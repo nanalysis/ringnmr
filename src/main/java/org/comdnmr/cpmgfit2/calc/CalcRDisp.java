@@ -29,6 +29,7 @@ public class CalcRDisp implements MultivariateFunction {
     double[] errValues;
     double[] fields;
     int[] idNums;
+    int[][] map;
     int nID = 1;
     int reportAt = 10;
     CPMGEquation equation;
@@ -40,18 +41,14 @@ public class CalcRDisp implements MultivariateFunction {
 
     public static enum CPMGEquation {
         NOEX("noex", 0, "R2") {
-            public double calculate(double[] par, double x, double field) {
-                return calculate(par, x, 0, field);
-            }
-
             @Override
-            public double calculate(double[] par, double x, int idNum, double field) {
+            public double calculate(double[] par, int[] map, double x, int idNum, double field) {
                 /*
                  Zero exchange cpmg function
                  R2(1/tcp)=R2
                  */
 
-                double R2 = par[idNum];
+                double R2 = par[map[0]];
                 double value = R2;
                 return value;
             }
@@ -113,23 +110,37 @@ public class CalcRDisp implements MultivariateFunction {
             double getKex(double[] pars, int id) {
                 return 0.0;
             }
-        },
-        CPMGFAST("cpmgfast", 1, "Kex", "R2", "Rex") {
+
             @Override
-            public double calculate(double[] par, double vu, double field) {
-                return calculate(par, vu, 0, field);
+            public int[][] makeMap(int n) {
+                int[][] map = new int[n][1];
+                for (int i = 0; i < n; i++) {
+                    map[i][0] = i;
+                }
+                return map;
             }
 
             @Override
-            public double calculate(double[] par, double vu, int idNum, double field) {
+            public int[][] makeMap(int n, int m) {
+                int[][] map = new int[n][1];
+                for (int i = 0; i < n; i++) {
+                    map[i][0] = i;
+                }
+                return map;
+            }
+        },
+        CPMGFAST("cpmgfast", 1, "Kex", "R2", "Rex") {
+
+            @Override
+            public double calculate(double[] par, int[] map, double vu, int idNum, double field) {
                 /*
                  Fast limit cpmg function
                  R2(1/tcp)=R2+Rex*(1 - (2*Tau/tcp)*tanh(1/(2*Tau/tcp)))
                  */
 // do we need a different R2 for each field
-                double kEx = par[0];
-                double R2 = par[2 * idNum + 1];
-                double Rex = par[2 * idNum + 2];
+                double kEx = par[map[0]];
+                double R2 = par[map[1]];
+                double Rex = par[map[2]];
                 double value;
                 if (kEx <= 0.0) {
                     value = R2;
@@ -237,6 +248,27 @@ public class CalcRDisp implements MultivariateFunction {
                 return pars[0];
             }
 
+            @Override
+            public int[][] makeMap(int n) {
+                int[][] map = new int[n][3];
+                for (int i = 0; i < n; i++) {
+                    map[i][0] = 0;
+                    map[i][1] = 2 * i + 1;
+                    map[i][2] = 2 * i + 2;
+                }
+                return map;
+            }
+
+            @Override
+            public int[][] makeMap(int n, int m) {
+                int[][] map = new int[n][3];
+                for (int i = 0; i < n; i++) {
+                    map[i][0] = 0;
+                    map[i][1] = 2 * i + 1;
+                    map[i][2] = 2 * i + 2;
+                }
+                return map;
+            }
         },
         //        ISHIMA("isima", "R2", "Rex", "PaDw", "Tau") {
         //            double calculate(double[] par, double tcp, double field) {
@@ -254,12 +286,12 @@ public class CalcRDisp implements MultivariateFunction {
         //        },
         CPMGSLOW("cpmgslow", 2, "Kex", "pA", "R2", "dW") {
             @Override
-            public double calculate(double[] par, double nu, int idNum, double field) {
+            public double calculate(double[] par, int[] map, double nu, int idNum, double field) {
 // do we need a different R2 for each field
-                double kEx = par[0];
-                double pA = par[1]; // p1-p2
-                double r2 = par[2 + 2 * idNum];
-                double dW = par[3 + 2 * idNum];
+                double kEx = par[map[0]];
+                double pA = par[map[1]]; // p1-p2
+                double r2 = par[map[2]];
+                double dW = par[map[3]];
                 double pB = 1.0 - pA;
                 double pDelta = pA - pB;
 
@@ -297,11 +329,6 @@ public class CalcRDisp implements MultivariateFunction {
 
                 return value;
 
-            }
-
-            @Override
-            public double calculate(double[] par, double nu, double field) {
-                return calculate(par, nu, 0, field);
             }
 
             @Override
@@ -435,6 +462,30 @@ public class CalcRDisp implements MultivariateFunction {
                 return pars[0];
             }
 
+            @Override
+            public int[][] makeMap(int n) {
+                int[][] map = new int[n][4];
+                for (int i = 0; i < n; i++) {
+                    map[i][0] = 0;
+                    map[i][1] = 1;
+                    map[i][2] = 2 * i + 2;
+                    map[i][3] = 2 * i + 3;
+                }
+                return map;
+            }
+
+            @Override
+            public int[][] makeMap(int n, int m) {
+                int[][] map = new int[n][4];
+                for (int i = 0; i < n; i++) {
+                    map[i][0] = 0;
+                    map[i][1] = 1;
+                    map[i][2] = 2 * i + 2;
+                    map[i][3] = 2 * i + 3;
+                }
+                return map;
+            }
+
         }, //        FULLREX("fullrex", "PaPb", "Dw", "kex") {
         //            double calculate(double[] par, double tcp, double field) {
         //                double R2 = par[0];
@@ -491,9 +542,7 @@ public class CalcRDisp implements MultivariateFunction {
         String[] parNames;
         double fieldRef;
 
-        public abstract double calculate(double[] par, double x, double field);
-
-        public abstract double calculate(double[] par, double x, int idNum, double field);
+        public abstract double calculate(double[] par, int[] map, double x, int idNum, double field);
 
         abstract double[] guess(double[] xValues, double[] yValues, double field);
 
@@ -514,6 +563,10 @@ public class CalcRDisp implements MultivariateFunction {
         public void setFieldRef(double field) {
             fieldRef = field;
         }
+
+        public abstract int[][] makeMap(int n);
+
+        public abstract int[][] makeMap(int n, int m);
 
         public String[] getParNames() {
             return parNames;
@@ -565,10 +618,19 @@ public class CalcRDisp implements MultivariateFunction {
         }
     }
 
+    public void setMap(int[][] map) {
+        this.map = map;
+    }
+
+    public int[][] getMap() {
+        return map;
+    }
+
     private boolean setNID() {
         nID = Arrays.stream(idNums).max().getAsInt() + 1;
         boolean[] checkIDs = new boolean[nID];
         Arrays.stream(idNums).forEach(id -> checkIDs[id] = true);
+        map = equation.makeMap(nID);
         return IntStream.range(0, checkIDs.length).anyMatch(id -> checkIDs[id] == false);
     }
 
@@ -645,11 +707,7 @@ public class CalcRDisp implements MultivariateFunction {
         double sumSq = 0.0;
         for (int i = 0; i < xValues.length; i++) {
             final double value;
-            if (false) {
-                value = equation.calculate(par, xValues[i], fieldValues[i]);
-            } else {
-                value = equation.calculate(par, xValues[i], idNums[i], fieldValues[i]);
-            }
+            value = equation.calculate(par, map[idNums[i]], xValues[i], idNums[i], fieldValues[i]);
             //System.out.println( "xxxxxxxxxxx " + value + " " + yValues[i] + " " + equation.name());
             double delta = (value - yValues[i]);
             //System.out.print(xValues[i] + " " + yValues[i] + " " + value + " " + (delta*delta) + " ");
@@ -676,11 +734,7 @@ public class CalcRDisp implements MultivariateFunction {
         double rss = 0.0;
         for (int i = 0; i < xValues.length; i++) {
             final double value;
-            if (false) {
-                value = equation.calculate(par, xValues[i], fieldValues[i]);
-            } else {
-                value = equation.calculate(par, xValues[i], idNums[i], fieldValues[i]);
-            }
+            value = equation.calculate(par, map[idNums[i]], xValues[i], idNums[i], fieldValues[i]);
             double delta = value - yValues[i];
             rss += delta * delta;
         }
@@ -691,11 +745,7 @@ public class CalcRDisp implements MultivariateFunction {
         double rss = 0.0;
         for (int i = 0; i < xValues.length; i++) {
             final double value;
-            if (false) {
-                value = equation.calculate(par, xValues[i], fieldValues[i]);
-            } else {
-                value = equation.calculate(par, xValues[i], idNums[i], fieldValues[i]);
-            }
+            value = equation.calculate(par, map[idNums[i]], xValues[i], idNums[i], fieldValues[i]);
 
             double delta = value - yValues[i];
             rss += delta * delta;
@@ -716,11 +766,7 @@ public class CalcRDisp implements MultivariateFunction {
         double[] yPred = new double[yValues.length];
         double rss = 0.0;
         for (int i = 0; i < xValues.length; i++) {
-            if (false) {
-                yPred[i] = equation.calculate(par, xValues[i], fieldValues[i]);
-            } else {
-                yPred[i] = equation.calculate(par, xValues[i], idNums[i], fieldValues[i]);
-            }
+            yPred[i] = equation.calculate(par, map[idNums[i]], xValues[i], idNums[i], fieldValues[i]);
         }
         return yPred;
     }
@@ -730,7 +776,7 @@ public class CalcRDisp implements MultivariateFunction {
             System.out.println("# field " + field);
             for (int i = 0; i < xValues.length; i++) {
                 if (FastMath.abs(fieldValues[i] - field) < 0.01) {
-                    double yCalc = equation.calculate(par, xValues[i], field);
+                    double yCalc = equation.calculate(par, map[idNums[i]], xValues[i], idNums[i], field);
                     System.out.printf("%8.5f %8.5f %8.5f\n", xValues[i], yValues[i], yCalc);
                 }
             }
@@ -745,7 +791,7 @@ public class CalcRDisp implements MultivariateFunction {
             System.out.println("# field " + field);
             for (int i = 0; i < n; i++) {
                 double x = min + i * delta;
-                double y = equation.calculate(par, x, field);
+                double y = equation.calculate(par, map[idNums[i]], x, idNums[i], field);
                 System.out.printf("%8.5f %8.5f\n", x, y);
             }
         }
@@ -755,7 +801,7 @@ public class CalcRDisp implements MultivariateFunction {
     public void dump(double[] par, double[] xValues, double field) {
         equation.setFieldRef(field);
         for (int i = 0; i < xValues.length; i++) {
-            double yCalc = equation.calculate(par, xValues[i], field);
+            double yCalc = equation.calculate(par, map[idNums[i]], xValues[i], idNums[i], field);
             System.out.printf("%8.5f %8.5f %8.5f\n", xValues[i], yCalc, field);
         }
     }
@@ -764,7 +810,7 @@ public class CalcRDisp implements MultivariateFunction {
         ArrayList<Double> result = new ArrayList<>();
         equation.setFieldRef(field);
         for (int i = 0; i < xValues.length; i++) {
-            double yCalc = equation.calculate(par, xValues[i], field);
+            double yCalc = equation.calculate(par, map[idNums[i]], xValues[i], idNums[i], field);
             result.add(yCalc);
         }
         return result;
@@ -779,13 +825,22 @@ public class CalcRDisp implements MultivariateFunction {
     }
 
     public double[] guess() {
-        return equation.guess(xValues, yValues, idNums, nID, fieldValues[0]);
+        double[] guess = equation.guess(xValues, yValues, idNums, nID, fieldValues[0]);
+        for (int i = 0; i < guess.length; i++) {
+            System.out.println("g " + i + " " + guess[i]);
+        }
+        return guess;
         //return equation.guess(xValues, yValues, fieldValues[0]);
     }
 
     public double[][] boundaries() {
         //return equation.boundaries(xValues, yValues, fieldValues[0]);
-        return equation.boundaries(xValues, yValues, idNums, nID, fieldValues[0]);
+        double[][] boundaries = equation.boundaries(xValues, yValues, idNums, nID, fieldValues[0]);
+        for (int i = 0; i < boundaries[0].length; i++) {
+            System.out.println("g " + i + " " + boundaries[0][i] + " " + boundaries[1][i]);
+        }
+
+        return boundaries;
     }
 
     public double[] getRex(double[] pars) {
@@ -885,6 +940,10 @@ public class CalcRDisp implements MultivariateFunction {
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
         double[] yPred = getPredicted(start);
+        System.out.println("sim");
+        for (int i = 0; i < lowerBounds.length; i++) {
+            System.out.println("s " + i + " " + lowerBounds[i] + " " + upperBounds[i]);
+        }
         IntStream.range(0, nSim).parallel().forEach(i -> {
             CalcRDisp rDisp = new CalcRDisp(xValues, yPred, errValues, fieldValues, fields, idNums);
             rDisp.setEquation(equation.name());

@@ -31,7 +31,7 @@ public class PlotEquation {
     public String getName() {
         return name;
     }
-    
+
     public void setExtra(double[] extras) {
         this.extras = extras.clone();
     }
@@ -43,13 +43,15 @@ public class PlotEquation {
     public double calculate(double[] pars, double xValue, double field) {
         CalcRDisp.CPMGEquation cpmgEquation = CalcRDisp.CPMGEquation.valueOf(name);
         cpmgEquation.setFieldRef(1.0);
-        return cpmgEquation.calculate(pars, xValue, field);
+        int[][] map = cpmgEquation.makeMap(1);
+        return cpmgEquation.calculate(pars, map[0], xValue, 0, field);
     }
 
     public double calculate(double xValue, double field) {
         CalcRDisp.CPMGEquation cpmgEquation = CalcRDisp.CPMGEquation.valueOf(name);
         cpmgEquation.setFieldRef(1.0);
-        return cpmgEquation.calculate(pars, xValue, field);
+        int[][] map = cpmgEquation.makeMap(1);
+        return cpmgEquation.calculate(pars, map[0], xValue, 0, field);
     }
 
     public String toString() {
