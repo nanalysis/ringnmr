@@ -54,13 +54,6 @@ public class CalcRDisp implements MultivariateFunction {
             }
 
             @Override
-            double[] guess(double[] xValues, double[] yValues, double field) {
-                DoubleSummaryStatistics dStat = Arrays.stream(yValues).summaryStatistics();
-                double[] guesses = {dStat.getAverage()};
-                return guesses;
-            }
-
-            @Override
             double[] guess(double[] xValues, double[] yValues, int[] idNums, int nID, double field) {
                 double[] guesses = new double[nID];
                 for (int id = 0; id < nID; id++) {
@@ -68,15 +61,6 @@ public class CalcRDisp implements MultivariateFunction {
                     guesses[id] = mean;
                 }
                 return guesses;
-            }
-
-            @Override
-            double[][] boundaries(double[] xValues, double[] yValues, double field) {
-                double[] guesses = guess(xValues, yValues, field);
-                double[][] boundaries = new double[2][guesses.length];
-                boundaries[0][0] = 0.0;
-                boundaries[1][0] = guesses[0] * 4;
-                return boundaries;
             }
 
             @Override
@@ -155,25 +139,6 @@ public class CalcRDisp implements MultivariateFunction {
             }
 
             @Override
-            double[] guess(double[] xValues, double[] yValues, double field) {
-                double minY = DataUtil.getMinValue(yValues);
-                double maxY = DataUtil.getMaxValue(yValues);
-
-                double r2 = minY;
-                double rex = maxY - minY;
-                double vMid = DataUtil.getMidValue(yValues, xValues);
-                double tauMid = 1.0 / (2.0 * vMid);
-                double kex = 1.915 / (0.5 * tauMid); // 1.915 comes from solving equation iteratively at tcp rex 0.5 half max
-                if (rex < 0.0) {
-                    rex = 0.0;
-                    kex = 0.0;
-                }
-                double[] guesses = {kex, r2, rex};
-                return guesses;
-
-            }
-
-            @Override
             double[] guess(double[] xValues, double[] yValues, int[] idNums, int nID, double field) {
                 double[] guesses = new double[1 + nID * 2];
                 double kExSum = 0.0;
@@ -197,19 +162,6 @@ public class CalcRDisp implements MultivariateFunction {
                 guesses[0] = kExSum /= nID;
                 return guesses;
 
-            }
-
-            @Override
-            double[][] boundaries(double[] xValues, double[] yValues, double field) {
-                double[] guesses = guess(xValues, yValues, field);
-                double[][] boundaries = new double[2][guesses.length];
-                boundaries[0][0] = 0.0;
-                boundaries[1][0] = guesses[0] * 4;
-                boundaries[0][1] = 0.0;
-                boundaries[1][1] = guesses[1] * 4;
-                boundaries[0][2] = 0.0;
-                boundaries[1][2] = guesses[2] * 4;
-                return boundaries;
             }
 
             @Override
@@ -332,40 +284,6 @@ public class CalcRDisp implements MultivariateFunction {
             }
 
             @Override
-            double[] guess(double[] xValues, double[] yValues, double field
-            ) {
-                double minY = DataUtil.getMinValue(yValues);
-                double maxY = DataUtil.getMaxValue(yValues);
-                double r2 = minY * 0.8;
-                double rex = maxY - minY;
-                double vMid = DataUtil.getMidValue(yValues, xValues);
-                double tauMid = 1.0 / (2.0 * vMid);
-                double kex = 1.915 / (0.5 * tauMid);
-                if (kex > 1000.0) { // fixme what should upper limit be (if kex gets too high can get infinite results
-                    kex = 1000.0;
-                }
-                // rex = pa *pb *dw *dw / kEx;
-
-                double pa = 0.95;
-                double dw2 = (rex / (pa * (1.0 - pa)) * kex);
-//                             System.out.println(tauMid + " " + r2 + " " + kex + " " + rex + " " + Math.sqrt(dw2));
-                if (rex < 0.0) {
-                    kex = 0.0;
-                    pa = 1.0;
-                    dw2 = 0.0;
-                }
-                double dw;
-                if (dw2 <= 0.0) {
-                    dw = 0.0;
-                } else {
-                    dw = Math.sqrt(dw2) / (2.0 * Math.PI);
-                }
-
-                double[] guesses = {kex, pa, r2, dw};
-                return guesses;
-            }
-
-            @Override
             double[] guess(double[] xValues, double[] yValues, int[] idNums, int nID, double field) {
                 double[] guesses = new double[2 + nID * 2];
                 double kExSum = 0.0;
@@ -394,22 +312,6 @@ public class CalcRDisp implements MultivariateFunction {
                 guesses[0] = kExSum /= nID;
                 guesses[1] = pa;
                 return guesses;
-            }
-
-            @Override
-            double[][] boundaries(double[] xValues, double[] yValues, double field) {
-                double[] guesses = guess(xValues, yValues, field);
-                double[][] boundaries = new double[2][guesses.length];
-                boundaries[0][0] = 0.0;
-                boundaries[1][0] = guesses[0] * 4;
-                boundaries[0][1] = 0.5;
-                boundaries[1][1] = 0.99;
-                boundaries[0][2] = 0.0;
-                boundaries[1][2] = guesses[2] * 4;
-                boundaries[0][3] = 0.0;
-                boundaries[1][3] = guesses[3] * 4;
-
-                return boundaries;
             }
 
             @Override
@@ -544,11 +446,7 @@ public class CalcRDisp implements MultivariateFunction {
 
         public abstract double calculate(double[] par, int[] map, double x, int idNum, double field);
 
-        abstract double[] guess(double[] xValues, double[] yValues, double field);
-
         abstract double[] guess(double[] xValues, double[] yValues, int[] idNums, int nID, double field);
-
-        abstract double[][] boundaries(double[] xValues, double[] yValues, double field);
 
         abstract double[][] boundaries(double[] xValues, double[] yValues, int[] idNums, int nID, double field);
 
@@ -826,20 +724,12 @@ public class CalcRDisp implements MultivariateFunction {
 
     public double[] guess() {
         double[] guess = equation.guess(xValues, yValues, idNums, nID, fieldValues[0]);
-        for (int i = 0; i < guess.length; i++) {
-            System.out.println("g " + i + " " + guess[i]);
-        }
         return guess;
-        //return equation.guess(xValues, yValues, fieldValues[0]);
     }
 
     public double[][] boundaries() {
         //return equation.boundaries(xValues, yValues, fieldValues[0]);
         double[][] boundaries = equation.boundaries(xValues, yValues, idNums, nID, fieldValues[0]);
-        for (int i = 0; i < boundaries[0].length; i++) {
-            System.out.println("g " + i + " " + boundaries[0][i] + " " + boundaries[1][i]);
-        }
-
         return boundaries;
     }
 
@@ -940,10 +830,6 @@ public class CalcRDisp implements MultivariateFunction {
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
         double[] yPred = getPredicted(start);
-        System.out.println("sim");
-        for (int i = 0; i < lowerBounds.length; i++) {
-            System.out.println("s " + i + " " + lowerBounds[i] + " " + upperBounds[i]);
-        }
         IntStream.range(0, nSim).parallel().forEach(i -> {
             CalcRDisp rDisp = new CalcRDisp(xValues, yPred, errValues, fieldValues, fields, idNums);
             rDisp.setEquation(equation.name());
