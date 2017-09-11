@@ -2,7 +2,9 @@ package org.comdnmr.cpmgfit2.calc;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.apache.commons.math3.optim.PointValuePair;
 
 /**
@@ -18,12 +20,94 @@ public class CPMGFit {
     List<Integer> idValues = new ArrayList<>();
     double[] usedFields = null;
     int nInGroup = 1;
+    Map<Double, Integer> fieldMap = new LinkedHashMap();
+    Map<Double, Integer> tempMap = new LinkedHashMap();
+    Map<String, Integer> nucMap = new LinkedHashMap();
+    int[][] states;
+    int[] stateCount;
+
+    class StateCount {
+
+        int[][] states;
+        int[] stateCount;
+
+        StateCount(int[][] states, int[] stateCount) {
+            this.states = states;
+            this.stateCount = stateCount;
+        }
+
+        int getResIndex(int i) {
+            return states[i][0];
+        }
+
+        int getTempIndex(int i) {
+            return states[i][2];
+        }
+    }
+
+    public static int getMapIndex(int[] state, int[] stateCount, int... mask) {
+        int index = 0;
+        System.out.println(state.length + " mask " + mask.length);
+        for (int i = 0; i < state.length; i++) {
+            System.out.print(" " + state[i]);
+        }
+        System.out.println("");
+        double mult = 1.0;
+        for (int i = 0; i < mask.length; i++) {
+            System.out.println(mask[i] + " " + state[mask[i]] + " " + stateCount[mask[i]]);
+            index += mult * state[mask[i]];
+            mult *= stateCount[mask[i]];
+        }
+        return index;
+    }
+
+    int[] getStateIndices(int resIndex, ExperimentData expData) {
+        int[] state = new int[4];
+        state[0] = resIndex;
+        state[1] = fieldMap.get(Math.floor(expData.field));
+        state[2] = tempMap.get(Math.floor(expData.temperature));
+        state[3] = nucMap.get(expData.nucleus);
+        System.out.println(resIndex + " " + expData.field + " " + expData.temperature + " " + expData.nucleus);
+        System.out.println("state index " + state[0] + " " + state[1] + " " + state[2] + " " + state[3]);
+
+        return state;
+    }
+
+    int[] getStateCount(int nResidues) {
+        int[] state = new int[4];
+        state[0] = nResidues;
+        state[1] = fieldMap.size();
+        state[2] = tempMap.size();
+        state[3] = nucMap.size();
+        System.out.println("state count " + state[0] + " " + state[1] + " " + state[2] + " " + state[3]);
+        return state;
+    }
 
     public void setData(Collection<ExperimentData> expDataList, String[] resNums) {
         nInGroup = resNums.length;
         int id = 0;
+        fieldMap.clear();
+        tempMap.clear();
+        nucMap.clear();
+        for (ExperimentData expData : expDataList) {
+            if (!fieldMap.containsKey(Math.floor(expData.field))) {
+                fieldMap.put(Math.floor(expData.field), fieldMap.size());
+            }
+            if (!tempMap.containsKey(Math.floor(expData.temperature))) {
+                tempMap.put(Math.floor(expData.temperature), tempMap.size());
+            }
+            if (!nucMap.containsKey(expData.nucleus)) {
+                nucMap.put(expData.nucleus, nucMap.size());
+            }
+        }
+        stateCount = getStateCount(resNums.length);
+        int nSets = resNums.length * expDataList.size();
+        states = new int[nSets][];
+        int k = 0;
+        int resIndex = 0;
         for (String resNum : resNums) {
             for (ExperimentData expData : expDataList) {
+                states[k++] = getStateIndices(resIndex, expData);
                 ResidueData resData = expData.getResidueData(resNum);
                 //  need peakRefs
                 double field = expData.getField();
@@ -37,8 +121,10 @@ public class CPMGFit {
                     fieldValues.add(field);
                     idValues.add(id);
                 }
+                id++;
+
             }
-            id++;
+            resIndex++;
         }
         usedFields = new double[expDataList.size()];
         int iExp = 0;
@@ -68,6 +154,7 @@ public class CPMGFit {
         calcR.setErr(err);
         calcR.setFieldValues(fields);
         calcR.setFields(usedFields);
+        calcR.setMap(stateCount, states);
         double[] guesses = calcR.guess();
         double[][] boundaries = calcR.boundaries();
         double[] sigma = new double[guesses.length];
@@ -75,9 +162,15 @@ public class CPMGFit {
             sigma[i] = (boundaries[1][i] - boundaries[0][i]) / 10.0;
         }
         PointValuePair result = calcR.refine(guesses, boundaries[0], boundaries[1], sigma);
+        
         double[] pars = result.getPoint();
+        for (int i=0;i<pars.length;i++) {
+            System.out.printf( " %.3f", pars[i]);
+        }
+        System.out.println("");
         double aic = calcR.getAICc(pars);
         double rms = calcR.getRMS(pars);
+        System.out.println("rms " + rms);
         int nGroupPars = calcR.getNGroupPars();
 
         String[] parNames = calcR.getParNames();

@@ -2,7 +2,6 @@ package org.comdnmr.cpmgfit2.calc;
 
 import java.util.Arrays;
 import java.util.ArrayList;
-import java.util.DoubleSummaryStatistics;
 import java.util.stream.IntStream;
 import org.apache.commons.math3.analysis.MultivariateFunction;
 import org.apache.commons.math3.optim.InitialGuess;
@@ -54,30 +53,26 @@ public class CalcRDisp implements MultivariateFunction {
             }
 
             @Override
-            double[] guess(double[] xValues, double[] yValues, int[] idNums, int nID, double field) {
-                double[] guesses = new double[nID];
-                for (int id = 0; id < nID; id++) {
+            double[] guess(double[] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+                int nPars = getNPars(map);
+                double[] guesses = new double[nPars];
+                for (int id = 0; id < map.length; id++) {
                     double mean = DataUtil.getMeanValue(yValues, idNums, id);
-                    guesses[id] = mean;
+                    guesses[map[id][0]] = mean;
                 }
                 return guesses;
             }
 
             @Override
-            double[][] boundaries(double[] xValues, double[] yValues, int[] idNums, int nID, double field) {
-                double[] guesses = guess(xValues, yValues, idNums, nID, field);
+            double[][] boundaries(double[] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+                double[] guesses = guess(xValues, yValues, map, idNums, nID, field);
                 double[][] boundaries = new double[2][guesses.length];
 
-                for (int id = 0; id < nID; id++) {
+                for (int id = 0; id < guesses.length; id++) {
                     boundaries[0][id] = 0.0;
                     boundaries[1][id] = guesses[id] * 4;
                 }
                 return boundaries;
-            }
-
-            @Override
-            public double getRex(double[] pars) {
-                return 0.0;
             }
 
             @Override
@@ -86,7 +81,7 @@ public class CalcRDisp implements MultivariateFunction {
             }
 
             @Override
-            double getRex(double[] pars, int id) {
+            double getRex(double[] pars, int[] map) {
                 return 0.0;
             }
 
@@ -112,6 +107,17 @@ public class CalcRDisp implements MultivariateFunction {
                 }
                 return map;
             }
+
+            public int[][] makeMap(int[] stateCount, int[][] states) {
+                int n = states.length;
+                int[][] map = new int[n][1];
+                // field temp nuc
+                for (int i = 0; i < n; i++) {
+                    map[i][0] = CPMGFit.getMapIndex(states[i], stateCount, 0, 1, 3);
+                }
+                return map;
+            }
+
         },
         CPMGFAST("cpmgfast", 1, "Kex", "R2", "Rex") {
 
@@ -139,21 +145,25 @@ public class CalcRDisp implements MultivariateFunction {
             }
 
             @Override
-            double[] guess(double[] xValues, double[] yValues, int[] idNums, int nID, double field) {
-                double[] guesses = new double[1 + nID * 2];
+            double[] guess(double[] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+                int nPars = getNPars(map);
+                double[] guesses = new double[nPars];
                 double kExSum = 0.0;
-                for (int id = 0; id < nID; id++) {
+                for (int id = 0; id < map.length; id++) {
                     double minY = DataUtil.getMinValue(yValues, idNums, id);
                     double maxY = DataUtil.getMaxValue(yValues, idNums, id);
+                    double mean = DataUtil.getMeanValue(yValues, idNums, id);
+                    double vMid = DataUtil.getMidValue(yValues, xValues, idNums, id);
 
                     double r2 = minY;
                     double rex = maxY - minY;
                     if (rex < 0.0) {
                         rex = 0.0;
                     }
-                    guesses[1 + id * 2] = r2;
-                    guesses[2 + id * 2] = rex;
-                    double vMid = DataUtil.getMidValue(yValues, xValues, idNums, id);
+
+                    guesses[map[id][1]] = r2;
+                    guesses[map[id][2]] = rex;
+
                     double tauMid = 1.0 / (2.0 * vMid);
                     if (rex >= 0) {
                         kExSum += 1.915 / (0.5 * tauMid); // 1.915 comes from solving equation iteratively at tcp rex 0.5 half max
@@ -165,29 +175,27 @@ public class CalcRDisp implements MultivariateFunction {
             }
 
             @Override
-            double[][] boundaries(double[] xValues, double[] yValues, int[] idNums, int nID, double field) {
-                double[] guesses = guess(xValues, yValues, idNums, nID, field);
+            double[][] boundaries(double[] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+                double[] guesses = guess(xValues, yValues, map, idNums, nID, field);
                 double[][] boundaries = new double[2][guesses.length];
-                boundaries[0][0] = 0.0;
-                boundaries[1][0] = guesses[0] * 4;
-                for (int id = 0; id < nID; id++) {
-                    boundaries[0][id * 2 + 1] = 0.0;
-                    boundaries[1][id * 2 + 1] = guesses[id * 2 + 1] * 4;
-                    boundaries[0][id * 2 + 2] = 0.0;
-                    boundaries[1][id * 2 + 2] = guesses[id * 2 + 2] * 4;
 
+                for (int id = 0; id < map.length; id++) {
+                    int iPar = map[id][0];
+                    boundaries[0][iPar] = 0.0;
+                    boundaries[1][iPar] = guesses[iPar] * 4;
+                    iPar = map[id][1];
+                    boundaries[0][iPar] = 0.0;
+                    boundaries[1][iPar] = guesses[iPar] * 4;
+                    iPar = map[id][2];
+                    boundaries[0][iPar] = 0.0;
+                    boundaries[1][iPar] = guesses[iPar] * 4;
                 }
                 return boundaries;
             }
 
             @Override
-            public double getRex(double[] pars) {
-                return pars[2];
-            }
-
-            @Override
-            double getRex(double[] pars, int id) {
-                return pars[id * 2 + 2];
+            double getRex(double[] pars, int[] map) {
+                return pars[map[2]];
             }
 
             @Override
@@ -218,6 +226,27 @@ public class CalcRDisp implements MultivariateFunction {
                     map[i][0] = 0;
                     map[i][1] = 2 * i + 1;
                     map[i][2] = 2 * i + 2;
+                }
+                return map;
+            }
+
+            public int[][] makeMap(int[] stateCount, int[][] states) {
+                int n = states.length;
+                int[][] map = new int[n][3];
+                int lastCount = 0;
+                // field temp nuc
+                for (int i = 0; i < n; i++) {
+                    map[i][0] = 0;
+                }
+                lastCount++;
+                int maxIndex = 0;
+                for (int i = 0; i < n; i++) {
+                    map[i][1] = CPMGFit.getMapIndex(states[i], stateCount, 0,1, 3) + lastCount;
+                    maxIndex = Math.max(map[i][1], maxIndex);
+                }
+                lastCount = maxIndex + 1;
+                for (int i = 0; i < n; i++) {
+                    map[i][2] = CPMGFit.getMapIndex(states[i], stateCount, 0,1, 3) + lastCount;
                 }
                 return map;
             }
@@ -284,20 +313,18 @@ public class CalcRDisp implements MultivariateFunction {
             }
 
             @Override
-            double[] guess(double[] xValues, double[] yValues, int[] idNums, int nID, double field) {
-                double[] guesses = new double[2 + nID * 2];
+            double[] guess(double[] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+                int nPars = getNPars(map);
+                double[] guesses = new double[nPars];
                 double kExSum = 0.0;
                 double pa = 0.95;
-                for (int id = 0; id < nID; id++) {
+                for (int id = 0; id < map.length; id++) {
                     double minY = DataUtil.getMinValue(yValues, idNums, id);
                     double maxY = DataUtil.getMaxValue(yValues, idNums, id);
-
+                    double mean = DataUtil.getMeanValue(yValues, idNums, id);
+                    double vMid = DataUtil.getMidValue(yValues, xValues, idNums, id);
                     double r2 = minY * 0.8;
                     double rex = maxY - r2;
-                    if (rex < 0.0) {
-                        rex = 0.0;
-                    }
-                    double vMid = DataUtil.getMidValue(yValues, xValues, idNums, id);
                     double tauMid = 1.0 / (2.0 * vMid);
                     double kex = 1.915 / (0.5 * tauMid); // 1.915 comes from solving equation iteratively at tcp rex 0.5 half max
                     if (kex > 1000.0) { // fixme what should upper limit be (if kex gets too high can get infinite results
@@ -305,50 +332,50 @@ public class CalcRDisp implements MultivariateFunction {
                     }
 
                     double dw2 = rex / (pa * (1.0 - pa)) * kex;
-                    guesses[2 + id * 2] = r2;
-                    guesses[3 + id * 2] = Math.sqrt(dw2) / (2.0 * Math.PI);
+                    guesses[map[id][2]] = r2;
+                    guesses[map[id][3]] = Math.sqrt(dw2) / (2.0 * Math.PI);
                     kExSum += kex;
+
                 }
+
                 guesses[0] = kExSum /= nID;
                 guesses[1] = pa;
                 return guesses;
             }
 
             @Override
-            double[][] boundaries(double[] xValues, double[] yValues, int[] idNums, int nID, double field) {
-                double[] guesses = guess(xValues, yValues, idNums, nID, field);
+            double[][] boundaries(double[] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+                double[] guesses = guess(xValues, yValues, map, idNums, nID, field);
                 double[][] boundaries = new double[2][guesses.length];
-                boundaries[0][0] = 0.0;
-                boundaries[1][0] = guesses[0] * 4;
-                boundaries[0][1] = 0.5;
-                boundaries[1][1] = 0.99;
-                for (int id = 0; id < nID; id++) {
-                    boundaries[0][id * 2 + 2] = 0.0;
-                    boundaries[1][id * 2 + 2] = guesses[id * 2 + 2] * 4;
-                    boundaries[0][id * 2 + 3] = 0.0;
-                    boundaries[1][id * 2 + 3] = guesses[id * 2 + 3] * 4;
+
+                for (int id = 0; id < map.length; id++) {
+                    int iPar = map[id][0];
+                    boundaries[0][iPar] = 0.0;
+                    boundaries[1][iPar] = guesses[iPar] * 4;
+
+                    iPar = map[id][1];
+                    boundaries[0][iPar] = 0.5;
+                    boundaries[1][iPar] = 0.99;
+
+                    iPar = map[id][2];
+                    boundaries[0][iPar] = 0.0;
+                    boundaries[1][iPar] = guesses[iPar] * 4;
+
+                    iPar = map[id][3];
+                    boundaries[0][iPar] = 0.0;
+                    boundaries[1][iPar] = guesses[iPar] * 4;
                 }
+
                 return boundaries;
             }
 //        CPMGSLOW("cpmgslow", 2, "Kex", "pA", "R2", "dW") {
 
             @Override
-            public double getRex(double[] pars
-            ) {
+            double getRex(double[] pars, int[] map) {
                 double rex = 0.0;
-                if (pars[3] != 0.0) {
+                if (pars[map[3]] != 0.0) {
                     // bieri and gooley rex = pa*pb*kex(/(1+(kex/dw)^2))
-                    rex = pars[1] * (1.0 - pars[1]) * pars[0] / (1.0 + Math.pow(pars[0] / (2.0 * Math.PI * pars[3]), 2));
-                }
-                return rex;
-            }
-
-            @Override
-            public double getRex(double[] pars, int id) {
-                double rex = 0.0;
-                if (pars[3 + 2 * id] != 0.0) {
-                    // bieri and gooley rex = pa*pb*kex(/(1+(kex/dw)^2))
-                    rex = pars[1] * (1.0 - pars[1]) * pars[0] / (1.0 + Math.pow(pars[0] / pars[3 + 2 * id], 2));
+                    rex = pars[map[1]] * (1.0 - pars[map[1]]) * pars[map[0]] / (1.0 + Math.pow(pars[map[0]] / pars[map[3]], 2));
                 }
                 return rex;
             }
@@ -384,6 +411,28 @@ public class CalcRDisp implements MultivariateFunction {
                     map[i][1] = 1;
                     map[i][2] = 2 * i + 2;
                     map[i][3] = 2 * i + 3;
+                }
+                return map;
+            }
+
+            public int[][] makeMap(int[] stateCount, int[][] states) {
+                int n = states.length;
+                int[][] map = new int[n][4];
+                int lastCount = 0;
+                for (int i = 0; i < n; i++) {
+                    map[i][0] = 0;
+                    map[i][1] = 1;
+                }
+                int maxIndex = 0;
+                lastCount = 2;
+                for (int i = 0; i < n; i++) {
+                    map[i][2] = CPMGFit.getMapIndex(states[i], stateCount, 0, 1, 3) + lastCount;
+                    maxIndex = Math.max(map[i][2], maxIndex);
+
+                }
+                lastCount = maxIndex + 1;
+                for (int i = 0; i < n; i++) {
+                    map[i][3] = CPMGFit.getMapIndex(states[i], stateCount, 0, 3) + lastCount;
                 }
                 return map;
             }
@@ -446,13 +495,11 @@ public class CalcRDisp implements MultivariateFunction {
 
         public abstract double calculate(double[] par, int[] map, double x, int idNum, double field);
 
-        abstract double[] guess(double[] xValues, double[] yValues, int[] idNums, int nID, double field);
+        abstract double[] guess(double[] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field);
 
-        abstract double[][] boundaries(double[] xValues, double[] yValues, int[] idNums, int nID, double field);
+        abstract double[][] boundaries(double[] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field);
 
-        public abstract double getRex(double[] pars);
-
-        abstract double getRex(double[] pars, int id);
+        abstract double getRex(double[] pars, int[] map);
 
         abstract double getKex(double[] pars);
 
@@ -465,6 +512,8 @@ public class CalcRDisp implements MultivariateFunction {
         public abstract int[][] makeMap(int n);
 
         public abstract int[][] makeMap(int n, int m);
+
+        public abstract int[][] makeMap(int[] stateCount, int[][] states);
 
         public String[] getParNames() {
             return parNames;
@@ -516,8 +565,29 @@ public class CalcRDisp implements MultivariateFunction {
         }
     }
 
+    public static int getNPars(int[][] map) {
+        int maxIndex = 0;
+        for (int i = 0; i < map.length; i++) {
+            for (int j = 0; j < map[i].length; j++) {
+                maxIndex = Math.max(map[i][j], maxIndex);
+            }
+        }
+        return maxIndex + 1;
+    }
+
     public void setMap(int[][] map) {
         this.map = map;
+    }
+
+    public void setMap(int[] stateCount, int[][] states) {
+        this.map = new int[states.length][stateCount.length];
+        this.map = equation.makeMap(stateCount, states);
+        for (int i = 0; i < map.length; i++) {
+            for (int j = 0; j < map[i].length; j++) {
+                System.out.print(" " + map[i][j]);
+            }
+            System.out.println(" map");
+        }
     }
 
     public int[][] getMap() {
@@ -528,7 +598,6 @@ public class CalcRDisp implements MultivariateFunction {
         nID = Arrays.stream(idNums).max().getAsInt() + 1;
         boolean[] checkIDs = new boolean[nID];
         Arrays.stream(idNums).forEach(id -> checkIDs[id] = true);
-        map = equation.makeMap(nID);
         return IntStream.range(0, checkIDs.length).anyMatch(id -> checkIDs[id] == false);
     }
 
@@ -723,26 +792,26 @@ public class CalcRDisp implements MultivariateFunction {
     }
 
     public double[] guess() {
-        double[] guess = equation.guess(xValues, yValues, idNums, nID, fieldValues[0]);
+        double[] guess = equation.guess(xValues, yValues, map, idNums, nID, fieldValues[0]);
         return guess;
     }
 
     public double[][] boundaries() {
         //return equation.boundaries(xValues, yValues, fieldValues[0]);
-        double[][] boundaries = equation.boundaries(xValues, yValues, idNums, nID, fieldValues[0]);
+        double[][] boundaries = equation.boundaries(xValues, yValues, map, idNums, nID, fieldValues[0]);
         return boundaries;
     }
 
     public double[] getRex(double[] pars) {
         double[] result = new double[nID];
-        for (int i = 0; i < nID; i++) {
-            result[i] = equation.getRex(pars, i);
+        for (int i = 0; i < map.length; i++) {
+            result[i] = equation.getRex(pars, map[i]);
         }
         return result;
     }
 
     public double getRex(double[] pars, int id) {
-        return equation.getRex(pars, id);
+        return equation.getRex(pars, map[id]);
     }
 
     public double[] getRexError() {
@@ -801,8 +870,8 @@ public class CalcRDisp implements MultivariateFunction {
                 parValues[j][i] = rPoint[j];
             }
             if (equation == CPMGEquation.CPMGSLOW) {
-                for (int j = 0; j < nID; j++) {
-                    rexValues[j][i] = equation.getRex(result.getPoint(), j);
+                for (int j = 0; j < map.length; j++) {
+                    rexValues[j][i] = equation.getRex(result.getPoint(), map[j]);
                 }
             }
         }
@@ -831,6 +900,7 @@ public class CalcRDisp implements MultivariateFunction {
         rexErrors = new double[nID];
         double[] yPred = getPredicted(start);
         IntStream.range(0, nSim).parallel().forEach(i -> {
+//        IntStream.range(0, nSim).forEach(i -> {
             CalcRDisp rDisp = new CalcRDisp(xValues, yPred, errValues, fieldValues, fields, idNums);
             rDisp.setEquation(equation.name());
             rDisp.setAbsMode(absMode);
@@ -840,6 +910,7 @@ public class CalcRDisp implements MultivariateFunction {
             }
             rDisp.setXY(xValues, newY);
             rDisp.setIds(idNums);
+            rDisp.setMap(map);
 
             PointValuePair result = rDisp.refine(start, lowerBounds, upperBounds, inputSigma);
             double[] rPoint = result.getPoint();
@@ -847,8 +918,8 @@ public class CalcRDisp implements MultivariateFunction {
                 parValues[j][i] = rPoint[j];
             }
             if (equation == CPMGEquation.CPMGSLOW) {
-                for (int j = 0; j < nID; j++) {
-                    rexValues[j][i] = equation.getRex(result.getPoint(), j);
+                for (int j = 0; j < map.length; j++) {
+                    rexValues[j][i] = equation.getRex(result.getPoint(), map[j]);
                 }
             }
         });
@@ -895,6 +966,7 @@ public class CalcRDisp implements MultivariateFunction {
             rDisp.setErr(newErr);
             rDisp.setFieldValues(newFieldValues);
             rDisp.setIds(newID);
+            rDisp.setMap(map);
 
             PointValuePair result = rDisp.refine(start, lowerBounds, upperBounds, inputSigma);
             double[] rPoint = result.getPoint();
@@ -902,8 +974,8 @@ public class CalcRDisp implements MultivariateFunction {
                 parValues[j][i] = rPoint[j];
             }
             if (equation == CPMGEquation.CPMGSLOW) {
-                for (int j = 0; j < nID; j++) {
-                    rexValues[j][i] = equation.getRex(result.getPoint(), j);
+                for (int j = 0; j < map.length; j++) {
+                    rexValues[j][i] = equation.getRex(result.getPoint(), map[j]);
                 }
             }
         });
