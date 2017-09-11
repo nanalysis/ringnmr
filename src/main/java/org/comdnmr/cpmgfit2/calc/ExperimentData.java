@@ -13,11 +13,16 @@ public class ExperimentData {
     HashMap<String, ResidueData> residueData;
     final double field;
     final double temperature;
+    final String nucleus;
 
-    public ExperimentData(String name, double field, double temperature) {
+    public ExperimentData(String name, String nucleus, double field, double temperature) {
         this.name = name;
         this.field = field;
         this.temperature = temperature;
+        if (nucleus == null) {
+            nucleus = "H";
+        }
+        this.nucleus = nucleus;
         residueData = new HashMap<>();
     }
 
