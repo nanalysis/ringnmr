@@ -26,12 +26,83 @@ import org.yaml.snakeyaml.Yaml;
  */
 public class DataIO {
 
-    public static void loadTextFile(String fileName, ResidueProperties resProp, double temperature, double field) throws IOException, IllegalArgumentException {
+    public static void loadPeakFile(String fileName, ResidueProperties resProp, String nucleus, double temperature, double field, double tauCPMG, double[] vcpmgs) throws IOException, IllegalArgumentException {
         Path path = Paths.get(fileName);
         String fileTail = path.getFileName().toString();
         fileTail = fileTail.substring(0, fileTail.indexOf('.'));
 
-        ExperimentData expData = new ExperimentData(fileTail, field, temperature);
+        ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature);
+        resProp.addExperimentData(fileTail, expData);
+        boolean gotHeader = false;
+        String[] peakRefs = null;
+        double[] xValues = null;
+        //  Peak       Residue N       T1      T2      T11     T3      T4      T9      T5      T10     T12     T6      T7      T8
+
+        try (BufferedReader fileReader = Files.newBufferedReader(path)) {
+            while (true) {
+                String line = fileReader.readLine();
+                if (line == null) {
+                    break;
+                }
+//            String line = fileReader.readLine();
+                String sline = line.trim();
+                if (sline.length() == 0) {
+                    continue;
+                }
+                if (sline.charAt(0) == '#') {
+                    continue;
+                }
+                String[] sfields = line.split("\t", -1);
+                int offset = 4;
+                if (!gotHeader) {
+                    int nValues = sfields.length - offset;
+                    xValues = new double[nValues];
+                    peakRefs = new String[nValues];
+                    for (int i = offset; i < sfields.length; i++) {
+                        int j = i - offset;
+                        // fixme assumes first vcpmg is the 0 ref 
+                        xValues[j] = vcpmgs[j + 1];
+                        peakRefs[j] = sfields[i];
+                    }
+                    gotHeader = true;
+                } else {
+                    String residueNum = sfields[1].trim();
+                    double refIntensity = Double.parseDouble(sfields[offset - 1].trim());
+                    List<Double> xValueList = new ArrayList<>();
+                    List<Double> yValueList = new ArrayList<>();
+                    List<Double> errValueList = new ArrayList<>();
+                    for (int i = offset; i < sfields.length; i++) {
+                        int j = i - offset;
+                        String valueStr = sfields[i].trim();
+                        if ((valueStr.length() == 0) || valueStr.equals("NA")) {
+                            continue;
+                        }
+                        double r2Eff;
+                        try {
+                            double intensity = Double.parseDouble(sfields[i].trim());
+                            r2Eff = -Math.log(intensity / refIntensity) / tauCPMG;
+                        } catch (NumberFormatException nFE) {
+                            continue;
+                        }
+                        xValueList.add(xValues[j]);
+                        yValueList.add(r2Eff);
+                        errValueList.add(0.0);
+                    }
+                    ResidueData residueData = new ResidueData(xValueList, yValueList, errValueList);
+                    expData.addResidueData(residueNum, residueData);
+                }
+            }
+        }
+        double errValue = estimateErrors(expData);
+        setErrors(expData, errValue);
+    }
+
+    public static void loadTextFile(String fileName, ResidueProperties resProp, String nucleus, double temperature, double field) throws IOException, IllegalArgumentException {
+        Path path = Paths.get(fileName);
+        String fileTail = path.getFileName().toString();
+        fileTail = fileTail.substring(0, fileTail.indexOf('.'));
+
+        ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature);
         resProp.addExperimentData(fileTail, expData);
         boolean gotHeader = false;
         String[] peakRefs = null;
@@ -77,9 +148,37 @@ public class DataIO {
                     ResidueData residueData = new ResidueData(xValues, yValues, errValues);
                     expData.addResidueData(residueNum, residueData);
                 }
-
             }
         }
+    }
+
+    public static void setErrors(ExperimentData expData, double error) {
+        for (ResidueData residueData : expData.residueData.values()) {
+            double[] errValues = residueData.getErrValues();
+            Arrays.fill(errValues, error);
+        }
+
+    }
+
+    public static double estimateErrors(ExperimentData expData) {
+        int nDups = 0;
+        double sumDelta2 = 0.0;
+        for (ResidueData residueData : expData.residueData.values()) {
+            double[] xValues = residueData.getXValues();
+            double[] yValues = residueData.getYValues();
+            for (int i = 0; i < xValues.length - 1; i++) {
+                for (int j = (i + 1); j < xValues.length; j++) {
+                    if (xValues[i] == xValues[j]) {
+                        double delta = yValues[i] - yValues[j];
+                        sumDelta2 += delta * delta;
+                        nDups++;
+                    }
+
+                }
+            }
+        }
+        double error = Math.sqrt(sumDelta2 / (2.0 * nDups));
+        return error;
     }
 
     public static ResidueProperties loadParametersFromFile(String fileName) throws IOException {
@@ -185,11 +284,10 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
     }
 
     public static ResidueProperties loadParameters(String fileName) {
-        File yamlFile = new File(fileName);
+        File yamlFile = new File(fileName).getAbsoluteFile();
         ResidueProperties resProp = null;
         try (InputStream input = new FileInputStream(yamlFile)) {
-            Path path = Paths.get(fileName);
-            String fileTail = path.getFileName().toString();
+            Path path = yamlFile.toPath();
             Path dirPath = path.getParent();
 
             Yaml yaml = new Yaml();
@@ -207,8 +305,19 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     String dataFileName = (String) dataMap3.get("file");
                     Double temperature = (Double) dataMap3.get("temperature");
                     Double field = (Double) dataMap3.get("field");
+                    String nucleus = (String) dataMap3.get("nucleus");
+                    List<Number> vcpmgList = (List<Number>) dataMap3.get("vcpmg");
+                    Double tauCPMG = (Double) dataMap3.get("tau");
                     String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
-                    DataIO.loadTextFile(textFileName, resProp, temperature, field);
+                    if (vcpmgList == null) {
+                        loadTextFile(textFileName, resProp, nucleus, temperature, field);
+                    } else {
+                        double[] vcpmgs = new double[vcpmgList.size()];
+                        for (int i = 0; i < vcpmgs.length; i++) {
+                            vcpmgs[i] = vcpmgList.get(i).doubleValue();
+                        }
+                        loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs);
+                    }
                 }
                 counter++;
             }
