@@ -1,4 +1,6 @@
 import org.comdnmr.cpmgfit2.calc.CalcRDisp as CalcRDisp
+import org.comdnmr.cpmgfit2.calc.DataIO as DataIO
+import org.comdnmr.cpmgfit2.calc.ResidueFitter as ResidueFitter
 import math
 import sys
 import os.path
@@ -382,6 +384,58 @@ def loadDataFiles(fileNames):
         cpmgExp.setPeakRefs(peakRefs)
         expList.append(cpmgExp)
 
+def loadProject(fileName):
+    resProp = DataIO.loadParameters(fileName)
+    return resProp
+
+def getResidues(resProp):
+    expDataSets = resProp.getExperimentData()
+    resSet = set() 
+    for expDataSet in expDataSets:
+        residues = expDataSet.getResidues()
+        for residue in residues:
+           resSet.add(residue)
+    residues = []
+    for residue in resSet:
+        residues.append([residue])
+    return residues
+
+def fitProject(resProp, groups):
+    expDataSets = resProp.getExperimentData()
+    residueFitter = ResidueFitter()
+    if len(groups) == 0:
+        groups = getResidues(resProp)
+    print 'groups',groups
+    for group in groups:
+        print group
+        sgroup = [str(groupNum) for groupNum in group]
+        resInfoList = residueFitter.fitResidues(resProp, sgroup, 0)
+        for resInfo in resInfoList:
+            print resInfo
+            fitResNum = resInfo.resNum;
+            resProp.residueMap.put(str(fitResNum), resInfo)
+    DataIO.saveParametersToFile('output.txt',resProp)
+
+def fitGroups(groups):
+    writeHeader()
+    groupID = 0
+    experiment = expList[0]
+    groupDone = False
+    for resNum in experiment.resData:
+        inGroup = False
+        for group in groups:
+            if resNum in group:
+                inGroup = True
+                break
+        if inGroup:
+            if resNum == group[0]:
+                fitGroup(expList,group,groupID)
+                groupID += 1
+        else:
+            if not onlyGroups:
+                fitGroup(expList,[resNum],groupID)
+                groupID += 1
+
 def parseArgs():
     global serialMode
     global onlyGroups
@@ -390,12 +444,14 @@ def parseArgs():
     parser.add_argument("-s",dest='serialMode',action='store_true',help="Run calcutions serially (not using multiple cores")
     parser.add_argument("-o",dest='onlyGroups',action='store_true',help="Only fit data in groups")
     parser.add_argument("-g", dest="groupList",default='', help="Residues to fit in groups")
+    parser.add_argument("-p", dest="projectFile",default='', help="Project file (.yaml) to load")
     parser.add_argument("fileNames",nargs="*")
     args = parser.parse_args()
 
     serialMode = args.serialMode
     onlyGroups = args.onlyGroups
     fileNames = args.fileNames
+    projectFile = args.projectFile
 
     groups = [] 
     if len(args.groupList) > 0:
@@ -404,28 +460,13 @@ def parseArgs():
         for group in sgroups:
             group = [int(groupNum) for groupNum in group.split(',')]
             groups.append(group)
-    loadDataFiles(fileNames)
-    return groups
 
-groups = parseArgs()
-
-mode = 1
-
-writeHeader()
-groupID = 0
-experiment = expList[0]
-groupDone = False
-for resNum in experiment.resData:
-    inGroup = False
-    for group in groups:
-        if resNum in group:
-            inGroup = True
-            break
-    if inGroup:
-        if resNum == group[0]:
-            fitGroup(expList,group,groupID)
-            groupID += 1
+    if projectFile != '':
+        resProp = loadProject(projectFile)
+        print resProp
+        fitProject(resProp,groups)
     else:
-        if not onlyGroups:
-            fitGroup(expList,[resNum],groupID)
-            groupID += 1
+        loadDataFiles(fileNames)
+        fitGroups(groups)
+
+parseArgs()
