@@ -1,6 +1,7 @@
 package org.comdnmr.cpmgfit2.calc;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -18,6 +19,18 @@ public class ResidueData {
         this.xValues = x.clone();
         this.yValues = y.clone();
         this.errValues = err.clone();
+    }
+    
+    public ResidueData(List<Double> xValueList, List<Double> yValueList, List<Double> errValueList) {
+        int nValues = xValueList.size();
+        this.xValues = new double[nValues];
+        this.yValues = new double[nValues];
+        this.errValues = new double[nValues];
+        for (int i=0;i<nValues;i++) {
+            xValues[i] = xValueList.get(i);
+            yValues[i] = yValueList.get(i);
+            errValues[i] = errValueList.get(i);
+        }
     }
 
     public double[] getXValues() {
