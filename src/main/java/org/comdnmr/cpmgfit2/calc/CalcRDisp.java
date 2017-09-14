@@ -241,12 +241,12 @@ public class CalcRDisp implements MultivariateFunction {
                 lastCount++;
                 int maxIndex = 0;
                 for (int i = 0; i < n; i++) {
-                    map[i][1] = CPMGFit.getMapIndex(states[i], stateCount, 0,1, 3) + lastCount;
+                    map[i][1] = CPMGFit.getMapIndex(states[i], stateCount, 0, 3) + lastCount;
                     maxIndex = Math.max(map[i][1], maxIndex);
                 }
                 lastCount = maxIndex + 1;
                 for (int i = 0; i < n; i++) {
-                    map[i][2] = CPMGFit.getMapIndex(states[i], stateCount, 0,1, 3) + lastCount;
+                    map[i][2] = CPMGFit.getMapIndex(states[i], stateCount, 0, 3) + lastCount;
                 }
                 return map;
             }
@@ -426,7 +426,7 @@ public class CalcRDisp implements MultivariateFunction {
                 int maxIndex = 0;
                 lastCount = 2;
                 for (int i = 0; i < n; i++) {
-                    map[i][2] = CPMGFit.getMapIndex(states[i], stateCount, 0, 1, 3) + lastCount;
+                    map[i][2] = CPMGFit.getMapIndex(states[i], stateCount, 0, 3) + lastCount;
                     maxIndex = Math.max(map[i][2], maxIndex);
 
                 }
