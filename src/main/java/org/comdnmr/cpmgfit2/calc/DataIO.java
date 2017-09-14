@@ -236,6 +236,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 int groupId = Integer.parseInt(groupIdStr);
                 String peakIdStr = sfields[headerMap.get("Peak")].trim();
                 int peakNum = Integer.parseInt(peakIdStr);
+                String stateString = sfields[headerMap.get("State")].trim();
                 ResidueInfo residueInfo = resProp.getResidueInfo(residueNumber);
 
                 if (residueInfo == null) {
@@ -275,8 +276,8 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 List<String> equationNames = Arrays.asList("NOEX", "CPMGFAST", "CPMGSLOW");
                 parMap.put("Equation", 1.0 + equationNames.indexOf(equationName));
                 PlotEquation plotEquation = new PlotEquation(equationName, pars, fields);
-                residueInfo.addEquation(plotEquation, bestValue.equals("best"));
-                residueInfo.addParMap(parMap, equationName);
+                CurveFit curveSet = new CurveFit(stateString, residueNumber, parMap, plotEquation);
+                residueInfo.addCurveSet(curveSet, bestValue.equals("best"));
             }
 
         }
@@ -337,7 +338,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
     }
 
     public static void saveParametersToFile(String fileName, ResidueProperties resProp) {
-        String header = "Residue	Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 Rex.sd	    Kex	 Kex.sd	     pA	  pA.sd	     dW	  dW.sd";
+        String header = "Residue	Peak	GrpSz	Group	State	Equation	RMS	   AIC	Best	     R2	  R2.sd	    Rex	 Rex.sd	    Kex	 Kex.sd	     pA	  pA.sd	     dW	  dW.sd";
         try (FileWriter writer = new FileWriter(fileName)) {
             writer.write(header);
             resProp.getResidueMap().values().stream().

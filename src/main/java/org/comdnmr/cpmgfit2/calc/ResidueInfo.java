@@ -7,6 +7,7 @@ package org.comdnmr.cpmgfit2.calc;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -17,7 +18,7 @@ import java.util.Map;
 public class ResidueInfo {
 
     int resNum;
-    HashMap<String, PlotEquation> plotEquations = new HashMap<>();
+    HashMap<String, CurveFit> curveSets = new LinkedHashMap<>();
     PlotEquation bestEquation = null;
     ResidueData resData = null;
     double[] extraValues;
@@ -25,7 +26,6 @@ public class ResidueInfo {
     int groupSize = 1;
     int groupId = 0;
     int peakNum = 0;
-    HashMap<String, HashMap<String, Double>> parMaps = new HashMap<>();
     static final String[] parNames = {"R2", "Rex", "Kex", "pA", "dW"};
 
     public class DataValue {
@@ -72,8 +72,8 @@ public class ResidueInfo {
             return parName;
         }
 
-        public double getValue(String equationName) {
-            Double value = resInfo.parMaps.get(equationName).get(parName);
+        public double getValue(String key) {
+            Double value = resInfo.curveSets.get(equationName).parMap.get(parName);
             if (value == null) {
                 return 0.0;
             } else {
@@ -85,8 +85,8 @@ public class ResidueInfo {
             return getValue(equationName);
         }
 
-        public double getError(String equationName) {
-            Double value = resInfo.parMaps.get(equationName).get(parName + ".sd");
+        public double getError(String key) {
+            Double value = resInfo.curveSets.get(key).parMap.get(parName + ".sd");
             if (value == null) {
                 return 0.0;
             } else {
@@ -110,11 +110,31 @@ public class ResidueInfo {
         this.peakNum = peakNum;
     }
 
-    public void addEquation(PlotEquation equation, boolean best) {
-        plotEquations.put(equation.name, equation);
+    public void addCurveSet(CurveFit curveSet, boolean best) {
+        String key = curveSet.plotEquation.getName() + "." + curveSet.state;
+        curveSets.put(key, curveSet);
         if (best) {
-            bestEquation = equation;
+            bestEquation = curveSet.plotEquation;
         }
+    }
+
+    public String checkKey(String key) {
+        if (key.startsWith("best")) {
+            if (key.indexOf('.') == -1) {
+                key = bestEquation.name + ".0:0:0:0";
+            } else {
+                key = bestEquation.name + key.substring(4);
+            }
+        } else {
+            if (key.indexOf('.') == -1) {
+                key = key + ".0:0:0:0";
+            }
+        }
+        return key;
+    }
+
+    public CurveFit getCurveSet(String key) {
+        return curveSets.get(key);
     }
 
     public String getBestEquationName() {
@@ -125,27 +145,24 @@ public class ResidueInfo {
         return resNum;
     }
 
-    public PlotEquation getEquation(String name) {
-        return plotEquations.get(name);
+    public Double getParValue(String key, String parName) {
+        key = checkKey(key);
+        return curveSets.get(key).parMap.get(parName);
     }
 
-    public void addParMap(HashMap<String, Double> parMap, String equationName) {
-        parMaps.put(equationName, parMap);
-    }
-
-    public Double getParValue(String equationName, String parName) {
-        return parMaps.get(equationName).get(parName);
-    }
-
-    public List<ParValueInterface> getParValues(String equationName) {
+    public List<ParValueInterface> getParValues(String key) {
+        System.out.println("key 1: " + key + " " + bestEquation.name);
+        key = checkKey(key);
+        System.out.println("key 2: " + key);
+        // fixme
         final String useEquationName;
-        if (equationName.equals("best")) {
+        if (key.startsWith("best")) {
             useEquationName = bestEquation.name;
         } else {
-            useEquationName = equationName;
+            useEquationName = key;
         }
         List<ParValueInterface> dataValues = new ArrayList<>();
-        HashMap<String, Double> parMap = parMaps.get(useEquationName);
+        Map<String, Double> parMap = curveSets.get(key).getParMap();
         parMap.keySet().stream().sorted().filter((parName) -> (parMap.containsKey(parName + ".sd"))).forEachOrdered((parName) -> {
             dataValues.add(new ParValue(this, parName, useEquationName));
         });
@@ -166,6 +183,8 @@ public class ResidueInfo {
         StringBuilder sBuilder = new StringBuilder();
         PlotEquation plotEquation = bestEquation;
         sBuilder.append(plotEquation.name);
+        sBuilder.append(" ");
+        sBuilder.append(resNum);
         sBuilder.append('\n');
         double[] xValues = null;
         double[] yValues = null;
@@ -187,9 +206,11 @@ public class ResidueInfo {
                 sBuilder.append(" ");
             }
         }
-        if (parMaps != null) {
-            sBuilder.append('\n');
-            sBuilder.append(parMaps.toString());
+        for (CurveFit curveSet : curveSets.values()) {
+            if (curveSet.parMap != null) {
+                sBuilder.append('\n');
+                sBuilder.append(curveSet.parMap.toString());
+            }
         }
         return sBuilder.toString();
     }
@@ -205,17 +226,19 @@ public class ResidueInfo {
         String commonString = sBuilder.toString();
         StringBuilder allBuilder = new StringBuilder();
         Double parValue;
-        for (PlotEquation plotEquation : plotEquations.values()) {
+        for (CurveFit curveSet : curveSets.values()) {
             sBuilder.setLength(0);
             sBuilder.append('\n');
             sBuilder.append(commonString);
+            PlotEquation plotEquation = curveSet.plotEquation;
+            sBuilder.append(curveSet.state).append(sep);// fixme
             sBuilder.append(plotEquation.name).append(sep);
-            Map<String, Double> parMap = parMaps.get(plotEquation.name);
+            Map<String, Double> parMap = curveSet.getParMap();
             parValue = parMap.get("RMS");
             sBuilder.append(String.format("%.2f", parValue)).append(sep);
             parValue = parMap.get("AIC");
             sBuilder.append(String.format("%.1f", parValue)).append(sep);
-            if (bestEquation == plotEquation) {
+            if (bestEquation.getName().equals(plotEquation.getName())) {
                 sBuilder.append("best");
             }
 

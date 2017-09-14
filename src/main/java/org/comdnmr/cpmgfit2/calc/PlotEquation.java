@@ -40,6 +40,14 @@ public class PlotEquation {
         return extras[i];
     }
 
+    public double[] getExtras() {
+        return extras;
+    }
+
+    public double[] getPars() {
+        return pars;
+    }
+
     public double calculate(double[] pars, double xValue, double field) {
         CalcRDisp.CPMGEquation cpmgEquation = CalcRDisp.CPMGEquation.valueOf(name);
         cpmgEquation.setFieldRef(1.0);

@@ -43,7 +43,7 @@ public class ResidueProperties {
 
     public List<String> getEquationNames() {
         List<String> equationNames = new ArrayList<>();
-        equationNames.addAll(residueMap.values().stream().findFirst().get().parMaps.keySet());
+       // fixme  equationNames.addAll(residueMap.values().stream().findFirst().get().curveSets.parMaps.keySet());
         return equationNames;
     }
 

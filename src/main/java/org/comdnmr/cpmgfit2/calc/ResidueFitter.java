@@ -106,7 +106,7 @@ public class ResidueFitter {
             }
             String[] resNumGroup = new String[resGroup.size()];
             resGroup.toArray(resNumGroup);
-            List<ResidueInfo> resInfoList = fitResidues(resProps, resNumGroup, nFit);
+            List<ResidueInfo> resInfoList = fitResidues(resProps, resNumGroup, nFit, null);
             for (ResidueInfo resInfo : resInfoList) {
                 int fitResNum = resInfo.resNum;
                 resProps.residueMap.put(String.valueOf(fitResNum), resInfo);
@@ -165,7 +165,7 @@ public class ResidueFitter {
             }
             String[] resNumGroup = new String[resList.size()];
             resList.toArray(resNumGroup);
-            List<ResidueInfo> resInfoList = fitResidues(resProps, resNumGroup, nFit);
+            List<ResidueInfo> resInfoList = fitResidues(resProps, resNumGroup, nFit, null);
             for (ResidueInfo resInfo : resInfoList) {
                 int fitResNum = resInfo.resNum;
                 resProps.residueMap.put(String.valueOf(fitResNum), resInfo);
@@ -177,11 +177,14 @@ public class ResidueFitter {
 
     }
 
-    public List<ResidueInfo> fitResidues(ResidueProperties resProps, String[] resNums, int groupId) {
+    public List<ResidueInfo> fitResidues(ResidueProperties resProps, String[] resNums, int groupId, String useEquation) {
         Map<String, CPMGFitResult> fitResults = new HashMap<>();
         double aicMin = Double.MAX_VALUE;
         String bestEquation = "";
         for (String equationName : equationNames) {
+            if ((useEquation != null) && !equationName.equals(useEquation)) {
+                continue;
+            }
             CPMGFit cpmgFit = new CPMGFit();
             cpmgFit.setData(resProps.expMaps.values(), resNums);
             CPMGFitResult fitResult = cpmgFit.doFit(equationName);
@@ -192,32 +195,25 @@ public class ResidueFitter {
             }
         }
         List<ResidueInfo> resInfoList = new ArrayList<>();
-        int iRes = 0;
+        Map<String, ResidueInfo> resMap = new HashMap<>();
         for (String residueNumber : resNums) {
             ResidueInfo residueInfo = new ResidueInfo(Integer.parseInt(residueNumber), groupId, resNums.length);
             resInfoList.add(residueInfo);
+            resMap.put(residueNumber, residueInfo);
+        }
 
-            for (String equationName : equationNames) {
-                CPMGFitResult fitResult = fitResults.get(equationName);
-
-                HashMap<String, Double> parMap = new HashMap<>();
-                List<ParValueInterface> parValues = fitResult.getParValues(iRes);
-                for (ParValueInterface parValue : parValues) {
-                    parMap.put(parValue.getName(), parValue.getValue());
-                    parMap.put(parValue.getName() + ".sd", parValue.getError());
-                }
-                parMap.put("AIC", fitResult.getAicc());
-                parMap.put("RMS", fitResult.getRms());
-
-                double[] pars = fitResult.getPars(iRes);
-                double[] fields = fitResult.getUsedFields();
-                List<String> equationNameList = Arrays.asList(equationNames);
-                parMap.put("Equation", 1.0 + equationNameList.indexOf(equationName));
-                PlotEquation plotEquation = new PlotEquation(equationName, pars, fields);
-                residueInfo.addEquation(plotEquation, bestEquation.equals(equationName));
-                residueInfo.addParMap(parMap, equationName);
+        for (String equationName : equationNames) {
+            if ((useEquation != null) && !equationName.equals(useEquation)) {
+                continue;
             }
-            iRes++;
+            CPMGFitResult fitResult = fitResults.get(equationName);
+            int nCurves = fitResult.getNCurves();
+            for (int iCurve = 0; iCurve < nCurves; iCurve++) {
+                CurveFit curveFit = fitResult.getCurveFit(iCurve);
+                String residueNumber = curveFit.getResNum();
+                ResidueInfo residueInfo = resMap.get(residueNumber);
+                residueInfo.addCurveSet(curveFit, bestEquation.equals(equationName));
+            }
         }
         return resInfoList;
     }
