@@ -20,40 +20,12 @@ public class ResidueInfo {
     int resNum;
     HashMap<String, CurveFit> curveSets = new LinkedHashMap<>();
     PlotEquation bestEquation = null;
-    ResidueData resData = null;
     double[] extraValues;
     String[] peakRefs;
     int groupSize = 1;
     int groupId = 0;
     int peakNum = 0;
     static final String[] parNames = {"R2", "Rex", "Kex", "pA", "dW"};
-
-    public class DataValue {
-
-        int index;
-        ResidueInfo resInfo;
-
-        public DataValue(ResidueInfo resInfo, int index) {
-            this.resInfo = resInfo;
-            this.index = index;
-        }
-
-        public double getX() {
-            return resInfo.resData.getXValues()[index];
-        }
-
-        public double getY() {
-            return resInfo.resData.getYValues()[index];
-        }
-
-        public String getPeak() {
-            String peak = "";
-            if (resInfo.peakRefs != null) {
-                peak = resInfo.peakRefs[index];
-            }
-            return peak;
-        }
-    }
 
     public class ParValue implements ParValueInterface {
 
@@ -169,16 +141,6 @@ public class ResidueInfo {
         return dataValues;
     }
 
-    ArrayList<DataValue> getDataValues() {
-        ArrayList<DataValue> dataValues = new ArrayList<>();
-        double[] xValues = resData.getXValues();
-
-        for (int i = 0; i < xValues.length; i++) {
-            dataValues.add(new DataValue(this, i));
-        }
-        return dataValues;
-    }
-
     public String toString() {
         StringBuilder sBuilder = new StringBuilder();
         PlotEquation plotEquation = bestEquation;
@@ -188,10 +150,6 @@ public class ResidueInfo {
         sBuilder.append('\n');
         double[] xValues = null;
         double[] yValues = null;
-        if (resData != null) {
-            xValues = resData.getXValues();
-            yValues = resData.getYValues();
-        }
         if (xValues != null) {
             for (double value : xValues) {
                 sBuilder.append(value);
