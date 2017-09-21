@@ -27,6 +27,7 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.chart.XYChart.Series;
 import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Transform;
+import org.comdnmr.cpmgfit2.calc.CurveFit;
 import org.comdnmr.cpmgfit2.calc.DataIO;
 import org.comdnmr.cpmgfit2.calc.ExperimentData;
 import org.comdnmr.cpmgfit2.calc.PlotEquation;
@@ -264,8 +265,11 @@ public class ChartUtil {
                 } else {
                     useEquationName = equationName;
                 }
-                PlotEquation equation = resInfo.getEquation(useEquationName);
+             //   for (CurveFit curveFit: resInfo.)
+                CurveFit curveSet = resInfo.getCurveSet(useEquationName + ".0:0:0:0"); // fixme
+                PlotEquation equation = curveSet.getEquation();
                 double[] extras = {field};
+                System.out.println("use eq " + equationName + " " + field);
                 PlotEquation equationCopy = equation.clone();
                 equationCopy.setExtra(extras);
 
