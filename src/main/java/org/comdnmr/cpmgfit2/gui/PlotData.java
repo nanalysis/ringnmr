@@ -19,6 +19,11 @@ import javafx.scene.Node;
 import javafx.scene.chart.ScatterChart;
 import javafx.scene.chart.XYChart.Data;
 import javafx.scene.shape.Polyline;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.Line;
+import javafx.scene.Group;
+
+import javafx.scene.paint.Color;
 import org.comdnmr.cpmgfit2.calc.PlotEquation;
 import org.comdnmr.cpmgfit2.calc.ResidueData;
 
@@ -30,6 +35,7 @@ public class PlotData extends ScatterChart {
     String fileName;
     ArrayList<Polyline> polyLines = new ArrayList<>();
     ArrayList<PlotEquation> plotEquations = new ArrayList<>();
+    static Color[] colors = {Color.ORANGE,Color.BLUE, Color.RED, Color.GREEN, Color.GRAY};
 
     public PlotData(NumberAxis xAxis, NumberAxis yAxis) {
         super(xAxis, yAxis);
@@ -46,17 +52,19 @@ public class PlotData extends ScatterChart {
     }
 
     void init() {
-        xAxis.setAnimated(false);
-        yAxis.setAnimated(false);
         xAxis.setAutoRanging(true);
         xAxis.setUpperBound(1000.0);
         yAxis.setUpperBound(60.0);
         xAxis.setLabel("\u03BD(cpmg)");
         yAxis.setLabel("R2(\u03BD)");
         setTitle("CPMG CurveFit");
-        setNodeListeners(this);
         setPrefHeight(200);
         setLegendSide(Side.BOTTOM);
+        setLegendVisible(true);
+        xAxis.setAnimated(false);
+        yAxis.setAnimated(false);
+        setAnimated(false);
+        setNodeListeners(this);
     }
 
     public void addCanvas(Canvas canvas) {
@@ -76,6 +84,7 @@ public class PlotData extends ScatterChart {
             int nLines = plotEquations.size();
             for (int i = 0; i < nLines; i++) {
                 Polyline polyLine = new Polyline();
+                polyLine.setStroke(colors[Math.min(colors.length-1,i)]);
                 polyLines.add(polyLine);
                 getPlotChildren().add(0, polyLine);
             }
@@ -88,12 +97,14 @@ public class PlotData extends ScatterChart {
 
     void setNodeListeners(XYChart chart) {
         ObservableList<XYChart.Series<Double, Double>> data = chart.getData();
+System.out.println("setnode");
         for (XYChart.Series<Double, Double> series : data) {
-            for (Data<Double, Double> xyData : series.getData()) {
-                Node node = xyData.getNode();
+            int j = 0;
+            for (Data<Double, Double> item : series.getData()) {
+                Node node = item.getNode();
                 if (node != null) {
-//                    node.onMouseClickedProperty().addListener(e -> dumpNode(xyData));
-                    node.setOnMouseClicked(e -> dumpNode(xyData));
+//                    node.onMouseClickedProperty().addListener(e -> dumpNode(item));
+                    node.setOnMouseClicked(e -> dumpNode(item));
                 }
             }
 
@@ -223,6 +234,38 @@ public class PlotData extends ScatterChart {
         Integer x = Integer.parseInt(fields[0]);
         Double y = Double.parseDouble(fields[1]) * scale;
         series.getData().add(new XYChart.Data(x, y));
+    }
+    private Node createNode(XYChart.Data item, int seriesIndex) {
+        Object extraValue = item.getExtraValue();
+        double errorY = 0.0;
+        if (extraValue instanceof ResidueData.DataValue) {
+            ResidueData.DataValue dataValue = (ResidueData.DataValue) extraValue;
+            double error = dataValue.getError();
+            double yValue = dataValue.getY();
+            double errorY2 = yAxis.getDisplayPosition(yValue+error);
+            double errorY1 = yAxis.getDisplayPosition(yValue-error);
+            errorY = Math.abs(errorY2-errorY1)/2.0;
+        }
+        Group g = new Group();
+        Circle circle = new Circle(4.0);
+        circle.setFill(colors[Math.min(colors.length-1,seriesIndex)]);
+        Line line = new Line(0,-errorY,0,errorY);
+        g.getChildren().add(circle);
+        g.getChildren().add(line);
+        return g;
+    }
+
+
+    @Override
+    protected void seriesAdded(XYChart.Series series, int seriesIndex) {
+        super.seriesAdded(series, seriesIndex);
+        System.out.println("add " + seriesIndex + " " + series.getData().size());
+        for (int j = 0; j < series.getData().size(); j++) {
+            XYChart.Data item = (XYChart.Data) series.getData().get(j);
+            Node node = createNode(item, seriesIndex);
+            item.setNode(node);
+            super.dataItemAdded(series, j, item);
+        }
     }
 
 //    @Override
