@@ -6,6 +6,7 @@
 package org.comdnmr.cpmgfit2.calc;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -80,6 +81,10 @@ public class ResidueInfo {
         this.groupId = groupId;
         this.groupSize = groupSize;
         this.peakNum = peakNum;
+    }
+    
+    public Collection<CurveFit> getCurveSets() {
+        return curveSets.values();
     }
 
     public void addCurveSet(CurveFit curveSet, boolean best) {

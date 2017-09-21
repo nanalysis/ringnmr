@@ -178,6 +178,7 @@ public class CPMGFit {
         double[] sigma = new double[guesses.length];
         for (int i = 0; i < guesses.length; i++) {
             sigma[i] = (boundaries[1][i] - boundaries[0][i]) / 10.0;
+            System.out.println(i + " " + boundaries[0][i] + " " + boundaries[1][i] + " " + sigma[i]);
         }
         PointValuePair result = calcR.refine(guesses, boundaries[0], boundaries[1], sigma);
 
@@ -207,17 +208,20 @@ public class CPMGFit {
         System.out.println("ning " + nCurves);
         for (int iCurve = 0; iCurve < nCurves; iCurve++) {
             double[] parArray = new double[parNames.length];
+            double[] errArray = new double[parNames.length];
             List<ParValueInterface> parValues = new ArrayList<>();
             for (int i = 0; i < nGroupPars; i++) {
                 ParValue parValue = new ParValue(parNames[i], pars[i], errEstimates[i]);
                 parValues.add(parValue);
                 parArray[i] = pars[i];
+                errArray[i] = errEstimates[i];
             }
             for (int j = 0; j < nNonGroup; j++) {
                 int k = map[iCurve][nGroupPars + j];
                 ParValue parValue = new ParValue(parNames[nGroupPars + j], pars[k], errEstimates[k]);
                 parValues.add(parValue);
                 parArray[nGroupPars + j] = pars[k];
+                errArray[nGroupPars + j] = errEstimates[k];
             }
             System.out.println("res " + resNums[states[iCurve][0]] + " " + parValues.toString());
             stateList.add(states[iCurve].clone());
@@ -232,7 +236,7 @@ public class CPMGFit {
             parMap.put("RMS", rms);
             parMap.put("Equation", 1.0 + equationNameList.indexOf(eqn));
 
-            PlotEquation plotEquation = new PlotEquation(eqn, parArray, usedFields);
+            PlotEquation plotEquation = new PlotEquation(eqn, parArray, errArray, usedFields);
             CurveFit curveFit = new CurveFit(getStateString(states[iCurve]), resNums[states[iCurve][0]], parMap, plotEquation);
             curveFits.add(curveFit);
         }

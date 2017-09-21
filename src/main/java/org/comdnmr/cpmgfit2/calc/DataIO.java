@@ -36,6 +36,7 @@ public class DataIO {
         boolean gotHeader = false;
         String[] peakRefs = null;
         double[] xValues = null;
+        List<String> peakRefList = new ArrayList<>();
         //  Peak       Residue N       T1      T2      T11     T3      T4      T9      T5      T10     T12     T6      T7      T8
 
         try (BufferedReader fileReader = Files.newBufferedReader(path)) {
@@ -63,6 +64,7 @@ public class DataIO {
                         // fixme assumes first vcpmg is the 0 ref 
                         xValues[j] = vcpmgs[j + 1];
                         peakRefs[j] = sfields[i];
+                        peakRefList.add(peakRefs[j]);
                     }
                     gotHeader = true;
                 } else {
@@ -71,6 +73,7 @@ public class DataIO {
                     List<Double> xValueList = new ArrayList<>();
                     List<Double> yValueList = new ArrayList<>();
                     List<Double> errValueList = new ArrayList<>();
+                    boolean ok = true;
                     for (int i = offset; i < sfields.length; i++) {
                         int j = i - offset;
                         String valueStr = sfields[i].trim();
@@ -80,6 +83,10 @@ public class DataIO {
                         double r2Eff;
                         try {
                             double intensity = Double.parseDouble(sfields[i].trim());
+                            if (intensity > refIntensity) {
+                                ok = false;
+                                continue;
+                            }
                             r2Eff = -Math.log(intensity / refIntensity) / tauCPMG;
                         } catch (NumberFormatException nFE) {
                             continue;
@@ -88,7 +95,10 @@ public class DataIO {
                         yValueList.add(r2Eff);
                         errValueList.add(0.0);
                     }
-                    ResidueData residueData = new ResidueData(xValueList, yValueList, errValueList);
+                    if (!ok) {
+                        continue;
+                    }
+                    ResidueData residueData = new ResidueData(xValueList, yValueList, errValueList, peakRefList);
                     expData.addResidueData(residueNum, residueData);
                 }
             }
@@ -252,10 +262,13 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 int nPar = eqnParNames.length;
 
                 double[] pars = new double[nPar];
+                double[] errs = new double[nPar];
                 int iPar = 0;
                 for (String parName : eqnParNames) {
                     int index = headerMap.get(parName);
-                    pars[iPar++] = Double.parseDouble(sfields[index].trim());
+                    pars[iPar] = Double.parseDouble(sfields[index].trim());
+                    index = headerMap.get(parName + ".sd");
+                    errs[iPar++] = Double.parseDouble(sfields[index].trim());
                 }
                 //parMap.put("Kex", 0.0); // Set Kex to 0.0.  Overwritten below if exists in output file
 
@@ -275,7 +288,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 }
                 List<String> equationNames = Arrays.asList("NOEX", "CPMGFAST", "CPMGSLOW");
                 parMap.put("Equation", 1.0 + equationNames.indexOf(equationName));
-                PlotEquation plotEquation = new PlotEquation(equationName, pars, fields);
+                PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, fields);
                 CurveFit curveSet = new CurveFit(stateString, residueNumber, parMap, plotEquation);
                 residueInfo.addCurveSet(curveSet, bestValue.equals("best"));
             }

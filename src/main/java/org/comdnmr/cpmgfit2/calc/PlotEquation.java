@@ -14,18 +14,20 @@ public class PlotEquation {
     //        CalcRDisp.CPMGEquation equation = CalcRDisp.CPMGEquation.CPMGFAST;
     String name;
     double[] pars;
+    double[] errs;
     double[] extras;
 
-    public PlotEquation(String name, double[] pars, double[] extras) {
+    public PlotEquation(String name, double[] pars, double[] errs, double[] extras) {
         this.name = name;
         this.pars = pars.clone();
+        this.errs = errs.clone();
         this.extras = extras.clone();
         //            equation = CalcRDisp.CPMGEquation.valueOf(name);
     }
 
     @Override
     public PlotEquation clone() {
-        return new PlotEquation(name, pars, extras);
+        return new PlotEquation(name, pars, errs, extras);
     }
 
     public String getName() {
@@ -45,6 +47,10 @@ public class PlotEquation {
     }
 
     public double[] getPars() {
+        return pars;
+    }
+
+    public double[] getErrs() {
         return pars;
     }
 

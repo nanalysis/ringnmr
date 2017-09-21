@@ -180,7 +180,7 @@ public class ResidueFitter {
     public List<ResidueInfo> fitResidues(ResidueProperties resProps, String[] resNums, int groupId, String useEquation) {
         Map<String, CPMGFitResult> fitResults = new HashMap<>();
         double aicMin = Double.MAX_VALUE;
-        String bestEquation = "";
+        String bestEquation = "NOEX";
         for (String equationName : equationNames) {
             if ((useEquation != null) && !equationName.equals(useEquation)) {
                 continue;
@@ -191,7 +191,9 @@ public class ResidueFitter {
             fitResults.put(equationName, fitResult);
             if (fitResult.getAicc() < aicMin) {
                 aicMin = fitResult.getAicc();
-                bestEquation = equationName;
+                if (fitResult.exchangeValid()) {
+                    bestEquation = equationName;
+                }
             }
         }
         List<ResidueInfo> resInfoList = new ArrayList<>();
