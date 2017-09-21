@@ -14,7 +14,6 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.geometry.Side;
 import javafx.scene.Node;
-import javafx.scene.chart.Chart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.ChoiceBox;
@@ -35,7 +34,7 @@ import javafx.stage.FileChooser;
 import javax.script.ScriptException;
 import org.comdnmr.cpmgfit2.calc.CPMGFit;
 import org.comdnmr.cpmgfit2.calc.CPMGFitResult;
-import org.comdnmr.cpmgfit2.calc.CalcRDisp;
+import org.comdnmr.cpmgfit2.calc.CurveFit;
 import org.comdnmr.cpmgfit2.calc.DataIO;
 import org.comdnmr.cpmgfit2.calc.ResidueData;
 import org.controlsfx.control.PropertySheet;
@@ -240,27 +239,30 @@ public class PyController implements Initializable {
                 pars[1] = pA;
                 pars[2] = r2;
                 pars[3] = dW;
-                rEx = CalcRDisp.CPMGEquation.CPMGSLOW.getRex(pars);
+                int[] map = {0};
+                //rEx = CalcRDisp.CPMGEquation.CPMGSLOW.getRex(pars, map);
+                rEx = 0.0;
                 rExValue.setText(String.format("%.1f", rEx));
                 rExSlider.setValue(rEx);
                 break;
             default:
                 return;
         }
+        double[] errs = new double[pars.length];
         int nFields = field2 > (defaultField + 10) ? 2 : 1; // add 10.0 to make sure slider set near to bottom gives 1 field
         double[] fields = new double[nFields];
         fields[0] = 1.0;
         if (nFields > 1) {
             fields[1] = field2 / defaultField;
         }
-        updateChartEquations(equationName, pars, fields);
+        updateChartEquations(equationName, pars, errs, fields);
     }
 
-    public void updateChartEquations(String equationName, double[] pars, double[] fields) {
+    public void updateChartEquations(String equationName, double[] pars, double[] errs, double[] fields) {
         List<PlotEquation> equations = new ArrayList<>();
         for (int i = 0; i < fields.length; i++) {
             double[] extras = {fields[i] / fields[0]};
-            PlotEquation plotEquation = new PlotEquation(equationName, pars, extras);
+            PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
             equations.add(plotEquation);
         }
         cpmgchart.setEquations(equations);
@@ -289,14 +291,16 @@ public class PyController implements Initializable {
 
         TableColumn<ResidueData.DataValue, Double> xColumn = new TableColumn<>("Vcpmg");
         TableColumn<ResidueData.DataValue, Double> yColumn = new TableColumn<>("Reff");
+        TableColumn<ResidueData.DataValue, String> errColumn = new TableColumn<>("Error");
         TableColumn<ResidueData.DataValue, String> peakColumn = new TableColumn<>("Peak");
 
         xColumn.setCellValueFactory(new PropertyValueFactory<>("X"));
         yColumn.setCellValueFactory(new PropertyValueFactory<>("Y"));
+        errColumn.setCellValueFactory(new PropertyValueFactory<>("Error"));
         peakColumn.setCellValueFactory(new PropertyValueFactory<>("Peak"));
 
         resInfoTable.getColumns().clear();
-        resInfoTable.getColumns().addAll(xColumn, yColumn, peakColumn);
+        resInfoTable.getColumns().addAll(xColumn, yColumn, errColumn, peakColumn);
     }
 
     public void updateTableWithPars(ResidueInfo resInfo, String equationName) {
@@ -449,14 +453,14 @@ public class PyController implements Initializable {
     }
 
     public void updateAfterFit(CPMGFitResult fitResult) {
-        List<ParValueInterface> parValues = fitResult.getParValues(0);
-        double[] pars = new double[parValues.size()];
-        for (int i = 0; i < pars.length; i++) {
-            pars[i] = parValues.get(i).getValue();
-        }
+        CurveFit curveFit = fitResult.getCurveFit(0);
+
+        List<ParValueInterface> parValues = new ArrayList<>();
         updateTableWithPars(parValues);
         updateSliders(parValues, fitResult.getEquationName());
-        updateChartEquations(fitResult.getEquationName(), pars, fitResult.getUsedFields());
+        double[] pars = curveFit.getEquation().getPars();
+        double[] errs = curveFit.getEquation().getErrs();
+        updateChartEquations(fitResult.getEquationName(), pars, errs, curveFit.getEquation().getExtras());
 
     }
 
