@@ -113,7 +113,7 @@ public class CalcRDisp implements MultivariateFunction {
                 int[][] map = new int[n][1];
                 // field temp nuc
                 for (int i = 0; i < n; i++) {
-                    map[i][0] = CPMGFit.getMapIndex(states[i], stateCount, 0, 1, 3);
+                    map[i][0] = CPMGFit.getMapIndex(states[i], stateCount, 0, 3);
                 }
                 return map;
             }
@@ -583,10 +583,10 @@ public class CalcRDisp implements MultivariateFunction {
         this.map = new int[states.length][stateCount.length];
         this.map = equation.makeMap(stateCount, states);
         for (int i = 0; i < map.length; i++) {
-            for (int j = 0; j < map[i].length; j++) {
-                System.out.print(" " + map[i][j]);
-            }
-            System.out.println(" map");
+//            for (int j = 0; j < map[i].length; j++) {
+//                System.out.print(" " + map[i][j]);
+//            }
+//            System.out.println(" map");
         }
     }
 
