@@ -173,6 +173,7 @@ public class DataIO {
     public static double estimateErrors(ExperimentData expData) {
         int nDups = 0;
         double sumDelta2 = 0.0;
+        double sumAbs = 0.0;
         for (ResidueData residueData : expData.residueData.values()) {
             double[] xValues = residueData.getXValues();
             double[] yValues = residueData.getYValues();
@@ -181,14 +182,17 @@ public class DataIO {
                     if (xValues[i] == xValues[j]) {
                         double delta = yValues[i] - yValues[j];
                         sumDelta2 += delta * delta;
+                        sumAbs += Math.abs(delta);
                         nDups++;
                     }
 
                 }
             }
         }
-        double error = Math.sqrt(sumDelta2 / (2.0 * nDups));
-        return error;
+        double error2 = Math.sqrt(sumDelta2 / (2.0 * nDups));
+        double errorA = Math.sqrt(Math.PI / 2.0) * sumAbs / (2.0 * nDups);
+        System.out.println("data " + expData.name + " errors " + error2 + "errorA " + errorA + " ndup " + nDups);
+        return errorA;
     }
 
     public static ResidueProperties loadParametersFromFile(String fileName) throws IOException {
@@ -313,6 +317,12 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 String parFileName = FileSystems.getDefault().getPath(dirPath.toString(), parName).toString();
 
                 resProp = DataIO.loadParametersFromFile(parFileName);
+                HashMap<String, Object> fitParMap = (HashMap<String, Object>) dataMap2.get("parameters");
+                if (fitParMap != null) {
+                    Boolean absValueMode = (Boolean) fitParMap.get("absValue");
+                    String bootStrapMode = (String) fitParMap.get("bootStrap");
+                    System.out.println("absmode " + absValueMode + " bootstrap " + bootStrapMode);
+                }
 
                 ArrayList<HashMap<String, Object>> dataList = (ArrayList<HashMap<String, Object>>) dataMap2.get("data");
                 for (HashMap<String, Object> dataMap3 : dataList) {
