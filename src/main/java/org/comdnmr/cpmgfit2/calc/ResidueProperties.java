@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -42,8 +43,12 @@ public class ResidueProperties {
     }
 
     public List<String> getEquationNames() {
-        List<String> equationNames = new ArrayList<>();
-       // fixme  equationNames.addAll(residueMap.values().stream().findFirst().get().curveSets.parMaps.keySet());
+        Set<String> equationSet = new HashSet<>();
+        System.out.println("get eqn " + residueMap.size());
+        residueMap.values().stream().forEach(rInfo -> {
+            equationSet.addAll(rInfo.curveSets.keySet());
+        });
+        List<String> equationNames = equationSet.stream().sorted().collect(Collectors.toList());
         return equationNames;
     }
 
