@@ -82,7 +82,7 @@ public class ResidueInfo {
         this.groupSize = groupSize;
         this.peakNum = peakNum;
     }
-    
+
     public Collection<CurveFit> getCurveSets() {
         return curveSets.values();
     }
@@ -123,8 +123,18 @@ public class ResidueInfo {
     }
 
     public Double getParValue(String key, String parName) {
+        System.out.println("key 1: " + key + " " + bestEquation.name + " " + parName);
         key = checkKey(key);
-        return curveSets.get(key).parMap.get(parName);
+        System.out.println("key 2: " + key);
+        CurveFit curveFit = curveSets.get(key);
+        if (curveFit == null) {
+            for (String keyName : curveSets.keySet()) {
+                System.out.println("keyname " + keyName);
+            }
+            return null;
+        } else {
+            return curveFit.parMap.get(parName);
+        }
     }
 
     public List<ParValueInterface> getParValues(String key) {
