@@ -53,14 +53,14 @@ public class CPMGFit {
 
     public static int getMapIndex(int[] state, int[] stateCount, int... mask) {
         int index = 0;
-        System.out.println(state.length + " mask " + mask.length);
-        for (int i = 0; i < state.length; i++) {
-            System.out.print(" " + state[i]);
-        }
-        System.out.println("");
+//        System.out.println(state.length + " mask " + mask.length);
+//        for (int i = 0; i < state.length; i++) {
+//            System.out.print(" " + state[i]);
+//        }
+//        System.out.println("");
         double mult = 1.0;
         for (int i = 0; i < mask.length; i++) {
-            System.out.println("mask:" + mask[i] + " state[mask]:" + state[mask[i]] + " count:" + stateCount[mask[i]]);
+//            System.out.println("mask:" + mask[i] + " state[mask]:" + state[mask[i]] + " count:" + stateCount[mask[i]]);
             index += mult * state[mask[i]];
             mult *= stateCount[mask[i]];
         }
@@ -73,8 +73,8 @@ public class CPMGFit {
         state[1] = fieldMap.get(Math.floor(expData.field));
         state[2] = tempMap.get(Math.floor(expData.temperature));
         state[3] = nucMap.get(expData.nucleus);
-        System.out.println(resIndex + " " + expData.field + " " + expData.temperature + " " + expData.nucleus);
-        System.out.println("state index residue:" + state[0] + " field:" + state[1] + " temp:" + state[2] + " nuc:" + state[3]);
+//        System.out.println(resIndex + " " + expData.field + " " + expData.temperature + " " + expData.nucleus);
+//        System.out.println("state index residue:" + state[0] + " field:" + state[1] + " temp:" + state[2] + " nuc:" + state[3]);
 
         return state;
     }
@@ -85,7 +85,7 @@ public class CPMGFit {
         state[1] = fieldMap.size();
         state[2] = tempMap.size();
         state[3] = nucMap.size();
-        System.out.println("state count residues:" + state[0] + " fields:" + state[1] + " temps:" + state[2] + " nucs:" + state[3]);
+//        System.out.println("state count residues:" + state[0] + " fields:" + state[1] + " temps:" + state[2] + " nucs:" + state[3]);
         return state;
     }
 
@@ -150,7 +150,7 @@ public class CPMGFit {
         return builder.toString();
     }
 
-    public CPMGFitResult doFit(String eqn) {
+    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap) {
         double[] x = new double[xValues.size()];
         double[] y = new double[xValues.size()];
         double[] err = new double[xValues.size()];
@@ -165,6 +165,7 @@ public class CPMGFit {
         }
         CalcRDisp calcR = new CalcRDisp();
         calcR.setEquation(eqn);
+        calcR.setAbsMode(absMode);
 
         calcR.setXY(x, y);
         calcR.setIds(idNums);
@@ -178,24 +179,24 @@ public class CPMGFit {
         double[] sigma = new double[guesses.length];
         for (int i = 0; i < guesses.length; i++) {
             sigma[i] = (boundaries[1][i] - boundaries[0][i]) / 10.0;
-            System.out.println(i + " " + boundaries[0][i] + " " + boundaries[1][i] + " " + sigma[i]);
+//            System.out.println(i + " " + boundaries[0][i] + " " + boundaries[1][i] + " " + sigma[i]);
         }
         PointValuePair result = calcR.refine(guesses, boundaries[0], boundaries[1], sigma);
 
         double[] pars = result.getPoint();
-        System.out.print("Fit pars ");
-        for (int i = 0; i < pars.length; i++) {
-            System.out.printf(" %.3f", pars[i]);
-        }
-        System.out.println("");
+//        System.out.print("Fit pars ");
+//        for (int i = 0; i < pars.length; i++) {
+//            System.out.printf(" %.3f", pars[i]);
+//        }
+//        System.out.println("");
         double aic = calcR.getAICc(pars);
         double rms = calcR.getRMS(pars);
-        System.out.println("rms " + rms);
+//        System.out.println("rms " + rms);
         int nGroupPars = calcR.getNGroupPars();
 
         String[] parNames = calcR.getParNames();
         double[] errEstimates;
-        if (false) {
+        if (nonParBootStrap) {
             errEstimates = calcR.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
         } else {
             errEstimates = calcR.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma);
@@ -205,7 +206,7 @@ public class CPMGFit {
         List<int[]> stateList = new ArrayList<>();
         List<String> residueNumbers = new ArrayList<>();
         List<CurveFit> curveFits = new ArrayList<>();
-        System.out.println("ning " + nCurves);
+//        System.out.println("ning " + nCurves);
         for (int iCurve = 0; iCurve < nCurves; iCurve++) {
             double[] parArray = new double[parNames.length];
             double[] errArray = new double[parNames.length];
@@ -223,7 +224,7 @@ public class CPMGFit {
                 parArray[nGroupPars + j] = pars[k];
                 errArray[nGroupPars + j] = errEstimates[k];
             }
-            System.out.println("res " + resNums[states[iCurve][0]] + " " + parValues.toString());
+//            System.out.println("res " + resNums[states[iCurve][0]] + " " + parValues.toString());
             stateList.add(states[iCurve].clone());
             residueNumbers.add(resNums[states[iCurve][0]]);
 
