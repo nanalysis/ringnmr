@@ -18,6 +18,34 @@ import javafx.concurrent.Worker;
  */
 public class ResidueFitter {
 
+    /**
+     * @return the absValueMode
+     */
+    public boolean isAbsValueMode() {
+        return absValueMode;
+    }
+
+    /**
+     * @param absValueMode the absValueMode to set
+     */
+    public void setAbsValueMode(boolean absValueMode) {
+        this.absValueMode = absValueMode;
+    }
+
+    /**
+     * @return the nonParBootStrap
+     */
+    public boolean isNonParBootStrap() {
+        return nonParBootStrap;
+    }
+
+    /**
+     * @param nonParBootStrap the nonParBootStrap to set
+     */
+    public void setNonParBootStrap(boolean nonParBootStrap) {
+        this.nonParBootStrap = nonParBootStrap;
+    }
+
     public static final String[] equationNames = {"NOEX", "CPMGFAST", "CPMGSLOW"};
 
     private FitResidues processDataset = new FitResidues();
@@ -27,6 +55,8 @@ public class ResidueFitter {
     Function<Double, Double> updaterFunction;
     Function<ProcessingStatus, Double> statusFunction;
     List<List<String>> residueFitGroups = null;
+    private boolean absValueMode = false;
+    private boolean nonParBootStrap = false;
 
     public ResidueFitter() {
     }
@@ -187,7 +217,7 @@ public class ResidueFitter {
             }
             CPMGFit cpmgFit = new CPMGFit();
             cpmgFit.setData(resProps.expMaps.values(), resNums);
-            CPMGFitResult fitResult = cpmgFit.doFit(equationName);
+            CPMGFitResult fitResult = cpmgFit.doFit(equationName, absValueMode, nonParBootStrap);
             fitResults.put(equationName, fitResult);
             if (fitResult.getAicc() < aicMin) {
                 aicMin = fitResult.getAicc();
