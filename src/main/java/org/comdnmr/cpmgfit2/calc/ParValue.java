@@ -11,6 +11,8 @@ package org.comdnmr.cpmgfit2.calc;
  */
 public class ParValue implements ParValueInterface {
 
+    String state;
+    String residue;
     String name;
     double value;
     double err;
@@ -19,7 +21,7 @@ public class ParValue implements ParValueInterface {
         this.name = parName;
     }
 
-    public ParValue(String parName, double value, double err) {
+    public ParValue(String residue, String state, String parName, double value, double err) {
         this.name = parName;
         this.value = value;
         this.err = err;
@@ -38,6 +40,16 @@ public class ParValue implements ParValueInterface {
     @Override
     public double getError() {
         return err;
+    }
+
+    @Override
+    public String getResidue() {
+        return residue;
+    }
+
+    @Override
+    public String getState() {
+        return state;
     }
 
 }

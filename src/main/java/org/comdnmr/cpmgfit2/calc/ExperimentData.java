@@ -14,6 +14,7 @@ public class ExperimentData {
     final double field;
     final double temperature;
     final String nucleus;
+    private String state="";
 
     public ExperimentData(String name, String nucleus, double field, double temperature) {
         this.name = name;
@@ -29,6 +30,7 @@ public class ExperimentData {
     public String getName() {
         return name;
     }
+    
 
     public void addResidueData(String resNum, ResidueData data) {
         residueData.put(resNum, data);
@@ -44,6 +46,20 @@ public class ExperimentData {
 
     public double getField() {
         return field;
+    }
+
+    /**
+     * @return the state
+     */
+    public String getState() {
+        return state;
+    }
+
+    /**
+     * @param state the state to set
+     */
+    public void setState(String state) {
+        this.state = state;
     }
 
 }

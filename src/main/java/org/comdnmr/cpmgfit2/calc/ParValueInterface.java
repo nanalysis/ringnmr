@@ -6,6 +6,10 @@ package org.comdnmr.cpmgfit2.calc;
  */
 public interface ParValueInterface {
 
+    public String getResidue();
+
+    public String getState();
+
     public String getName();
 
     public double getValue();

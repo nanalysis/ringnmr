@@ -31,4 +31,8 @@ public class CurveFit {
     public String getResNum() {
         return resNum;
     }
+    
+    public String getState() {
+        return state;
+    }
 }

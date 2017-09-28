@@ -24,9 +24,6 @@ public class CPMGFit {
     double[] usedFields = null;
     int nCurves = 1;
     int nResidues = 1;
-    Map<Double, Integer> fieldMap = new LinkedHashMap();
-    Map<Double, Integer> tempMap = new LinkedHashMap();
-    Map<String, Integer> nucMap = new LinkedHashMap();
     int[][] states;
     int[] stateCount;
     String[] resNums;
@@ -67,54 +64,21 @@ public class CPMGFit {
         return index;
     }
 
-    int[] getStateIndices(int resIndex, ExperimentData expData) {
-        int[] state = new int[4];
-        state[0] = resIndex;
-        state[1] = fieldMap.get(Math.floor(expData.field));
-        state[2] = tempMap.get(Math.floor(expData.temperature));
-        state[3] = nucMap.get(expData.nucleus);
-//        System.out.println(resIndex + " " + expData.field + " " + expData.temperature + " " + expData.nucleus);
-//        System.out.println("state index residue:" + state[0] + " field:" + state[1] + " temp:" + state[2] + " nuc:" + state[3]);
-
-        return state;
-    }
-
-    int[] getStateCount(int nResidues) {
-        int[] state = new int[4];
-        state[0] = nResidues;
-        state[1] = fieldMap.size();
-        state[2] = tempMap.size();
-        state[3] = nucMap.size();
-//        System.out.println("state count residues:" + state[0] + " fields:" + state[1] + " temps:" + state[2] + " nucs:" + state[3]);
-        return state;
-    }
-
-    public void setData(Collection<ExperimentData> expDataList, String[] resNums) {
+    // public void setData(Collection<ExperimentData> expDataList, String[] resNums) {
+    public void setData(ResidueProperties resProps, String[] resNums) {
         this.resNums = resNums.clone();
         nResidues = resNums.length;
         int id = 0;
-        fieldMap.clear();
-        tempMap.clear();
-        nucMap.clear();
-        for (ExperimentData expData : expDataList) {
-            if (!fieldMap.containsKey(Math.floor(expData.field))) {
-                fieldMap.put(Math.floor(expData.field), fieldMap.size());
-            }
-            if (!tempMap.containsKey(Math.floor(expData.temperature))) {
-                tempMap.put(Math.floor(expData.temperature), tempMap.size());
-            }
-            if (!nucMap.containsKey(expData.nucleus)) {
-                nucMap.put(expData.nucleus, nucMap.size());
-            }
-        }
-        stateCount = getStateCount(resNums.length);
+        resProps.setupMaps();
+        stateCount = resProps.getStateCount(resNums.length);
+        Collection<ExperimentData> expDataList = resProps.getExperimentData();
         nCurves = resNums.length * expDataList.size();
         states = new int[nCurves][];
         int k = 0;
         int resIndex = 0;
         for (String resNum : resNums) {
             for (ExperimentData expData : expDataList) {
-                states[k++] = getStateIndices(resIndex, expData);
+                states[k++] = resProps.getStateIndices(resIndex, expData);
                 ResidueData resData = expData.getResidueData(resNum);
                 //  need peakRefs
                 double field = expData.getField();
@@ -140,17 +104,7 @@ public class CPMGFit {
         }
     }
 
-    public static String getStateString(int[] state) {
-        StringBuilder builder = new StringBuilder();
-        builder.append(state[0]);
-        for (int i = 1; i < state.length; i++) {
-            builder.append(':');
-            builder.append(state[i]);
-        }
-        return builder.toString();
-    }
-
-    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap) {
+    public CPMGFitResult doFit(ResidueProperties resProps, String eqn, boolean absMode, boolean nonParBootStrap) {
         double[] x = new double[xValues.size()];
         double[] y = new double[xValues.size()];
         double[] err = new double[xValues.size()];
@@ -208,18 +162,19 @@ public class CPMGFit {
         List<CurveFit> curveFits = new ArrayList<>();
 //        System.out.println("ning " + nCurves);
         for (int iCurve = 0; iCurve < nCurves; iCurve++) {
+            String stateString = resProps.getStateString(states[iCurve]);
             double[] parArray = new double[parNames.length];
             double[] errArray = new double[parNames.length];
             List<ParValueInterface> parValues = new ArrayList<>();
             for (int i = 0; i < nGroupPars; i++) {
-                ParValue parValue = new ParValue(parNames[i], pars[i], errEstimates[i]);
+                ParValue parValue = new ParValue(resNums[states[iCurve][0]], stateString, parNames[i], pars[i], errEstimates[i]);
                 parValues.add(parValue);
                 parArray[i] = pars[i];
                 errArray[i] = errEstimates[i];
             }
             for (int j = 0; j < nNonGroup; j++) {
                 int k = map[iCurve][nGroupPars + j];
-                ParValue parValue = new ParValue(parNames[nGroupPars + j], pars[k], errEstimates[k]);
+                ParValue parValue = new ParValue(resNums[states[iCurve][0]], stateString, parNames[nGroupPars + j], pars[k], errEstimates[k]);
                 parValues.add(parValue);
                 parArray[nGroupPars + j] = pars[k];
                 errArray[nGroupPars + j] = errEstimates[k];
@@ -238,7 +193,7 @@ public class CPMGFit {
             parMap.put("Equation", 1.0 + equationNameList.indexOf(eqn));
 
             PlotEquation plotEquation = new PlotEquation(eqn, parArray, errArray, usedFields);
-            CurveFit curveFit = new CurveFit(getStateString(states[iCurve]), resNums[states[iCurve][0]], parMap, plotEquation);
+            CurveFit curveFit = new CurveFit(stateString, resNums[states[iCurve][0]], parMap, plotEquation);
             curveFits.add(curveFit);
         }
         CPMGFitResult fitResult = new CPMGFitResult(parNames, curveFits, eqn, nGroupPars, aic, rms);

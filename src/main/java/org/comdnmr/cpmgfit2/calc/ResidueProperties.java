@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,6 +21,9 @@ public class ResidueProperties {
     HashMap<String, ResidueInfo> residueMap = new HashMap<>();
     final String name;
     String fileName = null;
+    Map<Double, Integer> fieldMap = new LinkedHashMap();
+    Map<Double, Integer> tempMap = new LinkedHashMap();
+    Map<String, Integer> nucMap = new LinkedHashMap();
 
     public ResidueProperties(String name, String fileName) {
         this.name = name;
@@ -50,6 +54,89 @@ public class ResidueProperties {
         });
         List<String> equationNames = equationSet.stream().sorted().collect(Collectors.toList());
         return equationNames;
+    }
+
+    public static boolean matchStateString(String target, String state) {
+        boolean match = true;
+        String[] targetElems = target.split(":");
+        String[] stateElems = state.split(":");
+        for (int i = 0; i < targetElems.length; i++) {
+            if (!targetElems[i].equals("*") && !targetElems[i].equals(stateElems[i])) {
+                match = false;
+                break;
+            }
+        }
+        return match;
+    }
+
+    public List<String> getStateStrings() {
+        if (fieldMap.isEmpty()) {
+            setupMaps();
+        }
+        // List<String> stateStrings = 
+        Set<String> states = expMaps.values().stream().map(e -> e.getState()).map(s
+                -> "0:" + s.substring(2)).collect(Collectors.toSet());
+        List<String> stateStrings = states.stream().sorted().collect(Collectors.toList());
+        return stateStrings;
+    }
+
+    public static String getStateString(int[] state) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(state[1]);
+        for (int i = 2; i < state.length; i++) {
+            builder.append(':');
+            builder.append(state[i]);
+        }
+        return builder.toString();
+    }
+
+    public void setupMaps() {
+        fieldMap.clear();
+        tempMap.clear();
+        nucMap.clear();
+        for (ExperimentData expData : expMaps.values()) {
+            if (!fieldMap.containsKey(Math.floor(expData.field))) {
+                fieldMap.put(Math.floor(expData.field), fieldMap.size());
+            }
+            if (!tempMap.containsKey(Math.floor(expData.temperature))) {
+                tempMap.put(Math.floor(expData.temperature), tempMap.size());
+            }
+            if (!nucMap.containsKey(expData.nucleus)) {
+                nucMap.put(expData.nucleus, nucMap.size());
+            }
+        }
+        for (ExperimentData expData : expMaps.values()) {
+            int[] state = getStateIndices(0, expData);
+            expData.setState(getStateString(state));
+        }
+    }
+
+    int[] getStateIndices(int resIndex, ExperimentData expData) {
+        if (fieldMap.size() == 0) {
+            setupMaps();
+        }
+        int[] state = new int[4];
+        state[0] = resIndex;
+        state[1] = fieldMap.get(Math.floor(expData.field));
+        state[2] = tempMap.get(Math.floor(expData.temperature));
+        state[3] = nucMap.get(expData.nucleus);
+//        System.out.println(resIndex + " " + expData.field + " " + expData.temperature + " " + expData.nucleus);
+//        System.out.println("state index residue:" + state[0] + " field:" + state[1] + " temp:" + state[2] + " nuc:" + state[3]);
+
+        return state;
+    }
+
+    int[] getStateCount(int nResidues) {
+        if (fieldMap.size() == 0) {
+            setupMaps();
+        }
+        int[] state = new int[4];
+        state[0] = nResidues;
+        state[1] = fieldMap.size();
+        state[2] = tempMap.size();
+        state[3] = nucMap.size();
+//        System.out.println("state count residues:" + state[0] + " fields:" + state[1] + " temps:" + state[2] + " nucs:" + state[3]);
+        return state;
     }
 
     public void addResidueInfo(String resNum, ResidueInfo value) {
