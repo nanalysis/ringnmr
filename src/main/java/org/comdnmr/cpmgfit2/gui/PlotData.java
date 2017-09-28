@@ -35,7 +35,7 @@ public class PlotData extends ScatterChart {
     String fileName;
     ArrayList<Polyline> polyLines = new ArrayList<>();
     ArrayList<PlotEquation> plotEquations = new ArrayList<>();
-    static Color[] colors = {Color.ORANGE,Color.BLUE, Color.RED, Color.GREEN, Color.GRAY};
+    static Color[] colors = {Color.ORANGE, Color.BLUE, Color.RED, Color.GREEN, Color.GRAY};
 
     public PlotData(NumberAxis xAxis, NumberAxis yAxis) {
         super(xAxis, yAxis);
@@ -84,7 +84,7 @@ public class PlotData extends ScatterChart {
             int nLines = plotEquations.size();
             for (int i = 0; i < nLines; i++) {
                 Polyline polyLine = new Polyline();
-                polyLine.setStroke(colors[Math.min(colors.length-1,i)]);
+                polyLine.setStroke(colors[Math.min(colors.length - 1, i)]);
                 polyLines.add(polyLine);
                 getPlotChildren().add(0, polyLine);
             }
@@ -97,7 +97,7 @@ public class PlotData extends ScatterChart {
 
     void setNodeListeners(XYChart chart) {
         ObservableList<XYChart.Series<Double, Double>> data = chart.getData();
-System.out.println("setnode");
+        System.out.println("setnode");
         for (XYChart.Series<Double, Double> series : data) {
             int j = 0;
             for (Data<Double, Double> item : series.getData()) {
@@ -105,6 +105,13 @@ System.out.println("setnode");
                 if (node != null) {
 //                    node.onMouseClickedProperty().addListener(e -> dumpNode(item));
                     node.setOnMouseClicked(e -> dumpNode(item));
+                    if (node instanceof Group) {
+                        Group group = (Group) node;
+                        Line line = (Line) group.getChildren().get(1);
+                        double errorY = getScaledError(item);
+                        line.setStartY(-errorY);
+                        line.setEndY(errorY);
+                    }
                 }
             }
 
@@ -235,26 +242,33 @@ System.out.println("setnode");
         Double y = Double.parseDouble(fields[1]) * scale;
         series.getData().add(new XYChart.Data(x, y));
     }
-    private Node createNode(XYChart.Data item, int seriesIndex) {
+
+    private double getScaledError(XYChart.Data item) {
         Object extraValue = item.getExtraValue();
         double errorY = 0.0;
         if (extraValue instanceof ResidueData.DataValue) {
             ResidueData.DataValue dataValue = (ResidueData.DataValue) extraValue;
             double error = dataValue.getError();
             double yValue = dataValue.getY();
-            double errorY2 = yAxis.getDisplayPosition(yValue+error);
-            double errorY1 = yAxis.getDisplayPosition(yValue-error);
-            errorY = Math.abs(errorY2-errorY1)/2.0;
+            double errorY2 = yAxis.getDisplayPosition(yValue + error);
+            double errorY1 = yAxis.getDisplayPosition(yValue - error);
+            errorY = Math.abs(errorY2 - errorY1) / 2.0;
         }
+        return errorY;
+
+    }
+
+    private Node createNode(XYChart.Data item, int seriesIndex) {
+        Object extraValue = item.getExtraValue();
+        double errorY = getScaledError(item);
         Group g = new Group();
         Circle circle = new Circle(4.0);
-        circle.setFill(colors[Math.min(colors.length-1,seriesIndex)]);
-        Line line = new Line(0,-errorY,0,errorY);
+        circle.setFill(colors[Math.min(colors.length - 1, seriesIndex)]);
+        Line line = new Line(0, -errorY, 0, errorY);
         g.getChildren().add(circle);
         g.getChildren().add(line);
         return g;
     }
-
 
     @Override
     protected void seriesAdded(XYChart.Series series, int seriesIndex) {

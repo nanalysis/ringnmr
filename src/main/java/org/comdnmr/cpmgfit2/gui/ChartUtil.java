@@ -226,6 +226,7 @@ public class ChartUtil {
     }
 
     public static List<XYChart.Series<Double, Double>> getMapData(String seriesName, String expName, String[] residues) {
+        System.out.println("get map data " + seriesName + " " + expName);
         ResidueProperties resProps = residueProperties.get(seriesName);
         ExperimentData expData = resProps.getExperimentData(expName);
         List<XYChart.Series<Double, Double>> data = new ArrayList<>();
@@ -251,9 +252,10 @@ public class ChartUtil {
         return data;
     }
 
-    public static ArrayList<PlotEquation> getEquations(String seriesName, String[] residues, String equationName, double field) {
+    public static ArrayList<PlotEquation> getEquations(String seriesName, String[] residues, String equationName, String state, double field) {
         ResidueProperties residueProps = residueProperties.get(seriesName);
         ArrayList<PlotEquation> equations = new ArrayList<>();
+        System.out.println("get eq " + seriesName + " " + equationName);
         for (String resNum : residues) {
             Series<Double, Double> series = new Series<>();
             series.setName(resNum);
@@ -265,8 +267,8 @@ public class ChartUtil {
                 } else {
                     useEquationName = equationName;
                 }
-             //   for (CurveFit curveFit: resInfo.)
-                CurveFit curveSet = resInfo.getCurveSet(useEquationName + ".0:0:0:0"); // fixme
+                //   for (CurveFit curveFit: resInfo.)
+                CurveFit curveSet = resInfo.getCurveSet(useEquationName, state); // fixme
                 PlotEquation equation = curveSet.getEquation();
                 double[] extras = {field};
                 System.out.println("use eq " + equationName + " " + field);
@@ -285,12 +287,13 @@ public class ChartUtil {
         return resInfo;
     }
 
-    public static ObservableList<XYChart.Series<Double, Double>> getParMapData(String mapName, String eqnName, String parName) {
+    public static ObservableList<XYChart.Series<Double, Double>> getParMapData(String mapName, String eqnName, String state, String parName) {
+        System.out.println("get parmapdata " + mapName + " eqn " + eqnName + " par " + parName);
         ResidueProperties residueProps = residueProperties.get(mapName);
         ObservableList<XYChart.Series<Double, Double>> data = FXCollections.observableArrayList();
 
         Series<Double, Double> series = new Series<>();
-        series.setName(mapName + ':' + eqnName + ":" + parName);
+        series.setName(mapName + '|' + eqnName + "|" + state + "|" + parName);
         data.add(series);
         minRes = Integer.MAX_VALUE;
         maxRes = Integer.MIN_VALUE;
@@ -308,12 +311,12 @@ public class ChartUtil {
             minRes = Math.min(resNum, minRes);
             maxRes = Math.max(resNum, maxRes);
             double x = resNum;
-            Double y = resInfo.getParValue(useEquName, parName);
+            Double y = resInfo.getParValue(useEquName, state, parName);
             //  System.out.println(eqnName + " " + useEquName + " " + parName + " res " + resNum + " y " + y);
             if (y == null) {
                 continue;
             }
-            Double errUp = resInfo.getParValue(useEquName, parName + ".sd");
+            Double errUp = resInfo.getParValue(useEquName, state, parName + ".sd");
             Double errLow = errUp;
             if (errUp == null) {
                 errUp = 0.0;
@@ -358,11 +361,11 @@ public class ChartUtil {
         }
         ResidueProperties resProp = DataIO.loadParameters(fileName);
         residueProperties.put(resProp.getName(), resProp);
-        ObservableList<XYChart.Series<Double, Double>> data = ChartUtil.getParMapData(resProp.getName(), "best", "Kex");
+        ObservableList<XYChart.Series<Double, Double>> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", "Kex");
         PyController.mainController.makeAxisMenu();
 
         PyController.mainController.currentResProps = resProp;
-        PyController.mainController.setYAxisType(resProp.getName(), "best", "Kex");
+        PyController.mainController.setYAxisType(resProp.getName(), "best", "0:0:0", "Kex");
 
     }
 

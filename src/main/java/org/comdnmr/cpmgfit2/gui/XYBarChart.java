@@ -203,9 +203,12 @@ public class XYBarChart extends XYChart<Number, Number> {
         }
         String[] residues = new String[selectedResidues.size()];
         selectedResidues.toArray(residues);
-        String[] seriesNameParts = seriesName.split(":");
+        String[] seriesNameParts = seriesName.split("\\|");
         String mapName = seriesNameParts[0];
         String equationName = seriesNameParts[1];
+        String state = seriesNameParts[2];
+        state = "*:" + state.substring(2);
+        System.out.println("series " + seriesName + " map " + mapName + " eqn " + equationName + " state " + state + " index " + seriesIndex + " res " + resNum);
 
         ResidueProperties resProps = ChartUtil.residueProperties.get(mapName);
         ExperimentData tableData = null;
@@ -216,9 +219,12 @@ public class XYBarChart extends XYChart<Number, Number> {
                 tableData = expData; // get first experiment data
             }
             String expName = expData.getName();
+            if (!ResidueProperties.matchStateString(state, expData.getState())) {
+                continue;
+            }
             List<XYChart.Series<Double, Double>> data = ChartUtil.getMapData(mapName, expName, residues);
             allData.addAll(data);
-            equations.addAll(ChartUtil.getEquations(mapName, residues, equationName, expData.getField()));
+            equations.addAll(ChartUtil.getEquations(mapName, residues, equationName, expData.getState(), expData.getField()));
         }
         ((XYChart) chartNode).setData(allData);
 
@@ -228,10 +234,7 @@ public class XYBarChart extends XYChart<Number, Number> {
             ResidueData resData = tableData.getResidueData(String.valueOf(resNum));
             PyController.mainController.updateTable(resData);
         }
-        ResidueInfo resInfo = ChartUtil.getResInfo(mapName, String.valueOf(resNum));
-        if (resInfo != null) {
-            PyController.mainController.updateTableWithPars(resInfo, equationName);
-        }
+        PyController.mainController.updateTableWithPars(mapName, residues, equationName, state);
     }
 
     @Override
@@ -363,7 +366,7 @@ public class XYBarChart extends XYChart<Number, Number> {
         }
         boolean foundPar = false;
         for (String resPropName : ChartUtil.residueProperties.keySet()) {
-            ObservableList<XYChart.Series<Double, Double>> data = ChartUtil.getParMapData(resPropName, "best", "Kex");
+            ObservableList<XYChart.Series<Double, Double>> data = ChartUtil.getParMapData(resPropName, "best", "0:0:0", "Kex");
             if ((data != null) && (xData != null || yData != null)) {
                 foundPar = true;
                 for (XYChart.Series<Double, Double> series : data) {
