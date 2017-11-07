@@ -122,6 +122,12 @@
                                                     <Button text="FitGroup" onAction="#fitGroupResidues" fx:id="FitGroupResidues"/>
                                                     <Button fx:id="haltProcessButton" mnemonicParsing="false" onAction="#haltFit" text="Halt" />
                                                 </children>
+                                            </HBox> <HBox>
+                                                <children>
+                                                    <CheckBox text="AbsMode" fx:id="absValueModeCheckBox"/>
+                                                    <CheckBox text="BootStrap" fx:id="nonParBootStrapCheckBox"/>
+
+                                                </children>
                                             </HBox>
                                             <HBox>
                                                 <children>
