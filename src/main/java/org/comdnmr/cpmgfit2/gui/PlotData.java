@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import javafx.geometry.Side;
 import javafx.scene.Node;
 import javafx.scene.chart.ScatterChart;
@@ -22,6 +23,7 @@ import javafx.scene.shape.Polyline;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.Group;
+import javafx.scene.control.Label;
 
 import javafx.scene.paint.Color;
 import org.comdnmr.cpmgfit2.calc.PlotEquation;
@@ -273,12 +275,25 @@ public class PlotData extends ScatterChart {
     @Override
     protected void seriesAdded(XYChart.Series series, int seriesIndex) {
         super.seriesAdded(series, seriesIndex);
-        System.out.println("add " + seriesIndex + " " + series.getData().size());
         for (int j = 0; j < series.getData().size(); j++) {
             XYChart.Data item = (XYChart.Data) series.getData().get(j);
             Node node = createNode(item, seriesIndex);
             item.setNode(node);
             super.dataItemAdded(series, j, item);
+        }
+        updateLegend();
+    }
+
+    protected void updateLegend() {
+        super.updateLegend();
+        Set<Node> items = lookupAll(".chart-legend-item");
+        int it = 0;
+        for (Node item : items) {
+            Label label = (Label) item;
+            Circle circle = new Circle(4.0);
+            circle.setFill(colors[Math.min(colors.length - 1, it)]);
+            label.setGraphic(circle);
+            it++;
         }
     }
 
