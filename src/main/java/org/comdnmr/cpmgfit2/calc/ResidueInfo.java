@@ -113,7 +113,14 @@ public class ResidueInfo {
     }
 
     public CurveFit getCurveSet(String equationName, String state) {
-        return curveSets.get(equationName).get(state);
+        CurveFit curveFit = null;
+        if (curveSets != null) {
+            Map<String, CurveFit> curveFits = curveSets.get(equationName);
+            if (curveFits != null) {
+                curveFit = curveSets.get(equationName).get(state);
+            }
+        }
+        return curveFit;
     }
 
     public String getBestEquationName() {
@@ -149,15 +156,17 @@ public class ResidueInfo {
         System.out.println("update table with pars " + useEquationName + " " + state);
         List<ParValueInterface> dataValues = new ArrayList<>();
         Map<String, CurveFit> curveFits = curveSets.get(useEquationName);
-        curveFits.values().stream().forEach(cf -> {
-            if (ResidueProperties.matchStateString(state, cf.getState())) {
-                Map<String, Double> parMap = cf.getParMap();
-                parMap.keySet().stream().sorted().filter((parName) -> (parMap.containsKey(parName + ".sd"))).forEachOrdered((parName) -> {
-                    dataValues.add(new ParValue(this, parName, useEquationName, cf.getState()));
-                });
-            }
+        if (curveFits != null) {
+            curveFits.values().stream().forEach(cf -> {
+                if (ResidueProperties.matchStateString(state, cf.getState())) {
+                    Map<String, Double> parMap = cf.getParMap();
+                    parMap.keySet().stream().sorted().filter((parName) -> (parMap.containsKey(parName + ".sd"))).forEachOrdered((parName) -> {
+                        dataValues.add(new ParValue(this, parName, useEquationName, cf.getState()));
+                    });
+                }
 
-        });
+            });
+        }
         System.out.println(dataValues.size() + " pars");
         return dataValues;
     }
