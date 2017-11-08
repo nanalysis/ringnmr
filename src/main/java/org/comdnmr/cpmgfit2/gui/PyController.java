@@ -290,23 +290,29 @@ public class PyController implements Initializable {
 
     }
 
-    public void updateTable(ResidueData resData) {
+    public void updateTable(List<ResidueData> resDatas) {
         ObservableList<ResidueData.DataValue> data = FXCollections.observableArrayList();
-        data.addAll(resData.getDataValues());
+        for (ResidueData resData : resDatas) {
+            data.addAll(resData.getDataValues());
+        }
         resInfoTable.itemsProperty().setValue(data);
 
+        TableColumn<ResidueData.DataValue, String> nameColumn = new TableColumn<>("Name");
+        TableColumn<ResidueData.DataValue, String> resColumn = new TableColumn<>("Residue");
         TableColumn<ResidueData.DataValue, Double> xColumn = new TableColumn<>("Vcpmg");
         TableColumn<ResidueData.DataValue, Double> yColumn = new TableColumn<>("Reff");
         TableColumn<ResidueData.DataValue, String> errColumn = new TableColumn<>("Error");
         TableColumn<ResidueData.DataValue, String> peakColumn = new TableColumn<>("Peak");
 
+        nameColumn.setCellValueFactory(new PropertyValueFactory<>("Name"));
+        resColumn.setCellValueFactory(new PropertyValueFactory<>("Residue"));
         xColumn.setCellValueFactory(new PropertyValueFactory<>("X"));
         yColumn.setCellValueFactory(new PropertyValueFactory<>("Y"));
         errColumn.setCellValueFactory(new PropertyValueFactory<>("Error"));
         peakColumn.setCellValueFactory(new PropertyValueFactory<>("Peak"));
 
         resInfoTable.getColumns().clear();
-        resInfoTable.getColumns().addAll(xColumn, yColumn, errColumn, peakColumn);
+        resInfoTable.getColumns().addAll(nameColumn, resColumn, xColumn, yColumn, errColumn, peakColumn);
     }
 
     public void updateTableWithPars(String mapName, String[] residues, String equationName, String state) {
@@ -406,10 +412,20 @@ public class PyController implements Initializable {
         updatingTable = false;
     }
 
-    public void selectTableRow(int iRow) {
+    public void selectTableRow(String seriesName, int index) {
         parTabPane.getSelectionModel().select(1);
-        resInfoTable.getSelectionModel().clearAndSelect(iRow);
-        resInfoTable.scrollTo(iRow);
+        List<ResidueData.DataValue> data = resInfoTable.getItems();
+        int iRow = 0;
+        for (ResidueData.DataValue dValue : data) {
+            if ((dValue.getIndex() == index) && ((dValue.getName() + ":" + dValue.getResidue()).equals(seriesName))) {
+                resInfoTable.getSelectionModel().clearAndSelect(iRow);
+                resInfoTable.scrollTo(iRow);
+                return;
+            }
+            iRow++;
+
+        }
+
     }
 
     public void clearChart() {

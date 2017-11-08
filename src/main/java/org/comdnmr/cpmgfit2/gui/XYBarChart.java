@@ -211,12 +211,12 @@ public class XYBarChart extends XYChart<Number, Number> {
         System.out.println("series " + seriesName + " map " + mapName + " eqn " + equationName + " state " + state + " index " + seriesIndex + " res " + resNum);
 
         ResidueProperties resProps = ChartUtil.residueProperties.get(mapName);
-        ExperimentData tableData = null;
         ArrayList<PlotEquation> equations = new ArrayList<>();
         ObservableList<XYChart.Series<Double, Double>> allData = FXCollections.observableArrayList();
+        List<ResidueData> resDatas = new ArrayList<>();
         for (ExperimentData expData : resProps.getExperimentData()) {
-            if (tableData == null) {
-                tableData = expData; // get first experiment data
+            for (String residue : residues) {
+                resDatas.add(expData.getResidueData(residue));
             }
             String expName = expData.getName();
             if (!ResidueProperties.matchStateString(state, expData.getState())) {
@@ -230,10 +230,7 @@ public class XYBarChart extends XYChart<Number, Number> {
 
         ((PlotData) chartNode).setEquations(equations);
         ((PlotData) chartNode).layoutPlotChildren();
-        if (tableData != null) {
-            ResidueData resData = tableData.getResidueData(String.valueOf(resNum));
-            PyController.mainController.updateTable(resData);
-        }
+        PyController.mainController.updateTable(resDatas);
         PyController.mainController.updateTableWithPars(mapName, residues, equationName, state);
     }
 

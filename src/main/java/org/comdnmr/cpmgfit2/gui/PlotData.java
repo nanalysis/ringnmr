@@ -99,14 +99,13 @@ public class PlotData extends ScatterChart {
 
     void setNodeListeners(XYChart chart) {
         ObservableList<XYChart.Series<Double, Double>> data = chart.getData();
-        System.out.println("setnode");
         for (XYChart.Series<Double, Double> series : data) {
             int j = 0;
             for (Data<Double, Double> item : series.getData()) {
                 Node node = item.getNode();
                 if (node != null) {
 //                    node.onMouseClickedProperty().addListener(e -> dumpNode(item));
-                    node.setOnMouseClicked(e -> dumpNode(item));
+                    node.setOnMouseClicked(e -> dumpNode(series.getName(), item));
                     if (node instanceof Group) {
                         Group group = (Group) node;
                         Line line = (Line) group.getChildren().get(1);
@@ -120,11 +119,11 @@ public class PlotData extends ScatterChart {
         }
     }
 
-    void dumpNode(Data<Double, Double> data) {
+    void dumpNode(String seriesName, Data<Double, Double> data) {
         Object extraValue = data.getExtraValue();
         if (extraValue instanceof ResidueData.DataValue) {
             ResidueData.DataValue dataValue = (ResidueData.DataValue) extraValue;
-            PyController.mainController.selectTableRow(dataValue.getIndex());
+            PyController.mainController.selectTableRow(seriesName, dataValue.getIndex());
 
         }
 
