@@ -320,7 +320,7 @@ public class PyController implements Initializable {
         for (String resNum : residues) {
             ResidueInfo resInfo = ChartUtil.getResInfo(mapName, String.valueOf(resNum));
             if (resInfo != null) {
-
+                currentResInfo = resInfo;
                 final String useEquationName;
                 if (equationName.equals("best")) {
                     useEquationName = resInfo.getBestEquationName();
@@ -563,6 +563,11 @@ public class PyController implements Initializable {
             residueFitter.fitResidues(currentResProps, allResidues);
         }
     }
+    
+    public void refreshFit() {
+        XYBarChart chart = getActiveChart();
+        chart.showInfo();
+    }
 
     @FXML
     public void haltFit(ActionEvent event) {
@@ -593,6 +598,10 @@ public class PyController implements Initializable {
         return null;
 
     }
+    
+    public void processingDone() {
+        
+    }
 
     public Double updateStatus(ProcessingStatus status) {
         if (Platform.isFxApplicationThread()) {
@@ -612,6 +621,9 @@ public class PyController implements Initializable {
             statusBar.setText("");
         } else {
             statusBar.setText(s);
+            if (s.equals("Done")) {
+                refreshFit();
+            }
         }
         if (status.isOk()) {
             statusCircle.setFill(Color.GREEN);

@@ -19,7 +19,6 @@ import javafx.util.Duration;
 import org.comdnmr.cpmgfit2.calc.ExperimentData;
 import org.comdnmr.cpmgfit2.calc.PlotEquation;
 import org.comdnmr.cpmgfit2.calc.ResidueData;
-import org.comdnmr.cpmgfit2.calc.ResidueInfo;
 import org.comdnmr.cpmgfit2.calc.ResidueProperties;
 
 public class XYBarChart extends XYChart<Number, Number> {
@@ -30,6 +29,7 @@ public class XYBarChart extends XYChart<Number, Number> {
     Group group = null;
     boolean unifyYAxes = true;
     List<String> selectedResidues = new ArrayList<>();
+    String currentSeriesName = "";
 
     // -------------- CONSTRUCTORS ----------------------------------------------
     public XYBarChart() {
@@ -191,7 +191,6 @@ public class XYBarChart extends XYChart<Number, Number> {
     }
 
     void showInfo(String seriesName, int seriesIndex, int resNum, boolean appendMode) {
-        Node chartNode = ChartUtil.findNode(this.getScene(), "cpmgchart");
         String resString = String.valueOf(resNum);
         if (!appendMode) {
             selectedResidues.clear();
@@ -201,16 +200,30 @@ public class XYBarChart extends XYChart<Number, Number> {
                 selectedResidues.add(resString);
             }
         }
-        String[] residues = new String[selectedResidues.size()];
-        selectedResidues.toArray(residues);
+        currentSeriesName = seriesName;
+        String[] seriesNameParts = seriesName.split("\\|");
+        String mapName = seriesNameParts[0];
+        ResidueProperties resProps = ChartUtil.residueProperties.get(mapName);
+        showInfo(resProps, seriesName);
+    }
+
+    void showInfo() {
+        String[] seriesNameParts = currentSeriesName.split("\\|");
+        String mapName = seriesNameParts[0];
+        ResidueProperties resProps = ChartUtil.residueProperties.get(mapName);
+        showInfo(resProps, currentSeriesName);
+    }
+
+    void showInfo(ResidueProperties resProps, String seriesName) {
+        Node chartNode = ChartUtil.findNode(this.getScene(), "cpmgchart");
         String[] seriesNameParts = seriesName.split("\\|");
         String mapName = seriesNameParts[0];
         String equationName = seriesNameParts[1];
         String state = seriesNameParts[2];
         state = "*:" + state.substring(2);
-        System.out.println("series " + seriesName + " map " + mapName + " eqn " + equationName + " state " + state + " index " + seriesIndex + " res " + resNum);
-
-        ResidueProperties resProps = ChartUtil.residueProperties.get(mapName);
+        System.out.println("series " + seriesName + " map " + mapName + " eqn " + equationName + " state " + state);
+        String[] residues = new String[selectedResidues.size()];
+        selectedResidues.toArray(residues);
         ArrayList<PlotEquation> equations = new ArrayList<>();
         ObservableList<XYChart.Series<Double, Double>> allData = FXCollections.observableArrayList();
         List<ResidueData> resDatas = new ArrayList<>();
