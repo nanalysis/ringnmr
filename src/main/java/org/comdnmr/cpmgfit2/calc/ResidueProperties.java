@@ -24,6 +24,8 @@ public class ResidueProperties {
     Map<Double, Integer> fieldMap = new LinkedHashMap();
     Map<Double, Integer> tempMap = new LinkedHashMap();
     Map<String, Integer> nucMap = new LinkedHashMap();
+    private boolean absValueMode = false;
+    private String bootStrapMode = "parametric";
 
     public ResidueProperties(String name, String fileName) {
         this.name = name;
@@ -32,6 +34,34 @@ public class ResidueProperties {
 
     public String getName() {
         return name;
+    }
+
+    /**
+     * @return the absValueMode
+     */
+    public boolean isAbsValueMode() {
+        return absValueMode;
+    }
+
+    /**
+     * @param absValueMode the absValueMode to set
+     */
+    public void setAbsValueMode(boolean absValueMode) {
+        this.absValueMode = absValueMode;
+    }
+
+    /**
+     * @return the bootStrapMode
+     */
+    public String getBootStrapMode() {
+        return bootStrapMode;
+    }
+
+    /**
+     * @param bootStrapMode the bootStrapMode to set
+     */
+    public void setBootStrapMode(String bootStrapMode) {
+        this.bootStrapMode = bootStrapMode;
     }
 
     public void addExperimentData(String name, ExperimentData data) {
