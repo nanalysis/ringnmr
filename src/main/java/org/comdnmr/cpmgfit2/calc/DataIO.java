@@ -100,6 +100,12 @@ public class DataIO {
                     }
                     ResidueData residueData = new ResidueData(expData, residueNum, xValueList, yValueList, errValueList, peakRefList);
                     expData.addResidueData(residueNum, residueData);
+                    ResidueInfo residueInfo = resProp.getResidueInfo(residueNum);
+                    if (residueInfo == null) {
+                        residueInfo = new ResidueInfo(Integer.parseInt(residueNum), 0, 0, 0);
+                        resProp.addResidueInfo(residueNum, residueInfo);
+                    }
+
                 }
             }
         }
@@ -157,6 +163,12 @@ public class DataIO {
                     }
                     ResidueData residueData = new ResidueData(expData, residueNum, xValues, yValues, errValues);
                     expData.addResidueData(residueNum, residueData);
+
+                    ResidueInfo residueInfo = resProp.getResidueInfo(residueNum);
+                    if (residueInfo == null) {
+                        residueInfo = new ResidueInfo(Integer.parseInt(residueNum), 0, 0, 0);
+                        resProp.addResidueInfo(residueNum, residueInfo);
+                    }
                 }
             }
         }
@@ -239,6 +251,13 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 }
 
                 String[] sfields = line.split("\t", -1);
+                String[] stdHeaders = {"Best", "Residue", "Equation", "RMS", "GrpSz", "Group", "Peak", "State"};
+                for (String stdHeader : stdHeaders) {
+                    int index = headerMap.get(stdHeader);
+                    if (index == -1) {
+                        throw new IOException("Missing header " + stdHeader);
+                    }
+                }
                 String bestValue = sfields[headerMap.get("Best")];
                 String residueNumber = sfields[headerMap.get("Residue")].trim();
                 String equationName = sfields[headerMap.get("Equation")].trim().toUpperCase();
