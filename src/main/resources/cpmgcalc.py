@@ -400,18 +400,18 @@ def getResidues(resProp):
         residues.append([residue])
     return residues
 
-def fitProject(resProp, groups):
+def fitProject(resProp, groups, equationName):
     expDataSets = resProp.getExperimentData()
     residueFitter = ResidueFitter()
     if len(groups) == 0:
         groups = getResidues(resProp)
-    print 'groups',groups
+    groupID = 0
     for group in groups:
         print group
         sgroup = [str(groupNum) for groupNum in group]
-        resInfoList = residueFitter.fitResidues(resProp, sgroup, 0)
+        resInfoList = residueFitter.fitResidues(resProp, sgroup, groupID, equationName)
+        groupID += 1
         for resInfo in resInfoList:
-            print resInfo
             fitResNum = resInfo.resNum;
             resProp.residueMap.put(str(fitResNum), resInfo)
     DataIO.saveParametersToFile('output.txt',resProp)
@@ -442,6 +442,7 @@ def parseArgs():
     serailMode = False
     parser = argparse.ArgumentParser(description="Analyze CPMG data")
     parser.add_argument("-s",dest='serialMode',action='store_true',help="Run calcutions serially (not using multiple cores")
+    parser.add_argument("-e",dest='equationName',default=None,help="Fit specified equation, default is to fit all.")
     parser.add_argument("-o",dest='onlyGroups',action='store_true',help="Only fit data in groups")
     parser.add_argument("-g", dest="groupList",default='', help="Residues to fit in groups")
     parser.add_argument("-p", dest="projectFile",default='', help="Project file (.yaml) to load")
@@ -452,6 +453,7 @@ def parseArgs():
     onlyGroups = args.onlyGroups
     fileNames = args.fileNames
     projectFile = args.projectFile
+    equationName = args.equationName
 
     groups = [] 
     if len(args.groupList) > 0:
@@ -463,8 +465,7 @@ def parseArgs():
 
     if projectFile != '':
         resProp = loadProject(projectFile)
-        print resProp
-        fitProject(resProp,groups)
+        fitProject(resProp, groups, equationName)
     else:
         loadDataFiles(fileNames)
         fitGroups(groups)
