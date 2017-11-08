@@ -98,7 +98,7 @@ public class DataIO {
                     if (!ok) {
                         continue;
                     }
-                    ResidueData residueData = new ResidueData(xValueList, yValueList, errValueList, peakRefList);
+                    ResidueData residueData = new ResidueData(expData, residueNum, xValueList, yValueList, errValueList, peakRefList);
                     expData.addResidueData(residueNum, residueData);
                 }
             }
@@ -155,7 +155,7 @@ public class DataIO {
                         errValues[j] = r2EffErr;
                         j++;
                     }
-                    ResidueData residueData = new ResidueData(xValues, yValues, errValues);
+                    ResidueData residueData = new ResidueData(expData, residueNum, xValues, yValues, errValues);
                     expData.addResidueData(residueNum, residueData);
                 }
             }
@@ -320,7 +320,13 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 HashMap<String, Object> fitParMap = (HashMap<String, Object>) dataMap2.get("parameters");
                 if (fitParMap != null) {
                     Boolean absValueMode = (Boolean) fitParMap.get("absValue");
+                    if (absValueMode != null) {
+                        resProp.setAbsValueMode(absValueMode);
+                    }
                     String bootStrapMode = (String) fitParMap.get("bootStrap");
+                    if (bootStrapMode != null) {
+                        resProp.setBootStrapMode(bootStrapMode);
+                    }
                     System.out.println("absmode " + absValueMode + " bootstrap " + bootStrapMode);
                 }
 

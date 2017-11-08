@@ -9,26 +9,33 @@ import java.util.List;
  */
 public class ResidueData {
 
-    int resNum;
+    ExperimentData expData;
+    String resNum;
     double[] xValues;
     double[] errValues;
     double[] yValues;
     String[] peakRefs;
 
-    public ResidueData(double[] x, double[] y, double[] err) {
+    public ResidueData(ExperimentData expData, String residueNum, double[] x, double[] y, double[] err) {
+        this.resNum = residueNum;
+        this.expData = expData;
         this.xValues = x.clone();
         this.yValues = y.clone();
         this.errValues = err.clone();
     }
 
-    public ResidueData(double[] x, double[] y, double[] err, String[] peakRefs) {
+    public ResidueData(ExperimentData expData, String residueNum, double[] x, double[] y, double[] err, String[] peakRefs) {
+        this.resNum = residueNum;
+        this.expData = expData;
         this.xValues = x.clone();
         this.yValues = y.clone();
         this.errValues = err.clone();
         this.peakRefs = peakRefs.clone();
     }
 
-    public ResidueData(List<Double> xValueList, List<Double> yValueList, List<Double> errValueList) {
+    public ResidueData(ExperimentData expData, String residueNum, List<Double> xValueList, List<Double> yValueList, List<Double> errValueList) {
+        this.expData = expData;
+        this.resNum = residueNum;
         int nValues = xValueList.size();
         this.xValues = new double[nValues];
         this.yValues = new double[nValues];
@@ -40,7 +47,9 @@ public class ResidueData {
         }
     }
 
-    public ResidueData(List<Double> xValueList, List<Double> yValueList, List<Double> errValueList, List<String> peakRefList) {
+    public ResidueData(ExperimentData expData, String residueNum, List<Double> xValueList, List<Double> yValueList, List<Double> errValueList, List<String> peakRefList) {
+        this.expData = expData;
+        this.resNum = residueNum;
         int nValues = xValueList.size();
         this.xValues = new double[nValues];
         this.yValues = new double[nValues];
@@ -99,6 +108,14 @@ public class ResidueData {
             }
             return peak;
         }
+
+        public String getName() {
+            return resInfo.getDataName();
+        }
+
+        public String getResidue() {
+            return resInfo.resNum;
+        }
     }
 
     public ArrayList<DataValue> getDataValues() {
@@ -107,6 +124,14 @@ public class ResidueData {
             dataValues.add(new DataValue(this, i));
         }
         return dataValues;
+    }
+
+    public String getDataName() {
+        return expData.getName();
+    }
+
+    public ExperimentData getExperimentData() {
+        return expData;
     }
 
 }
