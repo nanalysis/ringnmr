@@ -28,10 +28,10 @@
     </bottom>
 
     <center>
-        <VBox fx:id="chartBox">
-            <children>
-                <HBox VBox.vgrow="ALWAYS">
-                    <children>
+        <SplitPane orientation="vertical">
+            <items>
+                <SplitPane orientation="horizontal">
+                    <items>
                         <PlotData fx:id="cpmgchart" HBox.hgrow="ALWAYS" />
                         <VBox HBox.hgrow="ALWAYS">
                             <TabPane fx:id="parTabPane" >
@@ -122,7 +122,8 @@
                                                     <Button text="FitGroup" onAction="#fitGroupResidues" fx:id="FitGroupResidues"/>
                                                     <Button fx:id="haltProcessButton" mnemonicParsing="false" onAction="#haltFit" text="Halt" />
                                                 </children>
-                                            </HBox> <HBox>
+                                            </HBox> 
+                                            <HBox>
                                                 <children>
                                                     <CheckBox text="AbsMode" fx:id="absValueModeCheckBox"/>
                                                     <CheckBox text="BootStrap" fx:id="nonParBootStrapCheckBox"/>
@@ -140,11 +141,16 @@
                                 </Tab>
                             </TabPane>
                         </VBox>
+                    </items>
+                </SplitPane>
+                <VBox fx:id="chartBox" VBox.vgrow="ALWAYS">
+                    <children>
+                        <SSRegion fx:id="ssregion" prefHeight="1" />
                     </children>
-                </HBox>
-                <SSRegion fx:id="ssregion" prefHeight="1" />
-            </children>
-        </VBox>
+                </VBox>
+            </items>
+        </SplitPane>
+
     </center>
     <right>
     </right>
