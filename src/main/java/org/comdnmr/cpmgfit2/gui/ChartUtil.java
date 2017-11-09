@@ -269,13 +269,15 @@ public class ChartUtil {
                 }
                 //   for (CurveFit curveFit: resInfo.)
                 CurveFit curveSet = resInfo.getCurveSet(useEquationName, state); // fixme
-                PlotEquation equation = curveSet.getEquation();
-                double[] extras = {field};
-                System.out.println("use eq " + equationName + " " + field);
-                PlotEquation equationCopy = equation.clone();
-                equationCopy.setExtra(extras);
+                if (curveSet != null) {
+                    PlotEquation equation = curveSet.getEquation();
+                    double[] extras = {field};
+                    System.out.println("use eq " + equationName + " " + field);
+                    PlotEquation equationCopy = equation.clone();
+                    equationCopy.setExtra(extras);
 
-                equations.add(equationCopy);
+                    equations.add(equationCopy);
+                }
             }
         }
         return equations;
@@ -311,12 +313,12 @@ public class ChartUtil {
             minRes = Math.min(resNum, minRes);
             maxRes = Math.max(resNum, maxRes);
             double x = resNum;
+            Double errUp = null;
             Double y = resInfo.getParValue(useEquName, state, parName);
-            //  System.out.println(eqnName + " " + useEquName + " " + parName + " res " + resNum + " y " + y);
             if (y == null) {
                 continue;
             }
-            Double errUp = resInfo.getParValue(useEquName, state, parName + ".sd");
+            errUp = resInfo.getParValue(useEquName, state, parName + ".sd");
             Double errLow = errUp;
             if (errUp == null) {
                 errUp = 0.0;
@@ -361,12 +363,12 @@ public class ChartUtil {
         }
         ResidueProperties resProp = DataIO.loadParameters(fileName);
         residueProperties.put(resProp.getName(), resProp);
-        ObservableList<XYChart.Series<Double, Double>> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", "Kex");
+        String parName = "Kex";
+        ObservableList<XYChart.Series<Double, Double>> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
         PyController.mainController.makeAxisMenu();
-
         PyController.mainController.currentResProps = resProp;
-        PyController.mainController.setYAxisType(resProp.getName(), "best", "0:0:0", "Kex");
-
+        PyController.mainController.setYAxisType(resProp.getName(), "best", "0:0:0", parName);
+        reschartNode.setResProps(resProp);
     }
 
 }
