@@ -14,11 +14,14 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Path;
+import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 import org.comdnmr.cpmgfit2.calc.ExperimentData;
 import org.comdnmr.cpmgfit2.calc.PlotEquation;
 import org.comdnmr.cpmgfit2.calc.ResidueData;
+import org.comdnmr.cpmgfit2.calc.ResidueInfo;
 import org.comdnmr.cpmgfit2.calc.ResidueProperties;
 
 public class XYBarChart extends XYChart<Number, Number> {
@@ -27,9 +30,11 @@ public class XYBarChart extends XYChart<Number, Number> {
     NumberAxis yAxis;
     SSPainter painter;
     Group group = null;
+    Group presenceGroup = null;
     boolean unifyYAxes = true;
     List<String> selectedResidues = new ArrayList<>();
     String currentSeriesName = "";
+    ResidueProperties resProps = null;
 
     // -------------- CONSTRUCTORS ----------------------------------------------
     public XYBarChart() {
@@ -46,7 +51,6 @@ public class XYBarChart extends XYChart<Number, Number> {
         ObservableList<XYChart.Series<Number, Number>> data = FXCollections.observableArrayList();
         setData(data);
         setPrefHeight(200);
-        xAxis.setOnMouseClicked(e -> mouseClickedOnAxis(e, xAxis));
         this.setOnMousePressed(e -> mousePressed(e));
         yAxis.setOnContextMenuRequested(e -> showAxisMenu(e));
 
@@ -111,6 +115,7 @@ public class XYBarChart extends XYChart<Number, Number> {
     @Override
     protected void layoutPlotChildren() {
         // we have nothing to layout if no data is present
+        addHasData();
         if (getData() == null) {
             return;
         }
@@ -175,13 +180,12 @@ public class XYBarChart extends XYChart<Number, Number> {
         PyController.mainController.activeChart = this;
     }
 
-    void mouseClickedOnAxis(MouseEvent e, NumberAxis axis) {
+    void mouseClickedOnPresenceBar(MouseEvent e, int resNum, double width) {
         boolean appendMode = e.isShiftDown();
-        double x = e.getX();
-        double value = axis.getValueForDisplay(x).doubleValue();
-        int resNum = (int) Math.round(value);
-        String seriesName = getData().get(0).getName();
-        showInfo(seriesName, 0, resNum, appendMode);
+        double f = e.getX() / width;
+        int seriesIndex = (int) Math.floor(getData().size() * f);
+        String seriesName = getData().get(seriesIndex).getName();
+        showInfo(seriesName, seriesIndex, resNum, appendMode);
     }
 
     void mouseClicked(MouseEvent e, String seriesName, int seriesIndex, XYChart.Data<Number, Number> item) {
@@ -406,6 +410,48 @@ public class XYBarChart extends XYChart<Number, Number> {
         }
         if (!foundPar) {
             super.updateAxisRange();
+        }
+
+    }
+
+    public void setResProps(ResidueProperties resProps) {
+        this.resProps = resProps;
+    }
+
+    public void addHasData() {
+        for (Node node : (ObservableList<Node>) getPlotChildren()) {
+            if ((node.getId() != null) && node.getId().equals("presentIndicator")) {
+                presenceGroup = (Group) node;
+            }
+        }
+        if (presenceGroup == null) {
+            presenceGroup = new Group();
+            presenceGroup.setId("presentIndicator");
+            getPlotChildren().add(0, presenceGroup);
+        }
+        if (!presenceGroup.getChildren().isEmpty()) {
+            presenceGroup.getChildren().clear();
+        }
+        if (resProps != null) {
+
+            for (ResidueInfo resInfo : resProps.getResidueMap().values()) {
+                if (resInfo == null) {
+                    continue;
+                }
+
+                int resNum = resInfo.getResNum();
+                double x1 = getXAxis().getDisplayPosition(resNum - 0.5) + 1;
+                double x2 = getXAxis().getDisplayPosition(resNum + 0.5) - 1;
+                double width = x2 - x1;
+                double y2 = getYAxis().getHeight();
+                Rectangle rect = new Rectangle(width, y2);
+                rect.setLayoutX(x1);
+                rect.setLayoutY(0.0);
+                rect.setFill(Color.LIGHTGRAY);
+                rect.setOnMouseClicked(e -> mouseClickedOnPresenceBar(e, resNum, width));
+
+                presenceGroup.getChildren().add(rect);
+            }
         }
 
     }

@@ -283,7 +283,7 @@ public class PyController implements Initializable {
     public XYBarChart addChart() {
         XYBarChart newChart = new XYBarChart();
         int nChildren = chartBox.getChildren().size();
-        chartBox.getChildren().add(1, newChart);
+        chartBox.getChildren().add(0, newChart);
         VBox.setVgrow(newChart, Priority.ALWAYS);
         activeChart = newChart;
         return newChart;
@@ -463,6 +463,7 @@ public class PyController implements Initializable {
             chart.setLegendVisible(false);
         }
         currentResProps = ChartUtil.residueProperties.get(setName);
+        chart.setResProps(currentResProps);
     }
 
     void makeAxisMenu() {
