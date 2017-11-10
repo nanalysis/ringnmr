@@ -1,29 +1,37 @@
 @echo off
 
-rem nvjp [ script  [ arg ... ] ]
+rem cpmgfit2.bat [ script  [ arg ... ] ]
 rem 
 rem optional environment variables:
 rem
 rem JAVA_HOME  - directory of JDK/JRE, if not set then 'java' must be found on PATH
 rem CLASSPATH  - colon separated list of additional jar files & class directories
 rem JAVA_OPTS  - list of JVM options, e.g. "-Xmx256m -Dfoo=bar"
-rem TCLLIBPATH - space separated list of Tcl library directories
 rem
 
 
 if "%OS%" == "Windows_NT" setlocal
 
-set nvjver=${project.version}
-set nvjpmain=org.comdnmr.cpmgfit2.chart.MainApp
+set cpmgfit2ver=${project.version}
+set cpmgfit2main=org.comdnmr.cpmgfit2.chart.MainApp
 
 
 set dir=%~dp0
 
-set cp="%dir%\cpmgfit2-%nvjver%.jar;${wclasspath};%CLASSPATH%"
+set javaexe=java
+set cp="%dir%\cpmgfit2-%cpmgfit2ver%.jar;${wclasspath};%CLASSPATH%"
 
-if "%TCLLIBPATH%" == "" goto nullTcllib
-set tcllibpath=-DTCLLIBPATH="%TCLLIBPATH%"
-:nullTcllib
+set testjava=%dir%jre\bin\java
 
-java %tcllibpath% -Djava.awt.headless=true -cp %cp% %JAVA_OPTS% %nvjpmain% %*
+if exist %testjava% (
+    set javaexe="%testjava%"
+    set cp="%dir%\lib\cpmgfit2-%cpmgfit2ver%.jar;${wclasspath};%CLASSPATH%"
+)
+
+
+if "%1"=="" (
+    %javaexe% -Djava.awt.headless=true -mx2048m -cp %cp% %JAVA_OPTS% %cpmgfit2main%
+) else (
+    %javaexe% -Djava.awt.headless=true -mx2048m -cp %cp% %JAVA_OPTS% %cpmgfit2main% -c "import cpmgfit2" %*
+)
 
