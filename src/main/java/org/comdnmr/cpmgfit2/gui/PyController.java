@@ -1,6 +1,7 @@
 package org.comdnmr.cpmgfit2.gui;
 
 import java.io.File;
+import java.io.IOException;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import java.util.ResourceBundle;
@@ -11,14 +12,17 @@ import java.util.Map;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
+import javafx.geometry.Bounds;
 import javafx.geometry.Side;
 import javafx.scene.Node;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
@@ -27,11 +31,16 @@ import javafx.scene.control.TabPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.ImageView;
+import javafx.scene.image.WritableImage;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import static javafx.scene.transform.Transform.scale;
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
+import javax.imageio.ImageIO;
 import javax.script.ScriptException;
 import org.comdnmr.cpmgfit2.calc.CPMGFit;
 import org.comdnmr.cpmgfit2.calc.CPMGFitResult;
@@ -111,10 +120,12 @@ public class PyController implements Initializable {
     CheckBox absValueModeCheckBox;
     @FXML
     CheckBox nonParBootStrapCheckBox;
+    @FXML
+    Menu axisMenu;
 
     boolean updatingTable = false;
 
-    final ContextMenu axisMenu = new ContextMenu();
+    //final ContextMenu axisMenu = new ContextMenu();
     final static double defaultField = 500.0;
 
     ResidueInfo currentResInfo = null;
@@ -173,6 +184,15 @@ public class PyController implements Initializable {
         statusCircle = new Circle(10);
         statusBar.getLeftItems().add(statusCircle);
 
+    }
+
+    public void loadParameterFile(Event e) {
+        FileChooser fileChooser = new FileChooser();
+        Stage stage = MainApp.primaryStage;
+        File file = fileChooser.showOpenDialog(stage);
+        if (file != null) {
+            ChartUtil.loadParameters(file.toString());
+        }
     }
 
     void equationAction() {
@@ -288,6 +308,14 @@ public class PyController implements Initializable {
         activeChart = newChart;
         return newChart;
 
+    }
+
+    public void removeChart(Event e) {
+        System.out.println(chartBox.getChildren().size() + " " + chartBox.getChildren().get(0));
+        if ((activeChart != null) && (chartBox.getChildren().size() > 2)) {
+            chartBox.getChildren().remove(activeChart);
+            activeChart = (XYBarChart) chartBox.getChildren().get(0);
+        }
     }
 
     public void updateTable(List<ResidueData> resDatas) {
@@ -428,6 +456,10 @@ public class PyController implements Initializable {
 
     }
 
+    public void clearChart(Event e) {
+        clearChart();
+    }
+
     public void clearChart() {
         activeChart.getData().clear();
     }
@@ -472,9 +504,9 @@ public class PyController implements Initializable {
 
         String[] parTypes = {"R2", "Rex", "Kex", "pA", "dW", "RMS", "AIC", "Equation"};
         Map<String, ResidueProperties> residueProps = ChartUtil.residueProperties;
-        MenuItem clearItem = new MenuItem("Clear");
-        clearItem.setOnAction(e -> clearChart());
-        axisMenu.getItems().add(clearItem);
+        // MenuItem clearItem = new MenuItem("Clear");
+        // clearItem.setOnAction(e -> clearChart());
+        // axisMenu.getItems().add(clearItem);
         for (String parType : parTypes) {
             Menu cascade = new Menu(parType);
             axisMenu.getItems().add(cascade);
@@ -564,7 +596,7 @@ public class PyController implements Initializable {
             residueFitter.fitResidues(currentResProps, allResidues);
         }
     }
-    
+
     public void refreshFit() {
         XYBarChart chart = getActiveChart();
         chart.showInfo();
@@ -578,7 +610,7 @@ public class PyController implements Initializable {
     @FXML
     public void saveParameters(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
-        File file = fileChooser.showSaveDialog(axisMenu);
+        File file = fileChooser.showSaveDialog(MainApp.primaryStage);
         if (file != null) {
             DataIO.saveParametersToFile(file.getAbsolutePath(), currentResProps);
         }
@@ -599,9 +631,9 @@ public class PyController implements Initializable {
         return null;
 
     }
-    
+
     public void processingDone() {
-        
+
     }
 
     public Double updateStatus(ProcessingStatus status) {
@@ -633,6 +665,37 @@ public class PyController implements Initializable {
         }
         statusBar.setProgress(0.0);
         return null;
+    }
+
+    public void saveBarChart() throws IOException {
+        FileChooser chooser = new FileChooser();
+        chooser.setInitialFileName("barchart.png");
+        File file = chooser.showSaveDialog(MainApp.primaryStage);
+        if (file != null) {
+            snapit(chartBox, file);
+        }
+    }
+
+    public void saveXYChart() throws IOException {
+        FileChooser chooser = new FileChooser();
+        chooser.setInitialFileName("cpmgchart.png");
+        File file = chooser.showSaveDialog(MainApp.primaryStage);
+        if (file != null) {
+            snapit(cpmgchart, file);
+        }
+    }
+
+    public void snapit(Node node, File file) throws IOException {
+        double scale = 4.0;
+        final Bounds bounds = node.getLayoutBounds();
+        final WritableImage image = new WritableImage(
+                (int) Math.round(bounds.getWidth() * scale),
+                (int) Math.round(bounds.getHeight() * scale));
+        final SnapshotParameters spa = new SnapshotParameters();
+        spa.setTransform(javafx.scene.transform.Transform.scale(scale, scale));
+        node.snapshot(spa, image);
+        ImageIO.write(SwingFXUtils.fromFXImage(image, null), "png", file);
+
     }
 
 }

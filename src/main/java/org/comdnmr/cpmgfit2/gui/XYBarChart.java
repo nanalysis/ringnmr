@@ -60,7 +60,7 @@ public class XYBarChart extends XYChart<Number, Number> {
 
     void showAxisMenu(ContextMenuEvent event) {
         Node mouseNode = (Node) event.getSource();
-        PyController.mainController.axisMenu.show(mouseNode.getScene().getWindow(), event.getScreenX(), event.getScreenY());
+       // PyController.mainController.axisMenu.show(mouseNode.getScene().getWindow(), event.getScreenX(), event.getScreenY());
     }
 
     /**

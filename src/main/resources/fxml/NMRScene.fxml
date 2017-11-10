@@ -16,10 +16,25 @@
     <top>
         <HBox>
             <children>
-                <Button text="Load CPMG..." onAction="loadCPMGFile(event)" fx:id="loadButton"/>
-                <Button text="2ndStr..." onAction="loadSecondaryStructure(event)" fx:id="ss"/>
-                <Button text="Add Chart" onAction="addChart(event)" fx:id="addChart"/>
-                <Button text="Save..." onAction="#saveParameters" fx:id="savePars"/>
+                <MenuBar>
+                    <Menu text="File">
+                        <items>
+                            <MenuItem text="Load Project File..." onAction="#loadParameterFile" fx:id="loadMenuItem"/>
+                            <MenuItem text="Load Secondary Structure..." onAction="loadSecondaryStructure(event)" fx:id="loadSSMenuItem"/>
+                            <MenuItem text="Save Analysis..." onAction="#saveParameters" fx:id="savePars"/>
+                            <MenuItem text="Save Bar Chart..." onAction="#saveBarChart" fx:id="saveBarChartButton"/>
+                            <MenuItem text="Save XY Chart..." onAction="#saveXYChart" fx:id="saveXYChartButton"/>
+                        </items>
+                    </Menu>
+                    <Menu text="Chart">
+                        <items>
+                            <MenuItem text="New Chart" onAction="#addChart" fx:id="addChart"/>
+                            <MenuItem text="Remove Active Chart" onAction="#removeChart" fx:id="removeChart"/>
+                            <MenuItem text="Clear Active Chart" onAction="#clearChart" fx:id="clearChart"/>
+                            <Menu text="Add Data" fx:id="axisMenu"/>
+                        </items>
+                    </Menu>
+                </MenuBar>
             </children>
         </HBox>
     </top>
