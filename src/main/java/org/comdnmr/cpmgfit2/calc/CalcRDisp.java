@@ -601,6 +601,22 @@ public class CalcRDisp implements MultivariateFunction {
         return IntStream.range(0, checkIDs.length).anyMatch(id -> checkIDs[id] == false);
     }
 
+    private boolean checkID(int[] idValues, int[] testValues, int checkNum) {
+        int n = Arrays.stream(idValues).max().getAsInt() + 1;
+        int[] count = new int[n];
+        for (int i = 0; i < testValues.length; i++) {
+            count[testValues[i]]++;
+        }
+        boolean ok = true;
+        for (int i = 0; i < count.length; i++) {
+            if (count[i] < checkNum) {
+                ok = false;
+                break;
+            }
+        }
+        return ok;
+    }
+
     public void setXY(double[] x, double[] y) {
         this.xValues = x;
         this.yValues = y;
@@ -623,7 +639,11 @@ public class CalcRDisp implements MultivariateFunction {
     public void setIds(int[] idNums) throws IllegalArgumentException {
         this.idNums = idNums;
         if (setNID()) {
-            throw new IllegalArgumentException("Invalid idNums, some values not used");
+            for (int id : idNums) {
+                System.out.print(id + " ");
+            }
+            System.out.println("");
+            throw new IllegalArgumentException("Invalid idNums, some values not used in setIds");
         }
     }
 
@@ -953,14 +973,18 @@ public class CalcRDisp implements MultivariateFunction {
             double[] newErr = new double[yValues.length];
             double[] newFieldValues = new double[yValues.length];
             int[] newID = new int[yValues.length];
-            for (int k = 0; k < yValues.length; k++) {
-                int rI = random.nextInt(yValues.length);
-                newX[k] = xValues[rI];
-                newY[k] = yValues[rI];
-                newErr[k] = errValues[rI];
-                newFieldValues[k] = fieldValues[rI];
-                newID[k] = idNums[rI];
-            }
+            int iTry = 0;
+            do {
+                for (int k = 0; k < yValues.length; k++) {
+                    int rI = random.nextInt(yValues.length);
+                    newX[k] = xValues[rI];
+                    newY[k] = yValues[rI];
+                    newErr[k] = errValues[rI];
+                    newFieldValues[k] = fieldValues[rI];
+                    newID[k] = idNums[rI];
+                }
+                iTry++;
+            } while (!checkID(idNums, newID, 2) && (iTry < 10));
             // fixme  idNum should be set in above loop
             rDisp.setXY(newX, newY);
             rDisp.setErr(newErr);
