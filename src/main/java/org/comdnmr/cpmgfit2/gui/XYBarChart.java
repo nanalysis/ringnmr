@@ -60,7 +60,7 @@ public class XYBarChart extends XYChart<Number, Number> {
 
     void showAxisMenu(ContextMenuEvent event) {
         Node mouseNode = (Node) event.getSource();
-       // PyController.mainController.axisMenu.show(mouseNode.getScene().getWindow(), event.getScreenX(), event.getScreenY());
+        // PyController.mainController.axisMenu.show(mouseNode.getScene().getWindow(), event.getScreenX(), event.getScreenY());
     }
 
     /**
@@ -221,6 +221,9 @@ public class XYBarChart extends XYChart<Number, Number> {
     void showInfo(ResidueProperties resProps, String seriesName) {
         Node chartNode = ChartUtil.findNode(this.getScene(), "cpmgchart");
         String[] seriesNameParts = seriesName.split("\\|");
+        if (seriesNameParts.length < 3) {
+            return;
+        }
         String mapName = seriesNameParts[0];
         String equationName = seriesNameParts[1];
         String state = seriesNameParts[2];
