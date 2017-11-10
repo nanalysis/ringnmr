@@ -1,11 +1,12 @@
 package org.comdnmr.cpmgfit2.calc;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Function;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.concurrent.Service;
@@ -18,34 +19,6 @@ import javafx.concurrent.Worker;
  */
 public class ResidueFitter {
 
-    /**
-     * @return the absValueMode
-     */
-    public boolean isAbsValueMode() {
-        return absValueMode;
-    }
-
-    /**
-     * @param absValueMode the absValueMode to set
-     */
-    public void setAbsValueMode(boolean absValueMode) {
-        this.absValueMode = absValueMode;
-    }
-
-    /**
-     * @return the nonParBootStrap
-     */
-    public boolean isNonParBootStrap() {
-        return nonParBootStrap;
-    }
-
-    /**
-     * @param nonParBootStrap the nonParBootStrap to set
-     */
-    public void setNonParBootStrap(boolean nonParBootStrap) {
-        this.nonParBootStrap = nonParBootStrap;
-    }
-
     public static final String[] equationNames = {"NOEX", "CPMGFAST", "CPMGSLOW"};
 
     private FitResidues processDataset = new FitResidues();
@@ -55,8 +28,6 @@ public class ResidueFitter {
     Function<Double, Double> updaterFunction;
     Function<ProcessingStatus, Double> statusFunction;
     List<List<String>> residueFitGroups = null;
-    private boolean absValueMode = false;
-    private boolean nonParBootStrap = false;
 
     public ResidueFitter() {
     }
@@ -148,13 +119,12 @@ public class ResidueFitter {
 
     public List<List<String>> getAllResidues() {
         Map<String, ExperimentData> expDataSets = resProps.expMaps;
-        List<Integer> resNums = new ArrayList<>();
+        Set<Integer> resNums = new TreeSet<>();
         for (ExperimentData expData : expDataSets.values()) {
             for (String resNumS : expData.getResidues()) {
                 resNums.add(Integer.parseInt(resNumS));
             }
         }
-        Collections.sort(resNums);
         List<List<String>> allResidues = new ArrayList<>();
         for (Integer resNum : resNums) {
             int groupIndex = -1;
@@ -217,7 +187,7 @@ public class ResidueFitter {
             }
             CPMGFit cpmgFit = new CPMGFit();
             cpmgFit.setData(resProps, resNums);
-            CPMGFitResult fitResult = cpmgFit.doFit(resProps, equationName, resProps.isAbsValueMode(), nonParBootStrap);
+            CPMGFitResult fitResult = cpmgFit.doFit(resProps, equationName, resProps.isAbsValueMode(), !resProps.getBootStrapMode().equals("parametric"));
             fitResults.put(equationName, fitResult);
             if (fitResult.getAicc() < aicMin) {
                 aicMin = fitResult.getAicc();
