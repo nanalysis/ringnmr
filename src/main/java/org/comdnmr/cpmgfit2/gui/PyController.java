@@ -593,6 +593,12 @@ public class PyController implements Initializable {
         groupResidues.addAll(chart.selectedResidues);
         if (!groupResidues.isEmpty()) {
             allResidues.add(groupResidues);
+            currentResProps.setAbsValueMode(absValueModeCheckBox.isSelected());
+            if (nonParBootStrapCheckBox.isSelected()) {
+                currentResProps.setBootStrapMode("nonparametric");
+            } else {
+                currentResProps.setBootStrapMode("parametric");
+            }
             residueFitter.fitResidues(currentResProps, allResidues);
         }
     }
