@@ -4,6 +4,7 @@
 <?import java.net.*?>
 <?import javafx.collections.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.layout.*?>
 <?import org.comdnmr.cpmgfit2.gui.*?>
 <?import org.controlsfx.control.*?>
@@ -48,8 +49,8 @@
                 <SplitPane orientation="horizontal">
                     <items>
                         <PlotData fx:id="cpmgchart" HBox.hgrow="ALWAYS" />
-                        <VBox HBox.hgrow="ALWAYS">
-                            <TabPane fx:id="parTabPane" >
+                        <VBox HBox.hgrow="ALWAYS"  VBox.vgrow="ALWAYS" >
+                            <TabPane fx:id="parTabPane"  VBox.vgrow="ALWAYS" >
                                 <Tab text="Parameters" closable="false" > 
                                     <TableView fx:id="parameterTable" prefHeight="200" VBox.vgrow="ALWAYS"  >
                                     </TableView>
@@ -60,6 +61,9 @@
                                 </Tab>
                                 <Tab text="Simulate" closable="false" > 
                                     <VBox HBox.hgrow="ALWAYS">
+                                        <padding>
+                                            <Insets top="5" right="5" left="5" bottom="5"/>                 
+                                        </padding>
                                         <children>
                                             <HBox>
                                                 <children>
@@ -133,8 +137,8 @@
                                         <children>
                                             <HBox>
                                                 <children>
-                                                    <Button text="Fit" onAction="#fitResidues" fx:id="FitResidues"/>
-                                                    <Button text="FitGroup" onAction="#fitGroupResidues" fx:id="FitGroupResidues"/>
+                                                    <Button text="Fit All" onAction="#fitResidues" fx:id="FitResidues"/>
+                                                    <Button text="Fit Selected" onAction="#fitGroupResidues" fx:id="FitGroupResidues"/>
                                                     <Button fx:id="haltProcessButton" mnemonicParsing="false" onAction="#haltFit" text="Halt" />
                                                 </children>
                                             </HBox> 
