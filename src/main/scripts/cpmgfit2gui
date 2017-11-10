@@ -1,17 +1,22 @@
 #!/bin/sh
 
-# swank [ script  [ arg ... ] ]
+# cpmgfig2gui [ script  [ arg ... ] ]
 # 
 # optional environment variables:
 #
 # JAVA_HOME  - directory of JDK/JRE, if not set then 'java' must be found on PATH
 # CLASSPATH  - colon separated list of additional jar files & class directories
 # JAVA_OPTS  - list of JVM options, e.g. "-Xmx256m -Dfoo=bar"
-# TCLLIBPATH - space separated list of Tcl libraries directories
 #
 
-nvjver=${project.version}
-nvjmain=org.comdnmr.cpmgfit2.gui.MainApp
+if [ -n "$NMRFXP_MEMORY" ] ; then
+    HEAP_MEM=$NMRFXP_MEMORY
+else
+    HEAP_MEM="2048"
+fi
+
+cpmgfit2guiver=${project.version}
+cpmgfig2guimain=org.comdnmr.cpmgfit2.gui.MainApp
 iscygwin=false
 ismsys=false
 case "`uname`" in
@@ -20,14 +25,6 @@ case "`uname`" in
 esac
 
 JAVA=java
-if [ -n "$JAVA_HOME" ] ; then
-    if [ -x "$JAVA_HOME/jre/sh/java"  ] ; then
-        # AIX location
-        JAVA="$JAVA_HOME/jre/sh/java"
-    else
-        JAVA="$JAVA_HOME/bin/java"
-    fi
-fi
 
 # get the directory path of this script
 # resolve script symlink, if any
@@ -44,24 +41,34 @@ done
 
 dir=`dirname $pgm`
 CLASSPATH=${classpath}
-# set classpath, or add to existing
-if [ -z "$CLASSPATH" ] ; then
-    CLASSPATH="$dir/cpmgfit2gui-$nvjver.jar"
-    if $iscygwin ; then
-        CLASSPATH=`cygpath -pw "$CLASSPATH"`
-    fi
+
+if [ -d "${dir}/../jre.bundle/Contents/Home/jre/bin" ] ; then
+    JAVA="${dir}/../jre.bundle/Contents/Home/jre/bin/java"
+    CLASSPATH="$dir/lib/cpmgfit2gui-$cpmgfit2guiver.jar:$CLASSPATH"
+elif [ -d "${dir}/jre/bin" ] ; then
+    JAVA="${dir}/jre/bin/java"
+    CLASSPATH="$dir/lib/cpmgfit2gui-$cpmgfit2guiver.jar:$CLASSPATH"
 else
+    if [ -n "$JAVA_HOME" ] ; then
+        if [ -x "$JAVA_HOME/jre/sh/java"  ] ; then
+            # AIX location
+            JAVA="$JAVA_HOME/jre/sh/java"
+        else
+            JAVA="$JAVA_HOME/bin/java"
+        fi
+    fi
+
     if $ismsys ; then
-        nvjdir=`$dir/echopath "$dir"`
-        CLASSPATH="$nvjdir/cpmgfit2gui-$nvjver.jar;$CLASSPATH"
+        cpmgfit2guidir=`$dir/echopath "$dir"`
+        CLASSPATH="$cpmgfit2guidir/cpmgfit2gui-$cpmgfit2guiver.jar;$CLASSPATH"
     elif $iscygwin ; then
         CLASSPATH=`cygpath -pu "$CLASSPATH"`
-        CLASSPATH="$dir/cpmgfit2gui-$nvjver.jar;$CLASSPATH"
+        CLASSPATH="$dir/cpmgfit2gui-$cpmgfit2guiver.jar;$CLASSPATH"
         CLASSPATH=`cygpath -pw "$CLASSPATH"`
     else
-        CLASSPATH="$dir/cpmgfit2gui-$nvjver.jar:$CLASSPATH"
+        CLASSPATH="$dir/cpmgfit2gui-$cpmgfit2guiver.jar:$CLASSPATH"
     fi
 fi
 
 export CLASSPATH
-exec "$JAVA" -Djava.awt.headless=true -DTCLLIBPATH="$TCLLIBPATH" -mx768m -cp "$CLASSPATH" $JAVA_OPTS $nvjmain ${1+"$@"}
+exec "$JAVA" -mx${HEAP_MEM}m -cp "$CLASSPATH" $JAVA_OPTS $cpmgfig2guimain ${1+"$@"}
