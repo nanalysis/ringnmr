@@ -89,13 +89,13 @@ def loadSecondaryStructure(event):
     node = event.getSource()
     #chartNode = ChartUtil.findNode(node.getScene(),"xyBarChart0")
     chartNode = PyController.mainController.getActiveChart()
-    ssRegion = ChartUtil.findNode(node.getScene(),"ssregion")
+    ssRegion = ChartUtil.findNode(chartNode.getScene(),"ssregion")
     if chartNode == None:
         print 'no chart node'
         return
     fileChooser = FileChooser()
     fileChooser.setTitle("Open Secondary Structure")
-    selectedFile = fileChooser.showOpenDialog(node.getScene().getWindow())
+    selectedFile = fileChooser.showOpenDialog(chartNode.getScene().getWindow())
     if selectedFile != None:
         f1 = open(selectedFile.toString(),'r')
         ssValues = ArrayList()
