@@ -195,8 +195,6 @@ public class SSPainter {
         double startX = xAxis.getLayoutX() + 5;  // 5 is a little fudge factor that helps with appearance
         double disx = xAxis.getDisplayPosition(xAxis.getLowerBound());
         double disy = yAxis.getLayoutX() + yAxis.getWidth();
-        System.out.println(xAxis.getLayoutX() + " " + disx + " " + disy);
-        System.out.println(xAxis.getBoundsInParent().toString());
         int nDisulfide = 0;
         for (SecondaryStructure ss : secondaryStructures) {
             Color color = ss.getColor();
