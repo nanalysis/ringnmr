@@ -136,6 +136,7 @@ public class CPMGFit {
 //            System.out.println(i + " " + boundaries[0][i] + " " + boundaries[1][i] + " " + sigma[i]);
         }
         PointValuePair result = calcR.refine(guesses, boundaries[0], boundaries[1], sigma);
+        double[] pars = result.getPoint();
         /*
         for (int i = 0; i < map.length; i++) {
             for (int j = 0; j < map[i].length; j++) {
@@ -144,13 +145,12 @@ public class CPMGFit {
             System.out.println("");
         }
 
-        double[] pars = result.getPoint();
         System.out.print("Fit pars ");
         for (int i = 0; i < pars.length; i++) {
             System.out.printf(" %.3f", pars[i]);
         }
         System.out.println("");
-*/
+         */
         double aic = calcR.getAICc(pars);
         double rms = calcR.getRMS(pars);
 //        System.out.println("rms " + rms);
