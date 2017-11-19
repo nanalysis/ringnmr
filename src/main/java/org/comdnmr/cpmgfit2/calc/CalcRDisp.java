@@ -37,6 +37,7 @@ public class CalcRDisp implements MultivariateFunction {
     boolean reportFitness = false;
     double[] rexErrors = new double[nID];
     static RandomGenerator random = new SynchronizedRandomGenerator(new Well19937c());
+    int[] r2Mask = {0, 1, 3};
 
     public static enum CPMGEquation {
         NOEX("noex", 0, "R2") {
@@ -108,12 +109,12 @@ public class CalcRDisp implements MultivariateFunction {
                 return map;
             }
 
-            public int[][] makeMap(int[] stateCount, int[][] states) {
+            public int[][] makeMap(int[] stateCount, int[][] states, int[] r2Mask) {
                 int n = states.length;
                 int[][] map = new int[n][1];
                 // field temp nuc
                 for (int i = 0; i < n; i++) {
-                    map[i][0] = CPMGFit.getMapIndex(states[i], stateCount, 0, 1, 3);
+                    map[i][0] = CPMGFit.getMapIndex(states[i], stateCount, r2Mask);
                 }
                 return map;
             }
@@ -230,7 +231,7 @@ public class CalcRDisp implements MultivariateFunction {
                 return map;
             }
 
-            public int[][] makeMap(int[] stateCount, int[][] states) {
+            public int[][] makeMap(int[] stateCount, int[][] states, int[] r2Mask) {
                 int n = states.length;
                 int[][] map = new int[n][3];
                 int lastCount = 0;
@@ -241,7 +242,7 @@ public class CalcRDisp implements MultivariateFunction {
                 lastCount++;
                 int maxIndex = 0;
                 for (int i = 0; i < n; i++) {
-                    map[i][1] = CPMGFit.getMapIndex(states[i], stateCount, 0, 1, 3) + lastCount;
+                    map[i][1] = CPMGFit.getMapIndex(states[i], stateCount, r2Mask) + lastCount;
                     maxIndex = Math.max(map[i][1], maxIndex);
                 }
                 lastCount = maxIndex + 1;
@@ -415,7 +416,7 @@ public class CalcRDisp implements MultivariateFunction {
                 return map;
             }
 
-            public int[][] makeMap(int[] stateCount, int[][] states) {
+            public int[][] makeMap(int[] stateCount, int[][] states, int[] r2Mask) {
                 int n = states.length;
                 int[][] map = new int[n][4];
                 int lastCount = 0;
@@ -426,7 +427,7 @@ public class CalcRDisp implements MultivariateFunction {
                 int maxIndex = 0;
                 lastCount = 2;
                 for (int i = 0; i < n; i++) {
-                    map[i][2] = CPMGFit.getMapIndex(states[i], stateCount, 0, 1, 3) + lastCount;
+                    map[i][2] = CPMGFit.getMapIndex(states[i], stateCount, r2Mask) + lastCount;
                     maxIndex = Math.max(map[i][2], maxIndex);
 
                 }
@@ -513,7 +514,7 @@ public class CalcRDisp implements MultivariateFunction {
 
         public abstract int[][] makeMap(int n, int m);
 
-        public abstract int[][] makeMap(int[] stateCount, int[][] states);
+        public abstract int[][] makeMap(int[] stateCount, int[][] states, int[] r2Mask);
 
         public String[] getParNames() {
             return parNames;
@@ -581,7 +582,7 @@ public class CalcRDisp implements MultivariateFunction {
 
     public void setMap(int[] stateCount, int[][] states) {
         this.map = new int[states.length][stateCount.length];
-        this.map = equation.makeMap(stateCount, states);
+        this.map = equation.makeMap(stateCount, states, r2Mask);
         for (int i = 0; i < map.length; i++) {
 //            for (int j = 0; j < map[i].length; j++) {
 //                System.out.print(" " + map[i][j]);
