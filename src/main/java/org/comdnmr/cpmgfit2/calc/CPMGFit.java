@@ -155,6 +155,9 @@ public class CPMGFit {
         double rms = calcR.getRMS(pars);
 //        System.out.println("rms " + rms);
         int nGroupPars = calcR.getNGroupPars();
+        for (int i = 0; i < guesses.length; i++) {
+            sigma[i] /= 2.0;
+        }
 
         String[] parNames = calcR.getParNames();
         double[] errEstimates;

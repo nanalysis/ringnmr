@@ -852,10 +852,11 @@ public class CalcRDisp implements MultivariateFunction {
         int nSteps = 2000;
         double stopFitness = 0.0;
         int diagOnly = 0;
+        double tol = 1.0e-5;
         //new Checker(100 * Precision.EPSILON, 100 * Precision.SAFE_MIN, nSteps));
         CMAESOptimizer optimizer = new CMAESOptimizer(nSteps, stopFitness, true, diagOnly, 0,
                 DEFAULT_RANDOMGENERATOR, true,
-                new Checker(1.0e-7, 1.0e-7, nSteps));
+                new Checker(tol, tol, nSteps));
         PointValuePair result = null;
 
         try {
