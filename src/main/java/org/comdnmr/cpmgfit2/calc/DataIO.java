@@ -38,7 +38,7 @@ public class DataIO {
         double[] xValues = null;
         List<String> peakRefList = new ArrayList<>();
         //  Peak       Residue N       T1      T2      T11     T3      T4      T9      T5      T10     T12     T6      T7      T8
-
+        int fakeRes = 1;
         try (BufferedReader fileReader = Files.newBufferedReader(path)) {
             while (true) {
                 String line = fileReader.readLine();
@@ -69,6 +69,12 @@ public class DataIO {
                     gotHeader = true;
                 } else {
                     String residueNum = sfields[1].trim();
+                    if (residueNum.equals("")) {
+                        residueNum = String.valueOf(fakeRes);
+                    } else if (residueNum.indexOf('.') != -1) {
+                        int dotIndex = residueNum.indexOf('.');
+                        residueNum = residueNum.substring(0, dotIndex);
+                    }
                     double refIntensity = Double.parseDouble(sfields[offset - 1].trim());
                     List<Double> xValueList = new ArrayList<>();
                     List<Double> yValueList = new ArrayList<>();
@@ -87,6 +93,11 @@ public class DataIO {
                                 ok = false;
                                 continue;
                             }
+                            if (intensity < 0.0) {
+                                ok = false;
+                                continue;
+                            }
+
                             r2Eff = -Math.log(intensity / refIntensity) / tauCPMG;
                         } catch (NumberFormatException nFE) {
                             continue;
@@ -105,7 +116,7 @@ public class DataIO {
                         residueInfo = new ResidueInfo(Integer.parseInt(residueNum), 0, 0, 0);
                         resProp.addResidueInfo(residueNum, residueInfo);
                     }
-
+                    fakeRes++;
                 }
             }
         }
