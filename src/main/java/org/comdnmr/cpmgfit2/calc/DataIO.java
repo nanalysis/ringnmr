@@ -26,13 +26,36 @@ import org.yaml.snakeyaml.Yaml;
  */
 public class DataIO {
 
-    public static void loadPeakFile(String fileName, ResidueProperties resProp, String nucleus, double temperature, double field, double tauCPMG, double[] vcpmgs) throws IOException, IllegalArgumentException {
+    public static void loadPeakFile(String fileName, ResidueProperties resProp, String nucleus, double temperature, double field, double tauCPMG, double[] vcpmgs, HashMap<String, Object> errorPars) throws IOException, IllegalArgumentException {
         Path path = Paths.get(fileName);
         String fileTail = path.getFileName().toString();
         fileTail = fileTail.substring(0, fileTail.indexOf('.'));
 
         ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature);
         resProp.addExperimentData(fileTail, expData);
+        boolean eSet = false;
+        double errF = 0.05;
+        double noise = 1.0;
+        String errorMode = "";
+        if (errorPars != null) {
+            if (errorPars.containsKey("mode")) {
+                errorMode = errorPars.get("mode").toString();
+                if (errorMode.equals("percent")) {
+                    if (errorPars.containsKey("value")) {
+                        String percentValue = errorPars.get("value").toString();
+                        errF = Double.parseDouble(percentValue) * 0.01;
+                        eSet = true;
+                    }
+                } else if (errorMode.equals("noise")) {
+                    if (errorPars.containsKey("value")) {
+                        String percentValue = errorPars.get("value").toString();
+                        noise = Double.parseDouble(percentValue);
+                        eSet = true;
+                    }
+                }
+            }
+        }
+
         boolean gotHeader = false;
         String[] peakRefs = null;
         double[] xValues = null;
@@ -62,8 +85,15 @@ public class DataIO {
                     for (int i = offset; i < sfields.length; i++) {
                         int j = i - offset;
                         // fixme assumes first vcpmg is the 0 ref 
-                        xValues[j] = vcpmgs[j + 1];
-                        peakRefs[j] = sfields[i];
+                        if (vcpmgs == null) {
+                            try {
+                                xValues[j] = Double.parseDouble(sfields[i].trim());
+                            } catch (NumberFormatException nFE) {
+                            }
+                        } else {
+                            xValues[j] = vcpmgs[j + 1];
+                        }
+                        peakRefs[j] = String.valueOf(j);
                         peakRefList.add(peakRefs[j]);
                     }
                     gotHeader = true;
@@ -87,8 +117,9 @@ public class DataIO {
                             continue;
                         }
                         double r2Eff;
+                        double intensity;
                         try {
-                            double intensity = Double.parseDouble(sfields[i].trim());
+                            intensity = Double.parseDouble(sfields[i].trim());
                             if (intensity > refIntensity) {
                                 ok = false;
                                 continue;
@@ -104,7 +135,13 @@ public class DataIO {
                         }
                         xValueList.add(xValues[j]);
                         yValueList.add(r2Eff);
-                        errValueList.add(0.0);
+                        double eValue = 0.0;
+                        if (errorMode.equals("noise")) {
+                            eValue = noise / (intensity * tauCPMG);
+                        } else if (errorMode.equals("percent")) {
+                            eValue = (errF * refIntensity) / (intensity * tauCPMG);
+                        }
+                        errValueList.add(eValue);
                     }
                     if (!ok) {
                         continue;
@@ -121,7 +158,9 @@ public class DataIO {
             }
         }
         double errValue = estimateErrors(expData);
-        setErrors(expData, errValue);
+        if (!eSet) {
+            setErrors(expData, errValue);
+        }
     }
 
     public static void loadTextFile(String fileName, ResidueProperties resProp, String nucleus, double temperature, double field) throws IOException, IllegalArgumentException {
@@ -181,6 +220,16 @@ public class DataIO {
                         resProp.addResidueInfo(residueNum, residueInfo);
                     }
                 }
+            }
+        }
+    }
+
+    public static void setPercentileErrors(ExperimentData expData, double fraction) {
+        for (ResidueData residueData : expData.residueData.values()) {
+            double[] yValues = residueData.getYValues();
+            double[] errValues = residueData.getErrValues();
+            for (int i = 0; i < yValues.length; i++) {
+                errValues[i] = yValues[i] * fraction;
             }
         }
     }
@@ -369,14 +418,29 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     List<Number> vcpmgList = (List<Number>) dataMap3.get("vcpmg");
                     Double tauCPMG = (Double) dataMap3.get("tau");
                     String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
-                    if (vcpmgList == null) {
-                        loadTextFile(textFileName, resProp, nucleus, temperature, field);
-                    } else {
-                        double[] vcpmgs = new double[vcpmgList.size()];
-                        for (int i = 0; i < vcpmgs.length; i++) {
-                            vcpmgs[i] = vcpmgList.get(i).doubleValue();
+                    String fileMode = (String) dataMap3.get("mode");
+                    HashMap<String, Object> errorPars = (HashMap<String, Object>) dataMap3.get("error");
+                    System.out.println("err " + errorPars);
+                    if ((fileMode != null) && fileMode.equals("mpk2")) {
+                        if (vcpmgList == null) {
+                            loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, null, errorPars);
+                        } else {
+                            double[] vcpmgs = new double[vcpmgList.size()];
+                            for (int i = 0; i < vcpmgs.length; i++) {
+                                vcpmgs[i] = vcpmgList.get(i).doubleValue();
+                            }
+                            loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs, errorPars);
                         }
-                        loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs);
+                    } else {
+                        if (vcpmgList == null) {
+                            loadTextFile(textFileName, resProp, nucleus, temperature, field);
+                        } else {
+                            double[] vcpmgs = new double[vcpmgList.size()];
+                            for (int i = 0; i < vcpmgs.length; i++) {
+                                vcpmgs[i] = vcpmgList.get(i).doubleValue();
+                            }
+                            loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs, errorPars);
+                        }
                     }
                 }
                 counter++;

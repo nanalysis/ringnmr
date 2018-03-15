@@ -13,6 +13,7 @@ public class ExperimentData {
     HashMap<String, ResidueData> residueData;
     final double field;
     final double temperature;
+    double errFraction = 0.05;
     final String nucleus;
     private String state="";
 
@@ -30,7 +31,14 @@ public class ExperimentData {
     public String getName() {
         return name;
     }
-    
+
+    public void setErrFraction(double errFraction) {
+       this.errFraction = errFraction;
+    }
+
+    public double getErrFraction() {
+       return(errFraction);
+    }
 
     public void addResidueData(String resNum, ResidueData data) {
         residueData.put(resNum, data);
