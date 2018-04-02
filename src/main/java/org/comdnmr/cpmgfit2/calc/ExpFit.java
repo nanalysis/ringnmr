@@ -11,9 +11,8 @@ import org.apache.commons.math3.optim.PointValuePair;
  *
  * @author Bruce Johnson
  */
-public class CPMGFit implements EquationFitter {
+public class ExpFit implements EquationFitter {
 
-    static List<String> equationNameList = Arrays.asList(CPMGEquation.getEquationNames());
     List<Double> xValues = new ArrayList<>();
     List<Double> yValues = new ArrayList<>();
     List<Double> errValues = new ArrayList<>();
@@ -25,6 +24,7 @@ public class CPMGFit implements EquationFitter {
     int[][] states;
     int[] stateCount;
     String[] resNums;
+    static List<String> equationNameList = Arrays.asList(ExpEquation.getEquationNames());
 
     class StateCount {
 
@@ -100,7 +100,7 @@ public class CPMGFit implements EquationFitter {
             usedFields[iExp++] = expData.getField();
         }
     }
-    
+
     public static List<String> getEquationNames() {
         return equationNameList;
     }
@@ -118,7 +118,7 @@ public class CPMGFit implements EquationFitter {
             fields[i] = fieldValues.get(i);
             idNums[i] = idValues.get(i);
         }
-        FitModel calcR = new CalcRDisp();
+        FitModel calcR = new CalcExpDecay();
         calcR.setEquation(eqn);
         calcR.setAbsMode(absMode);
 

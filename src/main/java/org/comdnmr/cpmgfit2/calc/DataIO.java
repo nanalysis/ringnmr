@@ -26,7 +26,10 @@ import org.yaml.snakeyaml.Yaml;
  */
 public class DataIO {
 
-    public static void loadPeakFile(String fileName, ResidueProperties resProp, String nucleus, double temperature, double field, double tauCPMG, double[] vcpmgs, HashMap<String, Object> errorPars) throws IOException, IllegalArgumentException {
+    public static void loadPeakFile(String fileName, ResidueProperties resProp, String nucleus,
+            double temperature, double field, double tauCPMG, double[] vcpmgs, boolean rateMode,
+            HashMap<String, Object> errorPars, double[] delayCalc) throws IOException, IllegalArgumentException {
+        System.out.println("laod peak file");
         Path path = Paths.get(fileName);
         String fileTail = path.getFileName().toString();
         fileTail = fileTail.substring(0, fileTail.indexOf('.'));
@@ -77,7 +80,10 @@ public class DataIO {
                     continue;
                 }
                 String[] sfields = line.split("\t", -1);
-                int offset = 4;
+                int offset = 3;
+                if (rateMode) {
+                    offset++;
+                }
                 if (!gotHeader) {
                     int nValues = sfields.length - offset;
                     xValues = new double[nValues];
@@ -87,7 +93,10 @@ public class DataIO {
                         // fixme assumes first vcpmg is the 0 ref 
                         if (vcpmgs == null) {
                             try {
-                                xValues[j] = Double.parseDouble(sfields[i].trim());
+                                double x = Double.parseDouble(sfields[i].trim());
+                                xValues[j] = delayCalc[0] + delayCalc[2] * (x + delayCalc[1]);
+                                System.out.println(x + " " + xValues[j]);
+
                             } catch (NumberFormatException nFE) {
                             }
                         } else {
@@ -105,7 +114,10 @@ public class DataIO {
                         int dotIndex = residueNum.indexOf('.');
                         residueNum = residueNum.substring(0, dotIndex);
                     }
-                    double refIntensity = Double.parseDouble(sfields[offset - 1].trim());
+                    double refIntensity = 1.0;
+                    if (rateMode) {
+                        refIntensity = Double.parseDouble(sfields[offset - 1].trim());
+                    }
                     List<Double> xValueList = new ArrayList<>();
                     List<Double> yValueList = new ArrayList<>();
                     List<Double> errValueList = new ArrayList<>();
@@ -116,30 +128,38 @@ public class DataIO {
                         if ((valueStr.length() == 0) || valueStr.equals("NA")) {
                             continue;
                         }
-                        double r2Eff;
+                        double yValue;
                         double intensity;
                         try {
                             intensity = Double.parseDouble(sfields[i].trim());
-                            if (intensity > refIntensity) {
-                                ok = false;
-                                continue;
-                            }
-                            if (intensity < 0.0) {
-                                ok = false;
-                                continue;
-                            }
+                            if (rateMode) {
+                                if (intensity > refIntensity) {
+                                    ok = false;
+                                    continue;
+                                }
+                                if (intensity < 0.0) {
+                                    ok = false;
+                                    continue;
+                                }
 
-                            r2Eff = -Math.log(intensity / refIntensity) / tauCPMG;
+                                yValue = -Math.log(intensity / refIntensity) / tauCPMG;
+                            } else {
+                                yValue = intensity;
+                            }
                         } catch (NumberFormatException nFE) {
                             continue;
                         }
                         xValueList.add(xValues[j]);
-                        yValueList.add(r2Eff);
+                        yValueList.add(yValue);
                         double eValue = 0.0;
-                        if (errorMode.equals("noise")) {
-                            eValue = noise / (intensity * tauCPMG);
-                        } else if (errorMode.equals("percent")) {
-                            eValue = (errF * refIntensity) / (intensity * tauCPMG);
+                        if (rateMode) {
+                            if (errorMode.equals("noise")) {
+                                eValue = noise / (intensity * tauCPMG);
+                            } else if (errorMode.equals("percent")) {
+                                eValue = (errF * refIntensity) / (intensity * tauCPMG);
+                            }
+                        } else {
+                            eValue = xValueList.get(0) * errF;
                         }
                         errValueList.add(eValue);
                     }
@@ -267,7 +287,7 @@ public class DataIO {
         return errorA;
     }
 
-    public static ResidueProperties loadParametersFromFile(String fileName) throws IOException {
+    public static ResidueProperties loadParametersFromFile(String fitMode, String fileName) throws IOException {
         Path path = Paths.get(fileName);
         String fileTail = path.getFileName().toString();
         fileTail = fileTail.substring(0, fileTail.indexOf('.'));
@@ -340,8 +360,16 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 fields[0] = 1.0;
                 int parStart = headerMap.get("Best") + 1;
                 HashMap<String, Double> parMap = new HashMap<>();
-                CalcRDisp.CPMGEquation cpmgEquation = CalcRDisp.CPMGEquation.valueOf(equationName);
-                String[] eqnParNames = cpmgEquation.getParNames();
+                EquationType equationType = null;
+                List<String> equationNames;
+                if (fitMode.equals("exp")) {
+                    equationType = ExpEquation.valueOf(equationName);
+                    equationNames = ExpFit.getEquationNames();
+                } else {
+                    equationType = CPMGEquation.valueOf(equationName);
+                    equationNames = CPMGFit.getEquationNames();
+                }
+                String[] eqnParNames = equationType.getParNames();
                 int nPar = eqnParNames.length;
 
                 double[] pars = new double[nPar];
@@ -369,7 +397,6 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                         parMap.put(extraPar, Double.parseDouble(sfields[parIndex].trim()));
                     }
                 }
-                List<String> equationNames = Arrays.asList("NOEX", "CPMGFAST", "CPMGSLOW");
                 parMap.put("Equation", 1.0 + equationNames.indexOf(equationName));
                 PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, fields);
                 CurveFit curveSet = new CurveFit(stateString, residueNumber, parMap, plotEquation);
@@ -393,9 +420,15 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 Map dataMap = (HashMap<String, Object>) data;
                 Map dataMap2 = (HashMap<String, Object>) dataMap.get("fit");
                 String parName = (String) dataMap2.get("file");
+                String expMode = (String) dataMap2.get("mode");
+                expMode = expMode == null ? "cpmg" : expMode;
                 String parFileName = FileSystems.getDefault().getPath(dirPath.toString(), parName).toString();
 
-                resProp = DataIO.loadParametersFromFile(parFileName);
+                resProp = DataIO.loadParametersFromFile(expMode, parFileName);
+                resProp.setExpMode(expMode);
+
+                boolean rateMode = expMode.equals("cpmg");
+                System.out.println("ratemode " + rateMode);
                 HashMap<String, Object> fitParMap = (HashMap<String, Object>) dataMap2.get("parameters");
                 if (fitParMap != null) {
                     Boolean absValueMode = (Boolean) fitParMap.get("absValue");
@@ -406,6 +439,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     if (bootStrapMode != null) {
                         resProp.setBootStrapMode(bootStrapMode);
                     }
+
                     System.out.println("absmode " + absValueMode + " bootstrap " + bootStrapMode);
                 }
 
@@ -417,19 +451,33 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     String nucleus = (String) dataMap3.get("nucleus");
                     List<Number> vcpmgList = (List<Number>) dataMap3.get("vcpmg");
                     Double tauCPMG = (Double) dataMap3.get("tau");
+                    tauCPMG = tauCPMG == null ? 1.0 : tauCPMG;  // fixme throw error if  ratemode and no tauCPMG
+
                     String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
                     String fileMode = (String) dataMap3.get("mode");
                     HashMap<String, Object> errorPars = (HashMap<String, Object>) dataMap3.get("error");
+                    Object delayField = dataMap3.get("delays");
+                    System.out.println("delays " + delayField);
+                    double[] delayCalc = {0.0, 0.0, 1.0};
+                    if (delayField instanceof Map) {
+                        Map<String, Number> delayMap = (Map<String, Number>) delayField;
+                        delayCalc[0] = delayMap.get("delta0").doubleValue();
+                        delayCalc[1] = delayMap.get("c0").doubleValue();
+                        delayCalc[2] = delayMap.get("delta").doubleValue();
+                    }
+                    System.out.println("err " + errorPars);
+                    System.out.println("err " + errorPars);
+                    System.out.println("err " + errorPars);
                     System.out.println("err " + errorPars);
                     if ((fileMode != null) && fileMode.equals("mpk2")) {
                         if (vcpmgList == null) {
-                            loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, null, errorPars);
+                            loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, null, rateMode, errorPars, delayCalc);
                         } else {
                             double[] vcpmgs = new double[vcpmgList.size()];
                             for (int i = 0; i < vcpmgs.length; i++) {
                                 vcpmgs[i] = vcpmgList.get(i).doubleValue();
                             }
-                            loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs, errorPars);
+                            loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs, rateMode, errorPars, delayCalc);
                         }
                     } else {
                         if (vcpmgList == null) {
@@ -439,7 +487,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                             for (int i = 0; i < vcpmgs.length; i++) {
                                 vcpmgs[i] = vcpmgList.get(i).doubleValue();
                             }
-                            loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs, errorPars);
+                            loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs, rateMode, errorPars, delayCalc);
                         }
                     }
                 }
@@ -461,7 +509,9 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
     }
 
     public static void saveParametersToFile(String fileName, ResidueProperties resProp) {
-        String header = "Residue	Peak	GrpSz	Group	State	Equation	RMS	   AIC	Best	     R2	  R2.sd	    Rex	 Rex.sd	    Kex	 Kex.sd	     pA	  pA.sd	     dW	  dW.sd";
+        String headerCPMG = "Residue	Peak	GrpSz	Group	State	Equation	RMS	   AIC	Best	     R2	  R2.sd	    Rex	 Rex.sd	    Kex	 Kex.sd	     pA	  pA.sd	     dW	  dW.sd";
+        String headerExp = "Residue	Peak	GrpSz	Group	State	Equation	RMS	   AIC	Best	     A	  A.sd	    R	 R.sd";
+        String header = headerCPMG;
         try (FileWriter writer = new FileWriter(fileName)) {
             writer.write(header);
             resProp.getResidueMap().values().stream().

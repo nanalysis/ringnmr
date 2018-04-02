@@ -9,25 +9,25 @@ import org.apache.commons.math3.random.Well19937c;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.util.FastMath;
 
-public class CalcRDisp extends FitModel {
+public class CalcExpDecay extends FitModel {
 
     static RandomGenerator random = new SynchronizedRandomGenerator(new Well19937c());
     int[] r2Mask = {0, 1, 3};
     double[] rexErrors = new double[nID];
 
-    public CalcRDisp() {
-        this.equation = CPMGEquation.CPMGFAST;
+    public CalcExpDecay() {
+        this.equation = ExpEquation.EXPAB;
     }
 
     public void setEquation(String eqName) {
-        equation = CPMGEquation.valueOf(eqName.toUpperCase());
+        equation = ExpEquation.valueOf(eqName.toUpperCase());
     }
 
-    public CalcRDisp(double[] x, double[] y, double[] err, double[] fieldValues, double[] fields) throws IllegalArgumentException {
+    public CalcExpDecay(double[] x, double[] y, double[] err, double[] fieldValues, double[] fields) throws IllegalArgumentException {
         this(x, y, err, fieldValues, fields, new int[x.length]);
     }
 
-    public CalcRDisp(double[] x, double[] y, double[] err, double[] fieldValues, double[] fields, int[] idNums) throws IllegalArgumentException {
+    public CalcExpDecay(double[] x, double[] y, double[] err, double[] fieldValues, double[] fields, int[] idNums) throws IllegalArgumentException {
         this.xValues = x.clone();
         this.yValues = y.clone();
         this.errValues = err.clone();
@@ -35,7 +35,7 @@ public class CalcRDisp extends FitModel {
         this.fields = fields.clone();
         this.idNums = idNums.clone();
         this.idNums = new int[xValues.length];
-        this.equation = CPMGEquation.CPMGFAST;
+        this.equation = ExpEquation.EXPAB;
         this.equation.setFieldRef(fields[0]);
         if (setNID()) {
             throw new IllegalArgumentException("Invalid idNums, some values not used");
@@ -71,13 +71,12 @@ public class CalcRDisp extends FitModel {
             sumSq += delta * delta;
         }
 //        if (reportFitness) {
-        //           double rms = Math.sqrt(sumSq / xValues.length);
-        //          for (double p:par) {
-        //             System.out.print(p + " ");
-        //        }
-        //       System.out.println(" " + sumSq + " " + sumAbs + " " + rms);
+//        double rms = Math.sqrt(sumSq / xValues.length);
+//        for (double p : par) {
+//            System.out.print(p + " ");
+//        }
+//        System.out.println(" " + sumSq + " " + sumAbs + " " + rms);
         //  }
-
         if (absMode) {
             return sumAbs;
         } else {
@@ -93,34 +92,6 @@ public class CalcRDisp extends FitModel {
             result.add(yCalc);
         }
         return result;
-    }
-
-    public static double rDisp(double[] par, double x) {
-        double a = par[0];
-        double b = par[1];
-        double c = par[2];
-        // fixme check for x=0;
-        return Math.exp(-(a - a * Math.sin(b / x) / (b / x) + c));
-    }
-
-    public double[] getRex(double[] pars) {
-        double[] result = new double[nID];
-        for (int i = 0; i < map.length; i++) {
-            result[i] = equation.getRex(pars, map[i]);
-        }
-        return result;
-    }
-
-    public double getRex(double[] pars, int id) {
-        return equation.getRex(pars, map[id]);
-    }
-
-    public double[] getRexError() {
-        return rexErrors.clone();
-    }
-
-    public double getKex(double[] pars) {
-        return equation.getKex(pars);
     }
 
     public double[] simBounds(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma) {
@@ -140,11 +111,6 @@ public class CalcRDisp extends FitModel {
             for (int j = 0; j < nPar; j++) {
                 parValues[j][i] = rPoint[j];
             }
-            if (equation == CPMGEquation.CPMGSLOW) {
-                for (int j = 0; j < map.length; j++) {
-                    rexValues[j][i] = equation.getRex(result.getPoint(), map[j]);
-                }
-            }
         }
         double[] parSDev = new double[nPar];
         for (int i = 0; i < nPar; i++) {
@@ -152,12 +118,6 @@ public class CalcRDisp extends FitModel {
             double p5 = dStat.getPercentile(5.0);
             double p95 = dStat.getPercentile(95.0);
             parSDev[i] = dStat.getStandardDeviation();
-        }
-        if (equation == CPMGEquation.CPMGSLOW) {
-            for (int j = 0; j < nID; j++) {
-                DescriptiveStatistics dStat = new DescriptiveStatistics(rexValues[j]);
-                rexErrors[j] = dStat.getStandardDeviation();
-            }
         }
         yValues = yValuesOrig;
         return parSDev;
@@ -172,7 +132,7 @@ public class CalcRDisp extends FitModel {
         double[] yPred = getPredicted(start);
         IntStream.range(0, nSim).parallel().forEach(i -> {
 //        IntStream.range(0, nSim).forEach(i -> {
-            CalcRDisp rDisp = new CalcRDisp(xValues, yPred, errValues, fieldValues, fields, idNums);
+            CalcExpDecay rDisp = new CalcExpDecay(xValues, yPred, errValues, fieldValues, fields, idNums);
             rDisp.setEquation(equation.getName());
             rDisp.setAbsMode(absMode);
             double[] newY = new double[yValues.length];
@@ -188,23 +148,12 @@ public class CalcRDisp extends FitModel {
             for (int j = 0; j < nPar; j++) {
                 parValues[j][i] = rPoint[j];
             }
-            if (equation == CPMGEquation.CPMGSLOW) {
-                for (int j = 0; j < map.length; j++) {
-                    rexValues[j][i] = equation.getRex(result.getPoint(), map[j]);
-                }
-            }
         });
 
         double[] parSDev = new double[nPar];
         for (int i = 0; i < nPar; i++) {
             DescriptiveStatistics dStat = new DescriptiveStatistics(parValues[i]);
             parSDev[i] = dStat.getStandardDeviation();
-        }
-        if (equation == CPMGEquation.CPMGSLOW) {
-            for (int j = 0; j < nID; j++) {
-                DescriptiveStatistics dStat = new DescriptiveStatistics(rexValues[j]);
-                rexErrors[j] = dStat.getStandardDeviation();
-            }
         }
         return parSDev;
     }
@@ -216,7 +165,7 @@ public class CalcRDisp extends FitModel {
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
         IntStream.range(0, nSim).parallel().forEach(i -> {
-            CalcRDisp rDisp = new CalcRDisp(xValues, yValues, errValues, fieldValues, fields, idNums);
+            CalcExpDecay rDisp = new CalcExpDecay(xValues, yValues, errValues, fieldValues, fields, idNums);
             rDisp.setEquation(equation.getName());
             rDisp.setAbsMode(absMode);
             double[] newX = new double[yValues.length];
@@ -248,23 +197,12 @@ public class CalcRDisp extends FitModel {
             for (int j = 0; j < nPar; j++) {
                 parValues[j][i] = rPoint[j];
             }
-            if (equation == CPMGEquation.CPMGSLOW) {
-                for (int j = 0; j < map.length; j++) {
-                    rexValues[j][i] = equation.getRex(result.getPoint(), map[j]);
-                }
-            }
         });
 
         double[] parSDev = new double[nPar];
         for (int i = 0; i < nPar; i++) {
             DescriptiveStatistics dStat = new DescriptiveStatistics(parValues[i]);
             parSDev[i] = dStat.getStandardDeviation();
-        }
-        if (equation == CPMGEquation.CPMGSLOW) {
-            for (int j = 0; j < nID; j++) {
-                DescriptiveStatistics dStat = new DescriptiveStatistics(rexValues[j]);
-                rexErrors[j] = dStat.getStandardDeviation();
-            }
         }
         return parSDev;
     }

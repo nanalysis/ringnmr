@@ -83,6 +83,7 @@ public class CPMGFitResult {
 
             }
         }
+        System.out.println(pars[0] + " " + errs[0] + " " + valid);
         return valid;
     }
 

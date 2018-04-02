@@ -26,6 +26,7 @@ public class ResidueProperties {
     Map<String, Integer> nucMap = new LinkedHashMap();
     private boolean absValueMode = false;
     private String bootStrapMode = "parametric";
+    private String expMode = "cpmg";
 
     public ResidueProperties(String name, String fileName) {
         this.name = name;
@@ -62,6 +63,20 @@ public class ResidueProperties {
      */
     public void setBootStrapMode(String bootStrapMode) {
         this.bootStrapMode = bootStrapMode;
+    }
+
+    /**
+     * @return the expMode
+     */
+    public String getExpMode() {
+        return expMode;
+    }
+
+    /**
+     * @param expMode the expMode to set
+     */
+    public void setExpMode(String expMode) {
+        this.expMode = expMode;
     }
 
     public void addExperimentData(String name, ExperimentData data) {

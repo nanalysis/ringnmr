@@ -27,6 +27,7 @@ public class ResidueInfo {
     int groupId = 0;
     int peakNum = 0;
     static final String[] parNames = {"R2", "Rex", "Kex", "pA", "dW"};
+//    static final String[] parNames = {"A", "R"};
 
     public class ParValue implements ParValueInterface {
 

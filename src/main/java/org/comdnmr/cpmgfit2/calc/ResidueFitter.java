@@ -1,7 +1,6 @@
 package org.comdnmr.cpmgfit2.calc;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,8 +17,6 @@ import javafx.concurrent.Worker;
  * @author Bruce Johnson
  */
 public class ResidueFitter {
-
-    public static final String[] equationNames = {"NOEX", "CPMGFAST", "CPMGSLOW"};
 
     private FitResidues processDataset = new FitResidues();
     final ReadOnlyObjectProperty<Worker.State> stateProperty = processDataset.worker.stateProperty();
@@ -177,15 +174,37 @@ public class ResidueFitter {
 
     }
 
+    EquationFitter getFitter() {
+        EquationFitter fitter;
+        if (resProps.getExpMode().equals("cpmg")) {
+            fitter = new CPMGFit();
+        } else if (resProps.getExpMode().equals("exp")) {
+            fitter = new ExpFit();
+        } else {
+            throw new IllegalArgumentException("Invalid mode " + resProps.getExpMode());
+        }
+        return fitter;
+    }
+
     public List<ResidueInfo> fitResidues(ResidueProperties resProps, String[] resNums, int groupId, String useEquation) {
+        this.resProps = resProps;
         Map<String, CPMGFitResult> fitResults = new HashMap<>();
         double aicMin = Double.MAX_VALUE;
         String bestEquation = "NOEX";
+        List<String> equationNames;
+        if (resProps.getExpMode().equals("cpmg")) {
+            equationNames = CPMGFit.getEquationNames();
+        } else if (resProps.getExpMode().equals("exp")) {
+            equationNames = ExpFit.getEquationNames();
+        } else {
+            throw new IllegalArgumentException("Invalid mode " + resProps.getExpMode());
+        }
         for (String equationName : equationNames) {
             if ((useEquation != null) && !equationName.equals(useEquation)) {
                 continue;
             }
-            CPMGFit cpmgFit = new CPMGFit();
+
+            EquationFitter cpmgFit = getFitter();
             cpmgFit.setData(resProps, resNums);
             CPMGFitResult fitResult = cpmgFit.doFit(resProps, equationName, resProps.isAbsValueMode(), !resProps.getBootStrapMode().equals("parametric"));
             fitResults.put(equationName, fitResult);
@@ -195,6 +214,7 @@ public class ResidueFitter {
                     bestEquation = equationName;
                 }
             }
+            System.out.println("fit " + fitResult.getAicc() + " " + aicMin + " " + bestEquation);
         }
         List<ResidueInfo> resInfoList = new ArrayList<>();
         Map<String, ResidueInfo> resMap = new HashMap<>();
@@ -256,6 +276,16 @@ public class ResidueFitter {
             });
 
         }
+    }
+
+    public static EquationType getEquationType(String name) throws IllegalArgumentException {
+        EquationType equationType = null;
+        try {
+            equationType = CPMGEquation.valueOf(name);
+        } catch (IllegalArgumentException iaE) {
+            equationType = ExpEquation.valueOf(name);
+        }
+        return equationType;
     }
 
 }
