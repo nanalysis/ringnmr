@@ -22,31 +22,29 @@ import javafx.scene.SnapshotParameters;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.Slider;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-import static javafx.scene.transform.Transform.scale;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javax.imageio.ImageIO;
 import javax.script.ScriptException;
 import org.comdnmr.cpmgfit2.calc.CPMGFit;
 import org.comdnmr.cpmgfit2.calc.CPMGFitResult;
-import org.comdnmr.cpmgfit2.calc.CalcRDisp;
 import org.comdnmr.cpmgfit2.calc.CurveFit;
 import org.comdnmr.cpmgfit2.calc.DataIO;
+import org.comdnmr.cpmgfit2.calc.EquationFitter;
+import org.comdnmr.cpmgfit2.calc.EquationType;
+import org.comdnmr.cpmgfit2.calc.ExpFit;
 import org.comdnmr.cpmgfit2.calc.ResidueData;
 import org.controlsfx.control.PropertySheet;
 import org.comdnmr.cpmgfit2.calc.ParValueInterface;
@@ -78,41 +76,6 @@ public class PyController implements Initializable {
 
     @FXML
     VBox chartBox;
-
-    @FXML
-    ChoiceBox equationSelector;
-
-    @FXML
-    Slider kExSlider;
-
-    @FXML
-    Slider r2Slider;
-
-    @FXML
-    Slider rExSlider;
-
-    @FXML
-    Slider pASlider;
-
-    @FXML
-    Slider dWSlider;
-    @FXML
-    Slider field2Slider;
-
-    @FXML
-    Label kExValue;
-
-    @FXML
-    Label rExValue;
-
-    @FXML
-    Label r2Value;
-    @FXML
-    Label pAValue;
-    @FXML
-    Label dWValue;
-    @FXML
-    Label field2Value;
     @FXML
     StatusBar statusBar;
     Circle statusCircle;
@@ -122,8 +85,10 @@ public class PyController implements Initializable {
     CheckBox nonParBootStrapCheckBox;
     @FXML
     Menu axisMenu;
+    @FXML
+    BorderPane simPane;
 
-    boolean updatingTable = false;
+    EquationControls simControls;
 
     //final ContextMenu axisMenu = new ContextMenu();
     final static double defaultField = 500.0;
@@ -147,7 +112,7 @@ public class PyController implements Initializable {
 
     @FXML
     public void displayEquation(ActionEvent event) {
-        simSliderAction("");
+        simControls.simSliderAction("");
     }
 
     @Override
@@ -159,31 +124,33 @@ public class PyController implements Initializable {
 //        propertySheet.setModeSwitcherVisible(false);
 //        propertySheet.setSearchBoxVisible(false);
         makeAxisMenu();
-        r2Slider.valueProperty().addListener(e -> {
-            simSliderAction("R2");
-        });
-        kExSlider.valueProperty().addListener(e -> {
-            simSliderAction("Kex");
-        });
-        rExSlider.valueProperty().addListener(e -> {
-            simSliderAction("Rex");
-        });
-        pASlider.valueProperty().addListener(e -> {
-            simSliderAction("pA");
-        });
-        dWSlider.valueProperty().addListener(e -> {
-            simSliderAction("dW");
-        });
-        field2Slider.valueProperty().addListener(e -> {
-            simSliderAction("Field2");
-        });
-        equationSelector.valueProperty().addListener(e -> {
-            equationAction();
-        });
+//        simControls = new CPMGControls();
+        if (getFittingMode().equals("cpmg")) {
+            simControls = new CPMGControls();
+        } else {
+            simControls = new ExpControls();
+        }
+        VBox vBox = simControls.makeControls(mainController);
+        simPane.centerProperty().set(vBox);
         residueFitter = new ResidueFitter(this::updateFitProgress, this::updateStatus);
         statusCircle = new Circle(10);
         statusBar.getLeftItems().add(statusCircle);
 
+    }
+
+    public void setControls() {
+        boolean update = false;
+        if (getFittingMode().equals("cpmg") && !(simControls instanceof CPMGControls)) {
+            simControls = new CPMGControls();
+            update = true;
+        } else if (getFittingMode().equals("exp") && !(simControls instanceof ExpControls)) {
+            simControls = new ExpControls();
+            update = true;
+        }
+        if (update) {
+            VBox vBox = simControls.makeControls(mainController);
+            simPane.centerProperty().set(vBox);
+        }
     }
 
     public void loadParameterFile(Event e) {
@@ -193,95 +160,6 @@ public class PyController implements Initializable {
         if (file != null) {
             ChartUtil.loadParameters(file.toString());
         }
-    }
-
-    void equationAction() {
-        String equationName = equationSelector.getValue().toString();
-        switch (equationName) {
-            case "NOEX":
-                r2Slider.setDisable(false);
-                rExSlider.setDisable(true);
-                kExSlider.setDisable(true);
-                pASlider.setDisable(true);
-                dWSlider.setDisable(true);
-                break;
-            case "CPMGFAST":
-                r2Slider.setDisable(false);
-                rExSlider.setDisable(false);
-                kExSlider.setDisable(false);
-                pASlider.setDisable(true);
-                dWSlider.setDisable(true);
-                break;
-            case "CPMGSLOW":
-                r2Slider.setDisable(false);
-                rExSlider.setDisable(true);
-                kExSlider.setDisable(false);
-                pASlider.setDisable(false);
-                dWSlider.setDisable(false);
-                break;
-            default:
-                return;
-        }
-        // simSliderAction(equationName);
-
-    }
-
-    void simSliderAction(String label) {
-        if (updatingTable) {
-            return;
-        }
-        String equationName = equationSelector.getValue().toString();
-        if (equationName.equals("CPMGSLOW") && label.equals("Rex")) {
-            return;
-        }
-        double r2 = r2Slider.getValue();
-        double kEx = kExSlider.getValue();
-        double rEx = rExSlider.getValue();
-        double pA = pASlider.getValue();
-        double dW = dWSlider.getValue();
-        double field2 = field2Slider.getValue();
-        r2Value.setText(String.format("%.1f", r2));
-        kExValue.setText(String.format("%.1f", kEx));
-        rExValue.setText(String.format("%.1f", rEx));
-        pAValue.setText(String.format("%.3f", pA));
-        dWValue.setText(String.format("%.1f", dW));
-        field2Value.setText(String.format("%.0f", field2));
-        double[] pars;
-        switch (equationName) {
-            case "NOEX":
-                pars = new double[1];
-                pars[0] = r2;
-
-                break;
-            case "CPMGFAST":
-                pars = new double[3];
-                pars[0] = kEx;
-                pars[1] = r2;
-                pars[2] = rEx;
-                break;
-            case "CPMGSLOW":
-                pars = new double[4];
-                pars[0] = kEx;
-                pars[1] = pA;
-                pars[2] = r2;
-                pars[3] = dW;
-                int[] map = {0};
-                //rEx = CalcRDisp.CPMGEquation.CPMGSLOW.getRex(pars, map);
-                rEx = 0.0;
-                rExValue.setText(String.format("%.1f", rEx));
-                rExSlider.setValue(rEx);
-                break;
-            default:
-                return;
-        }
-        double[] errs = new double[pars.length];
-        int nFields = field2 > (defaultField + 10) ? 2 : 1; // add 10.0 to make sure slider set near to bottom gives 1 field
-        double[] fields = new double[nFields];
-        fields[0] = 1.0;
-        if (nFields > 1) {
-            fields[1] = field2 / defaultField;
-        }
-        updateChartEquations(equationName, pars, errs, fields);
     }
 
     public void updateChartEquations(String equationName, double[] pars, double[] errs, double[] fields) {
@@ -357,7 +235,7 @@ public class PyController implements Initializable {
                 }
                 List<ParValueInterface> parValues = resInfo.getParValues(useEquationName, state);
                 if (resNum.equals(residues[0])) {
-                    updateSliders(parValues, useEquationName);
+                    simControls.updateSliders(parValues, useEquationName);
                 }
 
                 allParValues.addAll(parValues);
@@ -379,7 +257,7 @@ public class PyController implements Initializable {
         currentResInfo = resInfo;
         updateTableWithPars(parValues);
 
-        updateSliders(parValues, useEquationName);
+        simControls.updateSliders(parValues, useEquationName);
     }
 
     public void updateTableWithPars(List<ParValueInterface> parValues) {
@@ -401,43 +279,6 @@ public class PyController implements Initializable {
 
         parameterTable.getColumns().clear();
         parameterTable.getColumns().addAll(residueColumn, stateColumn, nameColumn, valueColumn, errorColumn);
-    }
-
-    public void updateSliders(List<ParValueInterface> parValues, String equationName) {
-        updatingTable = true;
-        for (ParValueInterface parValue : parValues) {
-            String parName = parValue.getName();
-            switch (parName) {
-                case "R2":
-                    double r2 = parValue.getValue();
-                    r2Slider.setValue(r2);
-                    r2Value.setText(String.format("%.1f", r2));
-                    break;
-                case "Rex":
-                    double rEx = parValue.getValue();
-                    rExSlider.setValue(rEx);
-                    rExValue.setText(String.format("%.1f", rEx));
-                    break;
-                case "Kex":
-                    double kEx = parValue.getValue();
-                    kExSlider.setValue(kEx);
-                    kExValue.setText(String.format("%.1f", kEx));
-                    break;
-                case "dW":
-                    double dW = parValue.getValue();
-                    dWSlider.setValue(dW);
-                    dWValue.setText(String.format("%.1f", dW));
-                    break;
-                case "pA":
-                    double pA = parValue.getValue();
-                    pASlider.setValue(pA);
-                    pAValue.setText(String.format("%.3f", pA));
-                    break;
-                default:
-            }
-        }
-        equationSelector.setValue(equationName);
-        updatingTable = false;
     }
 
     public void selectTableRow(String seriesName, int index) {
@@ -502,7 +343,7 @@ public class PyController implements Initializable {
         axisMenu.getItems().clear();
         //Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 Rex.sd	    Kex	 Kex.sd	     pA	  pA.sd	     dW	  dW.sd
 
-        String[] parTypes = {"R2", "Rex", "Kex", "pA", "dW", "RMS", "AIC", "Equation"};
+        String[] parTypes = getParTypes();
         Map<String, ResidueProperties> residueProps = ChartUtil.residueProperties;
         // MenuItem clearItem = new MenuItem("Clear");
         // clearItem.setOnAction(e -> clearChart());
@@ -531,7 +372,7 @@ public class PyController implements Initializable {
                         if (equationName.equals("best")) {
                             isValidPar = true;
                         } else {
-                            String[] validPars = CalcRDisp.CPMGEquation.valueOf(equationName).getParNames();
+                            String[] validPars = getParNames(equationName);
                             for (String validPar : validPars) {
                                 if (validPar.equals(parType)) {
                                     isValidPar = true;
@@ -560,11 +401,12 @@ public class PyController implements Initializable {
 
     @FXML
     public void fitEquation(ActionEvent event) {
-        CPMGFit cpmgFit = new CPMGFit();
+//        EquationFitter equationFitter = new CPMGFit();
+        EquationFitter equationFitter = getFitter();
         String[] resNums = {String.valueOf(currentResInfo.getResNum())};
-        cpmgFit.setData(currentResProps, resNums);
-        String equationName = (String) equationSelector.getValue();
-        CPMGFitResult fitResult = cpmgFit.doFit(currentResProps, (String) equationSelector.getValue(), absValueModeCheckBox.isSelected(), nonParBootStrapCheckBox.isSelected());
+        equationFitter.setData(currentResProps, resNums);
+        String equationName = simControls.getEquation();
+        CPMGFitResult fitResult = equationFitter.doFit(currentResProps, equationName, absValueModeCheckBox.isSelected(), nonParBootStrapCheckBox.isSelected());
         updateAfterFit(fitResult);
     }
 
@@ -573,7 +415,7 @@ public class PyController implements Initializable {
 
         List<ParValueInterface> parValues = new ArrayList<>();
         updateTableWithPars(parValues);
-        updateSliders(parValues, fitResult.getEquationName());
+        simControls.updateSliders(parValues, fitResult.getEquationName());
         double[] pars = curveFit.getEquation().getPars();
         double[] errs = curveFit.getEquation().getErrs();
         updateChartEquations(fitResult.getEquationName(), pars, errs, curveFit.getEquation().getExtras());
@@ -704,4 +546,38 @@ public class PyController implements Initializable {
 
     }
 
+    public String getFittingMode() {
+        if (currentResProps == null) {
+            return "cpmg";
+        } else {
+            return currentResProps.getExpMode();
+        }
+    }
+
+    public EquationFitter getFitter() {
+        if (getFittingMode().equals("exp")) {
+            return new ExpFit();
+        } else if (getFittingMode().equals("cpmg")) {
+            return new CPMGFit();
+        }
+        return null;
+    }
+
+    public String[] getParNames(String equationName) {
+        EquationType type = ResidueFitter.getEquationType(equationName);
+        return type.getParNames();
+    }
+
+    public String[] getParTypes() {
+        String[] cpmgTypes = {"R2", "Rex", "Kex", "pA", "dW", "RMS", "AIC", "Equation"};
+        String[] expTypes = {"A", "R", "C", "RMS", "AIC", "Equation"};
+        String[] nullTypes = {"RMS", "AIC", "Equation"};
+        if (getFittingMode().equals("exp")) {
+            return expTypes;
+        } else if (getFittingMode().equals("cpmg")) {
+            return cpmgTypes;
+        }
+        return nullTypes;
+
+    }
 }

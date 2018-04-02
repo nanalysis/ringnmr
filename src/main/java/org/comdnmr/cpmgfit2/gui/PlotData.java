@@ -59,7 +59,9 @@ public class PlotData extends ScatterChart {
         yAxis.setUpperBound(60.0);
         xAxis.setLabel("\u03BD(cpmg)");
         yAxis.setLabel("R2(\u03BD)");
-        setTitle("CPMG CurveFit");
+        xAxis.setLabel("Time (s)");
+        yAxis.setLabel("Intensity");
+        setTitle("CurveFit");
         setPrefHeight(200);
         setLegendSide(Side.BOTTOM);
         setLegendVisible(true);

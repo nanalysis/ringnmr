@@ -60,77 +60,19 @@
                                     </TableView>
                                 </Tab>
                                 <Tab text="Simulate" closable="false" > 
-                                    <VBox HBox.hgrow="ALWAYS">
+                                    <BorderPane fx:id="simPane" HBox.hgrow="ALWAYS">
                                         <padding>
                                             <Insets top="5" right="5" left="5" bottom="5"/>                 
                                         </padding>
-                                        <children>
+                                        <top>
                                             <HBox>
                                                 <children>
                                                     <Button text="Display" onAction="#displayEquation" fx:id="DisplayEquation"/>
                                                     <Button text="Fit" onAction="#fitEquation" fx:id="FitEquation"/>
                                                 </children>
                                             </HBox>
-                                            <HBox>
-                                                <Label text="Eqn." prefWidth="50" />
-                                                <ChoiceBox fx:id="equationSelector" value = "CPMGFAST">
-                                                    <items>
-                                                        <FXCollections fx:factory="observableArrayList">
-                                                            <String fx:value="NOEX" />
-                                                            <String fx:value="CPMGFAST" />
-                                                            <String fx:value="CPMGSLOW" />
-                                                        </FXCollections>
-                                                    </items>
-                                                </ChoiceBox>
-
-                                            </HBox>
-
-                                            <HBox>
-                                                <Label text="KEx" prefWidth="50"/>
-                                                <Slider  prefWidth="200" majorTickUnit="1000" showTickLabels="true" showTickMarks = "true"
-                                                         min="0.0" max="4000.0" value="500.0"
-                                                         fx:id="kExSlider" HBox.hgrow="ALWAYS"/>
-                                                <Label text="500.0"  prefWidth="50" fx:id="kExValue"/>
-                                            </HBox>
-                                            <HBox>
-                                                <Label text="R2" prefWidth="50"/>
-                                                <Slider  prefWidth="200" majorTickUnit="10" showTickLabels="true" showTickMarks = "true"
-                                                         min="0.0" max="50.0" value="10.0"
-                                                         fx:id="r2Slider" HBox.hgrow="ALWAYS"/>
-                                                <Label text="10.0"  prefWidth="50" fx:id="r2Value"/>
-                                            </HBox>
-                                            <HBox>
-                                                <Label text="REx" prefWidth="50"/>
-                                                <Slider  prefWidth="200" majorTickUnit="10" showTickLabels="true" showTickMarks = "true"
-                                                         min="0.0" max="50.0" value="8.0"
-                                                         fx:id="rExSlider" HBox.hgrow="ALWAYS"/>
-                                                <Label text="8.0"  prefWidth="50" fx:id="rExValue"/>
-                                            </HBox>
-                                            <HBox>
-                                                <Label text="pA" prefWidth="50"/>
-                                                <Slider  prefWidth="200" majorTickUnit="0.2" showTickLabels="true" showTickMarks = "true"
-                                                         min="0.5" max="0.99" value="0.9" disable="true"
-                                                         fx:id="pASlider" HBox.hgrow="ALWAYS"/>
-                                                <Label text="0.9"  prefWidth="50" fx:id="pAValue"/>
-                                            </HBox>
-                                            <HBox>
-                                                <Label text="dW" prefWidth="50"/>
-                                                <Slider  prefWidth="200" majorTickUnit="100" showTickLabels="true" showTickMarks = "true"
-                                                         min="0.0" max="400.0" value="100.0" disable="true"
-                                                         fx:id="dWSlider" HBox.hgrow="ALWAYS"/>
-                                                <Label text="100.0"  prefWidth="50" fx:id="dWValue"/>
-                                            </HBox>
-                                            <HBox>
-                                                <Label text="Field2" prefWidth="50"/>
-                                                <Slider  prefWidth="200" majorTickUnit="200" showTickLabels="true" showTickMarks = "true"
-                                                         min="500" max="1200" value="500.0"
-                                                         fx:id="field2Slider" HBox.hgrow="ALWAYS"/>
-                                                <Label text="500"  prefWidth="50" fx:id="field2Value"/>
-
-                                            </HBox>
-
-                                        </children>
-                                    </VBox>
+                                        </top>
+                                    </BorderPane>
                                 </Tab>
                                 <Tab text="Fitter" closable="false" > 
                                     <VBox HBox.hgrow="ALWAYS">

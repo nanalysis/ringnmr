@@ -52,5 +52,5 @@ actionFunctions['pushme'] = pushme
 
 #pystage = PyStage("file:src/main/resources/fxml/NMRScene.fxml",MainApp.primaryStage)
 pystage = PyStage("fxml/NMRScene.fxml",MainApp.primaryStage)
-pystage.title("CoMD/NMR CPMGFit2")
+pystage.title("CoMD/NMR Dynamics Analysis")
 

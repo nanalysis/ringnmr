@@ -28,7 +28,7 @@ public class MainApp extends Application {
     public void start(Stage primaryStage) {
         this.primaryStage = primaryStage;
         primaryStage.setScene(new Scene(new StackPane(), 200, 200));
-        primaryStage.setTitle("CoMD/NMR CPMG Analysis CPMGFit2");
+        primaryStage.setTitle("CoMD/NMR Dynamics Analysis");
         primaryStage.show();
         Parameters parameters = getParameters();
         try {

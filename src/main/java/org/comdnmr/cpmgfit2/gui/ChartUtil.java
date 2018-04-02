@@ -364,11 +364,15 @@ public class ChartUtil {
         ResidueProperties resProp = DataIO.loadParameters(fileName);
         residueProperties.put(resProp.getName(), resProp);
         String parName = "Kex";
+        if (resProp.getExpMode().equals("exp")) {
+            parName = "R";
+        }
         ObservableList<XYChart.Series<Double, Double>> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
-        PyController.mainController.makeAxisMenu();
         PyController.mainController.currentResProps = resProp;
+        PyController.mainController.makeAxisMenu();
         PyController.mainController.setYAxisType(resProp.getName(), "best", "0:0:0", parName);
         reschartNode.setResProps(resProp);
+        PyController.mainController.setControls();
     }
 
 }
