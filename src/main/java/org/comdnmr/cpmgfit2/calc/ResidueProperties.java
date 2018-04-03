@@ -156,7 +156,7 @@ public class ResidueProperties {
         }
     }
 
-    int[] getStateIndices(int resIndex, ExperimentData expData) {
+    public int[] getStateIndices(int resIndex, ExperimentData expData) {
         if (fieldMap.size() == 0) {
             setupMaps();
         }
