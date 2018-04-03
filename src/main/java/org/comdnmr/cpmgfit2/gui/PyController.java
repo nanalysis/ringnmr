@@ -91,7 +91,7 @@ public class PyController implements Initializable {
     EquationControls simControls;
 
     //final ContextMenu axisMenu = new ContextMenu();
-    final static double defaultField = 500.0;
+    static double defaultField = 500.0;
 
     ResidueInfo currentResInfo = null;
     ResidueProperties currentResProps = null;
@@ -221,7 +221,7 @@ public class PyController implements Initializable {
         resInfoTable.getColumns().addAll(nameColumn, resColumn, xColumn, yColumn, errColumn, peakColumn);
     }
 
-    public void updateTableWithPars(String mapName, String[] residues, String equationName, String state) {
+    public void updateTableWithPars(String mapName, String[] residues, String equationName, String state, List<int[]> allStates) {
         List<ParValueInterface> allParValues = new ArrayList<>();
         for (String resNum : residues) {
             ResidueInfo resInfo = ChartUtil.getResInfo(mapName, String.valueOf(resNum));
@@ -235,6 +235,7 @@ public class PyController implements Initializable {
                 }
                 List<ParValueInterface> parValues = resInfo.getParValues(useEquationName, state);
                 if (resNum.equals(residues[0])) {
+                    simControls.updateStates(allStates);
                     simControls.updateSliders(parValues, useEquationName);
                 }
 
@@ -337,6 +338,9 @@ public class PyController implements Initializable {
         }
         currentResProps = ChartUtil.residueProperties.get(setName);
         chart.setResProps(currentResProps);
+        if (currentResProps != null) {
+            defaultField = currentResProps.getFields()[0];
+        }
     }
 
     void makeAxisMenu() {

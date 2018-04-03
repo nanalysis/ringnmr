@@ -254,7 +254,7 @@ public class XYBarChart extends XYChart<Number, Number> {
         ((PlotData) chartNode).setEquations(equations);
         ((PlotData) chartNode).layoutPlotChildren();
         PyController.mainController.updateTable(resDatas);
-        PyController.mainController.updateTableWithPars(mapName, residues, equationName, state);
+        PyController.mainController.updateTableWithPars(mapName, residues, equationName, state, allStates);
     }
 
     @Override
