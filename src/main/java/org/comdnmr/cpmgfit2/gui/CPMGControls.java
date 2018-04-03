@@ -13,8 +13,10 @@ import javafx.scene.control.Slider;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import org.comdnmr.cpmgfit2.calc.CPMGEquation;
 import org.comdnmr.cpmgfit2.calc.CPMGFit;
 import org.comdnmr.cpmgfit2.calc.ParValueInterface;
+import org.comdnmr.cpmgfit2.calc.ResidueInfo;
 import static org.comdnmr.cpmgfit2.gui.CPMGControls.PARS.DW;
 import static org.comdnmr.cpmgfit2.gui.CPMGControls.PARS.FIELD2;
 import static org.comdnmr.cpmgfit2.gui.CPMGControls.PARS.KEX;
@@ -31,6 +33,7 @@ public class CPMGControls implements EquationControls {
 
     @FXML
     ChoiceBox<String> equationSelector;
+    ChoiceBox<String> stateSelector;
 
     String[] parNames = {"R2", "Kex", "Rex", "pA", "dW", "Field2"};
 
@@ -108,10 +111,13 @@ public class CPMGControls implements EquationControls {
         equationSelector = new ChoiceBox<>();
         equationSelector.getItems().addAll(CPMGFit.getEquationNames());
         equationSelector.setValue(CPMGFit.getEquationNames().get(0));
+        stateSelector = new ChoiceBox<>();
+        stateSelector.getItems().addAll("0:0:0", "1:0:0");
+        stateSelector.setValue("0:0:0");
         VBox vBox = new VBox();
         HBox hBox1 = new HBox();
         HBox.setHgrow(hBox1, Priority.ALWAYS);
-        hBox1.getChildren().add(equationSelector);
+        hBox1.getChildren().addAll(equationSelector, stateSelector);
         vBox.getChildren().add(hBox1);
 
         int i = 0;
@@ -130,11 +136,23 @@ public class CPMGControls implements EquationControls {
         equationSelector.valueProperty().addListener(e -> {
             equationAction();
         });
+        stateSelector.valueProperty().addListener(e -> {
+            stateAction();
+        });
         return vBox;
     }
 
     void equationAction() {
         String equationName = equationSelector.getValue().toString();
+        ResidueInfo resInfo = controller.currentResInfo;
+//        if (resInfo != null) {
+//            String state = stateSelector.getValue();
+//            System.out.println("get values " + state + " " + equationName);
+//            List<ParValueInterface> parValues = resInfo.getParValues(equationName, state);
+//            controller.updateTableWithPars(parValues);
+//            updateSliders(parValues, equationName);
+//            System.out.println(parValues.toString());
+//        }
         switch (equationName) {
             case "NOEX":
                 R2.disabled(false);
@@ -160,7 +178,21 @@ public class CPMGControls implements EquationControls {
             default:
                 return;
         }
-        // simSliderAction(equationName);
+        simSliderAction(equationName);
+
+    }
+
+    void stateAction() {
+        ResidueInfo resInfo = controller.currentResInfo;
+        if (resInfo != null) {
+            String state = stateSelector.getValue();
+            String equationName = equationSelector.getValue();
+            System.out.println("get values " + state + " " + equationName);
+            List<ParValueInterface> parValues = resInfo.getParValues(equationName, state);
+            controller.updateTableWithPars(parValues);
+            updateSliders(parValues, equationName);
+            System.out.println(parValues.toString());
+        }
 
     }
 
@@ -203,9 +235,9 @@ public class CPMGControls implements EquationControls {
                 pars[1] = pA;
                 pars[2] = r2;
                 pars[3] = dW;
-                int[] map = {0};
-                //rEx = CalcRDisp.CPMGEquation.CPMGSLOW.getRex(pars, map);
-                rEx = 0.0;
+                int[] map = {0, 1, 2, 3};
+                rEx = CPMGEquation.CPMGSLOW.getRex(pars, map);
+                System.out.println(pars[0] + " " + pars[1] + " " + pars[2] + " " + pars[3] + " " + rEx);
                 REX.setValue(rEx);
                 break;
             default:
