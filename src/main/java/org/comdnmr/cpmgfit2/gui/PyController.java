@@ -413,7 +413,7 @@ public class PyController implements Initializable {
     public void updateAfterFit(CPMGFitResult fitResult) {
         CurveFit curveFit = fitResult.getCurveFit(0);
 
-        List<ParValueInterface> parValues = new ArrayList<>();
+        List<ParValueInterface> parValues = curveFit.getParValues();
         updateTableWithPars(parValues);
         simControls.updateSliders(parValues, fitResult.getEquationName());
         double[] pars = curveFit.getEquation().getPars();
