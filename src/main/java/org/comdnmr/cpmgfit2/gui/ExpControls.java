@@ -181,6 +181,11 @@ public class ExpControls implements EquationControls {
         controller.updateChartEquations(equationName, pars, errs, fields);
     }
 
+    @Override
+    public void updateStates(List<int[]> allStates) {
+
+    }
+
     public void updateSliders(List<ParValueInterface> parValues, String equationName) {
         updatingTable = true;
         for (ParValueInterface parValue : parValues) {

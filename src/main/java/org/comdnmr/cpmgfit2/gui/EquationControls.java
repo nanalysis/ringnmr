@@ -20,6 +20,8 @@ public interface EquationControls {
     VBox makeControls(PyController controller);
 
     void updateSliders(List<ParValueInterface> parValues, String equationName);
+    
+    void updateStates(List<int[]> allStates);
 
     public void simSliderAction(String label);
 

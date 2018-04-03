@@ -17,6 +17,7 @@ import org.comdnmr.cpmgfit2.calc.CPMGEquation;
 import org.comdnmr.cpmgfit2.calc.CPMGFit;
 import org.comdnmr.cpmgfit2.calc.ParValueInterface;
 import org.comdnmr.cpmgfit2.calc.ResidueInfo;
+import org.comdnmr.cpmgfit2.calc.ResidueProperties;
 import static org.comdnmr.cpmgfit2.gui.CPMGControls.PARS.DW;
 import static org.comdnmr.cpmgfit2.gui.CPMGControls.PARS.FIELD2;
 import static org.comdnmr.cpmgfit2.gui.CPMGControls.PARS.KEX;
@@ -146,12 +147,14 @@ public class CPMGControls implements EquationControls {
         String equationName = equationSelector.getValue().toString();
         ResidueInfo resInfo = controller.currentResInfo;
 //        if (resInfo != null) {
+//            updatingTable = true;
 //            String state = stateSelector.getValue();
 //            System.out.println("get values " + state + " " + equationName);
 //            List<ParValueInterface> parValues = resInfo.getParValues(equationName, state);
 //            controller.updateTableWithPars(parValues);
 //            updateSliders(parValues, equationName);
 //            System.out.println(parValues.toString());
+//            updatingTable = false;
 //        }
         switch (equationName) {
             case "NOEX":
@@ -186,12 +189,14 @@ public class CPMGControls implements EquationControls {
         ResidueInfo resInfo = controller.currentResInfo;
         if (resInfo != null) {
             String state = stateSelector.getValue();
-            String equationName = equationSelector.getValue();
-            System.out.println("get values " + state + " " + equationName);
-            List<ParValueInterface> parValues = resInfo.getParValues(equationName, state);
-            controller.updateTableWithPars(parValues);
-            updateSliders(parValues, equationName);
-            System.out.println(parValues.toString());
+            if (state != null) {
+                String equationName = equationSelector.getValue();
+                System.out.println("get values " + state + " " + equationName);
+                List<ParValueInterface> parValues = resInfo.getParValues(equationName, state);
+                controller.updateTableWithPars(parValues);
+                updateSliders(parValues, equationName);
+                System.out.println(parValues.toString());
+            }
         }
 
     }
@@ -243,6 +248,7 @@ public class CPMGControls implements EquationControls {
             default:
                 return;
         }
+
         double[] errs = new double[pars.length];
         int nFields = field2 > (defaultField + 10) ? 2 : 1; // addTo 10.0 to make sure slider set near to bottom gives 1 field
         double[] fields = new double[nFields];
@@ -251,6 +257,26 @@ public class CPMGControls implements EquationControls {
             fields[1] = field2 / defaultField;
         }
         controller.updateChartEquations(equationName, pars, errs, fields);
+    }
+
+    @Override
+    public void updateStates(List<int[]> allStates) {
+        StringBuilder sBuilder = new StringBuilder();
+        stateSelector.setDisable(true);
+        stateSelector.getItems().clear();
+        for (int[] state : allStates) {
+            sBuilder.setLength(0);
+            for (int i = 1; i < state.length; i++) {
+                if (sBuilder.length() > 0) {
+                    sBuilder.append(':');
+                }
+                sBuilder.append(state[i]);
+            }
+            stateSelector.getItems().add(sBuilder.toString());
+        }
+        stateSelector.setValue(stateSelector.getItems().get(0));
+        stateSelector.setDisable(false);
+
     }
 
     @Override
