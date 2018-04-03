@@ -1,5 +1,7 @@
 package org.comdnmr.cpmgfit2.calc;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -31,8 +33,19 @@ public class CurveFit {
     public String getResNum() {
         return resNum;
     }
-    
+
     public String getState() {
         return state;
     }
+
+    public List<ParValueInterface> getParValues() {
+        List<ParValueInterface> dataValues = new ArrayList<>();
+        parMap.keySet().stream().sorted().filter((parName) -> (parMap.containsKey(parName + ".sd"))).forEachOrdered((parName) -> {
+            double value = parMap.get(parName).doubleValue();
+            double err = parMap.get(parName + ".sd").doubleValue();
+            dataValues.add(new ParValue(resNum, state, parName, value, err));
+        });
+        return dataValues;
+    }
+
 }
