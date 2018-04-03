@@ -234,6 +234,7 @@ public class XYBarChart extends XYChart<Number, Number> {
         ArrayList<PlotEquation> equations = new ArrayList<>();
         ObservableList<XYChart.Series<Double, Double>> allData = FXCollections.observableArrayList();
         List<ResidueData> resDatas = new ArrayList<>();
+        List<int[]> allStates = new ArrayList<>();
         for (ExperimentData expData : resProps.getExperimentData()) {
             for (String residue : residues) {
                 resDatas.add(expData.getResidueData(residue));
@@ -245,6 +246,8 @@ public class XYBarChart extends XYChart<Number, Number> {
             List<XYChart.Series<Double, Double>> data = ChartUtil.getMapData(mapName, expName, residues);
             allData.addAll(data);
             equations.addAll(ChartUtil.getEquations(mapName, residues, equationName, expData.getState(), expData.getField()));
+            int[] states = resProps.getStateIndices(0, expData);
+            allStates.add(states);
         }
         ((XYChart) chartNode).setData(allData);
 
