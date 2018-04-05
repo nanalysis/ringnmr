@@ -18,6 +18,8 @@ import java.util.Map;
  */
 public class ResidueInfo {
 
+    ResidueProperties resProps;
+
     int resNum;
     Map<String, Map<String, CurveFit>> curveSets = new LinkedHashMap<>();
     PlotEquation bestEquation = null;
@@ -26,8 +28,6 @@ public class ResidueInfo {
     int groupSize = 1;
     int groupId = 0;
     int peakNum = 0;
-    static final String[] parNames = {"R2", "Rex", "Kex", "pA", "dW"};
-//    static final String[] parNames = {"A", "R"};
 
     public class ParValue implements ParValueInterface {
 
@@ -86,11 +86,12 @@ public class ResidueInfo {
         }
     }
 
-    public ResidueInfo(int resNum, int groupId, int groupSize) {
-        this(resNum, groupId, groupSize, 0);
+    public ResidueInfo(ResidueProperties resProps, int resNum, int groupId, int groupSize) {
+        this(resProps, resNum, groupId, groupSize, 0);
     }
 
-    public ResidueInfo(int resNum, int groupId, int groupSize, int peakNum) {
+    public ResidueInfo(ResidueProperties resProps, int resNum, int groupId, int groupSize, int peakNum) {
+        this.resProps = resProps;
         this.resNum = resNum;
         this.groupId = groupId;
         this.groupSize = groupSize;
@@ -128,6 +129,15 @@ public class ResidueInfo {
         return bestEquation == null ? "" : bestEquation.name;
     }
 
+    public void setBestEquationName(String equationName) {
+        Map<String, CurveFit> curveFits = curveSets.get(equationName);
+        for (CurveFit curveFit : curveFits.values()) {
+            if (curveFit.plotEquation.getName().equals(equationName)) {
+                bestEquation = curveFit.plotEquation;
+            }
+        }
+    }
+
     public int getResNum() {
         return resNum;
     }
@@ -135,12 +145,10 @@ public class ResidueInfo {
     public Double getParValue(String equationName, String state, String parName) {
         Map<String, CurveFit> curveFits = curveSets.get(equationName);
         if (curveFits == null) {
-            System.out.println("no equ " + equationName);
             return null;
         }
         CurveFit curveFit = curveFits.get(state);
         if (curveFit == null) {
-            System.out.println("no state " + state);
             return null;
         } else {
             return curveFit.parMap.get(parName);
@@ -154,7 +162,6 @@ public class ResidueInfo {
         } else {
             useEquationName = equationName;
         }
-        System.out.println("update table with pars " + useEquationName + " " + state);
         List<ParValueInterface> dataValues = new ArrayList<>();
         Map<String, CurveFit> curveFits = curveSets.get(useEquationName);
         if (curveFits != null) {
@@ -168,7 +175,6 @@ public class ResidueInfo {
 
             });
         }
-        System.out.println(dataValues.size() + " pars");
         return dataValues;
     }
 
@@ -207,7 +213,7 @@ public class ResidueInfo {
     }
 
     //         String header = "Residue	Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 Rex.sd	    Kex	 Kex.sd	     pA	  pA.sd	     dW	  dW.sd";
-    public String toOutputString() {
+    public String toOutputString(String[] parNames) {
         char sep = '\t';
         StringBuilder sBuilder = new StringBuilder();
         sBuilder.append(resNum).append(sep);

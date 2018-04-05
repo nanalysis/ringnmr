@@ -170,7 +170,7 @@ public class DataIO {
                     expData.addResidueData(residueNum, residueData);
                     ResidueInfo residueInfo = resProp.getResidueInfo(residueNum);
                     if (residueInfo == null) {
-                        residueInfo = new ResidueInfo(Integer.parseInt(residueNum), 0, 0, 0);
+                        residueInfo = new ResidueInfo(resProp, Integer.parseInt(residueNum), 0, 0, 0);
                         resProp.addResidueInfo(residueNum, residueInfo);
                     }
                     fakeRes++;
@@ -236,7 +236,7 @@ public class DataIO {
 
                     ResidueInfo residueInfo = resProp.getResidueInfo(residueNum);
                     if (residueInfo == null) {
-                        residueInfo = new ResidueInfo(Integer.parseInt(residueNum), 0, 0, 0);
+                        residueInfo = new ResidueInfo(resProp, Integer.parseInt(residueNum), 0, 0, 0);
                         resProp.addResidueInfo(residueNum, residueInfo);
                     }
                 }
@@ -353,7 +353,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 ResidueInfo residueInfo = resProp.getResidueInfo(residueNumber);
 
                 if (residueInfo == null) {
-                    residueInfo = new ResidueInfo(Integer.parseInt(residueNumber), groupId, groupSize, peakNum);
+                    residueInfo = new ResidueInfo(resProp, Integer.parseInt(residueNumber), groupId, groupSize, peakNum);
                     resProp.addResidueInfo(residueNumber, residueInfo);
                 }
                 double[] fields = new double[1];
@@ -509,15 +509,33 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
     }
 
     public static void saveParametersToFile(String fileName, ResidueProperties resProp) {
-        String headerCPMG = "Residue	Peak	GrpSz	Group	State	Equation	RMS	   AIC	Best	     R2	  R2.sd	    Rex	 Rex.sd	    Kex	 Kex.sd	     pA	  pA.sd	     dW	  dW.sd";
-        String headerExp = "Residue	Peak	GrpSz	Group	State	Equation	RMS	   AIC	Best	     A	  A.sd	    R	 R.sd";
-        String header = headerCPMG;
+        String[] headerFields = {"Residue", "Peak", "GrpSz", "Group", "State", "Equation", "RMS", "AIC", "Best"};
+        StringBuilder headerBuilder = new StringBuilder();
+        String[] cpmgFields = {"R2", "Rex", "Kex", "pA", "dW"};
+        String[] expFields = {"A", "R"};
+        String[] parFields;
+        if (resProp.getExpMode().equals("cpmg")) {
+            parFields = cpmgFields;
+        } else {
+            parFields = expFields;
+        }
+
+        for (String field : headerFields) {
+            if (headerBuilder.length() > 0) {
+                headerBuilder.append('\t');
+            }
+            headerBuilder.append(field);
+        }
+        for (String field : parFields) {
+            headerBuilder.append('\t').append(field).append('\t').append(field).append(".sd");
+        }
+
         try (FileWriter writer = new FileWriter(fileName)) {
-            writer.write(header);
-            resProp.getResidueMap().values().stream().
+            writer.write(headerBuilder.toString());
+            resProp.getResidueValues().stream().
                     sorted((a, b) -> Integer.compare(a.getResNum(), b.getResNum())).
                     forEach(resInfo -> {
-                        String outputLine = resInfo.toOutputString();
+                        String outputLine = resInfo.toOutputString(parFields);
                         try {
                             writer.write(outputLine);
                         } catch (IOException ex) {

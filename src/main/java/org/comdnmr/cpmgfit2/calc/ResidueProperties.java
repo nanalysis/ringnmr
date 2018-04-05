@@ -18,12 +18,15 @@ import java.util.stream.Collectors;
 public class ResidueProperties {
 
     Map<String, ExperimentData> expMaps = new HashMap<>();
-    HashMap<String, ResidueInfo> residueMap = new HashMap<>();
+    private HashMap<String, ResidueInfo> residueMap = new HashMap<>();
     final String name;
     String fileName = null;
     Map<Double, Integer> fieldMap = new LinkedHashMap();
     Map<Double, Integer> tempMap = new LinkedHashMap();
     Map<String, Integer> nucMap = new LinkedHashMap();
+    List<Double> fieldList = new ArrayList<>();
+    List<Double> tempList = new ArrayList<>();
+    List<String> nucList = new ArrayList<>();
     private boolean absValueMode = false;
     private String bootStrapMode = "parametric";
     private String expMode = "cpmg";
@@ -93,7 +96,6 @@ public class ResidueProperties {
 
     public List<String> getEquationNames() {
         Set<String> equationSet = new HashSet<>();
-        System.out.println("get eqn " + residueMap.size());
         residueMap.values().stream().forEach(rInfo -> {
             equationSet.addAll(rInfo.curveSets.keySet());
         });
@@ -142,12 +144,15 @@ public class ResidueProperties {
         for (ExperimentData expData : expMaps.values()) {
             if (!fieldMap.containsKey(Math.floor(expData.field))) {
                 fieldMap.put(Math.floor(expData.field), fieldMap.size());
+                fieldList.add(expData.field);
             }
             if (!tempMap.containsKey(Math.floor(expData.temperature))) {
                 tempMap.put(Math.floor(expData.temperature), tempMap.size());
+                tempList.add(expData.temperature);
             }
             if (!nucMap.containsKey(expData.nucleus)) {
                 nucMap.put(expData.nucleus, nucMap.size());
+                nucList.add(expData.nucleus);
             }
         }
         for (ExperimentData expData : expMaps.values()) {
@@ -188,8 +193,14 @@ public class ResidueProperties {
         residueMap.put(resNum, value);
     }
 
-    public HashMap<String, ResidueInfo> getResidueMap() {
-        return residueMap;
+    public void clearResidueMap() {
+        residueMap.clear();
+    }
+
+    public List<ResidueInfo> getResidueValues() {
+        List<ResidueInfo> values = new ArrayList<>();
+        values.addAll(residueMap.values());
+        return values;
     }
 
     public ResidueInfo getResidueInfo(String resNum) {
@@ -197,17 +208,30 @@ public class ResidueProperties {
     }
 
     public double[] getFields() {
-        Set<Double> fieldSet = new HashSet<>();
-        for (ExperimentData expData : expMaps.values()) {
-            fieldSet.add(expData.getField());
-        }
-        double[] fields = new double[fieldSet.size()];
+        double[] fields = new double[fieldList.size()];
         int i = 0;
-        for (Double field : fieldSet) {
+        for (Double field : fieldList) {
             fields[i++] = field;
         }
-        Arrays.sort(fields);
         return fields;
+    }
+
+    public double[] getTemperatures() {
+        double[] temperatures = new double[tempList.size()];
+        int i = 0;
+        for (Double temperature : tempList) {
+            temperatures[i++] = temperature;
+        }
+        return temperatures;
+    }
+
+    public String[] getNuclei() {
+        String[] nuclei = new String[nucList.size()];
+        int i = 0;
+        for (String nucleus : nucList) {
+            nuclei[i++] = nucleus;
+        }
+        return nuclei;
     }
 
 }

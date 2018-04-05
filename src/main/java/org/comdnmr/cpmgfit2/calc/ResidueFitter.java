@@ -44,7 +44,7 @@ public class ResidueFitter {
         setProcessingOn();
         updateProgress(0.0);
         if (residueFitGroups == null) {
-            resProps.residueMap.clear();
+            resProps.clearResidueMap();
         }
         ((Service) processDataset.worker).restart();
     }
@@ -107,7 +107,7 @@ public class ResidueFitter {
             List<ResidueInfo> resInfoList = fitResidues(resProps, resNumGroup, nFit, null);
             for (ResidueInfo resInfo : resInfoList) {
                 int fitResNum = resInfo.resNum;
-                resProps.residueMap.put(String.valueOf(fitResNum), resInfo);
+                resProps.addResidueInfo(String.valueOf(fitResNum), resInfo);
             }
             nFit++;
             updateProgress((1.0 * nFit) / nResidues);
@@ -165,7 +165,7 @@ public class ResidueFitter {
             List<ResidueInfo> resInfoList = fitResidues(resProps, resNumGroup, nFit, null);
             for (ResidueInfo resInfo : resInfoList) {
                 int fitResNum = resInfo.resNum;
-                resProps.residueMap.put(String.valueOf(fitResNum), resInfo);
+                resProps.addResidueInfo(String.valueOf(fitResNum), resInfo);
             }
             nFit++;
             updateProgress((1.0 * nFit) / nGroups);
@@ -204,9 +204,9 @@ public class ResidueFitter {
                 continue;
             }
 
-            EquationFitter cpmgFit = getFitter();
-            cpmgFit.setData(resProps, resNums);
-            CPMGFitResult fitResult = cpmgFit.doFit(resProps, equationName, resProps.isAbsValueMode(), !resProps.getBootStrapMode().equals("parametric"));
+            EquationFitter equationFitter = getFitter();
+            equationFitter.setData(resProps, resNums);
+            CPMGFitResult fitResult = equationFitter.doFit(resProps, equationName, resProps.isAbsValueMode(), !resProps.getBootStrapMode().equals("parametric"));
             fitResults.put(equationName, fitResult);
             if (fitResult.getAicc() < aicMin) {
                 aicMin = fitResult.getAicc();
@@ -219,7 +219,7 @@ public class ResidueFitter {
         List<ResidueInfo> resInfoList = new ArrayList<>();
         Map<String, ResidueInfo> resMap = new HashMap<>();
         for (String residueNumber : resNums) {
-            ResidueInfo residueInfo = new ResidueInfo(Integer.parseInt(residueNumber), groupId, resNums.length);
+            ResidueInfo residueInfo = new ResidueInfo(resProps, Integer.parseInt(residueNumber), groupId, resNums.length);
             resInfoList.add(residueInfo);
             resMap.put(residueNumber, residueInfo);
         }
