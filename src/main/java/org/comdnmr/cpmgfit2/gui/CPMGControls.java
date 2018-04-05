@@ -5,7 +5,10 @@
  */
 package org.comdnmr.cpmgfit2.gui;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javafx.fxml.FXML;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
@@ -16,6 +19,7 @@ import javafx.scene.layout.VBox;
 import org.comdnmr.cpmgfit2.calc.CPMGEquation;
 import org.comdnmr.cpmgfit2.calc.CPMGFit;
 import org.comdnmr.cpmgfit2.calc.ParValueInterface;
+import org.comdnmr.cpmgfit2.calc.PlotEquation;
 import org.comdnmr.cpmgfit2.calc.ResidueInfo;
 import org.comdnmr.cpmgfit2.calc.ResidueProperties;
 import static org.comdnmr.cpmgfit2.gui.CPMGControls.PARS.DW;
@@ -146,16 +150,14 @@ public class CPMGControls implements EquationControls {
     void equationAction() {
         String equationName = equationSelector.getValue().toString();
         ResidueInfo resInfo = controller.currentResInfo;
-//        if (resInfo != null) {
-//            updatingTable = true;
-//            String state = stateSelector.getValue();
-//            System.out.println("get values " + state + " " + equationName);
-//            List<ParValueInterface> parValues = resInfo.getParValues(equationName, state);
-//            controller.updateTableWithPars(parValues);
-//            updateSliders(parValues, equationName);
-//            System.out.println(parValues.toString());
-//            updatingTable = false;
-//        }
+        if (resInfo != null) {
+            updatingTable = true;
+            String state = stateSelector.getValue();
+            List<ParValueInterface> parValues = resInfo.getParValues(equationName, state);
+            controller.updateTableWithPars(parValues);
+            updateSliders(parValues, equationName);
+            updatingTable = false;
+        }
         switch (equationName) {
             case "NOEX":
                 R2.disabled(false);
@@ -191,11 +193,9 @@ public class CPMGControls implements EquationControls {
             String state = stateSelector.getValue();
             if (state != null) {
                 String equationName = equationSelector.getValue();
-                System.out.println("get values " + state + " " + equationName);
                 List<ParValueInterface> parValues = resInfo.getParValues(equationName, state);
                 controller.updateTableWithPars(parValues);
                 updateSliders(parValues, equationName);
-                System.out.println(parValues.toString());
             }
         }
 
@@ -240,13 +240,14 @@ public class CPMGControls implements EquationControls {
                 pars[1] = pA;
                 pars[2] = r2;
                 pars[3] = dW;
-                int[] map = {0, 1, 2, 3};
-                rEx = CPMGEquation.CPMGSLOW.getRex(pars, map);
-                System.out.println(pars[0] + " " + pars[1] + " " + pars[2] + " " + pars[3] + " " + rEx);
-                REX.setValue(rEx);
                 break;
             default:
                 return;
+        }
+        if (equationName.equals("CPMGSLOW")) {
+            int[] map = {0, 1, 2, 3};
+            rEx = CPMGEquation.CPMGSLOW.getRex(pars, map);
+            REX.setValue(rEx);
         }
 
         double[] errs = new double[pars.length];
@@ -256,7 +257,70 @@ public class CPMGControls implements EquationControls {
         if (nFields > 1) {
             fields[1] = field2 / defaultField;
         }
-        controller.updateChartEquations(equationName, pars, errs, fields);
+        updateEquations();
+
+        //controller.updateChartEquations(equationName, pars, errs, fields);
+    }
+
+    double[] getPars(String equationName) {
+        double r2 = R2.getValue();
+        double kEx = KEX.getValue();
+        double rEx = REX.getValue();
+        double pA = PA.getValue();
+        double dW = DW.getValue();
+        double field2 = FIELD2.getValue();
+        double[] pars;
+        switch (equationName) {
+            case "NOEX":
+                pars = new double[1];
+                pars[0] = r2;
+
+                break;
+            case "CPMGFAST":
+                pars = new double[3];
+                pars[0] = kEx;
+                pars[1] = r2;
+                pars[2] = rEx;
+                break;
+            case "CPMGSLOW":
+                pars = new double[4];
+                pars[0] = kEx;
+                pars[1] = pA;
+                pars[2] = r2;
+                pars[3] = dW;
+                break;
+            default:
+                pars = null;
+        }
+        return pars;
+
+    }
+
+    double[] getPars(String equationName, Map<String, ParValueInterface> parValues) {
+        double[] pars;
+        switch (equationName) {
+            case "NOEX":
+                pars = new double[1];
+                pars[0] = parValues.get("R2").getValue();
+                break;
+            case "CPMGFAST":
+                pars = new double[3];
+                pars[0] = parValues.get("Kex").getValue();
+                pars[1] = parValues.get("R2").getValue();
+                pars[2] = parValues.get("Rex").getValue();
+                break;
+            case "CPMGSLOW":
+                pars = new double[4];
+                pars[0] = parValues.get("Kex").getValue();
+                pars[1] = parValues.get("pA").getValue();
+                pars[2] = parValues.get("R2").getValue();
+                pars[3] = parValues.get("dW").getValue();
+                break;
+            default:
+                pars = null;
+        }
+        return pars;
+
     }
 
     @Override
@@ -289,7 +353,15 @@ public class CPMGControls implements EquationControls {
                 control.setValue(parValue.getValue());
             }
         }
+        ResidueProperties resProps = controller.currentResProps;
+        if (resProps != null) {
+            double[] fields = resProps.getFields();
+            int iField = Integer.parseInt(stateSelector.getValue().substring(0, 1));
+            FIELD2.setValue(fields[iField]);
+            FIELD2.setText();
+        }
         equationSelector.setValue(equationName);
+
         updatingTable = false;
     }
 
@@ -298,4 +370,45 @@ public class CPMGControls implements EquationControls {
         return equationSelector.getValue();
     }
 
+    void updateEquations() {
+        ResidueInfo resInfo = controller.currentResInfo;
+        ResidueProperties resProps = controller.currentResProps;
+        List<PlotEquation> equations = new ArrayList<>();
+        double[] pars;
+        String equationName = equationSelector.getValue();
+        if (resProps == null) {
+            pars = getPars(equationName);
+            double[] errs = new double[pars.length];
+            double[] extras = new double[1];
+            extras[0] = 1.0;
+            PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
+            equations.add(plotEquation);
+        } else {
+            double[] fields = resProps.getFields();
+            String currentState = stateSelector.getValue();
+            double field2;
+            if (resInfo != null) {
+                for (String state : stateSelector.getItems()) {
+                    int iField = Integer.parseInt(state.substring(0, 1));
+                    if (state.equals(currentState)) {
+                        pars = getPars(equationName);
+                        fields[iField] = FIELD2.getValue();
+                    } else {
+                        Map<String, ParValueInterface> parMap = new HashMap<>();
+                        List<ParValueInterface> parValues = resInfo.getParValues(equationName, state);
+                        for (ParValueInterface parValue : parValues) {
+                            parMap.put(parValue.getName(), parValue);
+                        }
+                        pars = getPars(equationName, parMap);
+                    }
+                    double[] errs = new double[pars.length];
+                    double[] extras = new double[1];
+                    extras[0] = fields[iField] / fields[0];
+                    PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
+                    equations.add(plotEquation);
+                }
+            }
+        }
+        controller.showEquations(equations);
+    }
 }

@@ -71,6 +71,12 @@ public class PlotData extends ScatterChart {
         setNodeListeners(this);
     }
 
+    public void setNames(String title, String xName, String yName) {
+        setTitle(title);
+        xAxis.setLabel(xName);
+        yAxis.setLabel(yName);
+    }
+
     public void addCanvas(Canvas canvas) {
         getPlotChildren().add(1, canvas);
     }

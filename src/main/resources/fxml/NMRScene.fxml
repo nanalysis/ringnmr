@@ -52,8 +52,24 @@
                         <VBox HBox.hgrow="ALWAYS"  VBox.vgrow="ALWAYS" >
                             <TabPane fx:id="parTabPane"  VBox.vgrow="ALWAYS" >
                                 <Tab text="Parameters" closable="false" > 
-                                    <TableView fx:id="parameterTable" prefHeight="200" VBox.vgrow="ALWAYS"  >
-                                    </TableView>
+                                    <BorderPane HBox.hgrow="ALWAYS">
+                                        <top>
+                                            <HBox>
+                                                <children>
+                                                    <ChoiceBox fx:id="equationChoice">
+                                                      
+                                                    </ChoiceBox>
+                                                    <Button text="Set" onAction="#setBestEquation" />
+
+                                                </children>
+                                            </HBox> 
+                                        </top>
+                                           
+                                        <center>
+                                            <TableView fx:id="parameterTable" prefHeight="200" VBox.vgrow="ALWAYS"  >
+                                            </TableView>
+                                        </center>
+                                    </BorderPane>
                                 </Tab>
                                 <Tab text="Data" closable="false" > 
                                     <TableView fx:id="resInfoTable" prefHeight="200" VBox.vgrow="ALWAYS"  >

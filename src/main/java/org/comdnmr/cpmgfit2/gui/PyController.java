@@ -22,6 +22,7 @@ import javafx.scene.SnapshotParameters;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TabPane;
@@ -70,6 +71,8 @@ public class PyController implements Initializable {
     @FXML
     TableView parameterTable;
     @FXML
+    ChoiceBox<String> equationChoice;
+    @FXML
     TabPane parTabPane;
     @FXML
     PropertySheet propertySheet;
@@ -96,6 +99,11 @@ public class PyController implements Initializable {
     ResidueInfo currentResInfo = null;
     ResidueProperties currentResProps = null;
     ResidueFitter residueFitter;
+    String currentMapName = "";
+    String[] currentResidues;
+    String currentState = "";
+    String currentEquationName;
+    List<int[]> currentStates = new ArrayList<>();
 
     @FXML
     private void pyAction(ActionEvent event) {
@@ -127,14 +135,25 @@ public class PyController implements Initializable {
 //        simControls = new CPMGControls();
         if (getFittingMode().equals("cpmg")) {
             simControls = new CPMGControls();
+            equationChoice.getItems().clear();
+            equationChoice.getItems().add("+");
+            equationChoice.getItems().addAll(CPMGFit.getEquationNames());
+            equationChoice.setValue(CPMGFit.getEquationNames().get(0));
         } else {
             simControls = new ExpControls();
+            equationChoice.getItems().clear();
+            equationChoice.getItems().add("+");
+            equationChoice.getItems().addAll(ExpFit.getEquationNames());
+            equationChoice.setValue(ExpFit.getEquationNames().get(0));
         }
         VBox vBox = simControls.makeControls(mainController);
         simPane.centerProperty().set(vBox);
         residueFitter = new ResidueFitter(this::updateFitProgress, this::updateStatus);
         statusCircle = new Circle(10);
         statusBar.getLeftItems().add(statusCircle);
+        equationChoice.valueProperty().addListener(e -> {
+            equationAction();
+        });
 
     }
 
@@ -143,18 +162,27 @@ public class PyController implements Initializable {
         if (getFittingMode().equals("cpmg") && !(simControls instanceof CPMGControls)) {
             simControls = new CPMGControls();
             update = true;
+            equationChoice.getItems().clear();
+            equationChoice.getItems().add("+");
+            equationChoice.getItems().addAll(CPMGFit.getEquationNames());
+
         } else if (getFittingMode().equals("exp") && !(simControls instanceof ExpControls)) {
             simControls = new ExpControls();
+            equationChoice.getItems().clear();
+            equationChoice.getItems().add("+");
+            equationChoice.getItems().addAll(ExpFit.getEquationNames());
             update = true;
         }
         if (update) {
             VBox vBox = simControls.makeControls(mainController);
             simPane.centerProperty().set(vBox);
         }
+
     }
 
     public void loadParameterFile(Event e) {
         FileChooser fileChooser = new FileChooser();
+        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Yaml File", "*.yaml", "*.yml"));
         Stage stage = MainApp.primaryStage;
         File file = fileChooser.showOpenDialog(stage);
         if (file != null) {
@@ -169,6 +197,10 @@ public class PyController implements Initializable {
             PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
             equations.add(plotEquation);
         }
+        showEquations(equations);
+    }
+
+    public void showEquations(List<PlotEquation> equations) {
         cpmgchart.setEquations(equations);
         cpmgchart.layoutPlotChildren();
 
@@ -189,7 +221,6 @@ public class PyController implements Initializable {
     }
 
     public void removeChart(Event e) {
-        System.out.println(chartBox.getChildren().size() + " " + chartBox.getChildren().get(0));
         if ((activeChart != null) && (chartBox.getChildren().size() > 2)) {
             chartBox.getChildren().remove(activeChart);
             activeChart = (XYBarChart) chartBox.getChildren().get(0);
@@ -222,6 +253,10 @@ public class PyController implements Initializable {
     }
 
     public void updateTableWithPars(String mapName, String[] residues, String equationName, String state, List<int[]> allStates) {
+        updateTableWithPars(mapName, residues, equationName, state, allStates, true);
+    }
+
+    public void updateTableWithPars(String mapName, String[] residues, String equationName, String state, List<int[]> allStates, boolean savePars) {
         List<ParValueInterface> allParValues = new ArrayList<>();
         for (String resNum : residues) {
             ResidueInfo resInfo = ChartUtil.getResInfo(mapName, String.valueOf(resNum));
@@ -242,23 +277,38 @@ public class PyController implements Initializable {
                 allParValues.addAll(parValues);
             }
         }
-        updateTableWithPars(allParValues);
+        if (savePars) {
+            currentMapName = mapName;
+            currentResidues = new String[residues.length];
+            System.arraycopy(residues, 0, currentResidues, 0, residues.length);
+            currentState = state;
+            currentEquationName = equationName;
+            currentStates.clear();
+            currentStates.addAll(allStates);
+        }
 
+        updateTableWithPars(allParValues);
     }
 
-    public void updateTableWithPars(ResidueInfo resInfo, String equationName, String state) {
-        System.out.println("update table with pars " + equationName + " " + state);
-        final String useEquationName;
-        if (equationName.equals("best")) {
-            useEquationName = resInfo.getBestEquationName();
-        } else {
-            useEquationName = equationName;
+    public void updateEquation(String mapName, String[] residues, String equationName) {
+        String setEquation = "";
+        for (String resNum : residues) {
+            final String useEquationName;
+            ResidueInfo resInfo = ChartUtil.getResInfo(mapName, resNum);
+            if (equationName.equals("best")) {
+                useEquationName = resInfo.getBestEquationName();
+            } else {
+                useEquationName = equationName;
+            }
+            if (setEquation.equals("")) {
+                setEquation = useEquationName;
+            } else if (!setEquation.equals(useEquationName)) {
+                setEquation = "+";
+            }
         }
-        List<ParValueInterface> parValues = resInfo.getParValues(useEquationName, state);
-        currentResInfo = resInfo;
-        updateTableWithPars(parValues);
-
-        simControls.updateSliders(parValues, useEquationName);
+        equationChoice.setUserData("disabled");
+        equationChoice.setValue(setEquation);
+        equationChoice.setUserData(null);
     }
 
     public void updateTableWithPars(List<ParValueInterface> parValues) {
@@ -309,7 +359,11 @@ public class PyController implements Initializable {
     public void setYAxisType(String setName, String eqnName, String state, String typeName) {
         ObservableList<XYChart.Series<Double, Double>> data = ChartUtil.getParMapData(setName, eqnName, state, typeName);
         XYBarChart chart = activeChart;
+
         ((XYChart) chart).getData().addAll(data);
+        if (chart.currentSeriesName.equals("")) {
+            chart.currentSeriesName = data.get(0).getName();
+        }
         NumberAxis xAxis = (NumberAxis) chart.getXAxis();
         NumberAxis yAxis = (NumberAxis) chart.getYAxis();
         xAxis.setAutoRanging(false);
@@ -355,10 +409,8 @@ public class PyController implements Initializable {
         for (String parType : parTypes) {
             Menu cascade = new Menu(parType);
             axisMenu.getItems().add(cascade);
-            System.out.println(parType);
             for (ResidueProperties residueProp : residueProps.values()) {
                 String setName = residueProp.getName();
-                System.out.println(setName);
                 Menu cascade2 = new Menu(setName);
                 cascade.getItems().add(cascade2);
                 ArrayList<String> equationNames = new ArrayList<>();
@@ -385,11 +437,9 @@ public class PyController implements Initializable {
                             }
                         }
                         if (isValidPar) {
-                            System.out.println("eq " + equationName);
                             Menu cascade3 = new Menu(equationName);
                             cascade2.getItems().add(cascade3);
                             residueProp.getStateStrings().stream().forEach(state -> {
-                                System.out.println("ss " + state);
                                 MenuItem cmItem1 = new MenuItem(state);
                                 cmItem1.setOnAction(e -> setYAxisType(setName, equationName, state, parType));
                                 cascade3.getItems().add(cmItem1);
@@ -415,15 +465,19 @@ public class PyController implements Initializable {
     }
 
     public void updateAfterFit(CPMGFitResult fitResult) {
-        CurveFit curveFit = fitResult.getCurveFit(0);
-
-        List<ParValueInterface> parValues = curveFit.getParValues();
-        updateTableWithPars(parValues);
-        simControls.updateSliders(parValues, fitResult.getEquationName());
-        double[] pars = curveFit.getEquation().getPars();
-        double[] errs = curveFit.getEquation().getErrs();
-        updateChartEquations(fitResult.getEquationName(), pars, errs, curveFit.getEquation().getExtras());
-
+        List<PlotEquation> equations = new ArrayList<>();
+        int nCurves = fitResult.getNCurves();
+        for (int iCurve = 0; iCurve < nCurves; iCurve++) {
+            CurveFit curveFit = fitResult.getCurveFit(iCurve);
+            List<ParValueInterface> parValues = curveFit.getParValues();
+            updateTableWithPars(parValues);
+            simControls.updateSliders(parValues, fitResult.getEquationName());
+            double[] pars = curveFit.getEquation().getPars();
+            double[] errs = curveFit.getEquation().getErrs();
+            PlotEquation plotEquation = new PlotEquation(fitResult.getEquationName(), pars, errs, curveFit.getEquation().getExtras());
+            equations.add(plotEquation);
+        }
+        showEquations(equations);
     }
 
     @FXML
@@ -452,11 +506,13 @@ public class PyController implements Initializable {
     public void refreshFit() {
         XYBarChart chart = getActiveChart();
         chart.showInfo();
+        makeAxisMenu();
     }
 
     @FXML
     public void haltFit(ActionEvent event) {
         residueFitter.haltFit();
+        makeAxisMenu();
     }
 
     @FXML
@@ -469,15 +525,31 @@ public class PyController implements Initializable {
     }
 
     public Double updateFitProgress(Double f) {
+        XYBarChart chart = getActiveChart();
+        String seriesName = chart.currentSeriesName;
+        String[] sParts;
+        if (seriesName.length() == 0) {
+            sParts = new String[4];
+            sParts[0] = currentResProps.getName();
+            sParts[1] = "best";
+            sParts[2] = "0:0:0";
+            sParts[3] = "RMS";
+        } else {
+            sParts = seriesName.split("\\|");
+        }
         if (Platform.isFxApplicationThread()) {
             clearChart();
             statusBar.setProgress(f);
-            setYAxisType(currentResProps.getName(), "best", "0:0:0", "RMS");
+            setYAxisType(sParts[0], sParts[1], sParts[2], sParts[3]);
+            currentResProps = ChartUtil.residueProperties.get(currentResProps.getName());
+
         } else {
             Platform.runLater(() -> {
                 clearChart();
-                setYAxisType(currentResProps.getName(), "best", "0:0:0", "RMS");
+                setYAxisType(sParts[0], sParts[1], sParts[2], sParts[3]);
                 statusBar.setProgress(f);
+                currentResProps = ChartUtil.residueProperties.get(currentResProps.getName());
+
             });
         }
         return null;
@@ -485,7 +557,7 @@ public class PyController implements Initializable {
     }
 
     public void processingDone() {
-
+        makeAxisMenu();
     }
 
     public Double updateStatus(ProcessingStatus status) {
@@ -582,6 +654,29 @@ public class PyController implements Initializable {
             return cpmgTypes;
         }
         return nullTypes;
+    }
 
+    @FXML
+    void setBestEquation(ActionEvent e) {
+        for (String resNum : currentResidues) {
+            ResidueInfo resInfo = ChartUtil.getResInfo(currentMapName, String.valueOf(resNum));
+            if (resInfo != null) {
+                String equationName = equationChoice.getValue();
+                resInfo.setBestEquationName(equationName);
+            }
+        }
+        updateFitProgress(1.0);
+        
+    }
+
+    void equationAction() {
+        if (equationChoice.getUserData() == null) {
+            String equationName = equationChoice.getValue();
+            if (!currentStates.isEmpty()) {
+                // copy it so it doesn't get cleared by clear call in updateTableWithPars
+                List<int[]> useStates = new ArrayList<>(currentStates);
+                updateTableWithPars(currentMapName, currentResidues, equationName, currentState, useStates, false);
+            }
+        }
     }
 }

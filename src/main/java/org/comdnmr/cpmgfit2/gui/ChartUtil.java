@@ -141,14 +141,9 @@ public class ChartUtil {
     }
 
     public static void print(Node node) {
-        System.out.println("Print!");
         Set<Printer> printers = Printer.getAllPrinters();
-        for (Printer printer : printers) {
-            System.out.println(printer.getName());
-        }
         PrinterJob job = PrinterJob.createPrinterJob();
         if (job != null) {
-            System.out.println("gotjob");
             Node oldClip = node.getClip();
             List<Transform> oldTransforms = new ArrayList<>(node.getTransforms());
 
@@ -162,7 +157,6 @@ public class ChartUtil {
 
             boolean doPrint = job.showPrintDialog(node.getScene().getWindow());
             if (doPrint) {
-                System.out.print("fxthread " + Platform.isFxApplicationThread());
                 boolean success = job.printPage(node);
                 if (success) {
                     job.endJob();
@@ -226,7 +220,6 @@ public class ChartUtil {
     }
 
     public static List<XYChart.Series<Double, Double>> getMapData(String seriesName, String expName, String[] residues) {
-        System.out.println("get map data " + seriesName + " " + expName);
         ResidueProperties resProps = residueProperties.get(seriesName);
         ExperimentData expData = resProps.getExperimentData(expName);
         List<XYChart.Series<Double, Double>> data = new ArrayList<>();
@@ -255,7 +248,6 @@ public class ChartUtil {
     public static ArrayList<PlotEquation> getEquations(String seriesName, String[] residues, String equationName, String state, double field) {
         ResidueProperties residueProps = residueProperties.get(seriesName);
         ArrayList<PlotEquation> equations = new ArrayList<>();
-        System.out.println("get eq " + seriesName + " " + equationName);
         for (String resNum : residues) {
             Series<Double, Double> series = new Series<>();
             series.setName(resNum);
@@ -272,7 +264,6 @@ public class ChartUtil {
                 if (curveSet != null) {
                     PlotEquation equation = curveSet.getEquation();
                     double[] extras = {field};
-                    System.out.println("use eq " + equationName + " " + field);
                     PlotEquation equationCopy = equation.clone();
                     equationCopy.setExtra(extras);
 
@@ -290,7 +281,6 @@ public class ChartUtil {
     }
 
     public static ObservableList<XYChart.Series<Double, Double>> getParMapData(String mapName, String eqnName, String state, String parName) {
-        System.out.println("get parmapdata " + mapName + " eqn " + eqnName + " par " + parName);
         ResidueProperties residueProps = residueProperties.get(mapName);
         ObservableList<XYChart.Series<Double, Double>> data = FXCollections.observableArrayList();
 
@@ -299,10 +289,10 @@ public class ChartUtil {
         data.add(series);
         minRes = Integer.MAX_VALUE;
         maxRes = Integer.MIN_VALUE;
-        for (ResidueInfo resInfo : residueProps.getResidueMap().values()) {
+        List<ResidueInfo> resValues = residueProps.getResidueValues();
+        for (ResidueInfo resInfo : resValues) {
             String useEquName = eqnName;
             if (resInfo == null) {
-                System.out.println("null resInfo");
                 continue;
             }
 

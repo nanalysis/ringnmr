@@ -220,6 +220,7 @@ public class XYBarChart extends XYChart<Number, Number> {
 
     void showInfo(ResidueProperties resProps, String seriesName) {
         Node chartNode = ChartUtil.findNode(this.getScene(), "cpmgchart");
+        PlotData plotData = (PlotData) chartNode;
         String[] seriesNameParts = seriesName.split("\\|");
         if (seriesNameParts.length < 3) {
             return;
@@ -249,12 +250,19 @@ public class XYBarChart extends XYChart<Number, Number> {
             int[] states = resProps.getStateIndices(0, expData);
             allStates.add(states);
         }
-        ((XYChart) chartNode).setData(allData);
+        plotData.setData(allData);
+        if (resProps.getExpMode().equals("cpmg")) {
+            plotData.setNames("CPMG", "\u03BD(cpmg)", "R2(\u03BD)");
+        } else {
+            plotData.setNames("", "Time (s)", "Intensity");
+        }
 
-        ((PlotData) chartNode).setEquations(equations);
-        ((PlotData) chartNode).layoutPlotChildren();
+        plotData.setEquations(equations);
+        plotData.layoutPlotChildren();
         PyController.mainController.updateTable(resDatas);
         PyController.mainController.updateTableWithPars(mapName, residues, equationName, state, allStates);
+        PyController.mainController.updateEquation(mapName, residues, equationName);
+
     }
 
     @Override
@@ -439,8 +447,9 @@ public class XYBarChart extends XYChart<Number, Number> {
             presenceGroup.getChildren().clear();
         }
         if (resProps != null) {
+            List<ResidueInfo> resValues = resProps.getResidueValues();
 
-            for (ResidueInfo resInfo : resProps.getResidueMap().values()) {
+            for (ResidueInfo resInfo : resValues) {
                 if (resInfo == null) {
                     continue;
                 }
