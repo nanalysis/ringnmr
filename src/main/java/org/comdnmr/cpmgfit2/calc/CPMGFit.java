@@ -134,7 +134,7 @@ public class CPMGFit implements EquationFitter {
         double[] sigma = new double[guesses.length];
         for (int i = 0; i < guesses.length; i++) {
             sigma[i] = (boundaries[1][i] - boundaries[0][i]) / 10.0;
-//            System.out.println(i + " " + boundaries[0][i] + " " + boundaries[1][i] + " " + sigma[i]);
+//            System.out.printf("%3d %7.3f %7.3f %7.3f %7.3f\n",i,boundaries[0][i],boundaries[1][i],sigma[i], guesses[i]);
         }
         PointValuePair result = calcR.refine(guesses, boundaries[0], boundaries[1], sigma);
         double[] pars = result.getPoint();
@@ -146,7 +146,9 @@ public class CPMGFit implements EquationFitter {
             System.out.println("");
         }
 
-        System.out.print("Fit pars ");
+      
+        System.out.print("Fit " + x.length + " points");
+        System.out.print("Fit pars");
         for (int i = 0; i < pars.length; i++) {
             System.out.printf(" %.3f", pars[i]);
         }
