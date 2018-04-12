@@ -70,13 +70,13 @@ public class CalcRDisp extends FitModel {
             sumAbs += FastMath.abs(delta);
             sumSq += delta * delta;
         }
-        if (reportFittness) {
-                   double rms = Math.sqrt(sumSq / xValues.length);
-                  for (double p:par) {
-                     System.out.printf("%7.3f ",p);
-                }
-               System.out.printf("%7.3f %7.3f %7.3f\n",sumSq,sumAbs,rms);
-          }
+        if (reportFitness) {
+            double rms = Math.sqrt(sumSq / xValues.length);
+            for (double p : par) {
+                System.out.printf("%7.3f ", p);
+            }
+            System.out.printf("%7.3f %7.3f %7.3f\n", sumSq, sumAbs, rms);
+        }
 
         if (absMode) {
             return sumAbs;
