@@ -35,6 +35,13 @@
                             <Menu text="Add Data" fx:id="axisMenu"/>
                         </items>
                     </Menu>
+                    <Menu text="Fitting">
+                        <items>
+                            <MenuItem text="Fit All" onAction="#fitResidues" fx:id="FitResidues"/>
+                            <MenuItem text="Fit Selected" onAction="#fitGroupResidues" fx:id="FitGroupResidues"/>
+                            <MenuItem  text="Halt" onAction="#haltFit" fx:id="haltProcessButton" />
+                        </items>
+                    </Menu>
                 </MenuBar>
             </children>
         </HBox>
@@ -95,9 +102,6 @@
                                         <children>
                                             <HBox>
                                                 <children>
-                                                    <Button text="Fit All" onAction="#fitResidues" fx:id="FitResidues"/>
-                                                    <Button text="Fit Selected" onAction="#fitGroupResidues" fx:id="FitGroupResidues"/>
-                                                    <Button fx:id="haltProcessButton" mnemonicParsing="false" onAction="#haltFit" text="Halt" />
                                                 </children>
                                             </HBox> 
                                             <HBox>
