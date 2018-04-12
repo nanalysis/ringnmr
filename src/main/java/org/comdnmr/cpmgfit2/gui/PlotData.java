@@ -304,6 +304,38 @@ public class PlotData extends ScatterChart {
         }
     }
 
+    public void dumpLine(int iSeries) {
+        ObservableList<XYChart.Series<Double, Double>> data = getData();
+        XYChart.Series<Double, Double> series = data.get(iSeries);
+        series.getData().forEach((value) -> {
+            Double x = value.getXValue();
+            Double y = value.getYValue();
+            Object extraValue = value.getExtraValue();
+            if (extraValue instanceof ResidueData.DataValue) {
+                Double error = ((ResidueData.DataValue) extraValue).getError();
+                String outputLine = String.format("%14.4g %14.4g %14.4g", x, y, error);
+                System.out.println(outputLine);
+            }
+        });
+    }
+
+    public void dumpEquation(int iLine) {
+        PlotEquation plotEquation = plotEquations.get(iLine);
+        double fieldRef = 1.0;
+        double min = xAxis.getLowerBound();
+        double max = xAxis.getUpperBound();
+        int nIncr = 100;
+        double delta = (max - min) / nIncr;
+        if (iLine == 0) {
+            fieldRef = plotEquation.getExtra(0);
+        }
+        for (int i = 1; i < nIncr - 1; i++) {
+            double xValue = min + i * delta;
+            double yValue = plotEquation.calculate(xValue, plotEquation.getExtra(0) / fieldRef);
+            String outputLine = String.format("%14.4g %14.4g %14.4g", xValue, yValue, 0.0);
+        }
+    }
+
 //    @Override
 //    protected void seriesAdded(XYChart.Series series, int seriesIndex) {
 //        // handle any data already in series
