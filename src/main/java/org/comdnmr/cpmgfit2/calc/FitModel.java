@@ -137,7 +137,7 @@ public abstract class FitModel implements MultivariateFunction {
 
     public void setFields(double[] fields) {
         this.fields = fields;
-        this.equation.setFieldRef(fields[0]);
+        this.equation.setFieldRef(fields);
     }
 
     public double[] guess() {

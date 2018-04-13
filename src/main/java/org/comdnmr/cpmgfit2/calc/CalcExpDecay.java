@@ -36,7 +36,7 @@ public class CalcExpDecay extends FitModel {
         this.idNums = idNums.clone();
         this.idNums = new int[xValues.length];
         this.equation = ExpEquation.EXPAB;
-        this.equation.setFieldRef(fields[0]);
+        this.equation.setFieldRef(fields);
         if (setNID()) {
             throw new IllegalArgumentException("Invalid idNums, some values not used");
         }

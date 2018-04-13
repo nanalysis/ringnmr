@@ -5,6 +5,7 @@
  */
 package org.comdnmr.cpmgfit2.calc;
 
+import java.util.Arrays;
 import org.apache.commons.math3.util.FastMath;
 
 /**
@@ -374,6 +375,9 @@ public enum CPMGEquation implements EquationType {
         return parNames;
     }
 
+    public void setFieldRef(double[] field) {
+        fieldRef = Arrays.stream(field).min().getAsDouble();
+    }
     public void setFieldRef(double field) {
         fieldRef = field;
     }

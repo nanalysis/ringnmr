@@ -5,6 +5,8 @@
  */
 package org.comdnmr.cpmgfit2.calc;
 
+import java.util.Arrays;
+
 /**
  *
  * @author Bruce Johnson
@@ -121,6 +123,10 @@ public enum ExpEquation implements EquationType {
 
     public String[] getParNames() {
         return parNames;
+    }
+
+    public void setFieldRef(double[] fields) {
+        fieldRef = Arrays.stream(fields).min().getAsDouble();
     }
 
     public void setFieldRef(double field) {
