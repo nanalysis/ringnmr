@@ -220,6 +220,7 @@ public class XYBarChart extends XYChart<Number, Number> {
 
     void showInfo(ResidueProperties resProps, String seriesName) {
         Node chartNode = ChartUtil.findNode(this.getScene(), "cpmgchart");
+        PyController controller = PyController.mainController;
         PlotData plotData = (PlotData) chartNode;
         String[] seriesNameParts = seriesName.split("\\|");
         if (seriesNameParts.length < 3) {
@@ -232,37 +233,7 @@ public class XYBarChart extends XYChart<Number, Number> {
         System.out.println("series " + seriesName + " map " + mapName + " eqn " + equationName + " state " + state);
         String[] residues = new String[selectedResidues.size()];
         selectedResidues.toArray(residues);
-        ArrayList<PlotEquation> equations = new ArrayList<>();
-        ObservableList<XYChart.Series<Double, Double>> allData = FXCollections.observableArrayList();
-        List<ResidueData> resDatas = new ArrayList<>();
-        List<int[]> allStates = new ArrayList<>();
-        for (ExperimentData expData : resProps.getExperimentData()) {
-            for (String residue : residues) {
-                resDatas.add(expData.getResidueData(residue));
-            }
-            String expName = expData.getName();
-            if (!ResidueProperties.matchStateString(state, expData.getState())) {
-                continue;
-            }
-            List<XYChart.Series<Double, Double>> data = ChartUtil.getMapData(mapName, expName, residues);
-            allData.addAll(data);
-            equations.addAll(ChartUtil.getEquations(mapName, residues, equationName, expData.getState(), expData.getField()));
-            int[] states = resProps.getStateIndices(0, expData);
-            allStates.add(states);
-        }
-        plotData.setData(allData);
-        if (resProps.getExpMode().equals("cpmg")) {
-            plotData.setNames("CPMG", "\u03BD(cpmg)", "R2(\u03BD)");
-        } else {
-            plotData.setNames("", "Time (s)", "Intensity");
-        }
-
-        plotData.setEquations(equations);
-        plotData.layoutPlotChildren();
-        PyController.mainController.updateTable(resDatas);
-        PyController.mainController.updateTableWithPars(mapName, residues, equationName, state, allStates);
-        PyController.mainController.updateEquation(mapName, residues, equationName);
-
+        controller.showInfo(resProps, equationName, mapName, state, residues, plotData);
     }
 
     @Override

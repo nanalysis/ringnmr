@@ -46,6 +46,7 @@ import org.comdnmr.cpmgfit2.calc.DataIO;
 import org.comdnmr.cpmgfit2.calc.EquationFitter;
 import org.comdnmr.cpmgfit2.calc.EquationType;
 import org.comdnmr.cpmgfit2.calc.ExpFit;
+import org.comdnmr.cpmgfit2.calc.ExperimentData;
 import org.comdnmr.cpmgfit2.calc.ResidueData;
 import org.controlsfx.control.PropertySheet;
 import org.comdnmr.cpmgfit2.calc.ParValueInterface;
@@ -666,7 +667,7 @@ public class PyController implements Initializable {
             }
         }
         updateFitProgress(1.0);
-        
+
     }
 
     void equationAction() {
@@ -676,7 +677,50 @@ public class PyController implements Initializable {
                 // copy it so it doesn't get cleared by clear call in updateTableWithPars
                 List<int[]> useStates = new ArrayList<>(currentStates);
                 updateTableWithPars(currentMapName, currentResidues, equationName, currentState, useStates, false);
+                showInfo(equationName);
             }
         }
     }
+
+    void showInfo(String equationName) {
+        String mapName = currentMapName;
+        String state = currentState;
+        showInfo(currentResProps, equationName, mapName, state, currentResidues, cpmgchart);
+    }
+
+    void showInfo(ResidueProperties resProps, String equationName, String mapName, String state, String[] residues, PlotData plotData) {
+        ArrayList<PlotEquation> equations = new ArrayList<>();
+        ObservableList<XYChart.Series<Double, Double>> allData = FXCollections.observableArrayList();
+        List<ResidueData> resDatas = new ArrayList<>();
+        List<int[]> allStates = new ArrayList<>();
+        for (ExperimentData expData : resProps.getExperimentData()) {
+            for (String residue : residues) {
+                System.out.println("get resd " + residue + " " + expData.getResidueData(residue));
+
+                resDatas.add(expData.getResidueData(residue));
+            }
+            String expName = expData.getName();
+            if (!ResidueProperties.matchStateString(state, expData.getState())) {
+                continue;
+            }
+            List<XYChart.Series<Double, Double>> data = ChartUtil.getMapData(mapName, expName, residues);
+            allData.addAll(data);
+            equations.addAll(ChartUtil.getEquations(mapName, residues, equationName, expData.getState(), expData.getField()));
+            int[] states = resProps.getStateIndices(0, expData);
+            allStates.add(states);
+        }
+        plotData.setData(allData);
+        if (resProps.getExpMode().equals("cpmg")) {
+            plotData.setNames("CPMG", "\u03BD(cpmg)", "R2(\u03BD)");
+        } else {
+            plotData.setNames("", "Time (s)", "Intensity");
+        }
+
+        plotData.setEquations(equations);
+        plotData.layoutPlotChildren();
+        updateTable(resDatas);
+        updateTableWithPars(mapName, residues, equationName, state, allStates);
+        updateEquation(mapName, residues, equationName);
+    }
+
 }

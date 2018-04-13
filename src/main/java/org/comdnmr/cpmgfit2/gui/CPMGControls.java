@@ -148,6 +148,7 @@ public class CPMGControls implements EquationControls {
     }
 
     void equationAction() {
+        updatingTable = true;
         String equationName = equationSelector.getValue().toString();
         ResidueInfo resInfo = controller.currentResInfo;
         if (resInfo != null) {
@@ -184,7 +185,7 @@ public class CPMGControls implements EquationControls {
                 return;
         }
         simSliderAction(equationName);
-
+        updatingTable = false;
     }
 
     void stateAction() {
