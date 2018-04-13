@@ -407,13 +407,13 @@ def fitProject(resProp, groups, equationName):
         groups = getResidues(resProp)
     groupID = 0
     for group in groups:
-        print group
+        print 'fit',group
         sgroup = [str(groupNum) for groupNum in group]
         resInfoList = residueFitter.fitResidues(resProp, sgroup, groupID, equationName)
         groupID += 1
         for resInfo in resInfoList:
             fitResNum = resInfo.resNum;
-            resProp.residueMap.put(str(fitResNum), resInfo)
+            resProp.addResidueInfo(str(fitResNum), resInfo)
     DataIO.saveParametersToFile('output.txt',resProp)
 
 def fitGroups(groups):
@@ -454,14 +454,18 @@ def parseArgs():
     fileNames = args.fileNames
     projectFile = args.projectFile
     equationName = args.equationName
+    print 'fileNames',fileNames
 
     groups = [] 
+    print 'gL',args.groupList
     if len(args.groupList) > 0:
         sgroups = args.groupList.split(' ')
+        print 'sg',sgroups
         groups = []
         for group in sgroups:
             group = [int(groupNum) for groupNum in group.split(',')]
             groups.append(group)
+        print 'g',groups
 
     if projectFile != '':
         resProp = loadProject(projectFile)
