@@ -1,8 +1,5 @@
 package org.comdnmr.cpmgfit2.gui;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import javafx.application.Application;
@@ -18,9 +15,10 @@ public class MainApp extends Application {
     public static Stage primaryStage;
     public static ScriptEngine engine;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ScriptException {
         engine = new ScriptEngineManager().getEngineByName("python");
         engine.put(ScriptEngine.ARGV, args);
+        engine.eval("from graceExport import Writer");
         launch(args);
     }
 

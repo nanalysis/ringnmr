@@ -609,6 +609,39 @@ public class PyController implements Initializable {
             snapit(cpmgchart, file);
         }
     }
+    
+    public void saveGraceFile() throws IOException, ScriptException{
+        FileChooser chooser = new FileChooser();
+        chooser.setInitialFileName("ASCII.agr");
+        File file = chooser.showSaveDialog(MainApp.primaryStage);
+        if (file != null) {
+            String filePath = file.getAbsolutePath();
+            MainApp.engine.put("file",filePath);
+            
+            MainApp.engine.eval("writer = Writer()");
+            int numPlots = cpmgchart.getNumPlots();
+            int numFits = cpmgchart.getNumEquations();
+            
+            if (numPlots == numFits){
+                for (int i = 0; i < numPlots; i++){
+                    int color = i+1;
+                    MainApp.engine.put("color",color);
+                    
+                    ArrayList<String> rawData = cpmgchart.returnLine(i);
+                    MainApp.engine.put("rawData", rawData);
+                    MainApp.engine.eval("writer.addRawData(rawData,color)");
+                    
+                    ArrayList<String> fittedData = cpmgchart.returnEquation(i);
+                    MainApp.engine.put("fittedData", fittedData);
+                    MainApp.engine.eval("writer.addFittedData(fittedData,color)");
+                }
+            }
+            MainApp.engine.eval("writer.write();");
+            MainApp.engine.eval("writer.writeOut(file)");
+            
+ // TODO Figure out this part           
+        }
+    }
 
     public void snapit(Node node, File file) throws IOException {
         double scale = 4.0;

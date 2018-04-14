@@ -80,6 +80,16 @@ public class PlotData extends ScatterChart {
     public void addCanvas(Canvas canvas) {
         getPlotChildren().add(1, canvas);
     }
+    
+    public int getNumPlots(){
+        int numPlots = getData().size();
+        return numPlots;
+    }
+    
+    public int getNumEquations(){
+        int numEquations = plotEquations.size();
+        return numEquations;
+    }
 
     public void setEquations(List<PlotEquation> plotEquations) {
         this.plotEquations.clear();
@@ -318,6 +328,25 @@ public class PlotData extends ScatterChart {
             }
         });
     }
+    
+    public ArrayList<String> returnLine(int iSeries) {
+        ObservableList<XYChart.Series<Double, Double>> data = getData();
+        XYChart.Series<Double, Double> series = data.get(iSeries);
+        
+        ArrayList <String> lines = new ArrayList<String>(series.getData().size());
+        series.getData().forEach((value) -> {
+            Double x = value.getXValue();
+            Double y = value.getYValue();
+            Object extraValue = value.getExtraValue();
+            if (extraValue instanceof ResidueData.DataValue) {
+                Double error = ((ResidueData.DataValue) extraValue).getError();
+                String outputLine = String.format("%14.4g %14.4g %14.4g", x, y, error);
+                lines.add(outputLine);
+                //System.out.println(outputLine);
+            }
+        });
+        return lines;
+    }
 
     public void dumpEquation(int iLine) {
         PlotEquation plotEquation = plotEquations.get(iLine);
@@ -334,6 +363,27 @@ public class PlotData extends ScatterChart {
             double yValue = plotEquation.calculate(xValue, plotEquation.getExtra(0) / fieldRef);
             String outputLine = String.format("%14.4g %14.4g %14.4g", xValue, yValue, 0.0);
         }
+    }
+    
+    public ArrayList<String> returnEquation(int iLine) {
+        PlotEquation plotEquation = plotEquations.get(iLine);
+        double fieldRef = 1.0;
+        double min = xAxis.getLowerBound();
+        double max = xAxis.getUpperBound();
+        int nIncr = 100;
+        double delta = (max - min) / nIncr;
+        if (iLine == 0) {
+            fieldRef = plotEquation.getExtra(0);
+        }
+        ArrayList <String> lines = new ArrayList<String>(nIncr-1);
+        for (int i = 1; i < nIncr - 1; i++) {
+            double xValue = min + i * delta;
+            double yValue = plotEquation.calculate(xValue, plotEquation.getExtra(0) / fieldRef);
+            System.out.println(yValue);
+            String outputLine = String.format("%14.4g %14.4g %14.4g", xValue, yValue, 0.0);
+            lines.add(outputLine);
+        }
+        return lines;
     }
 
 //    @Override
