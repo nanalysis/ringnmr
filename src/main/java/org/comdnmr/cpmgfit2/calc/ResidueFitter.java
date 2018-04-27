@@ -206,7 +206,7 @@ public class ResidueFitter {
 
             EquationFitter equationFitter = getFitter();
             equationFitter.setData(resProps, resNums);
-            CPMGFitResult fitResult = equationFitter.doFit(resProps, equationName, resProps.isAbsValueMode(), !resProps.getBootStrapMode().equals("parametric"));
+            CPMGFitResult fitResult = equationFitter.doFit(equationName, resProps.isAbsValueMode(), !resProps.getBootStrapMode().equals("parametric"));
             fitResults.put(equationName, fitResult);
             if (fitResult.getAicc() < aicMin) {
                 aicMin = fitResult.getAicc();

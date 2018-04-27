@@ -65,7 +65,9 @@ public class PlotEquation {
         EquationType equationType = ResidueFitter.getEquationType(name);
         equationType.setFieldRef(1.0);
         int[][] map = equationType.makeMap(1);
-        return equationType.calculate(pars, map[0], xValue, 0, field);
+
+        double y = equationType.calculate(pars, map[0], xValue, 0, field);
+        return y;
     }
 
     public String toString() {
