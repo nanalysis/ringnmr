@@ -28,7 +28,7 @@ public abstract class FitModel implements MultivariateFunction {
 
     EquationType equation;
     long startTime = 0;
-    double[] xValues;
+    double[][] xValues;
     double[] fieldValues;
     double[] yValues;
     double[] errValues;
@@ -103,7 +103,7 @@ public abstract class FitModel implements MultivariateFunction {
 
     public abstract double[] simBoundsBootstrapStream(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma);
 
-    public void setXY(double[] x, double[] y) {
+    public void setXY(double[][] x, double[] y) {
         this.xValues = x;
         this.yValues = y;
         this.idNums = new int[x.length];
@@ -151,15 +151,19 @@ public abstract class FitModel implements MultivariateFunction {
         return boundaries;
     }
 
-    public double calculate(double[] par, int[] map, double x, int idNum, double field) {
+    public double calculate(double[] par, int[] map, double[] x, int idNum, double field) {
         return equation.calculate(par, map, x, idNum, field);
     }
 
     public double getRSS(double[] par) {
         double rss = 0.0;
-        for (int i = 0; i < xValues.length; i++) {
+        double[] x = new double[xValues.length];
+        for (int i = 0; i < yValues.length; i++) {
+            for (int j = 0; j < x.length; j++) {
+                x[j] = xValues[j][i];
+            }
             final double value;
-            value = calculate(par, map[idNums[i]], xValues[i], idNums[i], fieldValues[i]);
+            value = calculate(par, map[idNums[i]], x, idNums[i], fieldValues[i]);
             double delta = value - yValues[i];
             rss += delta * delta;
         }
@@ -168,9 +172,13 @@ public abstract class FitModel implements MultivariateFunction {
 
     public double getRMS(double[] par) {
         double rss = 0.0;
-        for (int i = 0; i < xValues.length; i++) {
+        double[] x = new double[xValues.length];
+        for (int i = 0; i < yValues.length; i++) {
+            for (int j = 0; j < x.length; j++) {
+                x[j] = xValues[j][i];
+            }
             final double value;
-            value = calculate(par, map[idNums[i]], xValues[i], idNums[i], fieldValues[i]);
+            value = calculate(par, map[idNums[i]], x, idNums[i], fieldValues[i]);
 
             double delta = value - yValues[i];
             rss += delta * delta;
@@ -247,11 +255,15 @@ public abstract class FitModel implements MultivariateFunction {
         return ok;
     }
 
-    public void dump(double[] par, double[] xValues, double field) {
+    public void dump(double[] par, double[][] xValues, double field) {
         equation.setFieldRef(field);
-        for (int i = 0; i < xValues.length; i++) {
-            double yCalc = equation.calculate(par, map[idNums[i]], xValues[i], idNums[i], field);
-            System.out.printf("%8.5f %8.5f %8.5f\n", xValues[i], yCalc, field);
+        double[] x = new double[xValues.length];
+        for (int i = 0; i < yValues.length; i++) {
+            for (int j = 0; j < x.length; j++) {
+                x[j] = xValues[j][i];
+            }
+            double yCalc = equation.calculate(par, map[idNums[i]], x, idNums[i], field);
+            System.out.printf("%8.5f %8.5f %8.5f\n", x[0], yCalc, field);
         }
     }
 
@@ -266,16 +278,18 @@ public abstract class FitModel implements MultivariateFunction {
             }
         }
 
-        DescriptiveStatistics dstat = new DescriptiveStatistics(xValues);
+        DescriptiveStatistics dstat = new DescriptiveStatistics(xValues[0]);
         double min = dstat.getMin();
         double max = dstat.getMax();
         int n = 20;
+        double[] ax = new double[1];
         double delta = (max - min) / (n - 1);
         for (double field : fields) {
             System.out.println("# field " + field);
             for (int i = 0; i < n; i++) {
                 double x = min + i * delta;
-                double y = equation.calculate(par, map[idNums[i]], x, idNums[i], field);
+                ax[0] = x;
+                double y = equation.calculate(par, map[idNums[i]], ax, idNums[i], field);
                 System.out.printf("%8.5f %8.5f\n", x, y);
             }
         }

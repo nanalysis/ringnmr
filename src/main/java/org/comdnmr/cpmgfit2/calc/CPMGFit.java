@@ -106,13 +106,13 @@ public class CPMGFit implements EquationFitter {
     }
 
     public CPMGFitResult doFit(ResidueProperties resProps, String eqn, boolean absMode, boolean nonParBootStrap) {
-        double[] x = new double[xValues.size()];
-        double[] y = new double[xValues.size()];
-        double[] err = new double[xValues.size()];
-        int[] idNums = new int[xValues.size()];
-        double[] fields = new double[xValues.size()];
-        for (int i = 0; i < x.length; i++) {
-            x[i] = xValues.get(i);
+        double[][] x = new double[1][xValues.size()];
+        double[] y = new double[yValues.size()];
+        double[] err = new double[yValues.size()];
+        int[] idNums = new int[yValues.size()];
+        double[] fields = new double[yValues.size()];
+        for (int i = 0; i < xValues.size(); i++) {
+            x[0][i] = xValues.get(i);
             y[i] = yValues.get(i);
             err[i] = errValues.get(i);
             fields[i] = fieldValues.get(i);

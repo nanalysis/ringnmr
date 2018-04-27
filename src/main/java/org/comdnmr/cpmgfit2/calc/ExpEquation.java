@@ -15,16 +15,17 @@ public enum ExpEquation implements EquationType {
 
     EXPAB("ExpAB", 0, "A", "R") {
         @Override
-        public double calculate(double[] par, int[] map, double delay, int idNum, double field) {
+        public double calculate(double[] par, int[] map, double[] x, int idNum, double field) {
             double A = par[map[0]];
             double R = par[map[1]];
+            double delay = x[0];
             double value = A * Math.exp(-R * delay);
 //            System.out.println(delay + " " + A + " " + R + " " + value);
             return value;
         }
 
         @Override
-        public double[] guess(double[] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
             int nPars = CalcRDisp.getNPars(map);
             double[] guesses = new double[nPars];
             double kExSum = 0.0;
@@ -32,7 +33,7 @@ public enum ExpEquation implements EquationType {
                 double minY = DataUtil.getMinValue(yValues, idNums, id);
                 double maxY = DataUtil.getMaxValue(yValues, idNums, id);
                 double mean = DataUtil.getMeanValue(yValues, idNums, id);
-                double vMid = DataUtil.getMidValue(yValues, xValues, idNums, id);
+                double vMid = DataUtil.getMidValue(yValues, xValues[0], idNums, id);
                 System.out.println(minY + " " + maxY + " " + mean + " " + vMid);
                 System.out.println(id + " " + map[id].length + " " + map[id][0] + " " + map[id][1]);
                 guesses[map[id][0]] = maxY;
@@ -43,7 +44,7 @@ public enum ExpEquation implements EquationType {
         }
 
         @Override
-        public double[][] boundaries(double[] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+        public double[][] boundaries(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
             double[] guesses = guess(xValues, yValues, map, idNums, nID, field);
             double[][] boundaries = new double[2][guesses.length];
             for (int id = 0; id < map.length; id++) {

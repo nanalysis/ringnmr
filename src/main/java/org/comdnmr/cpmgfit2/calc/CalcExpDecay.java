@@ -23,12 +23,13 @@ public class CalcExpDecay extends FitModel {
         equation = ExpEquation.valueOf(eqName.toUpperCase());
     }
 
-    public CalcExpDecay(double[] x, double[] y, double[] err, double[] fieldValues, double[] fields) throws IllegalArgumentException {
+    public CalcExpDecay(double[][] x, double[] y, double[] err, double[] fieldValues, double[] fields) throws IllegalArgumentException {
         this(x, y, err, fieldValues, fields, new int[x.length]);
     }
 
-    public CalcExpDecay(double[] x, double[] y, double[] err, double[] fieldValues, double[] fields, int[] idNums) throws IllegalArgumentException {
-        this.xValues = x.clone();
+    public CalcExpDecay(double[][] x, double[] y, double[] err, double[] fieldValues, double[] fields, int[] idNums) throws IllegalArgumentException {
+        this.xValues = new double[1][];
+        this.xValues[0] = x[0].clone();
         this.yValues = y.clone();
         this.errValues = err.clone();
         this.fieldValues = fieldValues.clone();
@@ -60,9 +61,11 @@ public class CalcExpDecay extends FitModel {
     public double value(double[] par) {
         double sumAbs = 0.0;
         double sumSq = 0.0;
-        for (int i = 0; i < xValues.length; i++) {
+        double[] ax = new double[1];
+        for (int i = 0; i < yValues.length; i++) {
             final double value;
-            value = equation.calculate(par, map[idNums[i]], xValues[i], idNums[i], fieldValues[i]);
+            ax[0] = xValues[0][i];
+            value = equation.calculate(par, map[idNums[i]], ax, idNums[i], fieldValues[i]);
             //System.out.println( "xxxxxxxxxxx " + value + " " + yValues[i] + " " + equation.name());
             double delta = (value - yValues[i]);
             //System.out.print(xValues[i] + " " + yValues[i] + " " + value + " " + (delta*delta) + " ");
@@ -84,11 +87,13 @@ public class CalcExpDecay extends FitModel {
         }
     }
 
-    public ArrayList<Double> simY(double[] par, double[] xValues, double field) {
+    public ArrayList<Double> simY(double[] par, double[][] xValues, double field) {
         ArrayList<Double> result = new ArrayList<>();
         equation.setFieldRef(field);
-        for (int i = 0; i < xValues.length; i++) {
-            double yCalc = equation.calculate(par, map[idNums[i]], xValues[i], idNums[i], field);
+        double[] x = new double[1];
+        for (int i = 0; i < xValues[0].length; i++) {
+            x[0] = xValues[0][i];
+            double yCalc = equation.calculate(par, map[idNums[i]], x, idNums[i], field);
             result.add(yCalc);
         }
         return result;
@@ -168,7 +173,7 @@ public class CalcExpDecay extends FitModel {
             CalcExpDecay rDisp = new CalcExpDecay(xValues, yValues, errValues, fieldValues, fields, idNums);
             rDisp.setEquation(equation.getName());
             rDisp.setAbsMode(absMode);
-            double[] newX = new double[yValues.length];
+            double[][] newX = new double[1][yValues.length];
             double[] newY = new double[yValues.length];
             double[] newErr = new double[yValues.length];
             double[] newFieldValues = new double[yValues.length];
@@ -177,7 +182,7 @@ public class CalcExpDecay extends FitModel {
             do {
                 for (int k = 0; k < yValues.length; k++) {
                     int rI = random.nextInt(yValues.length);
-                    newX[k] = xValues[rI];
+                    newX[0][k] = xValues[0][rI];
                     newY[k] = yValues[rI];
                     newErr[k] = errValues[rI];
                     newFieldValues[k] = fieldValues[rI];

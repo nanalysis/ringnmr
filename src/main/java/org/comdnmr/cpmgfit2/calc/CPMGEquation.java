@@ -15,14 +15,14 @@ import org.apache.commons.math3.util.FastMath;
 public enum CPMGEquation implements EquationType {
     NOEX("noex", 0, "R2") {
         @Override
-        public double calculate(double[] par, int[] map, double x, int idNum, double field) {
+        public double calculate(double[] par, int[] map, double[] x, int idNum, double field) {
             double R2 = par[map[0]];
             double value = R2;
             return value;
         }
 
         @Override
-        public double[] guess(double[] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
             int nPars = CalcRDisp.getNPars(map);
             double[] guesses = new double[nPars];
             for (int id = 0; id < map.length; id++) {
@@ -33,7 +33,7 @@ public enum CPMGEquation implements EquationType {
         }
 
         @Override
-        public double[][] boundaries(double[] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+        public double[][] boundaries(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
             double[] guesses = guess(xValues, yValues, map, idNums, nID, field);
             double[][] boundaries = new double[2][guesses.length];
             for (int id = 0; id < guesses.length; id++) {
@@ -86,10 +86,11 @@ public enum CPMGEquation implements EquationType {
         }
     }, CPMGFAST("cpmgfast", 1, "Kex", "R2", "Rex") {
         @Override
-        public double calculate(double[] par, int[] map, double vu, int idNum, double field) {
+        public double calculate(double[] par, int[] map, double[] x, int idNum, double field) {
             double kEx = par[map[0]];
             double R2 = par[map[1]];
             double Rex = par[map[2]];
+            double vu = x[0];
             double value;
             if (kEx <= 0.0) {
                 value = R2;
@@ -103,7 +104,7 @@ public enum CPMGEquation implements EquationType {
         }
 
         @Override
-        public double[] guess(double[] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
             int nPars = CalcRDisp.getNPars(map);
             double[] guesses = new double[nPars];
             double kExSum = 0.0;
@@ -111,7 +112,7 @@ public enum CPMGEquation implements EquationType {
                 double minY = DataUtil.getMinValue(yValues, idNums, id);
                 double maxY = DataUtil.getMaxValue(yValues, idNums, id);
                 double mean = DataUtil.getMeanValue(yValues, idNums, id);
-                double vMid = DataUtil.getMidValue(yValues, xValues, idNums, id);
+                double vMid = DataUtil.getMidValue(yValues, xValues[0], idNums, id);
                 double r2 = minY;
                 double rex = maxY - minY;
                 if (rex < 0.0) {
@@ -129,7 +130,7 @@ public enum CPMGEquation implements EquationType {
         }
 
         @Override
-        public double[][] boundaries(double[] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+        public double[][] boundaries(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
             double[] guesses = guess(xValues, yValues, map, idNums, nID, field);
             double[][] boundaries = new double[2][guesses.length];
             for (int id = 0; id < map.length; id++) {
@@ -218,7 +219,7 @@ public enum CPMGEquation implements EquationType {
     //        },
     CPMGSLOW("cpmgslow", 2, "Kex", "pA", "R2", "dW") {
         @Override
-        public double calculate(double[] par, int[] map, double nu, int idNum, double field) {
+        public double calculate(double[] par, int[] map, double[] x, int idNum, double field) {
             double kEx = par[map[0]];
             double pA = par[map[1]]; // p1-p2
             double r2 = par[map[2]];
@@ -228,6 +229,7 @@ public enum CPMGEquation implements EquationType {
             double fieldAdjust = field / fieldRef;
             dW *= fieldAdjust;
             dW *= 2.0 * Math.PI;
+            double nu = x[0];
             double tauCP = 1.0 / (2.0 * nu);
             double psi = (pDelta * kEx) * (pDelta * kEx) - dW * dW + 4.0 * pA * pB * kEx * kEx;
             double zeta = -2.0 * dW * kEx * pDelta;
@@ -249,7 +251,7 @@ public enum CPMGEquation implements EquationType {
         }
 
         @Override
-        public double[] guess(double[] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
             int nPars = CalcRDisp.getNPars(map);
             double[] guesses = new double[nPars];
             double kExSum = 0.0;
@@ -258,7 +260,7 @@ public enum CPMGEquation implements EquationType {
                 double minY = DataUtil.getMinValue(yValues, idNums, id);
                 double maxY = DataUtil.getMaxValue(yValues, idNums, id);
                 double mean = DataUtil.getMeanValue(yValues, idNums, id);
-                double vMid = DataUtil.getMidValue(yValues, xValues, idNums, id);
+                double vMid = DataUtil.getMidValue(yValues, xValues[0], idNums, id);
                 double r2 = minY * 0.8;
                 double rex = maxY - r2;
                 double tauMid = 1.0 / (2.0 * vMid);
@@ -277,7 +279,7 @@ public enum CPMGEquation implements EquationType {
         }
 
         @Override
-        public double[][] boundaries(double[] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+        public double[][] boundaries(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
             double[] guesses = guess(xValues, yValues, map, idNums, nID, field);
             double[][] boundaries = new double[2][guesses.length];
             for (int id = 0; id < map.length; id++) {

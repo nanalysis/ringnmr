@@ -23,12 +23,13 @@ public class CalcRDisp extends FitModel {
         equation = CPMGEquation.valueOf(eqName.toUpperCase());
     }
 
-    public CalcRDisp(double[] x, double[] y, double[] err, double[] fieldValues, double[] fields) throws IllegalArgumentException {
+    public CalcRDisp(double[][] x, double[] y, double[] err, double[] fieldValues, double[] fields) throws IllegalArgumentException {
         this(x, y, err, fieldValues, fields, new int[x.length]);
     }
 
-    public CalcRDisp(double[] x, double[] y, double[] err, double[] fieldValues, double[] fields, int[] idNums) throws IllegalArgumentException {
-        this.xValues = x.clone();
+    public CalcRDisp(double[][] x, double[] y, double[] err, double[] fieldValues, double[] fields, int[] idNums) throws IllegalArgumentException {
+        this.xValues = new double[1][];
+        this.xValues[0] = x[0].clone();
         this.yValues = y.clone();
         this.errValues = err.clone();
         this.fieldValues = fieldValues.clone();
@@ -60,9 +61,11 @@ public class CalcRDisp extends FitModel {
     public double value(double[] par) {
         double sumAbs = 0.0;
         double sumSq = 0.0;
-        for (int i = 0; i < xValues.length; i++) {
+        double[] ax = new double[1];
+        for (int i = 0; i < yValues.length; i++) {
             final double value;
-            value = equation.calculate(par, map[idNums[i]], xValues[i], idNums[i], fieldValues[i]);
+            ax[0] = xValues[0][i];
+            value = equation.calculate(par, map[idNums[i]], ax, idNums[i], fieldValues[i]);
             //System.out.println( "xxxxxxxxxxx " + value + " " + yValues[i] + " " + equation.name());
             double delta = (value - yValues[i]);
             //System.out.print(xValues[i] + " " + yValues[i] + " " + value + " " + (delta*delta) + " ");
@@ -85,11 +88,13 @@ public class CalcRDisp extends FitModel {
         }
     }
 
-    public ArrayList<Double> simY(double[] par, double[] xValues, double field) {
+    public ArrayList<Double> simY(double[] par, double[][] xValues, double field) {
         ArrayList<Double> result = new ArrayList<>();
         equation.setFieldRef(field);
-        for (int i = 0; i < xValues.length; i++) {
-            double yCalc = equation.calculate(par, map[idNums[i]], xValues[i], idNums[i], field);
+        double[] ax = new double[1];
+        for (int i = 0; i < yValues.length; i++) {
+            ax[0] = xValues[0][i];
+            double yCalc = equation.calculate(par, map[idNums[i]], ax, idNums[i], field);
             result.add(yCalc);
         }
         return result;
@@ -219,7 +224,7 @@ public class CalcRDisp extends FitModel {
             CalcRDisp rDisp = new CalcRDisp(xValues, yValues, errValues, fieldValues, fields, idNums);
             rDisp.setEquation(equation.getName());
             rDisp.setAbsMode(absMode);
-            double[] newX = new double[yValues.length];
+            double[][] newX = new double[1][yValues.length];
             double[] newY = new double[yValues.length];
             double[] newErr = new double[yValues.length];
             double[] newFieldValues = new double[yValues.length];
@@ -228,7 +233,7 @@ public class CalcRDisp extends FitModel {
             do {
                 for (int k = 0; k < yValues.length; k++) {
                     int rI = random.nextInt(yValues.length);
-                    newX[k] = xValues[rI];
+                    newX[0][k] = xValues[0][rI];
                     newY[k] = yValues[rI];
                     newErr[k] = errValues[rI];
                     newFieldValues[k] = fieldValues[rI];

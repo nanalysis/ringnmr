@@ -11,11 +11,23 @@ package org.comdnmr.cpmgfit2.calc;
  */
 public interface EquationType {
 
-    double calculate(double[] par, int[] map, double x, int idNum, double field);
+    double calculate(double[] par, int[] map, double[] x, int idNum, double field);
 
-    double[] guess(double[] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field);
+    default double[] calculate(double[] par, int[] map, double[][] x, int idNum, double field) {
+        double[] yValues = new double[x[0].length];
+        double[] ax = new double[x.length];
+        for (int i = 0; i < x[0].length; i++) {
+            for (int j = 0; j < ax.length; j++) {
+                ax[j] = x[j][i];
+            }
+            yValues[i] = calculate(par, map, ax, idNum, field);
+        }
+        return yValues;
+    }
 
-    double[][] boundaries(double[] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field);
+    double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field);
+
+    double[][] boundaries(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field);
 
     double getRex(double[] pars, int[] map);
 
@@ -34,7 +46,7 @@ public interface EquationType {
     public int getNGroupPars();
 
     public void setFieldRef(double[] fields);
-    
+
     public void setFieldRef(double field);
 
     public String getName();
