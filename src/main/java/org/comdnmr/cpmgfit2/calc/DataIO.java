@@ -193,6 +193,7 @@ public class DataIO {
         boolean gotHeader = false;
         String[] peakRefs = null;
         double[] xValues = null;
+//        List<Double> xValues = new ArrayList<>();
         try (BufferedReader fileReader = Files.newBufferedReader(path)) {
             while (true) {
                 String line = fileReader.readLine();
@@ -244,6 +245,8 @@ public class DataIO {
         }
     }
 
+    
+    
     public static void setPercentileErrors(ExperimentData expData, double fraction) {
         for (ResidueData residueData : expData.residueData.values()) {
             double[] yValues = residueData.getYValues();
@@ -548,4 +551,51 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
 
     }
 
+    public static void loadCESTTextFile(String[] files) throws IOException, IllegalArgumentException {
+        
+        String filepath = "/home/mbeckwith/cest/CEST_tutorial/";
+        
+        List<Double> offset = new ArrayList<>();
+        List<Double> g08inten = new ArrayList<>();
+        List<Double> g08err = new ArrayList<>();
+        List<Double> g10inten = new ArrayList<>();
+        List<Double> g10err = new ArrayList<>();
+        
+        for(int i=0; i<files.length; i++){
+            String fileName = filepath + files[i] + ".csv"; 
+            Path path = Paths.get(fileName);
+
+            try (BufferedReader fileReader = Files.newBufferedReader(path)) {
+                while (true) {
+                    String line = fileReader.readLine();
+                    if (line == null) {
+                        break;
+                    }
+
+                    String sline = line.trim();
+                    if (sline.length() == 0) {
+                        continue;
+                    }
+
+                    if (sline.contains("#")) {
+                        continue;
+                    }
+                    
+                    String[] sfields = line.split(",", -1);
+
+                    offset.add(Double.parseDouble(sfields[0]));
+                    g08inten.add(Double.parseDouble(sfields[1]));
+                    g08err.add(Double.parseDouble(sfields[2]));
+                    g10inten.add(Double.parseDouble(sfields[3]));
+                    g10err.add(Double.parseDouble(sfields[4]));
+
+                }
+            }
+        }
+        //System.out.println("\noffset: " + offset);
+        //System.out.println("\ng08inten: " + g08inten);
+        //System.out.println("\ng08err: " + g08err);
+        //System.out.println("\ng10inten: " + g10inten);
+        //System.out.println("\ng10err: " + g10err);
+    }
 }
