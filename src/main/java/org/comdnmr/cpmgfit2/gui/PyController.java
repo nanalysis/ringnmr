@@ -461,7 +461,7 @@ public class PyController implements Initializable {
         String[] resNums = {String.valueOf(currentResInfo.getResNum())};
         equationFitter.setData(currentResProps, resNums);
         String equationName = simControls.getEquation();
-        CPMGFitResult fitResult = equationFitter.doFit(currentResProps, equationName, absValueModeCheckBox.isSelected(), nonParBootStrapCheckBox.isSelected());
+        CPMGFitResult fitResult = equationFitter.doFit(equationName, absValueModeCheckBox.isSelected(), nonParBootStrapCheckBox.isSelected());
         updateAfterFit(fitResult);
     }
 

@@ -80,13 +80,13 @@ public class PlotData extends ScatterChart {
     public void addCanvas(Canvas canvas) {
         getPlotChildren().add(1, canvas);
     }
-    
-    public int getNumPlots(){
+
+    public int getNumPlots() {
         int numPlots = getData().size();
         return numPlots;
     }
-    
-    public int getNumEquations(){
+
+    public int getNumEquations() {
         int numEquations = plotEquations.size();
         return numEquations;
     }
@@ -188,10 +188,12 @@ public class PlotData extends ScatterChart {
                 fieldRef = plotEquation.getExtra(0);
             }
 //            plotEquation.equation.setFieldRef(fieldRef);
+            double[] ax = new double[1];
             for (int i = 1; i < nIncr - 1; i++) {
                 double xValue = min + i * delta;
                 double x = xAxis.getDisplayPosition(xValue);
-                double yValue = plotEquation.calculate(xValue, plotEquation.getExtra(0) / fieldRef);
+                ax[0] = xValue;
+                double yValue = plotEquation.calculate(ax, plotEquation.getExtra(0) / fieldRef);
                 double y = yAxis.getDisplayPosition(yValue);
                 points.add(x);
                 points.add(y);
@@ -328,12 +330,12 @@ public class PlotData extends ScatterChart {
             }
         });
     }
-    
+
     public ArrayList<String> returnLine(int iSeries) {
         ObservableList<XYChart.Series<Double, Double>> data = getData();
         XYChart.Series<Double, Double> series = data.get(iSeries);
-        
-        ArrayList <String> lines = new ArrayList<String>(series.getData().size());
+
+        ArrayList<String> lines = new ArrayList<String>(series.getData().size());
         series.getData().forEach((value) -> {
             Double x = value.getXValue();
             Double y = value.getYValue();
@@ -358,13 +360,16 @@ public class PlotData extends ScatterChart {
         if (iLine == 0) {
             fieldRef = plotEquation.getExtra(0);
         }
+        double[] ax = new double[1];
+
         for (int i = 1; i < nIncr - 1; i++) {
             double xValue = min + i * delta;
-            double yValue = plotEquation.calculate(xValue, plotEquation.getExtra(0) / fieldRef);
+            ax[0] = xValue;
+            double yValue = plotEquation.calculate(ax, plotEquation.getExtra(0) / fieldRef);
             String outputLine = String.format("%14.4g %14.4g %14.4g", xValue, yValue, 0.0);
         }
     }
-    
+
     public ArrayList<String> returnEquation(int iLine) {
         PlotEquation plotEquation = plotEquations.get(iLine);
         double fieldRef = 1.0;
@@ -375,11 +380,13 @@ public class PlotData extends ScatterChart {
         if (iLine == 0) {
             fieldRef = plotEquation.getExtra(0);
         }
-        ArrayList <String> lines = new ArrayList<String>(nIncr-1);
+        ArrayList<String> lines = new ArrayList<String>(nIncr - 1);
+        double[] ax = new double[1];
+
         for (int i = 1; i < nIncr - 1; i++) {
             double xValue = min + i * delta;
-            double yValue = plotEquation.calculate(xValue, plotEquation.getExtra(0) / fieldRef);
-            System.out.println(yValue);
+            ax[0] = xValue;
+            double yValue = plotEquation.calculate(ax, plotEquation.getExtra(0) / fieldRef);
             String outputLine = String.format("%14.4g %14.4g %14.4g", xValue, yValue, 0.0);
             lines.add(outputLine);
         }
