@@ -95,6 +95,12 @@ public abstract class FitModel implements MultivariateFunction {
 
     }
 
+    public double[] simY(double[] par) {
+        equation.setFieldRef(fields[0]);
+        double[] yCalc = equation.calculate(par, map[0], xValues, idNums[0], fields[0]);
+        return yCalc;
+    }
+
     public abstract int[] getMask();
 
     public abstract double[] simBounds(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma);

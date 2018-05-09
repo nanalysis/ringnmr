@@ -12,6 +12,7 @@ import org.apache.commons.math3.optim.PointValuePair;
  */
 public class ExpFit implements EquationFitter {
 
+    FitModel calcR = new CalcExpDecay();
     List<Double> xValues = new ArrayList<>();
     List<Double> yValues = new ArrayList<>();
     List<Double> errValues = new ArrayList<>();
@@ -100,6 +101,10 @@ public class ExpFit implements EquationFitter {
         }
     }
 
+    public FitModel getFitModel() {
+        return calcR;
+    }
+
     public static List<String> getEquationNames() {
         return equationNameList;
     }
@@ -117,7 +122,6 @@ public class ExpFit implements EquationFitter {
             fields[i] = fieldValues.get(i);
             idNums[i] = idValues.get(i);
         }
-        FitModel calcR = new CalcExpDecay();
         calcR.setEquation(eqn);
         calcR.setAbsMode(absMode);
 

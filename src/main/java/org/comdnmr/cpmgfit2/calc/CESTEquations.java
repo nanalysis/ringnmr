@@ -384,7 +384,7 @@ public class CESTEquations {
         return cest;
     }
 
-    public static  double[] cestExact1(double[][] X, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R2A, double R2B) {
+    public static  double[] cestR1rhoExact1(double[][] X, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A, double R2B) {
         // Performs an exact numerical calculation and returns CEST intensity ratio.
         // Assumes R1A = R1B.
         //
@@ -402,428 +402,7 @@ public class CESTEquations {
         double[] omegarf = X[0];
         double[] omega1 = X[1];
 
-        double R1B = R1A;
-
-        // time delay is hard-coded below
-        double tdelay = 0.3;
-
-        double[] cest = new double[omegarf.length];
-        double[] cest1 = new double[omegarf.length];
-
-        double k1 = pb * kex;
-        double km1 = (1 - pb) * kex;
-
-        double[] m0 = {0.5, 0, 0, 1 - pb, 0, 0, pb};
-        double[] m1 = {0.5, 0, 0, -(1 - pb), 0, 0, -pb};
-
-        double[][] K = {{0, 0, 0, 0, 0, 0, 0},
-                        {0, -k1, 0, 0, km1, 0, 0},
-                        {0, 0, -k1, 0, 0, km1, 0},
-                        {0, 0, 0, -k1, 0, 0, km1},
-                        {0, k1, 0, 0, -km1, 0, 0},
-                        {0, 0, k1, 0, 0, -km1, 0},
-                        {0, 0, 0, k1, 0, 0, -km1}};
-
-        for (int i = 0; i < omegarf.length; i++) {
-            double deltaA = deltaA0 - omegarf[i];
-            double deltaB = deltaB0 - omegarf[i];
-            double omegaBar = (1 - pb) * deltaA + pb * deltaB;
-            double we = Math.sqrt(omega1[i] * omega1[i] + omegaBar * omegaBar);
-
-            double sint = omega1[i] / we;
-            double cost = omegaBar / we;
-
-            double[][] La = {{0, 0, 0, 0, 0, 0, 0},
-                            {0, -R2A, -deltaA, 0, 0, 0, 0},
-                            {0, deltaA, -R2A, -omega1[i], 0, 0, 0},
-                            {2 * R1A * (1 - pb), 0, omega1[i], -R1A, 0, 0, 0},
-                            {0, 0, 0, 0, 0, 0, 0},
-                            {0, 0, 0, 0, 0, 0, 0},
-                            {0, 0, 0, 0, 0, 0, 0}};
-
-            double[][] Lb = {{0, 0, 0, 0, 0, 0, 0},
-                            {0, 0, 0, 0, 0, 0, 0},
-                            {0, 0, 0, 0, 0, 0, 0},
-                            {0, 0, 0, 0, 0, 0, 0},
-                            {0, 0, 0, 0, -R2B, -deltaB, 0},
-                            {0, 0, 0, 0, deltaB, -R2B, -omega1[i]},
-                            {2 * R1B * pb, 0, 0, 0, 0, omega1[i], -R1B}};
-
-            double[][] Z = new double[La.length][La[0].length];
-            for (int k = 0; k < La.length; k++) {
-                for (int j = 0; j < La[k].length; j++) {
-                    Z[k][j] = La[k][j] + Lb[k][j] + K[k][j];
-                }
-            }
-
-           
-            double[][] at = new double[Z.length][Z[0].length];
-            for (int k = 0; k < Z.length; k++) {
-                for (int j = 0; j < Z[k].length; j++) {
-                    at[k][j] = tdelay * Z[k][j];
-                }
-            }
-                
-            at = MtxExp.matrixExp(at);
-            
-            double magA = at[3][0] * m0[0] + at[3][3] * m0[3] + at[3][6] * m0[6];
-            magA = magA - (at[3][0] * m1[0] + at[3][3] * m1[3] + at[3][6] * m1[6]);
-            magA = magA / 2;
-
-            cest[i] = magA;
-        }
-        
-        return cest;
-    }
-
-    public static  double[] cestExact2(double[][] X, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A) {
-        // Performs an exact numerical calculation and returns CEST intensity ratio.
-        // Assumes R1A = R1B.
-        //
-        // X: array containing two arrays:
-        //  omegarf: CEST irradiation frequency (1/s)
-        //  omega1: B1 field strength (1/s)
-        //
-        // pb: population of minor state
-        // kex: k12+k21 (1/s)
-        // deltaA: offset of A state (angular units, 1/s)
-        // deltaB: offset of B state (angular units, 1/s)
-        // R1A, R1B: R10 relaxation rate constants of A and B states
-        // R2A, R2B: R20 relaxation rate constants of A and B states
-
-        double[] omegarf = X[0];
-        double[] omega1 = X[1];
-
-        double R2B = R2A;
-
-        // time delay is hard-coded below
-        double tdelay = 0.3;
-
-        double[] cest = new double[omegarf.length];
-
-        double k1 = pb * kex;
-        double km1 = (1 - pb) * kex;
-
-        double[] m0 = {0.5, 0, 0, 1 - pb, 0, 0, pb};
-        double[] m1 = {0.5, 0, 0, -(1 - pb), 0, 0, -pb};
-
-        double[][] K = {{0, 0, 0, 0, 0, 0, 0},
-                        {0, -k1, 0, 0, km1, 0, 0},
-                        {0, 0, -k1, 0, 0, km1, 0},
-                        {0, 0, 0, -k1, 0, 0, km1},
-                        {0, k1, 0, 0, -km1, 0, 0},
-                        {0, 0, k1, 0, 0, -km1, 0},
-                        {0, 0, 0, k1, 0, 0, -km1}};
-
-        for (int i = 0; i < omegarf.length; i++) {
-            double deltaA = deltaA0 - omegarf[i];
-            double deltaB = deltaB0 - omegarf[i];
-            double omegaBar = (1 - pb) * deltaA + pb * deltaB;
-            double we = Math.sqrt(omega1[i] * omega1[i] + omegaBar * omegaBar);
-
-            double sint = omega1[i] / we;
-            double cost = omegaBar / we;
-
-            double[][] La = {{0, 0, 0, 0, 0, 0, 0},
-                            {0, -R2A, -deltaA, 0, 0, 0, 0},
-                            {0, deltaA, -R2A, -omega1[i], 0, 0, 0},
-                            {2 * R1A * (1 - pb), 0, omega1[i], -R1A, 0, 0, 0},
-                            {0, 0, 0, 0, 0, 0, 0},
-                            {0, 0, 0, 0, 0, 0, 0},
-                            {0, 0, 0, 0, 0, 0, 0}};
-
-            double[][] Lb = {{0, 0, 0, 0, 0, 0, 0},
-                            {0, 0, 0, 0, 0, 0, 0},
-                            {0, 0, 0, 0, 0, 0, 0},
-                            {0, 0, 0, 0, 0, 0, 0},
-                            {0, 0, 0, 0, -R2B, -deltaB, 0},
-                            {0, 0, 0, 0, deltaB, -R2B, -omega1[i]},
-                            {2 * R1B * pb, 0, 0, 0, 0, omega1[i], -R1B}};
-
-            double[][] Z = new double[La.length][La[0].length];
-            for (int k = 0; k < La.length; k++) {
-                for (int j = 0; j < La[k].length; j++) {
-                    Z[k][j] = La[k][j] + Lb[k][j] + K[k][j];
-                }
-            }
-            
-            double[][] at = new double[Z.length][Z[0].length];
-            for (int k = 0; k < Z.length; k++) {
-                for (int j = 0; j < Z[k].length; j++) {
-                    at[k][j] = tdelay * Z[k][j];
-                }
-            }
-                
-            at = MtxExp.matrixExp(at);
-            
-            double magA = at[3][0] * m0[0] + at[3][3] * m0[3] + at[3][6] * m0[6];
-            magA = magA - (at[3][0] * m1[0] + at[3][3] * m1[3] + at[3][6] * m1[6]);
-            magA = magA / 2;
-
-            cest[i] = magA;
-        }
-
-        return cest;
-    }
-
-    public static  double[] cestR1rhoN(double[][] X, double pb, double kex, double deltaA0, double deltaB0, double R10, double R20) {
-        // Calculates the Miloushev-Palmer Laguerre second-order approximation to the eigenvalue and returns R1rho.
-        // and then returns the CEST intensity ratio.
-        // Assumes the intrinsic relaxation rate constants for sites A and B are nearly identical, so that only
-        // the average rates are calculated for projection from the laboratory frame to the tilted frame
-        // (and are not incorporated into the exchange formalism).
-        //
-        // X: array containing two arrays:
-        //  omegarf: CEST irradiation frequency (1/s)
-        //  omega1: B1 field strength (1/s)
-        //
-        // pb: population of minor state
-        // kex: k12+k21 (1/s)
-        // deltaA: offset of A state (angular units, 1/s)
-        // deltaB: offset of B state (angular units, 1/s)
-        // R1A, R1B: R10 relaxation rate constants of A and B states
-        // R2A, R2B: R20 relaxation rate constants of A and B states
-
-        // In the present implementation, the irradiation time is hard-coded below
-        double trad = 0.3;
-
-        double[] omegarf = X[0];
-        double[] omega1 = X[1];
-
-        double pa = 1.0 - pb;
-        double[] deltaA = new double[omegarf.length];
-        double[] deltaB = new double[omegarf.length];
-        double[] omegaBar = new double[omegarf.length];
-        for (int i = 0; i < omegarf.length; i++) {
-            deltaA[i] = deltaA0 - omegarf[i];
-            deltaB[i] = deltaB0 - omegarf[i];
-            omegaBar[i] = pa * deltaA[i] + pb * deltaB[i];
-        }
-
-        double[] we = new double[omegaBar.length];
-        double[] cos2t = new double[omegaBar.length];
-        for (int i = 0; i < omegaBar.length; i++) {
-            we[i] = Math.sqrt(omega1[i] * omega1[i] + omegaBar[i] * omegaBar[i]);
-            cos2t[i] = (omegaBar[i] / we[i]) * (omegaBar[i] / we[i]);
-        }
-
-        double[] r1rho = r1rhoLaguerre(omega1, pb, kex, deltaA, deltaB, R10, R10, R20, R20);
-        double[] cest = new double[cos2t.length];
-        for (int i = 0; i < cos2t.length; i++) {
-            cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
-        }
-
-        return cest;
-    }
-    
-    public static  double[] cestR1rhoPerturbation(double[][] X, double[] pars) {
-        double pb = pars[0];
-        double kex = pars[1];
-        double deltaA0 = pars[2];
-        double deltaB0 = pars[3];
-        double R10 = pars[4];
-        double R2A = pars[5];
-        double R2B = pars[6];
-        return cestR1rhoPerturbation(X, pb, kex, deltaA0, deltaB0, R10, R2A, R2B);
-    }
-
-    public static double[] cestR1rhoPerturbation(double[][] X, double pb, double kex, double deltaA0, double deltaB0, double R10, double R2A, double R2B) {
-        // Calculates the Trott perturbation approximation to the eigenvalue and returns R1rho.
-        // and then returns the CEST intensity ratio.
-        //
-        // X: array containing two arrays:
-        //  omegarf: CEST irradiation frequency (1/s)
-        //  omega1: B1 field strength (1/s)
-        //
-        // pb: population of minor state
-        // kex: k12+k21 (1/s)
-        // deltaA: offset of A state (angular units, 1/s)
-        // deltaB: offset of B state (angular units, 1/s)
-        // R1A, R1B: R10 relaxation rate constants of A and B states
-        // R2A, R2B: R20 relaxation rate constants of A and B states
-
-        // In the present implementation, the irradiation time is hard-coded below
-        double trad = 0.3;
-
-        double[] omegarf = X[0];
-        double[] omega1 = X[1];
-
-        double pa = 1.0 - pb;
-        double[] deltaA = new double[omegarf.length];
-        double[] deltaB = new double[omegarf.length];
-        double[] omegaBar = new double[omegarf.length];
-        for (int i = 0; i < omegarf.length; i++) {
-            deltaA[i] = deltaA0 - omegarf[i];
-            deltaB[i] = deltaB0 - omegarf[i];
-            omegaBar[i] = pa * deltaA[i] + pb * deltaB[i];
-        }
-        
-        double[] we = new double[omegaBar.length];
-        double[] cos2t = new double[omegaBar.length];
-        for (int i = 0; i < omegaBar.length; i++) {
-            we[i] = Math.sqrt(omega1[i] * omega1[i] + omegaBar[i] * omegaBar[i]);
-            cos2t[i] = (omegaBar[i] / we[i]) * (omegaBar[i] / we[i]);
-        }
-
-        double[] r1rho = r1rhoPerturbation(omega1, pb, kex, deltaA, deltaB, R10, R10, R2A, R2B);
-        double[] cest = new double[cos2t.length];
-        for (int i = 0; i < cos2t.length; i++) {
-            cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
-        }
-
-        return cest;
-    }
-
-    public static  double[] cestR1rhoSD(double[][] X, double pb, double kex, double deltaA0, double deltaB0, double R10, double R2A, double R2B) {
-        // Calculates the Trott perturbation approximation to the eigenvalue and returns R1rho.
-        // and then returns the CEST intensity ratio.
-        // Assumes the intrinsic relaxation rate constants for sites A and B are nearly identical, so that only
-        // the average rates are calculated for projection from the laboratory frame to the tilted frame
-        // (and are not incorporated into the exchange formalism).
-        //
-        // standard deviation in B1 field is hard-coded within this function.
-        //
-        // X: array containing two arrays:
-        //  omegarf: CEST irradiation frequency (1/s)
-        //  omega1: B1 field strength (1/s)
-        //
-        // pb: population of minor state
-        // kex: k12+k21 (1/s)
-        // deltaA: offset of A state (angular units, 1/s)
-        // deltaB: offset of B state (angular units, 1/s)
-        // R1A, R1B: R10 relaxation rate constants of A and B states
-        // R2A, R2B: R20 relaxation rate constants of A and B states
-
-        // In the present implementation, the irradiation time is hard-coded below
-        double trad = 0.3;
-
-        double[] omegarf = X[0];
-        double[] omega1 = X[1];
-
-        double pa = 1.0 - pb;
-        double[] deltaA = new double[omegarf.length];
-        double[] deltaB = new double[omegarf.length];
-        double[] omegaBar = new double[omegarf.length];
-        for (int i = 0; i < omegarf.length; i++) {
-            deltaA[i] = deltaA0 - omegarf[i];
-            deltaB[i] = deltaB0 - omegarf[i];
-            omegaBar[i] = pa * deltaA[i] + pb * deltaB[i];
-        }
-
-        double[] we = new double[omegaBar.length];
-        double[] cos2t = new double[omegaBar.length];
-        for (int i = 0; i < omegaBar.length; i++) {
-            we[i] = Math.sqrt(omega1[i] * omega1[i] + omegaBar[i] * omegaBar[i]);
-            cos2t[i] = (omegaBar[i] / we[i]) * (omegaBar[i] / we[i]);
-        }
-
-        int wlen = 11;
-
-        double omegaSD = 0.2;   // fractional variation in B1
-        double[] omwt = {0.022, 0.0444, 0.0777, 0.1159, 0.1473, 0.1596, 0.1473, 0.1159, 0.0777, 0.0444, 0.0216};
-        double omwtsum = 0;
-        for (int i = 0; i < omwt.length; i++) {
-            omwtsum += omwt[i];
-        }
-        for (int i = 0; i < omwt.length; i++) {
-            omwt[i] = omwt[i] / omwtsum;
-        }
-
-        double[] omegagauss = new double[wlen];
-        for (int i = 0; i < wlen; i++) {
-            omegagauss[i] = -2 * omegaSD + i * (2 * omegaSD - (-2 * omegaSD)) / (wlen - 1);
-        }
-
-        double[] magA = new double[omega1.length];
-        double[] omegatmp = new double[omega1.length];
-        double[] r1rho = new double[omegatmp.length];
-        double[] cest = new double[r1rho.length];
-        for (int i = 0; i < wlen; i++) {
-            for (int j = 0; j < omegatmp.length; j++) {
-                omegatmp[j] = omega1[j] * (1 + omegagauss[i]);
-                we[j] = Math.sqrt(omegatmp[j] * omegatmp[j] + omegaBar[j] * omegaBar[j]);
-                cos2t[j] = (omegaBar[j] / we[j]) * (omegaBar[j] / we[j]);
-            }
-
-            r1rho = r1rhoPerturbation(omegatmp, pb, kex, deltaA, deltaB, R10, R10, R2A, R2B);
-
-            for (int j = 0; j < cest.length; j++) {
-                cest[j] = cos2t[j] * Math.exp(-trad * r1rho[j]);
-                magA[j] = magA[j] + omwt[i] * cest[j];
-            }
-        }
-
-        cest = magA;
-
-        return cest;
-    }
-
-    public static  double[] cestR1rhoBaldwinKay(double[][] X, double pb, double kex, double deltaA0, double deltaB0, double R10, double R2A, double R2B) {
-        // Calculates the Baldwin-Kay first-order approximation to the eigenvalue and returns R1rho.
-        // and then returns the CEST intensity ratio.
-        //
-        // X: array containing two arrays:
-        //  omegarf: CEST irradiation frequency (1/s)
-        //  omega1: B1 field strength (1/s)
-        //
-        // pb: population of minor state
-        // kex: k12+k21 (1/s)
-        // deltaA: offset of A state (angular units, 1/s)
-        // deltaB: offset of B state (angular units, 1/s)
-        // R1A, R1B: R10 relaxation rate constants of A and B states
-        // R2A, R2B: R20 relaxation rate constants of A and B states
-
-        // In the present implementation, the irradiation time is hard-coded below
-        double trad = 0.3;
-
-        double[] omegarf = X[0];
-        double[] omega1 = X[1];
-
-        double pa = 1.0 - pb;
-        double[] deltaA = new double[omegarf.length];
-        double[] deltaB = new double[omegarf.length];
-        double[] omegaBar = new double[omegarf.length];
-        for (int i = 0; i < omegarf.length; i++) {
-            deltaA[i] = deltaA0 - omegarf[i];
-            deltaB[i] = deltaB0 - omegarf[i];
-            omegaBar[i] = pa * deltaA[i] + pb * deltaB[i];
-        }
-
-        double[] we = new double[omegaBar.length];
-        double[] cos2t = new double[omegaBar.length];
-        for (int i = 0; i < omegaBar.length; i++) {
-            we[i] = Math.sqrt(omega1[i] * omega1[i] + omegaBar[i] * omegaBar[i]);
-            cos2t[i] = (omegaBar[i] / we[i]) * (omegaBar[i] / we[i]);
-        }
-
-        double[] r1rho = r1rhoBaldwinKay(omega1, pb, kex, deltaA, deltaB, R10, R10, R2A, R2B);
-        double[] cest = new double[cos2t.length];
-        for (int i = 0; i < cos2t.length; i++) {
-            cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
-        }
-
-        return cest;
-    }
-
-    public static  double[] cestR1rhoExact1(double[][] X, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R2A, double R2B) {
-        // Performs an exact numerical calculation and returns CEST intensity ratio.
-        // Assumes R1A = R1B.
-        //
-        // X: array containing two arrays:
-        //  omegarf: CEST irradiation frequency (1/s)
-        //  omega1: B1 field strength (1/s)
-        // 
-        // pb: population of minor state
-        // kex: k12+k21 (1/s)
-        // deltaA: offset of A state (angular units, 1/s)
-        // deltaB: offset of B state (angular units, 1/s)
-        // R1A, R1B: R10 relaxation rate constants of A and B states
-        // R2A, R2B: R20 relaxation rate constants of A and B states
-
-        double[] omegarf = X[0];
-        double[] omega1 = X[1];
-
-        double R1B = R1A;
+        //double R1B = R1A;
 
         // time delay is hard-coded below
         double tdelay = 0.3;
@@ -887,6 +466,112 @@ public class CESTEquations {
 
             cest[i] = cost * cost * Math.exp(-tdelay * r1rho);
         }
+
+        return cest;
+    }
+    
+    public static double[] cestR1rhoApprox(String approx, double[][] X, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A, double R2B) {
+        
+        // X: array containing two arrays:
+        //  omegarf: CEST irradiation frequency (1/s)
+        //  omega1: B1 field strength (1/s)
+        //
+        // pb: population of minor state
+        // kex: k12+k21 (1/s)
+        // deltaA: offset of A state (angular units, 1/s)
+        // deltaB: offset of B state (angular units, 1/s)
+        // R1A, R1B: R10 relaxation rate constants of A and B states
+        // R2A, R2B: R20 relaxation rate constants of A and B states
+
+        // In the present implementation, the irradiation time is hard-coded below
+        double trad = 0.3;
+
+        double[] omegarf = X[0];
+        double[] omega1 = X[1];
+
+        double pa = 1.0 - pb;
+        double[] deltaA = new double[omegarf.length];
+        double[] deltaB = new double[omegarf.length];
+        double[] omegaBar = new double[omegarf.length];
+        for (int i = 0; i < omegarf.length; i++) {
+            deltaA[i] = deltaA0 - omegarf[i];
+            deltaB[i] = deltaB0 - omegarf[i];
+            omegaBar[i] = pa * deltaA[i] + pb * deltaB[i];
+        }
+        
+        double[] we = new double[omegaBar.length];
+        double[] cos2t = new double[omegaBar.length];
+        for (int i = 0; i < omegaBar.length; i++) {
+            we[i] = Math.sqrt(omega1[i] * omega1[i] + omegaBar[i] * omegaBar[i]);
+            cos2t[i] = (omegaBar[i] / we[i]) * (omegaBar[i] / we[i]);
+        }
+
+        double[] cest = new double[cos2t.length];
+        
+        if(approx == "laguerre") {
+           // if(R2.length == 1){
+            double[] r1rho = r1rhoLaguerre(omega1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
+            //double[] cest = new double[cos2t.length];
+            for (int i = 0; i < cos2t.length; i++) {
+                cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
+            }
+//            } else {
+//                System.out.print("Error: Incorrect number of values for R2. Input one value for R2.");
+//            } 
+        } else if(approx == "trott"){
+            double[] r1rho = r1rhoPerturbation(omega1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
+            //double[] cest = new double[cos2t.length];
+            for (int i = 0; i < cos2t.length; i++) {
+                cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
+            }
+            
+        } else if(approx == "baldwinkay"){
+            double[] r1rho = r1rhoBaldwinKay(omega1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
+            //double[] cest = new double[cos2t.length];
+            for (int i = 0; i < cos2t.length; i++) {
+                cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
+            }
+            
+        } else if(approx == "sd"){
+            int wlen = 11;
+
+            double omegaSD = 0.2;   // fractional variation in B1
+            double[] omwt = {0.022, 0.0444, 0.0777, 0.1159, 0.1473, 0.1596, 0.1473, 0.1159, 0.0777, 0.0444, 0.0216};
+            double omwtsum = 0;
+            for (int i = 0; i < omwt.length; i++) {
+                omwtsum += omwt[i];
+            }
+            for (int i = 0; i < omwt.length; i++) {
+                omwt[i] = omwt[i] / omwtsum;
+            }
+
+            double[] omegagauss = new double[wlen];
+            for (int i = 0; i < wlen; i++) {
+                omegagauss[i] = -2 * omegaSD + i * (2 * omegaSD - (-2 * omegaSD)) / (wlen - 1);
+            }
+
+            double[] magA = new double[omega1.length];
+            double[] omegatmp = new double[omega1.length];
+            double[] r1rho = new double[omegatmp.length];
+            //double[] cest = new double[r1rho.length];
+            for (int i = 0; i < wlen; i++) {
+                for (int j = 0; j < omegatmp.length; j++) {
+                    omegatmp[j] = omega1[j] * (1 + omegagauss[i]);
+                    we[j] = Math.sqrt(omegatmp[j] * omegatmp[j] + omegaBar[j] * omegaBar[j]);
+                    cos2t[j] = (omegaBar[j] / we[j]) * (omegaBar[j] / we[j]);
+                }
+
+                r1rho = r1rhoPerturbation(omegatmp, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
+
+                for (int j = 0; j < cest.length; j++) {
+                    cest[j] = cos2t[j] * Math.exp(-trad * r1rho[j]);
+                    magA[j] = magA[j] + omwt[i] * cest[j];
+                }
+            }
+
+            cest = magA;
+        }
+        
 
         return cest;
     }

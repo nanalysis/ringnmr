@@ -7,6 +7,7 @@ import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.random.SynchronizedRandomGenerator;
 import org.apache.commons.math3.random.Well19937c;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.apache.commons.math3.util.FastMath;
 
 public class CalcCEST extends FitModel {
 
@@ -20,7 +21,7 @@ public class CalcCEST extends FitModel {
     }
 
     public void setEquation(String eqName) {
-        equation = ExpEquation.valueOf(eqName.toUpperCase());
+        equation = CESTEquation.valueOf(eqName.toUpperCase());
     }
 
     public CalcCEST(double[][] x, double[] y, double[] err, double[] fieldValues, double[] fields) throws IllegalArgumentException {
@@ -62,12 +63,13 @@ public class CalcCEST extends FitModel {
     public double value(double[] par) {
         double sumAbs = 0.0;
         double sumSq = 0.0;
-//        double[] yCalc = cestEq.cestR1rhoPerturbation(xValues, par);
-//        for (int i = 0; i < xValues.length; i++) {
-//            double delta = (yCalc[i] - yValues[i]);
-//            sumAbs += FastMath.abs(delta);
-//            sumSq += delta * delta;
-//        }
+        double[] yCalc = equation.calculate(par, map[0], xValues, 0, 1.0);
+
+        for (int i = 0; i < yValues.length; i++) {
+            double delta = (yCalc[i] - yValues[i]);
+            sumAbs += FastMath.abs(delta);
+            sumSq += delta * delta;
+        }
         if (absMode) {
             return sumAbs;
         } else {
@@ -75,18 +77,13 @@ public class CalcCEST extends FitModel {
         }
     }
 
-    public ArrayList<Double> simY(double[] par, double[][] xValues, double field) {
-        ArrayList<Double> result = new ArrayList<>();
-        equation.setFieldRef(field);
-        double[] ax = new double[2];
-        for (int i = 0; i < yValues.length; i++) {
-            ax[0] = xValues[0][i];
-            ax[1] = xValues[1][i];
-            double yCalc = equation.calculate(par, map[idNums[i]], ax, idNums[i], field);
-            result.add(yCalc);
-        }
-        return result;
+    public double[] getPredicted(double[] par) {
+        double[] yPred = simY(par);
+        return yPred;
     }
+
+
+
 
     public double[] simBounds(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma) {
         reportFitness = false;

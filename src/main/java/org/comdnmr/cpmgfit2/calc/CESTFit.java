@@ -12,6 +12,7 @@ import org.apache.commons.math3.optim.PointValuePair;
  */
 public class CESTFit implements EquationFitter {
 
+    FitModel calcCEST = new CalcCEST();
     List<Double>[] xValues;
     List<Double> yValues = new ArrayList<>();
     List<Double> errValues = new ArrayList<>();
@@ -114,23 +115,53 @@ public class CESTFit implements EquationFitter {
         this.errValues.addAll(errValues);
         for (int i = 0; i < yValues.size(); i++) {
             fieldValues.add(1.0);
-            idValues.add(1);
+            idValues.add(0);
         }
         usedFields = new double[1];
         usedFields[0] = 1.0;
-        resNums = new String[0];
+        resNums = new String[1];
         resNums[0] = "0";
+        //states = new int[1][];
+        //states[0] = new int[7];
+        //stateCount = new int[7];
+        //for (int i=0;i<states.length;i++) {
+        //    states[0][i] = i;
+        //}
+
+        stateCount = new int[4];
+        stateCount[0] = 1;
+        stateCount[1] = 1;
+        stateCount[2] = 1;
+        stateCount[3] = 1;
+
+        states = new int[1][4];
+        states[0][0] = 0;
+        states[0][1] = 0;
+        states[0][2] = 0;
+        states[0][3] = 0;
+
         // states
         // stateCount
+        //System.out.println(xValues[0]);
+        //System.out.println(xValues[1]);
+        //System.out.println(this.yValues);
+        //System.out.println(this.errValues);
+        //System.out.print(xValues[0].size() + "\n");
+        //System.out.print(xValues[1].size() + "\n");
+        //System.out.print(this.yValues.size() + "\n");
     }
 
+    public FitModel getFitModel() {
+        return calcCEST;
+    }
+    
     public static List<String> getEquationNames() {
         return equationNameList;
     }
 
     @Override
     public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap) {
-        double[][] x = new double[1][yValues.size()];
+        double[][] x = new double[2][yValues.size()];
         double[] y = new double[yValues.size()];
         double[] err = new double[yValues.size()];
         int[] idNums = new int[yValues.size()];
@@ -143,7 +174,6 @@ public class CESTFit implements EquationFitter {
             fields[i] = fieldValues.get(i);
             idNums[i] = idValues.get(i);
         }
-        FitModel calcCEST = new CalcCEST();
         calcCEST.setEquation(eqn);
         calcCEST.setAbsMode(absMode);
 
@@ -159,7 +189,7 @@ public class CESTFit implements EquationFitter {
         double[] sigma = new double[guesses.length];
         for (int i = 0; i < guesses.length; i++) {
             sigma[i] = (boundaries[1][i] - boundaries[0][i]) / 10.0;
-//            System.out.println(i + " " + boundaries[0][i] + " " + boundaries[1][i] + " " + sigma[i]);
+            //System.out.println(i + " map " + map[0][i] + " bou0 " + boundaries[0][i] + " bou1 " + boundaries[1][i] + " sig " + sigma[i] + " gue " + guesses[i]);
         }
         PointValuePair result = calcCEST.refine(guesses, boundaries[0], boundaries[1], sigma);
         double[] pars = result.getPoint();

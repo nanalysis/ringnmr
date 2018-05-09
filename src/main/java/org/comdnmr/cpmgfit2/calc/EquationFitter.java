@@ -16,6 +16,8 @@ import static org.comdnmr.cpmgfit2.calc.CESTFit.equationNameList;
  */
 public interface EquationFitter {
 
+    public FitModel getFitModel();
+    
     public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap);
 
     public void setData(ResidueProperties resProps, String[] resNums);
