@@ -24,7 +24,7 @@ public class CESTFit implements EquationFitter {
     int[][] states;
     int[] stateCount;
     String[] resNums;
-    static List<String> equationNameList = Arrays.asList(ExpEquation.getEquationNames());
+    static List<String> equationNameList = Arrays.asList(CESTEquation.getEquationNames());
 
     class StateCount {
 
@@ -172,6 +172,7 @@ public class CESTFit implements EquationFitter {
             x[1][i] = xValues[1].get(i);
             y[i] = yValues.get(i);
             err[i] = errValues.get(i);
+            //System.out.println(x[0][i]+", "+x[0][i]+", "+x[0][i]+", "+x[0][i]);
             fields[i] = fieldValues.get(i);
             idNums[i] = idValues.get(i);
         }
@@ -194,7 +195,7 @@ public class CESTFit implements EquationFitter {
         }
         PointValuePair result = calcCEST.refine(guesses, boundaries[0], boundaries[1], sigma);
         double[] pars = result.getPoint();
-        /*
+        
         for (int i = 0; i < map.length; i++) {
             for (int j = 0; j < map[i].length; j++) {
                 System.out.printf(" %3d", map[i][j]);
@@ -207,10 +208,10 @@ public class CESTFit implements EquationFitter {
             System.out.printf(" %.3f", pars[i]);
         }
         System.out.println("");
-         */
+         
         double aic = calcCEST.getAICc(pars);
         double rms = calcCEST.getRMS(pars);
-//        System.out.println("rms " + rms);
+        System.out.println("rms " + rms);
         int nGroupPars = calcCEST.getNGroupPars();
         for (int i = 0; i < guesses.length; i++) {
             sigma[i] /= 2.0;
