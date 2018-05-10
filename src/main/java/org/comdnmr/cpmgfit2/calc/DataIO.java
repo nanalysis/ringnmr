@@ -198,8 +198,8 @@ public class DataIO {
             List<Double> bValueValueList = new ArrayList<>();
             List<Double> offsetValueList = new ArrayList<>();
             List<Double>[] xValueLists = new ArrayList[2];
-            xValueLists[0] = bValueValueList;
-            xValueLists[1] = offsetValueList;
+            xValueLists[1] = bValueValueList;
+            xValueLists[0] = offsetValueList;
             List<Double> yValueList = new ArrayList<>();
             List<Double> errValueList = new ArrayList<>();
             String resFileTail = resPath.getFileName().toString();
@@ -228,8 +228,8 @@ public class DataIO {
                             double offsetFreq = Double.parseDouble(sfields[1].trim());
                             double intensity = Double.parseDouble(sfields[2].trim());
                             double error = Double.parseDouble(sfields[3].trim());
-                            bValueValueList.add(b0Field);
-                            offsetValueList.add(offsetFreq);
+                            bValueValueList.add(b0Field*2*Math.PI);
+                            offsetValueList.add(offsetFreq*2*Math.PI);
                             yValueList.add(intensity);
                             errValueList.add(error);
                         } catch (NumberFormatException nFE) {
