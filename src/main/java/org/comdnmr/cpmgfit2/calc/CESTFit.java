@@ -195,7 +195,7 @@ public class CESTFit implements EquationFitter {
         }
         PointValuePair result = calcCEST.refine(guesses, boundaries[0], boundaries[1], sigma);
         double[] pars = result.getPoint();
-        
+        /*
         for (int i = 0; i < map.length; i++) {
             for (int j = 0; j < map[i].length; j++) {
                 System.out.printf(" %3d", map[i][j]);
@@ -208,10 +208,10 @@ public class CESTFit implements EquationFitter {
             System.out.printf(" %.3f", pars[i]);
         }
         System.out.println("");
-         
+         */
         double aic = calcCEST.getAICc(pars);
         double rms = calcCEST.getRMS(pars);
-        System.out.println("rms " + rms);
+        //   System.out.println("rms " + rms);
         int nGroupPars = calcCEST.getNGroupPars();
         for (int i = 0; i < guesses.length; i++) {
             sigma[i] /= 2.0;
