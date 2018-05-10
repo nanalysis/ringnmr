@@ -180,6 +180,8 @@ public class ResidueFitter {
             fitter = new CPMGFit();
         } else if (resProps.getExpMode().equals("exp")) {
             fitter = new ExpFit();
+        } else if (resProps.getExpMode().equals("cest")) {
+            fitter = new CESTFit();
         } else {
             throw new IllegalArgumentException("Invalid mode " + resProps.getExpMode());
         }
@@ -196,6 +198,8 @@ public class ResidueFitter {
             equationNames = CPMGFit.getEquationNames();
         } else if (resProps.getExpMode().equals("exp")) {
             equationNames = ExpFit.getEquationNames();
+        } else if (resProps.getExpMode().equals("cest")) {
+            equationNames = CESTFit.getEquationNames();
         } else {
             throw new IllegalArgumentException("Invalid mode " + resProps.getExpMode());
         }
