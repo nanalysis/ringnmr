@@ -183,6 +183,73 @@ public class DataIO {
         }
     }
 
+    public static void loadCESTFiles(Path dirPath, ResidueProperties resProp, String nucleus,
+            double temperature, double field,
+            HashMap<String, Object> errorPars) throws IOException, IllegalArgumentException {
+        System.out.println("load cest file " + dirPath);
+        String fileTail = dirPath.getFileName().toString();
+        //fileTail = fileTail.substring(0, fileTail.indexOf('.'));
+
+        ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature);
+        resProp.addExperimentData(fileTail, expData);
+        Files.newDirectoryStream(dirPath, "res*.txt").forEach(resPath -> {
+            System.out.println("load " + resPath.toString());
+            boolean gotHeader = false;
+            List<Double> bValueValueList = new ArrayList<>();
+            List<Double> offsetValueList = new ArrayList<>();
+            List<Double>[] xValueLists = new ArrayList[2];
+            xValueLists[0] = bValueValueList;
+            xValueLists[1] = offsetValueList;
+            List<Double> yValueList = new ArrayList<>();
+            List<Double> errValueList = new ArrayList<>();
+            String resFileTail = resPath.getFileName().toString();
+            String residueNum = resFileTail.substring(3, resFileTail.indexOf("."));
+            try (BufferedReader fileReader = Files.newBufferedReader(resPath)) {
+                while (true) {
+                    String line = fileReader.readLine();
+                    if (line == null) {
+                        break;
+                    }
+//            String line = fileReader.readLine();
+                    String sline = line.trim();
+                    if (sline.length() == 0) {
+                        continue;
+                    }
+                    if (sline.charAt(0) == '#') {
+                        continue;
+                    }
+                    String[] sfields = line.split("\t", -1);
+                    if (!gotHeader) {
+                        int nValues = sfields.length;
+                        gotHeader = true;
+                    } else {
+                        try {
+                            double b0Field = Double.parseDouble(sfields[0].trim());
+                            double offsetFreq = Double.parseDouble(sfields[1].trim());
+                            double intensity = Double.parseDouble(sfields[2].trim());
+                            double error = Double.parseDouble(sfields[3].trim());
+                            bValueValueList.add(b0Field);
+                            offsetValueList.add(offsetFreq);
+                            yValueList.add(intensity);
+                            errValueList.add(error);
+                        } catch (NumberFormatException nFE) {
+                            continue;
+                        }
+                    }
+                }
+                ResidueData residueData = new ResidueData(expData, residueNum, xValueLists, yValueList, errValueList);
+                expData.addResidueData(residueNum, residueData);
+                ResidueInfo residueInfo = resProp.getResidueInfo(residueNum);
+                if (residueInfo == null) {
+                    residueInfo = new ResidueInfo(resProp, Integer.parseInt(residueNum), 0, 0, 0);
+                    resProp.addResidueInfo(residueNum, residueInfo);
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(DataIO.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
+    }
+
     public static void loadTextFile(String fileName, ResidueProperties resProp, String nucleus, double temperature, double field) throws IOException, IllegalArgumentException {
         Path path = Paths.get(fileName);
         String fileTail = path.getFileName().toString();
@@ -192,7 +259,7 @@ public class DataIO {
         resProp.addExperimentData(fileTail, expData);
         boolean gotHeader = false;
         String[] peakRefs = null;
-        double[] xValues = null;
+        double[][] xValues = null;
 //        List<Double> xValues = new ArrayList<>();
         try (BufferedReader fileReader = Files.newBufferedReader(path)) {
             while (true) {
@@ -209,12 +276,12 @@ public class DataIO {
                 if (!gotHeader) {
                     int j = 0;
                     int nValues = (sfields.length - 1) / 2;
-                    xValues = new double[nValues];
+                    xValues = new double[1][nValues];
                     peakRefs = new String[nValues];
                     for (int i = 1; i < sfields.length - 1; i += 2) {
                         double tau = Double.parseDouble(sfields[i].trim());
                         double vcpmg = 1000.0 / (2.0 * tau);
-                        xValues[j] = vcpmg;
+                        xValues[0][j] = vcpmg;
                         peakRefs[j] = String.valueOf(j);
                         j++;
                     }
@@ -245,8 +312,6 @@ public class DataIO {
         }
     }
 
-    
-    
     public static void setPercentileErrors(ExperimentData expData, double fraction) {
         for (ResidueData residueData : expData.residueData.values()) {
             double[] yValues = residueData.getYValues();
@@ -270,11 +335,11 @@ public class DataIO {
         double sumDelta2 = 0.0;
         double sumAbs = 0.0;
         for (ResidueData residueData : expData.residueData.values()) {
-            double[] xValues = residueData.getXValues();
+            double[][] xValues = residueData.getXValues();
             double[] yValues = residueData.getYValues();
-            for (int i = 0; i < xValues.length - 1; i++) {
-                for (int j = (i + 1); j < xValues.length; j++) {
-                    if (xValues[i] == xValues[j]) {
+            for (int i = 0; i < yValues.length - 1; i++) {
+                for (int j = (i + 1); j < yValues.length; j++) {
+                    if (xValues[0][i] == xValues[0][j]) {
                         double delta = yValues[i] - yValues[j];
                         sumDelta2 += delta * delta;
                         sumAbs += Math.abs(delta);
@@ -410,6 +475,84 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         return resProp;
     }
 
+    static void getFitParameters(ResidueProperties resProp, Map<String, Object> dataMap2) {
+        HashMap<String, Object> fitParMap = (HashMap<String, Object>) dataMap2.get("parameters");
+        if (fitParMap != null) {
+            Boolean absValueMode = (Boolean) fitParMap.get("absValue");
+            if (absValueMode != null) {
+                resProp.setAbsValueMode(absValueMode);
+            }
+            String bootStrapMode = (String) fitParMap.get("bootStrap");
+            if (bootStrapMode != null) {
+                resProp.setBootStrapMode(bootStrapMode);
+            }
+
+            System.out.println("absmode " + absValueMode + " bootstrap " + bootStrapMode);
+        }
+    }
+
+    static void getCESTValues(ResidueProperties resProp, Map<String, Object> dataMap2, Path dirPath) throws IOException {
+        ArrayList<HashMap<String, Object>> dataList = (ArrayList<HashMap<String, Object>>) dataMap2.get("data");
+        for (HashMap<String, Object> dataMap3 : dataList) {
+            Double temperature = (Double) dataMap3.get("temperature");
+            Double field = (Double) dataMap3.get("field");
+            String nucleus = (String) dataMap3.get("nucleus");
+            HashMap<String, Object> errorPars = (HashMap<String, Object>) dataMap3.get("error");
+            loadCESTFiles(dirPath, resProp, nucleus, temperature, field, errorPars);
+        }
+    }
+
+    static void getDataValues(ResidueProperties resProp, Map<String, Object> dataMap2, Path dirPath, String expMode) throws IOException {
+        boolean rateMode = expMode.equals("cpmg");
+
+        ArrayList<HashMap<String, Object>> dataList = (ArrayList<HashMap<String, Object>>) dataMap2.get("data");
+        for (HashMap<String, Object> dataMap3 : dataList) {
+            String dataFileName = (String) dataMap3.get("file");
+            Double temperature = (Double) dataMap3.get("temperature");
+            Double field = (Double) dataMap3.get("field");
+            String nucleus = (String) dataMap3.get("nucleus");
+            List<Number> vcpmgList = (List<Number>) dataMap3.get("vcpmg");
+            Double tauCPMG = (Double) dataMap3.get("tau");
+            tauCPMG = tauCPMG == null ? 1.0 : tauCPMG;  // fixme throw error if  ratemode and no tauCPMG
+
+            String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
+            String fileMode = (String) dataMap3.get("mode");
+            HashMap<String, Object> errorPars = (HashMap<String, Object>) dataMap3.get("error");
+            Object delayField = dataMap3.get("delays");
+            System.out.println("delays " + delayField);
+            double[] delayCalc = {0.0, 0.0, 1.0};
+            if (delayField instanceof Map) {
+                Map<String, Number> delayMap = (Map<String, Number>) delayField;
+                delayCalc[0] = delayMap.get("delta0").doubleValue();
+                delayCalc[1] = delayMap.get("c0").doubleValue();
+                delayCalc[2] = delayMap.get("delta").doubleValue();
+            }
+            System.out.println("err " + errorPars);
+            if ((fileMode != null) && fileMode.equals("mpk2")) {
+                if (vcpmgList == null) {
+                    loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, null, rateMode, errorPars, delayCalc);
+                } else {
+                    double[] vcpmgs = new double[vcpmgList.size()];
+                    for (int i = 0; i < vcpmgs.length; i++) {
+                        vcpmgs[i] = vcpmgList.get(i).doubleValue();
+                    }
+                    loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs, rateMode, errorPars, delayCalc);
+                }
+            } else {
+                if (vcpmgList == null) {
+                    loadTextFile(textFileName, resProp, nucleus, temperature, field);
+                } else {
+                    double[] vcpmgs = new double[vcpmgList.size()];
+                    for (int i = 0; i < vcpmgs.length; i++) {
+                        vcpmgs[i] = vcpmgList.get(i).doubleValue();
+                    }
+                    loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs, rateMode, errorPars, delayCalc);
+                }
+            }
+        }
+
+    }
+
     public static ResidueProperties loadParameters(String fileName) {
         File yamlFile = new File(fileName).getAbsoluteFile();
         ResidueProperties resProp = null;
@@ -418,83 +561,27 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             Path dirPath = path.getParent();
 
             Yaml yaml = new Yaml();
-            int counter = 0;
             for (Object data : yaml.loadAll(input)) {
                 Map dataMap = (HashMap<String, Object>) data;
                 Map dataMap2 = (HashMap<String, Object>) dataMap.get("fit");
-                String parName = (String) dataMap2.get("file");
-                String expMode = (String) dataMap2.get("mode");
-                expMode = expMode == null ? "cpmg" : expMode;
-                String parFileName = FileSystems.getDefault().getPath(dirPath.toString(), parName).toString();
-
-                resProp = DataIO.loadParametersFromFile(expMode, parFileName);
-                resProp.setExpMode(expMode);
-
-                boolean rateMode = expMode.equals("cpmg");
-                System.out.println("ratemode " + rateMode);
-                HashMap<String, Object> fitParMap = (HashMap<String, Object>) dataMap2.get("parameters");
-                if (fitParMap != null) {
-                    Boolean absValueMode = (Boolean) fitParMap.get("absValue");
-                    if (absValueMode != null) {
-                        resProp.setAbsValueMode(absValueMode);
-                    }
-                    String bootStrapMode = (String) fitParMap.get("bootStrap");
-                    if (bootStrapMode != null) {
-                        resProp.setBootStrapMode(bootStrapMode);
-                    }
-
-                    System.out.println("absmode " + absValueMode + " bootstrap " + bootStrapMode);
+                if (dataMap2 != null) {
+                    String parName = (String) dataMap2.get("file");
+                    String expMode = (String) dataMap2.get("mode");
+                    expMode = expMode == null ? "cpmg" : expMode;
+                    String parFileName = FileSystems.getDefault().getPath(dirPath.toString(), parName).toString();
+                    resProp = DataIO.loadParametersFromFile(expMode, parFileName);
+                    resProp.setExpMode(expMode);
+                    getFitParameters(resProp, dataMap2);
+                    getDataValues(resProp, dataMap2, dirPath, expMode);
+                }
+                Map cestMap = (HashMap<String, Object>) dataMap.get("cest");
+                if (cestMap != null) {
+                    String expMode = "cest";
+                    resProp = DataIO.loadParametersFromFile(expMode, "xxx.txt");
+                    resProp.setExpMode(expMode);
+                    getCESTValues(resProp, cestMap, dirPath);
                 }
 
-                ArrayList<HashMap<String, Object>> dataList = (ArrayList<HashMap<String, Object>>) dataMap2.get("data");
-                for (HashMap<String, Object> dataMap3 : dataList) {
-                    String dataFileName = (String) dataMap3.get("file");
-                    Double temperature = (Double) dataMap3.get("temperature");
-                    Double field = (Double) dataMap3.get("field");
-                    String nucleus = (String) dataMap3.get("nucleus");
-                    List<Number> vcpmgList = (List<Number>) dataMap3.get("vcpmg");
-                    Double tauCPMG = (Double) dataMap3.get("tau");
-                    tauCPMG = tauCPMG == null ? 1.0 : tauCPMG;  // fixme throw error if  ratemode and no tauCPMG
-
-                    String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
-                    String fileMode = (String) dataMap3.get("mode");
-                    HashMap<String, Object> errorPars = (HashMap<String, Object>) dataMap3.get("error");
-                    Object delayField = dataMap3.get("delays");
-                    System.out.println("delays " + delayField);
-                    double[] delayCalc = {0.0, 0.0, 1.0};
-                    if (delayField instanceof Map) {
-                        Map<String, Number> delayMap = (Map<String, Number>) delayField;
-                        delayCalc[0] = delayMap.get("delta0").doubleValue();
-                        delayCalc[1] = delayMap.get("c0").doubleValue();
-                        delayCalc[2] = delayMap.get("delta").doubleValue();
-                    }
-                    System.out.println("err " + errorPars);
-                    System.out.println("err " + errorPars);
-                    System.out.println("err " + errorPars);
-                    System.out.println("err " + errorPars);
-                    if ((fileMode != null) && fileMode.equals("mpk2")) {
-                        if (vcpmgList == null) {
-                            loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, null, rateMode, errorPars, delayCalc);
-                        } else {
-                            double[] vcpmgs = new double[vcpmgList.size()];
-                            for (int i = 0; i < vcpmgs.length; i++) {
-                                vcpmgs[i] = vcpmgList.get(i).doubleValue();
-                            }
-                            loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs, rateMode, errorPars, delayCalc);
-                        }
-                    } else {
-                        if (vcpmgList == null) {
-                            loadTextFile(textFileName, resProp, nucleus, temperature, field);
-                        } else {
-                            double[] vcpmgs = new double[vcpmgList.size()];
-                            for (int i = 0; i < vcpmgs.length; i++) {
-                                vcpmgs[i] = vcpmgList.get(i).doubleValue();
-                            }
-                            loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs, rateMode, errorPars, delayCalc);
-                        }
-                    }
-                }
-                counter++;
             }
         } catch (FileNotFoundException ex) {
             Logger.getLogger(DataIO.class.getName()).log(Level.SEVERE, null, ex);
@@ -552,17 +639,17 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
     }
 
     public static void loadCESTTextFile(String[] files) throws IOException, IllegalArgumentException {
-        
+
         String filepath = "/home/mbeckwith/cest/CEST_tutorial/";
-        
+
         List<Double> offset = new ArrayList<>();
         List<Double> g08inten = new ArrayList<>();
         List<Double> g08err = new ArrayList<>();
         List<Double> g10inten = new ArrayList<>();
         List<Double> g10err = new ArrayList<>();
-        
-        for(int i=0; i<files.length; i++){
-            String fileName = filepath + files[i] + ".csv"; 
+
+        for (int i = 0; i < files.length; i++) {
+            String fileName = filepath + files[i] + ".csv";
             Path path = Paths.get(fileName);
 
             try (BufferedReader fileReader = Files.newBufferedReader(path)) {
@@ -580,7 +667,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     if (sline.contains("#")) {
                         continue;
                     }
-                    
+
                     String[] sfields = line.split(",", -1);
 
                     offset.add(Double.parseDouble(sfields[0]));
