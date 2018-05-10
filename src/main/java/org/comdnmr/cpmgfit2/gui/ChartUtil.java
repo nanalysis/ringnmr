@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.print.PageLayout;
@@ -229,12 +228,12 @@ public class ChartUtil {
             data.add(series);
             ResidueData resData = expData.getResidueData(resNum);
             if (resData != null) {
-                int nValues = resData.getXValues().length;
-                double[] xValues = resData.getXValues();
+                double[][] xValues = resData.getXValues();
                 double[] yValues = resData.getYValues();
+                int nValues = yValues.length;
                 double[] errValues = resData.getErrValues();
                 for (int i = 0; i < nValues; i++) {
-                    double x = xValues[i];
+                    double x = xValues[0][i];
                     double y = yValues[i];
                     XYChart.Data dataPoint = new XYChart.Data(x, y);
                     dataPoint.setExtraValue(resData.getDataValues().get(i));
