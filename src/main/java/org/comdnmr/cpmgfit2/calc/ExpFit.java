@@ -79,11 +79,11 @@ public class ExpFit implements EquationFitter {
                 ResidueData resData = expData.getResidueData(resNum);
                 //  need peakRefs
                 double field = expData.getField();
-                double[] x = resData.getXValues();
+                double[][] x = resData.getXValues();
                 double[] y = resData.getYValues();
                 double[] err = resData.getErrValues();
-                for (int i = 0; i < x.length; i++) {
-                    xValues.add(x[i]);
+                for (int i = 0; i < y.length; i++) {
+                    xValues.add(x[0][i]);
                     yValues.add(y[i]);
                     errValues.add(err[i]);
                     fieldValues.add(field);

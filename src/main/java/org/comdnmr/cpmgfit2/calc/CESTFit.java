@@ -83,11 +83,12 @@ public class CESTFit implements EquationFitter {
                 ResidueData resData = expData.getResidueData(resNum);
                 //  need peakRefs
                 double field = expData.getField();
-                double[] x = resData.getXValues();
+                double[][] x = resData.getXValues();
                 double[] y = resData.getYValues();
                 double[] err = resData.getErrValues();
-                for (int i = 0; i < x.length; i++) {
-                    xValues[0].add(x[i]);
+                for (int i = 0; i < y.length; i++) {
+                    xValues[0].add(x[0][i]);
+                    xValues[1].add(x[1][i]);
                     yValues.add(y[i]);
                     errValues.add(err[i]);
                     fieldValues.add(field);
@@ -154,7 +155,7 @@ public class CESTFit implements EquationFitter {
     public FitModel getFitModel() {
         return calcCEST;
     }
-    
+
     public static List<String> getEquationNames() {
         return equationNameList;
     }

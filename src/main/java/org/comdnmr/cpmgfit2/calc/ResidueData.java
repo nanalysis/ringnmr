@@ -11,23 +11,23 @@ public class ResidueData {
 
     ExperimentData expData;
     String resNum;
-    double[] xValues;
+    double[][] xValues;
     double[] errValues;
     double[] yValues;
     String[] peakRefs;
 
-    public ResidueData(ExperimentData expData, String residueNum, double[] x, double[] y, double[] err) {
+    public ResidueData(ExperimentData expData, String residueNum, double[][] x, double[] y, double[] err) {
         this.resNum = residueNum;
         this.expData = expData;
-        this.xValues = x.clone();
+        this.xValues = DataUtil.clone2DArray(x);
         this.yValues = y.clone();
         this.errValues = err.clone();
     }
 
-    public ResidueData(ExperimentData expData, String residueNum, double[] x, double[] y, double[] err, String[] peakRefs) {
+    public ResidueData(ExperimentData expData, String residueNum, double[][] x, double[] y, double[] err, String[] peakRefs) {
         this.resNum = residueNum;
         this.expData = expData;
-        this.xValues = x.clone();
+        this.xValues = DataUtil.clone2DArray(x);
         this.yValues = y.clone();
         this.errValues = err.clone();
         this.peakRefs = peakRefs.clone();
@@ -37,11 +37,28 @@ public class ResidueData {
         this.expData = expData;
         this.resNum = residueNum;
         int nValues = xValueList.size();
-        this.xValues = new double[nValues];
+        this.xValues = new double[1][nValues];
         this.yValues = new double[nValues];
         this.errValues = new double[nValues];
         for (int i = 0; i < nValues; i++) {
-            xValues[i] = xValueList.get(i);
+            xValues[0][i] = xValueList.get(i);
+            yValues[i] = yValueList.get(i);
+            errValues[i] = errValueList.get(i);
+        }
+    }
+
+    public ResidueData(ExperimentData expData, String residueNum, List<Double>[] xValueList, List<Double> yValueList, List<Double> errValueList) {
+        this.expData = expData;
+        this.resNum = residueNum;
+        int nValues = yValueList.size();
+        int nX = xValueList.length;
+        this.xValues = new double[nX][nValues];
+        this.yValues = new double[nValues];
+        this.errValues = new double[nValues];
+        for (int i = 0; i < nValues; i++) {
+            for (int j = 0; j < nX; j++) {
+                xValues[j][i] = xValueList[j].get(i);
+            }
             yValues[i] = yValueList.get(i);
             errValues[i] = errValueList.get(i);
         }
@@ -51,19 +68,19 @@ public class ResidueData {
         this.expData = expData;
         this.resNum = residueNum;
         int nValues = xValueList.size();
-        this.xValues = new double[nValues];
+        this.xValues = new double[1][nValues];
         this.yValues = new double[nValues];
         this.errValues = new double[nValues];
         this.peakRefs = new String[nValues];
         for (int i = 0; i < nValues; i++) {
-            xValues[i] = xValueList.get(i);
+            xValues[0][i] = xValueList.get(i);
             yValues[i] = yValueList.get(i);
             errValues[i] = errValueList.get(i);
             peakRefs[i] = peakRefList.get(i);
         }
     }
 
-    public double[] getXValues() {
+    public double[][] getXValues() {
         return xValues;
     }
 
@@ -90,7 +107,7 @@ public class ResidueData {
         }
 
         public double getX() {
-            return resInfo.xValues[index];
+            return resInfo.xValues[0][index];
         }
 
         public double getY() {
@@ -120,7 +137,7 @@ public class ResidueData {
 
     public ArrayList<DataValue> getDataValues() {
         ArrayList<DataValue> dataValues = new ArrayList<>();
-        for (int i = 0; i < xValues.length; i++) {
+        for (int i = 0; i < xValues[0].length; i++) {
             dataValues.add(new DataValue(this, i));
         }
         return dataValues;

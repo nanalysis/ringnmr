@@ -6,6 +6,14 @@ import java.util.stream.IntStream;
 
 public class DataUtil {
 
+    public static double[][] clone2DArray(double[][] values) {
+        double[][] result = new double[values.length][];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = values[i].clone();
+        }
+        return result;
+    }
+
     public static double getMeanValue(double[] values, int[] idValues, int id) {
         DoubleSummaryStatistics dStat = IntStream.range(0, values.length).filter(i -> idValues[i] == id).
                 mapToDouble(i -> values[i]).summaryStatistics();
