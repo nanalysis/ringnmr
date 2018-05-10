@@ -4,6 +4,7 @@ import org.comdnmr.cpmgfit2.calc.ResidueFitter as ResidueFitter
 import math
 import sys
 import os.path
+import runpy
 #from optparse import OptionParser
 import argparse
 
@@ -448,6 +449,7 @@ def parseArgs():
     parser.add_argument("-p", dest="projectFile",default='', help="Project file (.yaml) to load")
     parser.add_argument("fileNames",nargs="*")
     args = parser.parse_args()
+    print args
 
     serialMode = args.serialMode
     onlyGroups = args.onlyGroups
@@ -474,4 +476,11 @@ def parseArgs():
         loadDataFiles(fileNames)
         fitGroups(groups)
 
-parseArgs()
+if len(sys.argv) > 1:
+    arg0 = sys.argv[1]
+    if arg0.endswith(".py"):
+        sys.argv.pop(0)
+        runpy.run_path(arg0)
+    else:
+        sys.argv[0] = "cpmgcalc.py" 
+        parseArgs()
