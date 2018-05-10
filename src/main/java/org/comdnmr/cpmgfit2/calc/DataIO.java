@@ -228,8 +228,8 @@ public class DataIO {
                             double offsetFreq = Double.parseDouble(sfields[1].trim());
                             double intensity = Double.parseDouble(sfields[2].trim());
                             double error = Double.parseDouble(sfields[3].trim());
-                            bValueValueList.add(b0Field*2*Math.PI);
-                            offsetValueList.add(offsetFreq*2*Math.PI);
+                            bValueValueList.add(b0Field * 2 * Math.PI);
+                            offsetValueList.add(offsetFreq * 2 * Math.PI);
                             yValueList.add(intensity);
                             errValueList.add(error);
                         } catch (NumberFormatException nFE) {
@@ -538,16 +538,14 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     }
                     loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs, rateMode, errorPars, delayCalc);
                 }
+            } else if (vcpmgList == null) {
+                loadTextFile(textFileName, resProp, nucleus, temperature, field);
             } else {
-                if (vcpmgList == null) {
-                    loadTextFile(textFileName, resProp, nucleus, temperature, field);
-                } else {
-                    double[] vcpmgs = new double[vcpmgList.size()];
-                    for (int i = 0; i < vcpmgs.length; i++) {
-                        vcpmgs[i] = vcpmgList.get(i).doubleValue();
-                    }
-                    loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs, rateMode, errorPars, delayCalc);
+                double[] vcpmgs = new double[vcpmgList.size()];
+                for (int i = 0; i < vcpmgs.length; i++) {
+                    vcpmgs[i] = vcpmgList.get(i).doubleValue();
                 }
+                loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs, rateMode, errorPars, delayCalc);
             }
         }
 
