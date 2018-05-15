@@ -571,6 +571,7 @@ public class CESTEquations {
 
         List<Double> xmin = new ArrayList<>();
         List<Double> ymin = new ArrayList<>();
+        List<Double> fwhm = new ArrayList<>();
 
         double previousYdiff = 0;
 
@@ -580,27 +581,75 @@ public class CESTEquations {
                 if (ydiff > 0 & previousYdiff < 0) { //look for sign changes going from - to +
                     ymin.add(yvals[i - 1]);
                     xmin.add(xvals[i - 1]);
+                    // FWHM calculation
+                    double halfinten = (yvals[0] - yvals[i-1]) / 2 + yvals[i-1];
+                    double distance = Math.abs(yvals[0] - halfinten);
+                    int idx = 0;
+                    int idx1 = 0;
+                    for (int c = i-10; c < i; c++) {
+                        double cdistance = Math.abs(yvals[c] - halfinten);
+                        if (cdistance < distance) {
+                            idx = c;
+                            distance = cdistance;
+                        }
+                    }
+                    double halfleft = xvals[idx];// /(2*Math.PI);
+                    double distance1 = Math.abs(yvals[0] - halfinten);
+                    for (int c = i+1; c < i+10; c++) {
+                        double cdistance1 = Math.abs(yvals[c] - halfinten);
+                        if (cdistance1 < distance1) {
+                            idx1 = c;
+                            distance1 = cdistance1;
+                        }
+                    }
+                    double halfright = xvals[idx1];// /(2*Math.PI);
+                    fwhm.add(halfright-halfleft);
                 } else if (ydiff == 0) {
                     double yavg = (yvals[i] + yvals[i - 1]) / 2;
                     double xavg = (xvals[i] + xvals[i - 1]) / 2;
                     ymin.add(yavg);
                     xmin.add(xavg);
+                    // FWHM calculation
+                    double halfinten = (yvals[0] - yvals[i-1]) / 2 + yvals[i-1];
+                    double distance = Math.abs(yvals[0] - halfinten);
+                    int idx = 0;
+                    int idx1 = 0;
+                    for (int c = i-10; c < i; c++) {
+                        double cdistance = Math.abs(yvals[c] - halfinten);
+                        if (cdistance < distance) {
+                            idx = c;
+                            distance = cdistance;
+                        }
+                    }
+                    double halfleft = xvals[idx];// /(2*Math.PI);
+                    double distance1 = Math.abs(yvals[0] - halfinten);
+                    for (int c = i+1; c < i+10; c++) {
+                        double cdistance1 = Math.abs(yvals[c] - halfinten);
+                        if (cdistance1 < distance1) {
+                            idx1 = c;
+                            distance1 = cdistance1;
+                        }
+                    }
+                    double halfright = xvals[idx1];// /(2*Math.PI);
+                    fwhm.add(halfright-halfleft);
                 }
             }
             previousYdiff = ydiff;
         }
 
-        double[][] peaks = new double[xmin.size()][2];
+        double[][] peaks = new double[xmin.size()][3];
 
         for (int i = 0; i < xmin.size(); i++) {
             peaks[i][0] = xmin.get(i);
             peaks[i][1] = ymin.get(i);
+            peaks[i][2] = fwhm.get(i);
         }
         return peaks;
     }
 
     public static double[] cestPbGuess(double[][] peaks) {
         // Estimates CEST pb values from peak intensities for initial guesses for before fitting.
+        // Uses the output from cestPeakGuess as the input.
 
         double[] pb = new double[peaks.length / 2];
 
@@ -610,32 +659,36 @@ public class CESTEquations {
         return pb;
     }
 
-    public static double[] cestR2Guess(double[] xvals, double[] yvals, double[][] peaks) {
+    public static double[][] cestR2Guess(double[][] peaks) {
         // Estimates CEST R2A and R2B values from peak widths for initial guesses for before fitting.
+        // Uses the output from cestPeakGuess as the input.
 
-        double[] halfinten = new double[peaks.length];
-        for (int i = 0; i < peaks.length; i++) {
-            halfinten[i] = (yvals[0] - peaks[i][1]) / 2;
+        double[][] r2 = new double[2][peaks.length / 2];
+
+        for (int i = 0; i < r2[0].length; i++) {
+            r2[1][i] = peaks[2 * i][2]/(2*Math.PI); //R2B
+            r2[0][i] = peaks[2 * i + 1][2]/10/(2*Math.PI); //R2A
         }
+        return r2;
+    }
+    
+    public static double[] cestKexGuess(double[][] peaks) {
+        // Estimates CEST kex values from minor state peak widths for initial guesses for before fitting.
+        // Uses the output from cestPeakGuess as the input.
 
-        double[] halfyvals = new double[halfinten.length];
-        for (int i = 0; i < halfinten.length; i++) {
-            double distance = Math.abs(yvals[0] - halfinten[i]);
-            int idx = 0;
-            int start = Arrays.asList(yvals).indexOf(peaks[i][1]) - 10;
-            System.out.print(start);
-            int end = Arrays.asList(yvals).indexOf(peaks[i][1]) + 10;
-            System.out.print(end);
-            for (int c = start; c < end; c++) {
-                double cdistance = Math.abs(yvals[c] - halfinten[i]);
-                if (cdistance < distance) {
-                    idx = c;
-                    distance = cdistance;
-                }
-            }
-            halfyvals[i] = yvals[idx];
+        double[] kex = new double[peaks.length / 2];
+
+        for (int i = 0; i < kex.length; i++) {
+            kex[i] = peaks[2 * i][2]/(2*Math.PI); //R2B
         }
+        return kex;
+    }
+    
+    public static double[] cestR1Guess(double[] yvals) {
+        // Estimates CEST R1 values from data baseline intensity for initial guesses for before fitting.
 
-        return halfyvals;
+        double[] r1 = {yvals[0]*5, yvals[0]*5}; //{R1A, R1B}
+
+        return r1;
     }
 }

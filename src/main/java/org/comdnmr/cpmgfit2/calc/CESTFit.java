@@ -160,6 +160,41 @@ public class CESTFit implements EquationFitter {
         return equationNameList;
     }
 
+    public List<ParValueInterface> setupFit(String eqn, boolean absMode) {
+        double[][] x = new double[2][yValues.size()];
+        double[] y = new double[yValues.size()];
+        double[] err = new double[yValues.size()];
+        int[] idNums = new int[yValues.size()];
+        double[] fields = new double[yValues.size()];
+        for (int i = 0; i < x[0].length; i++) {
+            x[0][i] = xValues[0].get(i);
+            x[1][i] = xValues[1].get(i);
+            y[i] = yValues.get(i);
+            err[i] = errValues.get(i);
+            //System.out.println(x[0][i]+", "+x[0][i]+", "+x[0][i]+", "+x[0][i]);
+            fields[i] = fieldValues.get(i);
+            idNums[i] = idValues.get(i);
+        }
+        calcCEST.setEquation(eqn);
+        calcCEST.setAbsMode(absMode);
+
+        calcCEST.setXY(x, y);
+        calcCEST.setIds(idNums);
+        calcCEST.setErr(err);
+        calcCEST.setFieldValues(fields);
+        calcCEST.setFields(usedFields);
+        calcCEST.setMap(stateCount, states);
+        int[][] map = calcCEST.getMap();
+        double[] guesses = calcCEST.guess();
+        String[] parNames = calcCEST.getParNames();
+        List<ParValueInterface> parValues = new ArrayList<>();
+        for (int i = 0; i < guesses.length; i++) {
+            ParValueInterface parValue = new ParValue(parNames[i], guesses[i]);
+            parValues.add(parValue);
+        }
+        return parValues;
+    }
+
     @Override
     public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap) {
         double[][] x = new double[2][yValues.size()];
@@ -187,6 +222,7 @@ public class CESTFit implements EquationFitter {
         calcCEST.setMap(stateCount, states);
         int[][] map = calcCEST.getMap();
         double[] guesses = calcCEST.guess();
+//        double[] guesses = setupFit(eqn, absMode);
         double[][] boundaries = calcCEST.boundaries();
         double[] sigma = new double[guesses.length];
         for (int i = 0; i < guesses.length; i++) {
@@ -195,7 +231,7 @@ public class CESTFit implements EquationFitter {
         }
         PointValuePair result = calcCEST.refine(guesses, boundaries[0], boundaries[1], sigma);
         double[] pars = result.getPoint();
-        /*
+
         for (int i = 0; i < map.length; i++) {
             for (int j = 0; j < map[i].length; j++) {
                 System.out.printf(" %3d", map[i][j]);
@@ -208,10 +244,10 @@ public class CESTFit implements EquationFitter {
             System.out.printf(" %.3f", pars[i]);
         }
         System.out.println("");
-         */
+
         double aic = calcCEST.getAICc(pars);
         double rms = calcCEST.getRMS(pars);
-        //   System.out.println("rms " + rms);
+        System.out.println("rms " + rms);
         int nGroupPars = calcCEST.getNGroupPars();
         for (int i = 0; i < guesses.length; i++) {
             sigma[i] /= 2.0;
@@ -225,7 +261,11 @@ public class CESTFit implements EquationFitter {
             errEstimates = calcCEST.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma);
 
         }
-        return getResults(eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms);
+        // fixme
+        double[] extras = new double[2];
+        extras[0] = usedFields[0];
+        extras[1] = 17.0 * 2 * Math.PI;
+        return getResults(eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms);
     }
 
 }

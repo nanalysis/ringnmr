@@ -1,7 +1,10 @@
 package org.comdnmr.cpmgfit2.calc;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -15,7 +18,8 @@ public class ExperimentData {
     final double temperature;
     double errFraction = 0.05;
     final String nucleus;
-    private String state="";
+    List<Double> extras = new ArrayList<>();
+    private String state = "";
 
     public ExperimentData(String name, String nucleus, double field, double temperature) {
         this.name = name;
@@ -33,11 +37,11 @@ public class ExperimentData {
     }
 
     public void setErrFraction(double errFraction) {
-       this.errFraction = errFraction;
+        this.errFraction = errFraction;
     }
 
     public double getErrFraction() {
-       return(errFraction);
+        return (errFraction);
     }
 
     public void addResidueData(String resNum, ResidueData data) {
@@ -68,6 +72,14 @@ public class ExperimentData {
      */
     public void setState(String state) {
         this.state = state;
+    }
+
+    public void setExtras(List extravals) {
+        this.extras.addAll(extravals);
+    }
+
+    public List<Double> getExtras() {
+        return extras;
     }
 
 }

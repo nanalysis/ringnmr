@@ -21,6 +21,7 @@ public class PlotEquation {
         this.name = name;
         this.pars = pars.clone();
         this.errs = errs.clone();
+        //System.out.println("ploteq constructor " + extras.length);
         this.extras = extras.clone();
         //            equation = CalcRDisp.CPMGEquation.valueOf(name);
     }

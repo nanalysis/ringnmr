@@ -109,6 +109,40 @@ public class CPMGFit implements EquationFitter {
         return equationNameList;
     }
 
+    public List<ParValueInterface> setupFit(String eqn, boolean absMode) {
+        double[][] x = new double[1][yValues.size()];
+        double[] y = new double[yValues.size()];
+        double[] err = new double[yValues.size()];
+        int[] idNums = new int[yValues.size()];
+        double[] fields = new double[yValues.size()];
+        for (int i = 0; i < x[0].length; i++) {
+            x[0][i] = xValues.get(i);
+            y[i] = yValues.get(i);
+            err[i] = errValues.get(i);
+            //System.out.println(x[0][i]+", "+x[0][i]+", "+x[0][i]+", "+x[0][i]);
+            fields[i] = fieldValues.get(i);
+            idNums[i] = idValues.get(i);
+        }
+        calcR.setEquation(eqn);
+        calcR.setAbsMode(absMode);
+
+        calcR.setXY(x, y);
+        calcR.setIds(idNums);
+        calcR.setErr(err);
+        calcR.setFieldValues(fields);
+        calcR.setFields(usedFields);
+        calcR.setMap(stateCount, states);
+        int[][] map = calcR.getMap();
+        double[] guesses = calcR.guess();
+        String[] parNames = calcR.getParNames();
+       List<ParValueInterface> parValues = new ArrayList<>();
+        for (int i=0;i<guesses.length;i++) {
+            ParValueInterface parValue = new ParValue(parNames[i], guesses[i]);
+            parValues.add(parValue);
+        }
+        return parValues;
+      }
+
     public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap) {
         double[][] x = new double[1][xValues.size()];
         double[] y = new double[yValues.size()];

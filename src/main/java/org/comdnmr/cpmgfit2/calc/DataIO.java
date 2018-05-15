@@ -189,12 +189,13 @@ public class DataIO {
         System.out.println("load cest file " + dirPath);
         String fileTail = dirPath.getFileName().toString();
         //fileTail = fileTail.substring(0, fileTail.indexOf('.'));
-
+//System.out.println("exp name " + fileTail);
         ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature);
         resProp.addExperimentData(fileTail, expData);
         Files.newDirectoryStream(dirPath, "res*.txt").forEach(resPath -> {
             System.out.println("load " + resPath.toString());
             boolean gotHeader = false;
+            List<Double> bFieldUniqueValue = new ArrayList<>();
             List<Double> bValueValueList = new ArrayList<>();
             List<Double> offsetValueList = new ArrayList<>();
             List<Double>[] xValueLists = new ArrayList[2];
@@ -224,11 +225,14 @@ public class DataIO {
                         gotHeader = true;
                     } else {
                         try {
-                            double b0Field = Double.parseDouble(sfields[0].trim());
+                            double b1Field = Double.parseDouble(sfields[0].trim());
+                            if (bFieldUniqueValue.contains(b1Field) == false){
+                                bFieldUniqueValue.add(b1Field);
+                            }
                             double offsetFreq = Double.parseDouble(sfields[1].trim());
                             double intensity = Double.parseDouble(sfields[2].trim());
                             double error = Double.parseDouble(sfields[3].trim());
-                            bValueValueList.add(b0Field * 2 * Math.PI);
+                            bValueValueList.add(b1Field * 2 * Math.PI);
                             offsetValueList.add(offsetFreq * 2 * Math.PI);
                             yValueList.add(intensity);
                             errValueList.add(error);
@@ -239,6 +243,7 @@ public class DataIO {
                 }
                 ResidueData residueData = new ResidueData(expData, residueNum, xValueLists, yValueList, errValueList);
                 expData.addResidueData(residueNum, residueData);
+                expData.setExtras(bFieldUniqueValue);
                 ResidueInfo residueInfo = resProp.getResidueInfo(residueNum);
                 if (residueInfo == null) {
                     residueInfo = new ResidueInfo(resProp, Integer.parseInt(residueNum), 0, 0, 0);
@@ -575,7 +580,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 Map cestMap = (HashMap<String, Object>) dataMap.get("cest");
                 if (cestMap != null) {
                     String expMode = "cest";
-                    resProp = DataIO.loadParametersFromFile(expMode, "xxx.txt");
+                    resProp = DataIO.loadParametersFromFile(expMode, "cest.txt");
                     resProp.setExpMode(expMode);
                     getCESTValues(resProp, cestMap, dirPath);
                 }

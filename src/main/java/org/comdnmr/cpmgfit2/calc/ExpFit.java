@@ -12,7 +12,7 @@ import org.apache.commons.math3.optim.PointValuePair;
  */
 public class ExpFit implements EquationFitter {
 
-    FitModel calcR = new CalcExpDecay();
+    FitModel expModel = new CalcExpDecay();
     List<Double> xValues = new ArrayList<>();
     List<Double> yValues = new ArrayList<>();
     List<Double> errValues = new ArrayList<>();
@@ -102,11 +102,45 @@ public class ExpFit implements EquationFitter {
     }
 
     public FitModel getFitModel() {
-        return calcR;
+        return expModel;
     }
 
     public static List<String> getEquationNames() {
         return equationNameList;
+    }
+
+    public List<ParValueInterface> setupFit(String eqn, boolean absMode) {
+        double[][] x = new double[1][yValues.size()];
+        double[] y = new double[yValues.size()];
+        double[] err = new double[yValues.size()];
+        int[] idNums = new int[yValues.size()];
+        double[] fields = new double[yValues.size()];
+        for (int i = 0; i < x[0].length; i++) {
+            x[0][i] = xValues.get(i);
+            y[i] = yValues.get(i);
+            err[i] = errValues.get(i);
+            //System.out.println(x[0][i]+", "+x[0][i]+", "+x[0][i]+", "+x[0][i]);
+            fields[i] = fieldValues.get(i);
+            idNums[i] = idValues.get(i);
+        }
+        expModel.setEquation(eqn);
+        expModel.setAbsMode(absMode);
+
+        expModel.setXY(x, y);
+        expModel.setIds(idNums);
+        expModel.setErr(err);
+        expModel.setFieldValues(fields);
+        expModel.setFields(usedFields);
+        expModel.setMap(stateCount, states);
+        int[][] map = expModel.getMap();
+        double[] guesses = expModel.guess();
+        String[] parNames = expModel.getParNames();
+        List<ParValueInterface> parValues = new ArrayList<>();
+        for (int i = 0; i < guesses.length; i++) {
+            ParValueInterface parValue = new ParValue(parNames[i], guesses[i]);
+            parValues.add(parValue);
+        }
+        return parValues;
     }
 
     public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap) {
@@ -122,24 +156,24 @@ public class ExpFit implements EquationFitter {
             fields[i] = fieldValues.get(i);
             idNums[i] = idValues.get(i);
         }
-        calcR.setEquation(eqn);
-        calcR.setAbsMode(absMode);
+        expModel.setEquation(eqn);
+        expModel.setAbsMode(absMode);
 
-        calcR.setXY(x, y);
-        calcR.setIds(idNums);
-        calcR.setErr(err);
-        calcR.setFieldValues(fields);
-        calcR.setFields(usedFields);
-        calcR.setMap(stateCount, states);
-        int[][] map = calcR.getMap();
-        double[] guesses = calcR.guess();
-        double[][] boundaries = calcR.boundaries();
+        expModel.setXY(x, y);
+        expModel.setIds(idNums);
+        expModel.setErr(err);
+        expModel.setFieldValues(fields);
+        expModel.setFields(usedFields);
+        expModel.setMap(stateCount, states);
+        int[][] map = expModel.getMap();
+        double[] guesses = expModel.guess();
+        double[][] boundaries = expModel.boundaries();
         double[] sigma = new double[guesses.length];
         for (int i = 0; i < guesses.length; i++) {
             sigma[i] = (boundaries[1][i] - boundaries[0][i]) / 10.0;
 //            System.out.println(i + " " + boundaries[0][i] + " " + boundaries[1][i] + " " + sigma[i]);
         }
-        PointValuePair result = calcR.refine(guesses, boundaries[0], boundaries[1], sigma);
+        PointValuePair result = expModel.refine(guesses, boundaries[0], boundaries[1], sigma);
         double[] pars = result.getPoint();
         /*
         for (int i = 0; i < map.length; i++) {
@@ -155,20 +189,20 @@ public class ExpFit implements EquationFitter {
         }
         System.out.println("");
          */
-        double aic = calcR.getAICc(pars);
-        double rms = calcR.getRMS(pars);
+        double aic = expModel.getAICc(pars);
+        double rms = expModel.getRMS(pars);
 //        System.out.println("rms " + rms);
-        int nGroupPars = calcR.getNGroupPars();
+        int nGroupPars = expModel.getNGroupPars();
         for (int i = 0; i < guesses.length; i++) {
             sigma[i] /= 2.0;
         }
 
-        String[] parNames = calcR.getParNames();
+        String[] parNames = expModel.getParNames();
         double[] errEstimates;
         if (nonParBootStrap) {
-            errEstimates = calcR.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
+            errEstimates = expModel.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
         } else {
-            errEstimates = calcR.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma);
+            errEstimates = expModel.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma);
 
         }
         return getResults(eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms);

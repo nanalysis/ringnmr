@@ -17,8 +17,10 @@ import static org.comdnmr.cpmgfit2.calc.CESTFit.equationNameList;
 public interface EquationFitter {
 
     public FitModel getFitModel();
-    
+
     public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap);
+    
+    public List<ParValueInterface> setupFit(String eqn, boolean absMode);
 
     public void setData(ResidueProperties resProps, String[] resNums);
 
@@ -55,8 +57,12 @@ public interface EquationFitter {
             parMap.put("AIC", aic);
             parMap.put("RMS", rms);
             parMap.put("Equation", 1.0 + equationNameList.indexOf(eqn));
-
-            PlotEquation plotEquation = new PlotEquation(eqn, parArray, errArray, usedFields);
+            // fixme
+            double[] extras = new double[2];
+            extras[0] = usedFields[0];
+            extras[1] = 17.0 * 2 * Math.PI;
+            //System.out.println("getResults got called with extras length = " + extras.length);
+            PlotEquation plotEquation = new PlotEquation(eqn, parArray, errArray, extras);
             CurveFit curveFit = new CurveFit(stateString, resNums[states[iCurve][0]], parMap, plotEquation);
             curveFits.add(curveFit);
         }

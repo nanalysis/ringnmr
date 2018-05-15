@@ -21,6 +21,11 @@ public class ParValue implements ParValueInterface {
         this.name = parName;
     }
 
+    public ParValue(String parName, double value) {
+        this.name = parName;
+        this.value = value;
+    }
+
     public ParValue(String residue, String state, String parName, double value, double err) {
         this.name = parName;
         this.value = value;

@@ -141,12 +141,10 @@ public class ResidueFitter {
                 if (resGroup.get(0).equals(resStr)) {
                     allResidues.add(resGroup);
                 }
-            } else {
-                if (residueFitGroups == null) {
-                    List<String> singleRes = new ArrayList<>();
-                    singleRes.add(resStr);
-                    allResidues.add(singleRes);
-                }
+            } else if (residueFitGroups == null) {
+                List<String> singleRes = new ArrayList<>();
+                singleRes.add(resStr);
+                allResidues.add(singleRes);
             }
         }
         return allResidues;
@@ -284,10 +282,15 @@ public class ResidueFitter {
 
     public static EquationType getEquationType(String name) throws IllegalArgumentException {
         EquationType equationType = null;
+
         try {
             equationType = CPMGEquation.valueOf(name);
         } catch (IllegalArgumentException iaE) {
-            equationType = ExpEquation.valueOf(name);
+            try {
+                equationType = ExpEquation.valueOf(name);
+            } catch (IllegalArgumentException iaE2) {
+                equationType = CESTEquation.valueOf(name);
+            }
         }
         return equationType;
     }

@@ -106,8 +106,16 @@ public class ResidueData {
             return index;
         }
 
-        public double getX() {
+        public double getX0() {
             return resInfo.xValues[0][index];
+        }
+        
+        public double getX1() {
+            double x1 = resInfo.xValues[0][index];
+            if (resInfo.xValues.length > 1) {
+                x1 = resInfo.xValues[1][index];
+            } 
+            return x1;
         }
 
         public double getY() {
