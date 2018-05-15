@@ -56,6 +56,11 @@ import org.comdnmr.cpmgfit2.calc.ResidueFitter;
 import org.comdnmr.cpmgfit2.calc.ResidueInfo;
 import org.comdnmr.cpmgfit2.calc.ResidueProperties;
 import org.controlsfx.control.StatusBar;
+import org.comdnmr.cpmgfit2.calc.CESTFit;
+import java.io.PrintStream;
+import javafx.scene.control.TextArea;
+import org.comdnmr.cpmgfit2.calc.ParValue;
+import static org.comdnmr.cpmgfit2.gui.ChartUtil.residueProperties;
 
 public class PyController implements Initializable {
 
@@ -91,6 +96,9 @@ public class PyController implements Initializable {
     Menu axisMenu;
     @FXML
     BorderPane simPane;
+
+    @FXML
+    TextArea textArea;
 
     EquationControls simControls;
 
@@ -140,6 +148,12 @@ public class PyController implements Initializable {
             equationChoice.getItems().add("+");
             equationChoice.getItems().addAll(CPMGFit.getEquationNames());
             equationChoice.setValue(CPMGFit.getEquationNames().get(0));
+        } else if (getFittingMode().equals("cest")) {
+            simControls = new CESTControls();
+            equationChoice.getItems().clear();
+            equationChoice.getItems().add("+");
+            equationChoice.getItems().addAll(CESTFit.getEquationNames());
+            equationChoice.setValue(CESTFit.getEquationNames().get(0));
         } else {
             simControls = new ExpControls();
             equationChoice.getItems().clear();
@@ -155,6 +169,15 @@ public class PyController implements Initializable {
         equationChoice.valueProperty().addListener(e -> {
             equationAction();
         });
+
+        PrintStream printStream = new PrintStream(new ConsoleRedirect(textArea));
+        // keeps reference of standard output stream
+        //standardOut = System.out;
+        //standardErr = System.err;
+
+        // re-assigns standard output stream and error output stream
+        System.setOut(printStream);
+        System.setErr(printStream);
 
     }
 
@@ -172,6 +195,12 @@ public class PyController implements Initializable {
             equationChoice.getItems().clear();
             equationChoice.getItems().add("+");
             equationChoice.getItems().addAll(ExpFit.getEquationNames());
+            update = true;
+        } else if (getFittingMode().equals("cest") && !(simControls instanceof CESTControls)) {
+            simControls = new CESTControls();
+            equationChoice.getItems().clear();
+            equationChoice.getItems().add("+");
+            equationChoice.getItems().addAll(CESTFit.getEquationNames());
             update = true;
         }
         if (update) {
@@ -195,6 +224,7 @@ public class PyController implements Initializable {
         List<PlotEquation> equations = new ArrayList<>();
         for (int i = 0; i < fields.length; i++) {
             double[] extras = {fields[i] / fields[0]};
+            //System.out.println("updateChartEquations got called with extras length = "+extras.length);
             PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
             equations.add(plotEquation);
         }
@@ -235,22 +265,41 @@ public class PyController implements Initializable {
         }
         resInfoTable.itemsProperty().setValue(data);
 
-        TableColumn<ResidueData.DataValue, String> nameColumn = new TableColumn<>("Name");
-        TableColumn<ResidueData.DataValue, String> resColumn = new TableColumn<>("Residue");
-        TableColumn<ResidueData.DataValue, Double> xColumn = new TableColumn<>("Vcpmg");
-        TableColumn<ResidueData.DataValue, Double> yColumn = new TableColumn<>("Reff");
-        TableColumn<ResidueData.DataValue, String> errColumn = new TableColumn<>("Error");
-        TableColumn<ResidueData.DataValue, String> peakColumn = new TableColumn<>("Peak");
+        if (getFittingMode().equals("cpmg")) {
+            TableColumn<ResidueData.DataValue, String> nameColumn = new TableColumn<>("Name");
+            TableColumn<ResidueData.DataValue, String> resColumn = new TableColumn<>("Residue");
+            TableColumn<ResidueData.DataValue, Double> xColumn = new TableColumn<>("Vcpmg");
+            TableColumn<ResidueData.DataValue, Double> yColumn = new TableColumn<>("Reff");
+            TableColumn<ResidueData.DataValue, String> errColumn = new TableColumn<>("Error");
+            TableColumn<ResidueData.DataValue, String> peakColumn = new TableColumn<>("Peak");
 
-        nameColumn.setCellValueFactory(new PropertyValueFactory<>("Name"));
-        resColumn.setCellValueFactory(new PropertyValueFactory<>("Residue"));
-        xColumn.setCellValueFactory(new PropertyValueFactory<>("X"));
-        yColumn.setCellValueFactory(new PropertyValueFactory<>("Y"));
-        errColumn.setCellValueFactory(new PropertyValueFactory<>("Error"));
-        peakColumn.setCellValueFactory(new PropertyValueFactory<>("Peak"));
+            nameColumn.setCellValueFactory(new PropertyValueFactory<>("Name"));
+            resColumn.setCellValueFactory(new PropertyValueFactory<>("Residue"));
+            xColumn.setCellValueFactory(new PropertyValueFactory<>("X0"));
+            yColumn.setCellValueFactory(new PropertyValueFactory<>("Y"));
+            errColumn.setCellValueFactory(new PropertyValueFactory<>("Error"));
+            peakColumn.setCellValueFactory(new PropertyValueFactory<>("Peak"));
 
-        resInfoTable.getColumns().clear();
-        resInfoTable.getColumns().addAll(nameColumn, resColumn, xColumn, yColumn, errColumn, peakColumn);
+            resInfoTable.getColumns().clear();
+            resInfoTable.getColumns().addAll(nameColumn, resColumn, xColumn, yColumn, errColumn, peakColumn);
+        } else if (getFittingMode().equals("cest")) {
+            TableColumn<ResidueData.DataValue, String> nameColumn = new TableColumn<>("Name");
+            TableColumn<ResidueData.DataValue, String> resColumn = new TableColumn<>("Residue");
+            TableColumn<ResidueData.DataValue, Double> x0Column = new TableColumn<>("Offset");
+            TableColumn<ResidueData.DataValue, Double> x1Column = new TableColumn<>("B1 Field");
+            TableColumn<ResidueData.DataValue, Double> yColumn = new TableColumn<>("Intensity");
+            TableColumn<ResidueData.DataValue, String> errColumn = new TableColumn<>("Error");
+
+            nameColumn.setCellValueFactory(new PropertyValueFactory<>("Name"));
+            resColumn.setCellValueFactory(new PropertyValueFactory<>("Residue"));
+            x0Column.setCellValueFactory(new PropertyValueFactory<>("X0"));
+            x1Column.setCellValueFactory(new PropertyValueFactory<>("X1"));
+            yColumn.setCellValueFactory(new PropertyValueFactory<>("Y"));
+            errColumn.setCellValueFactory(new PropertyValueFactory<>("Error"));
+
+            resInfoTable.getColumns().clear();
+            resInfoTable.getColumns().addAll(nameColumn, resColumn, x0Column, x1Column, yColumn, errColumn);
+        }
     }
 
     public void updateTableWithPars(String mapName, String[] residues, String equationName, String state, List<int[]> allStates) {
@@ -455,12 +504,29 @@ public class PyController implements Initializable {
     }
 
     @FXML
+    public void guesses(ActionEvent event) {
+        EquationFitter equationFitter = getFitter();
+        String[] resNums = {String.valueOf(currentResInfo.getResNum())};
+        equationFitter.setData(currentResProps, resNums);
+        String equationName = simControls.getEquation();
+//        System.out.println("guesses eqnFitter = " + equationFitter);
+//        System.out.println("guesses resNums = " + resNums);
+//        System.out.println("guesses eqnName = " + equationName);
+        List<ParValueInterface> guesses = equationFitter.setupFit(equationName, absValueModeCheckBox.isSelected());
+        simControls.updateSliders(guesses, equationName);
+        simControls.simSliderAction("");
+    }
+
+    @FXML
     public void fitEquation(ActionEvent event) {
 //        EquationFitter equationFitter = new CPMGFit();
         EquationFitter equationFitter = getFitter();
         String[] resNums = {String.valueOf(currentResInfo.getResNum())};
         equationFitter.setData(currentResProps, resNums);
         String equationName = simControls.getEquation();
+//        System.out.println("fitEqn eqnFitter = " + equationFitter);
+//        System.out.println("fitEqn resNums = " + resNums);
+//        System.out.println("fitEqn eqnName = " + equationName);
         CPMGFitResult fitResult = equationFitter.doFit(equationName, absValueModeCheckBox.isSelected(), nonParBootStrapCheckBox.isSelected());
         updateAfterFit(fitResult);
     }
@@ -473,10 +539,40 @@ public class PyController implements Initializable {
             List<ParValueInterface> parValues = curveFit.getParValues();
             updateTableWithPars(parValues);
             simControls.updateSliders(parValues, fitResult.getEquationName());
-            double[] pars = curveFit.getEquation().getPars();
-            double[] errs = curveFit.getEquation().getErrs();
-            PlotEquation plotEquation = new PlotEquation(fitResult.getEquationName(), pars, errs, curveFit.getEquation().getExtras());
-            equations.add(plotEquation);
+            String equationName = fitResult.getEquationName(); //equationSelector.getValue();
+            //System.out.println("Fit button residueProperties = " + residueProperties);
+            ResidueProperties residueProps = residueProperties.get("cest"); // fixme
+            //System.out.println("Fit button expData = " + residueProps.getExperimentData("cest"));
+            ExperimentData expData = residueProps.getExperimentData("cest"); // fixme
+            if (expData.getExtras().size() > 0) {
+                double[] pars = curveFit.getEquation().getPars(); //pars = getPars(equationName);
+                double[] errs = curveFit.getEquation().getErrs(); //double[] errs = new double[pars.length];
+                double[] extras = new double[2];
+                for (int j = 0; j < expData.getExtras().size(); j++) {
+                    extras[0] = 1.0;
+                    extras[1] = expData.getExtras().get(j) * 2 * Math.PI;
+                    //System.out.println("Fit button expData extras size = " + expData.getExtras().size() + " extra[1] = " + extras[1]);
+                    PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
+                    //equationCopy.setExtra(extras);
+
+                    equations.add(plotEquation);
+                }
+            } else {
+                double[] pars = curveFit.getEquation().getPars(); //pars = getPars(equationName);
+                double[] errs = curveFit.getEquation().getErrs(); //double[] errs = new double[pars.length];
+                double[] extras = new double[1];
+                extras[0] = 1.0;
+                PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
+                //equationCopy.setExtra(extras);
+                //System.out.println("Fit button expData extras size = " + expData.getExtras().size() + " extra[0] = " + extras[0]);
+                equations.add(plotEquation);
+
+            }
+//            double[] pars = curveFit.getEquation().getPars();
+//            double[] errs = curveFit.getEquation().getErrs();
+//            //System.out.println("updateAfterFit got called with curvefit.getEquation().getExtras() length = "+curveFit.getEquation().getExtras().length);
+//            PlotEquation plotEquation = new PlotEquation(fitResult.getEquationName(), pars, errs, curveFit.getEquation().getExtras());
+//            equations.add(plotEquation);
         }
         showEquations(equations);
     }
@@ -669,6 +765,8 @@ public class PyController implements Initializable {
             return new ExpFit();
         } else if (getFittingMode().equals("cpmg")) {
             return new CPMGFit();
+        } else if (getFittingMode().equals("cest")) {
+            return new CESTFit();
         }
         return null;
     }
@@ -681,11 +779,14 @@ public class PyController implements Initializable {
     public String[] getParTypes() {
         String[] cpmgTypes = {"R2", "Rex", "Kex", "pA", "dW", "RMS", "AIC", "Equation"};
         String[] expTypes = {"A", "R", "C", "RMS", "AIC", "Equation"};
+        String[] cestTypes = {"kex", "pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B", "RMS", "AIC", "Equation"};
         String[] nullTypes = {"RMS", "AIC", "Equation"};
         if (getFittingMode().equals("exp")) {
             return expTypes;
         } else if (getFittingMode().equals("cpmg")) {
             return cpmgTypes;
+        } else if (getFittingMode().equals("cest")) {
+            return cestTypes;
         }
         return nullTypes;
     }
@@ -745,8 +846,10 @@ public class PyController implements Initializable {
         plotData.setData(allData);
         if (resProps.getExpMode().equals("cpmg")) {
             plotData.setNames("CPMG", "\u03BD(cpmg)", "R2(\u03BD)");
-        } else {
+        } else if (resProps.getExpMode().equals("exp")) {
             plotData.setNames("", "Time (s)", "Intensity");
+        } else if (resProps.getExpMode().equals("cest")) {
+            plotData.setNames("", "Offset (Hz)", "I(t)/I(0)");
         }
 
         plotData.setEquations(equations);

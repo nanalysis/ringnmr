@@ -26,8 +26,10 @@ import javafx.scene.Group;
 import javafx.scene.control.Label;
 
 import javafx.scene.paint.Color;
+import org.comdnmr.cpmgfit2.calc.ExperimentData;
 import org.comdnmr.cpmgfit2.calc.PlotEquation;
 import org.comdnmr.cpmgfit2.calc.ResidueData;
+import static org.comdnmr.cpmgfit2.gui.ChartUtil.residueProperties;
 
 public class PlotData extends ScatterChart {
 
@@ -69,6 +71,8 @@ public class PlotData extends ScatterChart {
         yAxis.setAnimated(false);
         setAnimated(false);
         setNodeListeners(this);
+        setHorizontalZeroLineVisible(false);
+        setVerticalZeroLineVisible(false);
     }
 
     public void setNames(String title, String xName, String yName) {
@@ -102,14 +106,15 @@ public class PlotData extends ScatterChart {
             getPlotChildren().removeAll(polyLines);
             polyLines.clear();
             int nLines = plotEquations.size();
+            //System.out.println("layoutPlotChildren No. Eqns = " + nLines);
             for (int i = 0; i < nLines; i++) {
                 Polyline polyLine = new Polyline();
                 polyLine.setStroke(colors[Math.min(colors.length - 1, i)]);
                 polyLines.add(polyLine);
                 getPlotChildren().add(0, polyLine);
             }
-
         }
+        
         super.layoutPlotChildren();
         paintLines(polyLines, ((NumberAxis) getXAxis()), ((NumberAxis) getYAxis()));
         setNodeListeners(this);
@@ -174,6 +179,7 @@ public class PlotData extends ScatterChart {
         }
         double fieldRef = 1.0;
         for (PlotEquation plotEquation : plotEquations) {
+            //System.out.println("paintLines No. Eqns = " + plotEquations.size());
             if (plotEquation == null) {
                 continue;
             }
@@ -188,11 +194,16 @@ public class PlotData extends ScatterChart {
                 fieldRef = plotEquation.getExtra(0);
             }
 //            plotEquation.equation.setFieldRef(fieldRef);
-            double[] ax = new double[1];
+            double[] extras = plotEquation.getExtras();
+            double[] ax = new double[extras.length];
+//System.out.println("extras " + extras.length);
             for (int i = 1; i < nIncr - 1; i++) {
                 double xValue = min + i * delta;
                 double x = xAxis.getDisplayPosition(xValue);
                 ax[0] = xValue;
+                for (int j = 1; j < extras.length; j++) {
+                    ax[j] = extras[j];
+                }
                 double yValue = plotEquation.calculate(ax, plotEquation.getExtra(0) / fieldRef);
                 double y = yAxis.getDisplayPosition(yValue);
                 points.add(x);
@@ -294,13 +305,23 @@ public class PlotData extends ScatterChart {
     @Override
     protected void seriesAdded(XYChart.Series series, int seriesIndex) {
         super.seriesAdded(series, seriesIndex);
+        ExperimentData expData = residueProperties.get("cest").getExperimentData("cest"); // fixme
         for (int j = 0; j < series.getData().size(); j++) {
             XYChart.Data item = (XYChart.Data) series.getData().get(j);
+            ResidueData.DataValue dataValue = (ResidueData.DataValue) item.getExtraValue();
+            double x1 = dataValue.getX1();
             Node node = createNode(item, seriesIndex);
+            double x1val = Math.round(100.0*x1/(2*Math.PI))/100.0;
+            if (expData != null && expData.getExtras().contains(x1val)) {
+                node = createNode(item, expData.getExtras().indexOf(x1val));
+            }
             item.setNode(node);
             super.dataItemAdded(series, j, item);
         }
         updateLegend();
+//        if (expData != null) {
+//                cestLegend(expData.getExtras());
+//            }
     }
 
     protected void updateLegend() {
@@ -315,6 +336,19 @@ public class PlotData extends ScatterChart {
             it++;
         }
     }
+    
+//    protected void cestLegend(List<Double> b1fields) {
+//        super.updateLegend();
+//        Set<Node> items = b1fields;
+//        int it = 0;
+//        for (Node item : items) {
+//            Label label = (Label) item;
+//            Circle circle = new Circle(4.0);
+//            circle.setFill(colors[Math.min(colors.length - 1, it)]);
+//            label.setGraphic(circle);
+//            it++;
+//        }
+//    }
 
     public void dumpLine(int iSeries) {
         ObservableList<XYChart.Series<Double, Double>> data = getData();
