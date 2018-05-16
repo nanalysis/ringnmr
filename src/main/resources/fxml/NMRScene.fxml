@@ -55,7 +55,7 @@
     <center>
         <SplitPane orientation="vertical">
             <items>
-                <SplitPane orientation="horizontal">
+                <SplitPane orientation="horizontal" prefHeight="800">
                     <items>
                         <PlotData fx:id="cpmgchart" HBox.hgrow="ALWAYS" />
                         <VBox HBox.hgrow="ALWAYS"  VBox.vgrow="ALWAYS" >

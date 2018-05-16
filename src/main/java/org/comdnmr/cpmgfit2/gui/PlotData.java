@@ -29,6 +29,7 @@ import javafx.scene.paint.Color;
 import org.comdnmr.cpmgfit2.calc.ExperimentData;
 import org.comdnmr.cpmgfit2.calc.PlotEquation;
 import org.comdnmr.cpmgfit2.calc.ResidueData;
+import org.comdnmr.cpmgfit2.calc.ResidueProperties;
 import static org.comdnmr.cpmgfit2.gui.ChartUtil.residueProperties;
 
 public class PlotData extends ScatterChart {
@@ -305,7 +306,11 @@ public class PlotData extends ScatterChart {
     @Override
     protected void seriesAdded(XYChart.Series series, int seriesIndex) {
         super.seriesAdded(series, seriesIndex);
-        ExperimentData expData = residueProperties.get("cest").getExperimentData("cest"); // fixme
+        ResidueProperties residueProps = residueProperties.get("cest");
+        ExperimentData expData = null;
+        if (residueProps != null) {
+            expData = residueProps.getExperimentData("cest"); // fixme
+        }
         for (int j = 0; j < series.getData().size(); j++) {
             XYChart.Data item = (XYChart.Data) series.getData().get(j);
             ResidueData.DataValue dataValue = (ResidueData.DataValue) item.getExtraValue();

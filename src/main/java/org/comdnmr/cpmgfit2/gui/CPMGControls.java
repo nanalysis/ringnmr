@@ -61,7 +61,6 @@ public class CPMGControls implements EquationControls {
             slider.setShowTickLabels(true);
             slider.setShowTickMarks(true);
             slider.setMajorTickUnit(major);
-            slider.setPrefWidth(200);
             label = new Label(name);
             label.setPrefWidth(50.0);
             valueText = new Label();
@@ -76,6 +75,7 @@ public class CPMGControls implements EquationControls {
         @Override
         public void addTo(HBox hBox) {
             hBox.getChildren().addAll(label, slider, valueText);
+            HBox.setHgrow(slider, Priority.ALWAYS);
         }
 
         @Override

@@ -67,11 +67,10 @@ public class CESTControls implements EquationControls {
             slider.setShowTickLabels(true);
             slider.setShowTickMarks(true);
             slider.setMajorTickUnit(major);
-            slider.setPrefWidth(200);
             label = new Label(name);
-            label.setPrefWidth(50.0);
+            label.setPrefWidth(60.0);
             valueText = new Label();
-            valueText.setPrefWidth(50);
+            valueText.setPrefWidth(60);
         }
 
         @Override
@@ -82,6 +81,7 @@ public class CESTControls implements EquationControls {
         @Override
         public void addTo(HBox hBox) {
             hBox.getChildren().addAll(label, slider, valueText);
+            HBox.setHgrow(slider, Priority.ALWAYS);
         }
 
         @Override
@@ -128,6 +128,7 @@ public class CESTControls implements EquationControls {
         VBox vBox = new VBox();
         HBox hBox1 = new HBox();
         HBox.setHgrow(hBox1, Priority.ALWAYS);
+        vBox.setFillWidth(true);
         hBox1.getChildren().addAll(equationSelector, stateSelector);
         vBox.getChildren().add(hBox1);
 

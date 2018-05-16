@@ -264,7 +264,7 @@ public class ChartUtil {
                 CurveFit curveSet = resInfo.getCurveSet(useEquationName, state); // fixme
                 if (curveSet != null) {
                     PlotEquation equation = curveSet.getEquation();
-                    if (expData.getExtras().size() > 0) {
+                    if (expData != null && expData.getExtras().size() > 0) {
                       double[] extras = new double[2];
                       for (int j = 0; j < expData.getExtras().size(); j++) {
                         extras[0] = field;

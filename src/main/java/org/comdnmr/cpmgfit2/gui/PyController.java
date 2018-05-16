@@ -543,8 +543,12 @@ public class PyController implements Initializable {
             //System.out.println("Fit button residueProperties = " + residueProperties);
             ResidueProperties residueProps = residueProperties.get("cest"); // fixme
             //System.out.println("Fit button expData = " + residueProps.getExperimentData("cest"));
-            ExperimentData expData = residueProps.getExperimentData("cest"); // fixme
-            if (expData.getExtras().size() > 0) {
+            ExperimentData expData = null;
+            if (residueProps != null){
+                expData = residueProps.getExperimentData("cest"); // fixme
+            }
+            
+            if (expData != null && expData.getExtras().size() > 0) {
                 double[] pars = curveFit.getEquation().getPars(); //pars = getPars(equationName);
                 double[] errs = curveFit.getEquation().getErrs(); //double[] errs = new double[pars.length];
                 double[] extras = new double[2];
