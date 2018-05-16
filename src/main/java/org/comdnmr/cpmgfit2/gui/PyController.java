@@ -142,7 +142,6 @@ public class PyController implements Initializable {
 //        propertySheet.setSearchBoxVisible(false);
         makeAxisMenu();
 //        simControls = new CPMGControls();
-        equationChoice.setUserData("disabled");
         if (getFittingMode().equals("cpmg")) {
             simControls = new CPMGControls();
             equationChoice.getItems().clear();
@@ -179,13 +178,11 @@ public class PyController implements Initializable {
         // re-assigns standard output stream and error output stream
         System.setOut(printStream);
         System.setErr(printStream);
-        equationChoice.setUserData(null);
 
     }
 
     public void setControls() {
         boolean update = false;
-        equationChoice.setUserData("disabled");
         if (getFittingMode().equals("cpmg") && !(simControls instanceof CPMGControls)) {
             simControls = new CPMGControls();
             update = true;
@@ -213,7 +210,6 @@ public class PyController implements Initializable {
             VBox vBox = simControls.makeControls(mainController);
             simPane.centerProperty().set(vBox);
         }
-        equationChoice.setUserData(null);
 
     }
 
