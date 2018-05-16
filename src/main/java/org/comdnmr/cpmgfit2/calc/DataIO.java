@@ -29,7 +29,7 @@ public class DataIO {
     public static void loadPeakFile(String fileName, ResidueProperties resProp, String nucleus,
             double temperature, double field, double tauCPMG, double[] vcpmgs, boolean rateMode,
             HashMap<String, Object> errorPars, double[] delayCalc) throws IOException, IllegalArgumentException {
-        System.out.println("laod peak file");
+        System.out.println("load peak file");
         Path path = Paths.get(fileName);
         String fileTail = path.getFileName().toString();
         fileTail = fileTail.substring(0, fileTail.indexOf('.'));
