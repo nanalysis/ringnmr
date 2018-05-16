@@ -12,7 +12,7 @@ import org.apache.commons.math3.optim.PointValuePair;
  */
 public class CPMGFit implements EquationFitter {
 
-    FitModel calcR = new CalcExpDecay();
+    FitModel calcR = new CalcRDisp();
     static List<String> equationNameList = Arrays.asList(CPMGEquation.getEquationNames());
     List<Double> xValues = new ArrayList<>();
     List<Double> yValues = new ArrayList<>();
@@ -136,7 +136,7 @@ public class CPMGFit implements EquationFitter {
         double[] guesses = calcR.guess();
         String[] parNames = calcR.getParNames();
        List<ParValueInterface> parValues = new ArrayList<>();
-        for (int i=0;i<guesses.length;i++) {
+        for (int i=0;i<parNames.length;i++) {
             ParValueInterface parValue = new ParValue(parNames[i], guesses[i]);
             parValues.add(parValue);
         }
