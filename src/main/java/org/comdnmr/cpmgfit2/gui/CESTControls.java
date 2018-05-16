@@ -157,6 +157,10 @@ public class CESTControls implements EquationControls {
     void equationAction() {
         updatingTable = true;
         String equationName = equationSelector.getValue().toString();
+        if (equationName == ""){
+            equationName = equationSelector.getItems().get(0);
+        }
+        //System.out.println("eqnAction eqnName = " + equationName);
         ResidueInfo resInfo = controller.currentResInfo;
         if (resInfo != null) {
             updatingTable = true;

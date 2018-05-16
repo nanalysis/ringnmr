@@ -98,6 +98,7 @@ public class ExpControls implements EquationControls {
         this.controller = controller;
         equationSelector = new ChoiceBox<>();
         equationSelector.getItems().addAll(ExpFit.getEquationNames());
+        equationSelector.setValue(ExpFit.getEquationNames().get(0));
         VBox vBox = new VBox();
         HBox hBox1 = new HBox();
         HBox.setHgrow(hBox1, Priority.ALWAYS);
@@ -124,6 +125,9 @@ public class ExpControls implements EquationControls {
 
     void equationAction() {
         String equationName = equationSelector.getValue();
+        if (equationName == ""){
+            equationName = equationSelector.getItems().get(0);
+        }
         switch (equationName) {
             case "EXPAB":
                 A.disabled(false);

@@ -150,6 +150,9 @@ public class CPMGControls implements EquationControls {
     void equationAction() {
         updatingTable = true;
         String equationName = equationSelector.getValue().toString();
+        if (equationName == ""){
+            equationName = equationSelector.getItems().get(0);
+        }
         ResidueInfo resInfo = controller.currentResInfo;
         if (resInfo != null) {
             updatingTable = true;

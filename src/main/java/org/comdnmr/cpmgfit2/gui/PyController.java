@@ -142,6 +142,7 @@ public class PyController implements Initializable {
 //        propertySheet.setSearchBoxVisible(false);
         makeAxisMenu();
 //        simControls = new CPMGControls();
+        equationChoice.setUserData("disabled");
         if (getFittingMode().equals("cpmg")) {
             simControls = new CPMGControls();
             equationChoice.getItems().clear();
@@ -178,35 +179,41 @@ public class PyController implements Initializable {
         // re-assigns standard output stream and error output stream
         System.setOut(printStream);
         System.setErr(printStream);
+        equationChoice.setUserData(null);
 
     }
 
     public void setControls() {
         boolean update = false;
+        equationChoice.setUserData("disabled");
         if (getFittingMode().equals("cpmg") && !(simControls instanceof CPMGControls)) {
             simControls = new CPMGControls();
             update = true;
             equationChoice.getItems().clear();
             equationChoice.getItems().add("+");
             equationChoice.getItems().addAll(CPMGFit.getEquationNames());
+            equationChoice.setValue(CPMGFit.getEquationNames().get(0));
 
         } else if (getFittingMode().equals("exp") && !(simControls instanceof ExpControls)) {
             simControls = new ExpControls();
             equationChoice.getItems().clear();
             equationChoice.getItems().add("+");
             equationChoice.getItems().addAll(ExpFit.getEquationNames());
+            equationChoice.setValue(ExpFit.getEquationNames().get(0));
             update = true;
         } else if (getFittingMode().equals("cest") && !(simControls instanceof CESTControls)) {
             simControls = new CESTControls();
             equationChoice.getItems().clear();
             equationChoice.getItems().add("+");
             equationChoice.getItems().addAll(CESTFit.getEquationNames());
+            equationChoice.setValue(CESTFit.getEquationNames().get(0));
             update = true;
         }
         if (update) {
             VBox vBox = simControls.makeControls(mainController);
             simPane.centerProperty().set(vBox);
         }
+        equationChoice.setUserData(null);
 
     }
 
@@ -544,10 +551,10 @@ public class PyController implements Initializable {
             ResidueProperties residueProps = residueProperties.get("cest"); // fixme
             //System.out.println("Fit button expData = " + residueProps.getExperimentData("cest"));
             ExperimentData expData = null;
-            if (residueProps != null){
+            if (residueProps != null) {
                 expData = residueProps.getExperimentData("cest"); // fixme
             }
-            
+
             if (expData != null && expData.getExtras().size() > 0) {
                 double[] pars = curveFit.getEquation().getPars(); //pars = getPars(equationName);
                 double[] errs = curveFit.getEquation().getErrs(); //double[] errs = new double[pars.length];

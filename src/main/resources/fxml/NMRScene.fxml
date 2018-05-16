@@ -49,7 +49,7 @@
     </top>
 
     <bottom>
-        <TextArea fx:id="textArea" editable="false"/>
+        <TextArea fx:id="textArea" editable="false" prefHeight="300"/>
     </bottom>
 
     <center>
