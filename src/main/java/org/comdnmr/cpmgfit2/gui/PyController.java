@@ -58,6 +58,7 @@ import org.comdnmr.cpmgfit2.calc.ResidueProperties;
 import org.controlsfx.control.StatusBar;
 import org.comdnmr.cpmgfit2.calc.CESTFit;
 import java.io.PrintStream;
+import javafx.scene.control.Alert;
 import javafx.scene.control.TextArea;
 import org.comdnmr.cpmgfit2.calc.ParValue;
 import static org.comdnmr.cpmgfit2.gui.ChartUtil.residueProperties;
@@ -129,7 +130,15 @@ public class PyController implements Initializable {
 
     @FXML
     public void displayEquation(ActionEvent event) {
-        simControls.simSliderAction("");
+        try {
+            simControls.simSliderAction("");
+        } catch (NullPointerException npE) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText("Error: Residue must be selected");
+            alert.showAndWait();
+            return;
+        }
+        
     }
 
     @Override
@@ -219,6 +228,10 @@ public class PyController implements Initializable {
         Stage stage = MainApp.primaryStage;
         File file = fileChooser.showOpenDialog(stage);
         if (file != null) {
+            if (activeChart != null) {
+                clearChart();
+                currentResidues = null;
+            }
             ChartUtil.loadParameters(file.toString());
         }
     }
@@ -311,36 +324,38 @@ public class PyController implements Initializable {
 
     public void updateTableWithPars(String mapName, String[] residues, String equationName, String state, List<int[]> allStates, boolean savePars) {
         List<ParValueInterface> allParValues = new ArrayList<>();
-        for (String resNum : residues) {
-            ResidueInfo resInfo = ChartUtil.getResInfo(mapName, String.valueOf(resNum));
-            if (resInfo != null) {
-                currentResInfo = resInfo;
-                final String useEquationName;
-                if (equationName.equals("best")) {
-                    useEquationName = resInfo.getBestEquationName();
-                } else {
-                    useEquationName = equationName;
-                }
-                List<ParValueInterface> parValues = resInfo.getParValues(useEquationName, state);
-                if (resNum.equals(residues[0])) {
-                    simControls.updateStates(allStates);
-                    simControls.updateSliders(parValues, useEquationName);
-                }
+        if (residues != null) {
+            for (String resNum : residues) {
+                ResidueInfo resInfo = ChartUtil.getResInfo(mapName, String.valueOf(resNum));
+                if (resInfo != null) {
+                    currentResInfo = resInfo;
+                    final String useEquationName;
+                    if (equationName.equals("best")) {
+                        useEquationName = resInfo.getBestEquationName();
+                    } else {
+                        useEquationName = equationName;
+                    }
+                    List<ParValueInterface> parValues = resInfo.getParValues(useEquationName, state);
+                    if (resNum.equals(residues[0])) {
+                        simControls.updateStates(allStates);
+                        simControls.updateSliders(parValues, useEquationName);
+                    }
 
-                allParValues.addAll(parValues);
+                    allParValues.addAll(parValues);
+                }
             }
-        }
-        if (savePars) {
-            currentMapName = mapName;
-            currentResidues = new String[residues.length];
-            System.arraycopy(residues, 0, currentResidues, 0, residues.length);
-            currentState = state;
-            currentEquationName = equationName;
-            currentStates.clear();
-            currentStates.addAll(allStates);
-        }
+            if (savePars) {
+                currentMapName = mapName;
+                currentResidues = new String[residues.length];
+                System.arraycopy(residues, 0, currentResidues, 0, residues.length);
+                currentState = state;
+                currentEquationName = equationName;
+                currentStates.clear();
+                currentStates.addAll(allStates);
+            }
 
-        updateTableWithPars(allParValues);
+            updateTableWithPars(allParValues);
+        }
     }
 
     public void updateEquation(String mapName, String[] residues, String equationName) {
@@ -508,30 +523,44 @@ public class PyController implements Initializable {
 
     @FXML
     public void guesses(ActionEvent event) {
-        EquationFitter equationFitter = getFitter();
-        String[] resNums = {String.valueOf(currentResInfo.getResNum())};
-        equationFitter.setData(currentResProps, resNums);
-        String equationName = simControls.getEquation();
+        try {
+            EquationFitter equationFitter = getFitter();
+            String[] resNums = {String.valueOf(currentResInfo.getResNum())};
+            equationFitter.setData(currentResProps, resNums);
+            String equationName = simControls.getEquation();
 //        System.out.println("guesses eqnFitter = " + equationFitter);
 //        System.out.println("guesses resNums = " + resNums);
 //        System.out.println("guesses eqnName = " + equationName);
-        List<ParValueInterface> guesses = equationFitter.setupFit(equationName, absValueModeCheckBox.isSelected());
-        simControls.updateSliders(guesses, equationName);
-        simControls.simSliderAction("");
+            List<ParValueInterface> guesses = equationFitter.setupFit(equationName, absValueModeCheckBox.isSelected());
+            simControls.updateSliders(guesses, equationName);
+            simControls.simSliderAction("");
+        } catch (NullPointerException npE1) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText("Error: Residue must be selected");
+            alert.showAndWait();
+            return;
+        }
     }
 
     @FXML
     public void fitEquation(ActionEvent event) {
 //        EquationFitter equationFitter = new CPMGFit();
-        EquationFitter equationFitter = getFitter();
-        String[] resNums = {String.valueOf(currentResInfo.getResNum())};
-        equationFitter.setData(currentResProps, resNums);
-        String equationName = simControls.getEquation();
+        try {
+            EquationFitter equationFitter = getFitter();
+            String[] resNums = {String.valueOf(currentResInfo.getResNum())};
+            equationFitter.setData(currentResProps, resNums);
+            String equationName = simControls.getEquation();
 //        System.out.println("fitEqn eqnFitter = " + equationFitter);
 //        System.out.println("fitEqn resNums = " + resNums);
 //        System.out.println("fitEqn eqnName = " + equationName);
-        CPMGFitResult fitResult = equationFitter.doFit(equationName, absValueModeCheckBox.isSelected(), nonParBootStrapCheckBox.isSelected());
-        updateAfterFit(fitResult);
+            CPMGFitResult fitResult = equationFitter.doFit(equationName, absValueModeCheckBox.isSelected(), nonParBootStrapCheckBox.isSelected());
+            updateAfterFit(fitResult);
+        } catch (NullPointerException npE2) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText("Error: Residue must be selected");
+            alert.showAndWait();
+            return;
+        }
     }
 
     public void updateAfterFit(CPMGFitResult fitResult) {
@@ -835,6 +864,9 @@ public class PyController implements Initializable {
         List<ResidueData> resDatas = new ArrayList<>();
         List<int[]> allStates = new ArrayList<>();
         for (ExperimentData expData : resProps.getExperimentData()) {
+            if (residues == null) {
+                break;
+            }
             for (String residue : residues) {
                 System.out.println("get resd " + residue + " " + expData.getResidueData(residue));
 
@@ -862,8 +894,11 @@ public class PyController implements Initializable {
         plotData.setEquations(equations);
         plotData.layoutPlotChildren();
         updateTable(resDatas);
-        updateTableWithPars(mapName, residues, equationName, state, allStates);
-        updateEquation(mapName, residues, equationName);
+        if (residues != null) {
+            updateTableWithPars(mapName, residues, equationName, state, allStates);
+            updateEquation(mapName, residues, equationName);
+        }
+
     }
 
 }
