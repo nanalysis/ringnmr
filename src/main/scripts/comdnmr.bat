@@ -1,6 +1,6 @@
 @echo off
 
-rem cpmgfit2.bat [ script  [ arg ... ] ]
+rem comdnmr.bat [ script  [ arg ... ] ]
 rem 
 rem optional environment variables:
 rem
@@ -12,26 +12,26 @@ rem
 
 if "%OS%" == "Windows_NT" setlocal
 
-set cpmgfit2ver=${project.version}
-set cpmgfit2main=org.comdnmr.cpmgfit2.chart.MainApp
+set comdnmrver=${project.version}
+set comdnmrmain=org.comdnmr.comdnmr.chart.MainApp
 
 
 set dir=%~dp0
 
 set javaexe=java
-set cp="%dir%\cpmgfit2-%cpmgfit2ver%.jar;${wclasspath};%CLASSPATH%"
+set cp="%dir%\comdnmr-%comdnmrver%.jar;${wclasspath};%CLASSPATH%"
 
 set testjava=%dir%jre\bin\java
 
 if exist %testjava% (
     set javaexe="%testjava%"
-    set cp="%dir%\lib\cpmgfit2-%cpmgfit2ver%.jar;${wclasspath};%CLASSPATH%"
+    set cp="%dir%\lib\comdnmr-%comdnmrver%.jar;${wclasspath};%CLASSPATH%"
 )
 
 
 if "%1"=="" (
-    %javaexe% -Djava.awt.headless=true -mx2048m -cp %cp% %JAVA_OPTS% %cpmgfit2main%
+    %javaexe% -Djava.awt.headless=true -mx2048m -cp %cp% %JAVA_OPTS% %comdnmrmain%
 ) else (
-    %javaexe% -Djava.awt.headless=true -mx2048m -cp %cp% %JAVA_OPTS% %cpmgfit2main% -c "import cpmgfit2" %*
+    %javaexe% -Djava.awt.headless=true -mx2048m -cp %cp% %JAVA_OPTS% %comdnmrmain% -c "import comdnmr" %*
 )
 

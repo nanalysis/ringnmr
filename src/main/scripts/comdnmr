@@ -10,8 +10,8 @@
 # TCLLIBPATH - space separated list of Tcl libraries directories
 #
 
-cpmgfit2ver=${project.version}
-cpmgfit2main=org.python.util.jython
+comdnmrver=${project.version}
+comdnmrmain=org.python.util.jython
 iscygwin=false
 ismsys=false
 case "`uname`" in
@@ -43,10 +43,10 @@ CLASSPATH=${classpath}
 
 if [ -d "${dir}/../jre.bundle/Contents/Home/jre/bin" ] ; then
     JAVA="${dir}/../jre.bundle/Contents/Home/jre/bin/java"
-    CLASSPATH="$dir/lib/cpmgfit2-$cpmgfit2ver.jar:$CLASSPATH"
+    CLASSPATH="$dir/lib/comdnmr-$comdnmrver.jar:$CLASSPATH"
 elif [ -d "${dir}/jre/bin" ] ; then
     JAVA="${dir}/jre/bin/java"
-    CLASSPATH="$dir/lib/cpmgfit2-$cpmgfit2ver.jar:$CLASSPATH"
+    CLASSPATH="$dir/lib/comdnmr-$comdnmrver.jar:$CLASSPATH"
 else
     if [ -n "$JAVA_HOME" ] ; then
         if [ -x "$JAVA_HOME/jre/sh/java"  ] ; then
@@ -58,22 +58,22 @@ else
     fi
 
     if $ismsys ; then
-        cpmgfit2dir=`$dir/echopath "$dir"`
-        CLASSPATH="$cpmgfit2dir/cpmgfit2-$cpmgfit2ver.jar;$CLASSPATH"
+        comdnmrdir=`$dir/echopath "$dir"`
+        CLASSPATH="$comdnmrdir/comdnmr-$comdnmrver.jar;$CLASSPATH"
     elif $iscygwin ; then
         CLASSPATH=`cygpath -pu "$CLASSPATH"`
-        CLASSPATH="$dir/cpmgfit2-$cpmgfit2ver.jar;$CLASSPATH"
+        CLASSPATH="$dir/comdnmr-$comdnmrver.jar;$CLASSPATH"
         CLASSPATH=`cygpath -pw "$CLASSPATH"`
     else
-        CLASSPATH="$dir/cpmgfit2-$cpmgfit2ver.jar:$CLASSPATH"
+        CLASSPATH="$dir/comdnmr-$comdnmrver.jar:$CLASSPATH"
     fi
 fi
 
 export CLASSPATH
 if [ "$#" -eq 0 ]; then
-    exec "$JAVA" -Djava.awt.headless=true -mx${HEAP_MEM}m -cp "$CLASSPATH" $JAVA_OPTS $cpmgfit2main ${1+"$@"}
+    exec "$JAVA" -Djava.awt.headless=true -mx${HEAP_MEM}m -cp "$CLASSPATH" $JAVA_OPTS $comdnmrmain ${1+"$@"}
 else
-    exec "$JAVA" -Djava.awt.headless=true -mx${HEAP_MEM}m -cp "$CLASSPATH" $JAVA_OPTS $cpmgfit2main -c "import cpmgcalc" ${1+"$@"}
+    exec "$JAVA" -Djava.awt.headless=true -mx${HEAP_MEM}m -cp "$CLASSPATH" $JAVA_OPTS $comdnmrmain -c "import cpmgcalc" ${1+"$@"}
 fi
-#exec "$JAVA" -Djava.awt.headless=true -mx${HEAP_MEM}m -cp "$CLASSPATH" $JAVA_OPTS $cpmgfit2main ${1+"$@"}
+#exec "$JAVA" -Djava.awt.headless=true -mx${HEAP_MEM}m -cp "$CLASSPATH" $JAVA_OPTS $comdnmrmain ${1+"$@"}
 
