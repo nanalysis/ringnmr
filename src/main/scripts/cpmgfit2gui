@@ -16,7 +16,7 @@ else
 fi
 
 cpmgfit2guiver=${project.version}
-cpmgfig2guimain=org.comdnmr.cpmgfit2.gui.MainApp
+cpmgfig2guimain=org.comdnmr.fit.gui.MainApp
 iscygwin=false
 ismsys=false
 case "`uname`" in

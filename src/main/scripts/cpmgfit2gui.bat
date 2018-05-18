@@ -14,7 +14,7 @@ rem
 if "%OS%" == "Windows_NT" setlocal
 
 set nvjver=${project.version}
-set nvjpmain=org.comdnmr.cpmgfit2.gui.MainApp
+set nvjpmain=org.comdnmr.fit.gui.MainApp
 
 
 set dir=%~dp0

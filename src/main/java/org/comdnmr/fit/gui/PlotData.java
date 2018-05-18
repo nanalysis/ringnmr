@@ -1,4 +1,4 @@
-package org.comdnmr.cpmgfit2.gui;
+package org.comdnmr.fit.gui;
 
 import java.io.BufferedReader;
 import javafx.collections.FXCollections;
@@ -26,11 +26,11 @@ import javafx.scene.Group;
 import javafx.scene.control.Label;
 
 import javafx.scene.paint.Color;
-import org.comdnmr.cpmgfit2.calc.ExperimentData;
-import org.comdnmr.cpmgfit2.calc.PlotEquation;
-import org.comdnmr.cpmgfit2.calc.ResidueData;
-import org.comdnmr.cpmgfit2.calc.ResidueProperties;
-import static org.comdnmr.cpmgfit2.gui.ChartUtil.residueProperties;
+import org.comdnmr.fit.calc.ExperimentData;
+import org.comdnmr.fit.calc.PlotEquation;
+import org.comdnmr.fit.calc.ResidueData;
+import org.comdnmr.fit.calc.ResidueProperties;
+import static org.comdnmr.fit.gui.ChartUtil.residueProperties;
 
 public class PlotData extends ScatterChart {
 

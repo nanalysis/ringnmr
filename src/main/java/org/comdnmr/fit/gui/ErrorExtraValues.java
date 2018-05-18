@@ -1,4 +1,4 @@
-package org.comdnmr.cpmgfit2.gui;
+package org.comdnmr.fit.gui;
 
 /**
  * Data extra values for storing value, lowPercentile and highPercentile.

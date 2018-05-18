@@ -1,4 +1,4 @@
-package org.comdnmr.cpmgfit2.gui;
+package org.comdnmr.fit.gui;
 
 import javafx.scene.Group;
 import javafx.scene.control.Tooltip;

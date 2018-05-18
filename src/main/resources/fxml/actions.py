@@ -3,9 +3,9 @@ from java.util import ArrayList
 from javafx.application import Platform
 from javafx.stage import FileChooser
 from javafx.stage.FileChooser import ExtensionFilter
-from org.comdnmr.cpmgfit2.gui import ChartUtil
-from org.comdnmr.cpmgfit2.gui import SecondaryStructure
-from org.comdnmr.cpmgfit2.gui import PyController
+from org.comdnmr.fit.gui import ChartUtil
+from org.comdnmr.fit.gui import SecondaryStructure
+from org.comdnmr.fit.gui import PyController
 
 def drawChart(event):
     node = event.getSource()

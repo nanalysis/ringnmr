@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.comdnmr.cpmgfit2.gui;
+package org.comdnmr.fit.gui;
 
 import java.util.List;
 import javafx.fxml.FXML;
@@ -13,11 +13,11 @@ import javafx.scene.control.Slider;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import org.comdnmr.cpmgfit2.calc.ExpFit;
-import org.comdnmr.cpmgfit2.calc.ParValueInterface;
-import static org.comdnmr.cpmgfit2.gui.ExpControls.PARS.A;
-import static org.comdnmr.cpmgfit2.gui.ExpControls.PARS.C;
-import static org.comdnmr.cpmgfit2.gui.ExpControls.PARS.R;
+import org.comdnmr.fit.calc.ExpFit;
+import org.comdnmr.fit.calc.ParValueInterface;
+import static org.comdnmr.fit.gui.ExpControls.PARS.A;
+import static org.comdnmr.fit.gui.ExpControls.PARS.C;
+import static org.comdnmr.fit.gui.ExpControls.PARS.R;
 
 /**
  *

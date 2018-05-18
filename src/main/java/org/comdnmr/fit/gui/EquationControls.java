@@ -3,11 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.comdnmr.cpmgfit2.gui;
+package org.comdnmr.fit.gui;
 
 import java.util.List;
 import javafx.scene.layout.VBox;
-import org.comdnmr.cpmgfit2.calc.ParValueInterface;
+import org.comdnmr.fit.calc.ParValueInterface;
 
 /**
  *

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.comdnmr.cpmgfit2.gui;
+package org.comdnmr.fit.gui;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,19 +16,19 @@ import javafx.scene.control.Slider;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import org.comdnmr.cpmgfit2.calc.CPMGEquation;
-import org.comdnmr.cpmgfit2.calc.CPMGFit;
-import org.comdnmr.cpmgfit2.calc.ParValueInterface;
-import org.comdnmr.cpmgfit2.calc.PlotEquation;
-import org.comdnmr.cpmgfit2.calc.ResidueInfo;
-import org.comdnmr.cpmgfit2.calc.ResidueProperties;
-import static org.comdnmr.cpmgfit2.gui.CPMGControls.PARS.DW;
-import static org.comdnmr.cpmgfit2.gui.CPMGControls.PARS.FIELD2;
-import static org.comdnmr.cpmgfit2.gui.CPMGControls.PARS.KEX;
-import static org.comdnmr.cpmgfit2.gui.CPMGControls.PARS.PA;
-import static org.comdnmr.cpmgfit2.gui.CPMGControls.PARS.R2;
-import static org.comdnmr.cpmgfit2.gui.CPMGControls.PARS.REX;
-import static org.comdnmr.cpmgfit2.gui.PyController.defaultField;
+import org.comdnmr.fit.calc.CPMGEquation;
+import org.comdnmr.fit.calc.CPMGFit;
+import org.comdnmr.fit.calc.ParValueInterface;
+import org.comdnmr.fit.calc.PlotEquation;
+import org.comdnmr.fit.calc.ResidueInfo;
+import org.comdnmr.fit.calc.ResidueProperties;
+import static org.comdnmr.fit.gui.CPMGControls.PARS.DW;
+import static org.comdnmr.fit.gui.CPMGControls.PARS.FIELD2;
+import static org.comdnmr.fit.gui.CPMGControls.PARS.KEX;
+import static org.comdnmr.fit.gui.CPMGControls.PARS.PA;
+import static org.comdnmr.fit.gui.CPMGControls.PARS.R2;
+import static org.comdnmr.fit.gui.CPMGControls.PARS.REX;
+import static org.comdnmr.fit.gui.PyController.defaultField;
 
 /**
  *

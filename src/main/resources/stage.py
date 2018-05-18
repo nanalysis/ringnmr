@@ -3,7 +3,7 @@ from javafx.stage import Stage
 from javafx.scene import Scene
 from javafx.fxml import FXMLLoader
 from java.net import URL
-from org.comdnmr.cpmgfit2.gui import MainApp
+from org.comdnmr.fit.gui import MainApp
 from java.lang import ClassLoader
 from sys import argv
 

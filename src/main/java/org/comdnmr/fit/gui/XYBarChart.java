@@ -1,4 +1,4 @@
-package org.comdnmr.cpmgfit2.gui;
+package org.comdnmr.fit.gui;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -18,11 +18,11 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Path;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
-import org.comdnmr.cpmgfit2.calc.ExperimentData;
-import org.comdnmr.cpmgfit2.calc.PlotEquation;
-import org.comdnmr.cpmgfit2.calc.ResidueData;
-import org.comdnmr.cpmgfit2.calc.ResidueInfo;
-import org.comdnmr.cpmgfit2.calc.ResidueProperties;
+import org.comdnmr.fit.calc.ExperimentData;
+import org.comdnmr.fit.calc.PlotEquation;
+import org.comdnmr.fit.calc.ResidueData;
+import org.comdnmr.fit.calc.ResidueInfo;
+import org.comdnmr.fit.calc.ResidueProperties;
 
 public class XYBarChart extends XYChart<Number, Number> {
 

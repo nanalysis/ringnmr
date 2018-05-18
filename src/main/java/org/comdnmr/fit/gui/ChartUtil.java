@@ -1,4 +1,4 @@
-package org.comdnmr.cpmgfit2.gui;
+package org.comdnmr.fit.gui;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -26,14 +26,13 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.chart.XYChart.Series;
 import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Transform;
-import org.comdnmr.cpmgfit2.calc.CurveFit;
-import org.comdnmr.cpmgfit2.calc.DataIO;
-import org.comdnmr.cpmgfit2.calc.ExperimentData;
-import org.comdnmr.cpmgfit2.calc.PlotEquation;
-import org.comdnmr.cpmgfit2.calc.ResidueInfo;
-import org.comdnmr.cpmgfit2.calc.ResidueProperties;
-
-import org.comdnmr.cpmgfit2.calc.ResidueData;
+import org.comdnmr.fit.calc.CurveFit;
+import org.comdnmr.fit.calc.DataIO;
+import org.comdnmr.fit.calc.ExperimentData;
+import org.comdnmr.fit.calc.PlotEquation;
+import org.comdnmr.fit.calc.ResidueInfo;
+import org.comdnmr.fit.calc.ResidueProperties;
+import org.comdnmr.fit.calc.ResidueData;
 
 public class ChartUtil {
 

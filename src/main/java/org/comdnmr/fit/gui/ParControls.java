@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.comdnmr.cpmgfit2.gui;
+package org.comdnmr.fit.gui;
 
 import javafx.scene.control.Slider;
 import javafx.scene.layout.HBox;

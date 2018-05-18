@@ -1,4 +1,4 @@
-package org.comdnmr.cpmgfit2.gui;
+package org.comdnmr.fit.gui;
 
 import javafx.scene.chart.NumberAxis;
 import java.util.ArrayList;
@@ -9,7 +9,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.chart.ScatterChart;
 import javafx.scene.shape.Polyline;
 
-public class SSBarChart extends ScatterChart {
+public class SSLineChart extends ScatterChart {
 
     Canvas canvas = null;
     SSPainter painter;
@@ -18,7 +18,7 @@ public class SSBarChart extends ScatterChart {
     NumberAxis xAxis;
     NumberAxis yAxis;
 
-    public SSBarChart() {
+    public SSLineChart() {
         super(new NumberAxis(), new NumberAxis());
         xAxis = (NumberAxis) getXAxis();
         yAxis = (NumberAxis) getYAxis();
@@ -44,10 +44,9 @@ public class SSBarChart extends ScatterChart {
             getPlotChildren().add(1, group);
         }
         layoutPlotChildren();
-
     }
 
-    public SSBarChart(NumberAxis xAxis, NumberAxis yAxis) {
+    public SSLineChart(NumberAxis xAxis, NumberAxis yAxis) {
         super(xAxis, yAxis);
     }
 

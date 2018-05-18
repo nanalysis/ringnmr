@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.comdnmr.cpmgfit2.gui;
+package org.comdnmr.fit.gui;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,23 +16,23 @@ import javafx.scene.control.Slider;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import org.comdnmr.cpmgfit2.calc.CESTEquation;
-import org.comdnmr.cpmgfit2.calc.CESTFit;
-import org.comdnmr.cpmgfit2.calc.ExperimentData;
-import org.comdnmr.cpmgfit2.calc.ParValueInterface;
-import org.comdnmr.cpmgfit2.calc.PlotEquation;
-import org.comdnmr.cpmgfit2.calc.ResidueInfo;
-import org.comdnmr.cpmgfit2.calc.ResidueProperties;
-import static org.comdnmr.cpmgfit2.gui.CESTControls.PARS.KEX;
-import static org.comdnmr.cpmgfit2.gui.CESTControls.PARS.PB;
-import static org.comdnmr.cpmgfit2.gui.CESTControls.PARS.DELTAA0;
-import static org.comdnmr.cpmgfit2.gui.CESTControls.PARS.DELTAB0;
-import static org.comdnmr.cpmgfit2.gui.CESTControls.PARS.R1A;
-import static org.comdnmr.cpmgfit2.gui.CESTControls.PARS.R1B;
-import static org.comdnmr.cpmgfit2.gui.CESTControls.PARS.R2A;
-import static org.comdnmr.cpmgfit2.gui.CESTControls.PARS.R2B;
-import static org.comdnmr.cpmgfit2.gui.ChartUtil.residueProperties;
-import static org.comdnmr.cpmgfit2.gui.PyController.defaultField;
+import org.comdnmr.fit.calc.CESTEquation;
+import org.comdnmr.fit.calc.CESTFit;
+import org.comdnmr.fit.calc.ExperimentData;
+import org.comdnmr.fit.calc.ParValueInterface;
+import org.comdnmr.fit.calc.PlotEquation;
+import org.comdnmr.fit.calc.ResidueInfo;
+import org.comdnmr.fit.calc.ResidueProperties;
+import static org.comdnmr.fit.gui.CESTControls.PARS.KEX;
+import static org.comdnmr.fit.gui.CESTControls.PARS.PB;
+import static org.comdnmr.fit.gui.CESTControls.PARS.DELTAA0;
+import static org.comdnmr.fit.gui.CESTControls.PARS.DELTAB0;
+import static org.comdnmr.fit.gui.CESTControls.PARS.R1A;
+import static org.comdnmr.fit.gui.CESTControls.PARS.R1B;
+import static org.comdnmr.fit.gui.CESTControls.PARS.R2A;
+import static org.comdnmr.fit.gui.CESTControls.PARS.R2B;
+import static org.comdnmr.fit.gui.ChartUtil.residueProperties;
+import static org.comdnmr.fit.gui.PyController.defaultField;
 
 /**
  *

@@ -1,4 +1,4 @@
-package org.comdnmr.cpmgfit2.gui;
+package org.comdnmr.fit.gui;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,29 +39,29 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javax.imageio.ImageIO;
 import javax.script.ScriptException;
-import org.comdnmr.cpmgfit2.calc.CPMGFit;
-import org.comdnmr.cpmgfit2.calc.CPMGFitResult;
-import org.comdnmr.cpmgfit2.calc.CurveFit;
-import org.comdnmr.cpmgfit2.calc.DataIO;
-import org.comdnmr.cpmgfit2.calc.EquationFitter;
-import org.comdnmr.cpmgfit2.calc.EquationType;
-import org.comdnmr.cpmgfit2.calc.ExpFit;
-import org.comdnmr.cpmgfit2.calc.ExperimentData;
-import org.comdnmr.cpmgfit2.calc.ResidueData;
+import org.comdnmr.fit.calc.CPMGFit;
+import org.comdnmr.fit.calc.CPMGFitResult;
+import org.comdnmr.fit.calc.CurveFit;
+import org.comdnmr.fit.calc.DataIO;
+import org.comdnmr.fit.calc.EquationFitter;
+import org.comdnmr.fit.calc.EquationType;
+import org.comdnmr.fit.calc.ExpFit;
+import org.comdnmr.fit.calc.ExperimentData;
+import org.comdnmr.fit.calc.ResidueData;
 import org.controlsfx.control.PropertySheet;
-import org.comdnmr.cpmgfit2.calc.ParValueInterface;
-import org.comdnmr.cpmgfit2.calc.PlotEquation;
-import org.comdnmr.cpmgfit2.calc.ProcessingStatus;
-import org.comdnmr.cpmgfit2.calc.ResidueFitter;
-import org.comdnmr.cpmgfit2.calc.ResidueInfo;
-import org.comdnmr.cpmgfit2.calc.ResidueProperties;
+import org.comdnmr.fit.calc.ParValueInterface;
+import org.comdnmr.fit.calc.PlotEquation;
+import org.comdnmr.fit.calc.ProcessingStatus;
+import org.comdnmr.fit.calc.ResidueFitter;
+import org.comdnmr.fit.calc.ResidueInfo;
+import org.comdnmr.fit.calc.ResidueProperties;
 import org.controlsfx.control.StatusBar;
-import org.comdnmr.cpmgfit2.calc.CESTFit;
+import org.comdnmr.fit.calc.CESTFit;
 import java.io.PrintStream;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextArea;
-import org.comdnmr.cpmgfit2.calc.ParValue;
-import static org.comdnmr.cpmgfit2.gui.ChartUtil.residueProperties;
+import org.comdnmr.fit.calc.ParValue;
+import static org.comdnmr.fit.gui.ChartUtil.residueProperties;
 
 public class PyController implements Initializable {
 
