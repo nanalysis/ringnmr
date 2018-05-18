@@ -1,6 +1,6 @@
-import org.comdnmr.cpmgfit2.calc.CalcRDisp as CalcRDisp
-import org.comdnmr.cpmgfit2.calc.DataIO as DataIO
-import org.comdnmr.cpmgfit2.calc.ResidueFitter as ResidueFitter
+import org.comdnmr.fit.calc.CalcRDisp as CalcRDisp
+import org.comdnmr.fit.calc.DataIO as DataIO
+import org.comdnmr.fit.calc.ResidueFitter as ResidueFitter
 import math
 import sys
 import os.path

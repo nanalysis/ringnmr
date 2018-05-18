@@ -10,7 +10,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <mainClass>org.comdnmr.cpmgfit2.chart.MainApp</mainClass>
+        <mainClass>org.comdnmr.fit.chart.MainApp</mainClass>
     </properties>
 
     <dependencies>
