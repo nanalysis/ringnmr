@@ -19,7 +19,7 @@ set nvjpmain=org.comdnmr.fit.gui.MainApp
 
 set dir=%~dp0
 
-set cp="%dir%\cpmgfit2gui-%nvjver%.jar;${wclasspath};%CLASSPATH%"
+set cp="%dir%\comdnmrgui-%nvjver%.jar;${wclasspath};%CLASSPATH%"
 
 if "%TCLLIBPATH%" == "" goto nullTcllib
 set tcllibpath=-DTCLLIBPATH="%TCLLIBPATH%"

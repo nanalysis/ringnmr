@@ -18,8 +18,8 @@ do
 
     mkdir -p $dir
     cd $dir
-    cp -r -p ../../target/cpmgfit2gui-*-bin/cpmgfit2* .
-    sdir=`ls -d cpmgfit2gui-*`
+    cp -r -p ../../target/comdnmrgui-*-bin/comdnmrgui* .
+    sdir=`ls -d comdnmrgui-*`
     cd $sdir
 
     mkdir jre

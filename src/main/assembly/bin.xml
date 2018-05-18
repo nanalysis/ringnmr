@@ -40,11 +40,11 @@
     </fileSets>
     <files>
         <file>
-            <source>src/main/scripts/cpmgfit2gui.bat</source>
+            <source>src/main/scripts/comdnmrgui.bat</source>
             <filtered>true</filtered>
         </file>
         <file>
-            <source>src/main/scripts/cpmgfit2gui</source>
+            <source>src/main/scripts/comdnmrgui</source>
             <filtered>true</filtered>
             <fileMode>0744</fileMode>
         </file>
