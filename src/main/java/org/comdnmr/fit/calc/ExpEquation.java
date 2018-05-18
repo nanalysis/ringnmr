@@ -37,7 +37,7 @@ public enum ExpEquation implements EquationType {
                 System.out.println(minY + " " + maxY + " " + mean + " " + vMid);
                 System.out.println(id + " " + map[id].length + " " + map[id][0] + " " + map[id][1]);
                 guesses[map[id][0]] = maxY;
-                guesses[map[id][1]] = 1.0 / vMid;
+                guesses[map[id][1]] = -Math.log(0.5) / vMid;
 
             }
             return guesses;
