@@ -100,6 +100,9 @@ public class PyController implements Initializable {
 
     @FXML
     TextArea textArea;
+    
+    @FXML
+    ChoiceBox<String> simChoice;
 
     EquationControls simControls;
 
@@ -187,7 +190,12 @@ public class PyController implements Initializable {
         // re-assigns standard output stream and error output stream
         System.setOut(printStream);
         System.setErr(printStream);
-
+        
+        simChoice.getItems().add("Simulate CPMG");
+        simChoice.getItems().add("Simulate EXP");
+        simChoice.getItems().add("Simulate CEST");
+        simChoice.setValue("Simulate CPMG");
+        
     }
 
     public void setControls() {
@@ -233,6 +241,16 @@ public class PyController implements Initializable {
                 currentResidues = null;
             }
             ChartUtil.loadParameters(file.toString());
+        }
+    }
+    
+    public void updateXYChartLabels(PlotData plotData) {
+        if (getFittingMode().equals("cpmg")) {
+            plotData.setNames("CPMG", "\u03BD(cpmg)", "R2(\u03BD)");
+        } else if (getFittingMode().equals("exp")) {
+            plotData.setNames("", "Time (s)", "Intensity");
+        } else if (getFittingMode().equals("cest")) {
+            plotData.setNames("", "Offset (Hz)", "I(t)/I(0)");
         }
     }
 
@@ -883,14 +901,7 @@ public class PyController implements Initializable {
             allStates.add(states);
         }
         plotData.setData(allData);
-        if (resProps.getExpMode().equals("cpmg")) {
-            plotData.setNames("CPMG", "\u03BD(cpmg)", "R2(\u03BD)");
-        } else if (resProps.getExpMode().equals("exp")) {
-            plotData.setNames("", "Time (s)", "Intensity");
-        } else if (resProps.getExpMode().equals("cest")) {
-            plotData.setNames("", "Offset (Hz)", "I(t)/I(0)");
-        }
-
+        updateXYChartLabels(plotData);
         plotData.setEquations(equations);
         plotData.layoutPlotChildren();
         updateTable(resDatas);
