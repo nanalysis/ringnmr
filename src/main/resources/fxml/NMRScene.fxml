@@ -6,13 +6,13 @@
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.layout.*?>
-<?import org.comdnmr.cpmgfit2.gui.*?>
+<?import org.comdnmr.fit.gui.*?>
 <?import org.controlsfx.control.*?>
 
 
 <?language python?>
 
-<BorderPane fx:id="mainBox"  styleClass="mainFxmlClass" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.comdnmr.cpmgfit2.gui.PyController">
+<BorderPane fx:id="mainBox"  styleClass="mainFxmlClass" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.comdnmr.fit.gui.PyController">
     <fx:script source="actions.py"/>
     <top>
         <HBox>
