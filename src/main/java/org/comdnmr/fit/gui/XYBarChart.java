@@ -219,7 +219,7 @@ public class XYBarChart extends XYChart<Number, Number> {
     }
 
     void showInfo(ResidueProperties resProps, String seriesName) {
-        Node chartNode = ChartUtil.findNode(this.getScene(), "cpmgchart");
+        Node chartNode = ChartUtil.findNode(this.getScene(), "xychart");
         PyController controller = PyController.mainController;
         PlotData plotData = (PlotData) chartNode;
         String[] seriesNameParts = seriesName.split("\\|");
