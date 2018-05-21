@@ -100,7 +100,7 @@ public class PyController implements Initializable {
 
     @FXML
     TextArea textArea;
-    
+
     @FXML
     ChoiceBox<String> simChoice;
 
@@ -141,7 +141,7 @@ public class PyController implements Initializable {
             alert.showAndWait();
             return;
         }
-        
+
     }
 
     @Override
@@ -192,7 +192,7 @@ public class PyController implements Initializable {
         // re-assigns standard output stream and error output stream
         System.setOut(printStream);
         System.setErr(printStream);
-        
+
         simChoice.getItems().add("Simulate CPMG");
         simChoice.getItems().add("Simulate EXP");
         simChoice.getItems().add("Simulate CEST");
@@ -200,7 +200,7 @@ public class PyController implements Initializable {
         simChoice.valueProperty().addListener(s -> {
             simAction();
         });
-        
+
     }
 
     public void setControls() {
@@ -234,7 +234,7 @@ public class PyController implements Initializable {
         }
 
     }
-    
+
     public void setSimControls() {
         boolean update = false;
         if (getSimMode().equals("cpmg") && !(simControls instanceof CPMGControls)) {
@@ -280,11 +280,11 @@ public class PyController implements Initializable {
             ChartUtil.loadParameters(file.toString());
         }
     }
-    
-    public void clearConsole(){
+
+    public void clearConsole() {
         textArea.setText("");
     }
-    
+
     public void updateXYChartLabels(PlotData plotData) {
         if ((simControls instanceof CPMGControls)) {
             plotData.setNames("CPMG", "\u03BD (cpmg)", "R2 (\u03BD)", "0");
@@ -913,17 +913,19 @@ public class PyController implements Initializable {
             }
         }
     }
-    
-    public String getSimMode(){
+
+    public String getSimMode() {
         String simSelected = simChoice.getSelectionModel().getSelectedItem();
         String simMode = simSelected.substring(9, simSelected.length()).toLowerCase();
         return simMode;
     }
-    
+
     void simAction() {
         getSimMode();
         setSimControls();
+        xychart.clear();
         updateXYChartLabels(xychart);
+        simControls.simSliderAction("");
     }
 
     void showInfo(String equationName) {

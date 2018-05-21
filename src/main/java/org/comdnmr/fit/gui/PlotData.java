@@ -82,7 +82,7 @@ public class PlotData extends ScatterChart {
         yAxis.setLabel(yName);
         getYAxis().lookup(".axis-label").setStyle("-fx-label-padding: 0 0 " + yPad + " 0;");
     }
-    
+
     public void setBounds(double xLower, double xUpper, double yLower, double yUpper, double xtick, double ytick) {
         xAxis.setAutoRanging(false);
         yAxis.setAutoRanging(false);
@@ -113,6 +113,11 @@ public class PlotData extends ScatterChart {
         this.plotEquations.addAll(plotEquations);
     }
 
+    public void clear() {
+        plotEquations.clear();
+        getData().clear();
+    }
+
     @Override
     protected void layoutPlotChildren() {
         if (true || (polyLines.size() != plotEquations.size())) {
@@ -127,7 +132,7 @@ public class PlotData extends ScatterChart {
                 getPlotChildren().add(0, polyLine);
             }
         }
-        
+
         super.layoutPlotChildren();
         paintLines(polyLines, ((NumberAxis) getXAxis()), ((NumberAxis) getYAxis()));
         setNodeListeners(this);
@@ -328,7 +333,7 @@ public class PlotData extends ScatterChart {
             ResidueData.DataValue dataValue = (ResidueData.DataValue) item.getExtraValue();
             double x1 = dataValue.getX1();
             Node node = createNode(item, seriesIndex);
-            double x1val = Math.round(100.0*x1/(2*Math.PI))/100.0;
+            double x1val = Math.round(100.0 * x1 / (2 * Math.PI)) / 100.0;
             if (expData != null && expData.getExtras().contains(x1val)) {
                 node = createNode(item, expData.getExtras().indexOf(x1val));
             }
@@ -353,7 +358,7 @@ public class PlotData extends ScatterChart {
             it++;
         }
     }
-    
+
 //    protected void cestLegend(List<Double> b1fields) {
 //        super.updateLegend();
 //        Set<Node> items = b1fields;
@@ -366,7 +371,6 @@ public class PlotData extends ScatterChart {
 //            it++;
 //        }
 //    }
-
     public void dumpLine(int iSeries) {
         ObservableList<XYChart.Series<Double, Double>> data = getData();
         XYChart.Series<Double, Double> series = data.get(iSeries);
