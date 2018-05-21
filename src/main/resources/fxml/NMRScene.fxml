@@ -49,12 +49,6 @@
     </top>
 
     <bottom>
-        <VBox>
-            <children>
-                <Button text="Clear Console" onAction="#clearConsole" />
-                <TextArea fx:id="textArea" editable="false" prefHeight="300"/>
-            </children>
-        </VBox>
     </bottom>
 
     <center>
@@ -139,6 +133,13 @@
                         <SSRegion fx:id="ssregion" prefHeight="1" />
                     </children>
                 </VBox>
+                <VBox>
+                    <children>
+                        <Button text="Clear Console" onAction="#clearConsole" />
+                        <TextArea fx:id="textArea" editable="false" VBox.vgrow="ALWAYS"/>
+                    </children>
+                </VBox>
+
             </items>
         </SplitPane>
 
