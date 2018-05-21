@@ -138,6 +138,7 @@ public class CPMGControls implements EquationControls {
             vBox.getChildren().add(hBox);
         }
 
+        equationAction();
         equationSelector.valueProperty().addListener(e -> {
             equationAction();
         });
@@ -248,19 +249,19 @@ public class CPMGControls implements EquationControls {
             default:
                 return;
         }
-        if (equationName.equals("CPMGSLOW")) {
-            int[] map = {0, 1, 2, 3};
-            rEx = CPMGEquation.CPMGSLOW.getRex(pars, map);
-            REX.setValue(rEx);
-        }
+//        if (equationName.equals("CPMGSLOW")) {
+//            int[] map = {0, 1, 2, 3};
+//            rEx = CPMGEquation.CPMGSLOW.getRex(pars, map);
+//            REX.setValue(rEx);
+//        }
 
-        double[] errs = new double[pars.length];
-        int nFields = field2 > (defaultField + 10) ? 2 : 1; // addTo 10.0 to make sure slider set near to bottom gives 1 field
-        double[] fields = new double[nFields];
-        fields[0] = 1.0;
-        if (nFields > 1) {
-            fields[1] = field2 / defaultField;
-        }
+//        double[] errs = new double[pars.length];
+//        int nFields = field2 > (defaultField + 10) ? 2 : 1; // addTo 10.0 to make sure slider set near to bottom gives 1 field
+//        double[] fields = new double[nFields];
+//        fields[0] = 1.0;
+//        if (nFields > 1) {
+//            fields[1] = field2 / defaultField;
+//        }
         updateEquations();
 
         //controller.updateChartEquations(equationName, pars, errs, fields);

@@ -57,13 +57,13 @@ public class PlotData extends ScatterChart {
     }
 
     void init() {
-        xAxis.setAutoRanging(true);
+        //xAxis.setAutoRanging(true);
         xAxis.setUpperBound(1000.0);
         yAxis.setUpperBound(60.0);
         xAxis.setLabel("Time (s)");
         yAxis.setLabel("Intensity");
-        xAxis.setLabel("\u03BD(cpmg)");
-        yAxis.setLabel("R2(\u03BD)");
+        xAxis.setLabel("\u03BD (cpmg)");
+        yAxis.setLabel("R2 (\u03BD)");
         setTitle("CPMG");
         setPrefHeight(200);
         setLegendSide(Side.BOTTOM);
@@ -76,10 +76,22 @@ public class PlotData extends ScatterChart {
         setVerticalZeroLineVisible(false);
     }
 
-    public void setNames(String title, String xName, String yName) {
+    public void setNames(String title, String xName, String yName, String yPad) {
         setTitle(title);
         xAxis.setLabel(xName);
         yAxis.setLabel(yName);
+        getYAxis().lookup(".axis-label").setStyle("-fx-label-padding: 0 0 " + yPad + " 0;");
+    }
+    
+    public void setBounds(double xLower, double xUpper, double yLower, double yUpper, double xtick, double ytick) {
+        xAxis.setAutoRanging(false);
+        yAxis.setAutoRanging(false);
+        xAxis.setLowerBound(xLower);
+        xAxis.setUpperBound(xUpper);
+        yAxis.setLowerBound(yLower);
+        yAxis.setUpperBound(yUpper);
+        xAxis.setTickUnit(xtick);
+        yAxis.setTickUnit(ytick);
     }
 
     public void addCanvas(Canvas canvas) {

@@ -71,7 +71,7 @@ public class PyController implements Initializable {
     XYBarChart xyBarChart0;
 
     @FXML
-    PlotData cpmgchart;
+    PlotData xychart;
 
     @FXML
     TableView resInfoTable;
@@ -166,12 +166,14 @@ public class PyController implements Initializable {
             equationChoice.getItems().add("+");
             equationChoice.getItems().addAll(CESTFit.getEquationNames());
             equationChoice.setValue(CESTFit.getEquationNames().get(0));
-        } else {
+        } else if (getFittingMode().equals("exp")) {
             simControls = new ExpControls();
             equationChoice.getItems().clear();
             equationChoice.getItems().add("+");
             equationChoice.getItems().addAll(ExpFit.getEquationNames());
             equationChoice.setValue(ExpFit.getEquationNames().get(0));
+        } else {
+            System.out.println("Error: no fitting mode selected.");
         }
         VBox vBox = simControls.makeControls(mainController);
         simPane.centerProperty().set(vBox);
@@ -195,6 +197,9 @@ public class PyController implements Initializable {
         simChoice.getItems().add("Simulate EXP");
         simChoice.getItems().add("Simulate CEST");
         simChoice.setValue("Simulate CPMG");
+        simChoice.valueProperty().addListener(s -> {
+            simAction();
+        });
         
     }
 
@@ -229,6 +234,38 @@ public class PyController implements Initializable {
         }
 
     }
+    
+    public void setSimControls() {
+        boolean update = false;
+        if (getSimMode().equals("cpmg") && !(simControls instanceof CPMGControls)) {
+            simControls = new CPMGControls();
+            update = true;
+            equationChoice.getItems().clear();
+            equationChoice.getItems().add("+");
+            equationChoice.getItems().addAll(CPMGFit.getEquationNames());
+            equationChoice.setValue(CPMGFit.getEquationNames().get(0));
+
+        } else if (getSimMode().equals("exp") && !(simControls instanceof ExpControls)) {
+            simControls = new ExpControls();
+            equationChoice.getItems().clear();
+            equationChoice.getItems().add("+");
+            equationChoice.getItems().addAll(ExpFit.getEquationNames());
+            equationChoice.setValue(ExpFit.getEquationNames().get(0));
+            update = true;
+        } else if (getSimMode().equals("cest") && !(simControls instanceof CESTControls)) {
+            simControls = new CESTControls();
+            equationChoice.getItems().clear();
+            equationChoice.getItems().add("+");
+            equationChoice.getItems().addAll(CESTFit.getEquationNames());
+            equationChoice.setValue(CESTFit.getEquationNames().get(0));
+            update = true;
+        }
+        if (update) {
+            VBox vBox = simControls.makeControls(mainController);
+            simPane.centerProperty().set(vBox);
+        }
+
+    }
 
     public void loadParameterFile(Event e) {
         FileChooser fileChooser = new FileChooser();
@@ -244,13 +281,20 @@ public class PyController implements Initializable {
         }
     }
     
+    public void clearConsole(){
+        textArea.setText("");
+    }
+    
     public void updateXYChartLabels(PlotData plotData) {
-        if (getFittingMode().equals("cpmg")) {
-            plotData.setNames("CPMG", "\u03BD(cpmg)", "R2(\u03BD)");
-        } else if (getFittingMode().equals("exp")) {
-            plotData.setNames("", "Time (s)", "Intensity");
-        } else if (getFittingMode().equals("cest")) {
-            plotData.setNames("", "Offset (Hz)", "I(t)/I(0)");
+        if ((simControls instanceof CPMGControls)) {
+            plotData.setNames("CPMG", "\u03BD (cpmg)", "R2 (\u03BD)", "0");
+            plotData.setBounds(0.0, 1100.0, 0.0, 65.0, 100.0, 5.0);
+        } else if ((simControls instanceof ExpControls)) {
+            plotData.setNames("Exp", "Time (s)", "Intensity", "0");
+            plotData.setBounds(0.0, 1.25, 0.0, 200.0, 0.25, 50.0);
+        } else if ((simControls instanceof CESTControls)) {
+            plotData.setNames("CEST", "Offset (Hz)", "I(t)/I(0)", "20");
+            plotData.setBounds(-6000.0, 6000.0, 0.0, 1.0, 1000.0, 0.25);
         }
     }
 
@@ -266,8 +310,8 @@ public class PyController implements Initializable {
     }
 
     public void showEquations(List<PlotEquation> equations) {
-        cpmgchart.setEquations(equations);
-        cpmgchart.layoutPlotChildren();
+        xychart.setEquations(equations);
+        xychart.layoutPlotChildren();
 
     }
 
@@ -756,7 +800,7 @@ public class PyController implements Initializable {
         chooser.setInitialFileName("cpmgchart.png");
         File file = chooser.showSaveDialog(MainApp.primaryStage);
         if (file != null) {
-            snapit(cpmgchart, file);
+            snapit(xychart, file);
         }
     }
 
@@ -769,19 +813,19 @@ public class PyController implements Initializable {
             MainApp.engine.put("file", filePath);
 
             MainApp.engine.eval("writer = Writer()");
-            int numPlots = cpmgchart.getNumPlots();
-            int numFits = cpmgchart.getNumEquations();
+            int numPlots = xychart.getNumPlots();
+            int numFits = xychart.getNumEquations();
 
             if (numPlots == numFits) {
                 for (int i = 0; i < numPlots; i++) {
                     int color = i + 1;
                     MainApp.engine.put("color", color);
 
-                    ArrayList<String> rawData = cpmgchart.returnLine(i);
+                    ArrayList<String> rawData = xychart.returnLine(i);
                     MainApp.engine.put("rawData", rawData);
                     MainApp.engine.eval("writer.addRawData(rawData,color)");
 
-                    ArrayList<String> fittedData = cpmgchart.returnEquation(i);
+                    ArrayList<String> fittedData = xychart.returnEquation(i);
                     MainApp.engine.put("fittedData", fittedData);
                     MainApp.engine.eval("writer.addFittedData(fittedData,color)");
                 }
@@ -869,11 +913,23 @@ public class PyController implements Initializable {
             }
         }
     }
+    
+    public String getSimMode(){
+        String simSelected = simChoice.getSelectionModel().getSelectedItem();
+        String simMode = simSelected.substring(9, simSelected.length()).toLowerCase();
+        return simMode;
+    }
+    
+    void simAction() {
+        getSimMode();
+        setSimControls();
+        updateXYChartLabels(xychart);
+    }
 
     void showInfo(String equationName) {
         String mapName = currentMapName;
         String state = currentState;
-        showInfo(currentResProps, equationName, mapName, state, currentResidues, cpmgchart);
+        showInfo(currentResProps, equationName, mapName, state, currentResidues, xychart);
     }
 
     void showInfo(ResidueProperties resProps, String equationName, String mapName, String state, String[] residues, PlotData plotData) {

@@ -5,6 +5,7 @@
  */
 package org.comdnmr.fit.gui;
 
+import java.util.ArrayList;
 import java.util.List;
 import javafx.fxml.FXML;
 import javafx.scene.control.ChoiceBox;
@@ -15,6 +16,9 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.comdnmr.fit.calc.ExpFit;
 import org.comdnmr.fit.calc.ParValueInterface;
+import org.comdnmr.fit.calc.PlotEquation;
+import org.comdnmr.fit.calc.ResidueInfo;
+import org.comdnmr.fit.calc.ResidueProperties;
 import static org.comdnmr.fit.gui.ExpControls.PARS.A;
 import static org.comdnmr.fit.gui.ExpControls.PARS.C;
 import static org.comdnmr.fit.gui.ExpControls.PARS.R;
@@ -117,6 +121,7 @@ public class ExpControls implements EquationControls {
             vBox.getChildren().add(hBox);
         }
 
+        equationAction();
         equationSelector.valueProperty().addListener(e -> {
             equationAction();
         });
@@ -125,7 +130,7 @@ public class ExpControls implements EquationControls {
 
     void equationAction() {
         String equationName = equationSelector.getValue();
-        if (equationName == ""){
+        if (equationName == "") {
             equationName = equationSelector.getItems().get(0);
         }
         switch (equationName) {
@@ -178,11 +183,12 @@ public class ExpControls implements EquationControls {
             default:
                 return;
         }
-        double[] errs = new double[pars.length];
-        int nFields = 1;
-        double[] fields = new double[nFields];
-        fields[0] = 1.0;
-        controller.updateChartEquations(equationName, pars, errs, fields);
+//        double[] errs = new double[pars.length];
+//        int nFields = 1;
+//        double[] fields = new double[nFields];
+//        fields[0] = 1.0;
+//        controller.updateChartEquations(equationName, pars, errs, fields);
+        updateEquations();
     }
 
     @Override
@@ -207,4 +213,53 @@ public class ExpControls implements EquationControls {
         return equationSelector.getValue();
     }
 
+    double[] getPars(String equationName) {
+        double a = A.getValue();
+        double r = R.getValue();
+        double c = C.getValue();
+        double[] pars;
+        switch (equationName) {
+            case "EXPAB":
+                pars = new double[2];
+                pars[0] = a;
+                pars[1] = r;
+
+                break;
+            case "EXPABC":
+                pars = new double[3];
+                pars[0] = a;
+                pars[1] = r;
+                pars[2] = r;
+
+                break;
+            default:
+                pars = null;
+        }
+        return pars;
+
+    }
+
+    void updateEquations() {
+        ResidueInfo resInfo = controller.currentResInfo;
+        ResidueProperties resProps = controller.currentResProps;
+        List<PlotEquation> equations = new ArrayList<>();
+        double[] pars;
+        String equationName = equationSelector.getValue();
+        if (resProps == null) {
+            pars = getPars(equationName);
+            double[] errs = new double[pars.length];
+            double[] extras = new double[1];
+            extras[0] = 1.0;
+            PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
+            equations.add(plotEquation);
+        } else {
+            pars = getPars(equationName);
+            double[] errs = new double[pars.length];
+            double[] extras = new double[1];
+            extras[0] = 1.0;
+            PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
+            equations.add(plotEquation);
+        }
+        controller.showEquations(equations);
+    }
 }

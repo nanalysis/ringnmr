@@ -6,13 +6,13 @@
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.layout.*?>
-<?import org.comdnmr.fit.gui.*?>
+<?import org.comdnmr.cpmgfit2.gui.*?>
 <?import org.controlsfx.control.*?>
 
 
 <?language python?>
 
-<BorderPane fx:id="mainBox"  styleClass="mainFxmlClass" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.comdnmr.fit.gui.PyController">
+<BorderPane fx:id="mainBox"  styleClass="mainFxmlClass" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.comdnmr.cpmgfit2.gui.PyController">
     <fx:script source="actions.py"/>
     <top>
         <HBox>
@@ -49,6 +49,12 @@
     </top>
 
     <bottom>
+        <VBox>
+            <children>
+                <Button text="Clear Console" onAction="#clearConsole" />
+                <TextArea fx:id="textArea" editable="false" prefHeight="300"/>
+            </children>
+        </VBox>
     </bottom>
 
     <center>
@@ -56,7 +62,7 @@
             <items>
                 <SplitPane orientation="horizontal" prefHeight="800">
                     <items>
-                        <PlotData fx:id="cpmgchart" HBox.hgrow="ALWAYS" />
+                        <PlotData fx:id="xychart" HBox.hgrow="ALWAYS" />
                         <VBox HBox.hgrow="ALWAYS"  VBox.vgrow="ALWAYS" >
                             <TabPane fx:id="parTabPane"  VBox.vgrow="ALWAYS" >
                                 <Tab text="Parameters" closable="false" > 
@@ -133,7 +139,6 @@
                         <SSRegion fx:id="ssregion" prefHeight="1" />
                     </children>
                 </VBox>
-                <TextArea fx:id="textArea" editable="false" prefHeight="300"/>
             </items>
         </SplitPane>
 
