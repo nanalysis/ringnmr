@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
@@ -138,7 +139,10 @@ public class CPMGControls implements EquationControls {
             vBox.getChildren().add(hBox);
         }
 
-        equationAction();
+        if (controller.simulate == true) {
+            equationAction();
+        }
+
         equationSelector.valueProperty().addListener(e -> {
             equationAction();
         });
@@ -151,7 +155,7 @@ public class CPMGControls implements EquationControls {
     void equationAction() {
         updatingTable = true;
         String equationName = equationSelector.getValue().toString();
-        if (equationName == ""){
+        if (equationName == "") {
             equationName = equationSelector.getItems().get(0);
         }
         ResidueInfo resInfo = controller.currentResInfo;
@@ -399,12 +403,19 @@ public class CPMGControls implements EquationControls {
                         pars = getPars(equationName);
                         fields[iField] = FIELD2.getValue();
                     } else {
-                        Map<String, ParValueInterface> parMap = new HashMap<>();
-                        List<ParValueInterface> parValues = resInfo.getParValues(equationName, state);
-                        for (ParValueInterface parValue : parValues) {
-                            parMap.put(parValue.getName(), parValue);
+                        try {
+                            Map<String, ParValueInterface> parMap = new HashMap<>();
+                            List<ParValueInterface> parValues = resInfo.getParValues(equationName, state);
+                            for (ParValueInterface parValue : parValues) {
+                                parMap.put(parValue.getName(), parValue);
+                            }
+                            pars = getPars(equationName, parMap);
+                        } catch (NullPointerException npEcpmgpar) {
+                            Alert alert = new Alert(Alert.AlertType.ERROR);
+                            alert.setContentText("Error: Residue must be selected");
+                            alert.showAndWait();
+                            return;
                         }
-                        pars = getPars(equationName, parMap);
                     }
                     double[] errs = new double[pars.length];
                     double[] extras = new double[1];

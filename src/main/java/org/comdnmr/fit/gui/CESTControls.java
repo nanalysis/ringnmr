@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
@@ -145,7 +146,10 @@ public class CESTControls implements EquationControls {
             vBox.getChildren().add(hBox);
         }
 
-        equationAction();
+        if (controller.simulate == true) {
+            equationAction();
+        }
+
         equationSelector.valueProperty().addListener(e -> {
             equationAction();
         });
@@ -669,11 +673,9 @@ public class CESTControls implements EquationControls {
         ResidueProperties residueProps = residueProperties.get("cest"); // fixme
         //System.out.println("expData = " + residueProps.getExperimentData("cest"));
         ExperimentData expData = null;
-        if (residueProps != null) {
-            expData = residueProps.getExperimentData("cest"); // fixme
-        }
-        if (resProps == null) {
+        if (resInfo != null) {
             if (residueProps != null) {
+                expData = residueProps.getExperimentData("cest"); // fixme
                 if (expData.getExtras().size() > 0) {
                     pars = getPars(equationName);
                     double[] errs = new double[pars.length];
@@ -696,73 +698,20 @@ public class CESTControls implements EquationControls {
                     //equationCopy.setExtra(extras);
                     //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[0] = " + extras[0]);
                     equations.add(plotEquation);
-
                 }
-//            
-            } else {
-                pars = getPars(equationName);
-                double[] errs = new double[pars.length];
-                double[] extras = new double[2];
-                extras[0] = 1.0;
-                extras[1] = 17.0 * 2 * Math.PI;
-                //System.out.println("updateEquations got called without resProps; extras length = "+extras.length);
-                PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
-                equations.add(plotEquation);
             }
 
         } else {
-            double[] fields = resProps.getFields();
-            String currentState = stateSelector.getValue();
-            //double field2;
-            if (resInfo != null) {
-                for (String state : stateSelector.getItems()) {
-                    int iField = Integer.parseInt(state.substring(0, 1));
-                    if (state.equals(currentState)) {
-                        pars = getPars(equationName);
-                        //fields[iField] = FIELD2.getValue();
-                    } else {
-                        Map<String, ParValueInterface> parMap = new HashMap<>();
-                        List<ParValueInterface> parValues = resInfo.getParValues(equationName, state);
-                        for (ParValueInterface parValue : parValues) {
-                            parMap.put(parValue.getName(), parValue);
-                        }
-                        pars = getPars(equationName, parMap);
-                    }
-                    if (expData.getExtras().size() > 0) {
-                        pars = getPars(equationName);
-                        double[] errs = new double[pars.length];
-                        double[] extras = new double[2];
-                        for (int j = 0; j < expData.getExtras().size(); j++) {
-                            extras[0] = 1.0;
-                            extras[1] = expData.getExtras().get(j) * 2 * Math.PI;
-                            //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[1] = " + extras[1]);
-                            PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
-                            //equationCopy.setExtra(extras);
-
-                            equations.add(plotEquation);
-                        }
-                    } else {
-                        pars = getPars(equationName);
-                        double[] errs = new double[pars.length];
-                        double[] extras = new double[1];
-                        extras[0] = 1.0;
-                        PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
-                        //equationCopy.setExtra(extras);
-                        //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[0] = " + extras[0]);
-                        equations.add(plotEquation);
-
-                    }
-//                    double[] errs = new double[pars.length];
-//                    double[] extras = new double[2];
-//                    extras[0] = 1.0;
-//                    extras[1] = 17.0 * 2 * Math.PI;
-//                    //extras[0] = fields[iField] / fields[0];
-//                    //System.out.println("updateEquations got called with resProps; extras length = "+extras.length);
-//                    PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
-//                    equations.add(plotEquation);
-                }
-            }
+            pars = getPars(equationName);
+            double[] errs = new double[pars.length];
+            double[] extras = new double[2];
+            extras[0] = 1.0;
+            extras[1] = 17.0 * 2 * Math.PI;
+            //System.out.println("updateEquations got called without resProps; extras length = "+extras.length);
+            PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
+            equations.add(plotEquation);
         }
+
         controller.showEquations(equations);
     }
 }

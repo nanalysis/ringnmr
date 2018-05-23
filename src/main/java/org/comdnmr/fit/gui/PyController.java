@@ -60,6 +60,7 @@ import org.comdnmr.fit.calc.CESTFit;
 import java.io.PrintStream;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.SplitPane;
 import org.comdnmr.fit.calc.ParValue;
 import static org.comdnmr.fit.gui.ChartUtil.residueProperties;
 
@@ -106,6 +107,9 @@ public class PyController implements Initializable {
 
     EquationControls simControls;
 
+    @FXML
+    SplitPane splitPane;
+
     //final ContextMenu axisMenu = new ContextMenu();
     static double defaultField = 500.0;
 
@@ -117,6 +121,8 @@ public class PyController implements Initializable {
     String currentState = "";
     String currentEquationName;
     List<int[]> currentStates = new ArrayList<>();
+
+    boolean simulate = true;
 
     @FXML
     private void pyAction(ActionEvent event) {
@@ -201,6 +207,7 @@ public class PyController implements Initializable {
             simAction();
         });
 
+        splitPane.setDividerPositions(0.4, 0.7);
     }
 
     public void setControls() {
@@ -276,6 +283,7 @@ public class PyController implements Initializable {
             if (activeChart != null) {
                 clearChart();
                 currentResidues = null;
+                simulate = false;
             }
             ChartUtil.loadParameters(file.toString());
         }
@@ -921,9 +929,14 @@ public class PyController implements Initializable {
     }
 
     void simAction() {
+        currentResidues = null;
+        currentResInfo = null;
+        currentResProps = null;
+        xychart.clear();
+        chartBox.getChildren().remove(activeChart);
+        activeChart = xyBarChart0;
         getSimMode();
         setSimControls();
-        xychart.clear();
         updateXYChartLabels(xychart);
         simControls.simSliderAction("");
     }
@@ -939,24 +952,26 @@ public class PyController implements Initializable {
         ObservableList<XYChart.Series<Double, Double>> allData = FXCollections.observableArrayList();
         List<ResidueData> resDatas = new ArrayList<>();
         List<int[]> allStates = new ArrayList<>();
-        for (ExperimentData expData : resProps.getExperimentData()) {
-            if (residues == null) {
-                break;
-            }
-            for (String residue : residues) {
-                System.out.println("get resd " + residue + " " + expData.getResidueData(residue));
+        if (resProps != null) {
+            for (ExperimentData expData : resProps.getExperimentData()) {
+                if (residues == null) {
+                    break;
+                }
+                for (String residue : residues) {
+                    System.out.println("get resd " + residue + " " + expData.getResidueData(residue));
 
-                resDatas.add(expData.getResidueData(residue));
+                    resDatas.add(expData.getResidueData(residue));
+                }
+                String expName = expData.getName();
+                if (!ResidueProperties.matchStateString(state, expData.getState())) {
+                    continue;
+                }
+                List<XYChart.Series<Double, Double>> data = ChartUtil.getMapData(mapName, expName, residues);
+                allData.addAll(data);
+                equations.addAll(ChartUtil.getEquations(mapName, residues, equationName, expData.getState(), expData.getField()));
+                int[] states = resProps.getStateIndices(0, expData);
+                allStates.add(states);
             }
-            String expName = expData.getName();
-            if (!ResidueProperties.matchStateString(state, expData.getState())) {
-                continue;
-            }
-            List<XYChart.Series<Double, Double>> data = ChartUtil.getMapData(mapName, expName, residues);
-            allData.addAll(data);
-            equations.addAll(ChartUtil.getEquations(mapName, residues, equationName, expData.getState(), expData.getField()));
-            int[] states = resProps.getStateIndices(0, expData);
-            allStates.add(states);
         }
         plotData.setData(allData);
         updateXYChartLabels(plotData);

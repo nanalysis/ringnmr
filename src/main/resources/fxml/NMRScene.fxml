@@ -52,7 +52,7 @@
     </bottom>
 
     <center>
-        <SplitPane orientation="vertical">
+        <SplitPane orientation="vertical" fx:id="splitPane">
             <items>
                 <SplitPane orientation="horizontal" prefHeight="800">
                     <items>

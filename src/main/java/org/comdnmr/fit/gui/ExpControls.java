@@ -121,7 +121,10 @@ public class ExpControls implements EquationControls {
             vBox.getChildren().add(hBox);
         }
 
-        equationAction();
+        if (controller.simulate == true){
+            equationAction();
+        }
+        
         equationSelector.valueProperty().addListener(e -> {
             equationAction();
         });
