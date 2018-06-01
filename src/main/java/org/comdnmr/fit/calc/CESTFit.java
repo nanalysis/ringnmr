@@ -261,11 +261,12 @@ public class CESTFit implements EquationFitter {
             errEstimates = calcCEST.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma);
 
         }
+        double[][] simPars = calcCEST.getSimPars();
         // fixme
         double[] extras = new double[2];
         extras[0] = usedFields[0];
         extras[1] = 17.0 * 2 * Math.PI;
-        return getResults(eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms);
+        return getResults(eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, simPars);
     }
 
 }

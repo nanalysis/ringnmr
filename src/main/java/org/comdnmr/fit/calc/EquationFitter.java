@@ -24,7 +24,7 @@ public interface EquationFitter {
 
     public void setData(ResidueProperties resProps, String[] resNums);
 
-    public default CPMGFitResult getResults(String eqn, String[] parNames, String[] resNums, int[][] map, int[][] states, double[] usedFields, int nGroupPars, double[] pars, double[] errEstimates, double aic, double rms) {
+    public default CPMGFitResult getResults(String eqn, String[] parNames, String[] resNums, int[][] map, int[][] states, double[] usedFields, int nGroupPars, double[] pars, double[] errEstimates, double aic, double rms, double[][] simPars) {
         int nNonGroup = parNames.length - nGroupPars;
         List<CurveFit> curveFits = new ArrayList<>();
 //        System.out.println("ning " + nCurves);
@@ -66,7 +66,7 @@ public interface EquationFitter {
             CurveFit curveFit = new CurveFit(stateString, resNums[states[iCurve][0]], parMap, plotEquation);
             curveFits.add(curveFit);
         }
-        CPMGFitResult fitResult = new CPMGFitResult(parNames, curveFits, eqn, nGroupPars, aic, rms);
+        CPMGFitResult fitResult = new CPMGFitResult(parNames, curveFits, eqn, nGroupPars, aic, rms, simPars);
         return fitResult;
     }
 }

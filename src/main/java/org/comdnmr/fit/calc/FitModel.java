@@ -39,6 +39,7 @@ public abstract class FitModel implements MultivariateFunction {
     int nID = 1;
     boolean reportFitness = false;
     boolean absMode = false;
+    double[][] parValues;
 
     public class Checker extends SimpleValueChecker {
 
@@ -108,6 +109,8 @@ public abstract class FitModel implements MultivariateFunction {
     public abstract double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma);
 
     public abstract double[] simBoundsBootstrapStream(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma);
+    
+    public abstract double[][] getSimPars();
 
     public void setXY(double[][] x, double[] y) {
         this.xValues = x;
@@ -240,7 +243,7 @@ public abstract class FitModel implements MultivariateFunction {
     public String[] getParNames() {
         return equation.getParNames();
     }
-
+        
     public int getNGroupPars() {
         return equation.getNGroupPars();
     }

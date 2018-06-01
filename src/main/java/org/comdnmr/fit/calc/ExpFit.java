@@ -207,7 +207,8 @@ public class ExpFit implements EquationFitter {
             errEstimates = expModel.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma);
 
         }
-        return getResults(eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms);
+        double[][] simPars = expModel.getSimPars();
+        return getResults(eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, simPars);
     }
 
 }

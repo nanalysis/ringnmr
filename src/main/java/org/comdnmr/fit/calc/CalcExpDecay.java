@@ -14,6 +14,7 @@ public class CalcExpDecay extends FitModel {
     static RandomGenerator random = new SynchronizedRandomGenerator(new Well19937c());
     int[] r2Mask = {0, 1, 3};
     double[] rexErrors = new double[nID];
+    double[][] parValues;
 
     public CalcExpDecay() {
         this.equation = ExpEquation.EXPAB;
@@ -57,6 +58,11 @@ public class CalcExpDecay extends FitModel {
         return r2Mask;
     }
 
+    @Override
+    public double[][] getSimPars() {
+        return parValues;
+    }
+    
     @Override
     public double value(double[] par) {
         double sumAbs = 0.0;
@@ -102,7 +108,7 @@ public class CalcExpDecay extends FitModel {
     public double[] simBounds(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma) {
         reportFitness = false;
         int nPar = start.length;
-        double[][] parValues = new double[nPar][nSim];
+        parValues = new double[nPar][nSim];
         double[] yPred = getPredicted(start);
         double[] yValuesOrig = yValues.clone();
         double[][] rexValues = new double[nID][nSim];
@@ -131,7 +137,7 @@ public class CalcExpDecay extends FitModel {
     public double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma) {
         reportFitness = false;
         int nPar = start.length;
-        double[][] parValues = new double[nPar][nSim];
+        parValues = new double[nPar][nSim];
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
         double[] yPred = getPredicted(start);
@@ -166,7 +172,7 @@ public class CalcExpDecay extends FitModel {
     public double[] simBoundsBootstrapStream(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma) {
         reportFitness = false;
         int nPar = start.length;
-        double[][] parValues = new double[nPar][nSim];
+        parValues = new double[nPar][nSim];
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
         IntStream.range(0, nSim).parallel().forEach(i -> {

@@ -87,19 +87,25 @@ public class CPMGFitResult {
         return valid;
     }
 
+    public double[][] getSimPars() {
+        return simPars;
+    }
+    
     private final String[] fitParNames;
     private final List<CurveFit> curveFits = new ArrayList<>();
     private final double aicc;
     private final double rms;
     private final String equationName;
     private final int nGroupPars;
+    private final double[][] simPars;
 
-    public CPMGFitResult(String[] fitParNames, List<CurveFit> curveFits, String equationName, int nGroupPars, double aicc, double rms) {
+    public CPMGFitResult(String[] fitParNames, List<CurveFit> curveFits, String equationName, int nGroupPars, double aicc, double rms, double[][] simPars) {
         this.curveFits.addAll(curveFits);
         this.fitParNames = fitParNames.clone();
         this.equationName = equationName;
         this.nGroupPars = nGroupPars;
         this.aicc = aicc;
         this.rms = rms;
+        this.simPars = simPars;
     }
 }
