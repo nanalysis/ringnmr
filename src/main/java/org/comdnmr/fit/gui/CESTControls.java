@@ -662,6 +662,86 @@ public class CESTControls implements EquationControls {
     public String getEquation() {
         return equationSelector.getValue();
     }
+    
+    public List<String> getParNames() {
+        String equationName = equationSelector.getValue().toString();
+        List<String> parNames1 = new ArrayList<>();
+        switch (equationName) {
+            case "CESTR1RHOPERTURBATION":
+                parNames1.add("Kex");
+                parNames1.add("Pb");
+                parNames1.add("deltaA0");
+                parNames1.add("deltaB0");
+                parNames1.add("R1A");
+                parNames1.add("R2A");
+                parNames1.add("R2B");
+                break;
+            case "CESTR1RHON":
+                parNames1.add("Kex");
+                parNames1.add("Pb");
+                parNames1.add("deltaA0");
+                parNames1.add("deltaB0");
+                parNames1.add("R1A");
+                parNames1.add("R2A");
+                break;
+            case "CESTR1RHOBALDWINKAY":
+                parNames1.add("Kex");
+                parNames1.add("Pb");
+                parNames1.add("deltaA0");
+                parNames1.add("deltaB0");
+                parNames1.add("R1A");
+                parNames1.add("R2A");
+                parNames1.add("R2B");
+                break;
+            case "CESTR1RHOSD":
+                parNames1.add("Kex");
+                parNames1.add("Pb");
+                parNames1.add("deltaA0");
+                parNames1.add("deltaB0");
+                parNames1.add("R1A");
+                parNames1.add("R2A");
+                parNames1.add("R2B");
+                break;
+            case "CESTR1RHOEXACT1":
+                parNames1.add("Kex");
+                parNames1.add("Pb");
+                parNames1.add("deltaA0");
+                parNames1.add("deltaB0");
+                parNames1.add("R1A");
+                parNames1.add("R2A");
+                parNames1.add("R2B");
+                break;
+            case "CESTEXACT0":
+                parNames1.add("Kex");
+                parNames1.add("Pb");
+                parNames1.add("deltaA0");
+                parNames1.add("deltaB0");
+                parNames1.add("R1A");
+                parNames1.add("R1B");
+                parNames1.add("R2A");
+                parNames1.add("R2B");
+                break;
+            case "CESTEXACT1":
+                parNames1.add("Kex");
+                parNames1.add("Pb");
+                parNames1.add("deltaA0");
+                parNames1.add("deltaB0");
+                parNames1.add("R1A");
+                parNames1.add("R2A");
+                parNames1.add("R2B");
+                break;
+            case "CESTEXACT2":
+                parNames1.add("Kex");
+                parNames1.add("Pb");
+                parNames1.add("deltaA0");
+                parNames1.add("deltaB0");
+                parNames1.add("R1A");
+                parNames1.add("R1B");
+                parNames1.add("R2A");
+                break;
+        }
+        return parNames1;
+    }
 
     void updateEquations() {
         ResidueInfo resInfo = controller.currentResInfo;

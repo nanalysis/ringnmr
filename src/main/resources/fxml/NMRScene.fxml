@@ -96,6 +96,7 @@
                                                     <Button text="Display" onAction="#displayEquation" fx:id="DisplayEquation"/>
                                                     <Button text="Fit" onAction="#fitEquation" fx:id="FitEquation"/>
                                                     <Button text="Guess" onAction="#guesses" fx:id="Guesses"/>
+                                                    <Button text="Monte Carlo Plot" onAction="#showMCplot" fx:id="MCPlot"/>
                                                 </children>
                                             </HBox>
                                         </top>

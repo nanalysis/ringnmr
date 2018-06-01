@@ -378,6 +378,31 @@ public class CPMGControls implements EquationControls {
     public String getEquation() {
         return equationSelector.getValue();
     }
+    
+    public List<String> getParNames() {
+        String equationName = equationSelector.getValue().toString();
+        List<String> parNames1 = new ArrayList<>();
+        switch (equationName) {
+            case "NOEX":
+                parNames1.add("R2");
+                parNames1.add("Field2");
+                break;
+            case "CPMGFAST":
+                parNames1.add("Kex");
+                parNames1.add("R2");
+                parNames1.add("Rex");
+                parNames1.add("Field2");
+                break;
+            case "CPMGSLOW":
+                parNames1.add("Kex");
+                parNames1.add("pA");
+                parNames1.add("R2");
+                parNames1.add("dW");
+                parNames1.add("Field2");
+                break;
+        }
+        return parNames1;
+    }
 
     void updateEquations() {
         ResidueInfo resInfo = controller.currentResInfo;

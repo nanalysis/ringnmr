@@ -215,6 +215,23 @@ public class ExpControls implements EquationControls {
     public String getEquation() {
         return equationSelector.getValue();
     }
+    
+    public List<String> getParNames() {
+        String equationName = equationSelector.getValue().toString();
+        List<String> parNames1 = new ArrayList<>();
+        switch (equationName) {
+            case "EXPAB":
+                parNames1.add("A");
+                parNames1.add("R");
+                break;
+            case "EXPABC":
+                parNames1.add("A");
+                parNames1.add("R");
+                parNames1.add("C");
+                break;
+        }
+        return parNames1;
+    }
 
     double[] getPars(String equationName) {
         double a = A.getValue();

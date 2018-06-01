@@ -16,6 +16,8 @@ import org.comdnmr.fit.calc.ParValueInterface;
 public interface EquationControls {
 
     String getEquation();
+    
+    List<String> getParNames();
 
     VBox makeControls(PyController controller);
 
