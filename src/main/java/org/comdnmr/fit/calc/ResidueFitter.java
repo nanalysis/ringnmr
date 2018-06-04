@@ -25,6 +25,7 @@ public class ResidueFitter {
     Function<Double, Double> updaterFunction;
     Function<ProcessingStatus, Double> statusFunction;
     List<List<String>> residueFitGroups = null;
+    CPMGFitResult fitResult;
 
     public ResidueFitter() {
     }
@@ -208,7 +209,7 @@ public class ResidueFitter {
 
             EquationFitter equationFitter = getFitter();
             equationFitter.setData(resProps, resNums);
-            CPMGFitResult fitResult = equationFitter.doFit(equationName, resProps.isAbsValueMode(), !resProps.getBootStrapMode().equals("parametric"));
+            fitResult = equationFitter.doFit(equationName, resProps.isAbsValueMode(), !resProps.getBootStrapMode().equals("parametric"));
             fitResults.put(equationName, fitResult);
             if (fitResult.getAicc() < aicMin) {
                 aicMin = fitResult.getAicc();
@@ -230,7 +231,7 @@ public class ResidueFitter {
             if ((useEquation != null) && !equationName.equals(useEquation)) {
                 continue;
             }
-            CPMGFitResult fitResult = fitResults.get(equationName);
+            fitResult = fitResults.get(equationName);
             int nCurves = fitResult.getNCurves();
             for (int iCurve = 0; iCurve < nCurves; iCurve++) {
                 CurveFit curveFit = fitResult.getCurveFit(iCurve);
@@ -242,6 +243,10 @@ public class ResidueFitter {
         return resInfoList;
     }
 
+    public CPMGFitResult getFitResult() {
+        return fitResult;
+    }
+    
     private class FitResidues {
 
         String script;
