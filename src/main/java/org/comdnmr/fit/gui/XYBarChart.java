@@ -1,6 +1,7 @@
 package org.comdnmr.fit.gui;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import javafx.animation.FadeTransition;
@@ -18,9 +19,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Path;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
-import org.comdnmr.fit.calc.ExperimentData;
-import org.comdnmr.fit.calc.PlotEquation;
-import org.comdnmr.fit.calc.ResidueData;
 import org.comdnmr.fit.calc.ResidueInfo;
 import org.comdnmr.fit.calc.ResidueProperties;
 
@@ -234,6 +232,45 @@ public class XYBarChart extends XYChart<Number, Number> {
         String[] residues = new String[selectedResidues.size()];
         selectedResidues.toArray(residues);
         controller.showInfo(resProps, equationName, mapName, state, residues, plotData);
+    }
+
+    public HashMap<String, Object> getChartData() {
+        HashMap<String, Object> chartData = new HashMap<>();
+
+        ArrayList<Double> ranges = new ArrayList<>(4);
+        double xLower = xAxis.getLowerBound();
+        double xUpper = xAxis.getUpperBound();
+        double yLower = yAxis.getLowerBound();
+        double yUpper = yAxis.getUpperBound();
+        ranges.add(xLower);
+        ranges.add(xUpper);
+        ranges.add(yLower);
+        ranges.add(yUpper);
+
+        chartData.put("ranges", ranges);
+
+        List<Series<Number, Number>> allSeries = this.getData();
+        allSeries.forEach(series -> {
+            String seriesName = series.getName();
+            System.out.println(seriesName);
+            List<XYChart.Data<Number, Number>> data = series.getData();
+            ArrayList<ArrayList<Double>> seriesData = new ArrayList<>(data.size());
+            data.forEach(values -> {
+                ArrayList<Double> xyEr = new ArrayList<>(4);
+                double x = values.getXValue().doubleValue();
+                double y = values.getYValue().doubleValue();
+                ErrorExtraValues extra = (ErrorExtraValues) values.getExtraValue();
+                double errLow = extra.getLowPercentile();
+                //double errHigh = extra.getHighPercentile();  //both lower and upper appear to be same. Removing for simplicity
+                xyEr.add(x);
+                xyEr.add(y);
+                xyEr.add(errLow); // These are referenced as the difference from y
+                //xyEr.add(errHigh);
+                seriesData.add(xyEr);
+            });
+            chartData.put(seriesName, seriesData);
+        });
+        return chartData;
     }
 
     @Override

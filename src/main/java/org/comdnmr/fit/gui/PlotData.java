@@ -13,6 +13,7 @@ import java.nio.file.Paths;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import javafx.geometry.Side;
@@ -285,6 +286,49 @@ public class PlotData extends ScatterChart {
         }
         return data;
     }
+    // Returns a list of maps that store data about each plot on cpmgfit
+
+    public HashMap<String, Object>[] getPlottedData() {
+        int numPlots = getNumPlots();
+        int numFits = getNumEquations();
+
+        if (numPlots == numFits) {
+            // The fitted curve belongs to the raw data collected
+            HashMap<String, Object>[] plottedData = new HashMap[numPlots];
+            for (int i = 0; i < numPlots; i++) {
+                HashMap<String, Object> plotDatum = new HashMap<>();
+                plotDatum.put("rawData", returnLine(i));
+                plotDatum.put("graphTitle", getSeriesName(i));
+                plotDatum.put("fittedData", returnEquation(i));
+                plottedData[i] = plotDatum;
+            }
+            return plottedData;
+
+        }
+        //Will break if numPlots != numFits
+        return null;
+    }
+
+    // Returns a map of parameters about the graph
+    public HashMap<String, Object> getGraphData() {
+        HashMap<String, Object> graphData = new HashMap<>();
+
+        String title = getTitle();
+        String xLabel = xAxis.getLabel();
+        String yLabel = yAxis.getLabel();
+        double xMin = xAxis.lowerBoundProperty().getValue();
+        double xMax = xAxis.upperBoundProperty().getValue();
+        double yMin = yAxis.lowerBoundProperty().getValue();
+        double yMax = yAxis.upperBoundProperty().getValue();
+
+        List<Double> ranges = new ArrayList(Arrays.asList(xMin, xMax, yMin, yMax));
+        graphData.put("title", title);
+        graphData.put("xlabel", xLabel);
+        graphData.put("ylabel", yLabel);
+        graphData.put("ranges", ranges);
+        graphData.put("colors", PlotData.colors);
+        return graphData;
+    }
 
     void doLine(Series<Integer, Double> series, String line, double scale) {
         String[] fields = line.split(" ");
@@ -371,81 +415,74 @@ public class PlotData extends ScatterChart {
 //            it++;
 //        }
 //    }
-    public void dumpLine(int iSeries) {
+    public String getSeriesName(int iSeries) {
         ObservableList<XYChart.Series<Double, Double>> data = getData();
         XYChart.Series<Double, Double> series = data.get(iSeries);
-        series.getData().forEach((value) -> {
-            Double x = value.getXValue();
-            Double y = value.getYValue();
-            Object extraValue = value.getExtraValue();
-            if (extraValue instanceof ResidueData.DataValue) {
-                Double error = ((ResidueData.DataValue) extraValue).getError();
-                String outputLine = String.format("%14.4g %14.4g %14.4g", x, y, error);
-                System.out.println(outputLine);
-            }
-        });
+        String seriesName = series.getName();  // Can get residue by splitting semicolon
+        return seriesName;
     }
 
-    public ArrayList<String> returnLine(int iSeries) {
+    public void dumpLine(int iSeries) {
+        ArrayList<ArrayList<Double>> lineData = returnLine(iSeries);
+        lineData.forEach((pointData -> {
+            String outputLine = String.format("%14.4g %14.4g %14.4g", pointData.get(0), pointData.get(1), pointData.get(2));
+            System.out.println(pointData);
+        }));
+    }
+
+    public ArrayList<ArrayList<Double>> returnLine(int iSeries) {
         ObservableList<XYChart.Series<Double, Double>> data = getData();
         XYChart.Series<Double, Double> series = data.get(iSeries);
-
-        ArrayList<String> lines = new ArrayList<String>(series.getData().size());
+        ArrayList<ArrayList<Double>> lineData = new ArrayList<>(series.getData().size());
         series.getData().forEach((value) -> {
             Double x = value.getXValue();
             Double y = value.getYValue();
             Object extraValue = value.getExtraValue();
             if (extraValue instanceof ResidueData.DataValue) {
                 Double error = ((ResidueData.DataValue) extraValue).getError();
-                String outputLine = String.format("%14.4g %14.4g %14.4g", x, y, error);
-                lines.add(outputLine);
-                //System.out.println(outputLine);
+                ArrayList<Double> pointData = new ArrayList<>(3);
+                pointData.add(x);
+                pointData.add(y);
+                pointData.add(error);
+                lineData.add(pointData);
             }
         });
-        return lines;
+        return lineData;
     }
 
     public void dumpEquation(int iLine) {
-        PlotEquation plotEquation = plotEquations.get(iLine);
-        double fieldRef = 1.0;
-        double min = xAxis.getLowerBound();
-        double max = xAxis.getUpperBound();
-        int nIncr = 100;
-        double delta = (max - min) / nIncr;
-        if (iLine == 0) {
-            fieldRef = plotEquation.getExtra(0);
-        }
-        double[] ax = new double[1];
-
-        for (int i = 1; i < nIncr - 1; i++) {
-            double xValue = min + i * delta;
-            ax[0] = xValue;
-            double yValue = plotEquation.calculate(ax, plotEquation.getExtra(0) / fieldRef);
-            String outputLine = String.format("%14.4g %14.4g %14.4g", xValue, yValue, 0.0);
-        }
+        ArrayList<ArrayList<Double>> equationData = returnEquation(iLine);
+        equationData.forEach((pointData -> {
+            String outputLine = String.format("%14.4g %14.4g %14.4g", pointData.get(0), pointData.get(1), pointData.get(2));
+            System.out.println(pointData);
+        }));
     }
 
-    public ArrayList<String> returnEquation(int iLine) {
+    public ArrayList<ArrayList<Double>> returnEquation(int iLine) {
         PlotEquation plotEquation = plotEquations.get(iLine);
-        double fieldRef = 1.0;
+        double fieldRef;
+        if (iLine == 0) {
+            fieldRef = plotEquation.getExtra(0);
+        } else { //Prevents another call if iLine = 0; probably an easier way to do this
+            PlotEquation refEquation = plotEquations.get(0);
+            fieldRef = refEquation.getExtra(0);
+        }
         double min = xAxis.getLowerBound();
         double max = xAxis.getUpperBound();
         int nIncr = 100;
         double delta = (max - min) / nIncr;
-        if (iLine == 0) {
-            fieldRef = plotEquation.getExtra(0);
-        }
-        ArrayList<String> lines = new ArrayList<String>(nIncr - 1);
+        ArrayList<ArrayList<Double>> equationData = new ArrayList<>(nIncr - 1);
         double[] ax = new double[1];
-
         for (int i = 1; i < nIncr - 1; i++) {
+            ArrayList<Double> pointData = new ArrayList<>(3);
             double xValue = min + i * delta;
             ax[0] = xValue;
             double yValue = plotEquation.calculate(ax, plotEquation.getExtra(0) / fieldRef);
-            String outputLine = String.format("%14.4g %14.4g %14.4g", xValue, yValue, 0.0);
-            lines.add(outputLine);
+            pointData.add(xValue);
+            pointData.add(yValue);
+            equationData.add(pointData);
         }
-        return lines;
+        return equationData;
     }
 
 //    @Override

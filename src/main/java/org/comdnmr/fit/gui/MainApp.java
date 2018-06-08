@@ -16,9 +16,9 @@ public class MainApp extends Application {
     public static ScriptEngine engine;
 
     public static void main(String[] args) throws ScriptException {
-        engine = new ScriptEngineManager().getEngineByName("python");
+        engine = new ScriptEngineManager().getEngineByName("jython");
         engine.put(ScriptEngine.ARGV, args);
-        engine.eval("from graceExport import Writer");
+        engine.eval("from exporter import Writer");
         launch(args);
     }
 

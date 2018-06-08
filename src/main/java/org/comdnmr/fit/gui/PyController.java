@@ -58,11 +58,10 @@ import org.comdnmr.fit.calc.ResidueProperties;
 import org.controlsfx.control.StatusBar;
 import org.comdnmr.fit.calc.CESTFit;
 import java.io.PrintStream;
-import javafx.event.EventType;
+import java.util.HashMap;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.SplitPane;
-import org.comdnmr.fit.calc.ParValue;
 import static org.comdnmr.fit.gui.ChartUtil.residueProperties;
 import javafx.scene.Scene;
 import javafx.scene.chart.ScatterChart;
@@ -1068,37 +1067,52 @@ public class PyController implements Initializable {
         }
     }
 
-    public void saveGraceFile() throws IOException, ScriptException {
+    public void exportExecutable(String fileSuggestion, String exportType) throws ScriptException {
         FileChooser chooser = new FileChooser();
-        chooser.setInitialFileName("ASCII.agr");
+        chooser.setInitialFileName(fileSuggestion);
         File file = chooser.showSaveDialog(MainApp.primaryStage);
         if (file != null) {
             String filePath = file.getAbsolutePath();
-            MainApp.engine.put("file", filePath);
 
-            MainApp.engine.eval("writer = Writer()");
-            int numPlots = xychart.getNumPlots();
-            int numFits = xychart.getNumEquations();
+            Map<String, Object>[] plottedData = xychart.getPlottedData();
+            Map<String, Object> graphData = xychart.getGraphData();
 
-            if (numPlots == numFits) {
-                for (int i = 0; i < numPlots; i++) {
-                    int color = i + 1;
-                    MainApp.engine.put("color", color);
-
-                    ArrayList<String> rawData = xychart.returnLine(i);
-                    MainApp.engine.put("rawData", rawData);
-                    MainApp.engine.eval("writer.addRawData(rawData,color)");
-
-                    ArrayList<String> fittedData = xychart.returnEquation(i);
-                    MainApp.engine.put("fittedData", fittedData);
-                    MainApp.engine.eval("writer.addFittedData(fittedData,color)");
-                }
+            graphData.put("file", filePath);
+            graphData.put("exportType", exportType);
+            ArrayList<Object> barChartData;
+            if (exportType != "grace") {
+                ObservableList<Node> barNodes = chartBox.getChildren();
+                barChartData = new ArrayList<>(barNodes.size());
+                barNodes.forEach(node -> {
+                    if (node instanceof XYBarChart) {
+                        XYBarChart barChart = (XYBarChart) node;
+                        String barChartName = barChart.toString();
+                        HashMap<String, Object> chartData = barChart.getChartData();
+                        barChartData.add(chartData);
+                    }
+                });
+            } else {
+                barChartData = new ArrayList<>(0);
             }
-            MainApp.engine.eval("writer.write();");
-            MainApp.engine.eval("writer.writeOut(file)");
 
-            // TODO Figure out this part           
+            MainApp.engine.put("data", plottedData);
+            MainApp.engine.put("configData", graphData);
+            MainApp.engine.put("barChartData", barChartData);
+            MainApp.engine.eval("writer = Writer(configData,data,barChartData)");
+            MainApp.engine.eval("writer.writeFromExportData()");
         }
+    }
+
+    public void saveGraceFile() throws IOException, ScriptException {
+        exportExecutable("ASCII.agr", "grace");
+    }
+
+    public void savePythonFile() throws IOException, ScriptException {
+        exportExecutable("graph.py", "python");
+    }
+
+    public void saveRFile() throws IOException, ScriptException {
+        exportExecutable("graph.r", "r");
     }
 
     public void snapit(Node node, File file) throws IOException {
