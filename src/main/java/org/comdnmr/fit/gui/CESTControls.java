@@ -34,6 +34,7 @@ import static org.comdnmr.fit.gui.CESTControls.PARS.R2A;
 import static org.comdnmr.fit.gui.CESTControls.PARS.R2B;
 import static org.comdnmr.fit.gui.ChartUtil.residueProperties;
 import static org.comdnmr.fit.gui.PyController.defaultField;
+import org.comdnmr.fit.calc.CalcCEST;
 
 /**
  *
@@ -613,6 +614,120 @@ public class CESTControls implements EquationControls {
                 pars = null;
         }
         return pars;
+
+    }
+    
+    public double[] sliderGuess(String equationName, int[][] map) {
+        double kex = KEX.getValue();
+        double pb = PB.getValue();
+        double deltaA0 = DELTAA0.getValue();
+        double deltaB0 = DELTAB0.getValue();
+        double R1a = R1A.getValue();
+        double R1b = R1B.getValue();
+        double R2a = R2A.getValue();
+        double R2b = R2B.getValue();
+        int nPars = CalcCEST.getNPars(map);
+        double[] guesses = new double[nPars];
+        switch (equationName) {
+            case "CESTR1RHOPERTURBATION":
+                for (int id = 0; id < map.length; id++) {
+                    guesses[map[id][0]] = kex; //kex
+                    guesses[map[id][1]] = pb; //pb
+                    guesses[map[id][2]] = deltaA0; //deltaA
+                    guesses[map[id][3]] = deltaB0; //deltaB
+                    guesses[map[id][4]] = R1a; //R1A
+                    guesses[map[id][5]] = R1b; //R1B
+                    guesses[map[id][6]] = R2a; //R2A
+                    guesses[map[id][7]] = R2b; //R2B
+                }
+                break;
+            case "CESTR1RHON":
+                for (int id = 0; id < map.length; id++) {
+                    guesses[map[id][0]] = kex; //kex
+                    guesses[map[id][1]] = pb; //pb
+                    guesses[map[id][2]] = deltaA0; //deltaA
+                    guesses[map[id][3]] = deltaB0; //deltaB
+                    guesses[map[id][4]] = R1a; //R1A
+                    guesses[map[id][5]] = R1b; //R1B
+                    guesses[map[id][6]] = R2a; //R2A
+                    guesses[map[id][7]] = R2b; //R2B
+                }
+                break;
+            case "CESTR1RHOSD":
+                for (int id = 0; id < map.length; id++) {
+                    guesses[map[id][0]] = kex; //kex
+                    guesses[map[id][1]] = pb; //pb
+                    guesses[map[id][2]] = deltaA0; //deltaA
+                    guesses[map[id][3]] = deltaB0; //deltaB
+                    guesses[map[id][4]] = R1a; //R1A
+                    guesses[map[id][5]] = R1b; //R1B
+                    guesses[map[id][6]] = R2a; //R2A
+                    guesses[map[id][7]] = R2b; //R2B
+                }
+                break;
+            case "CESTR1RHOBALDWINKAY":
+                for (int id = 0; id < map.length; id++) {
+                    guesses[map[id][0]] = kex; //kex
+                    guesses[map[id][1]] = pb; //pb
+                    guesses[map[id][2]] = deltaA0; //deltaA
+                    guesses[map[id][3]] = deltaB0; //deltaB
+                    guesses[map[id][4]] = R1a; //R1A
+                    guesses[map[id][5]] = R1b; //R1B
+                    guesses[map[id][6]] = R2a; //R2A
+                    guesses[map[id][7]] = R2b; //R2B
+                }
+                break;
+            case "CESTR1RHOEXACT1":
+                for (int id = 0; id < map.length; id++) {
+                    guesses[map[id][0]] = kex; //kex
+                    guesses[map[id][1]] = pb; //pb
+                    guesses[map[id][2]] = deltaA0; //deltaA
+                    guesses[map[id][3]] = deltaB0; //deltaB
+                    guesses[map[id][4]] = R1a; //R1A
+                    guesses[map[id][5]] = R1b; //R1B
+                    guesses[map[id][6]] = R2a; //R2A
+                    guesses[map[id][7]] = R2b; //R2B
+                }
+                break;
+            case "CESTEXACT0":
+                for (int id = 0; id < map.length; id++) {
+                    guesses[map[id][0]] = kex; //kex
+                    guesses[map[id][1]] = pb; //pb
+                    guesses[map[id][2]] = deltaA0; //deltaA
+                    guesses[map[id][3]] = deltaB0; //deltaB
+                    guesses[map[id][4]] = R1a; //R1A
+                    guesses[map[id][5]] = R1b; //R1B
+                    guesses[map[id][6]] = R2a; //R2A
+                    guesses[map[id][7]] = R2b; //R2B
+                }
+                break;
+            case "CESTEXACT1":
+                for (int id = 0; id < map.length; id++) {
+                    guesses[map[id][0]] = kex; //kex
+                    guesses[map[id][1]] = pb; //pb
+                    guesses[map[id][2]] = deltaA0; //deltaA
+                    guesses[map[id][3]] = deltaB0; //deltaB
+                    guesses[map[id][4]] = R1a; //R1A
+                    guesses[map[id][5]] = R1b; //R1B
+                    guesses[map[id][6]] = R2a; //R2A
+                    guesses[map[id][7]] = R2b; //R2B
+                }
+                break;
+            case "CESTEXACT2":
+                for (int id = 0; id < map.length; id++) {
+                    guesses[map[id][0]] = kex; //kex
+                    guesses[map[id][1]] = pb; //pb
+                    guesses[map[id][2]] = deltaA0; //deltaA
+                    guesses[map[id][3]] = deltaB0; //deltaB
+                    guesses[map[id][4]] = R1a; //R1A
+                    guesses[map[id][5]] = R1b; //R1B
+                    guesses[map[id][6]] = R2a; //R2A
+                    guesses[map[id][7]] = R2b; //R2B
+                }
+                break;
+        }
+        System.out.println("slider guesses = " + guesses);
+        return guesses;
 
     }
 

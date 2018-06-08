@@ -113,7 +113,6 @@
                                                 <children>
                                                     <CheckBox text="AbsMode" fx:id="absValueModeCheckBox"/>
                                                     <CheckBox text="BootStrap" fx:id="nonParBootStrapCheckBox"/>
-
                                                 </children>
                                             </HBox>
                                             <HBox>
@@ -121,6 +120,38 @@
                                                     <StatusBar fx:id="statusBar" HBox.hgrow="ALWAYS"/>
                                                 </children>
                                             </HBox>
+                                        </children>
+
+                                    </VBox>
+                                </Tab>
+                                <Tab text="Chart Bounds" closable="false" > 
+                                    <VBox HBox.hgrow="ALWAYS">
+                                        <children>
+                                            <HBox>
+                                                <children>
+                                                </children>
+                                            </HBox> 
+                                            <HBox>
+                                                <children>
+                                                    <Label text="X LB  " fx:id="xLowerBoundLabel"/>
+                                                    <TextField fx:id="xLowerBoundTextField" prefWidth="100"/>
+                                                    <Label text="  X UB  " fx:id="xUpperBoundLabel"/>
+                                                    <TextField fx:id="xUpperBoundTextField" prefWidth="100"/>
+                                                    <Label text="  X tick interval  " fx:id="xTickLabel"/>
+                                                    <TextField fx:id="xTickTextField" prefWidth="100"/>
+                                                </children>
+                                            </HBox>
+                                            <HBox>
+                                                <children>
+                                                    <Label text="Y LB  " fx:id="yLowerBoundLabel"/>
+                                                    <TextField fx:id="yLowerBoundTextField" prefWidth="100"/>
+                                                    <Label text="  Y UB  " fx:id="yUpperBoundLabel"/>
+                                                    <TextField fx:id="yUpperBoundTextField" prefWidth="100"/>
+                                                    <Label text="  Y tick interval  " fx:id="yTickLabel"/>
+                                                    <TextField fx:id="yTickTextField" prefWidth="100"/>
+                                                </children>
+                                            </HBox>
+                                            <Button text="Set Bounds" onAction="#setBounds" fx:id="setBoundsButton"/>
                                         </children>
 
                                     </VBox>

@@ -30,6 +30,7 @@ import static org.comdnmr.fit.gui.CPMGControls.PARS.PA;
 import static org.comdnmr.fit.gui.CPMGControls.PARS.R2;
 import static org.comdnmr.fit.gui.CPMGControls.PARS.REX;
 import static org.comdnmr.fit.gui.PyController.defaultField;
+import org.comdnmr.fit.calc.CalcRDisp;
 
 /**
  *
@@ -332,6 +333,42 @@ public class CPMGControls implements EquationControls {
 
     }
 
+    public double[] sliderGuess(String equationName, int[][] map) {
+        double r2 = R2.getValue();
+        double kEx = KEX.getValue();
+        double rEx = REX.getValue();
+        double pA = PA.getValue();
+        double dW = DW.getValue();
+        double field2 = FIELD2.getValue();
+        int nPars = CalcRDisp.getNPars(map);
+        double[] guesses = new double[nPars];
+        switch (equationName) {
+            case "NOEX":
+                for (int id = 0; id < map.length; id++) {
+                    guesses[map[id][0]] = r2;
+                }
+                break;
+            case "CPMGFAST":
+                for (int id = 0; id < map.length; id++) {
+                    guesses[map[id][1]] = r2;
+                    guesses[map[id][2]] = rEx;
+                }
+                guesses[0] = kEx;
+                break;
+            case "CPMGSLOW":
+                for (int id = 0; id < map.length; id++) {
+                    guesses[map[id][2]] = r2;
+                    guesses[map[id][3]] = Math.sqrt(dW) / (2.0 * Math.PI);
+                }
+                guesses[0] = kEx;
+                guesses[1] = pA;
+                break;
+        }
+        System.out.println("slider guesses = " + guesses);
+        return guesses;
+
+    }
+        
     @Override
     public void updateStates(List<int[]> allStates) {
         StringBuilder sBuilder = new StringBuilder();

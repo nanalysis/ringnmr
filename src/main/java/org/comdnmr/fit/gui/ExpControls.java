@@ -22,6 +22,7 @@ import org.comdnmr.fit.calc.ResidueProperties;
 import static org.comdnmr.fit.gui.ExpControls.PARS.A;
 import static org.comdnmr.fit.gui.ExpControls.PARS.C;
 import static org.comdnmr.fit.gui.ExpControls.PARS.R;
+import org.comdnmr.fit.calc.CalcExpDecay;
 
 /**
  *
@@ -194,6 +195,25 @@ public class ExpControls implements EquationControls {
         updateEquations();
     }
 
+    public double[] sliderGuess(String equationName, int[][] map) {
+        double a = A.getValue();
+        double r = R.getValue();
+        double c = C.getValue();
+        int nPars = CalcExpDecay.getNPars(map);
+        double[] guesses = new double[nPars];
+        switch (equationName) {
+            case "EXPAB":
+                for (int id = 0; id < map.length; id++) {
+                    guesses[map[id][0]] = a;
+                    guesses[map[id][1]] = r;
+                }
+                break;
+        }
+        System.out.println("slider guesses = " + guesses);
+        return guesses;
+
+    }
+        
     @Override
     public void updateStates(List<int[]> allStates) {
 

@@ -58,6 +58,7 @@ import org.comdnmr.fit.calc.ResidueProperties;
 import org.controlsfx.control.StatusBar;
 import org.comdnmr.fit.calc.CESTFit;
 import java.io.PrintStream;
+import javafx.event.EventType;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.SplitPane;
@@ -67,6 +68,8 @@ import javafx.scene.Scene;
 import javafx.scene.chart.ScatterChart;
 import javafx.scene.layout.HBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.control.Button;
 
 public class PyController implements Initializable {
 
@@ -75,6 +78,10 @@ public class PyController implements Initializable {
     @FXML
     XYBarChart xyBarChart0;
 
+    SSRegion activeSSregion;
+    @FXML
+    SSRegion ssregion;
+    
     @FXML
     PlotData xychart;
 
@@ -108,6 +115,25 @@ public class PyController implements Initializable {
 
     @FXML
     ChoiceBox<String> simChoice;
+    
+    @FXML
+    CheckBox sliderGuessCheckBox;
+    
+    @FXML
+    TextField xLowerBoundTextField;
+    @FXML
+    TextField xUpperBoundTextField;
+    @FXML
+    TextField xTickTextField;
+    @FXML
+    TextField yLowerBoundTextField;
+    @FXML
+    TextField yUpperBoundTextField;
+    @FXML
+    TextField yTickTextField;
+    
+    @FXML
+    Button setBoundsButton;
 
     EquationControls simControls;
 
@@ -136,7 +162,7 @@ public class PyController implements Initializable {
     ChoiceBox<String> MCyArrayChoice = new ChoiceBox<>();
     XYChart activeMCchart;
     XYChart.Series MCseries = new XYChart.Series();
-
+    
     @FXML
     private void pyAction(ActionEvent event) {
         Node node = (Node) event.getSource();
@@ -167,6 +193,7 @@ public class PyController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         mainController = this;
         activeChart = xyBarChart0;
+        activeSSregion = ssregion;
         //propertySheet.setPropertyEditorFactory(new NvFxPropertyEditorFactory());
 //        propertySheet.setMode(PropertySheet.Mode.NAME);
 //        propertySheet.setModeSwitcherVisible(false);
@@ -179,18 +206,36 @@ public class PyController implements Initializable {
             equationChoice.getItems().add("+");
             equationChoice.getItems().addAll(CPMGFit.getEquationNames());
             equationChoice.setValue(CPMGFit.getEquationNames().get(0));
+            xLowerBoundTextField.setText("0.0");
+            xUpperBoundTextField.setText("1100.0");
+            yLowerBoundTextField.setText("0.0");
+            yUpperBoundTextField.setText("65.0");
+            xTickTextField.setText("100.0");
+            yTickTextField.setText("5.0");
         } else if (getFittingMode().equals("cest")) {
             simControls = new CESTControls();
             equationChoice.getItems().clear();
             equationChoice.getItems().add("+");
             equationChoice.getItems().addAll(CESTFit.getEquationNames());
             equationChoice.setValue(CESTFit.getEquationNames().get(0));
+            xLowerBoundTextField.setText("-6000.0");
+            xUpperBoundTextField.setText("6000.0");
+            yLowerBoundTextField.setText("0.0");
+            yUpperBoundTextField.setText("1.0");
+            xTickTextField.setText("2000.0");
+            yTickTextField.setText("0.25");
         } else if (getFittingMode().equals("exp")) {
             simControls = new ExpControls();
             equationChoice.getItems().clear();
             equationChoice.getItems().add("+");
             equationChoice.getItems().addAll(ExpFit.getEquationNames());
             equationChoice.setValue(ExpFit.getEquationNames().get(0));
+            xLowerBoundTextField.setText("0.0");
+            xUpperBoundTextField.setText("1.25");
+            yLowerBoundTextField.setText("0.0");
+            yUpperBoundTextField.setText("200.0");
+            xTickTextField.setText("0.25");
+            yTickTextField.setText("50.0");
         } else {
             System.out.println("Error: no fitting mode selected.");
         }
@@ -221,6 +266,8 @@ public class PyController implements Initializable {
         });
 
         splitPane.setDividerPositions(0.4, 0.7);
+        
+        setBoundsButton.setOnAction(this::setBounds);
     }
 
     public void setControls() {
@@ -307,17 +354,61 @@ public class PyController implements Initializable {
         textArea.setText("");
     }
 
-    public void updateXYChartLabels(PlotData plotData) {
+    public void updateXYChartLabels() {
         if ((simControls instanceof CPMGControls)) {
-            plotData.setNames("CPMG", "\u03BD (cpmg)", "R2 (\u03BD)", "0");
-            plotData.setBounds(0.0, 1100.0, 0.0, 65.0, 100.0, 5.0);
+            xychart.setNames("CPMG", "\u03BD (cpmg)", "R2 (\u03BD)", "0");
+            xychart.setBounds(0.0, 1100.0, 0.0, 65.0, 100.0, 5.0);
+            xLowerBoundTextField.setText("0.0");
+            xUpperBoundTextField.setText("1100.0");
+            yLowerBoundTextField.setText("0.0");
+            yUpperBoundTextField.setText("65.0");
+            xTickTextField.setText("100.0");
+            yTickTextField.setText("5.0");
         } else if ((simControls instanceof ExpControls)) {
-            plotData.setNames("Exp", "Time (s)", "Intensity", "0");
-            plotData.setBounds(0.0, 1.25, 0.0, 200.0, 0.25, 50.0);
+            xychart.setNames("Exp", "Time (s)", "Intensity", "0");
+            xychart.setBounds(0.0, 1.25, 0.0, 200.0, 0.25, 50.0);
+            xLowerBoundTextField.setText("0.0");
+            xUpperBoundTextField.setText("1.25");
+            yLowerBoundTextField.setText("0.0");
+            yUpperBoundTextField.setText("200.0");
+            xTickTextField.setText("0.25");
+            yTickTextField.setText("50.0");
         } else if ((simControls instanceof CESTControls)) {
-            plotData.setNames("CEST", "Offset (Hz)", "I(t)/I(0)", "20");
-            plotData.setBounds(-6000.0, 6000.0, 0.0, 1.0, 1000.0, 0.25);
+            xychart.setNames("CEST", "Offset (Hz)", "I(t)/I(0)", "20");
+            xychart.setBounds(-6000.0, 6000.0, 0.0, 1.0, 2000.0, 0.25);
+            xLowerBoundTextField.setText("-6000.0");
+            xUpperBoundTextField.setText("6000.0");
+            yLowerBoundTextField.setText("0.0");
+            yUpperBoundTextField.setText("1.0");
+            xTickTextField.setText("2000.0");
+            yTickTextField.setText("0.25");
         }
+    }
+    
+    public void setBounds(ActionEvent event) {
+        try {
+            double xLB = Double.parseDouble(xLowerBoundTextField.getText());
+            double xUB = Double.parseDouble(xUpperBoundTextField.getText());
+            double xTick = Double.parseDouble(xTickTextField.getText());
+            double yLB = Double.parseDouble(yLowerBoundTextField.getText());
+            double yUB = Double.parseDouble(yUpperBoundTextField.getText());
+            double yTick = Double.parseDouble(yTickTextField.getText());
+            if (xLB < xUB & yLB < yUB) {
+                xychart.setBounds(xLB, xUB, yLB, yUB, xTick, yTick);
+            } else {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setContentText("Error: Upper Bound must be > Lower Bound.");
+                alert.showAndWait();
+                return;
+            }
+            
+        } catch (NumberFormatException nfEsb) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText("Error: Bound and Interval values must be provided.");
+            alert.showAndWait();
+            return;
+        }
+        
     }
 
     public void updateChartEquations(String equationName, double[] pars, double[] errs, double[] fields) {
@@ -634,10 +725,15 @@ public class PyController implements Initializable {
             String[] resNums = {String.valueOf(currentResInfo.getResNum())};
             equationFitter.setData(currentResProps, resNums);
             String equationName = simControls.getEquation();
+//            equationFitter.getFitModel().setMap(stateCount, states);
+//            int[][] map = equationFitter.getFitModel().getMap();
+//            System.out.println("map = " + map);
+//            System.out.println("getFitModel = " + equationFitter.getFitModel());
 //        System.out.println("fitEqn eqnFitter = " + equationFitter);
 //        System.out.println("fitEqn resNums = " + resNums);
 //        System.out.println("fitEqn eqnName = " + equationName);
-            fitResult = equationFitter.doFit(equationName, absValueModeCheckBox.isSelected(), nonParBootStrapCheckBox.isSelected());
+            double[] sliderGuesses = null; //simControls.sliderGuess(equationName, map);
+            fitResult = equationFitter.doFit(equationName, absValueModeCheckBox.isSelected(), nonParBootStrapCheckBox.isSelected(), sliderGuesses);
             updateAfterFit(fitResult);
         } catch (NullPointerException npE2) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -844,7 +940,7 @@ public class PyController implements Initializable {
         //Create the Scatter chart  
         NumberAxis MCxAxis = new NumberAxis();
         NumberAxis MCyAxis = new NumberAxis();
-        ScatterChart<String, Number> MCchart = new ScatterChart(MCxAxis, MCyAxis);
+        ScatterChart<Number, Number> MCchart = new ScatterChart(MCxAxis, MCyAxis);
         MCxAxis.setAutoRanging(true);
         MCxAxis.setForceZeroInRange(false);
         MCyAxis.setAutoRanging(true);
@@ -906,7 +1002,7 @@ public class PyController implements Initializable {
             MCdisplay.getChildren().remove(activeMCchart);
             NumberAxis MCxAxis = new NumberAxis();
             NumberAxis MCyAxis = new NumberAxis();
-            ScatterChart<String, Number> MCchart = new ScatterChart(MCxAxis, MCyAxis);
+            ScatterChart<Number, Number> MCchart = new ScatterChart(MCxAxis, MCyAxis);
             MCxAxis.setAutoRanging(true);
             MCxAxis.setForceZeroInRange(false);
             MCyAxis.setAutoRanging(true);
@@ -1093,7 +1189,7 @@ public class PyController implements Initializable {
         activeChart = xyBarChart0;
         getSimMode();
         setSimControls();
-        updateXYChartLabels(xychart);
+        updateXYChartLabels();
         simControls.simSliderAction("");
     }
 
@@ -1130,7 +1226,7 @@ public class PyController implements Initializable {
             }
         }
         plotData.setData(allData);
-        updateXYChartLabels(plotData);
+        updateXYChartLabels();
         plotData.setEquations(equations);
         plotData.layoutPlotChildren();
         updateTable(resDatas);

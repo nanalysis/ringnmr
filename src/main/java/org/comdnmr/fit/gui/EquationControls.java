@@ -26,5 +26,7 @@ public interface EquationControls {
     void updateStates(List<int[]> allStates);
 
     public void simSliderAction(String label);
+    
+    public double[] sliderGuess(String equationName, int[][] map);
 
 }
