@@ -81,7 +81,7 @@ public class PyController implements Initializable {
     SSRegion activeSSregion;
     @FXML
     SSRegion ssregion;
-    
+
     @FXML
     PlotData xychart;
 
@@ -115,10 +115,10 @@ public class PyController implements Initializable {
 
     @FXML
     ChoiceBox<String> simChoice;
-    
+
     @FXML
     CheckBox sliderGuessCheckBox;
-    
+
     @FXML
     TextField xLowerBoundTextField;
     @FXML
@@ -131,7 +131,7 @@ public class PyController implements Initializable {
     TextField yUpperBoundTextField;
     @FXML
     TextField yTickTextField;
-    
+
     @FXML
     Button setBoundsButton;
 
@@ -162,7 +162,7 @@ public class PyController implements Initializable {
     ChoiceBox<String> MCyArrayChoice = new ChoiceBox<>();
     XYChart activeMCchart;
     XYChart.Series MCseries = new XYChart.Series();
-    
+
     @FXML
     private void pyAction(ActionEvent event) {
         Node node = (Node) event.getSource();
@@ -266,7 +266,7 @@ public class PyController implements Initializable {
         });
 
         splitPane.setDividerPositions(0.4, 0.7);
-        
+
         setBoundsButton.setOnAction(this::setBounds);
     }
 
@@ -384,7 +384,7 @@ public class PyController implements Initializable {
             yTickTextField.setText("0.25");
         }
     }
-    
+
     public void setBounds(ActionEvent event) {
         try {
             double xLB = Double.parseDouble(xLowerBoundTextField.getText());
@@ -401,14 +401,14 @@ public class PyController implements Initializable {
                 alert.showAndWait();
                 return;
             }
-            
+
         } catch (NumberFormatException nfEsb) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setContentText("Error: Bound and Interval values must be provided.");
             alert.showAndWait();
             return;
         }
-        
+
     }
 
     public void updateChartEquations(String equationName, double[] pars, double[] errs, double[] fields) {
@@ -720,6 +720,7 @@ public class PyController implements Initializable {
     @FXML
     public void fitEquation(ActionEvent event) {
 //        EquationFitter equationFitter = new CPMGFit();
+        fitResult = null;
         try {
             EquationFitter equationFitter = getFitter();
             String[] resNums = {String.valueOf(currentResInfo.getResNum())};
@@ -795,11 +796,13 @@ public class PyController implements Initializable {
 
     @FXML
     public void fitResidues(ActionEvent event) {
+        fitResult = null;
         residueFitter.fitResidues(currentResProps);
     }
 
     @FXML
     public void fitGroupResidues(ActionEvent event) {
+        fitResult = null;
         List<List<String>> allResidues = new ArrayList<>();
         List<String> groupResidues = new ArrayList<>();
         XYBarChart chart = getActiveChart();
@@ -1015,8 +1018,9 @@ public class PyController implements Initializable {
             int xInd = MCxArrayChoice.getSelectionModel().getSelectedIndex();
             int yInd = MCyArrayChoice.getSelectionModel().getSelectedIndex();
             if (fitResult != null && fitResult.getSimPars() != null) {
-                for (int i = 0; i < fitResult.getSimPars()[xInd].length; i++) {
-                    MCseries.getData().add(new XYChart.Data(fitResult.getSimPars()[xInd][i], fitResult.getSimPars()[yInd][i]));
+                double[][] simPars = fitResult.getSimPars();
+                for (int i = 0; i < simPars[xInd].length; i++) {
+                    MCseries.getData().add(new XYChart.Data(simPars[xInd][i], simPars[yInd][i]));
                 }
 
                 MCchart.getData().clear();
@@ -1025,8 +1029,9 @@ public class PyController implements Initializable {
                 activeMCchart = MCchart;
                 MCdisplay.getChildren().add(activeMCchart);
             } else if (residueFitter.getFitResult() != null && residueFitter.getFitResult().getSimPars() != null) {
+                double[][] simPars = residueFitter.getFitResult().getSimPars();
                 for (int i = 0; i < residueFitter.getFitResult().getSimPars()[xInd].length; i++) {
-                    MCseries.getData().add(new XYChart.Data(residueFitter.getFitResult().getSimPars()[xInd][i], residueFitter.getFitResult().getSimPars()[yInd][i]));
+                    MCseries.getData().add(new XYChart.Data(simPars[xInd][i], simPars[yInd][i]));
                 }
 
                 MCchart.getData().clear();
