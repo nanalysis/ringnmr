@@ -145,7 +145,7 @@ public class ExpFit implements EquationFitter {
         return parValues;
     }
 
-    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap) {
+    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderguesses) {
         double[][] x = new double[1][yValues.size()];
         double[] y = new double[yValues.size()];
         double[] err = new double[xValues.size()];
@@ -168,7 +168,14 @@ public class ExpFit implements EquationFitter {
         expModel.setFields(usedFields);
         expModel.setMap(stateCount, states);
         int[][] map = expModel.getMap();
-        double[] guesses = expModel.guess();
+        double[] guesses;
+        if (sliderguesses != null) {
+            //fixme
+            guesses = sliderguesses;
+        } else {
+            guesses = expModel.guess();
+        }
+//        System.out.println("dofit guesses = " + guesses);
         double[][] boundaries = expModel.boundaries();
         double[] sigma = new double[guesses.length];
         for (int i = 0; i < guesses.length; i++) {

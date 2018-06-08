@@ -112,7 +112,7 @@ public class CESTFitTest {
         CESTFit fitting = new CESTFit();
         fitting.setData(offset, omega, intenarray, errarray);
         
-        CPMGFitResult fit = fitting.doFit("cestr1rhoperturbation", false, false);
+        CPMGFitResult fit = fitting.doFit("cestr1rhoperturbation", false, false, null);
 
         double[] fitpars = fit.getPars(0);
         double[] validpars = new double[]{159.40549413953838, 0.07848868547481112, 2705.7656176771607, -1244.26540485914, 2.3834525779746167,
@@ -160,7 +160,7 @@ public class CESTFitTest {
         CESTFit fitting = new CESTFit();
         fitting.setData(offset, omega, intenarray, errarray);
         
-        CPMGFitResult fit = fitting.doFit("cestr1rhosd", false, false);
+        CPMGFitResult fit = fitting.doFit("cestr1rhosd", false, false, null);
 
         double[] fitpars = fit.getPars(0);
         double[] validpars = new double[]{164.31219540872297, 0.08000559530543723, 2710.5848956396685, -1247.6238696374273, 2.3747806394904574,
@@ -208,7 +208,7 @@ public class CESTFitTest {
         CESTFit fitting = new CESTFit();
         fitting.setData(offset, omega, intenarray, errarray);
         
-        CPMGFitResult fit = fitting.doFit("cestr1rhobaldwinkay", false, false);
+        CPMGFitResult fit = fitting.doFit("cestr1rhobaldwinkay", false, false, null);
 
         double[] fitpars = fit.getPars(0);
         double[] validpars = new double[]{168.45940742687503, 0.07848006386286228, 2705.4283684664874, -1244.1504931304519, 2.3839104552778836,
@@ -256,7 +256,7 @@ public class CESTFitTest {
         CESTFit fitting = new CESTFit();
         fitting.setData(offset, omega, intenarray, errarray);
         
-        CPMGFitResult fit = fitting.doFit("cestr1rhon", false, false);
+        CPMGFitResult fit = fitting.doFit("cestr1rhon", false, false, null);
 
         double[] fitpars = fit.getPars(0);
         double[] validpars = new double[]{288.937925578066, 0.07087265844081425, 2771.0529601396183, -1285.1744405197783, 2.4246256495623104,

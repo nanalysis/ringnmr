@@ -196,7 +196,7 @@ public class CESTFit implements EquationFitter {
     }
 
     @Override
-    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap) {
+    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderguesses) {
         double[][] x = new double[2][yValues.size()];
         double[] y = new double[yValues.size()];
         double[] err = new double[yValues.size()];
@@ -221,7 +221,14 @@ public class CESTFit implements EquationFitter {
         calcCEST.setFields(usedFields);
         calcCEST.setMap(stateCount, states);
         int[][] map = calcCEST.getMap();
-        double[] guesses = calcCEST.guess();
+        double[] guesses;
+        if (sliderguesses != null) {
+            //fixme
+            guesses = sliderguesses;
+        } else {
+            guesses = calcCEST.guess();
+        }
+//        System.out.println("dofit guesses = " + guesses);
 //        double[] guesses = setupFit(eqn, absMode);
         double[][] boundaries = calcCEST.boundaries();
         double[] sigma = new double[guesses.length];

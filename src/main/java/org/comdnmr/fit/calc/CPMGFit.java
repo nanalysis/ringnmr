@@ -143,7 +143,7 @@ public class CPMGFit implements EquationFitter {
         return parValues;
       }
 
-    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap) {
+    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderguesses) {
         double[][] x = new double[1][xValues.size()];
         double[] y = new double[yValues.size()];
         double[] err = new double[yValues.size()];
@@ -166,7 +166,14 @@ public class CPMGFit implements EquationFitter {
         calcR.setFields(usedFields);
         calcR.setMap(stateCount, states);
         int[][] map = calcR.getMap();
-        double[] guesses = calcR.guess();
+        double[] guesses;
+        if (sliderguesses != null) {
+            //fixme
+            guesses = sliderguesses;
+        } else {
+            guesses = calcR.guess();
+        }
+//        System.out.println("dofit guesses = " + guesses);
         double[][] boundaries = calcR.boundaries();
         double[] sigma = new double[guesses.length];
         for (int i = 0; i < guesses.length; i++) {

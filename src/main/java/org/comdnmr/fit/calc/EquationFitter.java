@@ -18,7 +18,7 @@ public interface EquationFitter {
 
     public FitModel getFitModel();
 
-    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap);
+    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderGuesses);
     
     public List<ParValueInterface> setupFit(String eqn, boolean absMode);
 
