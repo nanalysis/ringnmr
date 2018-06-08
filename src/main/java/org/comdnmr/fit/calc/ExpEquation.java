@@ -26,7 +26,7 @@ public enum ExpEquation implements EquationType {
 
         @Override
         public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
-            int nPars = CalcRDisp.getNPars(map);
+            int nPars = CalcExpDecay.getNPars(map);
             double[] guesses = new double[nPars];
             double kExSum = 0.0;
             for (int id = 0; id < map.length; id++) {
@@ -95,7 +95,7 @@ public enum ExpEquation implements EquationType {
 
         public int[][] makeMap(int[] stateCount, int[][] states, int[] r2Mask) {
             int n = states.length;
-            int[][] map = new int[n][3];
+            int[][] map = new int[n][2];
             int lastCount = 0;
             for (int i = 0; i < n; i++) {
                 map[i][0] = 0;
@@ -103,12 +103,8 @@ public enum ExpEquation implements EquationType {
             lastCount++;
             int maxIndex = 0;
             for (int i = 0; i < n; i++) {
-                map[i][1] = CPMGFit.getMapIndex(states[i], stateCount, r2Mask) + lastCount;
+                map[i][1] = ExpFit.getMapIndex(states[i], stateCount, r2Mask) + lastCount;
                 maxIndex = Math.max(map[i][1], maxIndex);
-            }
-            lastCount = maxIndex + 1;
-            for (int i = 0; i < n; i++) {
-                map[i][2] = CPMGFit.getMapIndex(states[i], stateCount, 0, 3) + lastCount;
             }
             return map;
         }
