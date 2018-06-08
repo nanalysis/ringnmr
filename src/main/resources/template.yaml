@@ -1,0 +1,62 @@
+grace:
+  import : '@version 50122'
+  color  : '@map color {} to ({}, {}, {}), ""'
+  title  : '@   title "{}"'
+  xlabel : '@   xaxis label "{}"'
+  ylabel : '@   yaxis label "{}"'
+  ranges : '@   world {0}, {2}, {1}, {3}'
+  scatter:
+    - '@   s{0} type xydy'
+    - '@   s{0} line type 0'
+    - '@   s{0} symbol 1'
+    - '@   s{0} symbol color {1}'
+    - '@   s{0} symbol fill color {1}'
+    - '@   s{0} symbol fill pattern 1'
+  line   :
+    - '@   s{0} type xy'
+    - '@   s{0} line type 1'
+    - '@   s{0} line color {1}'
+    - '@   s{0} symbol 0'
+  dataHeader : '@type {}'
+
+python:
+  encode : '#coding=utf-8'
+  import : 'import matplotlib.pyplot as plt; from matplotlib.ticker import FormatStrFormatter'
+  newplot: 'plt.figure()'
+  endplot: 'plt.show()'
+  var    : '{1} = {0}'
+  arr    : '[{}]'
+  color  : 'color{} = ({},{},{})'
+  config : 'plt.title({title}); plt.xlabel({xlabel}); plt.ylabel({ylabel}); plt.xlim({xlims}); plt.ylim({ylims});'
+  title  : "plt.title(u'{}')"
+  xlabel : "plt.xlabel(u'{}')"
+  ylabel : "plt.ylabel(u'{}')"
+  xlim   : 'plt.xlim({})'
+  ylim   : 'plt.ylim({})'
+  xtick  : 'ax=plt.axes(); ax.xaxis.set_major_formatter(FormatStrFormatter("%i")); ax.xaxis.set_ticks(range({}, {}, 10)); '
+  scatter: 'plt.errorbar({0},{1},yerr={2}, label="{4}", linestyle="none", marker="o", color=color{3})'
+  line   : 'plt.errorbar({0},{1}, color=color{2})'
+  barplot: 'bar_width = 0.35; opacity = 1.0; plt.bar([index+{4}*bar_width for index in {0}], {1}, bar_width, alpha=opacity, label="{5}", color="{3}", yerr=[{2},{2}], error_kw={{"ecolor":"black"}}); plt.xticks([index+{4}*bar_width*0.5 for index in {0}], {0})'
+  legend : 'plt.legend()'
+  subplot: 'plt.subplot({}{}{})'
+
+r:
+  import : 'library(ggplot2); library(gridExtra);'
+  newplot: 'dev.new()'
+  var    : '{1} <- {0}'
+  arr    : 'c({})'
+  color  : 'color{} <- rgb({},{},{})'
+  frame  : 'data.frame({})' # Contain x,y and group
+  title  : 'ggtitle("{}")'
+  xlabel : 'xlab("{}")'
+  ylabel : 'ylab("{}")'
+  xlim   : 'xlim({})'
+  ylim   : 'ylim({})'
+  firstplt : 'ggplot(data={}, aes(x=x,y=y, color=factor(group), fill=factor(group)))'
+  scatter: 'geom_point()'
+  line   : 'geom_line(data={})'        # The dataframe that contains the fitted data
+  error  : 'geom_errorbar(aes(ymin=y-error, ymax=y+error), width=.2, position=position_dodge(0.9))'
+  pltcolor: 'scale_color_manual(values={0}) + scale_fill_manual(values={0})'
+  barplot: 'geom_col(position=position_dodge())'
+  subplot: 'grid.arrange({}, nrow={}, ncol={})'
+
