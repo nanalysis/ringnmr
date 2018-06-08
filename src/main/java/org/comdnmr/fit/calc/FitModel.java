@@ -115,7 +115,7 @@ public abstract class FitModel implements MultivariateFunction {
     public void setXY(double[][] x, double[] y) {
         this.xValues = x;
         this.yValues = y;
-        this.idNums = new int[x.length];
+        this.idNums = new int[x[0].length];
     }
 
     public void setErr(double[] err) {
@@ -213,11 +213,7 @@ public abstract class FitModel implements MultivariateFunction {
     }
 
     public double[] getPredicted(double[] par) {
-        double[] yPred = new double[yValues.length];
-        double rss = 0.0;
-        for (int i = 0; i < xValues.length; i++) {
-            yPred[i] = equation.calculate(par, map[idNums[i]], xValues[i], idNums[i], fieldValues[i]);
-        }
+        double[] yPred = simY(par);
         return yPred;
     }
 

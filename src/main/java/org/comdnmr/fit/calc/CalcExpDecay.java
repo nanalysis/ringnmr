@@ -36,7 +36,7 @@ public class CalcExpDecay extends FitModel {
         this.fieldValues = fieldValues.clone();
         this.fields = fields.clone();
         this.idNums = idNums.clone();
-        this.idNums = new int[xValues.length];
+        this.idNums = new int[yValues.length];
         this.equation = ExpEquation.EXPAB;
         this.equation.setFieldRef(fields);
         if (setNID()) {
@@ -62,7 +62,7 @@ public class CalcExpDecay extends FitModel {
     public double[][] getSimPars() {
         return parValues;
     }
-    
+
     @Override
     public double value(double[] par) {
         double sumAbs = 0.0;
