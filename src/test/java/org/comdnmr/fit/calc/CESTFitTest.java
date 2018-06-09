@@ -146,7 +146,7 @@ public class CESTFitTest {
         Assert.assertArrayEquals(fiterrs, validerrs, 6.0e1);
         
         double fitrms = fit.getRms();
-        double validrms = 0.11413164131657126;
+        double validrms = 0.012800369270230845;
         
         System.out.print("\ncestR1rhoPerturbation fit RMS: "+fitrms);
         System.out.print("\ncestR1rhoPerturbation valid RMS: "+validrms);
@@ -154,6 +154,8 @@ public class CESTFitTest {
         
         Assert.assertEquals(fitrms, validrms, 6.0e-13);
     }
+
+
     
     @Test
     public void testcestR1rhoSD() {
@@ -194,7 +196,7 @@ public class CESTFitTest {
         Assert.assertArrayEquals(fiterrs, validerrs, 6.0e1);
         
         double fitrms = fit.getRms();
-        double validrms = 0.11219482594550317;
+        double validrms = 0.012583146844688359;
         
         System.out.print("\ncestR1rhoSD fit RMS: "+fitrms);
         System.out.print("\ncestR1rhoSD valid RMS: "+validrms);
@@ -242,7 +244,7 @@ public class CESTFitTest {
         Assert.assertArrayEquals(fiterrs, validerrs, 6.0e1);
         
         double fitrms = fit.getRms();
-        double validrms = 0.1153435445860262;
+        double validrms = 0.012936289591623533;
         
         System.out.print("\ncestR1rhoBaldwinKay fit RMS: "+fitrms);
         System.out.print("\ncestR1rhoBaldwinKay valid RMS: "+validrms);
@@ -290,7 +292,7 @@ public class CESTFitTest {
         Assert.assertArrayEquals(fiterrs, validerrs, 6.0e1);
         
         double fitrms = fit.getRms();
-        double validrms = 0.15449163795370774;
+        double validrms = 0.017326921720901785;
         
         System.out.print("\ncestR1rhoN fit RMS: "+fitrms);
         System.out.print("\ncestR1rhoN valid RMS: "+validrms);
