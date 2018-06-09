@@ -59,6 +59,7 @@ public class PlotData extends ScatterChart {
 
     void init() {
         //xAxis.setAutoRanging(true);
+        //yAxis.setAutoRanging(true);
         xAxis.setUpperBound(1000.0);
         yAxis.setUpperBound(60.0);
         xAxis.setLabel("Time (s)");

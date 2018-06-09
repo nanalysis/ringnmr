@@ -298,7 +298,7 @@ public class PyController implements Initializable {
             VBox vBox = simControls.makeControls(mainController);
             simPane.centerProperty().set(vBox);
         }
-
+        updateXYChartLabels();
     }
 
     public void setSimControls() {
@@ -385,6 +385,9 @@ public class PyController implements Initializable {
     }
 
     public void setBounds(ActionEvent event) {
+        setBounds();
+    }
+    public void setBounds() {
         try {
             double xLB = Double.parseDouble(xLowerBoundTextField.getText());
             double xUB = Double.parseDouble(xUpperBoundTextField.getText());
@@ -1253,7 +1256,7 @@ public class PyController implements Initializable {
             }
         }
         plotData.setData(allData);
-        updateXYChartLabels();
+        setBounds();
         plotData.setEquations(equations);
         plotData.layoutPlotChildren();
         updateTable(resDatas);
