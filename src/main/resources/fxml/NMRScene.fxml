@@ -25,9 +25,19 @@
                             <MenuItem text="Save Analysis..." onAction="#saveParameters" fx:id="savePars"/>
                             <MenuItem text="Save Bar Chart..." onAction="#saveBarChart" fx:id="saveBarChartButton"/>
                             <MenuItem text="Save XY Chart..." onAction="#saveXYChart" fx:id="saveXYChartButton"/>
-                            <MenuItem text="Save Grace File..." onAction="#saveGraceFile" fx:id="saveGraceButton"/>
-                            <MenuItem text="Save Python File..." onAction="#savePythonFile" fx:id="savePythonButton"/>
-                            <MenuItem text="Save R File..." onAction="#saveRFile" fx:id="saveRButton"/>
+                            <Menu text="Export XY Chart">
+                                <items>
+                                    <MenuItem text="Save Grace File..." onAction="#saveGraceFile" fx:id="saveGraceButton"/>
+                                    <MenuItem text="Save Python File..." onAction="#savePythonFile" fx:id="savePythonButton"/>
+                                    <MenuItem text="Save R File..." onAction="#saveRFile" fx:id="saveRButton"/>                            
+                                </items>
+                            </Menu>
+                            <Menu text="Export Bar Chart">
+                                <items>
+                                    <MenuItem text="Save Python File..." onAction="#saveBarToPythonFile"/>
+                                    <MenuItem text="Save R File..." onAction="#saveBarToRFile"/>                            
+                                </items>
+                            </Menu>
                         </items>
                     </Menu>
                     <Menu text="Chart">

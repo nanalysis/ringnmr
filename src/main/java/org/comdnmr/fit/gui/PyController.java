@@ -1067,7 +1067,7 @@ public class PyController implements Initializable {
         }
     }
 
-    public void exportExecutable(String fileSuggestion, String exportType) throws ScriptException {
+    public void exportExecutable(String fileSuggestion, String exportType, boolean saveBar) throws ScriptException {
         FileChooser chooser = new FileChooser();
         chooser.setInitialFileName(fileSuggestion);
         File file = chooser.showSaveDialog(MainApp.primaryStage);
@@ -1075,12 +1075,12 @@ public class PyController implements Initializable {
             String filePath = file.getAbsolutePath();
 
             Map<String, Object>[] plottedData = xychart.getPlottedData();
-            Map<String, Object> graphData = xychart.getGraphData();
-
+            Map<String, Object> graphData = null;
+            graphData = xychart.getGraphData();
             graphData.put("file", filePath);
             graphData.put("exportType", exportType);
             ArrayList<Object> barChartData;
-            if (exportType != "grace") {
+            if (!"grace".equals(exportType) && saveBar) {
                 ObservableList<Node> barNodes = chartBox.getChildren();
                 barChartData = new ArrayList<>(barNodes.size());
                 barNodes.forEach(node -> {
@@ -1104,15 +1104,23 @@ public class PyController implements Initializable {
     }
 
     public void saveGraceFile() throws IOException, ScriptException {
-        exportExecutable("ASCII.agr", "grace");
+        exportExecutable("ASCII.agr", "grace", false);
     }
 
     public void savePythonFile() throws IOException, ScriptException {
-        exportExecutable("graph.py", "python");
+        exportExecutable("graph.py", "python", false);
     }
 
     public void saveRFile() throws IOException, ScriptException {
-        exportExecutable("graph.r", "r");
+        exportExecutable("graph.r", "r", false);
+    }
+
+    public void saveBarToPythonFile() throws IOException, ScriptException {
+        exportExecutable("graph.py", "python", true);
+    }
+
+    public void saveBarToRFile() throws IOException, ScriptException {
+        exportExecutable("graph.r", "r", true);
     }
 
     public void snapit(Node node, File file) throws IOException {
