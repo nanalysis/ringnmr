@@ -36,7 +36,7 @@ public class CalcRDisp extends FitModel {
         this.fieldValues = fieldValues.clone();
         this.fields = fields.clone();
         this.idNums = idNums.clone();
-        this.idNums = new int[xValues.length];
+        this.idNums = new int[yValues.length];
         this.equation = CPMGEquation.CPMGFAST;
         this.equation.setFieldRef(fields);
         if (setNID()) {
@@ -80,7 +80,7 @@ public class CalcRDisp extends FitModel {
             sumSq += delta * delta;
         }
         if (reportFitness) {
-            double rms = Math.sqrt(sumSq / xValues.length);
+            double rms = Math.sqrt(sumSq / yValues.length);
             for (double p : par) {
                 System.out.printf("%7.3f ", p);
             }

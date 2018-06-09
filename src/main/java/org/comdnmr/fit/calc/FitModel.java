@@ -192,13 +192,13 @@ public abstract class FitModel implements MultivariateFunction {
             double delta = value - yValues[i];
             rss += delta * delta;
         }
-        return Math.sqrt(rss / xValues.length);
+        return Math.sqrt(rss / yValues.length);
     }
 
     public double getAICc(double[] par) {
         double rss = getRSS(par);
         int k = par.length;
-        int n = xValues.length;
+        int n = yValues.length;
         double aic = 2 * k + n * Math.log(rss);
         double aicc = aic + 2 * k * (k + 1) / (n - k - 1);
         return aicc;

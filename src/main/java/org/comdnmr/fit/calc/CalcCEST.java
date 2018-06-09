@@ -38,7 +38,7 @@ public class CalcCEST extends FitModel {
         this.fieldValues = fieldValues.clone();
         this.fields = fields.clone();
         this.idNums = idNums.clone();
-        this.idNums = new int[xValues.length];
+        this.idNums = new int[yValues.length];
         this.equation = CESTEquation.CESTR1RHOPERTURBATION;
         this.equation.setFieldRef(fields);
         if (setNID()) {
