@@ -73,7 +73,7 @@ export CLASSPATH
 if [ "$#" -eq 0 ]; then
     exec "$JAVA" -Djava.awt.headless=true -mx${HEAP_MEM}m -cp "$CLASSPATH" $JAVA_OPTS $comdnmrmain ${1+"$@"}
 else
-    exec "$JAVA" -Djava.awt.headless=true -mx${HEAP_MEM}m -cp "$CLASSPATH" $JAVA_OPTS $comdnmrmain -c "import cpmgcalc" ${1+"$@"}
+    exec "$JAVA" -Djava.awt.headless=true -mx${HEAP_MEM}m -cp "$CLASSPATH" $JAVA_OPTS $comdnmrmain -c "import comdnmrcalc" ${1+"$@"}
 fi
 #exec "$JAVA" -Djava.awt.headless=true -mx${HEAP_MEM}m -cp "$CLASSPATH" $JAVA_OPTS $comdnmrmain ${1+"$@"}
 

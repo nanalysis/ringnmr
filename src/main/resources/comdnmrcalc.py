@@ -482,5 +482,5 @@ if len(sys.argv) > 1:
         sys.argv.pop(0)
         runpy.run_path(arg0)
     else:
-        sys.argv[0] = "cpmgcalc.py" 
+        sys.argv[0] = "comdnmrcalc.py" 
         parseArgs()

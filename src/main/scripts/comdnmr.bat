@@ -32,6 +32,6 @@ if exist %testjava% (
 if "%1"=="" (
     %javaexe% -Djava.awt.headless=true -mx2048m -cp %cp% %JAVA_OPTS% %comdnmrmain%
 ) else (
-    %javaexe% -Djava.awt.headless=true -mx2048m -cp %cp% %JAVA_OPTS% %comdnmrmain% -c "import comdnmr" %*
+    %javaexe% -Djava.awt.headless=true -mx2048m -cp %cp% %JAVA_OPTS% %comdnmrmain% -c "import comdnmrcalc" %*
 )
 
