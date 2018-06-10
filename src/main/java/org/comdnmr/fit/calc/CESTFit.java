@@ -156,6 +156,11 @@ public class CESTFit implements EquationFitter {
         return calcCEST;
     }
 
+    @Override
+    public List<String> getEquationNameList() {
+        return getEquationNames();
+    }
+
     public static List<String> getEquationNames() {
         return equationNameList;
     }
@@ -273,7 +278,7 @@ public class CESTFit implements EquationFitter {
         double[] extras = new double[2];
         extras[0] = usedFields[0];
         extras[1] = 17.0 * 2 * Math.PI;
-        return getResults(eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, simPars);
+        return getResults(this, eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, simPars);
     }
 
 }

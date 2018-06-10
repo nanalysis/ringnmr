@@ -8,7 +8,6 @@ package org.comdnmr.fit.calc;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import static org.comdnmr.fit.calc.CESTFit.equationNameList;
 
 /**
  *
@@ -16,15 +15,17 @@ import static org.comdnmr.fit.calc.CESTFit.equationNameList;
  */
 public interface EquationFitter {
 
+    public List<String> getEquationNameList();
+
     public FitModel getFitModel();
 
     public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderGuesses);
-    
+
     public List<ParValueInterface> setupFit(String eqn, boolean absMode);
 
     public void setData(ResidueProperties resProps, String[] resNums);
 
-    public default CPMGFitResult getResults(String eqn, String[] parNames, String[] resNums, int[][] map, int[][] states, double[] usedFields, int nGroupPars, double[] pars, double[] errEstimates, double aic, double rms, double[][] simPars) {
+    public default CPMGFitResult getResults(EquationFitter fitter, String eqn, String[] parNames, String[] resNums, int[][] map, int[][] states, double[] usedFields, int nGroupPars, double[] pars, double[] errEstimates, double aic, double rms, double[][] simPars) {
         int nNonGroup = parNames.length - nGroupPars;
         List<CurveFit> curveFits = new ArrayList<>();
 //        System.out.println("ning " + nCurves);
@@ -56,7 +57,9 @@ public interface EquationFitter {
             }
             parMap.put("AIC", aic);
             parMap.put("RMS", rms);
-            parMap.put("Equation", 1.0 + equationNameList.indexOf(eqn));
+            FitModel model = getFitModel();
+
+            parMap.put("Equation", 1.0 + fitter.getEquationNameList().indexOf(eqn));
             // fixme
             double[] extras = new double[2];
             extras[0] = usedFields[0];

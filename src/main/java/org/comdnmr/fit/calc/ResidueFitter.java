@@ -217,7 +217,7 @@ public class ResidueFitter {
                     bestEquation = equationName;
                 }
             }
-            System.out.println("fit " + fitResult.getAicc() + " " + aicMin + " " + bestEquation);
+            //System.out.println("fit " + fitResult.getAicc() + " " + aicMin + " " + bestEquation);
         }
         List<ResidueInfo> resInfoList = new ArrayList<>();
         Map<String, ResidueInfo> resMap = new HashMap<>();

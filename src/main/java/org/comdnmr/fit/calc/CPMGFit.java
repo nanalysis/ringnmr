@@ -105,6 +105,11 @@ public class CPMGFit implements EquationFitter {
         return calcR;
     }
 
+    @Override
+    public List<String> getEquationNameList() {
+        return getEquationNames();
+    }
+
     public static List<String> getEquationNames() {
         return equationNameList;
     }
@@ -135,13 +140,13 @@ public class CPMGFit implements EquationFitter {
         int[][] map = calcR.getMap();
         double[] guesses = calcR.guess();
         String[] parNames = calcR.getParNames();
-       List<ParValueInterface> parValues = new ArrayList<>();
-        for (int i=0;i<parNames.length;i++) {
+        List<ParValueInterface> parValues = new ArrayList<>();
+        for (int i = 0; i < parNames.length; i++) {
             ParValueInterface parValue = new ParValue(parNames[i], guesses[i]);
             parValues.add(parValue);
         }
         return parValues;
-      }
+    }
 
     public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderguesses) {
         double[][] x = new double[1][xValues.size()];
@@ -215,6 +220,6 @@ public class CPMGFit implements EquationFitter {
 
         }
         double[][] simPars = calcR.getSimPars();
-        return getResults(eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, simPars);
+        return getResults(this, eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, simPars);
     }
 }

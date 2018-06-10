@@ -105,6 +105,11 @@ public class ExpFit implements EquationFitter {
         return expModel;
     }
 
+    @Override
+    public List<String> getEquationNameList() {
+        return getEquationNames();
+    }
+
     public static List<String> getEquationNames() {
         return equationNameList;
     }
@@ -215,7 +220,7 @@ public class ExpFit implements EquationFitter {
 
         }
         double[][] simPars = expModel.getSimPars();
-        return getResults(eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, simPars);
+        return getResults(this, eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, simPars);
     }
 
 }
