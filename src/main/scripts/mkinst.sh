@@ -21,6 +21,8 @@ do
     cp -r -p ../../target/comdnmrgui-*-bin/comdnmrgui* .
     sdir=`ls -d comdnmrgui-*`
     cd $sdir
+    cp -p ../../../../comdnmr/target/comdnmr-*-bin/comdnmr-*/comdnmr .
+    cp -p ../../../../comdnmr/target/comdnmr-*-bin/comdnmr-*/comdnmr.bat .
 
     mkdir jre
     cd jre
