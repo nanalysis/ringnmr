@@ -94,6 +94,11 @@ public class PlotData extends ScatterChart {
         xAxis.setTickUnit(xtick);
         yAxis.setTickUnit(ytick);
     }
+    
+    public void autoscaleBounds() {
+        xAxis.setAutoRanging(true);
+        yAxis.setAutoRanging(true);
+    }
 
     public void addCanvas(Canvas canvas) {
         getPlotChildren().add(1, canvas);

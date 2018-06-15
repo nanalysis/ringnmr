@@ -409,6 +409,11 @@ public class PyController implements Initializable {
         }
 
     }
+    
+    public void autoscaleBounds(ActionEvent event) {
+        xychart.autoscaleBounds();
+
+    }
 
     public void updateChartEquations(String equationName, double[] pars, double[] errs, double[] fields) {
         List<PlotEquation> equations = new ArrayList<>();
@@ -725,14 +730,19 @@ public class PyController implements Initializable {
             String[] resNums = {String.valueOf(currentResInfo.getResNum())};
             equationFitter.setData(currentResProps, resNums);
             String equationName = simControls.getEquation();
-//            equationFitter.getFitModel().setMap(stateCount, states);
-//            int[][] map = equationFitter.getFitModel().getMap();
+            int[] stateCount = equationFitter.getStateCount();
+            int[][] states = equationFitter.getStates();
+            equationFitter.getFitModel().setMap(stateCount, states);
+            int[][] map = equationFitter.getFitModel().getMap();
 //            System.out.println("map = " + map);
 //            System.out.println("getFitModel = " + equationFitter.getFitModel());
 //        System.out.println("fitEqn eqnFitter = " + equationFitter);
 //        System.out.println("fitEqn resNums = " + resNums);
 //        System.out.println("fitEqn eqnName = " + equationName);
-            double[] sliderGuesses = null; //simControls.sliderGuess(equationName, map);
+            double[] sliderGuesses = null;
+            if (sliderGuessCheckBox.isSelected()) {
+                sliderGuesses = simControls.sliderGuess(equationName, map);
+            } 
             fitResult = equationFitter.doFit(equationName, absValueModeCheckBox.isSelected(), nonParBootStrapCheckBox.isSelected(), sliderGuesses);
             updateAfterFit(fitResult);
         } catch (NullPointerException npE2) {
