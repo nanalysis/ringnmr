@@ -108,6 +108,14 @@ public class CPMGFit implements EquationFitter {
     public static List<String> getEquationNames() {
         return equationNameList;
     }
+    
+    public int[] getStateCount() {
+        return stateCount;
+    }
+    
+    public int[][] getStates() {
+        return states;
+    }
 
     public List<ParValueInterface> setupFit(String eqn, boolean absMode) {
         double[][] x = new double[1][yValues.size()];
