@@ -726,7 +726,10 @@ public class CESTControls implements EquationControls {
                 }
                 break;
         }
-        System.out.println("slider guesses = " + guesses);
+//        for(int i=0; i<guesses.length; i++){
+//            System.out.println("slider guess: " + i + " " + guesses[i]);
+//        }
+        
         return guesses;
 
     }
