@@ -25,6 +25,7 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.Group;
 import javafx.scene.control.Label;
+import javafx.scene.input.MouseEvent;
 
 import javafx.scene.paint.Color;
 import org.comdnmr.fit.calc.ExperimentData;
@@ -94,10 +95,14 @@ public class PlotData extends ScatterChart {
         xAxis.setTickUnit(xtick);
         yAxis.setTickUnit(ytick);
     }
-    
+
     public void autoscaleBounds() {
         xAxis.setAutoRanging(true);
         yAxis.setAutoRanging(true);
+    }
+
+    void mouseClicked(MouseEvent e, XYChart chart) {
+        chart.getData();
     }
 
     public void addCanvas(Canvas canvas) {
