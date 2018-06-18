@@ -165,6 +165,14 @@ public class CESTFit implements EquationFitter {
         return equationNameList;
     }
 
+    public int[] getStateCount() {
+        return stateCount;
+    }
+    
+    public int[][] getStates() {
+        return states;
+    }
+    
     public List<ParValueInterface> setupFit(String eqn, boolean absMode) {
         double[][] x = new double[2][yValues.size()];
         double[] y = new double[yValues.size()];

@@ -24,6 +24,10 @@ public interface EquationFitter {
     public List<ParValueInterface> setupFit(String eqn, boolean absMode);
 
     public void setData(ResidueProperties resProps, String[] resNums);
+    
+    public int[] getStateCount();
+    
+    public int[][] getStates();
 
     public default CPMGFitResult getResults(EquationFitter fitter, String eqn, String[] parNames, String[] resNums, int[][] map, int[][] states, double[] usedFields, int nGroupPars, double[] pars, double[] errEstimates, double aic, double rms, double[][] simPars) {
         int nNonGroup = parNames.length - nGroupPars;
