@@ -21,6 +21,7 @@
                     <Menu text="File">
                         <items>
                             <MenuItem text="Load Project File..." onAction="#loadParameterFile" fx:id="loadMenuItem"/>
+                            <MenuItem text="Input Project Parameters..." onAction="#inputParameters" fx:id="inputMenuItem"/>
                             <MenuItem text="Load Secondary Structure..." onAction="loadSecondaryStructure(event)" fx:id="loadSSMenuItem"/>
                             <MenuItem text="Save Analysis..." onAction="#saveParameters" fx:id="savePars"/>
                             <MenuItem text="Save Bar Chart..." onAction="#saveBarChart" fx:id="saveBarChartButton"/>

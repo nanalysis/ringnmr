@@ -226,7 +226,7 @@ public class PlotData extends ScatterChart {
 //            plotEquation.equation.setFieldRef(fieldRef);
             double[] extras = plotEquation.getExtras();
             double[] ax = new double[extras.length];
-//System.out.println("extras " + extras.length);
+//            System.out.println("extras " + extras.length);
             for (int i = 1; i < nIncr - 1; i++) {
                 double xValue = min + i * delta;
                 double x = xAxis.getDisplayPosition(xValue);
