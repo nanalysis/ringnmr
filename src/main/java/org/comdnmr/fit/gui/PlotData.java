@@ -42,7 +42,19 @@ public class PlotData extends ScatterChart {
     String fileName;
     ArrayList<Polyline> polyLines = new ArrayList<>();
     ArrayList<PlotEquation> plotEquations = new ArrayList<>();
-    static Color[] colors = {Color.ORANGE, Color.BLUE, Color.RED, Color.GREEN, Color.GRAY};
+    static Color[] colors = {
+        Color.web("#1b9e77"),
+        Color.web("#d95f02"),
+        Color.web("#7570b3"),
+        Color.web("#e7298a"),
+        Color.web("#66a61e"),
+        Color.web("#e6ab02"),
+        Color.web("#a6761d"),
+        Color.web("#666666"),
+        Color.web("#ff7f00"),
+        Color.web("#6a3d9a"),
+        
+    };
 
     public PlotData(NumberAxis xAxis, NumberAxis yAxis) {
         super(xAxis, yAxis);
