@@ -185,6 +185,7 @@ public class PyController implements Initializable {
     TextField tauTextField = new TextField();
     TextArea xValTextArea = new TextArea();
     TextField fitModeTextField = new TextField();
+    ChoiceBox<String> fitModeChoice = new ChoiceBox<>();
     TextField B1TextField = new TextField();
     ArrayList<HashMap<String, Object>> dataList = new ArrayList();
 
@@ -388,10 +389,10 @@ public class PyController implements Initializable {
         Label modeLabel = new Label("  Mode:  ");
         Label tauLabel = new Label("  Tau:  ");
         Label xValLabel = new Label("  X Values:  ");
-        Label fitModeLabel = new Label("  Fit Mode:  ");
+        Label fitModeLabel = new Label("  Experiment Type:  ");
         Label B1FieldLabel = new Label("  B1 Field Mode:  ");
 
-        Label[] labels = {fileLabel, fieldLabel, tempLabel, nucLabel, pLabel, modeLabel, tauLabel, fitModeLabel, B1FieldLabel, xValLabel};
+        Label[] labels = {fitModeLabel, fileLabel, fieldLabel, tempLabel, nucLabel, pLabel, modeLabel, tauLabel, B1FieldLabel, xValLabel};
 
         Button fileChoiceButton = new Button();
         fileChoiceButton.setOnAction(e -> chooseFile(e));
@@ -410,7 +411,7 @@ public class PyController implements Initializable {
         xValTextArea.setMaxWidth(240);
         xValTextArea.setWrapText(true);
 
-        TextField[] texts = {fieldTextField, tempTextField, nucTextField, pTextField, modeTextField, tauTextField, fitModeTextField, B1TextField};
+        TextField[] texts = {fieldTextField, tempTextField, nucTextField, pTextField, modeTextField, tauTextField, B1TextField};
 
         inputInfoDisplay.getChildren().clear();
 
@@ -418,16 +419,26 @@ public class PyController implements Initializable {
             inputInfoDisplay.add(labels[i], 0, i);
         }
         for (int i = 0; i < texts.length; i++) {
-            inputInfoDisplay.add(texts[i], 1, i + 1);
+            inputInfoDisplay.add(texts[i], 1, i+2);
         }
-
-        inputInfoDisplay.add(fileChoiceButton, 2, 0);
-        inputInfoDisplay.add(chosenFileLabel, 1, 0);
+        
+        fitModeChoice.getItems().add("CPMG");
+        fitModeChoice.getItems().add("EXP");
+        fitModeChoice.getItems().add("CEST");
+        fitModeChoice.setValue("CPMG");
+        
+        fitModeChoice.valueProperty().addListener(x -> {
+            updateInfoInterface();
+        });
+        
+        inputInfoDisplay.add(fitModeChoice, 1, 0);
+        inputInfoDisplay.add(fileChoiceButton, 2, 1);
+        inputInfoDisplay.add(chosenFileLabel, 1, 1);
         inputInfoDisplay.add(xValTextArea, 1, labels.length - 1, 2, 1);
 
         Button addButton = new Button();
         addButton.setOnAction(e -> addInfo(e));
-        addButton.setText("Add");
+        addButton.setText("Add to Data List");
         inputInfoDisplay.add(addButton, 1, labels.length);
 
         Button clearButton = new Button();
@@ -439,9 +450,34 @@ public class PyController implements Initializable {
         loadButton.setOnAction(e -> loadInfo(e));
         loadButton.setText("Load");
         inputInfoDisplay.add(loadButton, 2, labels.length);
+        
+        if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CPMG")) {
+            B1TextField.setDisable(true);
+            tauTextField.setDisable(false);
+        } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("EXP")) {
+            B1TextField.setDisable(true);
+            tauTextField.setDisable(true);
+        } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST")) {
+            B1TextField.setDisable(false);
+            tauTextField.setDisable(true);
+        }
 
         infoStage.setScene(inputScene);
         infoStage.show();
+
+    }
+    
+    public void updateInfoInterface() {
+        if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CPMG")) {
+            B1TextField.setDisable(true);
+            tauTextField.setDisable(false);
+        } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("EXP")) {
+            B1TextField.setDisable(true);
+            tauTextField.setDisable(true);
+        } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST")) {
+            B1TextField.setDisable(false);
+            tauTextField.setDisable(true);
+        }
 
     }
 
@@ -525,7 +561,7 @@ public class PyController implements Initializable {
         hm.put("tau", Double.parseDouble(tauTextField.getText()));
         hm.put("pressure", Double.parseDouble(pTextField.getText()));
         hm.put("mode", modeTextField.getText());
-        hm.put("fitmode", fitModeTextField.getText());
+        hm.put("fitmode", fitModeChoice.getSelectionModel().getSelectedItem().toLowerCase());
         hm.put("B1field", Double.parseDouble(B1TextField.getText()));
         String[] xvals = xValTextArea.getText().split("\t");
         ArrayList<Double> fxvals = new ArrayList();
