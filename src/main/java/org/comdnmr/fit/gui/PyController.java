@@ -1,5 +1,6 @@
 package org.comdnmr.fit.gui;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import javafx.fxml.FXML;
@@ -58,7 +59,14 @@ import org.comdnmr.fit.calc.ResidueProperties;
 import org.controlsfx.control.StatusBar;
 import org.comdnmr.fit.calc.CESTFit;
 import java.io.PrintStream;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Optional;
+import java.util.Set;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.SplitPane;
@@ -69,6 +77,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Button;
+import javafx.scene.layout.GridPane;
+import static org.comdnmr.fit.calc.DataIO.loadPeakFile;
+import static org.comdnmr.fit.calc.DataIO.loadTextFile;
 
 public class PyController implements Initializable {
 
@@ -161,6 +172,22 @@ public class PyController implements Initializable {
     ChoiceBox<String> MCyArrayChoice = new ChoiceBox<>();
     XYChart activeMCchart;
     XYChart.Series MCseries = new XYChart.Series();
+
+    GridPane inputInfoDisplay = new GridPane();
+    Scene inputScene = new Scene(inputInfoDisplay, 700, 500);
+    Stage infoStage = new Stage();
+    Label chosenFileLabel = new Label();
+    TextField fieldTextField = new TextField();
+    TextField tempTextField = new TextField();
+    TextField nucTextField = new TextField();
+    TextField pTextField = new TextField();
+    TextField modeTextField = new TextField();
+    TextField tauTextField = new TextField();
+    TextArea xValTextArea = new TextArea();
+    TextField fitModeTextField = new TextField();
+    ChoiceBox<String> fitModeChoice = new ChoiceBox<>();
+    TextField B1TextField = new TextField();
+    ArrayList<HashMap<String, Object>> dataList = new ArrayList();
 
     @FXML
     private void pyAction(ActionEvent event) {
@@ -267,6 +294,8 @@ public class PyController implements Initializable {
         splitPane.setDividerPositions(0.4, 0.7);
 
         setBoundsButton.setOnAction(this::setBounds);
+
+//        mainController.setOnHidden(e -> Platform.exit());
     }
 
     public void setControls() {
@@ -349,6 +378,316 @@ public class PyController implements Initializable {
         }
     }
 
+    public void inputParameters(ActionEvent event) {
+
+        infoStage.setTitle("Input Data Parameters");
+        Label fileLabel = new Label("  File:  ");
+        Label fieldLabel = new Label("  Field:  ");
+        Label tempLabel = new Label("  Temperature:  ");
+        Label nucLabel = new Label("  Nucleus:  ");
+        Label pLabel = new Label("  Pressure:  ");
+        Label modeLabel = new Label("  Mode:  ");
+        Label tauLabel = new Label("  Tau:  ");
+        Label xValLabel = new Label("  X Values:  ");
+        Label fitModeLabel = new Label("  Experiment Type:  ");
+        Label B1FieldLabel = new Label("  B1 Field Mode:  ");
+
+        Label[] labels = {fitModeLabel, fileLabel, fieldLabel, tempLabel, nucLabel, pLabel, modeLabel, tauLabel, B1FieldLabel, xValLabel};
+
+        Button fileChoiceButton = new Button();
+        fileChoiceButton.setOnAction(e -> chooseFile(e));
+        fileChoiceButton.setText("Browse");
+        chosenFileLabel.setText("");
+
+        fieldTextField.setText("");
+        tempTextField.setText("25.0");
+        nucTextField.setText("");
+        pTextField.setText("20.0");
+        modeTextField.setText("mpk2");
+        tauTextField.setText("0.04");
+        fitModeTextField.setText("cpmg");
+        B1TextField.setText("20.0");
+        xValTextArea.setText("");
+        xValTextArea.setMaxWidth(240);
+        xValTextArea.setWrapText(true);
+
+        TextField[] texts = {fieldTextField, tempTextField, nucTextField, pTextField, modeTextField, tauTextField, B1TextField};
+
+        inputInfoDisplay.getChildren().clear();
+
+        for (int i = 0; i < labels.length; i++) {
+            inputInfoDisplay.add(labels[i], 0, i);
+        }
+        for (int i = 0; i < texts.length; i++) {
+            inputInfoDisplay.add(texts[i], 1, i+2);
+        }
+        
+        fitModeChoice.getItems().add("CPMG");
+        fitModeChoice.getItems().add("EXP");
+        fitModeChoice.getItems().add("CEST");
+        fitModeChoice.setValue("CPMG");
+        
+        fitModeChoice.valueProperty().addListener(x -> {
+            updateInfoInterface();
+        });
+        
+        inputInfoDisplay.add(fitModeChoice, 1, 0);
+        inputInfoDisplay.add(fileChoiceButton, 2, 1);
+        inputInfoDisplay.add(chosenFileLabel, 1, 1);
+        inputInfoDisplay.add(xValTextArea, 1, labels.length - 1, 2, 1);
+
+        Button addButton = new Button();
+        addButton.setOnAction(e -> addInfo(e));
+        addButton.setText("Add to Data List");
+        inputInfoDisplay.add(addButton, 1, labels.length);
+
+        Button clearButton = new Button();
+        clearButton.setOnAction(e -> clearDataList(e));
+        clearButton.setText("Clear Data List");
+        inputInfoDisplay.add(clearButton, 1, labels.length + 1);
+
+        Button loadButton = new Button();
+        loadButton.setOnAction(e -> loadInfo(e));
+        loadButton.setText("Load");
+        inputInfoDisplay.add(loadButton, 2, labels.length);
+        
+        if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CPMG")) {
+            B1TextField.setDisable(true);
+            tauTextField.setDisable(false);
+        } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("EXP")) {
+            B1TextField.setDisable(true);
+            tauTextField.setDisable(true);
+        } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST")) {
+            B1TextField.setDisable(false);
+            tauTextField.setDisable(true);
+        }
+
+        infoStage.setScene(inputScene);
+        infoStage.show();
+
+    }
+    
+    public void updateInfoInterface() {
+        if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CPMG")) {
+            B1TextField.setDisable(true);
+            tauTextField.setDisable(false);
+        } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("EXP")) {
+            B1TextField.setDisable(true);
+            tauTextField.setDisable(true);
+        } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST")) {
+            B1TextField.setDisable(false);
+            tauTextField.setDisable(true);
+        }
+
+    }
+
+    public void chooseFile(ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("mpk2 File", "*.mpk2"));
+        File file = fileChooser.showOpenDialog(infoStage);
+        String directory = file.getParent();
+        String fileName = file.getName();
+        chosenFileLabel.setText(directory + "/" + fileName);
+
+        Path path = Paths.get(directory + "/" + fileName);
+
+        try (BufferedReader fileReader = Files.newBufferedReader(path)) {
+            while (true) {
+                String line = fileReader.readLine();
+                if (line == null) {
+                    break;
+                }
+                String sline = line.trim();
+                if (sline.length() == 0) {
+                    continue;
+                }
+                if (!sline.startsWith("id")) {
+                    break;
+                }
+                String xVals = line.substring(13);
+                xValTextArea.setText(xVals);
+            }
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+
+        String fileNoExt = fileName.substring(0, fileName.indexOf('.'));
+
+        boolean xpk2Check = new File(directory, fileNoExt + ".xpk2").exists();
+        if (xpk2Check) {
+            Path path1 = Paths.get(directory + "/" + fileNoExt + ".xpk2");
+
+            List<String[]> head = new ArrayList<>();
+
+            try (BufferedReader fileReader = Files.newBufferedReader(path1)) {
+                while (true) {
+                    String line = fileReader.readLine();
+                    if (line == null) {
+                        break;
+                    }
+                    String sline = line.trim();
+                    if (sline.length() == 0) {
+                        continue;
+                    }
+                    if (Character.isDigit(sline.charAt(0))) {
+                        break;
+                    }
+                    String[] sline1 = line.split("\t", -1);
+                    head.add(sline1);
+                }
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+            }
+            int sfInd = Arrays.asList(head.get(2)).indexOf("sf");
+            int codeInd = Arrays.asList(head.get(2)).indexOf("code");
+            String field = Arrays.asList(head.get(4)).get(sfInd);
+            String nuc = Arrays.asList(head.get(4)).get(codeInd);
+            nuc = nuc.replaceAll("[^a-zA-Z]", "");
+            nucTextField.setText(nuc);
+            fieldTextField.setText(field);
+        }
+    }
+
+    public void addInfo(ActionEvent event) {
+        addInfo();
+    }
+
+    public void addInfo() {
+        HashMap hm = new HashMap();
+        hm.put("file", chosenFileLabel.getText());
+        hm.put("temperature", Double.parseDouble(tempTextField.getText()));
+        hm.put("field", Double.parseDouble(fieldTextField.getText()));
+        hm.put("nucleus", nucTextField.getText());
+        hm.put("tau", Double.parseDouble(tauTextField.getText()));
+        hm.put("pressure", Double.parseDouble(pTextField.getText()));
+        hm.put("mode", modeTextField.getText());
+        hm.put("fitmode", fitModeChoice.getSelectionModel().getSelectedItem().toLowerCase());
+        hm.put("B1field", Double.parseDouble(B1TextField.getText()));
+        String[] xvals = xValTextArea.getText().split("\t");
+        ArrayList<Double> fxvals = new ArrayList();
+        for (int i = 0; i < xvals.length; i++) {
+            fxvals.add(Double.parseDouble(xvals[i]));
+        }
+        hm.put("vcpmg", fxvals);
+        dataList.add(hm);
+    }
+
+    public void clearDataList(ActionEvent event) {
+        dataList.clear();
+    }
+
+    public void loadInfo(ActionEvent event) {
+        if (dataList.isEmpty()) {
+            addInfo();
+        }
+
+        File file = null; //new File(chosenFileLabel.getText()).getAbsoluteFile();
+        ResidueProperties resProp = null;
+        try {
+            System.out.println(dataList);
+            for (HashMap<String, Object> dataMap3 : dataList) {
+                String dataFileName = (String) dataMap3.get("file");
+                Double temperature = (Double) dataMap3.get("temperature");
+                Double field = (Double) dataMap3.get("field");
+                String nucleus = (String) dataMap3.get("nucleus");
+                List<Number> vcpmgList = (List<Number>) dataMap3.get("vcpmg");
+                Double tauCPMG = (Double) dataMap3.get("tau");
+                tauCPMG = tauCPMG == null ? 1.0 : tauCPMG;  // fixme throw error if  ratemode and no tauCPMG
+                Double B1field = (Double) dataMap3.get("B1field");
+                double[] B1fieldList = new double[vcpmgList.size()];
+
+                file = new File(dataFileName).getAbsoluteFile();
+                Path path = file.toPath();
+                Path dirPath = path.getParent();
+                dataFileName = file.getName();
+                String fileTail = dataFileName.substring(0, dataFileName.indexOf('.'));
+
+//                ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature);
+                resProp = new ResidueProperties(fileTail, dataFileName);
+                String expMode = (String) dataMap3.get("fitmode");
+                expMode = expMode.toLowerCase();
+                resProp.setExpMode(expMode);
+
+                if (expMode.equals("cest")) {
+                    for (int i = 0; i < B1fieldList.length; i++) {
+                        B1fieldList[i] = B1field;
+                    }
+                } else {
+                    B1fieldList = null;
+                }
+
+                System.out.println(dirPath);
+                System.out.println(dataFileName);
+                System.out.println(path);
+                String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
+                String fileMode = (String) dataMap3.get("mode");
+                HashMap<String, Object> errorPars = (HashMap<String, Object>) dataMap3.get("error");
+                Object delayField = dataMap3.get("delays");
+                System.out.println("delays " + delayField);
+                double[] delayCalc = {0.0, 0.0, 1.0};
+                if (delayField instanceof Map) {
+                    Map<String, Number> delayMap = (Map<String, Number>) delayField;
+                    delayCalc[0] = delayMap.get("delta0").doubleValue();
+                    delayCalc[1] = delayMap.get("c0").doubleValue();
+                    delayCalc[2] = delayMap.get("delta").doubleValue();
+                }
+                System.out.println("err " + errorPars);
+                if ((fileMode != null) && fileMode.equals("mpk2")) {
+                    if (vcpmgList == null) {
+                        ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, tauCPMG, null, expMode, errorPars, delayCalc, B1fieldList);
+//                        loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, null, expMode, errorPars, delayCalc);
+                        loadPeakFile(textFileName, expData, resProp);
+                    } else {
+                        double[] vcpmgs = new double[vcpmgList.size()];
+                        for (int i = 0; i < vcpmgs.length; i++) {
+                            vcpmgs[i] = vcpmgList.get(i).doubleValue();
+                        }
+                        ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, tauCPMG, vcpmgs, expMode, errorPars, delayCalc, B1fieldList);
+//                        loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs, expMode, errorPars, delayCalc);
+                        loadPeakFile(textFileName, expData, resProp);
+                    }
+                } else if (vcpmgList == null) {
+                    loadTextFile(textFileName, resProp, nucleus, temperature, field);
+                } else {
+                    double[] vcpmgs = new double[vcpmgList.size()];
+                    for (int i = 0; i < vcpmgs.length; i++) {
+                        vcpmgs[i] = vcpmgList.get(i).doubleValue();
+                    }
+                    ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, tauCPMG, vcpmgs, expMode, errorPars, delayCalc, B1fieldList);
+//                    loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs, expMode, errorPars, delayCalc);
+                    loadPeakFile(textFileName, expData, resProp);
+                }
+            }
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+        if (file != null) {
+            if (activeChart != null) {
+                clearChart();
+                currentResidues = null;
+                simulate = false;
+                fitResult = null;
+            }
+            XYBarChart reschartNode = PyController.mainController.getActiveChart();
+            if (reschartNode == null) {
+                reschartNode = PyController.mainController.addChart();
+
+            }
+//            ResidueProperties resProp = DataIO.loadParameters(fileName);
+            residueProperties.put(resProp.getName(), resProp);
+            String parName = "Kex";
+            if (resProp.getExpMode().equals("exp")) {
+                parName = "R";
+            }
+            ObservableList<XYChart.Series<Double, Double>> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
+            PyController.mainController.currentResProps = resProp;
+            PyController.mainController.makeAxisMenu();
+            PyController.mainController.setYAxisType(resProp.getName(), "best", "0:0:0", parName);
+            reschartNode.setResProps(resProp);
+            PyController.mainController.setControls();
+        }
+    }
+
     public void clearConsole() {
         textArea.setText("");
     }
@@ -387,6 +726,7 @@ public class PyController implements Initializable {
     public void setBounds(ActionEvent event) {
         setBounds();
     }
+
     public void setBounds() {
         try {
             double xLB = Double.parseDouble(xLowerBoundTextField.getText());
@@ -412,7 +752,7 @@ public class PyController implements Initializable {
         }
 
     }
-    
+
     public void autoscaleBounds(ActionEvent event) {
         xychart.autoscaleBounds();
 
@@ -745,7 +1085,7 @@ public class PyController implements Initializable {
             double[] sliderGuesses = null;
             if (sliderGuessCheckBox.isSelected()) {
                 sliderGuesses = simControls.sliderGuess(equationName, map);
-            } 
+            }
             fitResult = equationFitter.doFit(equationName, absValueModeCheckBox.isSelected(), nonParBootStrapCheckBox.isSelected(), sliderGuesses);
             updateAfterFit(fitResult);
         } catch (NullPointerException npE2) {
@@ -766,14 +1106,14 @@ public class PyController implements Initializable {
             simControls.updateSliders(parValues, fitResult.getEquationName());
             String equationName = fitResult.getEquationName(); //equationSelector.getValue();
             //System.out.println("Fit button residueProperties = " + residueProperties);
-            ResidueProperties residueProps = residueProperties.get("cest"); // fixme
             //System.out.println("Fit button expData = " + residueProps.getExperimentData("cest"));
-            ExperimentData expData = null;
-            if (residueProps != null) {
-                expData = residueProps.getExperimentData("cest"); // fixme
+            Optional<ExperimentData> optionalData = Optional.empty();
+            if (currentResProps != null) {
+                 optionalData = currentResProps.getExperimentData().stream().findFirst();
             }
 
-            if (expData != null && expData.getExtras().size() > 0) {
+            if (optionalData.isPresent() && optionalData.get().getExtras().size() > 0) {
+                ExperimentData expData = optionalData.get();
                 double[] pars = curveFit.getEquation().getPars(); //pars = getPars(equationName);
                 double[] errs = curveFit.getEquation().getErrs(); //double[] errs = new double[pars.length];
                 double[] extras = new double[2];
