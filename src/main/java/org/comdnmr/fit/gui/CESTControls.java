@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ChoiceBox;
@@ -282,6 +283,7 @@ public class CESTControls implements EquationControls {
         if (updatingTable) {
             return;
         }
+//        System.out.println("simSlider");
         String equationName = equationSelector.getValue().toString();
 //        if (equationName.equals("CPMGSLOW") && label.equals("Rex")) {
 //            return;
@@ -862,25 +864,29 @@ public class CESTControls implements EquationControls {
     }
 
     void updateEquations() {
+//        System.out.println("CEST Controls updateEqns called.");
         ResidueInfo resInfo = controller.currentResInfo;
         ResidueProperties resProps = controller.currentResProps;
         List<PlotEquation> equations = new ArrayList<>();
         double[] pars;
         String equationName = equationSelector.getValue();
-        //System.out.println("residueProperties = " + residueProperties);
-        ResidueProperties residueProps = residueProperties.get("cest"); // fixme
-        //System.out.println("expData = " + residueProps.getExperimentData("cest"));
-        ExperimentData expData = null;
+        Optional<ExperimentData> optionalData = Optional.empty();
         if (resInfo != null) {
-            if (residueProps != null) {
-                expData = residueProps.getExperimentData("cest"); // fixme
-                if (expData.getExtras().size() > 0) {
+            if (resProps != null) {
+                optionalData = resProps.getExperimentData().stream().findFirst();
+                if (optionalData.isPresent() && optionalData.get().getExtras().size() > 0) {
+                    ExperimentData expData = optionalData.get();
                     pars = getPars(equationName);
                     double[] errs = new double[pars.length];
-                    double[] extras = new double[2];
-                    for (int j = 0; j < expData.getExtras().size(); j++) {
+                    double[] extras = new double[3];
+                    for (int j = 0; j < expData.getExtras().size()/2; j++) {
                         extras[0] = 1.0;
-                        extras[1] = expData.getExtras().get(j) * 2 * Math.PI;
+                        extras[1] = expData.getExtras().get(2*j) * 2 * Math.PI;
+                        extras[2] = expData.getExtras().get(2*j+1);
+//                        System.out.println("resInfo Res Num = " + resInfo.getResNum());
+//                        System.out.println("extras size = " + expData.getExtras().size());
+//                        System.out.println(j + " expData extras[1] = " + extras[1]);
+//                        System.out.println(j + " expData extras[2] = " + extras[2]);
                         //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[1] = " + extras[1]);
                         PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
                         //equationCopy.setExtra(extras);
@@ -902,9 +908,10 @@ public class CESTControls implements EquationControls {
         } else {
             pars = getPars(equationName);
             double[] errs = new double[pars.length];
-            double[] extras = new double[2];
+            double[] extras = new double[3];
             extras[0] = 1.0;
             extras[1] = 17.0 * 2 * Math.PI;
+            extras[2] = 0.3;
             //System.out.println("updateEquations got called without resProps; extras length = "+extras.length);
             PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
             equations.add(plotEquation);
