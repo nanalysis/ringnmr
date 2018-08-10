@@ -12,10 +12,11 @@ package org.comdnmr.fit.calc;
 public interface CESTEquationType extends EquationType {
     
         public default double calculate(double[] par, int[] map, double[] X, int idNum, double field) {
-            double[][] x = new double[2][1];
+            double[][] x = new double[3][1];
             //System.out.println(x.length + " " + x[0].length + " X " + X.length);
             x[0][0] = X[0];
             x[1][0] = X[1];
+            x[2][0] = X[2];
             double[] y = calculate(par, map, x, idNum, field);
             return y[0];
         }
