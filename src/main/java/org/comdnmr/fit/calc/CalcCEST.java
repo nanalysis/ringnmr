@@ -33,6 +33,7 @@ public class CalcCEST extends FitModel {
         this.xValues = new double[x.length][];
         this.xValues[0] = x[0].clone();
         this.xValues[1] = x[1].clone();
+        this.xValues[2] = x[2].clone();
         this.yValues = y.clone();
         this.errValues = err.clone();
         this.fieldValues = fieldValues.clone();
@@ -163,7 +164,7 @@ public class CalcCEST extends FitModel {
             CalcCEST rDisp = new CalcCEST(xValues, yValues, errValues, fieldValues, fields, idNums);
             rDisp.setEquation(equation.getName());
             rDisp.setAbsMode(absMode);
-            double[][] newX = new double[2][yValues.length];
+            double[][] newX = new double[3][yValues.length];
             double[] newY = new double[yValues.length];
             double[] newErr = new double[yValues.length];
             double[] newFieldValues = new double[yValues.length];
@@ -174,6 +175,7 @@ public class CalcCEST extends FitModel {
                     int rI = random.nextInt(yValues.length);
                     newX[0][k] = xValues[0][rI];
                     newX[1][k] = xValues[1][rI];
+                    newX[2][k] = xValues[2][rI];
                     newY[k] = yValues[rI];
                     newErr[k] = errValues[rI];
                     newFieldValues[k] = fieldValues[rI];

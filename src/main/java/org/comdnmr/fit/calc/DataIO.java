@@ -102,7 +102,7 @@ public class DataIO {
                             try {
                                 double x = Double.parseDouble(sfields[i].trim());
                                 xValues[j] = delayCalc[0] + delayCalc[2] * (x + delayCalc[1]);
-                                System.out.println(x + " " + xValues[j]);
+//                                System.out.println(x + " " + xValues[j]);
 
                             } catch (NumberFormatException nFE) {
                             }
@@ -193,14 +193,24 @@ public class DataIO {
                         for (int i=0; i<B1field.length; i++) {
                             B1fieldList.add(B1field[i]);//* 2 * Math.PI);
                         }
+                        double[] Tex = expData.getTex();
+                        List<Double> TexList = new ArrayList<>();
+                        for (int i=0; i<Tex.length; i++) {
+                            TexList.add(Tex[i]);
+                        }
                         List<Double> bFieldUniqueValue = new ArrayList<>();
                         bFieldUniqueValue.add(B1fieldList.get(0));
-                        List<Double>[] xValueLists = new ArrayList[2];
-                        xValueLists[1] = B1fieldList;
+                        List<Double> TexList1 = new ArrayList<>();
+                        TexList1.add(TexList.get(0));
+                        List<Double>[] xValueLists = new ArrayList[3];
                         xValueLists[0] = xValueList;
+                        xValueLists[1] = B1fieldList;
+                        xValueLists[2] = TexList;
                         ResidueData residueData = new ResidueData(expData, residueNum, xValueLists, yValueList, errValueList);
                         expData.addResidueData(residueNum, residueData);
+                        expData.getExtras().clear();
                         expData.setExtras(bFieldUniqueValue);
+                        expData.setExtras(TexList1);
 //                        System.out.println("expData extras = " + expData.getExtras());
                     } else {
                         ResidueData residueData = new ResidueData(expData, residueNum, xValueList, yValueList, errValueList, peakRefList);
@@ -229,17 +239,19 @@ public class DataIO {
         //fileTail = fileTail.substring(0, fileTail.indexOf('.'));
 //System.out.println("exp name " + fileTail);
 //        ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature);
-        ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, null, null, null, errorPars, null, null);
+        ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, null, null, null, errorPars, null, null, null);
         resProp.addExperimentData(fileTail, expData);
         Files.newDirectoryStream(dirPath, "res*.txt").forEach(resPath -> {
             System.out.println("load " + resPath.toString());
             boolean gotHeader = false;
             List<Double> bFieldUniqueValue = new ArrayList<>();
+            List<Double> TexList = new ArrayList<>();
             List<Double> bValueValueList = new ArrayList<>();
             List<Double> offsetValueList = new ArrayList<>();
-            List<Double>[] xValueLists = new ArrayList[2];
+            List<Double>[] xValueLists = new ArrayList[3];
             xValueLists[1] = bValueValueList;
             xValueLists[0] = offsetValueList;
+            xValueLists[2] = TexList;
             List<Double> yValueList = new ArrayList<>();
             List<Double> errValueList = new ArrayList<>();
             String resFileTail = resPath.getFileName().toString();
@@ -273,6 +285,7 @@ public class DataIO {
                             double error = Double.parseDouble(sfields[3].trim());
                             bValueValueList.add(b1Field * 2 * Math.PI);
                             offsetValueList.add(offsetFreq * 2 * Math.PI);
+                            TexList.add(0.3);
                             yValueList.add(intensity);
                             errValueList.add(error);
                         } catch (NumberFormatException nFE) {
@@ -282,7 +295,17 @@ public class DataIO {
                 }
                 ResidueData residueData = new ResidueData(expData, residueNum, xValueLists, yValueList, errValueList);
                 expData.addResidueData(residueNum, residueData);
-                expData.setExtras(bFieldUniqueValue);
+                List<Double> extrasList = new ArrayList<>(bFieldUniqueValue.size()*2);
+                for (int i=0; i<bFieldUniqueValue.size(); i++) {
+                    extrasList.add(2*i, bFieldUniqueValue.get(i));
+                    extrasList.add(2*i+1, TexList.get(i));
+                }
+//                System.out.println("res num = " + residueNum);
+//                System.out.println("bfield unique value size = " + bFieldUniqueValue.size());
+//                System.out.println("extras list size = " + extrasList.size());
+                expData.getExtras().clear();
+                expData.setExtras(extrasList);
+//                System.out.println("expData extras size = " + expData.getExtras().size());
                 ResidueInfo residueInfo = resProp.getResidueInfo(residueNum);
                 if (residueInfo == null) {
                     residueInfo = new ResidueInfo(resProp, Integer.parseInt(residueNum), 0, 0, 0);
@@ -300,7 +323,7 @@ public class DataIO {
         fileTail = fileTail.substring(0, fileTail.indexOf('.'));
 
 //        ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature);
-        ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, null, null, null, null, null, null);
+        ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, null, null, null, null, null, null, null);
         resProp.addExperimentData(fileTail, expData);
         boolean gotHeader = false;
         String[] peakRefs = null;
@@ -574,7 +597,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             System.out.println("err " + errorPars);
             if ((fileMode != null) && fileMode.equals("mpk2")) {
                 if (vcpmgList == null) {
-                    ExperimentData expData = new ExperimentData(textFileName, nucleus, field, temperature, tauCPMG, null, expMode, errorPars, delayCalc, null);
+                    ExperimentData expData = new ExperimentData(textFileName, nucleus, field, temperature, tauCPMG, null, expMode, errorPars, delayCalc, null, null);
 //                    loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, null, expMode, errorPars, delayCalc);
                     loadPeakFile(textFileName, expData, resProp);
                 } else {
@@ -582,7 +605,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     for (int i = 0; i < vcpmgs.length; i++) {
                         vcpmgs[i] = vcpmgList.get(i).doubleValue();
                     }
-                    ExperimentData expData = new ExperimentData(textFileName, nucleus, field, temperature, tauCPMG, vcpmgs, expMode, errorPars, delayCalc, null);
+                    ExperimentData expData = new ExperimentData(textFileName, nucleus, field, temperature, tauCPMG, vcpmgs, expMode, errorPars, delayCalc, null, null);
 //                    loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs, expMode, errorPars, delayCalc);
                     loadPeakFile(textFileName, expData, resProp);
                 }
@@ -593,7 +616,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 for (int i = 0; i < vcpmgs.length; i++) {
                     vcpmgs[i] = vcpmgList.get(i).doubleValue();
                 }
-                ExperimentData expData = new ExperimentData(textFileName, nucleus, field, temperature, tauCPMG, vcpmgs, expMode, errorPars, delayCalc, null);
+                ExperimentData expData = new ExperimentData(textFileName, nucleus, field, temperature, tauCPMG, vcpmgs, expMode, errorPars, delayCalc, null, null);
 //                loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs, expMode, errorPars, delayCalc);
                 loadPeakFile(textFileName, expData, resProp);
             }

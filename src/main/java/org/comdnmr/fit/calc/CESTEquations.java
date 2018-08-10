@@ -306,9 +306,10 @@ public class CESTEquations {
 
         double[] omegarf = X[0];
         double[] omega1 = X[1];
+        double[] Tex = X[2];
 
         // time delay is hard-coded below
-        double tdelay = 0.3;
+        double tdelay = Tex[0];//0.3;
 
         double[] cest = new double[omegarf.length];
 
@@ -394,10 +395,11 @@ public class CESTEquations {
 
         double[] omegarf = X[0];
         double[] omega1 = X[1];
+        double[] Tex = X[2];
 
         //double R1B = R1A;
         // time delay is hard-coded below
-        double tdelay = 0.3;
+        double tdelay = Tex[0];//0.3;
 
         double[] cest = new double[omegarf.length];
 
@@ -475,10 +477,12 @@ public class CESTEquations {
         // R1A, R1B: R10 relaxation rate constants of A and B states
         // R2A, R2B: R20 relaxation rate constants of A and B states
         // In the present implementation, the irradiation time is hard-coded below
-        double trad = 0.3;
 
         double[] omegarf = X[0];
         double[] omega1 = X[1];
+        double[] Tex = X[2];
+        
+        double trad = Tex[0];//0.3;
 
         double pa = 1.0 - pb;
         double[] deltaA = new double[omegarf.length];

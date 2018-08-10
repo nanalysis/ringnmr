@@ -64,9 +64,10 @@ public class CESTFit implements EquationFitter {
     // public void setData(Collection<ExperimentData> expDataList, String[] resNums) {
     @Override
     public void setData(ResidueProperties resProps, String[] resNums) {
-        xValues = new ArrayList[2];
+        xValues = new ArrayList[3];
         xValues[0] = new ArrayList<>();
         xValues[1] = new ArrayList<>();
+        xValues[2] = new ArrayList<>();
         this.resNums = resNums.clone();
         nResidues = resNums.length;
         int id = 0;
@@ -84,11 +85,13 @@ public class CESTFit implements EquationFitter {
                 //  need peakRefs
                 double field = expData.getField();
                 double[][] x = resData.getXValues();
+//                System.out.println("setData x length = " + x.length);
                 double[] y = resData.getYValues();
                 double[] err = resData.getErrValues();
                 for (int i = 0; i < y.length; i++) {
                     xValues[0].add(x[0][i]);
                     xValues[1].add(x[1][i]);
+                    xValues[2].add(x[2][i]);
                     yValues.add(y[i]);
                     errValues.add(err[i]);
                     fieldValues.add(field);
@@ -106,12 +109,14 @@ public class CESTFit implements EquationFitter {
         }
     }
 
-    public void setData(List<Double> xValues0, List<Double> xValues1, List<Double> yValues, List<Double> errValues) {
-        xValues = new ArrayList[2];
+    public void setData(List<Double> xValues0, List<Double> xValues1, List<Double> xValues2, List<Double> yValues, List<Double> errValues) {
+        xValues = new ArrayList[3];
         xValues[0] = new ArrayList<>();
         xValues[0].addAll(xValues0);
         xValues[1] = new ArrayList<>();
         xValues[1].addAll(xValues1);
+        xValues[2] = new ArrayList<>();
+        xValues[2].addAll(xValues2);
         this.yValues.addAll(yValues);
         this.errValues.addAll(errValues);
         for (int i = 0; i < yValues.size(); i++) {
@@ -174,7 +179,7 @@ public class CESTFit implements EquationFitter {
     }
     
     public List<ParValueInterface> setupFit(String eqn, boolean absMode) {
-        double[][] x = new double[2][yValues.size()];
+        double[][] x = new double[3][yValues.size()];
         double[] y = new double[yValues.size()];
         double[] err = new double[yValues.size()];
         int[] idNums = new int[yValues.size()];
@@ -182,6 +187,7 @@ public class CESTFit implements EquationFitter {
         for (int i = 0; i < x[0].length; i++) {
             x[0][i] = xValues[0].get(i);
             x[1][i] = xValues[1].get(i);
+            x[2][i] = xValues[2].get(i);
             y[i] = yValues.get(i);
             err[i] = errValues.get(i);
             //System.out.println(x[0][i]+", "+x[0][i]+", "+x[0][i]+", "+x[0][i]);
@@ -210,7 +216,7 @@ public class CESTFit implements EquationFitter {
 
     @Override
     public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderguesses) {
-        double[][] x = new double[2][yValues.size()];
+        double[][] x = new double[3][yValues.size()];
         double[] y = new double[yValues.size()];
         double[] err = new double[yValues.size()];
         int[] idNums = new int[yValues.size()];
@@ -218,6 +224,7 @@ public class CESTFit implements EquationFitter {
         for (int i = 0; i < x[0].length; i++) {
             x[0][i] = xValues[0].get(i);
             x[1][i] = xValues[1].get(i);
+            x[2][i] = xValues[2].get(i);
             y[i] = yValues.get(i);
             err[i] = errValues.get(i);
             //System.out.println(x[0][i]+", "+x[0][i]+", "+x[0][i]+", "+x[0][i]);
@@ -283,9 +290,10 @@ public class CESTFit implements EquationFitter {
         }
         double[][] simPars = calcCEST.getSimPars();
         // fixme
-        double[] extras = new double[2];
+        double[] extras = new double[3];
         extras[0] = usedFields[0];
         extras[1] = 17.0 * 2 * Math.PI;
+        extras[2] = 0.3;
         return getResults(this, eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, simPars);
     }
 

@@ -77,6 +77,18 @@ public class CESTFitTest {
                                             ,302.91236366,302.91236366,302.91236366,302.91236366,302.91236366
                                             ,302.91236366,302.91236366,302.91236366,302.91236366);
     
+    private List<Double> Texarray = Arrays.asList(0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,
+                                            0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,
+                                            0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,
+                                            0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,
+                                            0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,
+                                            0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,
+                                            0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,
+                                            0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,
+                                            0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,
+                                            0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,
+                                            0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3,0.3);
+    
     private List<Double> intenarray = Arrays.asList(0.482, 0.487, 0.485, 0.489, 0.485, 0.491, 0.485, 0.489, 0.489, 0.49, 0.488, 0.491, 0.487, 
                                                     0.488, 0.492, 0.487, 0.484, 0.48, 0.48, 0.478, 0.476, 0.467, 0.449, 0.42, 0.368, 0.284, 
                                                     0.187, 0.182, 0.289, 0.374, 0.411, 0.435, 0.448, 0.451, 0.458, 0.459, 0.458, 0.463, 0.456, 
@@ -110,7 +122,7 @@ public class CESTFitTest {
     @Test
     public void testcestR1rhoPerturbation() {
         CESTFit fitting = new CESTFit();
-        fitting.setData(offset, omega, intenarray, errarray);
+        fitting.setData(offset, omega, Texarray, intenarray, errarray);
         
         CPMGFitResult fit = fitting.doFit("cestr1rhoperturbation", false, false, null);
 
@@ -160,7 +172,7 @@ public class CESTFitTest {
     @Test
     public void testcestR1rhoSD() {
         CESTFit fitting = new CESTFit();
-        fitting.setData(offset, omega, intenarray, errarray);
+        fitting.setData(offset, omega, Texarray, intenarray, errarray);
         
         CPMGFitResult fit = fitting.doFit("cestr1rhosd", false, false, null);
 
@@ -208,7 +220,7 @@ public class CESTFitTest {
     @Test
     public void testcestR1rhoBaldwinKay() {
         CESTFit fitting = new CESTFit();
-        fitting.setData(offset, omega, intenarray, errarray);
+        fitting.setData(offset, omega, Texarray, intenarray, errarray);
         
         CPMGFitResult fit = fitting.doFit("cestr1rhobaldwinkay", false, false, null);
 
@@ -256,7 +268,7 @@ public class CESTFitTest {
     @Test
     public void testcestR1rhoN() {
         CESTFit fitting = new CESTFit();
-        fitting.setData(offset, omega, intenarray, errarray);
+        fitting.setData(offset, omega, Texarray, intenarray, errarray);
         
         CPMGFitResult fit = fitting.doFit("cestr1rhon", false, false, null);
 

@@ -52,6 +52,7 @@ public class ResidueData {
         this.resNum = residueNum;
         int nValues = yValueList.size();
         int nX = xValueList.length;
+//        System.out.println("make res data " + nX);
         this.xValues = new double[nX][nValues];
         this.yValues = new double[nValues];
         this.errValues = new double[nValues];
@@ -116,6 +117,14 @@ public class ResidueData {
                 x1 = resInfo.xValues[1][index];
             } 
             return x1;
+        }
+        
+        public double getX2() {
+            double x2 = resInfo.xValues[0][index];
+            if (resInfo.xValues.length > 2) {
+                x2 = resInfo.xValues[2][index];
+            } 
+            return x2;
         }
 
         public double getY() {
