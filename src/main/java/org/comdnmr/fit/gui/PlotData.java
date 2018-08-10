@@ -133,6 +133,7 @@ public class PlotData extends ScatterChart {
     }
 
     public void setEquations(List<PlotEquation> plotEquations) {
+//        System.out.println("set equations " + plotEquations.size());
         this.plotEquations.clear();
         this.plotEquations.addAll(plotEquations);
     }

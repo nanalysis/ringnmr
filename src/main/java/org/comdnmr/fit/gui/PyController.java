@@ -187,6 +187,7 @@ public class PyController implements Initializable {
     TextField fitModeTextField = new TextField();
     ChoiceBox<String> fitModeChoice = new ChoiceBox<>();
     TextField B1TextField = new TextField();
+    TextField TexTextField = new TextField();
     ArrayList<HashMap<String, Object>> dataList = new ArrayList();
 
     @FXML
@@ -390,9 +391,10 @@ public class PyController implements Initializable {
         Label tauLabel = new Label("  Tau:  ");
         Label xValLabel = new Label("  X Values:  ");
         Label fitModeLabel = new Label("  Experiment Type:  ");
-        Label B1FieldLabel = new Label("  B1 Field Mode:  ");
+        Label B1FieldLabel = new Label("  B1 Field:  ");
+        Label TexLabel = new Label("  Tex:  ");
 
-        Label[] labels = {fitModeLabel, fileLabel, fieldLabel, tempLabel, nucLabel, pLabel, modeLabel, tauLabel, B1FieldLabel, xValLabel};
+        Label[] labels = {fitModeLabel, fileLabel, fieldLabel, tempLabel, nucLabel, pLabel, modeLabel, tauLabel, B1FieldLabel, TexLabel, xValLabel};
 
         Button fileChoiceButton = new Button();
         fileChoiceButton.setOnAction(e -> chooseFile(e));
@@ -407,11 +409,12 @@ public class PyController implements Initializable {
         tauTextField.setText("0.04");
         fitModeTextField.setText("cpmg");
         B1TextField.setText("20.0");
+        TexTextField.setText("0.3");
         xValTextArea.setText("");
         xValTextArea.setMaxWidth(240);
         xValTextArea.setWrapText(true);
 
-        TextField[] texts = {fieldTextField, tempTextField, nucTextField, pTextField, modeTextField, tauTextField, B1TextField};
+        TextField[] texts = {fieldTextField, tempTextField, nucTextField, pTextField, modeTextField, tauTextField, B1TextField, TexTextField};
 
         inputInfoDisplay.getChildren().clear();
 
@@ -563,6 +566,7 @@ public class PyController implements Initializable {
         hm.put("mode", modeTextField.getText());
         hm.put("fitmode", fitModeChoice.getSelectionModel().getSelectedItem().toLowerCase());
         hm.put("B1field", Double.parseDouble(B1TextField.getText()));
+        hm.put("Tex", Double.parseDouble(TexTextField.getText()));
         String[] xvals = xValTextArea.getText().split("\t");
         ArrayList<Double> fxvals = new ArrayList();
         for (int i = 0; i < xvals.length; i++) {
@@ -584,7 +588,7 @@ public class PyController implements Initializable {
         File file = null; //new File(chosenFileLabel.getText()).getAbsoluteFile();
         ResidueProperties resProp = null;
         try {
-            System.out.println(dataList);
+//            System.out.println(dataList);
             for (HashMap<String, Object> dataMap3 : dataList) {
                 String dataFileName = (String) dataMap3.get("file");
                 Double temperature = (Double) dataMap3.get("temperature");
@@ -594,7 +598,9 @@ public class PyController implements Initializable {
                 Double tauCPMG = (Double) dataMap3.get("tau");
                 tauCPMG = tauCPMG == null ? 1.0 : tauCPMG;  // fixme throw error if  ratemode and no tauCPMG
                 Double B1field = (Double) dataMap3.get("B1field");
+                Double Tex = (Double) dataMap3.get("Tex");
                 double[] B1fieldList = new double[vcpmgList.size()];
+                double[] TexList = new double[vcpmgList.size()];
 
                 file = new File(dataFileName).getAbsoluteFile();
                 Path path = file.toPath();
@@ -611,14 +617,16 @@ public class PyController implements Initializable {
                 if (expMode.equals("cest")) {
                     for (int i = 0; i < B1fieldList.length; i++) {
                         B1fieldList[i] = B1field;
+                        TexList[i] = Tex;
                     }
                 } else {
                     B1fieldList = null;
+                    TexList = null;
                 }
 
-                System.out.println(dirPath);
-                System.out.println(dataFileName);
-                System.out.println(path);
+//                System.out.println(dirPath);
+//                System.out.println(dataFileName);
+//                System.out.println(path);
                 String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
                 String fileMode = (String) dataMap3.get("mode");
                 HashMap<String, Object> errorPars = (HashMap<String, Object>) dataMap3.get("error");
@@ -634,7 +642,7 @@ public class PyController implements Initializable {
                 System.out.println("err " + errorPars);
                 if ((fileMode != null) && fileMode.equals("mpk2")) {
                     if (vcpmgList == null) {
-                        ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, tauCPMG, null, expMode, errorPars, delayCalc, B1fieldList);
+                        ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, tauCPMG, null, expMode, errorPars, delayCalc, B1fieldList, TexList);
 //                        loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, null, expMode, errorPars, delayCalc);
                         loadPeakFile(textFileName, expData, resProp);
                     } else {
@@ -642,7 +650,7 @@ public class PyController implements Initializable {
                         for (int i = 0; i < vcpmgs.length; i++) {
                             vcpmgs[i] = vcpmgList.get(i).doubleValue();
                         }
-                        ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, tauCPMG, vcpmgs, expMode, errorPars, delayCalc, B1fieldList);
+                        ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, tauCPMG, vcpmgs, expMode, errorPars, delayCalc, B1fieldList, TexList);
 //                        loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs, expMode, errorPars, delayCalc);
                         loadPeakFile(textFileName, expData, resProp);
                     }
@@ -653,7 +661,7 @@ public class PyController implements Initializable {
                     for (int i = 0; i < vcpmgs.length; i++) {
                         vcpmgs[i] = vcpmgList.get(i).doubleValue();
                     }
-                    ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, tauCPMG, vcpmgs, expMode, errorPars, delayCalc, B1fieldList);
+                    ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, tauCPMG, vcpmgs, expMode, errorPars, delayCalc, B1fieldList, TexList);
 //                    loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs, expMode, errorPars, delayCalc);
                     loadPeakFile(textFileName, expData, resProp);
                 }
@@ -1116,11 +1124,12 @@ public class PyController implements Initializable {
                 ExperimentData expData = optionalData.get();
                 double[] pars = curveFit.getEquation().getPars(); //pars = getPars(equationName);
                 double[] errs = curveFit.getEquation().getErrs(); //double[] errs = new double[pars.length];
-                double[] extras = new double[2];
-                for (int j = 0; j < expData.getExtras().size(); j++) {
+                double[] extras = new double[3];
+                for (int j = 0; j < expData.getExtras().size()/2; j++) {
                     extras[0] = 1.0;
-                    extras[1] = expData.getExtras().get(j) * 2 * Math.PI;
-                    //System.out.println("Fit button expData extras size = " + expData.getExtras().size() + " extra[1] = " + extras[1]);
+                    extras[1] = expData.getExtras().get(2*j) * 2 * Math.PI;
+                    extras[2] = expData.getExtras().get(2*j+1);
+//                    System.out.println("Fit button expData extras size = " + expData.getExtras().size() + " extra[1] = " + extras[1]);
                     PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
                     //equationCopy.setExtra(extras);
 
