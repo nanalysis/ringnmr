@@ -180,7 +180,7 @@ public class DataIO {
                                 eValue = (errF * refIntensity) / (intensity * tau);
                             }
                         } else {
-                            eValue = xValueList.get(0) * errF;
+                            eValue = Math.abs(yValue) * errF;
                         }
                         errValueList.add(eValue);
                     }
