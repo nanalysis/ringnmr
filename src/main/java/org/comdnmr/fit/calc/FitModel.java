@@ -154,9 +154,9 @@ public abstract class FitModel implements MultivariateFunction {
         return guess;
     }
 
-    public double[][] boundaries() {
+    public double[][] boundaries(double[] guesses) {
         //return equation.boundaries(xValues, yValues, fieldValues[0]);
-        double[][] boundaries = equation.boundaries(xValues, yValues, map, idNums, nID, fieldValues[0]);
+        double[][] boundaries = equation.boundaries(guesses, xValues, yValues, map, idNums, nID, fieldValues[0]);
         return boundaries;
     }
 

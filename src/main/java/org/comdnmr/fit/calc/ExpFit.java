@@ -113,16 +113,16 @@ public class ExpFit implements EquationFitter {
     public static List<String> getEquationNames() {
         return equationNameList;
     }
-    
+
     public int[] getStateCount() {
         return stateCount;
     }
-    
+
     public int[][] getStates() {
         return states;
     }
 
-    public List<ParValueInterface> setupFit(String eqn, boolean absMode) {
+    public void setupFit(String eqn, boolean absMode) {
         double[][] x = new double[1][yValues.size()];
         double[] y = new double[yValues.size()];
         double[] err = new double[yValues.size()];
@@ -145,7 +145,10 @@ public class ExpFit implements EquationFitter {
         expModel.setFieldValues(fields);
         expModel.setFields(usedFields);
         expModel.setMap(stateCount, states);
-        int[][] map = expModel.getMap();
+    }
+
+    public List<ParValueInterface> guessPars(String eqn, boolean absMode) {
+        setupFit(eqn, absMode);
         double[] guesses = expModel.guess();
         //System.out.println("guesses length = " + guesses.length);
         String[] parNames = expModel.getParNames();
@@ -158,28 +161,14 @@ public class ExpFit implements EquationFitter {
         return parValues;
     }
 
-    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderguesses) {
-        double[][] x = new double[1][yValues.size()];
-        double[] y = new double[yValues.size()];
-        double[] err = new double[xValues.size()];
-        int[] idNums = new int[xValues.size()];
-        double[] fields = new double[xValues.size()];
-        for (int i = 0; i < x[0].length; i++) {
-            x[0][i] = xValues.get(i);
-            y[i] = yValues.get(i);
-            err[i] = errValues.get(i);
-            fields[i] = fieldValues.get(i);
-            idNums[i] = idValues.get(i);
-        }
-        expModel.setEquation(eqn);
-        expModel.setAbsMode(absMode);
+    public double rms(double[] pars) {
+        double rms = expModel.getRMS(pars);
+        return rms;
+    }
 
-        expModel.setXY(x, y);
-        expModel.setIds(idNums);
-        expModel.setErr(err);
-        expModel.setFieldValues(fields);
-        expModel.setFields(usedFields);
-        expModel.setMap(stateCount, states);
+    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderguesses) {
+        setupFit(eqn, absMode);
+
         int[][] map = expModel.getMap();
         double[] guesses;
         if (sliderguesses != null) {
@@ -189,7 +178,7 @@ public class ExpFit implements EquationFitter {
             guesses = expModel.guess();
         }
 //        System.out.println("dofit guesses = " + guesses);
-        double[][] boundaries = expModel.boundaries();
+        double[][] boundaries = expModel.boundaries(guesses);
         double[] sigma = new double[guesses.length];
         for (int i = 0; i < guesses.length; i++) {
             sigma[i] = (boundaries[1][i] - boundaries[0][i]) / 10.0;

@@ -113,16 +113,16 @@ public class CPMGFit implements EquationFitter {
     public static List<String> getEquationNames() {
         return equationNameList;
     }
-    
+
     public int[] getStateCount() {
         return stateCount;
     }
-    
+
     public int[][] getStates() {
         return states;
     }
 
-    public List<ParValueInterface> setupFit(String eqn, boolean absMode) {
+    public void setupFit(String eqn, boolean absMode) {
         double[][] x = new double[1][yValues.size()];
         double[] y = new double[yValues.size()];
         double[] err = new double[yValues.size()];
@@ -145,7 +145,10 @@ public class CPMGFit implements EquationFitter {
         calcR.setFieldValues(fields);
         calcR.setFields(usedFields);
         calcR.setMap(stateCount, states);
-        int[][] map = calcR.getMap();
+    }
+
+    public List<ParValueInterface> guessPars(String eqn, boolean absMode) {
+        setupFit(eqn, absMode);
         double[] guesses = calcR.guess();
         String[] parNames = calcR.getParNames();
         List<ParValueInterface> parValues = new ArrayList<>();
@@ -156,28 +159,13 @@ public class CPMGFit implements EquationFitter {
         return parValues;
     }
 
-    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderguesses) {
-        double[][] x = new double[1][xValues.size()];
-        double[] y = new double[yValues.size()];
-        double[] err = new double[yValues.size()];
-        int[] idNums = new int[yValues.size()];
-        double[] fields = new double[yValues.size()];
-        for (int i = 0; i < xValues.size(); i++) {
-            x[0][i] = xValues.get(i);
-            y[i] = yValues.get(i);
-            err[i] = errValues.get(i);
-            fields[i] = fieldValues.get(i);
-            idNums[i] = idValues.get(i);
-        }
-        calcR.setEquation(eqn);
-        calcR.setAbsMode(absMode);
+    public double rms(double[] pars) {
+        double rms = calcR.getRMS(pars);
+        return rms;
+    }
 
-        calcR.setXY(x, y);
-        calcR.setIds(idNums);
-        calcR.setErr(err);
-        calcR.setFieldValues(fields);
-        calcR.setFields(usedFields);
-        calcR.setMap(stateCount, states);
+    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderguesses) {
+        setupFit(eqn, absMode);
         int[][] map = calcR.getMap();
         double[] guesses;
         if (sliderguesses != null) {
@@ -187,7 +175,7 @@ public class CPMGFit implements EquationFitter {
             guesses = calcR.guess();
         }
 //        System.out.println("dofit guesses = " + guesses);
-        double[][] boundaries = calcR.boundaries();
+        double[][] boundaries = calcR.boundaries(guesses);
         double[] sigma = new double[guesses.length];
         for (int i = 0; i < guesses.length; i++) {
             sigma[i] = (boundaries[1][i] - boundaries[0][i]) / 10.0;
