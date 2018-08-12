@@ -44,8 +44,7 @@ public enum ExpEquation implements EquationType {
         }
 
         @Override
-        public double[][] boundaries(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
-            double[] guesses = guess(xValues, yValues, map, idNums, nID, field);
+        public double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
             double[][] boundaries = new double[2][guesses.length];
             for (int id = 0; id < map.length; id++) {
                 int iPar = map[id][0];

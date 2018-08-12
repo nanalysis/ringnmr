@@ -44,25 +44,24 @@ public interface CESTEquationType extends EquationType {
         }
 
         
-        public default double[][] boundaries(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
-            double[] guesses = guess(xValues, yValues, map, idNums, nID, field);
+        public default double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
             double[][] boundaries = new double[2][guesses.length];
             int id = 0;
-                boundaries[0][map[id][0]] = 0.0; //kex LB
+                boundaries[0][map[id][0]] = 1.0; //kex LB
                 boundaries[1][map[id][0]] = guesses[map[id][0]] * 4; //kex UB
-                boundaries[0][map[id][1]] = 0.0; //pb LB
-                boundaries[1][map[id][1]] = guesses[map[id][1]] * 4; //pb UB //guesses[1] * 4;
+                boundaries[0][map[id][1]] = 0.01; //pb LB
+                boundaries[1][map[id][1]] = 0.49; // guesses[map[id][1]] * 4; //pb UB //guesses[1] * 4;
                 boundaries[0][map[id][2]] = 0.0; //deltaA LB
                 boundaries[1][map[id][2]] = guesses[map[id][2]] * 4; //deltaA UB
                 boundaries[0][map[id][3]] = guesses[map[id][3]] * 4; //deltaB LB
                 boundaries[1][map[id][3]] = 0.0; //deltaB UB
-                boundaries[0][map[id][4]] = 0.0; //R1A LB
+                boundaries[0][map[id][4]] = 0.5; //R1A LB
                 boundaries[1][map[id][4]] = guesses[map[id][4]] * 4; //R1A UB
-                boundaries[0][map[id][5]] = 0.0; //R1B LB
+                boundaries[0][map[id][5]] = 0.5; //R1B LB
                 boundaries[1][map[id][5]] = guesses[map[id][5]] * 4; //R1B UB
-                boundaries[0][map[id][6]] = 0.0; //R2A LB
+                boundaries[0][map[id][6]] = 0.5; //R2A LB
                 boundaries[1][map[id][6]] = guesses[map[id][6]] * 4; //R2A UB
-                boundaries[0][map[id][7]] = 0.0; //R2B LB
+                boundaries[0][map[id][7]] = 0.5; //R2B LB
                 boundaries[1][map[id][7]] = guesses[map[id][7]] * 4; //R2B UB
             return boundaries;
         }
