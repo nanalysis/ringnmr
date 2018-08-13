@@ -422,18 +422,18 @@ public class PyController implements Initializable {
             inputInfoDisplay.add(labels[i], 0, i);
         }
         for (int i = 0; i < texts.length; i++) {
-            inputInfoDisplay.add(texts[i], 1, i+2);
+            inputInfoDisplay.add(texts[i], 1, i + 2);
         }
-        
+
         fitModeChoice.getItems().add("CPMG");
         fitModeChoice.getItems().add("EXP");
         fitModeChoice.getItems().add("CEST");
         fitModeChoice.setValue("CPMG");
-        
+
         fitModeChoice.valueProperty().addListener(x -> {
             updateInfoInterface();
         });
-        
+
         inputInfoDisplay.add(fitModeChoice, 1, 0);
         inputInfoDisplay.add(fileChoiceButton, 2, 1);
         inputInfoDisplay.add(chosenFileLabel, 1, 1);
@@ -453,7 +453,7 @@ public class PyController implements Initializable {
         loadButton.setOnAction(e -> loadInfo(e));
         loadButton.setText("Load");
         inputInfoDisplay.add(loadButton, 2, labels.length);
-        
+
         if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CPMG")) {
             B1TextField.setDisable(true);
             tauTextField.setDisable(false);
@@ -469,7 +469,7 @@ public class PyController implements Initializable {
         infoStage.show();
 
     }
-    
+
     public void updateInfoInterface() {
         if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CPMG")) {
             B1TextField.setDisable(true);
@@ -629,7 +629,9 @@ public class PyController implements Initializable {
 //                System.out.println(path);
                 String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
                 String fileMode = (String) dataMap3.get("mode");
-                HashMap<String, Object> errorPars = (HashMap<String, Object>) dataMap3.get("error");
+                HashMap<String, Object> errorPars = new HashMap(); //(HashMap<String, Object>) dataMap3.get("error");
+                errorPars.put("mode", "percent");
+                errorPars.put("value", 5);
                 Object delayField = dataMap3.get("delays");
                 System.out.println("delays " + delayField);
                 double[] delayCalc = {0.0, 0.0, 1.0};
@@ -780,6 +782,7 @@ public class PyController implements Initializable {
     public void showEquations(List<PlotEquation> equations) {
         xychart.setEquations(equations);
         xychart.layoutPlotChildren();
+        Optional<Double> rms = rms();
 
     }
 
@@ -1061,7 +1064,7 @@ public class PyController implements Initializable {
 //        System.out.println("guesses eqnFitter = " + equationFitter);
 //        System.out.println("guesses resNums = " + resNums);
 //        System.out.println("guesses eqnName = " + equationName);
-            List<ParValueInterface> guesses = equationFitter.setupFit(equationName, absValueModeCheckBox.isSelected());
+            List<ParValueInterface> guesses = equationFitter.guessPars(equationName, absValueModeCheckBox.isSelected());
             simControls.updateSliders(guesses, equationName);
             simControls.simSliderAction("");
         } catch (NullPointerException npE1) {
@@ -1070,6 +1073,30 @@ public class PyController implements Initializable {
             alert.showAndWait();
             return;
         }
+    }
+
+    public Optional<Double> rms() {
+        Optional<Double> rms;
+        try {
+            EquationFitter equationFitter = getFitter();
+            if (currentResInfo != null) {
+                String[] resNums = {String.valueOf(currentResInfo.getResNum())};
+                equationFitter.setData(currentResProps, resNums);
+                String equationName = simControls.getEquation();
+                int[] stateCount = equationFitter.getStateCount();
+                int[][] states = equationFitter.getStates();
+                equationFitter.getFitModel().setMap(stateCount, states);
+                int[][] map = equationFitter.getFitModel().getMap();
+                double[] sliderGuesses = simControls.sliderGuess(equationName, map);
+                equationFitter.setupFit(equationName, absValueModeCheckBox.isSelected());
+                rms = Optional.of(equationFitter.rms(sliderGuesses));
+            } else {
+                rms = Optional.empty();
+            }
+        } catch (NullPointerException npE2) {
+            rms = Optional.empty();
+        }
+        return rms;
     }
 
     @FXML
@@ -1117,7 +1144,7 @@ public class PyController implements Initializable {
             //System.out.println("Fit button expData = " + residueProps.getExperimentData("cest"));
             Optional<ExperimentData> optionalData = Optional.empty();
             if (currentResProps != null) {
-                 optionalData = currentResProps.getExperimentData().stream().findFirst();
+                optionalData = currentResProps.getExperimentData().stream().findFirst();
             }
 
             if (optionalData.isPresent() && optionalData.get().getExtras().size() > 0) {
@@ -1125,10 +1152,10 @@ public class PyController implements Initializable {
                 double[] pars = curveFit.getEquation().getPars(); //pars = getPars(equationName);
                 double[] errs = curveFit.getEquation().getErrs(); //double[] errs = new double[pars.length];
                 double[] extras = new double[3];
-                for (int j = 0; j < expData.getExtras().size()/2; j++) {
+                for (int j = 0; j < expData.getExtras().size() / 2; j++) {
                     extras[0] = 1.0;
-                    extras[1] = expData.getExtras().get(2*j) * 2 * Math.PI;
-                    extras[2] = expData.getExtras().get(2*j+1);
+                    extras[1] = expData.getExtras().get(2 * j);
+                    extras[2] = expData.getExtras().get(2 * j + 1);
 //                    System.out.println("Fit button expData extras size = " + expData.getExtras().size() + " extra[1] = " + extras[1]);
                     PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
                     //equationCopy.setExtra(extras);
