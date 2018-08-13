@@ -579,14 +579,14 @@ public class CESTEquations {
 
         double previousYdiff = 0;
 
-        for (int i = 1; i < yvals.length; i++) {
+        for (int i = 2; i < yvals.length; i++) {
             double ydiff = yvals[i] - yvals[i - 1];
-            if (Math.abs(yvals[0] - yvals[i - 1]) / yvals[0] > 0.1) { //peak intensity threshold
+            if (Math.abs(yvals[1] - yvals[i - 1]) / yvals[1] > 0.2) { //peak intensity threshold
                 if (ydiff > 0 & previousYdiff < 0) { //look for sign changes going from - to +
                     ymin.add(yvals[i - 1]);
                     xmin.add(xvals[i - 1]);
                     // FWHM calculation
-                    double halfinten = (yvals[0] - yvals[i-1]) / 2 + yvals[i-1];
+                    double halfinten = (yvals[1] - yvals[i-1]) / 2 + yvals[i-1];
                     double distance = Math.abs(yvals[0] - halfinten);
                     int idx = 0;
                     int idx1 = 0;
@@ -598,7 +598,7 @@ public class CESTEquations {
                         }
                     }
                     double halfleft = xvals[idx];// /(2*Math.PI);
-                    double distance1 = Math.abs(yvals[0] - halfinten);
+                    double distance1 = Math.abs(yvals[1] - halfinten);
                     for (int c = i+1; c < i+10; c++) {
                         double cdistance1 = Math.abs(yvals[c] - halfinten);
                         if (cdistance1 < distance1) {
@@ -607,14 +607,14 @@ public class CESTEquations {
                         }
                     }
                     double halfright = xvals[idx1];// /(2*Math.PI);
-                    fwhm.add(halfright-halfleft);
+                    fwhm.add(Math.abs(halfright-halfleft));
                 } else if (ydiff == 0) {
                     double yavg = (yvals[i] + yvals[i - 1]) / 2;
                     double xavg = (xvals[i] + xvals[i - 1]) / 2;
                     ymin.add(yavg);
                     xmin.add(xavg);
                     // FWHM calculation
-                    double halfinten = (yvals[0] - yvals[i-1]) / 2 + yvals[i-1];
+                    double halfinten = (yvals[1] - yvals[i-1]) / 2 + yvals[i-1];
                     double distance = Math.abs(yvals[0] - halfinten);
                     int idx = 0;
                     int idx1 = 0;
@@ -626,7 +626,7 @@ public class CESTEquations {
                         }
                     }
                     double halfleft = xvals[idx];// /(2*Math.PI);
-                    double distance1 = Math.abs(yvals[0] - halfinten);
+                    double distance1 = Math.abs(yvals[1] - halfinten);
                     for (int c = i+1; c < i+10; c++) {
                         double cdistance1 = Math.abs(yvals[c] - halfinten);
                         if (cdistance1 < distance1) {
@@ -635,7 +635,7 @@ public class CESTEquations {
                         }
                     }
                     double halfright = xvals[idx1];// /(2*Math.PI);
-                    fwhm.add(halfright-halfleft);
+                    fwhm.add(Math.abs(halfright-halfleft));
                 }
             }
             previousYdiff = ydiff;
@@ -651,47 +651,77 @@ public class CESTEquations {
         return peaks;
     }
 
-    public static double[] cestPbGuess(double[][] peaks) {
+    public static double cestPbGuess(double[][] peaks) {
         // Estimates CEST pb values from peak intensities for initial guesses for before fitting.
         // Uses the output from cestPeakGuess as the input.
 
-        double[] pb = new double[peaks.length / 2];
-
-        for (int i = 0; i < pb.length; i++) {
-            pb[i] = peaks[2 * i][1] - peaks[2 * i + 1][1];
+        if (peaks.length > 1) {
+            double[] pb = new double[peaks.length / 2];
+            
+            for (int i = 0; i < pb.length; i++) {
+//                pb[i] = peaks[2 * i][1] - peaks[2 * i + 1][1];
+                pb[0] = peaks[0][1] - peaks[peaks.length-1][1];
+            }
+            return pb[0];
+        } else {
+            return 0.0;
         }
-        return pb;
+        
     }
 
     public static double[][] cestR2Guess(double[][] peaks) {
         // Estimates CEST R2A and R2B values from peak widths for initial guesses for before fitting.
         // Uses the output from cestPeakGuess as the input.
 
-        double[][] r2 = new double[2][peaks.length / 2];
+        if (peaks.length > 1) {
+            double[][] r2 = new double[2][peaks.length / 2];
 
-        for (int i = 0; i < r2[0].length; i++) {
-            r2[1][i] = peaks[2 * i][2]/(2*Math.PI); //R2B
-            r2[0][i] = peaks[2 * i + 1][2]/10/(2*Math.PI); //R2A
+            for (int i = 0; i < r2[0].length; i++) {
+                r2[1][i] = peaks[2 * i][2]/(2*Math.PI); //R2A
+                r2[0][i] = peaks[2 * i + 1][2]/10/(2*Math.PI); //R2B
+            }
+            return r2;
+        } else {
+            double[][] r2 = new double[2][1];
+
+            for (int i = 0; i < r2[0].length; i++) {
+                r2[0][0] = peaks[0][2]/(2*Math.PI); //R2A
+                r2[1][0] = 0.0; //R2B
+            }
+            return r2;
         }
-        return r2;
     }
     
-    public static double[] cestKexGuess(double[][] peaks) {
+    public static double cestKexGuess(double[][] peaks) {
         // Estimates CEST kex values from minor state peak widths for initial guesses for before fitting.
         // Uses the output from cestPeakGuess as the input.
 
-        double[] kex = new double[peaks.length / 2];
+        if (peaks.length > 1) {
+            double[] kex = new double[peaks.length / 2];
 
-        for (int i = 0; i < kex.length; i++) {
-            kex[i] = peaks[2 * i][2]/(2*Math.PI); //R2B
+            for (int i = 0; i < kex.length; i++) {
+                kex[i] = peaks[2 * i][2]/(2*Math.PI); //Kex
+            }
+            return kex[kex.length-1];
+        } else {
+            return peaks[0][2]/(2*Math.PI); //Kex;
         }
-        return kex;
+        
     }
     
-    public static double[] cestR1Guess(double[] yvals) {
+    public static double[] cestR1Guess(Double Tex) {
         // Estimates CEST R1 values from data baseline intensity for initial guesses for before fitting.
 
-        double[] r1 = {yvals[0]*5, yvals[0]*5}; //{R1A, R1B}
+        double cm = 3.5;
+        double[] r1 = {Math.exp(-0.3)*cm, Math.exp(-0.3)*cm}; //{R1A, R1B}
+        if (Tex != null) {
+            r1[0] = Math.exp(-Tex)*cm;
+            r1[1] = Math.exp(-Tex)*cm; 
+            if (Tex.equals(0.0)) {
+                r1[0] = 0.0;
+                r1[1] = 0.0; 
+            }
+        }
 
         return r1;
     }

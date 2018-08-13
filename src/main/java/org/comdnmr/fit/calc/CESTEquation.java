@@ -40,14 +40,22 @@ public enum CESTEquation implements CESTEquationType {
                 double vMid = DataUtil.getMidValue(yValues, xValues[0], idNums, id);
                 //System.out.println(minY + " " + maxY + " " + mean + " " + vMid);
                 //System.out.println(id + " " + map[id].length + " " + map[id][0] + " " + map[id][1]);
-                guesses[map[id][0]] = 112.0; //kex
-                guesses[map[id][1]] = 0.1; //pb
-                guesses[map[id][2]] = 400 * 2.0 * Math.PI; //deltaA
-                guesses[map[id][3]] = -250 * 2.0 * Math.PI; //deltaB
-                guesses[map[id][4]] = 2.4; //R1A
-                guesses[map[id][5]] = 2.4; //R1B
-                guesses[map[id][6]] = 20.0; //R2A
-                guesses[map[id][7]] = 100.0; //R2B
+                double[][] peaks = CESTEquations.cestPeakGuess(xValues[0], yValues);
+//                for (int i=0; i<peaks.length; i++) {
+//                    for (int j=0; j<peaks[i].length; j++) {
+//                        System.out.println("peaks " + i + " " + j + " = " + peaks[i][j]);
+//                    }
+//                }
+                double[] r1 = CESTEquations.cestR1Guess(xValues[2][0]);
+                double[][] r2 = CESTEquations.cestR2Guess(peaks);
+                guesses[map[id][0]] = CESTEquations.cestKexGuess(peaks); //112.0; //kex
+                guesses[map[id][1]] = CESTEquations.cestPbGuess(peaks); //0.1; //pb
+                guesses[map[id][2]] = peaks[peaks.length-1][0]; //400 * 2.0 * Math.PI; //deltaA
+                guesses[map[id][3]] = peaks[0][0]; //-250 * 2.0 * Math.PI; //deltaB
+                guesses[map[id][4]] = r1[0]; //2.4; //R1A
+                guesses[map[id][5]] = r1[1]; //2.4; //R1B
+                guesses[map[id][6]] = r2[1][r2[0].length-1]/4; //20.0; //R2A
+                guesses[map[id][7]] = r2[0][0]; //100.0; //R2B
             }
             return guesses;
         }
@@ -87,15 +95,27 @@ public enum CESTEquation implements CESTEquationType {
                 double vMid = DataUtil.getMidValue(yValues, xValues[0], idNums, id);
                 //System.out.println(minY + " " + maxY + " " + mean + " " + vMid);
                 //System.out.println(id + " " + map[id].length + " " + map[id][0] + " " + map[id][1]);
-                guesses[map[id][0]] = 112.0; //kex
-                guesses[map[id][1]] = 0.1; //pb
-                guesses[map[id][2]] = 400 * 2.0 * Math.PI; //deltaA
-                guesses[map[id][3]] = -250 * 2.0 * Math.PI; //deltaB
-                guesses[map[id][4]] = 2.4; //R1A
-                guesses[map[id][5]] = 2.4; //R1B
-                guesses[map[id][6]] = 20.0; //R2A
-                guesses[map[id][7]] = 100.0; //R2B
+                double[][] peaks = CESTEquations.cestPeakGuess(xValues[0], yValues);
+//                for (int i=0; i<peaks.length; i++) {
+//                    for (int j=0; j<peaks[i].length; j++) {
+//                        System.out.println("peaks " + i + " " + j + " = " + peaks[i][j]);
+//                    }
+//                }
+                double[] r1 = CESTEquations.cestR1Guess(xValues[2][0]);
+                double[][] r2 = CESTEquations.cestR2Guess(peaks);
+                guesses[map[id][0]] = CESTEquations.cestKexGuess(peaks); //112.0; //kex
+                guesses[map[id][1]] = CESTEquations.cestPbGuess(peaks); //0.1; //pb
+                guesses[map[id][2]] = peaks[peaks.length-1][0]; //400 * 2.0 * Math.PI; //deltaA
+                guesses[map[id][3]] = peaks[0][0]; //-250 * 2.0 * Math.PI; //deltaB
+                guesses[map[id][4]] = r1[0]; //2.4; //R1A
+                guesses[map[id][5]] = r1[1]; //2.4; //R1B
+                guesses[map[id][6]] = r2[1][r2[0].length-1]/4; //20.0; //R2A
+                guesses[map[id][7]] = r2[0][0]; //100.0; //R2B
             }
+//            for (int i=0; i<guesses.length; i++) {
+//                System.out.println(guesses[i]);
+//            }
+            
             return guesses;
         }
      
@@ -133,15 +153,27 @@ public enum CESTEquation implements CESTEquationType {
                 double vMid = DataUtil.getMidValue(yValues, xValues[0], idNums, id);
                 //System.out.println(minY + " " + maxY + " " + mean + " " + vMid);
                 //System.out.println(id + " " + map[id].length + " " + map[id][0] + " " + map[id][1]);
-                guesses[map[id][0]] = 112.0; //kex
-                guesses[map[id][1]] = 0.1; //pb
-                guesses[map[id][2]] = 400 * 2.0 * Math.PI; //deltaA
-                guesses[map[id][3]] = -250 * 2.0 * Math.PI; //deltaB
-                guesses[map[id][4]] = 2.4; //R1A
-                guesses[map[id][5]] = 2.4; //R1B
-                guesses[map[id][6]] = 20.0; //R2A
-                guesses[map[id][7]] = 100.0; //R2B
+                double[][] peaks = CESTEquations.cestPeakGuess(xValues[0], yValues);
+//                for (int i=0; i<peaks.length; i++) {
+//                    for (int j=0; j<peaks[i].length; j++) {
+//                        System.out.println("peaks " + i + " " + j + " = " + peaks[i][j]);
+//                    }
+//                }
+                double[] r1 = CESTEquations.cestR1Guess(xValues[2][0]);
+                double[][] r2 = CESTEquations.cestR2Guess(peaks);
+                guesses[map[id][0]] = CESTEquations.cestKexGuess(peaks); //112.0; //kex
+                guesses[map[id][1]] = CESTEquations.cestPbGuess(peaks); //0.1; //pb
+                guesses[map[id][2]] = peaks[peaks.length-1][0]; //400 * 2.0 * Math.PI; //deltaA
+                guesses[map[id][3]] = peaks[0][0]; //-250 * 2.0 * Math.PI; //deltaB
+                guesses[map[id][4]] = r1[0]; //2.4; //R1A
+                guesses[map[id][5]] = r1[1]; //2.4; //R1B
+                guesses[map[id][6]] = r2[1][r2[0].length-1]/4; //20.0; //R2A
+                guesses[map[id][7]] = r2[0][0]; //100.0; //R2B
             }
+//            for (int i=0; i<guesses.length; i++) {
+//                System.out.println(guesses[i]);
+//            }
+            
             return guesses;
         }
      
@@ -179,15 +211,27 @@ public enum CESTEquation implements CESTEquationType {
                 double vMid = DataUtil.getMidValue(yValues, xValues[0], idNums, id);
                 //System.out.println(minY + " " + maxY + " " + mean + " " + vMid);
                 //System.out.println(id + " " + map[id].length + " " + map[id][0] + " " + map[id][1]);
-                guesses[map[id][0]] = 112.0; //kex
-                guesses[map[id][1]] = 0.1; //pb
-                guesses[map[id][2]] = 400 * 2.0 * Math.PI; //deltaA
-                guesses[map[id][3]] = -250 * 2.0 * Math.PI; //deltaB
-                guesses[map[id][4]] = 2.4; //R1A
-                guesses[map[id][5]] = 2.4; //R1B
-                guesses[map[id][6]] = 20.0; //R2A
-                guesses[map[id][7]] = 20.0; //R2B
+                double[][] peaks = CESTEquations.cestPeakGuess(xValues[0], yValues);
+//                for (int i=0; i<peaks.length; i++) {
+//                    for (int j=0; j<peaks[i].length; j++) {
+//                        System.out.println("peaks " + i + " " + j + " = " + peaks[i][j]);
+//                    }
+//                }
+                double[] r1 = CESTEquations.cestR1Guess(xValues[2][0]);
+                double[][] r2 = CESTEquations.cestR2Guess(peaks);
+                guesses[map[id][0]] = CESTEquations.cestKexGuess(peaks); //112.0; //kex
+                guesses[map[id][1]] = CESTEquations.cestPbGuess(peaks); //0.1; //pb
+                guesses[map[id][2]] = peaks[peaks.length-1][0]; //400 * 2.0 * Math.PI; //deltaA
+                guesses[map[id][3]] = peaks[0][0]; //-250 * 2.0 * Math.PI; //deltaB
+                guesses[map[id][4]] = r1[0]; //2.4; //R1A
+                guesses[map[id][5]] = r1[1]; //2.4; //R1B
+                guesses[map[id][6]] = r2[1][r2[0].length-1]/4; //20.0; //R2A
+                guesses[map[id][7]] = r2[0][0]; //100.0; //R2B
             }
+//            for (int i=0; i<guesses.length; i++) {
+//                System.out.println(guesses[i]);
+//            }
+            
             return guesses;
         }
      
@@ -225,15 +269,27 @@ public enum CESTEquation implements CESTEquationType {
                 double vMid = DataUtil.getMidValue(yValues, xValues[0], idNums, id);
                 //System.out.println(minY + " " + maxY + " " + mean + " " + vMid);
                 //System.out.println(id + " " + map[id].length + " " + map[id][0] + " " + map[id][1]);
-                guesses[map[id][0]] = 112.0; //kex
-                guesses[map[id][1]] = 0.1; //pb
-                guesses[map[id][2]] = 400 * 2.0 * Math.PI; //deltaA
-                guesses[map[id][3]] = -250 * 2.0 * Math.PI; //deltaB
-                guesses[map[id][4]] = 2.4; //R1A
-                guesses[map[id][5]] = 2.4; //R1B
-                guesses[map[id][6]] = 20.0; //R2A
-                guesses[map[id][7]] = 100.0; //R2B
+                double[][] peaks = CESTEquations.cestPeakGuess(xValues[0], yValues);
+//                for (int i=0; i<peaks.length; i++) {
+//                    for (int j=0; j<peaks[i].length; j++) {
+//                        System.out.println("peaks " + i + " " + j + " = " + peaks[i][j]);
+//                    }
+//                }
+                double[] r1 = CESTEquations.cestR1Guess(xValues[2][0]);
+                double[][] r2 = CESTEquations.cestR2Guess(peaks);
+                guesses[map[id][0]] = CESTEquations.cestKexGuess(peaks); //112.0; //kex
+                guesses[map[id][1]] = CESTEquations.cestPbGuess(peaks); //0.1; //pb
+                guesses[map[id][2]] = peaks[peaks.length-1][0]; //400 * 2.0 * Math.PI; //deltaA
+                guesses[map[id][3]] = peaks[0][0]; //-250 * 2.0 * Math.PI; //deltaB
+                guesses[map[id][4]] = r1[0]; //2.4; //R1A
+                guesses[map[id][5]] = r1[1]; //2.4; //R1B
+                guesses[map[id][6]] = r2[1][r2[0].length-1]/4; //20.0; //R2A
+                guesses[map[id][7]] = r2[0][0]; //100.0; //R2B
             }
+//            for (int i=0; i<guesses.length; i++) {
+//                System.out.println(guesses[i]);
+//            }
+            
             return guesses;
         }
      
@@ -290,15 +346,27 @@ public enum CESTEquation implements CESTEquationType {
                 double vMid = DataUtil.getMidValue(yValues, xValues[0], idNums, id);
                 //System.out.println(minY + " " + maxY + " " + mean + " " + vMid);
                 //System.out.println(id + " " + map[id].length + " " + map[id][0] + " " + map[id][1]);
-                guesses[map[id][0]] = 112.0; //kex
-                guesses[map[id][1]] = 0.1; //pb
-                guesses[map[id][2]] = 400 * 2.0 * Math.PI; //deltaA
-                guesses[map[id][3]] = -250 * 2.0 * Math.PI; //deltaB
-                guesses[map[id][4]] = 2.4; //R1A
-                guesses[map[id][5]] = 2.4; //R1B
-                guesses[map[id][6]] = 20.0; //R2A
-                guesses[map[id][7]] = 100.0; //R2B
+                double[][] peaks = CESTEquations.cestPeakGuess(xValues[0], yValues);
+//                for (int i=0; i<peaks.length; i++) {
+//                    for (int j=0; j<peaks[i].length; j++) {
+//                        System.out.println("peaks " + i + " " + j + " = " + peaks[i][j]);
+//                    }
+//                }
+                double[] r1 = CESTEquations.cestR1Guess(xValues[2][0]);
+                double[][] r2 = CESTEquations.cestR2Guess(peaks);
+                guesses[map[id][0]] = CESTEquations.cestKexGuess(peaks); //112.0; //kex
+                guesses[map[id][1]] = CESTEquations.cestPbGuess(peaks); //0.1; //pb
+                guesses[map[id][2]] = peaks[peaks.length-1][0]; //400 * 2.0 * Math.PI; //deltaA
+                guesses[map[id][3]] = peaks[0][0]; //-250 * 2.0 * Math.PI; //deltaB
+                guesses[map[id][4]] = r1[0]; //2.4; //R1A
+                guesses[map[id][5]] = r1[1]; //2.4; //R1B
+                guesses[map[id][6]] = r2[1][r2[0].length-1]/4; //20.0; //R2A
+                guesses[map[id][7]] = r2[0][0]; //100.0; //R2B
             }
+//            for (int i=0; i<guesses.length; i++) {
+//                System.out.println(guesses[i]);
+//            }
+            
             return guesses;
         }
      
@@ -337,15 +405,27 @@ public enum CESTEquation implements CESTEquationType {
                 double vMid = DataUtil.getMidValue(yValues, xValues[0], idNums, id);
                 //System.out.println(minY + " " + maxY + " " + mean + " " + vMid);
                 //System.out.println(id + " " + map[id].length + " " + map[id][0] + " " + map[id][1]);
-                guesses[map[id][0]] = 112.0; //kex
-                guesses[map[id][1]] = 0.1; //pb
-                guesses[map[id][2]] = 400 * 2.0 * Math.PI; //deltaA
-                guesses[map[id][3]] = -250 * 2.0 * Math.PI; //deltaB
-                guesses[map[id][4]] = 2.4; //R1A
-                guesses[map[id][5]] = 50.0; //R1B
-                guesses[map[id][6]] = 20.0; //R2A
-                guesses[map[id][7]] = 20.0; //R2B
+                double[][] peaks = CESTEquations.cestPeakGuess(xValues[0], yValues);
+//                for (int i=0; i<peaks.length; i++) {
+//                    for (int j=0; j<peaks[i].length; j++) {
+//                        System.out.println("peaks " + i + " " + j + " = " + peaks[i][j]);
+//                    }
+//                }
+                double[] r1 = CESTEquations.cestR1Guess(xValues[2][0]);
+                double[][] r2 = CESTEquations.cestR2Guess(peaks);
+                guesses[map[id][0]] = CESTEquations.cestKexGuess(peaks); //112.0; //kex
+                guesses[map[id][1]] = CESTEquations.cestPbGuess(peaks); //0.1; //pb
+                guesses[map[id][2]] = peaks[peaks.length-1][0]; //400 * 2.0 * Math.PI; //deltaA
+                guesses[map[id][3]] = peaks[0][0]; //-250 * 2.0 * Math.PI; //deltaB
+                guesses[map[id][4]] = r1[0]; //2.4; //R1A
+                guesses[map[id][5]] = r1[1]; //2.4; //R1B
+                guesses[map[id][6]] = r2[1][r2[0].length-1]/4; //20.0; //R2A
+                guesses[map[id][7]] = r2[0][0]; //100.0; //R2B
             }
+//            for (int i=0; i<guesses.length; i++) {
+//                System.out.println(guesses[i]);
+//            }
+            
             return guesses;
         }
      
