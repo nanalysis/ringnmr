@@ -191,7 +191,7 @@ public class DataIO {
                         double[] B1field = expData.getB1Field();
                         List<Double> B1fieldList = new ArrayList<>();
                         for (int i=0; i<B1field.length; i++) {
-                            B1fieldList.add(B1field[i]);//* 2 * Math.PI);
+                            B1fieldList.add(B1field[i] * 2 * Math.PI);
                         }
                         double[] Tex = expData.getTex();
                         List<Double> TexList = new ArrayList<>();
