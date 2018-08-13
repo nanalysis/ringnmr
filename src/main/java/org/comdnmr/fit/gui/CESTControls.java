@@ -50,13 +50,13 @@ public class CESTControls implements EquationControls {
     String[] parNames = {"Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B"};
 
     enum PARS implements ParControls {
-        KEX("Kex", 0.0, 350.0, 50.0, 150.0),
+        KEX("Kex", 0.0, 1000.0, 100.0, 150.0),
         PB("Pb", 0.0, 1.0, 0.1, 0.1),
         DELTAA0("deltaA0", 0.0, 3000.0, 100.0, 2700.0),
         DELTAB0("deltaB0", -3000.0, 0.0, 100.0, -1250.0),
         R1A("R1A", 0.0, 4.0, 1.0, 2.5),
         R1B("R1B", 0.0, 10.0, 1.0, 5.0),
-        R2A("R2A", 0.0, 40.0, 10.0, 15.0),
+        R2A("R2A", 0.0, 200.0, 50.0, 15.0),
         R2B("R2B", 0.0, 200.0, 50.0, 120.0);
 
         String name;
@@ -638,7 +638,7 @@ public class CESTControls implements EquationControls {
                     guesses[map[id][2]] = deltaA0; //deltaA
                     guesses[map[id][3]] = deltaB0; //deltaB
                     guesses[map[id][4]] = R1a; //R1A
-                    guesses[map[id][5]] = R1b; //R1B
+                    guesses[map[id][5]] = R1a; //R1B
                     guesses[map[id][6]] = R2a; //R2A
                     guesses[map[id][7]] = R2b; //R2B
                 }
@@ -650,9 +650,9 @@ public class CESTControls implements EquationControls {
                     guesses[map[id][2]] = deltaA0; //deltaA
                     guesses[map[id][3]] = deltaB0; //deltaB
                     guesses[map[id][4]] = R1a; //R1A
-                    guesses[map[id][5]] = R1b; //R1B
+                    guesses[map[id][5]] = R1a; //R1B
                     guesses[map[id][6]] = R2a; //R2A
-                    guesses[map[id][7]] = R2b; //R2B
+                    guesses[map[id][7]] = R2a; //R2B
                 }
                 break;
             case "CESTR1RHOSD":
@@ -662,7 +662,7 @@ public class CESTControls implements EquationControls {
                     guesses[map[id][2]] = deltaA0; //deltaA
                     guesses[map[id][3]] = deltaB0; //deltaB
                     guesses[map[id][4]] = R1a; //R1A
-                    guesses[map[id][5]] = R1b; //R1B
+                    guesses[map[id][5]] = R1a; //R1B
                     guesses[map[id][6]] = R2a; //R2A
                     guesses[map[id][7]] = R2b; //R2B
                 }
@@ -674,7 +674,7 @@ public class CESTControls implements EquationControls {
                     guesses[map[id][2]] = deltaA0; //deltaA
                     guesses[map[id][3]] = deltaB0; //deltaB
                     guesses[map[id][4]] = R1a; //R1A
-                    guesses[map[id][5]] = R1b; //R1B
+                    guesses[map[id][5]] = R1a; //R1B
                     guesses[map[id][6]] = R2a; //R2A
                     guesses[map[id][7]] = R2b; //R2B
                 }
@@ -686,7 +686,7 @@ public class CESTControls implements EquationControls {
                     guesses[map[id][2]] = deltaA0; //deltaA
                     guesses[map[id][3]] = deltaB0; //deltaB
                     guesses[map[id][4]] = R1a; //R1A
-                    guesses[map[id][5]] = R1b; //R1B
+                    guesses[map[id][5]] = R1a; //R1B
                     guesses[map[id][6]] = R2a; //R2A
                     guesses[map[id][7]] = R2b; //R2B
                 }
@@ -710,7 +710,7 @@ public class CESTControls implements EquationControls {
                     guesses[map[id][2]] = deltaA0; //deltaA
                     guesses[map[id][3]] = deltaB0; //deltaB
                     guesses[map[id][4]] = R1a; //R1A
-                    guesses[map[id][5]] = R1b; //R1B
+                    guesses[map[id][5]] = R1a; //R1B
                     guesses[map[id][6]] = R2a; //R2A
                     guesses[map[id][7]] = R2b; //R2B
                 }
@@ -724,7 +724,7 @@ public class CESTControls implements EquationControls {
                     guesses[map[id][4]] = R1a; //R1A
                     guesses[map[id][5]] = R1b; //R1B
                     guesses[map[id][6]] = R2a; //R2A
-                    guesses[map[id][7]] = R2b; //R2B
+                    guesses[map[id][7]] = R2a; //R2B
                 }
                 break;
         }
@@ -881,12 +881,12 @@ public class CESTControls implements EquationControls {
                     double[] extras = new double[3];
                     for (int j = 0; j < expData.getExtras().size()/2; j++) {
                         extras[0] = 1.0;
-                        extras[1] = expData.getExtras().get(2*j) * 2 * Math.PI;
+                        extras[1] = expData.getExtras().get(2*j);
                         extras[2] = expData.getExtras().get(2*j+1);
-//                        System.out.println("resInfo Res Num = " + resInfo.getResNum());
-//                        System.out.println("extras size = " + expData.getExtras().size());
-//                        System.out.println(j + " expData extras[1] = " + extras[1]);
-//                        System.out.println(j + " expData extras[2] = " + extras[2]);
+                        System.out.println("resInfo Res Num = " + resInfo.getResNum());
+                        System.out.println("extras size = " + expData.getExtras().size());
+                        System.out.println(j + " expData extras[1] = " + extras[1]);
+                        System.out.println(j + " expData extras[2] = " + extras[2]);
                         //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[1] = " + extras[1]);
                         PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
                         //equationCopy.setExtra(extras);
