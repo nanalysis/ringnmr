@@ -267,7 +267,7 @@ public class ChartUtil {
                       double[] extras = new double[2];
                       for (int j = 0; j < expData.getExtras().size(); j++) {
                         extras[0] = field;
-                        extras[1] = expData.getExtras().get(j) * 2 * Math.PI;
+                        extras[1] = expData.getExtras().get(j);
                         //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[1] = " + extras[1]);
                         PlotEquation equationCopy = equation.clone();
                         equationCopy.setExtra(extras);
