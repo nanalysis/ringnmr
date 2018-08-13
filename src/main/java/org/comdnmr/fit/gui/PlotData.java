@@ -52,9 +52,7 @@ public class PlotData extends ScatterChart {
         Color.web("#a6761d"),
         Color.web("#666666"),
         Color.web("#ff7f00"),
-        Color.web("#6a3d9a"),
-        
-    };
+        Color.web("#6a3d9a"),};
 
     public PlotData(NumberAxis xAxis, NumberAxis yAxis) {
         super(xAxis, yAxis);
