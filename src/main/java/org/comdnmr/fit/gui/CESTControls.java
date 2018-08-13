@@ -6,19 +6,16 @@
 package org.comdnmr.fit.gui;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import org.comdnmr.fit.calc.CESTEquation;
 import org.comdnmr.fit.calc.CESTFit;
 import org.comdnmr.fit.calc.ExperimentData;
 import org.comdnmr.fit.calc.ParValueInterface;
@@ -33,8 +30,6 @@ import static org.comdnmr.fit.gui.CESTControls.PARS.R1A;
 import static org.comdnmr.fit.gui.CESTControls.PARS.R1B;
 import static org.comdnmr.fit.gui.CESTControls.PARS.R2A;
 import static org.comdnmr.fit.gui.CESTControls.PARS.R2B;
-import static org.comdnmr.fit.gui.ChartUtil.residueProperties;
-import static org.comdnmr.fit.gui.PyController.defaultField;
 import org.comdnmr.fit.calc.CalcCEST;
 
 /**
