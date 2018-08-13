@@ -297,7 +297,7 @@ public class DataIO {
                 expData.addResidueData(residueNum, residueData);
                 List<Double> extrasList = new ArrayList<>(bFieldUniqueValue.size()*2);
                 for (int i=0; i<bFieldUniqueValue.size(); i++) {
-                    extrasList.add(2*i, bFieldUniqueValue.get(i));
+                    extrasList.add(2*i, bFieldUniqueValue.get(i) * 2.0 * Math.PI);
                     extrasList.add(2*i+1, TexList.get(i));
                 }
 //                System.out.println("res num = " + residueNum);
