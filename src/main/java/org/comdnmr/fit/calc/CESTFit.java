@@ -293,9 +293,6 @@ public class CESTFit implements EquationFitter {
             }
             return getResults(this, eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, simPars);
         } else {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setContentText("Error: Two peaks are needed to fit the data.");
-            alert.showAndWait();
             return null;
         }
     }
