@@ -341,8 +341,8 @@ public class CPMGControls implements EquationControls {
         int nPars = CalcRDisp.getNPars(map);
         double[] guesses = new double[nPars];
         System.out.println(equationName + " nPars " + nPars);
-        for (int i=0;i<map.length;i++) {
-            for (int j=0;j<map[i].length;j++) {
+        for (int i = 0; i < map.length; i++) {
+            for (int j = 0; j < map[i].length; j++) {
                 System.out.print(map[i][j] + " ");
             }
             System.out.println(" i " + i);
@@ -378,7 +378,7 @@ public class CPMGControls implements EquationControls {
         return guesses;
 
     }
-        
+
     @Override
     public void updateStates(List<int[]> allStates) {
         StringBuilder sBuilder = new StringBuilder();
@@ -425,7 +425,7 @@ public class CPMGControls implements EquationControls {
     public String getEquation() {
         return equationSelector.getValue();
     }
-    
+
     public List<String> getParNames() {
         String equationName = equationSelector.getValue().toString();
         List<String> parNames1 = new ArrayList<>();
@@ -466,32 +466,32 @@ public class CPMGControls implements EquationControls {
             equations.add(plotEquation);
         } else {
             double[] fields = resProps.getFields();
+            double[] extras = new double[1];
             String currentState = stateSelector.getValue();
-            double field2;
             if (resInfo != null) {
                 for (String state : stateSelector.getItems()) {
                     int iField = Integer.parseInt(state.substring(0, 1));
-                    if (state.equals(currentState)) {
+                    List<ParValueInterface> parValues = resInfo.getParValues(equationName, state);
+                    if (state.equals(currentState) || parValues.isEmpty()) {
                         pars = getPars(equationName);
-                        fields[iField] = FIELD2.getValue();
+                        if (state.equals(currentState)) {
+                            extras[0] = FIELD2.getValue();
+                        } else {
+                            extras[0] = fields[iField];
+                        }
                     } else {
                         try {
                             Map<String, ParValueInterface> parMap = new HashMap<>();
-                            List<ParValueInterface> parValues = resInfo.getParValues(equationName, state);
                             for (ParValueInterface parValue : parValues) {
                                 parMap.put(parValue.getName(), parValue);
                             }
                             pars = getPars(equationName, parMap);
                         } catch (NullPointerException npEcpmgpar) {
-                            Alert alert = new Alert(Alert.AlertType.ERROR);
-                            alert.setContentText("Error: Residue must be selected");
-                            alert.showAndWait();
-                            return;
+                            continue;
                         }
+                        extras[0] = fields[iField];
                     }
                     double[] errs = new double[pars.length];
-                    double[] extras = new double[1];
-                    extras[0] = fields[iField];
                     PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
                     equations.add(plotEquation);
                 }
