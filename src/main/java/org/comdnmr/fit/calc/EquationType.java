@@ -45,10 +45,6 @@ public interface EquationType {
 
     public int getNGroupPars();
 
-    public void setFieldRef(double[] fields);
-
-    public void setFieldRef(double field);
-
     public String getName();
 
 }

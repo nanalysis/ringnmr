@@ -41,7 +41,6 @@ public class CalcCEST extends FitModel {
         this.idNums = idNums.clone();
         this.idNums = new int[yValues.length];
         this.equation = CESTEquation.CESTR1RHOPERTURBATION;
-        this.equation.setFieldRef(fields);
         if (setNID()) {
             throw new IllegalArgumentException("Invalid idNums, some values not used");
         }

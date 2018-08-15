@@ -97,7 +97,6 @@ public abstract class FitModel implements MultivariateFunction {
     }
 
     public double[] simY(double[] par) {
-        equation.setFieldRef(fields[0]);
         double[] yCalc = equation.calculate(par, map[0], xValues, idNums[0], fields[0]);
         return yCalc;
     }
@@ -109,7 +108,7 @@ public abstract class FitModel implements MultivariateFunction {
     public abstract double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma);
 
     public abstract double[] simBoundsBootstrapStream(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma);
-    
+
     public abstract double[][] getSimPars();
 
     public void setXY(double[][] x, double[] y) {
@@ -146,7 +145,6 @@ public abstract class FitModel implements MultivariateFunction {
 
     public void setFields(double[] fields) {
         this.fields = fields;
-        this.equation.setFieldRef(fields);
     }
 
     public double[] guess() {
@@ -239,7 +237,7 @@ public abstract class FitModel implements MultivariateFunction {
     public String[] getParNames() {
         return equation.getParNames();
     }
-        
+
     public int getNGroupPars() {
         return equation.getNGroupPars();
     }
@@ -261,7 +259,6 @@ public abstract class FitModel implements MultivariateFunction {
     }
 
     public void dump(double[] par, double[][] xValues, double field) {
-        equation.setFieldRef(field);
         double[] x = new double[xValues.length];
         for (int i = 0; i < yValues.length; i++) {
             for (int j = 0; j < x.length; j++) {
