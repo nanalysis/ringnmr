@@ -1149,7 +1149,7 @@ public class PyController implements Initializable {
                 double[] errs = curveFit.getEquation().getErrs(); //double[] errs = new double[pars.length];
                 double[] extras = new double[3];
                 for (int j = 0; j < expData.getExtras().size() / 2; j++) {
-                    extras[0] = 1.0;
+                    extras[0] = expData.getField();
                     extras[1] = expData.getExtras().get(2 * j);
                     extras[2] = expData.getExtras().get(2 * j + 1);
 //                    System.out.println("Fit button expData extras size = " + expData.getExtras().size() + " extra[1] = " + extras[1]);
@@ -1162,7 +1162,7 @@ public class PyController implements Initializable {
                 double[] pars = curveFit.getEquation().getPars(); //pars = getPars(equationName);
                 double[] errs = curveFit.getEquation().getErrs(); //double[] errs = new double[pars.length];
                 double[] extras = new double[1];
-                extras[0] = 1.0;
+                extras[0] = CPMGFit.REF_FIELD;
                 PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
                 //equationCopy.setExtra(extras);
                 //System.out.println("Fit button expData extras size = " + expData.getExtras().size() + " extra[0] = " + extras[0]);
