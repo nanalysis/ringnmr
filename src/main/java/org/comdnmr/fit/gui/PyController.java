@@ -409,7 +409,7 @@ public class PyController implements Initializable {
         tauTextField.setText("0.04");
         fitModeTextField.setText("cpmg");
         B1TextField.setText("20.0");
-        TexTextField.setText("0.3");
+        TexTextField.setText("0.5");
         xValTextArea.setText("");
         xValTextArea.setMaxWidth(240);
         xValTextArea.setWrapText(true);

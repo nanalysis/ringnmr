@@ -67,7 +67,7 @@
     <center>
         <SplitPane orientation="vertical" fx:id="splitPane">
             <items>
-                <SplitPane orientation="horizontal" prefHeight="800">
+                <SplitPane orientation="horizontal" prefHeight="950">
                     <items>
                         <PlotData fx:id="xychart" HBox.hgrow="ALWAYS" />
                         <VBox HBox.hgrow="ALWAYS"  VBox.vgrow="ALWAYS" >

@@ -399,9 +399,9 @@ public class PlotData extends ScatterChart {
             ResidueData.DataValue dataValue = (ResidueData.DataValue) item.getExtraValue();
             double x1 = dataValue.getX1();
             Node node = createNode(item, seriesIndex);
-            double x1val = Math.round(100.0 * x1 / (2 * Math.PI)) / 100.0;
+            double x1val = x1; //Math.round(100.0 * x1 / (2 * Math.PI)) / 100.0;
             if (expData != null && expData.getExtras().contains(x1val)) {
-                node = createNode(item, expData.getExtras().indexOf(x1val));
+                node = createNode(item, expData.getExtras().indexOf(x1val)/2);
             }
             item.setNode(node);
             super.dataItemAdded(series, j, item);
