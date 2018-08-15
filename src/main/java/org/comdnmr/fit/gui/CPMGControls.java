@@ -217,57 +217,13 @@ public class CPMGControls implements EquationControls {
         if (equationName.equals("CPMGSLOW") && label.equals("Rex")) {
             return;
         }
-        double r2 = R2.getValue();
-        double kEx = KEX.getValue();
-        double rEx = REX.getValue();
-        double pA = PA.getValue();
-        double dPPM = DPPM.getValue();
-        double field2 = FIELD2.getValue();
         R2.setText();
         KEX.setText();
         REX.setText();
         PA.setText();
         DPPM.setText();
         FIELD2.setText();
-        double[] pars;
-        switch (equationName) {
-            case "NOEX":
-                pars = new double[1];
-                pars[0] = r2;
-
-                break;
-            case "CPMGFAST":
-                pars = new double[3];
-                pars[0] = kEx;
-                pars[1] = r2;
-                pars[2] = rEx;
-                break;
-            case "CPMGSLOW":
-                pars = new double[4];
-                pars[0] = kEx;
-                pars[1] = pA;
-                pars[2] = r2;
-                pars[3] = dPPM;
-                break;
-            default:
-                return;
-        }
-//        if (equationName.equals("CPMGSLOW")) {
-//            int[] map = {0, 1, 2, 3};
-//            rEx = CPMGEquation.CPMGSLOW.getRex(pars, map);
-//            REX.setValue(rEx);
-//        }
-
-//        double[] errs = new double[pars.length];
-//        int nFields = field2 > (defaultField + 10) ? 2 : 1; // addTo 10.0 to make sure slider set near to bottom gives 1 field
-//        double[] fields = new double[nFields];
-//        fields[0] = 1.0;
-//        if (nFields > 1) {
-//            fields[1] = field2 / defaultField;
-//        }
         updateEquations();
-
-        //controller.updateChartEquations(equationName, pars, errs, fields);
     }
 
     double[] getPars(String equationName) {
