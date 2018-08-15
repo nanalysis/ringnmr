@@ -63,10 +63,11 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Optional;
-import java.util.Set;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.SplitPane;
@@ -209,7 +210,7 @@ public class PyController implements Initializable {
             simControls.simSliderAction("");
         } catch (NullPointerException npE) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setContentText("Error: Residue must be selected");
+            alert.setContentText("Error: Residue must be selected in display equation");
             alert.showAndWait();
             return;
         }
@@ -912,6 +913,7 @@ public class PyController implements Initializable {
     }
 
     public void updateTableWithPars(List<ParValueInterface> parValues) {
+        DecimalFormat df = new DecimalFormat();
         ObservableList<ParValueInterface> data = FXCollections.observableArrayList();
         data.addAll(parValues);
         parameterTable.itemsProperty().setValue(data);
@@ -919,14 +921,36 @@ public class PyController implements Initializable {
         TableColumn<ParValueInterface, String> residueColumn = new TableColumn<>("Residue");
         TableColumn<ParValueInterface, String> stateColumn = new TableColumn<>("State");
         TableColumn<ParValueInterface, String> nameColumn = new TableColumn<>("Name");
-        TableColumn<ParValueInterface, Double> valueColumn = new TableColumn<>("Value");
-        TableColumn<ParValueInterface, Double> errorColumn = new TableColumn<>("Error");
+        TableColumn<ParValueInterface, String> valueColumn = new TableColumn<>("Value");
+        TableColumn<ParValueInterface, String> errorColumn = new TableColumn<>("Error");
 
         residueColumn.setCellValueFactory(new PropertyValueFactory<>("Residue"));
         stateColumn.setCellValueFactory(new PropertyValueFactory<>("State"));
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("Name"));
-        valueColumn.setCellValueFactory(new PropertyValueFactory<>("Value"));
-        errorColumn.setCellValueFactory(new PropertyValueFactory<>("Error"));
+        valueColumn.setCellValueFactory(c -> {
+            SimpleStringProperty property = new SimpleStringProperty();
+            double errValue = c.getValue().getError();
+            int nSig = (int) Math.floor(Math.log10(errValue)) - 1;
+            nSig = -nSig;
+            if (nSig < 0) {
+                nSig = 0;
+            }
+            df.setMaximumFractionDigits(nSig);
+            property.setValue(df.format(c.getValue().getValue()));
+            return property;
+        });
+        errorColumn.setCellValueFactory(c -> {
+            SimpleStringProperty property = new SimpleStringProperty();
+            double errValue = c.getValue().getError();
+            int nSig = (int) Math.floor(Math.log10(errValue));
+            nSig = -nSig;
+            if (nSig < 0) {
+                nSig = 0;
+            }
+            df.setMaximumFractionDigits(nSig);
+            property.setValue(df.format(errValue));
+            return property;
+        });
 
         parameterTable.getColumns().clear();
         parameterTable.getColumns().addAll(residueColumn, stateColumn, nameColumn, valueColumn, errorColumn);
@@ -1068,7 +1092,7 @@ public class PyController implements Initializable {
             simControls.simSliderAction("");
         } catch (NullPointerException npE1) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setContentText("Error: Residue must be selected");
+            alert.setContentText("Error: Residue must be selected when guessing");
             alert.showAndWait();
             return;
         }
@@ -1121,7 +1145,7 @@ public class PyController implements Initializable {
             updateAfterFit(fitResult);
         } catch (NullPointerException npE2) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setContentText("Error: Residue must be selected");
+            alert.setContentText("Error: Residue must be selected when fitting");
             alert.showAndWait();
             return;
         }
