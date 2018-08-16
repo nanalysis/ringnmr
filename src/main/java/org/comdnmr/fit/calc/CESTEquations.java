@@ -677,9 +677,9 @@ public class CESTEquations {
             double[][] r2 = new double[2][peaks.length / 2];
 
             for (int i = 0; i < r2[0].length; i++) {
-                r2[1][i] = peaks[2 * i][2]/(2*Math.PI); //R2A
-                r2[0][i] = peaks[2 * i + 1][2]/10/(2*Math.PI); //R2B
-            }
+                r2[0][i] = peaks[2 * i + 1][2]/10/(2*Math.PI); //R2A
+                r2[1][i] = peaks[2 * i][2]/(2*Math.PI); //R2B
+            }           
             return r2;
         } else {
             double[][] r2 = new double[2][1];
@@ -702,7 +702,7 @@ public class CESTEquations {
             for (int i = 0; i < kex.length; i++) {
                 kex[i] = peaks[2 * i][2]/(2*Math.PI); //Kex
             }
-            return kex[kex.length-1];
+            return kex[0];
         } else {
             return peaks[0][2]/(2*Math.PI); //Kex;
         }
@@ -722,7 +722,7 @@ public class CESTEquations {
                 r1[1] = 0.0; 
             }
         }
-
+        
         return r1;
     }
 }
