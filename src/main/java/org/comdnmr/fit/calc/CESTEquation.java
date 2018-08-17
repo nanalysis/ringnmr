@@ -174,9 +174,9 @@ public enum CESTEquation implements CESTEquationType {
                 guesses[map[id][6]] = r2[0][0]; //r2[1][r2[0].length-1]/4; //20.0; //R2A
                 guesses[map[id][7]] = r2[1][0]; //100.0; //R2B
             }
-            for (int i=0; i<guesses.length; i++) {
-                System.out.println(guesses[i]);
-            }
+//            for (int i=0; i<guesses.length; i++) {
+//                System.out.println(guesses[i]);
+//            }
             
             return guesses;
         }
