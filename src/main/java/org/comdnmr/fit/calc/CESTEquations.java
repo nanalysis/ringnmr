@@ -570,7 +570,7 @@ public class CESTEquations {
         return cest;
     }
 
-    public static double[][] cestPeakGuess(double[] xvals, double[] yvals) {
+    public static double[][] cestPeakGuess(double[][] xvals, double[] yvals) {
         // Estimates CEST peak positions for initial guesses for before fitting.
 
         List<Double> xmin = new ArrayList<>();
@@ -578,6 +578,8 @@ public class CESTEquations {
         List<Double> fwhm = new ArrayList<>();
 
         double previousYdiff = 0;
+        
+        double B1val = xvals[1][0];
 
         for (int i = 3; i < yvals.length-2; i++) {
             double ydiff = yvals[i] - yvals[i - 1];
@@ -587,31 +589,31 @@ public class CESTEquations {
                 if (ydiff > 0 & previousYdiff < 0) { //look for sign changes going from - to +
                     if (ydiff2l > 0 & ydiff2r > 0) {
                         ymin.add(yvals[i - 1]);
-                        xmin.add(xvals[i - 1]);
+                        xmin.add(xvals[0][i - 1]);
                     } else if (ydiff2l > 0) {
                         ymin.add(yvals[i - 1]);
-                        xmin.add(xvals[i - 1]);
+                        xmin.add(xvals[0][i - 1]);
                     } else if (ydiff2r > 0) {
                         ymin.add(yvals[i - 1]);
-                        xmin.add(xvals[i - 1]);
+                        xmin.add(xvals[0][i - 1]);
                     }
                 } else if (ydiff == 0) {
                     if (ydiff2l > 0 & ydiff2r > 0) {
                         double yavg = (yvals[i] + yvals[i - 1]) / 2;
-                        double xavg = (xvals[i] + xvals[i - 1]) / 2;
+                        double xavg = (xvals[0][i] + xvals[0][i - 1]) / 2;
                         ymin.add(yavg);
                         xmin.add(xavg);
-                    } else if (ydiff2l > 0) {
-                        double yavg = (yvals[i] + yvals[i - 1]) / 2;
-                        double xavg = (xvals[i] + xvals[i - 1]) / 2;
-                        ymin.add(yavg);
-                        xmin.add(xavg);
-                    } else if (ydiff2r > 0) {
-                        double yavg = (yvals[i] + yvals[i - 1]) / 2;
-                        double xavg = (xvals[i] + xvals[i - 1]) / 2;
-                        ymin.add(yavg);
-                        xmin.add(xavg);
-                    }
+                    } //else if (ydiff2l > 0) {
+//                        double yavg = (yvals[i] + yvals[i - 1]) / 2;
+//                        double xavg = (xvals[i] + xvals[i - 1]) / 2;
+//                        ymin.add(yavg);
+//                        xmin.add(xavg);
+//                    } else if (ydiff2r > 0) {
+//                        double yavg = (yvals[i] + yvals[i - 1]) / 2;
+//                        double xavg = (xvals[i] + xvals[i - 1]) / 2;
+//                        ymin.add(yavg);
+//                        xmin.add(xavg);
+//                    }
                 }
                 if (fwhm.size() < ymin.size()) {
                     // FWHM calculation
@@ -626,7 +628,7 @@ public class CESTEquations {
                             distance = cdistance;
                         }
                     }
-                    double halfleft = xvals[idx];// /(2*Math.PI);
+                    double halfleft = xvals[0][idx];// /(2*Math.PI);
                     double distance1 = Math.abs(yvals[1] - halfinten);
                     for (int c = i+1; c < i+10; c++) {
                         double cdistance1 = Math.abs(yvals[c] - halfinten);
@@ -635,19 +637,30 @@ public class CESTEquations {
                             distance1 = cdistance1;
                         }
                     }
-                    double halfright = xvals[idx1];// /(2*Math.PI);
+                    double halfright = xvals[0][idx1];// /(2*Math.PI);
                     fwhm.add(Math.abs(halfright-halfleft));
                 }
             }
             previousYdiff = ydiff;
+            if (xvals[1][i] != B1val) {
+                break;
+            }
         }
-
-        double[][] peaks = new double[xmin.size()][3];
+           
+//        System.out.println("ymin = " + ymin);
+        double[][] peaks = new double[2][3];
+        double ymin0 = ymin.get(0);
 
         for (int i = 0; i < xmin.size(); i++) {
-            peaks[i][0] = xmin.get(i);
-            peaks[i][1] = ymin.get(i);
-            peaks[i][2] = fwhm.get(i);
+            if (ymin.get(i) < ymin0) {
+                peaks[0][0] = xmin.get(ymin.indexOf(ymin0));
+                peaks[0][1] = ymin.get(ymin.indexOf(ymin0));
+                peaks[0][2] = fwhm.get(ymin.indexOf(ymin0));
+                peaks[1][0] = xmin.get(i);
+                peaks[1][1] = ymin.get(i);
+                peaks[1][2] = fwhm.get(i);
+                ymin0 = ymin.get(i);
+            }
         }
 //        for (int i=0; i<peaks.length; i++) {
 //           for (int j=0; j<peaks[i].length; j++) {
@@ -683,6 +696,8 @@ public class CESTEquations {
         // Estimates CEST R2A and R2B values from peak widths for initial guesses for before fitting.
         // Uses the output from cestPeakGuess as the input.
 
+        double pb = cestPbGuess(peaks);
+        
         if (peaks.length > 1) {
             double[][] r2 = new double[2][peaks.length / 2];
 
@@ -690,8 +705,10 @@ public class CESTEquations {
                 double awidth = peaks[2 * i + 1][2]/(2*Math.PI); 
                 double bwidth = peaks[2 * i][2]/(2*Math.PI); 
                 double kex = (awidth + bwidth)/2;
-                r2[0][i] = Math.abs(awidth - kex); //R2A
-                r2[1][i] = bwidth; //R2B
+                double kb = pb*kex;
+                double ka = (1-pb)*kex;
+                r2[0][i] = Math.abs(awidth - ka); //R2A
+                r2[1][i] = Math.abs(bwidth - kb); //R2B
             }  
 //            for (int i=0; i<r2.length; i++) {
 //                for (int j=0; j<r2[i].length; j++) {
