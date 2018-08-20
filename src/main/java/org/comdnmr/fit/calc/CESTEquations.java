@@ -588,30 +588,30 @@ public class CESTEquations {
                     if (ydiff2l > 0 & ydiff2r > 0) {
                         ymin.add(yvals[i - 1]);
                         xmin.add(xvals[i - 1]);
-                    } else if (ydiff2l > 0) {
-                        ymin.add(yvals[i - 1]);
-                        xmin.add(xvals[i - 1]);
-                    } else if (ydiff2r > 0) {
-                        ymin.add(yvals[i - 1]);
-                        xmin.add(xvals[i - 1]);
-                    }
+                    } //else if (ydiff2l > 0) {
+//                        ymin.add(yvals[i - 1]);
+//                        xmin.add(xvals[i - 1]);
+//                    } else if (ydiff2r > 0) {
+//                        ymin.add(yvals[i - 1]);
+//                        xmin.add(xvals[i - 1]);
+//                    }
                 } else if (ydiff == 0) {
                     if (ydiff2l > 0 & ydiff2r > 0) {
                         double yavg = (yvals[i] + yvals[i - 1]) / 2;
                         double xavg = (xvals[i] + xvals[i - 1]) / 2;
                         ymin.add(yavg);
                         xmin.add(xavg);
-                    } else if (ydiff2l > 0) {
-                        double yavg = (yvals[i] + yvals[i - 1]) / 2;
-                        double xavg = (xvals[i] + xvals[i - 1]) / 2;
-                        ymin.add(yavg);
-                        xmin.add(xavg);
-                    } else if (ydiff2r > 0) {
-                        double yavg = (yvals[i] + yvals[i - 1]) / 2;
-                        double xavg = (xvals[i] + xvals[i - 1]) / 2;
-                        ymin.add(yavg);
-                        xmin.add(xavg);
-                    }
+                    } //else if (ydiff2l > 0) {
+//                        double yavg = (yvals[i] + yvals[i - 1]) / 2;
+//                        double xavg = (xvals[i] + xvals[i - 1]) / 2;
+//                        ymin.add(yavg);
+//                        xmin.add(xavg);
+//                    } else if (ydiff2r > 0) {
+//                        double yavg = (yvals[i] + yvals[i - 1]) / 2;
+//                        double xavg = (xvals[i] + xvals[i - 1]) / 2;
+//                        ymin.add(yavg);
+//                        xmin.add(xavg);
+//                    }
                 }
                 if (fwhm.size() < ymin.size()) {
                     // FWHM calculation
@@ -683,6 +683,8 @@ public class CESTEquations {
         // Estimates CEST R2A and R2B values from peak widths for initial guesses for before fitting.
         // Uses the output from cestPeakGuess as the input.
 
+        double pb = cestPbGuess(peaks);
+        
         if (peaks.length > 1) {
             double[][] r2 = new double[2][peaks.length / 2];
 
@@ -690,8 +692,10 @@ public class CESTEquations {
                 double awidth = peaks[2 * i + 1][2]/(2*Math.PI); 
                 double bwidth = peaks[2 * i][2]/(2*Math.PI); 
                 double kex = (awidth + bwidth)/2;
-                r2[0][i] = Math.abs(awidth - kex); //R2A
-                r2[1][i] = bwidth; //R2B
+                double kb = pb*kex;
+                double ka = (1-pb)*kex;
+                r2[0][i] = Math.abs(awidth - ka); //R2A
+                r2[1][i] = Math.abs(bwidth - kb); //R2B
             }  
 //            for (int i=0; i<r2.length; i++) {
 //                for (int j=0; j<r2[i].length; j++) {

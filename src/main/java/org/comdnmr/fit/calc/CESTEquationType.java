@@ -68,13 +68,13 @@ public interface CESTEquationType extends EquationType {
                 boundaries[1][map[id][2]] = guesses[map[id][2]] * 4; //deltaA UB
                 boundaries[0][map[id][3]] = guesses[map[id][3]] * 4; //deltaB LB
                 boundaries[1][map[id][3]] = 0.0; //deltaB UB
-                boundaries[0][map[id][4]] = 0.0; //R1A LB
+                boundaries[0][map[id][4]] = 0.1; //R1A LB
                 boundaries[1][map[id][4]] = guesses[map[id][4]] * 4; //R1A UB
-                boundaries[0][map[id][5]] = 0.0; //R1B LB
+                boundaries[0][map[id][5]] = 0.1; //R1B LB
                 boundaries[1][map[id][5]] = guesses[map[id][5]] * 4; //R1B UB
-                boundaries[0][map[id][6]] = 0.0; //R2A LB
+                boundaries[0][map[id][6]] = 0.1; //R2A LB
                 boundaries[1][map[id][6]] = guesses[map[id][6]] * 4; //R2A UB
-                boundaries[0][map[id][7]] = 0.0; //R2B LB
+                boundaries[0][map[id][7]] = 0.1; //R2B LB
                 boundaries[1][map[id][7]] = guesses[map[id][7]] * 4; //R2B UB
             return boundaries;
         }
