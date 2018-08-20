@@ -37,7 +37,8 @@ public interface CESTEquationType extends EquationType {
 //                        System.out.println("peaks " + i + " " + j + " = " + peaks[i][j]);
 //                    }
 //                }
-                double[] r1 = CESTEquations.cestR1Guess(xValues[2][0]);
+                double tex = xValues[2][0];
+                double[] r1 = CESTEquations.cestR1Guess(yValues, tex);
                 double[][] r2 = CESTEquations.cestR2Guess(peaks);
                 guesses[map[id][0]] = CESTEquations.cestKexGuess(peaks); //112.0; //kex
                 guesses[map[id][1]] = CESTEquations.cestPbGuess(peaks); //0.1; //pb
