@@ -225,10 +225,12 @@ public class CESTFit implements EquationFitter {
 
     @Override
     public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderguesses) {
-        double[] xvals = new double[xValues[0].size()];
+        double[][] xvals = new double[xValues.length][xValues[0].size()];
         double[] yvals = new double[yValues.size()];
         for (int i=0; i<xvals.length;  i++) {
-            xvals[i] = xValues[0].get(i);
+            for (int j=0; j<xvals[0].length; j++) {
+                xvals[i][j] = xValues[i].get(j);
+            }
         }
         for (int i=0; i<yvals.length;  i++) {
             yvals[i] = yValues.get(i);

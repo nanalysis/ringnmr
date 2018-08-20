@@ -40,7 +40,7 @@ public enum CESTEquation implements CESTEquationType {
                 double vMid = DataUtil.getMidValue(yValues, xValues[0], idNums, id);
                 //System.out.println(minY + " " + maxY + " " + mean + " " + vMid);
                 //System.out.println(id + " " + map[id].length + " " + map[id][0] + " " + map[id][1]);
-                double[][] peaks = CESTEquations.cestPeakGuess(xValues[0], yValues);
+                double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues);
 //                for (int i=0; i<peaks.length; i++) {
 //                    for (int j=0; j<peaks[i].length; j++) {
 //                        System.out.println("peaks " + i + " " + j + " = " + peaks[i][j]);
@@ -100,7 +100,7 @@ public enum CESTEquation implements CESTEquationType {
                 double vMid = DataUtil.getMidValue(yValues, xValues[0], idNums, id);
                 //System.out.println(minY + " " + maxY + " " + mean + " " + vMid);
                 //System.out.println(id + " " + map[id].length + " " + map[id][0] + " " + map[id][1]);
-                double[][] peaks = CESTEquations.cestPeakGuess(xValues[0], yValues);
+                double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues);
 //                for (int i=0; i<peaks.length; i++) {
 //                    for (int j=0; j<peaks[i].length; j++) {
 //                        System.out.println("peaks " + i + " " + j + " = " + peaks[i][j]);
@@ -159,7 +159,7 @@ public enum CESTEquation implements CESTEquationType {
                 double vMid = DataUtil.getMidValue(yValues, xValues[0], idNums, id);
                 //System.out.println(minY + " " + maxY + " " + mean + " " + vMid);
                 //System.out.println(id + " " + map[id].length + " " + map[id][0] + " " + map[id][1]);
-                double[][] peaks = CESTEquations.cestPeakGuess(xValues[0], yValues);
+                double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues);
 //                for (int i=0; i<peaks.length; i++) {
 //                    for (int j=0; j<peaks[i].length; j++) {
 //                        System.out.println("peaks " + i + " " + j + " = " + peaks[i][j]);
@@ -218,7 +218,7 @@ public enum CESTEquation implements CESTEquationType {
                 double vMid = DataUtil.getMidValue(yValues, xValues[0], idNums, id);
                 //System.out.println(minY + " " + maxY + " " + mean + " " + vMid);
                 //System.out.println(id + " " + map[id].length + " " + map[id][0] + " " + map[id][1]);
-                double[][] peaks = CESTEquations.cestPeakGuess(xValues[0], yValues);
+                double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues);
 //                for (int i=0; i<peaks.length; i++) {
 //                    for (int j=0; j<peaks[i].length; j++) {
 //                        System.out.println("peaks " + i + " " + j + " = " + peaks[i][j]);
@@ -277,7 +277,7 @@ public enum CESTEquation implements CESTEquationType {
                 double vMid = DataUtil.getMidValue(yValues, xValues[0], idNums, id);
                 //System.out.println(minY + " " + maxY + " " + mean + " " + vMid);
                 //System.out.println(id + " " + map[id].length + " " + map[id][0] + " " + map[id][1]);
-                double[][] peaks = CESTEquations.cestPeakGuess(xValues[0], yValues);
+                double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues);
 //                for (int i=0; i<peaks.length; i++) {
 //                    for (int j=0; j<peaks[i].length; j++) {
 //                        System.out.println("peaks " + i + " " + j + " = " + peaks[i][j]);
@@ -355,7 +355,7 @@ public enum CESTEquation implements CESTEquationType {
                 double vMid = DataUtil.getMidValue(yValues, xValues[0], idNums, id);
                 //System.out.println(minY + " " + maxY + " " + mean + " " + vMid);
                 //System.out.println(id + " " + map[id].length + " " + map[id][0] + " " + map[id][1]);
-                double[][] peaks = CESTEquations.cestPeakGuess(xValues[0], yValues);
+                double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues);
 //                for (int i=0; i<peaks.length; i++) {
 //                    for (int j=0; j<peaks[i].length; j++) {
 //                        System.out.println("peaks " + i + " " + j + " = " + peaks[i][j]);
@@ -415,7 +415,7 @@ public enum CESTEquation implements CESTEquationType {
                 double vMid = DataUtil.getMidValue(yValues, xValues[0], idNums, id);
                 //System.out.println(minY + " " + maxY + " " + mean + " " + vMid);
                 //System.out.println(id + " " + map[id].length + " " + map[id][0] + " " + map[id][1]);
-                double[][] peaks = CESTEquations.cestPeakGuess(xValues[0], yValues);
+                double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues);
 //                for (int i=0; i<peaks.length; i++) {
 //                    for (int j=0; j<peaks[i].length; j++) {
 //                        System.out.println("peaks " + i + " " + j + " = " + peaks[i][j]);
