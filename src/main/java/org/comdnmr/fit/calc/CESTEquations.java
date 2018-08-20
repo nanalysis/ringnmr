@@ -579,43 +579,44 @@ public class CESTEquations {
 
         double previousYdiff = 0;
 
-        for (int i = 2; i < yvals.length; i++) {
+        for (int i = 3; i < yvals.length-2; i++) {
             double ydiff = yvals[i] - yvals[i - 1];
-            if (Math.abs(yvals[1] - yvals[i - 1]) / yvals[1] > 0.2) { //peak intensity threshold
+            double ydiff2l = yvals[i - 3] - yvals[i - 2];
+            double ydiff2r = yvals[i + 2] - yvals[i + 1];
+            if (Math.abs(yvals[1] - yvals[i - 1]) / yvals[1] > 0.02) { //peak intensity threshold
                 if (ydiff > 0 & previousYdiff < 0) { //look for sign changes going from - to +
-                    ymin.add(yvals[i - 1]);
-                    xmin.add(xvals[i - 1]);
-                    // FWHM calculation
-                    double halfinten = (yvals[1] - yvals[i-1]) / 2 + yvals[i-1];
-                    double distance = Math.abs(yvals[0] - halfinten);
-                    int idx = 0;
-                    int idx1 = 0;
-                    for (int c = i-10; c < i; c++) {
-                        double cdistance = Math.abs(yvals[c] - halfinten);
-                        if (cdistance < distance) {
-                            idx = c;
-                            distance = cdistance;
-                        }
+                    if (ydiff2l > 0 & ydiff2r > 0) {
+                        ymin.add(yvals[i - 1]);
+                        xmin.add(xvals[i - 1]);
+                    } else if (ydiff2l > 0) {
+                        ymin.add(yvals[i - 1]);
+                        xmin.add(xvals[i - 1]);
+                    } else if (ydiff2r > 0) {
+                        ymin.add(yvals[i - 1]);
+                        xmin.add(xvals[i - 1]);
                     }
-                    double halfleft = xvals[idx];// /(2*Math.PI);
-                    double distance1 = Math.abs(yvals[1] - halfinten);
-                    for (int c = i+1; c < i+10; c++) {
-                        double cdistance1 = Math.abs(yvals[c] - halfinten);
-                        if (cdistance1 < distance1) {
-                            idx1 = c;
-                            distance1 = cdistance1;
-                        }
-                    }
-                    double halfright = xvals[idx1];// /(2*Math.PI);
-                    fwhm.add(Math.abs(halfright-halfleft));
                 } else if (ydiff == 0) {
-                    double yavg = (yvals[i] + yvals[i - 1]) / 2;
-                    double xavg = (xvals[i] + xvals[i - 1]) / 2;
-                    ymin.add(yavg);
-                    xmin.add(xavg);
+                    if (ydiff2l > 0 & ydiff2r > 0) {
+                        double yavg = (yvals[i] + yvals[i - 1]) / 2;
+                        double xavg = (xvals[i] + xvals[i - 1]) / 2;
+                        ymin.add(yavg);
+                        xmin.add(xavg);
+                    } else if (ydiff2l > 0) {
+                        double yavg = (yvals[i] + yvals[i - 1]) / 2;
+                        double xavg = (xvals[i] + xvals[i - 1]) / 2;
+                        ymin.add(yavg);
+                        xmin.add(xavg);
+                    } else if (ydiff2r > 0) {
+                        double yavg = (yvals[i] + yvals[i - 1]) / 2;
+                        double xavg = (xvals[i] + xvals[i - 1]) / 2;
+                        ymin.add(yavg);
+                        xmin.add(xavg);
+                    }
+                }
+                if (fwhm.size() < ymin.size()) {
                     // FWHM calculation
                     double halfinten = (yvals[1] - yvals[i-1]) / 2 + yvals[i-1];
-                    double distance = Math.abs(yvals[0] - halfinten);
+                    double distance = Math.abs(yvals[1] - halfinten);
                     int idx = 0;
                     int idx1 = 0;
                     for (int c = i-10; c < i; c++) {
@@ -648,6 +649,11 @@ public class CESTEquations {
             peaks[i][1] = ymin.get(i);
             peaks[i][2] = fwhm.get(i);
         }
+//        for (int i=0; i<peaks.length; i++) {
+//           for (int j=0; j<peaks[i].length; j++) {
+//                System.out.println("peaks guess " + i + " " + j + " " + peaks[i][j]);
+//            } 
+//        }
         return peaks;
     }
 
@@ -658,10 +664,14 @@ public class CESTEquations {
         if (peaks.length > 1) {
             double[] pb = new double[peaks.length / 2];
             
-            for (int i = 0; i < pb.length; i++) {
-//                pb[i] = peaks[2 * i][1] - peaks[2 * i + 1][1];
-                pb[0] = peaks[0][1] - peaks[peaks.length-1][1];
+            if (peaks.length == 2) {
+                pb[0] = peaks[0][1] - peaks[1][1];
+            } else {
+                for (int i = 0; i < pb.length; i++) {
+                    pb[i] = peaks[2 * i][1] - peaks[2 * i + 1][1];
+                }
             }
+//            System.out.println("pb guess = " + pb[0]);
             return pb[0];
         } else {
             return 0.0;
@@ -677,15 +687,24 @@ public class CESTEquations {
             double[][] r2 = new double[2][peaks.length / 2];
 
             for (int i = 0; i < r2[0].length; i++) {
-                r2[1][i] = peaks[2 * i][2]/(2*Math.PI); //R2A
-                r2[0][i] = peaks[2 * i + 1][2]/10/(2*Math.PI); //R2B
-            }
+                double awidth = peaks[2 * i + 1][2]/(2*Math.PI); 
+                double bwidth = peaks[2 * i][2]/(2*Math.PI); 
+                double kex = (awidth + bwidth)/2;
+                r2[0][i] = Math.abs(awidth - kex); //R2A
+                r2[1][i] = bwidth; //R2B
+            }  
+//            for (int i=0; i<r2.length; i++) {
+//                for (int j=0; j<r2[i].length; j++) {
+//                    System.out.println("R2 guess " + i + " " + j + " " + r2[i][j]);
+//                }
+//            }
             return r2;
         } else {
             double[][] r2 = new double[2][1];
 
             for (int i = 0; i < r2[0].length; i++) {
-                r2[0][0] = peaks[0][2]/(2*Math.PI); //R2A
+                double awidth = peaks[0][2]/(2*Math.PI);
+                r2[0][0] =  awidth; //R2A
                 r2[1][0] = 0.0; //R2B
             }
             return r2;
@@ -693,36 +712,43 @@ public class CESTEquations {
     }
     
     public static double cestKexGuess(double[][] peaks) {
-        // Estimates CEST kex values from minor state peak widths for initial guesses for before fitting.
+        // Estimates CEST kex values from peak widths for initial guesses for before fitting.
         // Uses the output from cestPeakGuess as the input.
 
         if (peaks.length > 1) {
             double[] kex = new double[peaks.length / 2];
 
             for (int i = 0; i < kex.length; i++) {
-                kex[i] = peaks[2 * i][2]/(2*Math.PI); //Kex
+                double awidth = peaks[2 * i + 1][2]/(2*Math.PI);
+                double bwidth = peaks[2 * i][2]/(2*Math.PI);
+                kex[i] = (awidth + bwidth)/2; //peaks[2 * i][2]/(2*Math.PI); //Kex
             }
-            return kex[kex.length-1];
+//            for (int i=0; i<kex.length; i++) {
+//                System.out.println("Kex guess " + i + " " + kex[i]);
+//            }
+            return kex[0];
         } else {
             return peaks[0][2]/(2*Math.PI); //Kex;
         }
         
     }
     
-    public static double[] cestR1Guess(Double Tex) {
-        // Estimates CEST R1 values from data baseline intensity for initial guesses for before fitting.
+    public static double[] cestR1Guess(double[] yvals, Double Tex) {
+        // Estimates CEST R1 values from data baseline intensity and Tex for initial guesses for before fitting.
+        // Reference: Palmer, A. G. "Chemical exchange in biomacromolecules: Past, present, and future." J. Mag. Res. 241 (2014) 3-17.
 
-        double cm = 3.5;
-        double[] r1 = {Math.exp(-0.3)*cm, Math.exp(-0.3)*cm}; //{R1A, R1B}
+        double[] r1 = {-Math.log(yvals[1])/0.3, -Math.log(yvals[1])/0.3}; //{R1A, R1B}
         if (Tex != null) {
-            r1[0] = Math.exp(-Tex)*cm;
-            r1[1] = Math.exp(-Tex)*cm; 
+            r1[0] = -Math.log(yvals[1])/Tex; //R1A
+            r1[1] = -Math.log(yvals[1])/Tex; //R1B
             if (Tex.equals(0.0)) {
                 r1[0] = 0.0;
                 r1[1] = 0.0; 
             }
         }
-
+//        for (int i=0; i<r1.length; i++) {
+//           System.out.println("R1 guess " + i + " " + r1[i]); 
+//        }
         return r1;
     }
 }

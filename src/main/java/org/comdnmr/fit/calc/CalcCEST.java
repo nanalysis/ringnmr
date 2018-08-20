@@ -72,6 +72,10 @@ public class CalcCEST extends FitModel {
             sumAbs += FastMath.abs(delta);
             sumSq += delta * delta;
         }
+//        for (double p:par) {
+//            System.out.print(p + " ");
+//        }
+//        System.out.println(Math.sqrt(sumSq/yValues.length));
         if (absMode) {
             return sumAbs;
         } else {
