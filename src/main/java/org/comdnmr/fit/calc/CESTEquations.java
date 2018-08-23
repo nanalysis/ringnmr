@@ -31,30 +31,36 @@ import org.apache.commons.math3.linear.EigenDecomposition;
  *
  * r1rhoBaldwinKay First-order approximation, assuming R1A=R1B, but R2A != R2B
  *
- * r1rhoExact Numerical determination of least negative eigenvalue of Bloch-McConnell rate matrix. No restriction on R10
- * or R20
+ * r1rhoExact Numerical determination of least negative eigenvalue of
+ * Bloch-McConnell rate matrix. No restriction on R10 or R20
  *
  * CEST functions
  *
- * cestExact0 Numerical integration of thermalized Bloch-McConnell rate matrix. No restriction on R10 or R20
+ * cestExact0 Numerical integration of thermalized Bloch-McConnell rate matrix.
+ * No restriction on R10 or R20
  *
- * cestExact1 Numerical integration of thermalized Bloch-McConnell rate matrix. R1A = R1B
+ * cestExact1 Numerical integration of thermalized Bloch-McConnell rate matrix.
+ * R1A = R1B
  *
- * cestExact2 Numerical integration of thermalized Bloch-McConnell rate matrix. R2A = R2B
+ * cestExact2 Numerical integration of thermalized Bloch-McConnell rate matrix.
+ * R2A = R2B
  *
- * cestR1rhoN Uses Laguerre R1rho approximation to calculate CEST Second-order approximation, assuming R1A=R1B and
- * R2A=R2B
+ * cestR1rhoN Uses Laguerre R1rho approximation to calculate CEST Second-order
+ * approximation, assuming R1A=R1B and R2A=R2B
  *
- * cestR1rhoPerturbation Uses Trott perturbation R1rho approximation to calculate CEST Assumes R1A=R1B
+ * cestR1rhoPerturbation Uses Trott perturbation R1rho approximation to
+ * calculate CEST Assumes R1A=R1B
  *
- * cestR1rhoSD Uses perturbation R1rho approximation to calculate CEST Second-order approximation, assuming R1A=R1B
- * Averages over B1 inhomogeneity
+ * cestR1rhoSD Uses perturbation R1rho approximation to calculate CEST
+ * Second-order approximation, assuming R1A=R1B Averages over B1 inhomogeneity
  *
  *
  *
- * cestR1rhoBaldwinKay Uses first-order R1rho approximation to calculate CEST Assumes R1A=R1B
+ * cestR1rhoBaldwinKay Uses first-order R1rho approximation to calculate CEST
+ * Assumes R1A=R1B
  *
- * cestR1rhoExact1 Uses numerical determination of least negative eigenvalue to calculate CEST Assumes R1A=R1B
+ * cestR1rhoExact1 Uses numerical determination of least negative eigenvalue to
+ * calculate CEST Assumes R1A=R1B
  */
 public class CESTEquations {
 
@@ -125,35 +131,24 @@ public class CESTEquations {
         // deltaB: offset of B state (angular units, 1/s)
         // R1A, R1B: R10 relaxation rate constants of A and B states
         // R2A, R2B: R20 relaxation rate constants of A and B states
-
+        int size = omega.length;
         double pa = 1.0 - pb;
-        double[] dw = new double[deltaA.length];
-        for (int i = 0; i < deltaA.length; i++) {
-            dw[i] = deltaB[i] - deltaA[i];
-        }
-
-        double[] weA = new double[omega.length];
-        double[] weB = new double[omega.length];
-        double[] sin2t = new double[omega.length];
-        for (int i = 0; i < omega.length; i++) {
-            weA[i] = Math.sqrt(omega[i] * omega[i] + deltaA[i] * deltaA[i]);
-            weB[i] = Math.sqrt(omega[i] * omega[i] + deltaB[i] * deltaB[i]);
-            sin2t[i] = (omega[i] / weA[i]) * (omega[i] / weA[i]);
-        }
 
         double k1 = pb * kex;
         double km1 = pa * kex;
 
         double dR = Math.abs(R2B - R2A);
 
-        double[] x = new double[weA.length];
-        double[] y = new double[weB.length];
-        double[] r1rho = new double[x.length];
-        for (int i = 0; i < weA.length; i++) {
-            x[i] = ((dw[i] * dw[i]) + (dR * dR)) * km1 + dR * ((weA[i] * weA[i]) + (km1 * km1));
-            y[i] = km1 * (weB[i] * weB[i] + (km1 + dR) * (km1 + dR)) + dR * (omega[i] * omega[i]);
-            r1rho[i] = k1 * x[i] / y[i];
-            r1rho[i] = (1 - sin2t[i]) * R1A + sin2t[i] * R2A + sin2t[i] * r1rho[i];
+        double[] r1rho = new double[size];
+        for (int i = 0; i < size; i++) {
+            double dw = deltaB[i] - deltaA[i];
+            double weA = Math.sqrt(omega[i] * omega[i] + deltaA[i] * deltaA[i]);
+            double weB = Math.sqrt(omega[i] * omega[i] + deltaB[i] * deltaB[i]);
+            double sin2t = (omega[i] / weA) * (omega[i] / weA);
+            double x = ((dw * dw) + (dR * dR)) * km1 + dR * ((weA * weA) + (km1 * km1));
+            double y = km1 * (weB * weB + (km1 + dR) * (km1 + dR)) + dR * (omega[i] * omega[i]);
+            double REx = k1 * x / y;
+            r1rho[i] = (1 - sin2t) * R1A + sin2t * R2A + sin2t * REx;
         }
 
         return r1rho;
@@ -477,11 +472,10 @@ public class CESTEquations {
         // R1A, R1B: R10 relaxation rate constants of A and B states
         // R2A, R2B: R20 relaxation rate constants of A and B states
         // In the present implementation, the irradiation time is hard-coded below
-
         double[] omegarf = X[0];
         double[] omega1 = X[1];
         double[] Tex = X[2];
-        
+
         double trad = Tex[0];//0.3;
 
         double pa = 1.0 - pb;
@@ -578,10 +572,10 @@ public class CESTEquations {
         List<Double> fwhm = new ArrayList<>();
 
         double previousYdiff = 0;
-        
+
         double B1val = xvals[1][0];
 
-        for (int i = 3; i < yvals.length-2; i++) {
+        for (int i = 3; i < yvals.length - 2; i++) {
             double ydiff = yvals[i] - yvals[i - 1];
             double ydiff2l = yvals[i - 3] - yvals[i - 2];
             double ydiff2r = yvals[i + 2] - yvals[i + 1];
@@ -617,11 +611,11 @@ public class CESTEquations {
                 }
                 if (fwhm.size() < ymin.size()) {
                     // FWHM calculation
-                    double halfinten = (yvals[1] - yvals[i-1]) / 2 + yvals[i-1];
+                    double halfinten = (yvals[1] - yvals[i - 1]) / 2 + yvals[i - 1];
                     double distance = Math.abs(yvals[1] - halfinten);
                     int idx = 0;
                     int idx1 = 0;
-                    for (int c = i-10; c < i; c++) {
+                    for (int c = i - 10; c < i; c++) {
                         double cdistance = Math.abs(yvals[c] - halfinten);
                         if (cdistance < distance) {
                             idx = c;
@@ -630,7 +624,7 @@ public class CESTEquations {
                     }
                     double halfleft = xvals[0][idx];// /(2*Math.PI);
                     double distance1 = Math.abs(yvals[1] - halfinten);
-                    for (int c = i+1; c < i+10; c++) {
+                    for (int c = i + 1; c < i + 10; c++) {
                         double cdistance1 = Math.abs(yvals[c] - halfinten);
                         if (cdistance1 < distance1) {
                             idx1 = c;
@@ -638,7 +632,7 @@ public class CESTEquations {
                         }
                     }
                     double halfright = xvals[0][idx1];// /(2*Math.PI);
-                    fwhm.add(Math.abs(halfright-halfleft));
+                    fwhm.add(Math.abs(halfright - halfleft));
                 }
             }
             previousYdiff = ydiff;
@@ -646,7 +640,7 @@ public class CESTEquations {
                 break;
             }
         }
-           
+
 //        System.out.println("ymin = " + ymin);
         double[][] peaks = new double[2][3];
         double ymin0 = ymin.get(0);
@@ -676,7 +670,7 @@ public class CESTEquations {
 
         if (peaks.length > 1) {
             double[] pb = new double[peaks.length / 2];
-            
+
             if (peaks.length == 2) {
                 pb[0] = peaks[0][1] - peaks[1][1];
             } else {
@@ -689,7 +683,7 @@ public class CESTEquations {
         } else {
             return 0.0;
         }
-        
+
     }
 
     public static double[][] cestR2Guess(double[][] peaks) {
@@ -697,19 +691,24 @@ public class CESTEquations {
         // Uses the output from cestPeakGuess as the input.
 
         double pb = cestPbGuess(peaks);
-        
+        for (int i = 0; i < peaks.length; i++) {
+            double p = peaks[i][2];
+            double ppi = p / (2.0 * Math.PI);
+            System.out.println(i + " " + peaks[i][0] + " " + peaks[i][1] + " " + p + " " + ppi);
+        }
+
         if (peaks.length > 1) {
             double[][] r2 = new double[2][peaks.length / 2];
 
             for (int i = 0; i < r2[0].length; i++) {
-                double awidth = peaks[2 * i + 1][2]/(2*Math.PI); 
-                double bwidth = peaks[2 * i][2]/(2*Math.PI); 
-                double kex = (awidth + bwidth)/2;
-                double kb = pb*kex;
-                double ka = (1-pb)*kex;
+                double awidth = peaks[2 * i + 1][2] / (2 * Math.PI);
+                double bwidth = peaks[2 * i][2] / (2 * Math.PI);
+                double kex = (awidth + bwidth) / 2;
+                double kb = pb * kex;
+                double ka = (1 - pb) * kex;
                 r2[0][i] = Math.abs(awidth - ka); //R2A
                 r2[1][i] = Math.abs(bwidth - kb); //R2B
-            }  
+            }
 //            for (int i=0; i<r2.length; i++) {
 //                for (int j=0; j<r2[i].length; j++) {
 //                    System.out.println("R2 guess " + i + " " + j + " " + r2[i][j]);
@@ -720,14 +719,14 @@ public class CESTEquations {
             double[][] r2 = new double[2][1];
 
             for (int i = 0; i < r2[0].length; i++) {
-                double awidth = peaks[0][2]/(2*Math.PI);
-                r2[0][0] =  awidth; //R2A
+                double awidth = peaks[0][2] / (2 * Math.PI);
+                r2[0][0] = awidth; //R2A
                 r2[1][0] = 0.0; //R2B
             }
             return r2;
         }
     }
-    
+
     public static double cestKexGuess(double[][] peaks) {
         // Estimates CEST kex values from peak widths for initial guesses for before fitting.
         // Uses the output from cestPeakGuess as the input.
@@ -736,31 +735,31 @@ public class CESTEquations {
             double[] kex = new double[peaks.length / 2];
 
             for (int i = 0; i < kex.length; i++) {
-                double awidth = peaks[2 * i + 1][2]/(2*Math.PI);
-                double bwidth = peaks[2 * i][2]/(2*Math.PI);
-                kex[i] = (awidth + bwidth)/2; //peaks[2 * i][2]/(2*Math.PI); //Kex
+                double awidth = peaks[2 * i + 1][2] / (2 * Math.PI);
+                double bwidth = peaks[2 * i][2] / (2 * Math.PI);
+                kex[i] = (awidth + bwidth) / 2; //peaks[2 * i][2]/(2*Math.PI); //Kex
             }
 //            for (int i=0; i<kex.length; i++) {
 //                System.out.println("Kex guess " + i + " " + kex[i]);
 //            }
             return kex[0];
         } else {
-            return peaks[0][2]/(2*Math.PI); //Kex;
+            return peaks[0][2] / (2 * Math.PI); //Kex;
         }
-        
+
     }
-    
+
     public static double[] cestR1Guess(double[] yvals, Double Tex) {
         // Estimates CEST R1 values from data baseline intensity and Tex for initial guesses for before fitting.
         // Reference: Palmer, A. G. "Chemical exchange in biomacromolecules: Past, present, and future." J. Mag. Res. 241 (2014) 3-17.
 
-        double[] r1 = {-Math.log(yvals[1])/0.3, -Math.log(yvals[1])/0.3}; //{R1A, R1B}
+        double[] r1 = {-Math.log(yvals[1]) / 0.3, -Math.log(yvals[1]) / 0.3}; //{R1A, R1B}
         if (Tex != null) {
-            r1[0] = -Math.log(yvals[1])/Tex; //R1A
-            r1[1] = -Math.log(yvals[1])/Tex; //R1B
+            r1[0] = -Math.log(yvals[1]) / Tex; //R1A
+            r1[1] = -Math.log(yvals[1]) / Tex; //R1B
             if (Tex.equals(0.0)) {
                 r1[0] = 0.0;
-                r1[1] = 0.0; 
+                r1[1] = 0.0;
             }
         }
 //        for (int i=0; i<r1.length; i++) {
