@@ -211,8 +211,9 @@ public class CESTFit implements EquationFitter {
         double[] guesses = calcCEST.guess();
         String[] parNames = calcCEST.getParNames();
         List<ParValueInterface> parValues = new ArrayList<>();
-        for (int i = 0; i < guesses.length; i++) {
-            ParValueInterface parValue = new ParValue(parNames[i], guesses[i]);
+        int[][] map = calcCEST.getMap();
+        for (int i = 0; i < parNames.length; i++) {
+            ParValueInterface parValue = new ParValue(parNames[i], guesses[map[0][i]]);
             parValues.add(parValue);
         }
         return parValues;
@@ -236,7 +237,7 @@ public class CESTFit implements EquationFitter {
             yvals[i] = yValues.get(i);
         }
         double[][] peaks = CESTEquations.cestPeakGuess(xvals, yvals);
-        if (peaks.length > 1){
+        if (peaks.length >= 1){
             setupFit(eqn, absMode);
             int[][] map = calcCEST.getMap();
             double[] guesses;

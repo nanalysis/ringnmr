@@ -39,9 +39,9 @@ public interface CESTEquationType extends EquationType {
 //                }
                 double tex = xValues[2][0];
                 double[] r1 = CESTEquations.cestR1Guess(yValues, tex);
-                double[][] r2 = CESTEquations.cestR2Guess(peaks);
+                double[][] r2 = CESTEquations.cestR2Guess(peaks, yValues);
                 guesses[map[id][0]] = CESTEquations.cestKexGuess(peaks); //112.0; //kex
-                guesses[map[id][1]] = CESTEquations.cestPbGuess(peaks); //0.1; //pb
+                guesses[map[id][1]] = CESTEquations.cestPbGuess(peaks, yValues); //0.1; //pb
                 guesses[map[id][2]] = peaks[peaks.length-1][0]; //400 * 2.0 * Math.PI; //deltaA
                 guesses[map[id][3]] = peaks[0][0]; //-250 * 2.0 * Math.PI; //deltaB
                 guesses[map[id][4]] = r1[0]; //2.4; //R1A
@@ -60,18 +60,27 @@ public interface CESTEquationType extends EquationType {
         public default double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
             double[][] boundaries = new double[2][guesses.length];
             int id = 0;
+            double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues);
+            double dAbound = 0;
+            double dBbound = 0;
+            if (peaks.length > 1) {
+                dAbound = peaks[1][2]/2;
+                dBbound = peaks[0][2]/2;
+            } else if (peaks.length == 1) {
+                dAbound = peaks[0][2]/2;
+            }
                 boundaries[0][map[id][0]] = 1.0; //kex LB
                 boundaries[1][map[id][0]] = guesses[map[id][0]] * 4; //kex UB
                 boundaries[0][map[id][1]] = 0.01; //pb LB
                 boundaries[1][map[id][1]] = 0.25; //pb UB //guesses[1] * 4;
-                boundaries[0][map[id][2]] = 0.0; //deltaA LB
-                boundaries[1][map[id][2]] = guesses[map[id][2]] * 4; //deltaA UB
-                boundaries[0][map[id][3]] = guesses[map[id][3]] * 4; //deltaB LB
-                boundaries[1][map[id][3]] = 0.0; //deltaB UB
-                boundaries[0][map[id][4]] = 0.1; //R1A LB
-                boundaries[1][map[id][4]] = guesses[map[id][4]] * 4; //R1A UB
-                boundaries[0][map[id][5]] = 0.1; //R1B LB
-                boundaries[1][map[id][5]] = guesses[map[id][5]] * 4; //R1B UB
+                boundaries[0][map[id][2]] = guesses[map[id][2]] - dAbound; //deltaA LB
+                boundaries[1][map[id][2]] = guesses[map[id][2]] + dAbound; //deltaA UB
+                boundaries[0][map[id][3]] = guesses[map[id][3]] - dBbound; //deltaB LB
+                boundaries[1][map[id][3]] = guesses[map[id][3]] + dBbound; //deltaB UB
+                boundaries[0][map[id][4]] = guesses[map[id][4]] - 0.1; //R1A LB
+                boundaries[1][map[id][4]] = guesses[map[id][4]] + 0.1; //R1A UB
+                boundaries[0][map[id][5]] = guesses[map[id][5]] - 0.1; //R1B LB
+                boundaries[1][map[id][5]] = guesses[map[id][5]] + 0.1; //R1B UB
                 boundaries[0][map[id][6]] = 0.1; //R2A LB
                 boundaries[1][map[id][6]] = guesses[map[id][6]] * 4; //R2A UB
                 boundaries[0][map[id][7]] = 0.1; //R2B LB
