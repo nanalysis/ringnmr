@@ -782,7 +782,7 @@ public class PyController implements Initializable {
     public void showEquations(List<PlotEquation> equations) {
         xychart.setEquations(equations);
         xychart.layoutPlotChildren();
-        Optional<Double> rms = rms();
+        //Optional<Double> rms = rms();
     }
 
     public XYBarChart getActiveChart() {
