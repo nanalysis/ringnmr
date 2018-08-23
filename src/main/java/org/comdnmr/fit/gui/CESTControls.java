@@ -49,8 +49,8 @@ public class CESTControls implements EquationControls {
     enum PARS implements ParControls {
         KEX("Kex", 0.0, 1000.0, 100.0, 150.0),
         PB("Pb", 0.0, 1.0, 0.1, 0.1),
-        DELTAA0("deltaA0", 0.0, 3000.0, 100.0, 2700.0),
-        DELTAB0("deltaB0", -3000.0, 0.0, 100.0, -1250.0),
+        DELTAA0("deltaA0", -6000.0, 6000.0, 1000.0, 2700.0),
+        DELTAB0("deltaB0", -6000.0, 6000.0, 1000.0, -1250.0),
         R1A("R1A", 0.0, 10.0, 1.0, 2.5),
         R1B("R1B", 0.0, 10.0, 1.0, 2.5),
         R2A("R2A", 0.0, 200.0, 50.0, 15.0),
@@ -100,12 +100,18 @@ public class CESTControls implements EquationControls {
         public void setValue(double value) {
             slider.setValue(value);
             valueText.setText(String.format("%.1f", value));
+            if (name.equals("Pb")) {
+                valueText.setText(String.format("%.2f", value));
+            }
         }
 
         @Override
         public void setText() {
             double value = slider.getValue();
             valueText.setText(String.format("%.1f", value));
+            if (name.equals("Pb")) {
+                valueText.setText(String.format("%.2f", value));
+            }
         }
 
         @Override
@@ -712,8 +718,6 @@ public class CESTControls implements EquationControls {
                     guesses[map[id][5]] = R1a; //R1B
                     guesses[map[id][6]] = R2a; //R2A
                     guesses[map[id][7]] = R2b; //R2B
-                    guesses[map[id][8]] = B1field; //B1field
-                    guesses[map[id][9]] = Tex; //Tex
                 }
                 break;
             case "CESTR1RHON":
@@ -726,8 +730,6 @@ public class CESTControls implements EquationControls {
                     guesses[map[id][5]] = R1a; //R1B
                     guesses[map[id][6]] = R2a; //R2A
                     guesses[map[id][7]] = R2a; //R2B
-                    guesses[map[id][8]] = B1field; //B1field
-                    guesses[map[id][9]] = Tex; //Tex
                 }
                 break;
             case "CESTR1RHOSD":
@@ -740,8 +742,6 @@ public class CESTControls implements EquationControls {
                     guesses[map[id][5]] = R1a; //R1B
                     guesses[map[id][6]] = R2a; //R2A
                     guesses[map[id][7]] = R2b; //R2B
-                    guesses[map[id][8]] = B1field; //B1field
-                    guesses[map[id][9]] = Tex; //Tex
                 }
                 break;
             case "CESTR1RHOBALDWINKAY":
@@ -754,8 +754,6 @@ public class CESTControls implements EquationControls {
                     guesses[map[id][5]] = R1a; //R1B
                     guesses[map[id][6]] = R2a; //R2A
                     guesses[map[id][7]] = R2b; //R2B
-                    guesses[map[id][8]] = B1field; //B1field
-                    guesses[map[id][9]] = Tex; //Tex
                 }
                 break;
             case "CESTR1RHOEXACT1":
@@ -768,8 +766,6 @@ public class CESTControls implements EquationControls {
                     guesses[map[id][5]] = R1a; //R1B
                     guesses[map[id][6]] = R2a; //R2A
                     guesses[map[id][7]] = R2b; //R2B
-                    guesses[map[id][8]] = B1field; //B1field
-                    guesses[map[id][9]] = Tex; //Tex
                 }
                 break;
             case "CESTEXACT0":
@@ -782,8 +778,6 @@ public class CESTControls implements EquationControls {
                     guesses[map[id][5]] = R1b; //R1B
                     guesses[map[id][6]] = R2a; //R2A
                     guesses[map[id][7]] = R2b; //R2B
-                    guesses[map[id][8]] = B1field; //B1field
-                    guesses[map[id][9]] = Tex; //Tex
                 }
                 break;
             case "CESTEXACT1":
@@ -796,8 +790,6 @@ public class CESTControls implements EquationControls {
                     guesses[map[id][5]] = R1a; //R1B
                     guesses[map[id][6]] = R2a; //R2A
                     guesses[map[id][7]] = R2b; //R2B
-                    guesses[map[id][8]] = B1field; //B1field
-                    guesses[map[id][9]] = Tex; //Tex
                 }
                 break;
             case "CESTEXACT2":
@@ -810,8 +802,6 @@ public class CESTControls implements EquationControls {
                     guesses[map[id][5]] = R1b; //R1B
                     guesses[map[id][6]] = R2a; //R2A
                     guesses[map[id][7]] = R2a; //R2B
-                    guesses[map[id][8]] = B1field; //B1field
-                    guesses[map[id][9]] = Tex; //Tex
                 }
                 break;
         }
