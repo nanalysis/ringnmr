@@ -105,9 +105,12 @@ public class CalcExpDecay extends FitModel {
         return result;
     }
 
-    public double[] simBounds(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma) {
+    public double[] simBounds(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma, boolean nSimFew) {
         reportFitness = false;
         int nPar = start.length;
+        if (nSimFew) {
+            nSim = 10;
+        }
         parValues = new double[nPar][nSim];
         double[] yPred = getPredicted(start);
         double[] yValuesOrig = yValues.clone();
@@ -134,9 +137,12 @@ public class CalcExpDecay extends FitModel {
         return parSDev;
     }
 
-    public double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma) {
+    public double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma, boolean nSimFew) {
         reportFitness = false;
         int nPar = start.length;
+        if (nSimFew) {
+            nSim = 10;
+        }
         parValues = new double[nPar][nSim];
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
@@ -169,9 +175,12 @@ public class CalcExpDecay extends FitModel {
         return parSDev;
     }
 
-    public double[] simBoundsBootstrapStream(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma) {
+    public double[] simBoundsBootstrapStream(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma, boolean nSimFew) {
         reportFitness = false;
         int nPar = start.length;
+        if (nSimFew) {
+            nSim = 10;
+        }
         parValues = new double[nPar][nSim];
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];

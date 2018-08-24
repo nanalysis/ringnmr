@@ -104,11 +104,11 @@ public abstract class FitModel implements MultivariateFunction {
 
     public abstract int[] getMask();
 
-    public abstract double[] simBounds(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma);
+    public abstract double[] simBounds(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma, boolean nSimFew);
 
-    public abstract double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma);
+    public abstract double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma, boolean nSimFew);
 
-    public abstract double[] simBoundsBootstrapStream(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma);
+    public abstract double[] simBoundsBootstrapStream(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma, boolean nSimFew);
     
     public abstract double[][] getSimPars();
 

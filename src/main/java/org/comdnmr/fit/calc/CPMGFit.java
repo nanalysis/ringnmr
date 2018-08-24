@@ -164,7 +164,7 @@ public class CPMGFit implements EquationFitter {
         return rms;
     }
 
-    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderguesses) {
+    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderguesses, boolean nSimFew) {
         setupFit(eqn, absMode);
         int[][] map = calcR.getMap();
         double[] guesses;
@@ -210,9 +210,9 @@ public class CPMGFit implements EquationFitter {
         String[] parNames = calcR.getParNames();
         double[] errEstimates;
         if (nonParBootStrap) {
-            errEstimates = calcR.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
+            errEstimates = calcR.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma, nSimFew);
         } else {
-            errEstimates = calcR.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma);
+            errEstimates = calcR.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma, nSimFew);
 
         }
         double[][] simPars = calcR.getSimPars();
