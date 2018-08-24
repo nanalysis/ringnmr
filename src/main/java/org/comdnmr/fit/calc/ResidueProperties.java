@@ -30,6 +30,7 @@ public class ResidueProperties {
     private boolean absValueMode = false;
     private String bootStrapMode = "parametric";
     private String expMode = "cpmg";
+    private boolean nSimFewMode = false;
 
     public ResidueProperties(String name, String fileName) {
         this.name = name;
@@ -66,6 +67,20 @@ public class ResidueProperties {
      */
     public void setBootStrapMode(String bootStrapMode) {
         this.bootStrapMode = bootStrapMode;
+    }
+    
+    /**
+     * @return the nSimFewMode
+     */
+    public boolean isNSimFewMode() {
+        return nSimFewMode;
+    }
+
+    /**
+     * @param nSimFewMode the nSimFewMode to set
+     */
+    public void setNSimFewMode(boolean nSimFewMode) {
+        this.nSimFewMode = nSimFewMode;
     }
 
     /**
