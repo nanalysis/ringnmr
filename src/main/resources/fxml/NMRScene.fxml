@@ -127,6 +127,7 @@
                                                     <CheckBox text="AbsMode" fx:id="absValueModeCheckBox"/>
                                                     <CheckBox text="BootStrap" fx:id="nonParBootStrapCheckBox"/>
                                                     <CheckBox text="SliderGuess" fx:id="sliderGuessCheckBox"/>
+                                                    <CheckBox text="FewerMCSims" fx:id="nSimCheckBox"/>
                                                 </children>
                                             </HBox>
                                             <HBox>

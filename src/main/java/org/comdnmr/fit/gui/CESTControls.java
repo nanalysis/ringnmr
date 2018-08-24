@@ -965,6 +965,8 @@ public class CESTControls implements EquationControls {
 //                        System.out.println("resInfo Res Num = " + resInfo.getResNum());
 //                        System.out.println("extras size = " + expData.getExtras().size());
                         //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[1] = " + extras[1]);
+                        System.out.println("extras[1] = " + extras[1]);
+                        System.out.println("extras[2] = " + extras[2]);
                         PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
                         //equationCopy.setExtra(extras);
 

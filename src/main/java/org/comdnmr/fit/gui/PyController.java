@@ -128,6 +128,8 @@ public class PyController implements Initializable {
 
     @FXML
     CheckBox sliderGuessCheckBox;
+    @FXML
+    CheckBox nSimCheckBox;
 
     @FXML
     TextField xLowerBoundTextField;
@@ -782,7 +784,7 @@ public class PyController implements Initializable {
     public void showEquations(List<PlotEquation> equations) {
         xychart.setEquations(equations);
         xychart.layoutPlotChildren();
-        Optional<Double> rms = rms();
+//        Optional<Double> rms = rms();
 
     }
 
@@ -1121,7 +1123,7 @@ public class PyController implements Initializable {
             if (sliderGuessCheckBox.isSelected()) {
                 sliderGuesses = simControls.sliderGuess(equationName, map);
             }
-            fitResult = equationFitter.doFit(equationName, absValueModeCheckBox.isSelected(), nonParBootStrapCheckBox.isSelected(), sliderGuesses);
+            fitResult = equationFitter.doFit(equationName, absValueModeCheckBox.isSelected(), nonParBootStrapCheckBox.isSelected(), sliderGuesses, nSimCheckBox.isSelected());
             updateAfterFit(fitResult);
         } catch (NullPointerException npE2) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
