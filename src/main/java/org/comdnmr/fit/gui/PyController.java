@@ -130,6 +130,8 @@ public class PyController implements Initializable {
     CheckBox sliderGuessCheckBox;
     @FXML
     CheckBox nSimCheckBox;
+    @FXML
+    TextField nSimTextField;
 
     @FXML
     TextField xLowerBoundTextField;
@@ -1123,7 +1125,12 @@ public class PyController implements Initializable {
             if (sliderGuessCheckBox.isSelected()) {
                 sliderGuesses = simControls.sliderGuess(equationName, map);
             }
-            fitResult = equationFitter.doFit(equationName, absValueModeCheckBox.isSelected(), nonParBootStrapCheckBox.isSelected(), sliderGuesses, nSimCheckBox.isSelected());
+            if (nSimCheckBox.isSelected()) {
+//                nSimTextField.setText("10");
+                int newNSims = (int) Double.parseDouble(nSimTextField.getText());
+                equationFitter.getFitModel().setNSim(newNSims);
+            }
+            fitResult = equationFitter.doFit(equationName, absValueModeCheckBox.isSelected(), nonParBootStrapCheckBox.isSelected(), sliderGuesses);
             updateAfterFit(fitResult);
         } catch (NullPointerException npE2) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
