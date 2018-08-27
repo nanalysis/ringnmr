@@ -166,7 +166,7 @@ public class ExpFit implements EquationFitter {
         return rms;
     }
 
-    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderguesses, boolean nSimFew) {
+    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderguesses) {
         setupFit(eqn, absMode);
 
         int[][] map = expModel.getMap();
@@ -211,9 +211,9 @@ public class ExpFit implements EquationFitter {
         String[] parNames = expModel.getParNames();
         double[] errEstimates;
         if (nonParBootStrap) {
-            errEstimates = expModel.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma, nSimFew);
+            errEstimates = expModel.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
         } else {
-            errEstimates = expModel.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma, nSimFew);
+            errEstimates = expModel.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma);
 
         }
         double[][] simPars = expModel.getSimPars();

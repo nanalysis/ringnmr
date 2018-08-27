@@ -209,7 +209,7 @@ public class ResidueFitter {
 
             EquationFitter equationFitter = getFitter();
             equationFitter.setData(resProps, resNums);
-            fitResult = equationFitter.doFit(equationName, resProps.isAbsValueMode(), !resProps.getBootStrapMode().equals("parametric"), null, resProps.isNSimFewMode());
+            fitResult = equationFitter.doFit(equationName, resProps.isAbsValueMode(), !resProps.getBootStrapMode().equals("parametric"), null);
             fitResults.put(equationName, fitResult);
             if (fitResult.getAicc() < aicMin) {
                 aicMin = fitResult.getAicc();

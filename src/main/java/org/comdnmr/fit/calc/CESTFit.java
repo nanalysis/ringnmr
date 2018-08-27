@@ -225,7 +225,7 @@ public class CESTFit implements EquationFitter {
     }
 
     @Override
-    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderguesses, boolean nSimFew) {
+    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderguesses) {
         double[][] xvals = new double[xValues.length][xValues[0].size()];
         double[] yvals = new double[yValues.size()];
         for (int i=0; i<xvals.length;  i++) {
@@ -282,9 +282,9 @@ public class CESTFit implements EquationFitter {
             String[] parNames = calcCEST.getParNames();
             double[] errEstimates;
             if (nonParBootStrap) {
-                errEstimates = calcCEST.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma, nSimFew);
+                errEstimates = calcCEST.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
             } else {
-                errEstimates = calcCEST.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma, nSimFew);
+                errEstimates = calcCEST.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma);
 
             }
             double[][] simPars = calcCEST.getSimPars();
