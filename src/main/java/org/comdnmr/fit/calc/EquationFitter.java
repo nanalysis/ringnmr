@@ -19,7 +19,7 @@ public interface EquationFitter {
 
     public FitModel getFitModel();
 
-    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderGuesses, boolean nSimFew);
+    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderGuesses);
 
     public void setupFit(String eqn, boolean absMode);
     

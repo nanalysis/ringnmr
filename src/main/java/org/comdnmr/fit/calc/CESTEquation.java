@@ -480,7 +480,7 @@ public enum CESTEquation implements CESTEquationType {
     }
 
     public static String[] getEquationNames() {
-        String[] equationNames = {"CESTR1RHOPERTURBATION", "CESTR1RHOSD", "CESTEXACT0"};//, "CESTR1RHOBALDWINKAY", "CESTR1RHON"};
+        String[] equationNames = {"CESTR1RHOPERTURBATION", "CESTR1RHOSD"};//, "CESTR1RHOBALDWINKAY", "CESTR1RHON"};
         //, "CESTR1RHOEXACT1","CESTEXACT0", "CESTEXACT1", "CESTEXACT2"};
         return equationNames;
     }
