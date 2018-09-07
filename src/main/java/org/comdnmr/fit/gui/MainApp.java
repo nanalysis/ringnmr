@@ -9,11 +9,13 @@ import javafx.stage.Stage;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import org.python.util.InteractiveInterpreter;
 
 public class MainApp extends Application {
 
     public static Stage primaryStage;
     public static ScriptEngine engine;
+    public static InteractiveInterpreter interpreter = new InteractiveInterpreter();
 
     public static void main(String[] args) throws ScriptException {
         engine = new ScriptEngineManager().getEngineByName("jython");
@@ -44,4 +46,9 @@ public class MainApp extends Application {
 //        } catch (IOException | ScriptException ioE) {
 //        }
     }
+    
+    public static InteractiveInterpreter getInterpreter() {
+        return interpreter;
+    }
+    
 }
