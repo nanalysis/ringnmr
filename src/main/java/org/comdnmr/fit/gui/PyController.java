@@ -189,7 +189,6 @@ public class PyController implements Initializable {
     Scene inputScene = new Scene(inputInfoDisplay, 700, 500);
     Stage infoStage = new Stage();
     Label chosenFileLabel = new Label();
-    Label chosenParamFileLabel = new Label();
     TextField fieldTextField = new TextField();
     TextField tempTextField = new TextField();
     TextField nucTextField = new TextField();
@@ -419,7 +418,6 @@ public class PyController implements Initializable {
 
         infoStage.setTitle("Input Data Parameters");
         Label fileLabel = new Label("  File:  ");
-        Label fitFileLabel = new Label("  Fit Parameter File:  ");
         Label fieldLabel = new Label("  Field:  ");
         Label tempLabel = new Label("  Temperature:  ");
         Label nucLabel = new Label("  Nucleus:  ");
@@ -431,18 +429,13 @@ public class PyController implements Initializable {
         Label B1FieldLabel = new Label("  B1 Field:  ");
         Label TexLabel = new Label("  Tex:  ");
 
-        Label[] labels = {fitModeLabel, fileLabel, fitFileLabel, fieldLabel, tempLabel, nucLabel, pLabel, modeLabel, tauLabel, B1FieldLabel, TexLabel, xValLabel};
+        Label[] labels = {fitModeLabel, fileLabel, fieldLabel, tempLabel, nucLabel, pLabel, modeLabel, tauLabel, B1FieldLabel, TexLabel, xValLabel};
 
         Button fileChoiceButton = new Button();
         fileChoiceButton.setOnAction(e -> chooseFile(e));
         fileChoiceButton.setText("Browse");
         chosenFileLabel.setText("");
         
-        Button paramFileChoiceButton = new Button();
-        paramFileChoiceButton.setOnAction(e -> chooseParamFile(e));
-        paramFileChoiceButton.setText("Browse");
-        chosenParamFileLabel.setText("");
-
         fieldTextField.setText("");
         tempTextField.setText("25.0");
         nucTextField.setText("");
@@ -464,7 +457,7 @@ public class PyController implements Initializable {
             inputInfoDisplay.add(labels[i], 0, i);
         }
         for (int i = 0; i < texts.length; i++) {
-            inputInfoDisplay.add(texts[i], 1, i + 3);
+            inputInfoDisplay.add(texts[i], 1, i + 2);
         }
 
         fitModeChoice.getItems().add("CPMG");
@@ -479,8 +472,6 @@ public class PyController implements Initializable {
         inputInfoDisplay.add(fitModeChoice, 1, 0);
         inputInfoDisplay.add(fileChoiceButton, 2, 1);
         inputInfoDisplay.add(chosenFileLabel, 1, 1);
-        inputInfoDisplay.add(paramFileChoiceButton, 2, 2);
-        inputInfoDisplay.add(chosenParamFileLabel, 1, 2);
         inputInfoDisplay.add(xValTextArea, 1, labels.length - 1, 2, 1);
 
         Button addButton = new Button();
@@ -595,15 +586,6 @@ public class PyController implements Initializable {
         }
     }
 
-    public void chooseParamFile(ActionEvent event) {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("txt File", "*.txt"));
-        File file = fileChooser.showOpenDialog(infoStage);
-        String directory = file.getParent();
-        String fileName = file.getName();
-        chosenParamFileLabel.setText(directory + "/" + fileName);
-    }
-    
     public void addInfo(ActionEvent event) {
         addInfo();
     }
@@ -611,7 +593,6 @@ public class PyController implements Initializable {
     public void addInfo() {
         HashMap hm = new HashMap();
         hm.put("file", chosenFileLabel.getText());
-        hm.put("paramFile", chosenParamFileLabel.getText());
         hm.put("temperature", Double.parseDouble(tempTextField.getText()));
         hm.put("field", Double.parseDouble(fieldTextField.getText()));
         hm.put("nucleus", nucTextField.getText());
@@ -645,7 +626,6 @@ public class PyController implements Initializable {
 //            System.out.println(dataList);
             for (HashMap<String, Object> dataMap3 : dataList) {
                 String dataFileName = (String) dataMap3.get("file");
-                String fitFile = (String) dataMap3.get("paramFile");
                 Double temperature = (Double) dataMap3.get("temperature");
                 Double field = (Double) dataMap3.get("field");
                 String nucleus = (String) dataMap3.get("nucleus");
@@ -667,9 +647,6 @@ public class PyController implements Initializable {
                 resProp = new ResidueProperties(fileTail, dataFileName);
                 String expMode = (String) dataMap3.get("fitmode");
                 expMode = expMode.toLowerCase();
-                if (!fitFile.equals("")) {
-                    resProp = DataIO.loadParametersFromFile(expMode, fitFile);
-                }
                 resProp.setExpMode(expMode);
 
                 if (expMode.equals("cest")) {
