@@ -66,7 +66,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Optional;
-import java.util.Set;
+import javafx.event.EventHandler;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.SplitPane;
@@ -77,9 +77,12 @@ import javafx.scene.layout.HBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Button;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import static org.comdnmr.fit.calc.DataIO.loadPeakFile;
 import static org.comdnmr.fit.calc.DataIO.loadTextFile;
+import org.python.util.InteractiveInterpreter;
 
 public class PyController implements Initializable {
 
@@ -122,12 +125,21 @@ public class PyController implements Initializable {
 
     @FXML
     TextArea textArea;
-
+    
+    ArrayList<String> history = new ArrayList<>();
+    InteractiveInterpreter interpreter = MainApp.getInterpreter();
+    int historyInd = 0;
+    KeyCode prevKey = null;
+    
     @FXML
     ChoiceBox<String> simChoice;
 
     @FXML
     CheckBox sliderGuessCheckBox;
+    @FXML
+    CheckBox nSimCheckBox;
+    @FXML
+    TextField nSimTextField;
 
     @FXML
     TextField xLowerBoundTextField;
@@ -174,9 +186,11 @@ public class PyController implements Initializable {
     XYChart.Series MCseries = new XYChart.Series();
 
     GridPane inputInfoDisplay = new GridPane();
-    Scene inputScene = new Scene(inputInfoDisplay, 700, 500);
+    Scene inputScene = new Scene(inputInfoDisplay, 800, 500);
     Stage infoStage = new Stage();
     Label chosenFileLabel = new Label();
+    Label chosenXPK2FileLabel = new Label();
+    Label chosenParamFileLabel = new Label();
     TextField fieldTextField = new TextField();
     TextField tempTextField = new TextField();
     TextField nucTextField = new TextField();
@@ -274,6 +288,24 @@ public class PyController implements Initializable {
         equationChoice.valueProperty().addListener(e -> {
             equationAction();
         });
+        
+      
+        textArea.setEditable(true);
+        textArea.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent keyEvent) {
+                consoleInteraction(keyEvent);
+            }
+        });
+        textArea.setOnKeyReleased(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent keyEvent) {
+                KeyCode code = keyEvent.getCode();
+                if (code == KeyCode.ENTER || code == KeyCode.UP || code == KeyCode.DOWN)  {
+                     textArea.positionCaret(textArea.getText().lastIndexOf(">")+2);
+                }
+            }
+        });
 
         PrintStream printStream = new PrintStream(new ConsoleRedirect(textArea));
         // keeps reference of standard output stream
@@ -283,6 +315,9 @@ public class PyController implements Initializable {
         // re-assigns standard output stream and error output stream
         System.setOut(printStream);
         System.setErr(printStream);
+        
+        interpreter.setOut(printStream);
+        interpreter.setErr(printStream);
 
         simChoice.getItems().add("Simulate CPMG");
         simChoice.getItems().add("Simulate EXP");
@@ -295,6 +330,8 @@ public class PyController implements Initializable {
         splitPane.setDividerPositions(0.4, 0.7);
 
         setBoundsButton.setOnAction(this::setBounds);
+        
+        textArea.appendText("> ");
 
 //        mainController.setOnHidden(e -> Platform.exit());
     }
@@ -383,6 +420,8 @@ public class PyController implements Initializable {
 
         infoStage.setTitle("Input Data Parameters");
         Label fileLabel = new Label("  File:  ");
+        Label xpk2FileLabel = new Label("  XPK2 File:  ");
+        Label fitFileLabel = new Label("  Fit Parameter File:  ");
         Label fieldLabel = new Label("  Field:  ");
         Label tempLabel = new Label("  Temperature:  ");
         Label nucLabel = new Label("  Nucleus:  ");
@@ -394,12 +433,25 @@ public class PyController implements Initializable {
         Label B1FieldLabel = new Label("  B1 Field:  ");
         Label TexLabel = new Label("  Tex:  ");
 
-        Label[] labels = {fitModeLabel, fileLabel, fieldLabel, tempLabel, nucLabel, pLabel, modeLabel, tauLabel, B1FieldLabel, TexLabel, xValLabel};
+        Label[] labels = {fitModeLabel, fileLabel, xpk2FileLabel, fitFileLabel, fieldLabel, tempLabel, nucLabel, pLabel, modeLabel, tauLabel, B1FieldLabel, TexLabel, xValLabel};
 
         Button fileChoiceButton = new Button();
         fileChoiceButton.setOnAction(e -> chooseFile(e));
         fileChoiceButton.setText("Browse");
         chosenFileLabel.setText("");
+        
+        Button xpk2ChoiceButton = new Button();
+        xpk2ChoiceButton.setOnAction(e -> chooseXPK2File(e));
+        xpk2ChoiceButton.setText("Browse");
+        chosenXPK2FileLabel.setText("");
+        
+        Button paramFileChoiceButton = new Button();
+        paramFileChoiceButton.setOnAction(e -> chooseParamFile(e));
+        paramFileChoiceButton.setText("Browse");
+        Button paramFileResetButton = new Button();
+        paramFileResetButton.setOnAction(e -> resetParamFile(e));
+        paramFileResetButton.setText("Reset");
+        chosenParamFileLabel.setText("");
 
         fieldTextField.setText("");
         tempTextField.setText("25.0");
@@ -409,7 +461,7 @@ public class PyController implements Initializable {
         tauTextField.setText("0.04");
         fitModeTextField.setText("cpmg");
         B1TextField.setText("20.0");
-        TexTextField.setText("0.3");
+        TexTextField.setText("0.5");
         xValTextArea.setText("");
         xValTextArea.setMaxWidth(240);
         xValTextArea.setWrapText(true);
@@ -422,7 +474,7 @@ public class PyController implements Initializable {
             inputInfoDisplay.add(labels[i], 0, i);
         }
         for (int i = 0; i < texts.length; i++) {
-            inputInfoDisplay.add(texts[i], 1, i + 2);
+            inputInfoDisplay.add(texts[i], 1, i + 4);
         }
 
         fitModeChoice.getItems().add("CPMG");
@@ -437,6 +489,11 @@ public class PyController implements Initializable {
         inputInfoDisplay.add(fitModeChoice, 1, 0);
         inputInfoDisplay.add(fileChoiceButton, 2, 1);
         inputInfoDisplay.add(chosenFileLabel, 1, 1);
+        inputInfoDisplay.add(xpk2ChoiceButton, 2, 2);
+        inputInfoDisplay.add(chosenXPK2FileLabel, 1, 2);
+        inputInfoDisplay.add(paramFileChoiceButton, 2, 3);
+        inputInfoDisplay.add(paramFileResetButton, 3, 3);
+        inputInfoDisplay.add(chosenParamFileLabel, 1, 3);
         inputInfoDisplay.add(xValTextArea, 1, labels.length - 1, 2, 1);
 
         Button addButton = new Button();
@@ -486,7 +543,7 @@ public class PyController implements Initializable {
 
     public void chooseFile(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("mpk2 File", "*.mpk2"));
+        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("mpk2 or txt File", "*.mpk2", "*.txt"));
         File file = fileChooser.showOpenDialog(infoStage);
         String directory = file.getParent();
         String fileName = file.getName();
@@ -504,53 +561,86 @@ public class PyController implements Initializable {
                 if (sline.length() == 0) {
                     continue;
                 }
-                if (!sline.startsWith("id")) {
+                if (fileName.endsWith(".mpk2") && !sline.startsWith("id") || fileName.endsWith(".txt") && !sline.startsWith("Residue")) {
                     break;
                 }
-                String xVals = line.substring(13);
+                String xVals = null;
+                if (sline.startsWith("id")) {
+                    xVals = line.substring(13);
+                } else if (sline.startsWith("Residue")) {
+                    if (sline.contains("Hz")) {
+                        xVals = line.substring(8).replaceAll(" Hz\t", "\t").replaceAll(" Hz", "");
+                    } else if (sline.contains("1/S")) {
+                        xVals = line.substring(8).replaceAll(" 1/S\t", "\t").replaceAll(" 1/S", "");
+                        StringBuilder xVals1 = new StringBuilder(xVals);
+                        xVals1.insert(0, "0.0\t");
+                        xVals = xVals1.toString();
+                    } else if (sline.contains("S")) {
+                        xVals = line.substring(8).replaceAll(" S\t", "\t").replaceAll(" S", "");
+                    } else if (sline.contains("On")) {
+                        xVals = line.substring(8).replaceAll(" On\t", "\t").replaceAll(" On", "");
+                    }
+                }
                 xValTextArea.setText(xVals);
             }
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }
+    }
+    
+    public void chooseXPK2File(ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("xpk2 File", "*.xpk2"));
+        File file = fileChooser.showOpenDialog(infoStage);
+        String directory = file.getParent();
+        String fileName = file.getName();
+        chosenXPK2FileLabel.setText(directory + "/" + fileName);
 
-        String fileNoExt = fileName.substring(0, fileName.indexOf('.'));
+        Path path1 = Paths.get(directory + "/" + fileName);
 
-        boolean xpk2Check = new File(directory, fileNoExt + ".xpk2").exists();
-        if (xpk2Check) {
-            Path path1 = Paths.get(directory + "/" + fileNoExt + ".xpk2");
+        List<String[]> head = new ArrayList<>();
 
-            List<String[]> head = new ArrayList<>();
-
-            try (BufferedReader fileReader = Files.newBufferedReader(path1)) {
-                while (true) {
-                    String line = fileReader.readLine();
-                    if (line == null) {
-                        break;
-                    }
-                    String sline = line.trim();
-                    if (sline.length() == 0) {
-                        continue;
-                    }
-                    if (Character.isDigit(sline.charAt(0))) {
-                        break;
-                    }
-                    String[] sline1 = line.split("\t", -1);
-                    head.add(sline1);
+        try (BufferedReader fileReader = Files.newBufferedReader(path1)) {
+            while (true) {
+                String line = fileReader.readLine();
+                if (line == null) {
+                    break;
                 }
-            } catch (IOException ioe) {
-                ioe.printStackTrace();
+                String sline = line.trim();
+                if (sline.length() == 0) {
+                    continue;
+                }
+                if (Character.isDigit(sline.charAt(0))) {
+                    break;
+                }
+                String[] sline1 = line.split("\t", -1);
+                head.add(sline1);
             }
-            int sfInd = Arrays.asList(head.get(2)).indexOf("sf");
-            int codeInd = Arrays.asList(head.get(2)).indexOf("code");
-            String field = Arrays.asList(head.get(4)).get(sfInd);
-            String nuc = Arrays.asList(head.get(4)).get(codeInd);
-            nuc = nuc.replaceAll("[^a-zA-Z]", "");
-            nucTextField.setText(nuc);
-            fieldTextField.setText(field);
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
         }
+        int sfInd = Arrays.asList(head.get(2)).indexOf("sf");
+        int codeInd = Arrays.asList(head.get(2)).indexOf("code");
+        String field = Arrays.asList(head.get(4)).get(sfInd);
+        String nuc = Arrays.asList(head.get(4)).get(codeInd);
+        nuc = nuc.replaceAll("[^a-zA-Z]", "");
+        nucTextField.setText(nuc);
+        fieldTextField.setText(field);
     }
 
+    public void chooseParamFile(ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("txt File", "*.txt"));
+        File file = fileChooser.showOpenDialog(infoStage);
+        String directory = file.getParent();
+        String fileName = file.getName();
+        chosenParamFileLabel.setText(directory + "/" + fileName);
+    }
+    
+    public void resetParamFile(ActionEvent event) {
+        chosenParamFileLabel.setText("");
+    }
+    
     public void addInfo(ActionEvent event) {
         addInfo();
     }
@@ -558,6 +648,7 @@ public class PyController implements Initializable {
     public void addInfo() {
         HashMap hm = new HashMap();
         hm.put("file", chosenFileLabel.getText());
+        hm.put("paramFile", chosenParamFileLabel.getText());
         hm.put("temperature", Double.parseDouble(tempTextField.getText()));
         hm.put("field", Double.parseDouble(fieldTextField.getText()));
         hm.put("nucleus", nucTextField.getText());
@@ -591,6 +682,7 @@ public class PyController implements Initializable {
 //            System.out.println(dataList);
             for (HashMap<String, Object> dataMap3 : dataList) {
                 String dataFileName = (String) dataMap3.get("file");
+                String fitFile = (String) dataMap3.get("paramFile");
                 Double temperature = (Double) dataMap3.get("temperature");
                 Double field = (Double) dataMap3.get("field");
                 String nucleus = (String) dataMap3.get("nucleus");
@@ -612,6 +704,9 @@ public class PyController implements Initializable {
                 resProp = new ResidueProperties(fileTail, dataFileName);
                 String expMode = (String) dataMap3.get("fitmode");
                 expMode = expMode.toLowerCase();
+                if (!fitFile.equals("")) {
+                    resProp = DataIO.loadParametersFromFile(expMode, fitFile);
+                }
                 resProp.setExpMode(expMode);
 
                 if (expMode.equals("cest")) {
@@ -699,7 +794,49 @@ public class PyController implements Initializable {
     }
 
     public void clearConsole() {
-        textArea.setText("");
+        textArea.setText("> ");
+    }
+    
+    public void consoleInteraction(KeyEvent keyEvent) {
+        KeyCode key = keyEvent.getCode();
+        String text = textArea.getText();
+        int lastLineStart = text.lastIndexOf(">")+2;
+        int lastLineEnd = textArea.getLength();
+        String lastLine = text.substring(lastLineStart-2, lastLineEnd).trim();
+        String typed = text.substring(lastLineStart).trim();
+        if (key == KeyCode.ENTER & lastLine.equals("> " + typed)) {
+            history.add(typed);
+            historyInd = history.size();
+            if (history.size() == 1 || prevKey == KeyCode.UP || prevKey == KeyCode.DOWN) {
+                textArea.appendText("\n");
+            }
+            interpreter.runsource(typed);
+            textArea.appendText("> ");
+        } else if (key == KeyCode.ENTER & typed.equals("")) {
+            textArea.appendText("> ");
+        } else if (key == KeyCode.UP) {
+            if (history.size() > 0) {
+                prevKey = key;
+                historyInd -= 1;
+                if (historyInd < 0) {
+                    historyInd = 0;
+                } 
+                String command = history.get(historyInd);
+                textArea.replaceText(lastLineStart, lastLineEnd, command);
+            }
+        } else if (key == KeyCode.DOWN) {
+            if (history.size() > 0) {
+                prevKey = key;
+                historyInd += 1;
+                if (historyInd > history.size()-1) {
+                    historyInd = history.size()-1;
+                }
+                String command = history.get(historyInd);
+                textArea.replaceText(lastLineStart, lastLineEnd, command);
+            }
+        } else if (key == KeyCode.ALPHANUMERIC  || key == KeyCode.DIGIT0) {
+            prevKey = key;
+        }
     }
 
     public void updateXYChartLabels() {
@@ -782,7 +919,8 @@ public class PyController implements Initializable {
     public void showEquations(List<PlotEquation> equations) {
         xychart.setEquations(equations);
         xychart.layoutPlotChildren();
-        //Optional<Double> rms = rms();
+//        Optional<Double> rms = rms();
+
     }
 
     public XYBarChart getActiveChart() {
@@ -1104,18 +1242,25 @@ public class PyController implements Initializable {
             String[] resNums = {String.valueOf(currentResInfo.getResNum())};
             equationFitter.setData(currentResProps, resNums);
             String equationName = simControls.getEquation();
-            int[] stateCount = equationFitter.getStateCount();
-            int[][] states = equationFitter.getStates();
-            equationFitter.getFitModel().setMap(stateCount, states);
+            equationFitter.setupFit(equationName, absValueModeCheckBox.isSelected());
             int[][] map = equationFitter.getFitModel().getMap();
-//            System.out.println("map = " + map);
+//            for (int i=0; i<map.length; i++) {
+//                for (int j=0; j<map[i].length; j++) {
+//                    System.out.println("map " + i + " " + j + " " + map[i][j]);
+//                }
+//            }
 //            System.out.println("getFitModel = " + equationFitter.getFitModel());
-//        System.out.println("fitEqn eqnFitter = " + equationFitter);
-//        System.out.println("fitEqn resNums = " + resNums);
-//        System.out.println("fitEqn eqnName = " + equationName);
+//            System.out.println("fitEqn eqnFitter = " + equationFitter);
+//            System.out.println("fitEqn resNums = " + resNums);
+//            System.out.println("fitEqn eqnName = " + equationName);
             double[] sliderGuesses = null;
             if (sliderGuessCheckBox.isSelected()) {
                 sliderGuesses = simControls.sliderGuess(equationName, map);
+            }
+            if (nSimCheckBox.isSelected()) {
+//                nSimTextField.setText("10");
+                int newNSims = (int) Double.parseDouble(nSimTextField.getText());
+                equationFitter.getFitModel().setNSim(newNSims);
             }
             fitResult = equationFitter.doFit(equationName, absValueModeCheckBox.isSelected(), nonParBootStrapCheckBox.isSelected(), sliderGuesses);
             updateAfterFit(fitResult);

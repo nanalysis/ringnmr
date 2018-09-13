@@ -67,7 +67,7 @@
     <center>
         <SplitPane orientation="vertical" fx:id="splitPane">
             <items>
-                <SplitPane orientation="horizontal" prefHeight="800">
+                <SplitPane orientation="horizontal" prefHeight="950">
                     <items>
                         <PlotData fx:id="xychart" HBox.hgrow="ALWAYS" />
                         <VBox HBox.hgrow="ALWAYS"  VBox.vgrow="ALWAYS" >
@@ -129,6 +129,12 @@
                                                     <CheckBox text="SliderGuess" fx:id="sliderGuessCheckBox"/>
                                                 </children>
                                             </HBox>
+                                            <HBox>
+                                                <children>
+                                                    <CheckBox text="ChangeNumMCSims:" fx:id="nSimCheckBox"/>
+                                                    <TextField text="200" fx:id="nSimTextField" prefWidth="100"/>
+                                                </children>
+                                            </HBox> 
                                             <HBox>
                                                 <children>
                                                     <StatusBar fx:id="statusBar" HBox.hgrow="ALWAYS"/>

@@ -30,6 +30,8 @@ import static org.comdnmr.fit.gui.CESTControls.PARS.R1A;
 import static org.comdnmr.fit.gui.CESTControls.PARS.R1B;
 import static org.comdnmr.fit.gui.CESTControls.PARS.R2A;
 import static org.comdnmr.fit.gui.CESTControls.PARS.R2B;
+import static org.comdnmr.fit.gui.CESTControls.PARS.B1FIELD;
+import static org.comdnmr.fit.gui.CESTControls.PARS.TEX;
 import org.comdnmr.fit.calc.CalcCEST;
 
 /**
@@ -42,17 +44,19 @@ public class CESTControls implements EquationControls {
     ChoiceBox<String> equationSelector;
     ChoiceBox<String> stateSelector;
 
-    String[] parNames = {"Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B"};
+    String[] parNames = {"Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B", "B1field", "Tex"};
 
     enum PARS implements ParControls {
         KEX("Kex", 0.0, 1000.0, 100.0, 150.0),
         PB("Pb", 0.0, 1.0, 0.1, 0.1),
-        DELTAA0("deltaA0", 0.0, 3000.0, 100.0, 2700.0),
-        DELTAB0("deltaB0", -3000.0, 0.0, 100.0, -1250.0),
-        R1A("R1A", 0.0, 4.0, 1.0, 2.5),
-        R1B("R1B", 0.0, 10.0, 1.0, 5.0),
+        DELTAA0("deltaA0", -6000.0, 6000.0, 1000.0, 2700.0),
+        DELTAB0("deltaB0", -6000.0, 6000.0, 1000.0, -1250.0),
+        R1A("R1A", 0.0, 10.0, 1.0, 2.5),
+        R1B("R1B", 0.0, 10.0, 1.0, 2.5),
         R2A("R2A", 0.0, 200.0, 50.0, 15.0),
-        R2B("R2B", 0.0, 200.0, 50.0, 120.0);
+        R2B("R2B", 0.0, 200.0, 50.0, 120.0),
+        B1FIELD("B1field", 0.0, 200.0, 50.0, 20.0 * 2 * Math.PI),
+        TEX("Tex", 0.0, 1.0, 0.1, 0.3);
 
         String name;
         Slider slider;
@@ -96,12 +100,18 @@ public class CESTControls implements EquationControls {
         public void setValue(double value) {
             slider.setValue(value);
             valueText.setText(String.format("%.1f", value));
+            if (name.equals("Pb")) {
+                valueText.setText(String.format("%.2f", value));
+            }
         }
 
         @Override
         public void setText() {
             double value = slider.getValue();
             valueText.setText(String.format("%.1f", value));
+            if (name.equals("Pb")) {
+                valueText.setText(String.format("%.2f", value));
+            }
         }
 
         @Override
@@ -182,6 +192,8 @@ public class CESTControls implements EquationControls {
                 R1B.disabled(true);
                 R2A.disabled(false);
                 R2B.disabled(false);
+                B1FIELD.disabled(false);
+                TEX.disabled(false);
                 break;
             case "CESTR1RHON":
                 KEX.disabled(false);
@@ -192,6 +204,8 @@ public class CESTControls implements EquationControls {
                 R1B.disabled(true);
                 R2A.disabled(false);
                 R2B.disabled(true);
+                B1FIELD.disabled(false);
+                TEX.disabled(false);
                 break;
             case "CESTR1RHOBALDWINKAY":
                 KEX.disabled(false);
@@ -202,6 +216,8 @@ public class CESTControls implements EquationControls {
                 R1B.disabled(true);
                 R2A.disabled(false);
                 R2B.disabled(false);
+                B1FIELD.disabled(false);
+                TEX.disabled(false);
                 break;
             case "CESTR1RHOSD":
                 KEX.disabled(false);
@@ -212,6 +228,8 @@ public class CESTControls implements EquationControls {
                 R1B.disabled(true);
                 R2A.disabled(false);
                 R2B.disabled(false);
+                B1FIELD.disabled(false);
+                TEX.disabled(false);
                 break;
             case "CESTR1RHOEXACT1":
                 KEX.disabled(false);
@@ -222,6 +240,8 @@ public class CESTControls implements EquationControls {
                 R1B.disabled(true);
                 R2A.disabled(false);
                 R2B.disabled(false);
+                B1FIELD.disabled(false);
+                TEX.disabled(false);
                 break;
             case "CESTEXACT0":
                 KEX.disabled(false);
@@ -232,6 +252,8 @@ public class CESTControls implements EquationControls {
                 R1B.disabled(false);
                 R2A.disabled(false);
                 R2B.disabled(false);
+                B1FIELD.disabled(false);
+                TEX.disabled(false);
                 break;
             case "CESTEXACT1":
                 KEX.disabled(false);
@@ -242,6 +264,8 @@ public class CESTControls implements EquationControls {
                 R1B.disabled(true);
                 R2A.disabled(false);
                 R2B.disabled(false);
+                B1FIELD.disabled(false);
+                TEX.disabled(false);
                 break;
             case "CESTEXACT2":
                 KEX.disabled(false);
@@ -252,6 +276,8 @@ public class CESTControls implements EquationControls {
                 R1B.disabled(false);
                 R2A.disabled(false);
                 R2B.disabled(true);
+                B1FIELD.disabled(false);
+                TEX.disabled(false);
                 break;
             default:
                 return;
@@ -291,6 +317,8 @@ public class CESTControls implements EquationControls {
         double R1b = R1B.getValue();
         double R2a = R2A.getValue();
         double R2b = R2B.getValue();
+        double B1field = B1FIELD.getValue();
+        double Tex = TEX.getValue();
         KEX.setText();
         PB.setText();
         DELTAA0.setText();
@@ -299,95 +327,113 @@ public class CESTControls implements EquationControls {
         R1B.setText();
         R2A.setText();
         R2B.setText();
-        double[] pars;
+        B1FIELD.setText();
+        TEX.setText();
+        double[][] pars;
         switch (equationName) {
             case "CESTR1RHOPERTURBATION":
-                pars = new double[8];
-                pars[0] = kex;
-                pars[1] = pb;
-                pars[2] = deltaA0;
-                pars[3] = deltaB0;
-                pars[4] = R1a;
-                pars[5] = R1b;
-                pars[6] = R2a;
-                pars[7] = R2b;
+                pars = new double[2][8];
+                pars[0][0] = kex;
+                pars[0][1] = pb;
+                pars[0][2] = deltaA0;
+                pars[0][3] = deltaB0;
+                pars[0][4] = R1a;
+                pars[0][5] = R1b;
+                pars[0][6] = R2a;
+                pars[0][7] = R2b;
+                pars[1][0] = B1field;
+                pars[1][1] = Tex;
                 break;
             case "CESTR1RHON":
-                pars = new double[8];
-                pars[0] = kex;
-                pars[1] = pb;
-                pars[2] = deltaA0;
-                pars[3] = deltaB0;
-                pars[4] = R1a;
-                pars[5] = R1b;
-                pars[6] = R2a;
-                pars[7] = R2b;
+                pars = new double[2][8];
+                pars[0][0] = kex;
+                pars[0][1] = pb;
+                pars[0][2] = deltaA0;
+                pars[0][3] = deltaB0;
+                pars[0][4] = R1a;
+                pars[0][5] = R1b;
+                pars[0][6] = R2a;
+                pars[0][7] = R2b;
+                pars[1][0] = B1field;
+                pars[1][1] = Tex;
                 break;
             case "CESTR1RHOSD":
-                pars = new double[8];
-                pars[0] = kex;
-                pars[1] = pb;
-                pars[2] = deltaA0;
-                pars[3] = deltaB0;
-                pars[4] = R1a;
-                pars[5] = R1b;
-                pars[6] = R2a;
-                pars[7] = R2b;
+                pars = new double[2][8];
+                pars[0][0] = kex;
+                pars[0][1] = pb;
+                pars[0][2] = deltaA0;
+                pars[0][3] = deltaB0;
+                pars[0][4] = R1a;
+                pars[0][5] = R1b;
+                pars[0][6] = R2a;
+                pars[0][7] = R2b;
+                pars[1][0] = B1field;
+                pars[1][1] = Tex;
                 break;
             case "CESTR1RHOBALDWINKAY":
-                pars = new double[8];
-                pars[0] = kex;
-                pars[1] = pb;
-                pars[2] = deltaA0;
-                pars[3] = deltaB0;
-                pars[4] = R1a;
-                pars[5] = R1b;
-                pars[6] = R2a;
-                pars[7] = R2b;
+                pars = new double[2][8];
+                pars[0][0] = kex;
+                pars[0][1] = pb;
+                pars[0][2] = deltaA0;
+                pars[0][3] = deltaB0;
+                pars[0][4] = R1a;
+                pars[0][5] = R1b;
+                pars[0][6] = R2a;
+                pars[0][7] = R2b;
+                pars[1][0] = B1field;
+                pars[1][1] = Tex;
                 break;
             case "CESTR1RHOEXACT1":
-                pars = new double[8];
-                pars[0] = kex;
-                pars[1] = pb;
-                pars[2] = deltaA0;
-                pars[3] = deltaB0;
-                pars[4] = R1a;
-                pars[5] = R1b;
-                pars[6] = R2a;
-                pars[7] = R2b;
+                pars = new double[2][8];
+                pars[0][0] = kex;
+                pars[0][1] = pb;
+                pars[0][2] = deltaA0;
+                pars[0][3] = deltaB0;
+                pars[0][4] = R1a;
+                pars[0][5] = R1b;
+                pars[0][6] = R2a;
+                pars[0][7] = R2b;
+                pars[1][0] = B1field;
+                pars[1][1] = Tex;
                 break;
             case "CESTEXACT0":
-                pars = new double[8];
-                pars[0] = kex;
-                pars[1] = pb;
-                pars[2] = deltaA0;
-                pars[3] = deltaB0;
-                pars[4] = R1a;
-                pars[5] = R1b;
-                pars[6] = R2a;
-                pars[7] = R2b;
+                pars = new double[2][8];
+                pars[0][0] = kex;
+                pars[0][1] = pb;
+                pars[0][2] = deltaA0;
+                pars[0][3] = deltaB0;
+                pars[0][4] = R1a;
+                pars[0][5] = R1b;
+                pars[0][6] = R2a;
+                pars[0][7] = R2b;
+                pars[1][0] = B1field;
+                pars[1][1] = Tex;
                 break;
             case "CESTEXACT1":
-                pars = new double[8];
-                pars[0] = kex;
-                pars[1] = pb;
-                pars[2] = deltaA0;
-                pars[3] = deltaB0;
-                pars[4] = R1a;
-                pars[5] = R1b;
-                pars[6] = R2a;
-                pars[7] = R2b;
+                pars = new double[2][8];
+                pars[0][0] = kex;
+                pars[0][1] = pb;
+                pars[0][2] = deltaA0;
+                pars[0][3] = deltaB0;
+                pars[0][4] = R1a;
+                pars[0][5] = R1b;
+                pars[0][6] = R2a;
+                pars[0][7] = R2b;
+                pars[1][0] = B1field;
+                pars[1][1] = Tex;
                 break;
             case "CESTEXACT2":
-                pars = new double[8];
-                pars[0] = kex;
-                pars[1] = pb;
-                pars[2] = deltaA0;
-                pars[3] = deltaB0;
-                pars[4] = R1a;
-                pars[5] = R1b;
-                pars[6] = R2a;
-                pars[7] = R2b;
+                pars = new double[2][8];
+                pars[0][0] = kex;
+                pars[0][1] = pb;
+                pars[0][2] = deltaA0;
+                pars[0][3] = deltaB0;
+                pars[0][4] = R1a;
+                pars[0][5] = R1b;
+                pars[0][6] = R2a;
+                pars[0][7] = R2b;
+                pars[1][0] = B1field;
+                pars[1][1] = Tex;
                 break;
             default:
                 return;
@@ -410,7 +456,7 @@ public class CESTControls implements EquationControls {
         //controller.updateChartEquations(equationName, pars, errs, fields);
     }
 
-    double[] getPars(String equationName) {
+    double[][] getPars(String equationName) {
         double kex = KEX.getValue();
         double pb = PB.getValue();
         double deltaA0 = DELTAA0.getValue();
@@ -419,95 +465,113 @@ public class CESTControls implements EquationControls {
         double R1b = R1B.getValue();
         double R2a = R2A.getValue();
         double R2b = R2B.getValue();
-        double[] pars;
+        double B1field = B1FIELD.getValue();
+        double Tex = TEX.getValue();
+        double[][] pars;
         switch (equationName) {
             case "CESTR1RHOPERTURBATION":
-                pars = new double[8];
-                pars[0] = kex;
-                pars[1] = pb;
-                pars[2] = deltaA0;
-                pars[3] = deltaB0;
-                pars[4] = R1a;
-                pars[5] = R1b;
-                pars[6] = R2a;
-                pars[7] = R2b;
+                pars = new double[2][8];
+                pars[0][0] = kex;
+                pars[0][1] = pb;
+                pars[0][2] = deltaA0;
+                pars[0][3] = deltaB0;
+                pars[0][4] = R1a;
+                pars[0][5] = R1b;
+                pars[0][6] = R2a;
+                pars[0][7] = R2b;
+                pars[1][0] = B1field;
+                pars[1][1] = Tex;
                 break;
             case "CESTR1RHON":
-                pars = new double[8];
-                pars[0] = kex;
-                pars[1] = pb;
-                pars[2] = deltaA0;
-                pars[3] = deltaB0;
-                pars[4] = R1a;
-                pars[5] = R1b;
-                pars[6] = R2a;
-                pars[7] = R2b;
+                pars = new double[2][8];
+                pars[0][0] = kex;
+                pars[0][1] = pb;
+                pars[0][2] = deltaA0;
+                pars[0][3] = deltaB0;
+                pars[0][4] = R1a;
+                pars[0][5] = R1b;
+                pars[0][6] = R2a;
+                pars[0][7] = R2b;
+                pars[1][0] = B1field;
+                pars[1][1] = Tex;
                 break;
             case "CESTR1RHOSD":
-                pars = new double[8];
-                pars[0] = kex;
-                pars[1] = pb;
-                pars[2] = deltaA0;
-                pars[3] = deltaB0;
-                pars[4] = R1a;
-                pars[5] = R1b;
-                pars[6] = R2a;
-                pars[7] = R2b;
+                pars = new double[2][8];
+                pars[0][0] = kex;
+                pars[0][1] = pb;
+                pars[0][2] = deltaA0;
+                pars[0][3] = deltaB0;
+                pars[0][4] = R1a;
+                pars[0][5] = R1b;
+                pars[0][6] = R2a;
+                pars[0][7] = R2b;
+                pars[1][0] = B1field;
+                pars[1][1] = Tex;
                 break;
             case "CESTR1RHOBALDWINKAY":
-                pars = new double[8];
-                pars[0] = kex;
-                pars[1] = pb;
-                pars[2] = deltaA0;
-                pars[3] = deltaB0;
-                pars[4] = R1a;
-                pars[5] = R1b;
-                pars[6] = R2a;
-                pars[7] = R2b;
+                pars = new double[2][8];
+                pars[0][0] = kex;
+                pars[0][1] = pb;
+                pars[0][2] = deltaA0;
+                pars[0][3] = deltaB0;
+                pars[0][4] = R1a;
+                pars[0][5] = R1b;
+                pars[0][6] = R2a;
+                pars[0][7] = R2b;
+                pars[1][0] = B1field;
+                pars[1][1] = Tex;
                 break;
             case "CESTR1RHOEXACT1":
-                pars = new double[8];
-                pars[0] = kex;
-                pars[1] = pb;
-                pars[2] = deltaA0;
-                pars[3] = deltaB0;
-                pars[4] = R1a;
-                pars[5] = R1b;
-                pars[6] = R2a;
-                pars[7] = R2b;
+                pars = new double[2][8];
+                pars[0][0] = kex;
+                pars[0][1] = pb;
+                pars[0][2] = deltaA0;
+                pars[0][3] = deltaB0;
+                pars[0][4] = R1a;
+                pars[0][5] = R1b;
+                pars[0][6] = R2a;
+                pars[0][7] = R2b;
+                pars[1][0] = B1field;
+                pars[1][1] = Tex;
                 break;
             case "CESTEXACT0":
-                pars = new double[8];
-                pars[0] = kex;
-                pars[1] = pb;
-                pars[2] = deltaA0;
-                pars[3] = deltaB0;
-                pars[4] = R1a;
-                pars[5] = R1b;
-                pars[6] = R2a;
-                pars[7] = R2b;
+                pars = new double[2][8];
+                pars[0][0] = kex;
+                pars[0][1] = pb;
+                pars[0][2] = deltaA0;
+                pars[0][3] = deltaB0;
+                pars[0][4] = R1a;
+                pars[0][5] = R1b;
+                pars[0][6] = R2a;
+                pars[0][7] = R2b;
+                pars[1][0] = B1field;
+                pars[1][1] = Tex;
                 break;
             case "CESTEXACT1":
-                pars = new double[8];
-                pars[0] = kex;
-                pars[1] = pb;
-                pars[2] = deltaA0;
-                pars[3] = deltaB0;
-                pars[4] = R1a;
-                pars[5] = R1b;
-                pars[6] = R2a;
-                pars[7] = R2b;
+                pars = new double[2][8];
+                pars[0][0] = kex;
+                pars[0][1] = pb;
+                pars[0][2] = deltaA0;
+                pars[0][3] = deltaB0;
+                pars[0][4] = R1a;
+                pars[0][5] = R1b;
+                pars[0][6] = R2a;
+                pars[0][7] = R2b;
+                pars[1][0] = B1field;
+                pars[1][1] = Tex;
                 break;
             case "CESTEXACT2":
-                pars = new double[8];
-                pars[0] = kex;
-                pars[1] = pb;
-                pars[2] = deltaA0;
-                pars[3] = deltaB0;
-                pars[4] = R1a;
-                pars[5] = R1b;
-                pars[6] = R2a;
-                pars[7] = R2b;
+                pars = new double[2][8];
+                pars[0][0] = kex;
+                pars[0][1] = pb;
+                pars[0][2] = deltaA0;
+                pars[0][3] = deltaB0;
+                pars[0][4] = R1a;
+                pars[0][5] = R1b;
+                pars[0][6] = R2a;
+                pars[0][7] = R2b;
+                pars[1][0] = B1field;
+                pars[1][1] = Tex;
                 break;
             default:
                 pars = null;
@@ -516,96 +580,112 @@ public class CESTControls implements EquationControls {
 
     }
 
-    double[] getPars(String equationName, Map<String, ParValueInterface> parValues) {
-        double[] pars;
+    double[][] getPars(String equationName, Map<String, ParValueInterface> parValues) {
+        double[][] pars;
         switch (equationName) {
             case "CESTR1RHOPERTURBATION":
-                pars = new double[8];
-                pars[0] = parValues.get("kex").getValue();
-                pars[1] = parValues.get("pb").getValue();
-                pars[2] = parValues.get("deltaA0").getValue();
-                pars[3] = parValues.get("deltaB0").getValue();
-                pars[4] = parValues.get("R1a").getValue();
-                pars[5] = parValues.get("R1b").getValue();
-                pars[6] = parValues.get("R2a").getValue();
-                pars[7] = parValues.get("R2b").getValue();
+                pars = new double[2][8];
+                pars[0][0] = parValues.get("kex").getValue();
+                pars[0][1] = parValues.get("pb").getValue();
+                pars[0][2] = parValues.get("deltaA0").getValue();
+                pars[0][3] = parValues.get("deltaB0").getValue();
+                pars[0][4] = parValues.get("R1a").getValue();
+                pars[0][5] = parValues.get("R1b").getValue();
+                pars[0][6] = parValues.get("R2a").getValue();
+                pars[0][7] = parValues.get("R2b").getValue();
+                pars[1][0] = parValues.get("B1field").getValue();
+                pars[1][1] = parValues.get("Tex").getValue();
                 break;
             case "CESTR1RHON":
-                pars = new double[8];
-                pars[0] = parValues.get("kex").getValue();
-                pars[1] = parValues.get("pb").getValue();
-                pars[2] = parValues.get("deltaA0").getValue();
-                pars[3] = parValues.get("deltaB0").getValue();
-                pars[4] = parValues.get("R1a").getValue();
-                pars[5] = parValues.get("R1b").getValue();
-                pars[6] = parValues.get("R2a").getValue();
-                pars[7] = parValues.get("R2b").getValue();
+                pars = new double[2][8];
+                pars[0][0] = parValues.get("kex").getValue();
+                pars[0][1] = parValues.get("pb").getValue();
+                pars[0][2] = parValues.get("deltaA0").getValue();
+                pars[0][3] = parValues.get("deltaB0").getValue();
+                pars[0][4] = parValues.get("R1a").getValue();
+                pars[0][5] = parValues.get("R1b").getValue();
+                pars[0][6] = parValues.get("R2a").getValue();
+                pars[0][7] = parValues.get("R2b").getValue();
+                pars[1][0] = parValues.get("B1field").getValue();
+                pars[1][1] = parValues.get("Tex").getValue();
                 break;
             case "CESTR1RHOBALDWINKAY":
-                pars = new double[8];
-                pars[0] = parValues.get("kex").getValue();
-                pars[1] = parValues.get("pb").getValue();
-                pars[2] = parValues.get("deltaA0").getValue();
-                pars[3] = parValues.get("deltaB0").getValue();
-                pars[4] = parValues.get("R1a").getValue();
-                pars[5] = parValues.get("R1b").getValue();
-                pars[6] = parValues.get("R2a").getValue();
-                pars[7] = parValues.get("R2b").getValue();
+                pars = new double[2][8];
+                pars[0][0] = parValues.get("kex").getValue();
+                pars[0][1] = parValues.get("pb").getValue();
+                pars[0][2] = parValues.get("deltaA0").getValue();
+                pars[0][3] = parValues.get("deltaB0").getValue();
+                pars[0][4] = parValues.get("R1a").getValue();
+                pars[0][5] = parValues.get("R1b").getValue();
+                pars[0][6] = parValues.get("R2a").getValue();
+                pars[0][7] = parValues.get("R2b").getValue();
+                pars[1][0] = parValues.get("B1field").getValue();
+                pars[1][1] = parValues.get("Tex").getValue();
                 break;
             case "CESTR1RHOSD":
-                pars = new double[8];
-                pars[0] = parValues.get("kex").getValue();
-                pars[1] = parValues.get("pb").getValue();
-                pars[2] = parValues.get("deltaA0").getValue();
-                pars[3] = parValues.get("deltaB0").getValue();
-                pars[4] = parValues.get("R1a").getValue();
-                pars[5] = parValues.get("R1b").getValue();
-                pars[6] = parValues.get("R2a").getValue();
-                pars[7] = parValues.get("R2b").getValue();
+                pars = new double[2][8];
+                pars[0][0] = parValues.get("kex").getValue();
+                pars[0][1] = parValues.get("pb").getValue();
+                pars[0][2] = parValues.get("deltaA0").getValue();
+                pars[0][3] = parValues.get("deltaB0").getValue();
+                pars[0][4] = parValues.get("R1a").getValue();
+                pars[0][5] = parValues.get("R1b").getValue();
+                pars[0][6] = parValues.get("R2a").getValue();
+                pars[0][7] = parValues.get("R2b").getValue();
+                pars[1][0] = parValues.get("B1field").getValue();
+                pars[1][1] = parValues.get("Tex").getValue();
                 break;
             case "CESTR1RHOEXACT1":
-                pars = new double[8];
-                pars[0] = parValues.get("kex").getValue();
-                pars[1] = parValues.get("pb").getValue();
-                pars[2] = parValues.get("deltaA0").getValue();
-                pars[3] = parValues.get("deltaB0").getValue();
-                pars[4] = parValues.get("R1a").getValue();
-                pars[5] = parValues.get("R1b").getValue();
-                pars[6] = parValues.get("R2a").getValue();
-                pars[7] = parValues.get("R2b").getValue();
+                pars = new double[2][8];
+                pars[0][0] = parValues.get("kex").getValue();
+                pars[0][1] = parValues.get("pb").getValue();
+                pars[0][2] = parValues.get("deltaA0").getValue();
+                pars[0][3] = parValues.get("deltaB0").getValue();
+                pars[0][4] = parValues.get("R1a").getValue();
+                pars[0][5] = parValues.get("R1b").getValue();
+                pars[0][6] = parValues.get("R2a").getValue();
+                pars[0][7] = parValues.get("R2b").getValue();
+                pars[1][0] = parValues.get("B1field").getValue();
+                pars[1][1] = parValues.get("Tex").getValue();
                 break;
             case "CESTEXACT0":
-                pars = new double[8];
-                pars[0] = parValues.get("kex").getValue();
-                pars[1] = parValues.get("pb").getValue();
-                pars[2] = parValues.get("deltaA0").getValue();
-                pars[3] = parValues.get("deltaB0").getValue();
-                pars[4] = parValues.get("R1a").getValue();
-                pars[5] = parValues.get("R1b").getValue();
-                pars[6] = parValues.get("R2a").getValue();
-                pars[7] = parValues.get("R2b").getValue();
+                pars = new double[2][8];
+                pars[0][0] = parValues.get("kex").getValue();
+                pars[0][1] = parValues.get("pb").getValue();
+                pars[0][2] = parValues.get("deltaA0").getValue();
+                pars[0][3] = parValues.get("deltaB0").getValue();
+                pars[0][4] = parValues.get("R1a").getValue();
+                pars[0][5] = parValues.get("R1b").getValue();
+                pars[0][6] = parValues.get("R2a").getValue();
+                pars[0][7] = parValues.get("R2b").getValue();
+                pars[1][0] = parValues.get("B1field").getValue();
+                pars[1][1] = parValues.get("Tex").getValue();
                 break;
             case "CESTEXACT1":
-                pars = new double[8];
-                pars[0] = parValues.get("kex").getValue();
-                pars[1] = parValues.get("pb").getValue();
-                pars[2] = parValues.get("deltaA0").getValue();
-                pars[3] = parValues.get("deltaB0").getValue();
-                pars[4] = parValues.get("R1a").getValue();
-                pars[5] = parValues.get("R1b").getValue();
-                pars[6] = parValues.get("R2a").getValue();
-                pars[7] = parValues.get("R2b").getValue();
+                pars = new double[2][8];
+                pars[0][0] = parValues.get("kex").getValue();
+                pars[0][1] = parValues.get("pb").getValue();
+                pars[0][2] = parValues.get("deltaA0").getValue();
+                pars[0][3] = parValues.get("deltaB0").getValue();
+                pars[0][4] = parValues.get("R1a").getValue();
+                pars[0][5] = parValues.get("R1b").getValue();
+                pars[0][6] = parValues.get("R2a").getValue();
+                pars[0][7] = parValues.get("R2b").getValue();
+                pars[1][0] = parValues.get("B1field").getValue();
+                pars[1][1] = parValues.get("Tex").getValue();
                 break;
             case "CESTEXACT2":
-                pars = new double[8];
-                pars[0] = parValues.get("kex").getValue();
-                pars[1] = parValues.get("pb").getValue();
-                pars[2] = parValues.get("deltaA0").getValue();
-                pars[3] = parValues.get("deltaB0").getValue();
-                pars[4] = parValues.get("R1a").getValue();
-                pars[5] = parValues.get("R1b").getValue();
-                pars[6] = parValues.get("R2a").getValue();
-                pars[7] = parValues.get("R2b").getValue();
+                pars = new double[2][8];
+                pars[0][0] = parValues.get("kex").getValue();
+                pars[0][1] = parValues.get("pb").getValue();
+                pars[0][2] = parValues.get("deltaA0").getValue();
+                pars[0][3] = parValues.get("deltaB0").getValue();
+                pars[0][4] = parValues.get("R1a").getValue();
+                pars[0][5] = parValues.get("R1b").getValue();
+                pars[0][6] = parValues.get("R2a").getValue();
+                pars[0][7] = parValues.get("R2b").getValue();
+                pars[1][0] = parValues.get("B1field").getValue();
+                pars[1][1] = parValues.get("Tex").getValue();
                 break;
             default:
                 pars = null;
@@ -623,6 +703,8 @@ public class CESTControls implements EquationControls {
         double R1b = R1B.getValue();
         double R2a = R2A.getValue();
         double R2b = R2B.getValue();
+        double B1field = B1FIELD.getValue();
+        double Tex = TEX.getValue();
         int nPars = CalcCEST.getNPars(map);
         double[] guesses = new double[nPars];
         switch (equationName) {
@@ -864,6 +946,7 @@ public class CESTControls implements EquationControls {
         ResidueProperties resProps = controller.currentResProps;
         List<PlotEquation> equations = new ArrayList<>();
         double[] pars;
+        double[] extras1;
         String equationName = equationSelector.getValue();
         Optional<ExperimentData> optionalData = Optional.empty();
         if (resInfo != null) {
@@ -871,25 +954,26 @@ public class CESTControls implements EquationControls {
                 optionalData = resProps.getExperimentData().stream().findFirst();
                 if (optionalData.isPresent() && optionalData.get().getExtras().size() > 0) {
                     ExperimentData expData = optionalData.get();
-                    pars = getPars(equationName);
+                    pars = getPars(equationName)[0];
+                    List<Double> dataExtras = expData.getExtras();
                     double[] errs = new double[pars.length];
                     double[] extras = new double[3];
-                    for (int j = 0; j < expData.getExtras().size()/2; j++) {
+                    for (int j = 0; j < dataExtras.size()/2; j++) {
                         extras[0] = 1.0;
-                        extras[1] = expData.getExtras().get(2*j);
-                        extras[2] = expData.getExtras().get(2*j+1);
-                        System.out.println("resInfo Res Num = " + resInfo.getResNum());
-                        System.out.println("extras size = " + expData.getExtras().size());
-                        System.out.println(j + " expData extras[1] = " + extras[1]);
-                        System.out.println(j + " expData extras[2] = " + extras[2]);
+                        extras[1] = dataExtras.get(2*j);
+                        extras[2] = dataExtras.get(2*j+1);
+//                        System.out.println("resInfo Res Num = " + resInfo.getResNum());
+//                        System.out.println("extras size = " + expData.getExtras().size());
                         //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[1] = " + extras[1]);
+                        System.out.println("extras[1] = " + extras[1]);
+                        System.out.println("extras[2] = " + extras[2]);
                         PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
                         //equationCopy.setExtra(extras);
 
                         equations.add(plotEquation);
                     }
                 } else {
-                    pars = getPars(equationName);
+                    pars = getPars(equationName)[0];
                     double[] errs = new double[pars.length];
                     double[] extras = new double[1];
                     extras[0] = 1.0;
@@ -901,12 +985,13 @@ public class CESTControls implements EquationControls {
             }
 
         } else {
-            pars = getPars(equationName);
+            pars = getPars(equationName)[0];
+            extras1 = getPars(equationName)[1];
             double[] errs = new double[pars.length];
             double[] extras = new double[3];
             extras[0] = 1.0;
-            extras[1] = 17.0 * 2 * Math.PI;
-            extras[2] = 0.3;
+            extras[1] = extras1[0]; //17.0 * 2 * Math.PI;
+            extras[2] = extras1[1]; //0.3;
             //System.out.println("updateEquations got called without resProps; extras length = "+extras.length);
             PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
             equations.add(plotEquation);
