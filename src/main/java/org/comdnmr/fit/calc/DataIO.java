@@ -88,14 +88,21 @@ public class DataIO {
                 }
                 String[] sfields = line.split("\t", -1);
                 int offset = 3;
+                if (fileName.endsWith(".txt")) {
+                    offset = 1;
+                }
                 if (expMode.equals("cest") || expMode.equals("cpmg")) {
                     offset++;
                 }
                 if (!gotHeader) {
-                    int nValues = sfields.length - offset;
+                    int nfields = sfields.length;
+                    if (fileName.endsWith(".txt") && expMode.equals("cpmg")) {
+                        nfields = sfields.length+1;
+                    }
+                    int nValues = nfields - offset;
                     xValues = new double[nValues];
                     peakRefs = new String[nValues];
-                    for (int i = offset; i < sfields.length; i++) {
+                    for (int i = offset; i < nfields; i++) {
                         int j = i - offset;
                         // fixme assumes first vcpmg is the 0 ref 
                         if (xVals == null) {
@@ -119,6 +126,9 @@ public class DataIO {
                     gotHeader = true;
                 } else {
                     String residueNum = sfields[1].trim();
+                    if (fileName.endsWith(".txt")) {
+                        residueNum = sfields[0].trim();
+                    }
                     if (residueNum.equals("")) {
                         residueNum = String.valueOf(fakeRes);
                     } else if (residueNum.indexOf('.') != -1) {
