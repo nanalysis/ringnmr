@@ -66,7 +66,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Optional;
-import java.util.Set;
+import javafx.event.EventHandler;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.SplitPane;
@@ -77,9 +77,12 @@ import javafx.scene.layout.HBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Button;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import static org.comdnmr.fit.calc.DataIO.loadPeakFile;
 import static org.comdnmr.fit.calc.DataIO.loadTextFile;
+import org.python.util.InteractiveInterpreter;
 
 public class PyController implements Initializable {
 
@@ -122,7 +125,12 @@ public class PyController implements Initializable {
 
     @FXML
     TextArea textArea;
-
+    
+    ArrayList<String> history = new ArrayList<>();
+    InteractiveInterpreter interpreter = MainApp.getInterpreter();
+    int historyInd = 0;
+    KeyCode prevKey = null;
+    
     @FXML
     ChoiceBox<String> simChoice;
 
@@ -278,6 +286,24 @@ public class PyController implements Initializable {
         equationChoice.valueProperty().addListener(e -> {
             equationAction();
         });
+        
+      
+        textArea.setEditable(true);
+        textArea.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent keyEvent) {
+                consoleInteraction(keyEvent);
+            }
+        });
+        textArea.setOnKeyReleased(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent keyEvent) {
+                KeyCode code = keyEvent.getCode();
+                if (code == KeyCode.ENTER || code == KeyCode.UP || code == KeyCode.DOWN)  {
+                     textArea.positionCaret(textArea.getText().lastIndexOf(">")+2);
+                }
+            }
+        });
 
         PrintStream printStream = new PrintStream(new ConsoleRedirect(textArea));
         // keeps reference of standard output stream
@@ -287,6 +313,9 @@ public class PyController implements Initializable {
         // re-assigns standard output stream and error output stream
         System.setOut(printStream);
         System.setErr(printStream);
+        
+        interpreter.setOut(printStream);
+        interpreter.setErr(printStream);
 
         simChoice.getItems().add("Simulate CPMG");
         simChoice.getItems().add("Simulate EXP");
@@ -299,6 +328,8 @@ public class PyController implements Initializable {
         splitPane.setDividerPositions(0.4, 0.7);
 
         setBoundsButton.setOnAction(this::setBounds);
+        
+        textArea.appendText("> ");
 
 //        mainController.setOnHidden(e -> Platform.exit());
     }
@@ -404,7 +435,7 @@ public class PyController implements Initializable {
         fileChoiceButton.setOnAction(e -> chooseFile(e));
         fileChoiceButton.setText("Browse");
         chosenFileLabel.setText("");
-
+        
         fieldTextField.setText("");
         tempTextField.setText("25.0");
         nucTextField.setText("");
@@ -703,7 +734,49 @@ public class PyController implements Initializable {
     }
 
     public void clearConsole() {
-        textArea.setText("");
+        textArea.setText("> ");
+    }
+    
+    public void consoleInteraction(KeyEvent keyEvent) {
+        KeyCode key = keyEvent.getCode();
+        String text = textArea.getText();
+        int lastLineStart = text.lastIndexOf(">")+2;
+        int lastLineEnd = textArea.getLength();
+        String lastLine = text.substring(lastLineStart-2, lastLineEnd).trim();
+        String typed = text.substring(lastLineStart).trim();
+        if (key == KeyCode.ENTER & lastLine.equals("> " + typed)) {
+            history.add(typed);
+            historyInd = history.size();
+            if (history.size() == 1 || prevKey == KeyCode.UP || prevKey == KeyCode.DOWN) {
+                textArea.appendText("\n");
+            }
+            interpreter.runsource(typed);
+            textArea.appendText("> ");
+        } else if (key == KeyCode.ENTER & typed.equals("")) {
+            textArea.appendText("> ");
+        } else if (key == KeyCode.UP) {
+            if (history.size() > 0) {
+                prevKey = key;
+                historyInd -= 1;
+                if (historyInd < 0) {
+                    historyInd = 0;
+                } 
+                String command = history.get(historyInd);
+                textArea.replaceText(lastLineStart, lastLineEnd, command);
+            }
+        } else if (key == KeyCode.DOWN) {
+            if (history.size() > 0) {
+                prevKey = key;
+                historyInd += 1;
+                if (historyInd > history.size()-1) {
+                    historyInd = history.size()-1;
+                }
+                String command = history.get(historyInd);
+                textArea.replaceText(lastLineStart, lastLineEnd, command);
+            }
+        } else if (key == KeyCode.ALPHANUMERIC  || key == KeyCode.DIGIT0) {
+            prevKey = key;
+        }
     }
 
     public void updateXYChartLabels() {
