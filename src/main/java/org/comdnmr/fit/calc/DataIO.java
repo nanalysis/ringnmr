@@ -88,14 +88,21 @@ public class DataIO {
                 }
                 String[] sfields = line.split("\t", -1);
                 int offset = 3;
+                if (fileName.endsWith(".txt")) {
+                    offset = 1;
+                }
                 if (expMode.equals("cest") || expMode.equals("cpmg")) {
                     offset++;
                 }
                 if (!gotHeader) {
-                    int nValues = sfields.length - offset;
+                    int nfields = sfields.length;
+                    if (fileName.endsWith(".txt") && expMode.equals("cpmg")) {
+                        nfields = sfields.length+1;
+                    }
+                    int nValues = nfields - offset;
                     xValues = new double[nValues];
                     peakRefs = new String[nValues];
-                    for (int i = offset; i < sfields.length; i++) {
+                    for (int i = offset; i < nfields; i++) {
                         int j = i - offset;
                         // fixme assumes first vcpmg is the 0 ref 
                         if (xVals == null) {
@@ -119,6 +126,9 @@ public class DataIO {
                     gotHeader = true;
                 } else {
                     String residueNum = sfields[1].trim();
+                    if (fileName.endsWith(".txt")) {
+                        residueNum = sfields[0].trim();
+                    }
                     if (residueNum.equals("")) {
                         residueNum = String.valueOf(fakeRes);
                     } else if (residueNum.indexOf('.') != -1) {
@@ -501,6 +511,9 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 if (fitMode.equals("exp")) {
                     equationType = ExpEquation.valueOf(equationName);
                     equationNames = ExpFit.getEquationNames();
+                } else if (fitMode.equals("cest")) { 
+                    equationType = CESTEquation.valueOf(equationName);
+                    equationNames = CESTFit.getEquationNames();
                 } else {
                     equationType = CPMGEquation.valueOf(equationName);
                     equationNames = CPMGFit.getEquationNames();
@@ -674,9 +687,12 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         StringBuilder headerBuilder = new StringBuilder();
         String[] cpmgFields = {"R2", "Rex", "Kex", "pA", "dW"};
         String[] expFields = {"A", "R"};
+        String[] cestFields = {"Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B"};
         String[] parFields;
         if (resProp.getExpMode().equals("cpmg")) {
             parFields = cpmgFields;
+        } else if (resProp.getExpMode().equals("cest")) {
+            parFields = cestFields;
         } else {
             parFields = expFields;
         }
