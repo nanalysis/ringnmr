@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 import javafx.collections.FXCollections;
@@ -26,6 +27,7 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.chart.XYChart.Series;
 import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Transform;
+import org.comdnmr.fit.calc.CPMGFitResult;
 import org.comdnmr.fit.calc.CurveFit;
 import org.comdnmr.fit.calc.DataIO;
 import org.comdnmr.fit.calc.ExperimentData;
@@ -251,7 +253,11 @@ public class ChartUtil {
             Series<Double, Double> series = new Series<>();
             series.setName(resNum);
             ResidueInfo resInfo = residueProps.getResidueInfo(resNum);
-            ExperimentData expData = residueProps.getExperimentData("cest"); // fixme
+//            ExperimentData expData = residueProps.getExperimentData("cest"); // fixme
+            Optional<ExperimentData> optionalData = Optional.empty();
+            if (residueProps != null) {
+                optionalData = residueProps.getExperimentData().stream().findFirst();
+            }
             if (resInfo != null) {
                 final String useEquationName;
                 if (equationName.equals("best")) {
@@ -263,14 +269,22 @@ public class ChartUtil {
                 CurveFit curveSet = resInfo.getCurveSet(useEquationName, state); // fixme
                 if (curveSet != null) {
                     PlotEquation equation = curveSet.getEquation();
-                    if (expData != null && expData.getExtras().size() > 0) {
-                      double[] extras = new double[2];
-                      for (int j = 0; j < expData.getExtras().size(); j++) {
-                        extras[0] = field;
-                        extras[1] = expData.getExtras().get(j);
-                        //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[1] = " + extras[1]);
-                        PlotEquation equationCopy = equation.clone();
-                        equationCopy.setExtra(extras);
+                    if (optionalData.isPresent() && optionalData.get().getExtras().size() > 0) {
+                      ExperimentData expData = optionalData.get();
+                      double[] pars = curveSet.getEquation().getPars(); //pars = getPars(equationName);
+                      double[] errs = curveSet.getEquation().getErrs(); //double[] errs = new double[pars.length];
+                      double[] extras = new double[3];
+                      for (int j = 0; j < expData.getExtras().size() / 2; j++) {
+//                        extras[0] = field;
+//                        extras[1] = expData.getExtras().get(j);
+//                        //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[1] = " + extras[1]);
+//                        PlotEquation equationCopy = equation.clone();
+//                        equationCopy.setExtra(extras);
+                        extras[0] = 1.0;
+                        extras[1] = expData.getExtras().get(2 * j);
+                        extras[2] = expData.getExtras().get(2 * j + 1);
+//                        System.out.println("Fit button expData extras size = " + expData.getExtras().size() + " extra[1] = " + extras[1]);
+                        PlotEquation equationCopy = new PlotEquation(useEquationName, pars, errs, extras);
 
                         equations.add(equationCopy);
                       }
