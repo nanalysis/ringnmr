@@ -186,9 +186,10 @@ public class PyController implements Initializable {
     XYChart.Series MCseries = new XYChart.Series();
 
     GridPane inputInfoDisplay = new GridPane();
-    Scene inputScene = new Scene(inputInfoDisplay, 700, 500);
+    Scene inputScene = new Scene(inputInfoDisplay, 800, 500);
     Stage infoStage = new Stage();
     Label chosenFileLabel = new Label();
+    Label chosenXPK2FileLabel = new Label();
     Label chosenParamFileLabel = new Label();
     TextField fieldTextField = new TextField();
     TextField tempTextField = new TextField();
@@ -419,6 +420,7 @@ public class PyController implements Initializable {
 
         infoStage.setTitle("Input Data Parameters");
         Label fileLabel = new Label("  File:  ");
+        Label xpk2FileLabel = new Label("  XPK2 File:  ");
         Label fitFileLabel = new Label("  Fit Parameter File:  ");
         Label fieldLabel = new Label("  Field:  ");
         Label tempLabel = new Label("  Temperature:  ");
@@ -431,16 +433,24 @@ public class PyController implements Initializable {
         Label B1FieldLabel = new Label("  B1 Field:  ");
         Label TexLabel = new Label("  Tex:  ");
 
-        Label[] labels = {fitModeLabel, fileLabel, fitFileLabel, fieldLabel, tempLabel, nucLabel, pLabel, modeLabel, tauLabel, B1FieldLabel, TexLabel, xValLabel};
+        Label[] labels = {fitModeLabel, fileLabel, xpk2FileLabel, fitFileLabel, fieldLabel, tempLabel, nucLabel, pLabel, modeLabel, tauLabel, B1FieldLabel, TexLabel, xValLabel};
 
         Button fileChoiceButton = new Button();
         fileChoiceButton.setOnAction(e -> chooseFile(e));
         fileChoiceButton.setText("Browse");
         chosenFileLabel.setText("");
         
+        Button xpk2ChoiceButton = new Button();
+        xpk2ChoiceButton.setOnAction(e -> chooseXPK2File(e));
+        xpk2ChoiceButton.setText("Browse");
+        chosenXPK2FileLabel.setText("");
+        
         Button paramFileChoiceButton = new Button();
         paramFileChoiceButton.setOnAction(e -> chooseParamFile(e));
         paramFileChoiceButton.setText("Browse");
+        Button paramFileResetButton = new Button();
+        paramFileResetButton.setOnAction(e -> resetParamFile(e));
+        paramFileResetButton.setText("Reset");
         chosenParamFileLabel.setText("");
 
         fieldTextField.setText("");
@@ -464,7 +474,7 @@ public class PyController implements Initializable {
             inputInfoDisplay.add(labels[i], 0, i);
         }
         for (int i = 0; i < texts.length; i++) {
-            inputInfoDisplay.add(texts[i], 1, i + 3);
+            inputInfoDisplay.add(texts[i], 1, i + 4);
         }
 
         fitModeChoice.getItems().add("CPMG");
@@ -479,8 +489,11 @@ public class PyController implements Initializable {
         inputInfoDisplay.add(fitModeChoice, 1, 0);
         inputInfoDisplay.add(fileChoiceButton, 2, 1);
         inputInfoDisplay.add(chosenFileLabel, 1, 1);
-        inputInfoDisplay.add(paramFileChoiceButton, 2, 2);
-        inputInfoDisplay.add(chosenParamFileLabel, 1, 2);
+        inputInfoDisplay.add(xpk2ChoiceButton, 2, 2);
+        inputInfoDisplay.add(chosenXPK2FileLabel, 1, 2);
+        inputInfoDisplay.add(paramFileChoiceButton, 2, 3);
+        inputInfoDisplay.add(paramFileResetButton, 3, 3);
+        inputInfoDisplay.add(chosenParamFileLabel, 1, 3);
         inputInfoDisplay.add(xValTextArea, 1, labels.length - 1, 2, 1);
 
         Button addButton = new Button();
@@ -530,7 +543,7 @@ public class PyController implements Initializable {
 
     public void chooseFile(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("mpk2 File", "*.mpk2"));
+        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("mpk2 or txt File", "*.mpk2", "*.txt"));
         File file = fileChooser.showOpenDialog(infoStage);
         String directory = file.getParent();
         String fileName = file.getName();
@@ -548,51 +561,71 @@ public class PyController implements Initializable {
                 if (sline.length() == 0) {
                     continue;
                 }
-                if (!sline.startsWith("id")) {
+                if (fileName.endsWith(".mpk2") && !sline.startsWith("id") || fileName.endsWith(".txt") && !sline.startsWith("Residue")) {
                     break;
                 }
-                String xVals = line.substring(13);
+                String xVals = null;
+                if (sline.startsWith("id")) {
+                    xVals = line.substring(13);
+                } else if (sline.startsWith("Residue")) {
+                    if (sline.contains("Hz")) {
+                        xVals = line.substring(8).replaceAll(" Hz\t", "\t").replaceAll(" Hz", "");
+                    } else if (sline.contains("1/S")) {
+                        xVals = line.substring(8).replaceAll(" 1/S\t", "\t").replaceAll(" 1/S", "");
+                        StringBuilder xVals1 = new StringBuilder(xVals);
+                        xVals1.insert(0, "0.0\t");
+                        xVals = xVals1.toString();
+                    } else if (sline.contains("S")) {
+                        xVals = line.substring(8).replaceAll(" S\t", "\t").replaceAll(" S", "");
+                    } else if (sline.contains("On")) {
+                        xVals = line.substring(8).replaceAll(" On\t", "\t").replaceAll(" On", "");
+                    }
+                }
                 xValTextArea.setText(xVals);
             }
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }
+    }
+    
+    public void chooseXPK2File(ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("xpk2 File", "*.xpk2"));
+        File file = fileChooser.showOpenDialog(infoStage);
+        String directory = file.getParent();
+        String fileName = file.getName();
+        chosenXPK2FileLabel.setText(directory + "/" + fileName);
 
-        String fileNoExt = fileName.substring(0, fileName.indexOf('.'));
+        Path path1 = Paths.get(directory + "/" + fileName);
 
-        boolean xpk2Check = new File(directory, fileNoExt + ".xpk2").exists();
-        if (xpk2Check) {
-            Path path1 = Paths.get(directory + "/" + fileNoExt + ".xpk2");
+        List<String[]> head = new ArrayList<>();
 
-            List<String[]> head = new ArrayList<>();
-
-            try (BufferedReader fileReader = Files.newBufferedReader(path1)) {
-                while (true) {
-                    String line = fileReader.readLine();
-                    if (line == null) {
-                        break;
-                    }
-                    String sline = line.trim();
-                    if (sline.length() == 0) {
-                        continue;
-                    }
-                    if (Character.isDigit(sline.charAt(0))) {
-                        break;
-                    }
-                    String[] sline1 = line.split("\t", -1);
-                    head.add(sline1);
+        try (BufferedReader fileReader = Files.newBufferedReader(path1)) {
+            while (true) {
+                String line = fileReader.readLine();
+                if (line == null) {
+                    break;
                 }
-            } catch (IOException ioe) {
-                ioe.printStackTrace();
+                String sline = line.trim();
+                if (sline.length() == 0) {
+                    continue;
+                }
+                if (Character.isDigit(sline.charAt(0))) {
+                    break;
+                }
+                String[] sline1 = line.split("\t", -1);
+                head.add(sline1);
             }
-            int sfInd = Arrays.asList(head.get(2)).indexOf("sf");
-            int codeInd = Arrays.asList(head.get(2)).indexOf("code");
-            String field = Arrays.asList(head.get(4)).get(sfInd);
-            String nuc = Arrays.asList(head.get(4)).get(codeInd);
-            nuc = nuc.replaceAll("[^a-zA-Z]", "");
-            nucTextField.setText(nuc);
-            fieldTextField.setText(field);
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
         }
+        int sfInd = Arrays.asList(head.get(2)).indexOf("sf");
+        int codeInd = Arrays.asList(head.get(2)).indexOf("code");
+        String field = Arrays.asList(head.get(4)).get(sfInd);
+        String nuc = Arrays.asList(head.get(4)).get(codeInd);
+        nuc = nuc.replaceAll("[^a-zA-Z]", "");
+        nucTextField.setText(nuc);
+        fieldTextField.setText(field);
     }
 
     public void chooseParamFile(ActionEvent event) {
@@ -602,6 +635,10 @@ public class PyController implements Initializable {
         String directory = file.getParent();
         String fileName = file.getName();
         chosenParamFileLabel.setText(directory + "/" + fileName);
+    }
+    
+    public void resetParamFile(ActionEvent event) {
+        chosenParamFileLabel.setText("");
     }
     
     public void addInfo(ActionEvent event) {
