@@ -702,13 +702,13 @@ public class CESTEquations {
         
         peaks.sort(Comparator.comparingDouble(Peak::getDepth));
 
-        System.out.println("yvals[1] = " + yvals[1]);
-
-        for (int i = 0; i < peaks.size(); i++) {
-            System.out.println("peaks guess " + i + " x = " + peaks.get(i).position);
-            System.out.println("peaks guess " + i + " y = " + peaks.get(i).depth);
-            System.out.println("peaks guess " + i + " fwhm = " + peaks.get(i).width);
-        }
+//        System.out.println("yvals[1] = " + yvals[1]);
+//
+//        for (int i = 0; i < peaks.size(); i++) {
+//            System.out.println("peaks guess " + i + " x = " + peaks.get(i).position);
+//            System.out.println("peaks guess " + i + " y = " + peaks.get(i).depth);
+//            System.out.println("peaks guess " + i + " fwhm = " + peaks.get(i).width);
+//        }
         
         List<Peak> peaks2 = peaks;
         if (peaks.size() >= 2) {
@@ -807,12 +807,12 @@ public class CESTEquations {
         // Estimates CEST pb values from peak intensities for initial guesses for before fitting.
         // Uses the output from cestPeakGuess as the input.
 
-        System.out.println(peaks.length + " peaks found.");
-        for (int i = 0; i < peaks.length; i++) {
-            for (int j = 0; j < peaks[i].length; j++) {
-                System.out.println(i + " " + j + " " + peaks[i][j]);
-            }
-        }
+//        System.out.println(peaks.length + " peaks found.");
+//        for (int i = 0; i < peaks.length; i++) {
+//            for (int j = 0; j < peaks[i].length; j++) {
+//                System.out.println(i + " " + j + " " + peaks[i][j]);
+//            }
+//        }
 
         double baseline = yvals[1];
         if (yvals[yvals.length - 1] > baseline) {
@@ -833,7 +833,7 @@ public class CESTEquations {
                     pb[i] = (baseline - peaks[2 * i][1]) / (baseline - peaks[2 * i + 1][1]) / 4;
                 }
             }
-            System.out.println("pb guess = " + pb[0]);
+//            System.out.println("pb guess = " + pb[0]);
             return pb[0];
         } else {
             return 0.1;
@@ -876,11 +876,11 @@ public class CESTEquations {
                     r2[1][i] = Math.abs(bwidth - kb); //R2B
                 }
             }
-            for (int i = 0; i < r2.length; i++) {
-                for (int j = 0; j < r2[i].length; j++) {
-                    System.out.println("R2 guess " + i + " " + j + " " + r2[i][j]);
-                }
-            }
+//            for (int i = 0; i < r2.length; i++) {
+//                for (int j = 0; j < r2[i].length; j++) {
+//                    System.out.println("R2 guess " + i + " " + j + " " + r2[i][j]);
+//                }
+//            }
             return r2;
         } else {
             double[][] r2 = new double[2][1];

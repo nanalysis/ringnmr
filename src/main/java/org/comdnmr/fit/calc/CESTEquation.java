@@ -41,11 +41,11 @@ public enum CESTEquation implements CESTEquationType {
                 //System.out.println(minY + " " + maxY + " " + mean + " " + vMid);
                 //System.out.println(id + " " + map[id].length + " " + map[id][0] + " " + map[id][1]);
                 double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues);
-                for (int i=0; i<peaks.length; i++) {
-                    for (int j=0; j<peaks[i].length; j++) {
-                        System.out.println("peaks " + i + " " + j + " = " + peaks[i][j]);
-                    }
-                }
+//                for (int i=0; i<peaks.length; i++) {
+//                    for (int j=0; j<peaks[i].length; j++) {
+//                        System.out.println("peaks " + i + " " + j + " = " + peaks[i][j]);
+//                    }
+//                }
                 double tex = xValues[2][0];
                 double[] r1 = CESTEquations.cestR1Guess(yValues, tex);
                 double[][] r2 = CESTEquations.cestR2Guess(peaks, yValues);
@@ -58,9 +58,9 @@ public enum CESTEquation implements CESTEquationType {
                 guesses[map[id][6]] = r2[0][0]; //20.0; //R2A
                 guesses[map[id][7]] = r2[1][0]; //100.0; //R2B
             }
-            for (int i=0; i<map[0].length; i++) {
-                System.out.println(guesses[map[0][i]]);
-            }
+//            for (int i=0; i<map[0].length; i++) {
+//                System.out.println(guesses[map[0][i]]);
+//            }
             return guesses;
             
         }
@@ -118,9 +118,9 @@ public enum CESTEquation implements CESTEquationType {
                 guesses[map[id][6]] = r2[0][0]; //r2[1][r2[0].length-1]/4; //20.0; //R2A
                 guesses[map[id][7]] = r2[1][0]; //100.0; //R2B
             }
-            for (int i=0; i<map[0].length; i++) {
-                System.out.println(guesses[map[0][i]]);
-            }
+//            for (int i=0; i<map[0].length; i++) {
+//                System.out.println(guesses[map[0][i]]);
+//            }
             
             return guesses;
         }
@@ -177,9 +177,9 @@ public enum CESTEquation implements CESTEquationType {
                 guesses[map[id][6]] = r2[0][0]; //r2[1][r2[0].length-1]/4; //20.0; //R2A
                 guesses[map[id][7]] = r2[1][0]; //100.0; //R2B
             }
-            for (int i=0; i<map[0].length; i++) {
-                System.out.println(guesses[map[0][i]]);
-            }
+//            for (int i=0; i<map[0].length; i++) {
+//                System.out.println(guesses[map[0][i]]);
+//            }
             
             return guesses;
         }
@@ -236,9 +236,9 @@ public enum CESTEquation implements CESTEquationType {
                 guesses[map[id][6]] = r2[0][0]; //r2[1][r2[0].length-1]/4; //20.0; //R2A
                 guesses[map[id][7]] = r2[0][0]; //100.0; //R2B
             }
-            for (int i=0; i<map[0].length; i++) {
-                System.out.println(guesses[map[0][i]]);
-            }
+//            for (int i=0; i<map[0].length; i++) {
+//                System.out.println(guesses[map[0][i]]);
+//            }
             
             return guesses;
         }
