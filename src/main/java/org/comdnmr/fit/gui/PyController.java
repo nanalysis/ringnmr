@@ -1112,15 +1112,17 @@ public class PyController implements Initializable {
             String[] resNums = {String.valueOf(currentResInfo.getResNum())};
             equationFitter.setData(currentResProps, resNums);
             String equationName = simControls.getEquation();
-            int[] stateCount = equationFitter.getStateCount();
-            int[][] states = equationFitter.getStates();
-            equationFitter.getFitModel().setMap(stateCount, states);
+            equationFitter.setupFit(equationName, absValueModeCheckBox.isSelected());
             int[][] map = equationFitter.getFitModel().getMap();
-//            System.out.println("map = " + map);
+//            for (int i=0; i<map.length; i++) {
+//                for (int j=0; j<map[i].length; j++) {
+//                    System.out.println("map " + i + " " + j + " " + map[i][j]);
+//                }
+//            }
 //            System.out.println("getFitModel = " + equationFitter.getFitModel());
-//        System.out.println("fitEqn eqnFitter = " + equationFitter);
-//        System.out.println("fitEqn resNums = " + resNums);
-//        System.out.println("fitEqn eqnName = " + equationName);
+//            System.out.println("fitEqn eqnFitter = " + equationFitter);
+//            System.out.println("fitEqn resNums = " + resNums);
+//            System.out.println("fitEqn eqnName = " + equationName);
             double[] sliderGuesses = null;
             if (sliderGuessCheckBox.isSelected()) {
                 sliderGuesses = simControls.sliderGuess(equationName, map);
