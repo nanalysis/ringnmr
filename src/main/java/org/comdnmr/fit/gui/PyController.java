@@ -1220,12 +1220,9 @@ public class PyController implements Initializable {
                 String[] resNums = {String.valueOf(currentResInfo.getResNum())};
                 equationFitter.setData(currentResProps, resNums);
                 String equationName = simControls.getEquation();
-                int[] stateCount = equationFitter.getStateCount();
-                int[][] states = equationFitter.getStates();
-                equationFitter.getFitModel().setMap(stateCount, states);
+                equationFitter.setupFit(equationName, absValueModeCheckBox.isSelected());
                 int[][] map = equationFitter.getFitModel().getMap();
                 double[] sliderGuesses = simControls.sliderGuess(equationName, map);
-                equationFitter.setupFit(equationName, absValueModeCheckBox.isSelected());
                 rms = Optional.of(equationFitter.rms(sliderGuesses));
             } else {
                 rms = Optional.empty();
