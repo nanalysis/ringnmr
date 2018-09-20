@@ -12,6 +12,7 @@ import java.util.Comparator;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.EigenDecomposition;
+import org.comdnmr.fit.calc.SavitzkyGolay;
 
 /**
  *
@@ -117,6 +118,80 @@ public class CESTEquations {
 
         return r1rho;
 
+    }
+    
+    public static double[] r1rhoPerturbationNoEx(double[] omega, double pb, double kex, double[] deltaA, double R1A, double R2A) {
+        int size = omega.length;
+        double pa = 1.0 - pb;
+
+        double k1 = pb * kex;
+        double km1 = pa * kex;
+
+        double dR = Math.abs(R2A);
+
+        double[] r1rho = new double[size];
+        for (int i = 0; i < size; i++) {
+            double dw = deltaA[i];
+            double weA = Math.sqrt(omega[i] * omega[i] + deltaA[i] * deltaA[i]);
+//            double weB = Math.sqrt(omega[i] * omega[i] + deltaB[i] * deltaB[i]);
+            double sin2t = (omega[i] / weA) * (omega[i] / weA);
+            double x = ((dw * dw) + (dR * dR)) * km1 + dR * ((weA * weA) + (km1 * km1));
+            double y = dR * (omega[i] * omega[i]);
+            double REx = k1 * x / y;
+            r1rho[i] = (1 - sin2t) * R1A + sin2t * R2A + sin2t * REx;
+        }
+        return r1rho;
+    }
+    
+    public static double[] r1rhoPerturbationNoEx2(double[] omega, double[] deltaA, double R1A, double R2A) {
+        int size = omega.length;
+
+        double dR = Math.abs(R2A);
+
+        double[] r1rho = new double[size];
+        for (int i = 0; i < size; i++) {
+            double dw = deltaA[i];
+            double weA = Math.sqrt(omega[i] * omega[i] + deltaA[i] * deltaA[i]);
+//            double weB = Math.sqrt(omega[i] * omega[i] + deltaB[i] * deltaB[i]);
+            double sin2t = (omega[i] / weA) * (omega[i] / weA);
+            double x = dR * ((weA * weA));
+            double y = dR * (omega[i] * omega[i]);
+            r1rho[i] = (1 - sin2t) * R1A + sin2t * R2A;
+        }
+        return r1rho;
+    }
+    
+    public static double[] cestR1rhoPerturbationNoEx2(double[][] X, double deltaA0, double R1A, double R2A) {
+        double[] omegarf = X[0];
+        double[] omega1 = X[1];
+        double[] Tex = X[2];
+
+        double trad = Tex[0];//0.3;
+
+        double pa = 1.0;
+        double[] deltaA = new double[omegarf.length];
+        double[] deltaB = new double[omegarf.length];
+        double[] omegaBar = new double[omegarf.length];
+        for (int i = 0; i < omegarf.length; i++) {
+            deltaA[i] = deltaA0 - omegarf[i];
+            omegaBar[i] = pa * deltaA[i];
+        }
+
+        double[] we = new double[omegaBar.length];
+        double[] cos2t = new double[omegaBar.length];
+        for (int i = 0; i < omegaBar.length; i++) {
+            we[i] = Math.sqrt(omega1[i] * omega1[i] + omegaBar[i] * omegaBar[i]);
+            cos2t[i] = (omegaBar[i] / we[i]) * (omegaBar[i] / we[i]);
+        }
+
+        double[] cest = new double[cos2t.length];
+        
+        double[] r1rho = r1rhoPerturbationNoEx2(omega1, deltaA, R1A, R2A);
+        //double[] cest = new double[cos2t.length];
+        for (int i = 0; i < cos2t.length; i++) {
+            cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
+        }
+        return cest;
     }
 
     public static double[] r1rhoPerturbation(double[] omega, double pb, double kex, double[] deltaA, double[] deltaB, double R1A, double R1B, double R2A, double R2B) {
@@ -514,6 +589,20 @@ public class CESTEquations {
                 cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
             }
 
+        } else if (approx == "trottnoex") {
+            double[] r1rho = r1rhoPerturbationNoEx(omega1, pb, kex, deltaA, R1A, R2A);
+            //double[] cest = new double[cos2t.length];
+            for (int i = 0; i < cos2t.length; i++) {
+                cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
+            }
+
+        } else if (approx == "trottnoex2") {
+            double[] r1rho = r1rhoPerturbationNoEx2(omega1, deltaA, R1A, R2A);
+            //double[] cest = new double[cos2t.length];
+            for (int i = 0; i < cos2t.length; i++) {
+                cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
+            }
+
         } else if (approx == "baldwinkay") {
             double[] r1rho = r1rhoBaldwinKay(omega1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
             //double[] cest = new double[cos2t.length];
@@ -590,6 +679,18 @@ public class CESTEquations {
             this.pkInd = pkInd;
         }
     }
+    
+    public static double[] smoothCEST(double[] vec, int j1, int j2, int order, int smoothSize, double[] X) {
+        // Applies a Savitzky-Golay filter to the data for smoothing.
+        SavitzkyGolay sg = new SavitzkyGolay();
+        double[] smoothed = new double[X.length];
+        try {
+          smoothed = sg.runningSavitzkyGolaySmoothing(vec, j1, j2, order, smoothSize, X);  
+        } catch (Exception e) {
+            System.out.println("Smooth-size should be one of 5,7,9,...,25");
+        }
+        return smoothed;
+    }
 
     public static double[][] cestPeakGuess(double[][] xvals, double[] yvals) {
         // Estimates CEST peak positions for initial guesses for before fitting.
@@ -602,11 +703,15 @@ public class CESTEquations {
         double prevY = 0;
 
         double B1val = xvals[1][0];
+        
+        double[] syvals = new double[yvals.length];
+          
+        yvals = smoothCEST(yvals, 0, yvals.length, 3, 21, syvals);
 
         for (int i = 3; i < yvals.length - 2; i++) {
             double ydiff = yvals[i] - yvals[i - 1];
-            double ydiff2l = yvals[i - 3] - yvals[i - 2];
-            double ydiff2r = yvals[i + 2] - yvals[i + 1];
+            double ydiff2l = yvals[i - 3] - yvals[i - 1];
+            double ydiff2r = yvals[i + 2] - yvals[i];
             double ydiff2l1 = yvals[i - 2] - yvals[i - 1];
             double ydiff2r1 = yvals[i + 1] - yvals[i];
             if (Math.abs(yvals[1] - yvals[i - 1]) / yvals[1] > 0.02) { //peak intensity threshold
@@ -766,10 +871,15 @@ public class CESTEquations {
         
         peaks2.sort(Comparator.comparingDouble(Peak::getPosition).reversed());
         
-        double peak1diff = Math.abs(peaks2.get(0).depth - yvals[1]);
+        double baseline = yvals[1];
+        if (yvals[yvals.length - 1] > baseline) {
+            baseline = yvals[yvals.length - 1];
+        }
+        
+        double peak1diff = Math.abs(peaks2.get(0).depth - baseline);
         double peak2diff = peak1diff;
         if (peaks2.size() == 2) {
-            peak2diff = Math.abs(peaks2.get(1).depth - yvals[1]);
+            peak2diff = Math.abs(peaks2.get(1).depth - baseline);
         }
         if (peak1diff < 0.05 || peak2diff < 0.05) {
             double[][] peaks1 = new double[1][3];
@@ -877,7 +987,7 @@ public class CESTEquations {
             for (int i = 0; i < r2[0].length; i++) {
                 double awidth = peaks[0][2] / (2 * Math.PI);
                 r2[0][0] = awidth; //R2A
-                r2[1][0] = 0.1; //R2B
+                r2[1][0] = awidth; //R2B
             }
             return r2;
         }

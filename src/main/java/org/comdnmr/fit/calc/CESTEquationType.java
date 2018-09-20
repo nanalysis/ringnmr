@@ -68,6 +68,7 @@ public interface CESTEquationType extends EquationType {
                 dBbound = peaks[0][2]/2;
             } else if (peaks.length == 1) {
                 dAbound = peaks[0][2]/2;
+                dBbound = dAbound;
             }
                 boundaries[0][map[id][0]] = 1.0; //kex LB
                 boundaries[1][map[id][0]] = guesses[map[id][0]] * 4; //kex UB

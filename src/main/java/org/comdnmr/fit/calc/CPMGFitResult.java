@@ -79,6 +79,21 @@ public class CPMGFitResult {
                 if (errs[0] > pars[0]) {
                     valid = false;
                 }
+                break;
+            case "CESTR1RHOPERTURBATIONNOEX":
+                break;
+            case "CESTR1RHOPERTURBATION":
+            case "CESTR1RHOSD":
+            case "CESTR1RHOBALDWINKAY":
+            case "CESTR1RHON":
+            case "CESTR1RHOEXACT1":
+            case "CESTEXACT0":
+            case "CESTEXACT1":
+            case "CESTEXACT2":
+                if (Math.abs(pars[2] - pars[3]) < 100.0) {
+                    valid = false;
+                }
+                break;
             default: {
 
             }
