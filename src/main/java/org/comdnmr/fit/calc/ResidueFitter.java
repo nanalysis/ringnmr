@@ -197,8 +197,10 @@ public class ResidueFitter {
             equationNames = CPMGFit.getEquationNames();
         } else if (resProps.getExpMode().equals("exp")) {
             equationNames = ExpFit.getEquationNames();
+            bestEquation = "EXPAB";
         } else if (resProps.getExpMode().equals("cest")) {
             equationNames = CESTFit.getEquationNames();
+            bestEquation = "CESTR1RHOPERTURBATIONNOEX";
         } else {
             throw new IllegalArgumentException("Invalid mode " + resProps.getExpMode());
         }
@@ -209,6 +211,7 @@ public class ResidueFitter {
 
             EquationFitter equationFitter = getFitter();
             equationFitter.setData(resProps, resNums);
+            System.out.println("Residue " + resNums[0]);
             fitResult = equationFitter.doFit(equationName, resProps.isAbsValueMode(), !resProps.getBootStrapMode().equals("parametric"), null);
             fitResults.put(equationName, fitResult);
             if (fitResult.getAicc() < aicMin) {
@@ -217,7 +220,7 @@ public class ResidueFitter {
                     bestEquation = equationName;
                 }
             }
-            //System.out.println("fit " + fitResult.getAicc() + " " + aicMin + " " + bestEquation);
+            System.out.println("fit " + fitResult.getAicc() + " " + aicMin + " " + bestEquation);
         }
         List<ResidueInfo> resInfoList = new ArrayList<>();
         Map<String, ResidueInfo> resMap = new HashMap<>();
