@@ -184,6 +184,10 @@ public class CESTControls implements EquationControls {
         }
         switch (equationName) {
             case "CESTR1RHOPERTURBATION":
+            case "CESTR1RHOBALDWINKAY":
+            case "CESTR1RHOSD":
+            case "CESTR1RHOEXACT1":
+            case "CESTEXACT1":
                 KEX.disabled(false);
                 PB.disabled(false);
                 DELTAA0.disabled(false);
@@ -207,42 +211,6 @@ public class CESTControls implements EquationControls {
                 B1FIELD.disabled(false);
                 TEX.disabled(false);
                 break;
-            case "CESTR1RHOBALDWINKAY":
-                KEX.disabled(false);
-                PB.disabled(false);
-                DELTAA0.disabled(false);
-                DELTAB0.disabled(false);
-                R1A.disabled(false);
-                R1B.disabled(true);
-                R2A.disabled(false);
-                R2B.disabled(false);
-                B1FIELD.disabled(false);
-                TEX.disabled(false);
-                break;
-            case "CESTR1RHOSD":
-                KEX.disabled(false);
-                PB.disabled(false);
-                DELTAA0.disabled(false);
-                DELTAB0.disabled(false);
-                R1A.disabled(false);
-                R1B.disabled(true);
-                R2A.disabled(false);
-                R2B.disabled(false);
-                B1FIELD.disabled(false);
-                TEX.disabled(false);
-                break;
-            case "CESTR1RHOEXACT1":
-                KEX.disabled(false);
-                PB.disabled(false);
-                DELTAA0.disabled(false);
-                DELTAB0.disabled(false);
-                R1A.disabled(false);
-                R1B.disabled(true);
-                R2A.disabled(false);
-                R2B.disabled(false);
-                B1FIELD.disabled(false);
-                TEX.disabled(false);
-                break;
             case "CESTEXACT0":
                 KEX.disabled(false);
                 PB.disabled(false);
@@ -255,18 +223,6 @@ public class CESTControls implements EquationControls {
                 B1FIELD.disabled(false);
                 TEX.disabled(false);
                 break;
-            case "CESTEXACT1":
-                KEX.disabled(false);
-                PB.disabled(false);
-                DELTAA0.disabled(false);
-                DELTAB0.disabled(false);
-                R1A.disabled(false);
-                R1B.disabled(true);
-                R2A.disabled(false);
-                R2B.disabled(false);
-                B1FIELD.disabled(false);
-                TEX.disabled(false);
-                break;
             case "CESTEXACT2":
                 KEX.disabled(false);
                 PB.disabled(false);
@@ -274,6 +230,18 @@ public class CESTControls implements EquationControls {
                 DELTAB0.disabled(false);
                 R1A.disabled(false);
                 R1B.disabled(false);
+                R2A.disabled(false);
+                R2B.disabled(true);
+                B1FIELD.disabled(false);
+                TEX.disabled(false);
+                break;
+            case "CESTR1RHOPERTURBATIONNOEX":
+                KEX.disabled(true);
+                PB.disabled(true);
+                DELTAA0.disabled(false);
+                DELTAB0.disabled(true);
+                R1A.disabled(false);
+                R1B.disabled(true);
                 R2A.disabled(false);
                 R2B.disabled(true);
                 B1FIELD.disabled(false);
@@ -332,96 +300,12 @@ public class CESTControls implements EquationControls {
         double[][] pars;
         switch (equationName) {
             case "CESTR1RHOPERTURBATION":
-                pars = new double[2][8];
-                pars[0][0] = kex;
-                pars[0][1] = pb;
-                pars[0][2] = deltaA0;
-                pars[0][3] = deltaB0;
-                pars[0][4] = R1a;
-                pars[0][5] = R1b;
-                pars[0][6] = R2a;
-                pars[0][7] = R2b;
-                pars[1][0] = B1field;
-                pars[1][1] = Tex;
-                break;
             case "CESTR1RHON":
-                pars = new double[2][8];
-                pars[0][0] = kex;
-                pars[0][1] = pb;
-                pars[0][2] = deltaA0;
-                pars[0][3] = deltaB0;
-                pars[0][4] = R1a;
-                pars[0][5] = R1b;
-                pars[0][6] = R2a;
-                pars[0][7] = R2b;
-                pars[1][0] = B1field;
-                pars[1][1] = Tex;
-                break;
             case "CESTR1RHOSD":
-                pars = new double[2][8];
-                pars[0][0] = kex;
-                pars[0][1] = pb;
-                pars[0][2] = deltaA0;
-                pars[0][3] = deltaB0;
-                pars[0][4] = R1a;
-                pars[0][5] = R1b;
-                pars[0][6] = R2a;
-                pars[0][7] = R2b;
-                pars[1][0] = B1field;
-                pars[1][1] = Tex;
-                break;
             case "CESTR1RHOBALDWINKAY":
-                pars = new double[2][8];
-                pars[0][0] = kex;
-                pars[0][1] = pb;
-                pars[0][2] = deltaA0;
-                pars[0][3] = deltaB0;
-                pars[0][4] = R1a;
-                pars[0][5] = R1b;
-                pars[0][6] = R2a;
-                pars[0][7] = R2b;
-                pars[1][0] = B1field;
-                pars[1][1] = Tex;
-                break;
             case "CESTR1RHOEXACT1":
-                pars = new double[2][8];
-                pars[0][0] = kex;
-                pars[0][1] = pb;
-                pars[0][2] = deltaA0;
-                pars[0][3] = deltaB0;
-                pars[0][4] = R1a;
-                pars[0][5] = R1b;
-                pars[0][6] = R2a;
-                pars[0][7] = R2b;
-                pars[1][0] = B1field;
-                pars[1][1] = Tex;
-                break;
             case "CESTEXACT0":
-                pars = new double[2][8];
-                pars[0][0] = kex;
-                pars[0][1] = pb;
-                pars[0][2] = deltaA0;
-                pars[0][3] = deltaB0;
-                pars[0][4] = R1a;
-                pars[0][5] = R1b;
-                pars[0][6] = R2a;
-                pars[0][7] = R2b;
-                pars[1][0] = B1field;
-                pars[1][1] = Tex;
-                break;
             case "CESTEXACT1":
-                pars = new double[2][8];
-                pars[0][0] = kex;
-                pars[0][1] = pb;
-                pars[0][2] = deltaA0;
-                pars[0][3] = deltaB0;
-                pars[0][4] = R1a;
-                pars[0][5] = R1b;
-                pars[0][6] = R2a;
-                pars[0][7] = R2b;
-                pars[1][0] = B1field;
-                pars[1][1] = Tex;
-                break;
             case "CESTEXACT2":
                 pars = new double[2][8];
                 pars[0][0] = kex;
@@ -432,6 +316,19 @@ public class CESTControls implements EquationControls {
                 pars[0][5] = R1b;
                 pars[0][6] = R2a;
                 pars[0][7] = R2b;
+                pars[1][0] = B1field;
+                pars[1][1] = Tex;
+                break;
+            case "CESTR1RHOPERTURBATIONNOEX":
+                pars = new double[2][8];
+//                pars[0][0] = kex;
+//                pars[0][1] = pb;
+                pars[0][0] = deltaA0;
+//                pars[0][3] = deltaB0;
+                pars[0][1] = R1a;
+//                pars[0][5] = R1b;
+                pars[0][2] = R2a;
+//                pars[0][7] = R2b;
                 pars[1][0] = B1field;
                 pars[1][1] = Tex;
                 break;
@@ -470,96 +367,12 @@ public class CESTControls implements EquationControls {
         double[][] pars;
         switch (equationName) {
             case "CESTR1RHOPERTURBATION":
-                pars = new double[2][8];
-                pars[0][0] = kex;
-                pars[0][1] = pb;
-                pars[0][2] = deltaA0;
-                pars[0][3] = deltaB0;
-                pars[0][4] = R1a;
-                pars[0][5] = R1b;
-                pars[0][6] = R2a;
-                pars[0][7] = R2b;
-                pars[1][0] = B1field;
-                pars[1][1] = Tex;
-                break;
             case "CESTR1RHON":
-                pars = new double[2][8];
-                pars[0][0] = kex;
-                pars[0][1] = pb;
-                pars[0][2] = deltaA0;
-                pars[0][3] = deltaB0;
-                pars[0][4] = R1a;
-                pars[0][5] = R1b;
-                pars[0][6] = R2a;
-                pars[0][7] = R2b;
-                pars[1][0] = B1field;
-                pars[1][1] = Tex;
-                break;
             case "CESTR1RHOSD":
-                pars = new double[2][8];
-                pars[0][0] = kex;
-                pars[0][1] = pb;
-                pars[0][2] = deltaA0;
-                pars[0][3] = deltaB0;
-                pars[0][4] = R1a;
-                pars[0][5] = R1b;
-                pars[0][6] = R2a;
-                pars[0][7] = R2b;
-                pars[1][0] = B1field;
-                pars[1][1] = Tex;
-                break;
             case "CESTR1RHOBALDWINKAY":
-                pars = new double[2][8];
-                pars[0][0] = kex;
-                pars[0][1] = pb;
-                pars[0][2] = deltaA0;
-                pars[0][3] = deltaB0;
-                pars[0][4] = R1a;
-                pars[0][5] = R1b;
-                pars[0][6] = R2a;
-                pars[0][7] = R2b;
-                pars[1][0] = B1field;
-                pars[1][1] = Tex;
-                break;
             case "CESTR1RHOEXACT1":
-                pars = new double[2][8];
-                pars[0][0] = kex;
-                pars[0][1] = pb;
-                pars[0][2] = deltaA0;
-                pars[0][3] = deltaB0;
-                pars[0][4] = R1a;
-                pars[0][5] = R1b;
-                pars[0][6] = R2a;
-                pars[0][7] = R2b;
-                pars[1][0] = B1field;
-                pars[1][1] = Tex;
-                break;
             case "CESTEXACT0":
-                pars = new double[2][8];
-                pars[0][0] = kex;
-                pars[0][1] = pb;
-                pars[0][2] = deltaA0;
-                pars[0][3] = deltaB0;
-                pars[0][4] = R1a;
-                pars[0][5] = R1b;
-                pars[0][6] = R2a;
-                pars[0][7] = R2b;
-                pars[1][0] = B1field;
-                pars[1][1] = Tex;
-                break;
             case "CESTEXACT1":
-                pars = new double[2][8];
-                pars[0][0] = kex;
-                pars[0][1] = pb;
-                pars[0][2] = deltaA0;
-                pars[0][3] = deltaB0;
-                pars[0][4] = R1a;
-                pars[0][5] = R1b;
-                pars[0][6] = R2a;
-                pars[0][7] = R2b;
-                pars[1][0] = B1field;
-                pars[1][1] = Tex;
-                break;
             case "CESTEXACT2":
                 pars = new double[2][8];
                 pars[0][0] = kex;
@@ -570,6 +383,19 @@ public class CESTControls implements EquationControls {
                 pars[0][5] = R1b;
                 pars[0][6] = R2a;
                 pars[0][7] = R2b;
+                pars[1][0] = B1field;
+                pars[1][1] = Tex;
+                break;
+            case "CESTR1RHOPERTURBATIONNOEX":
+                pars = new double[2][8];
+//                pars[0][0] = kex;
+//                pars[0][1] = pb;
+                pars[0][0] = deltaA0;
+//                pars[0][3] = deltaB0;
+                pars[0][1] = R1a;
+//                pars[0][5] = R1b;
+                pars[0][2] = R2a;
+//                pars[0][7] = R2b;
                 pars[1][0] = B1field;
                 pars[1][1] = Tex;
                 break;
@@ -584,96 +410,12 @@ public class CESTControls implements EquationControls {
         double[][] pars;
         switch (equationName) {
             case "CESTR1RHOPERTURBATION":
-                pars = new double[2][8];
-                pars[0][0] = parValues.get("kex").getValue();
-                pars[0][1] = parValues.get("pb").getValue();
-                pars[0][2] = parValues.get("deltaA0").getValue();
-                pars[0][3] = parValues.get("deltaB0").getValue();
-                pars[0][4] = parValues.get("R1a").getValue();
-                pars[0][5] = parValues.get("R1b").getValue();
-                pars[0][6] = parValues.get("R2a").getValue();
-                pars[0][7] = parValues.get("R2b").getValue();
-                pars[1][0] = parValues.get("B1field").getValue();
-                pars[1][1] = parValues.get("Tex").getValue();
-                break;
             case "CESTR1RHON":
-                pars = new double[2][8];
-                pars[0][0] = parValues.get("kex").getValue();
-                pars[0][1] = parValues.get("pb").getValue();
-                pars[0][2] = parValues.get("deltaA0").getValue();
-                pars[0][3] = parValues.get("deltaB0").getValue();
-                pars[0][4] = parValues.get("R1a").getValue();
-                pars[0][5] = parValues.get("R1b").getValue();
-                pars[0][6] = parValues.get("R2a").getValue();
-                pars[0][7] = parValues.get("R2b").getValue();
-                pars[1][0] = parValues.get("B1field").getValue();
-                pars[1][1] = parValues.get("Tex").getValue();
-                break;
             case "CESTR1RHOBALDWINKAY":
-                pars = new double[2][8];
-                pars[0][0] = parValues.get("kex").getValue();
-                pars[0][1] = parValues.get("pb").getValue();
-                pars[0][2] = parValues.get("deltaA0").getValue();
-                pars[0][3] = parValues.get("deltaB0").getValue();
-                pars[0][4] = parValues.get("R1a").getValue();
-                pars[0][5] = parValues.get("R1b").getValue();
-                pars[0][6] = parValues.get("R2a").getValue();
-                pars[0][7] = parValues.get("R2b").getValue();
-                pars[1][0] = parValues.get("B1field").getValue();
-                pars[1][1] = parValues.get("Tex").getValue();
-                break;
             case "CESTR1RHOSD":
-                pars = new double[2][8];
-                pars[0][0] = parValues.get("kex").getValue();
-                pars[0][1] = parValues.get("pb").getValue();
-                pars[0][2] = parValues.get("deltaA0").getValue();
-                pars[0][3] = parValues.get("deltaB0").getValue();
-                pars[0][4] = parValues.get("R1a").getValue();
-                pars[0][5] = parValues.get("R1b").getValue();
-                pars[0][6] = parValues.get("R2a").getValue();
-                pars[0][7] = parValues.get("R2b").getValue();
-                pars[1][0] = parValues.get("B1field").getValue();
-                pars[1][1] = parValues.get("Tex").getValue();
-                break;
             case "CESTR1RHOEXACT1":
-                pars = new double[2][8];
-                pars[0][0] = parValues.get("kex").getValue();
-                pars[0][1] = parValues.get("pb").getValue();
-                pars[0][2] = parValues.get("deltaA0").getValue();
-                pars[0][3] = parValues.get("deltaB0").getValue();
-                pars[0][4] = parValues.get("R1a").getValue();
-                pars[0][5] = parValues.get("R1b").getValue();
-                pars[0][6] = parValues.get("R2a").getValue();
-                pars[0][7] = parValues.get("R2b").getValue();
-                pars[1][0] = parValues.get("B1field").getValue();
-                pars[1][1] = parValues.get("Tex").getValue();
-                break;
             case "CESTEXACT0":
-                pars = new double[2][8];
-                pars[0][0] = parValues.get("kex").getValue();
-                pars[0][1] = parValues.get("pb").getValue();
-                pars[0][2] = parValues.get("deltaA0").getValue();
-                pars[0][3] = parValues.get("deltaB0").getValue();
-                pars[0][4] = parValues.get("R1a").getValue();
-                pars[0][5] = parValues.get("R1b").getValue();
-                pars[0][6] = parValues.get("R2a").getValue();
-                pars[0][7] = parValues.get("R2b").getValue();
-                pars[1][0] = parValues.get("B1field").getValue();
-                pars[1][1] = parValues.get("Tex").getValue();
-                break;
             case "CESTEXACT1":
-                pars = new double[2][8];
-                pars[0][0] = parValues.get("kex").getValue();
-                pars[0][1] = parValues.get("pb").getValue();
-                pars[0][2] = parValues.get("deltaA0").getValue();
-                pars[0][3] = parValues.get("deltaB0").getValue();
-                pars[0][4] = parValues.get("R1a").getValue();
-                pars[0][5] = parValues.get("R1b").getValue();
-                pars[0][6] = parValues.get("R2a").getValue();
-                pars[0][7] = parValues.get("R2b").getValue();
-                pars[1][0] = parValues.get("B1field").getValue();
-                pars[1][1] = parValues.get("Tex").getValue();
-                break;
             case "CESTEXACT2":
                 pars = new double[2][8];
                 pars[0][0] = parValues.get("kex").getValue();
@@ -684,6 +426,19 @@ public class CESTControls implements EquationControls {
                 pars[0][5] = parValues.get("R1b").getValue();
                 pars[0][6] = parValues.get("R2a").getValue();
                 pars[0][7] = parValues.get("R2b").getValue();
+                pars[1][0] = parValues.get("B1field").getValue();
+                pars[1][1] = parValues.get("Tex").getValue();
+                break;
+            case "CESTR1RHOPERTURBATIONNOEX":
+                pars = new double[2][8];
+//                pars[0][0] = parValues.get("kex").getValue();
+//                pars[0][1] = parValues.get("pb").getValue();
+                pars[0][0] = parValues.get("deltaA0").getValue();
+//                pars[0][3] = parValues.get("deltaB0").getValue();
+                pars[0][1] = parValues.get("R1a").getValue();
+//                pars[0][5] = parValues.get("R1b").getValue();
+                pars[0][2] = parValues.get("R2a").getValue();
+//                pars[0][7] = parValues.get("R2b").getValue();
                 pars[1][0] = parValues.get("B1field").getValue();
                 pars[1][1] = parValues.get("Tex").getValue();
                 break;
@@ -709,54 +464,10 @@ public class CESTControls implements EquationControls {
         double[] guesses = new double[nPars];
         switch (equationName) {
             case "CESTR1RHOPERTURBATION":
-                for (int id = 0; id < map.length; id++) {
-                    guesses[map[id][0]] = kex; //kex
-                    guesses[map[id][1]] = pb; //pb
-                    guesses[map[id][2]] = deltaA0; //deltaA
-                    guesses[map[id][3]] = deltaB0; //deltaB
-                    guesses[map[id][4]] = R1a; //R1A
-                    guesses[map[id][5]] = R1a; //R1B
-                    guesses[map[id][6]] = R2a; //R2A
-                    guesses[map[id][7]] = R2b; //R2B
-                }
-                break;
-            case "CESTR1RHON":
-                for (int id = 0; id < map.length; id++) {
-                    guesses[map[id][0]] = kex; //kex
-                    guesses[map[id][1]] = pb; //pb
-                    guesses[map[id][2]] = deltaA0; //deltaA
-                    guesses[map[id][3]] = deltaB0; //deltaB
-                    guesses[map[id][4]] = R1a; //R1A
-                    guesses[map[id][5]] = R1a; //R1B
-                    guesses[map[id][6]] = R2a; //R2A
-                    guesses[map[id][7]] = R2a; //R2B
-                }
-                break;
             case "CESTR1RHOSD":
-                for (int id = 0; id < map.length; id++) {
-                    guesses[map[id][0]] = kex; //kex
-                    guesses[map[id][1]] = pb; //pb
-                    guesses[map[id][2]] = deltaA0; //deltaA
-                    guesses[map[id][3]] = deltaB0; //deltaB
-                    guesses[map[id][4]] = R1a; //R1A
-                    guesses[map[id][5]] = R1a; //R1B
-                    guesses[map[id][6]] = R2a; //R2A
-                    guesses[map[id][7]] = R2b; //R2B
-                }
-                break;
             case "CESTR1RHOBALDWINKAY":
-                for (int id = 0; id < map.length; id++) {
-                    guesses[map[id][0]] = kex; //kex
-                    guesses[map[id][1]] = pb; //pb
-                    guesses[map[id][2]] = deltaA0; //deltaA
-                    guesses[map[id][3]] = deltaB0; //deltaB
-                    guesses[map[id][4]] = R1a; //R1A
-                    guesses[map[id][5]] = R1a; //R1B
-                    guesses[map[id][6]] = R2a; //R2A
-                    guesses[map[id][7]] = R2b; //R2B
-                }
-                break;
             case "CESTR1RHOEXACT1":
+            case "CESTEXACT1":
                 for (int id = 0; id < map.length; id++) {
                     guesses[map[id][0]] = kex; //kex
                     guesses[map[id][1]] = pb; //pb
@@ -780,18 +491,6 @@ public class CESTControls implements EquationControls {
                     guesses[map[id][7]] = R2b; //R2B
                 }
                 break;
-            case "CESTEXACT1":
-                for (int id = 0; id < map.length; id++) {
-                    guesses[map[id][0]] = kex; //kex
-                    guesses[map[id][1]] = pb; //pb
-                    guesses[map[id][2]] = deltaA0; //deltaA
-                    guesses[map[id][3]] = deltaB0; //deltaB
-                    guesses[map[id][4]] = R1a; //R1A
-                    guesses[map[id][5]] = R1a; //R1B
-                    guesses[map[id][6]] = R2a; //R2A
-                    guesses[map[id][7]] = R2b; //R2B
-                }
-                break;
             case "CESTEXACT2":
                 for (int id = 0; id < map.length; id++) {
                     guesses[map[id][0]] = kex; //kex
@@ -802,6 +501,30 @@ public class CESTControls implements EquationControls {
                     guesses[map[id][5]] = R1b; //R1B
                     guesses[map[id][6]] = R2a; //R2A
                     guesses[map[id][7]] = R2a; //R2B
+                }
+                break;
+            case "CESTR1RHON":
+                for (int id = 0; id < map.length; id++) {
+                    guesses[map[id][0]] = kex; //kex
+                    guesses[map[id][1]] = pb; //pb
+                    guesses[map[id][2]] = deltaA0; //deltaA
+                    guesses[map[id][3]] = deltaB0; //deltaB
+                    guesses[map[id][4]] = R1a; //R1A
+                    guesses[map[id][5]] = R1a; //R1B
+                    guesses[map[id][6]] = R2a; //R2A
+                    guesses[map[id][7]] = R2a; //R2B
+                }
+                break;
+            case "CESTR1RHOPERTURBATIONNOEX":
+                for (int id = 0; id < map.length; id++) {
+//                    guesses[map[id][0]] = kex; //kex
+//                    guesses[map[id][1]] = pb; //pb
+                    guesses[map[id][0]] = deltaA0; //deltaA
+//                    guesses[map[id][3]] = deltaA0; //deltaB
+                    guesses[map[id][1]] = R1a; //R1A
+//                    guesses[map[id][5]] = R1a; //R1B
+                    guesses[map[id][2]] = R2a; //R2A
+//                    guesses[map[id][7]] = R2a; //R2B
                 }
                 break;
         }
@@ -865,41 +588,10 @@ public class CESTControls implements EquationControls {
         List<String> parNames1 = new ArrayList<>();
         switch (equationName) {
             case "CESTR1RHOPERTURBATION":
-                parNames1.add("Kex");
-                parNames1.add("Pb");
-                parNames1.add("deltaA0");
-                parNames1.add("deltaB0");
-                parNames1.add("R1A");
-                parNames1.add("R2A");
-                parNames1.add("R2B");
-                break;
-            case "CESTR1RHON":
-                parNames1.add("Kex");
-                parNames1.add("Pb");
-                parNames1.add("deltaA0");
-                parNames1.add("deltaB0");
-                parNames1.add("R1A");
-                parNames1.add("R2A");
-                break;
             case "CESTR1RHOBALDWINKAY":
-                parNames1.add("Kex");
-                parNames1.add("Pb");
-                parNames1.add("deltaA0");
-                parNames1.add("deltaB0");
-                parNames1.add("R1A");
-                parNames1.add("R2A");
-                parNames1.add("R2B");
-                break;
             case "CESTR1RHOSD":
-                parNames1.add("Kex");
-                parNames1.add("Pb");
-                parNames1.add("deltaA0");
-                parNames1.add("deltaB0");
-                parNames1.add("R1A");
-                parNames1.add("R2A");
-                parNames1.add("R2B");
-                break;
             case "CESTR1RHOEXACT1":
+            case "CESTEXACT1":
                 parNames1.add("Kex");
                 parNames1.add("Pb");
                 parNames1.add("deltaA0");
@@ -918,15 +610,6 @@ public class CESTControls implements EquationControls {
                 parNames1.add("R2A");
                 parNames1.add("R2B");
                 break;
-            case "CESTEXACT1":
-                parNames1.add("Kex");
-                parNames1.add("Pb");
-                parNames1.add("deltaA0");
-                parNames1.add("deltaB0");
-                parNames1.add("R1A");
-                parNames1.add("R2A");
-                parNames1.add("R2B");
-                break;
             case "CESTEXACT2":
                 parNames1.add("Kex");
                 parNames1.add("Pb");
@@ -934,6 +617,21 @@ public class CESTControls implements EquationControls {
                 parNames1.add("deltaB0");
                 parNames1.add("R1A");
                 parNames1.add("R1B");
+                parNames1.add("R2A");
+                break;
+            case "CESTR1RHON":
+                parNames1.add("Kex");
+                parNames1.add("Pb");
+                parNames1.add("deltaA0");
+                parNames1.add("deltaB0");
+                parNames1.add("R1A");
+                parNames1.add("R2A");
+                break;
+            case "CESTR1RHOPERTURBATIONNOEX":
+//                parNames1.add("Kex");
+//                parNames1.add("Pb");
+                parNames1.add("deltaA0");
+                parNames1.add("R1A");
                 parNames1.add("R2A");
                 break;
         }
