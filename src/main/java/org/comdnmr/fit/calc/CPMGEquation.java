@@ -112,7 +112,7 @@ public enum CPMGEquation implements EquationType {
                 double maxY = DataUtil.getMaxValue(yValues, idNums, id);
                 double mean = DataUtil.getMeanValue(yValues, idNums, id);
                 double vMid = DataUtil.getMidValue(yValues, xValues[0], idNums, id);
-                double r2 = minY;
+                double r2 = minY * 0.95;
                 double rex = maxY - minY;
                 if (rex < 0.0) {
                     rex = 0.0;
@@ -259,7 +259,7 @@ public enum CPMGEquation implements EquationType {
                 double maxY = DataUtil.getMaxValue(yValues, idNums, id);
                 double mean = DataUtil.getMeanValue(yValues, idNums, id);
                 double vMid = DataUtil.getMidValue(yValues, xValues[0], idNums, id);
-                double r2 = minY * 0.8;
+                double r2 = minY * 0.95;
                 double rex = maxY - r2;
                 double tauMid = 1.0 / (2.0 * vMid);
                 double kex = 1.915 / (0.5 * tauMid); // 1.915 comes from solving equation iteratively at tcp rex 0.5 half max
