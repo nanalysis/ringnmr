@@ -374,7 +374,7 @@ public class CPMGControls implements EquationControls {
                     System.out.println(map[id][2]);
                     System.out.println(map[id][3]);
                     guesses[map[id][2]] = r2;
-                    guesses[map[id][3]] = Math.sqrt(dW) / (2.0 * Math.PI);
+                    guesses[map[id][3]] = dW;
                 }
                 guesses[0] = kEx;
                 guesses[1] = pA;
