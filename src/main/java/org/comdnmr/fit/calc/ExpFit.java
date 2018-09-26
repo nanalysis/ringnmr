@@ -12,6 +12,8 @@ import org.apache.commons.math3.optim.PointValuePair;
  */
 public class ExpFit implements EquationFitter {
 
+    public static final double[] SIMX = {0.0, 25.0, 50.0, 100.0, 150.0, 250.0, 350.0, 500.0, 750.0, 1000.0};
+
     FitModel expModel = new CalcExpDecay();
     List<Double> xValues = new ArrayList<>();
     List<Double> yValues = new ArrayList<>();
@@ -244,6 +246,10 @@ public class ExpFit implements EquationFitter {
         }
         double[][] simPars = expModel.getSimPars();
         return getResults(this, eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, simPars);
+    }
+
+    public double[] getSimX() {
+        return SIMX;
     }
 
 }

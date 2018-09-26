@@ -35,6 +35,8 @@ public interface EquationFitter {
 
     public int[][] getStates();
 
+    public double[] getSimX();
+
     public default CPMGFitResult getResults(EquationFitter fitter, String eqn, String[] parNames, String[] resNums, int[][] map, int[][] states, double[] usedFields, int nGroupPars, double[] pars, double[] errEstimates, double aic, double rms, double[][] simPars) {
         int nNonGroup = parNames.length - nGroupPars;
         List<CurveFit> curveFits = new ArrayList<>();

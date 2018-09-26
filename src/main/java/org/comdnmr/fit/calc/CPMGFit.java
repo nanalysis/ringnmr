@@ -12,6 +12,8 @@ import org.apache.commons.math3.optim.PointValuePair;
  */
 public class CPMGFit implements EquationFitter {
 
+    public static final double[] SIMX = {25.0, 50.0, 100.0, 150.0, 250.0, 350.0, 500.0, 750.0, 1000.0};
+
     FitModel calcR = new CalcRDisp();
     static List<String> equationNameList = Arrays.asList(CPMGEquation.getEquationNames());
     List<Double> xValues = new ArrayList<>();
@@ -244,4 +246,9 @@ public class CPMGFit implements EquationFitter {
         double[][] simPars = calcR.getSimPars();
         return getResults(this, eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, simPars);
     }
+
+    public double[] getSimX() {
+        return SIMX;
+    }
+
 }
