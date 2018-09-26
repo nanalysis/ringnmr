@@ -210,6 +210,16 @@ public class PlotData extends ScatterChart {
         }
     }
 
+    public double[] getXBounds() {
+        double[] bounds = {xAxis.getLowerBound(), xAxis.getUpperBound()};
+        return bounds;
+    }
+
+    public double[] getYBounds() {
+        double[] bounds = {yAxis.getLowerBound(), yAxis.getUpperBound()};
+        return bounds;
+    }
+
     void paintLines(ArrayList<Polyline> polyLines, NumberAxis xAxis, NumberAxis yAxis) {
         //double[] fields = {11.7,14.04};
         //double[] par = {6.315686252794991, 8.612586767595255, 0.7538704344970752};
@@ -369,6 +379,12 @@ public class PlotData extends ScatterChart {
             double errorY2 = yAxis.getDisplayPosition(yValue + error);
             double errorY1 = yAxis.getDisplayPosition(yValue - error);
             errorY = Math.abs(errorY2 - errorY1) / 2.0;
+        } else if (extraValue instanceof Double) {
+            double yValue = ((Double) item.getYValue());
+            double error = (Double) extraValue;
+            double errorY2 = yAxis.getDisplayPosition(yValue + error);
+            double errorY1 = yAxis.getDisplayPosition(yValue - error);
+            errorY = Math.abs(errorY2 - errorY1) / 2.0;
         }
         return errorY;
 
@@ -396,12 +412,17 @@ public class PlotData extends ScatterChart {
         }
         for (int j = 0; j < series.getData().size(); j++) {
             XYChart.Data item = (XYChart.Data) series.getData().get(j);
-            ResidueData.DataValue dataValue = (ResidueData.DataValue) item.getExtraValue();
-            double x1 = dataValue.getX1();
             Node node = createNode(item, seriesIndex);
-            double x1val = x1; //Math.round(100.0 * x1 / (2 * Math.PI)) / 100.0;
-            if (expData != null && expData.getExtras().contains(x1val)) {
-                node = createNode(item, expData.getExtras().indexOf(x1val)/2);
+            Object dataObject = item.getExtraValue();
+            if (dataObject != null) {
+                if (dataObject instanceof ResidueData.DataValue) {
+                    ResidueData.DataValue dataValue = (ResidueData.DataValue) dataObject;
+                    double x1 = dataValue.getX1();
+                    double x1val = x1; //Math.round(100.0 * x1 / (2 * Math.PI)) / 100.0;
+                    if (expData != null && expData.getExtras().contains(x1val)) {
+                        node = createNode(item, expData.getExtras().indexOf(x1val) / 2);
+                    }
+                }
             }
             item.setNode(node);
             super.dataItemAdded(series, j, item);

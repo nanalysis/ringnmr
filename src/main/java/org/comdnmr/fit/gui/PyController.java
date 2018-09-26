@@ -66,6 +66,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.Random;
 import javafx.event.EventHandler;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextArea;
@@ -125,12 +126,12 @@ public class PyController implements Initializable {
 
     @FXML
     TextArea textArea;
-    
+
     ArrayList<String> history = new ArrayList<>();
     InteractiveInterpreter interpreter = MainApp.getInterpreter();
     int historyInd = 0;
     KeyCode prevKey = null;
-    
+
     @FXML
     ChoiceBox<String> simChoice;
 
@@ -203,6 +204,8 @@ public class PyController implements Initializable {
     TextField B1TextField = new TextField();
     TextField TexTextField = new TextField();
     ArrayList<HashMap<String, Object>> dataList = new ArrayList();
+
+    static Random rand = new Random();
 
     @FXML
     private void pyAction(ActionEvent event) {
@@ -288,8 +291,7 @@ public class PyController implements Initializable {
         equationChoice.valueProperty().addListener(e -> {
             equationAction();
         });
-        
-      
+
         textArea.setEditable(true);
         textArea.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
@@ -301,8 +303,8 @@ public class PyController implements Initializable {
             @Override
             public void handle(KeyEvent keyEvent) {
                 KeyCode code = keyEvent.getCode();
-                if (code == KeyCode.ENTER || code == KeyCode.UP || code == KeyCode.DOWN)  {
-                     textArea.positionCaret(textArea.getText().lastIndexOf(">")+2);
+                if (code == KeyCode.ENTER || code == KeyCode.UP || code == KeyCode.DOWN) {
+                    textArea.positionCaret(textArea.getText().lastIndexOf(">") + 2);
                 }
             }
         });
@@ -315,7 +317,7 @@ public class PyController implements Initializable {
         // re-assigns standard output stream and error output stream
         System.setOut(printStream);
         System.setErr(printStream);
-        
+
         interpreter.setOut(printStream);
         interpreter.setErr(printStream);
 
@@ -330,7 +332,7 @@ public class PyController implements Initializable {
         splitPane.setDividerPositions(0.4, 0.7);
 
         setBoundsButton.setOnAction(this::setBounds);
-        
+
         textArea.appendText("> ");
 
 //        mainController.setOnHidden(e -> Platform.exit());
@@ -439,12 +441,12 @@ public class PyController implements Initializable {
         fileChoiceButton.setOnAction(e -> chooseFile(e));
         fileChoiceButton.setText("Browse");
         chosenFileLabel.setText("");
-        
+
         Button xpk2ChoiceButton = new Button();
         xpk2ChoiceButton.setOnAction(e -> chooseXPK2File(e));
         xpk2ChoiceButton.setText("Browse");
         chosenXPK2FileLabel.setText("");
-        
+
         Button paramFileChoiceButton = new Button();
         paramFileChoiceButton.setOnAction(e -> chooseParamFile(e));
         paramFileChoiceButton.setText("Browse");
@@ -587,7 +589,7 @@ public class PyController implements Initializable {
             ioe.printStackTrace();
         }
     }
-    
+
     public void chooseXPK2File(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("xpk2 File", "*.xpk2"));
@@ -636,11 +638,11 @@ public class PyController implements Initializable {
         String fileName = file.getName();
         chosenParamFileLabel.setText(directory + "/" + fileName);
     }
-    
+
     public void resetParamFile(ActionEvent event) {
         chosenParamFileLabel.setText("");
     }
-    
+
     public void addInfo(ActionEvent event) {
         addInfo();
     }
@@ -796,13 +798,13 @@ public class PyController implements Initializable {
     public void clearConsole() {
         textArea.setText("> ");
     }
-    
+
     public void consoleInteraction(KeyEvent keyEvent) {
         KeyCode key = keyEvent.getCode();
         String text = textArea.getText();
-        int lastLineStart = text.lastIndexOf(">")+2;
+        int lastLineStart = text.lastIndexOf(">") + 2;
         int lastLineEnd = textArea.getLength();
-        String lastLine = text.substring(lastLineStart-2, lastLineEnd).trim();
+        String lastLine = text.substring(lastLineStart - 2, lastLineEnd).trim();
         String typed = text.substring(lastLineStart).trim();
         if (key == KeyCode.ENTER & lastLine.equals("> " + typed)) {
             history.add(typed);
@@ -820,7 +822,7 @@ public class PyController implements Initializable {
                 historyInd -= 1;
                 if (historyInd < 0) {
                     historyInd = 0;
-                } 
+                }
                 String command = history.get(historyInd);
                 textArea.replaceText(lastLineStart, lastLineEnd, command);
             }
@@ -828,13 +830,13 @@ public class PyController implements Initializable {
             if (history.size() > 0) {
                 prevKey = key;
                 historyInd += 1;
-                if (historyInd > history.size()-1) {
-                    historyInd = history.size()-1;
+                if (historyInd > history.size() - 1) {
+                    historyInd = history.size() - 1;
                 }
                 String command = history.get(historyInd);
                 textArea.replaceText(lastLineStart, lastLineEnd, command);
             }
-        } else if (key == KeyCode.ALPHANUMERIC  || key == KeyCode.DIGIT0) {
+        } else if (key == KeyCode.ALPHANUMERIC || key == KeyCode.DIGIT0) {
             prevKey = key;
         }
     }
@@ -1193,22 +1195,26 @@ public class PyController implements Initializable {
 
     @FXML
     public void guesses(ActionEvent event) {
-        try {
-            EquationFitter equationFitter = getFitter();
-            String[] resNums = {String.valueOf(currentResInfo.getResNum())};
-            equationFitter.setData(currentResProps, resNums);
-            String equationName = simControls.getEquation();
+        if (currentResProps == null) {
+            guessSimData();
+        } else {
+            try {
+                EquationFitter equationFitter = getFitter();
+                String[] resNums = {String.valueOf(currentResInfo.getResNum())};
+                equationFitter.setData(currentResProps, resNums);
+                String equationName = simControls.getEquation();
 //        System.out.println("guesses eqnFitter = " + equationFitter);
 //        System.out.println("guesses resNums = " + resNums);
 //        System.out.println("guesses eqnName = " + equationName);
-            List<ParValueInterface> guesses = equationFitter.guessPars(equationName, absValueModeCheckBox.isSelected());
-            simControls.updateSliders(guesses, equationName);
-            simControls.simSliderAction("");
-        } catch (NullPointerException npE1) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setContentText("Error: Residue must be selected");
-            alert.showAndWait();
-            return;
+                List<ParValueInterface> guesses = equationFitter.guessPars(equationName, absValueModeCheckBox.isSelected());
+                simControls.updateSliders(guesses, equationName);
+                simControls.simSliderAction("");
+            } catch (NullPointerException npE1) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setContentText("Error: Residue must be selected");
+                alert.showAndWait();
+                return;
+            }
         }
     }
 
@@ -1239,11 +1245,14 @@ public class PyController implements Initializable {
         fitResult = null;
         try {
             EquationFitter equationFitter = getFitter();
-            String[] resNums = {String.valueOf(currentResInfo.getResNum())};
-            equationFitter.setData(currentResProps, resNums);
-            String equationName = simControls.getEquation();
-            equationFitter.setupFit(equationName, absValueModeCheckBox.isSelected());
-            int[][] map = equationFitter.getFitModel().getMap();
+            if (currentResProps == null) {
+                fitSimData();
+            } else {
+                String[] resNums = {String.valueOf(currentResInfo.getResNum())};
+                equationFitter.setData(currentResProps, resNums);
+                String equationName = simControls.getEquation();
+                equationFitter.setupFit(equationName, absValueModeCheckBox.isSelected());
+                int[][] map = equationFitter.getFitModel().getMap();
 //            for (int i=0; i<map.length; i++) {
 //                for (int j=0; j<map[i].length; j++) {
 //                    System.out.println("map " + i + " " + j + " " + map[i][j]);
@@ -1253,18 +1262,20 @@ public class PyController implements Initializable {
 //            System.out.println("fitEqn eqnFitter = " + equationFitter);
 //            System.out.println("fitEqn resNums = " + resNums);
 //            System.out.println("fitEqn eqnName = " + equationName);
-            double[] sliderGuesses = null;
-            if (sliderGuessCheckBox.isSelected()) {
-                sliderGuesses = simControls.sliderGuess(equationName, map);
-            }
-            if (nSimCheckBox.isSelected()) {
+                double[] sliderGuesses = null;
+                if (sliderGuessCheckBox.isSelected()) {
+                    sliderGuesses = simControls.sliderGuess(equationName, map);
+                }
+                if (nSimCheckBox.isSelected()) {
 //                nSimTextField.setText("10");
-                int newNSims = (int) Double.parseDouble(nSimTextField.getText());
-                equationFitter.getFitModel().setNSim(newNSims);
+                    int newNSims = (int) Double.parseDouble(nSimTextField.getText());
+                    equationFitter.getFitModel().setNSim(newNSims);
+                }
+                fitResult = equationFitter.doFit(equationName, absValueModeCheckBox.isSelected(), nonParBootStrapCheckBox.isSelected(), sliderGuesses);
+                updateAfterFit(fitResult);
             }
-            fitResult = equationFitter.doFit(equationName, absValueModeCheckBox.isSelected(), nonParBootStrapCheckBox.isSelected(), sliderGuesses);
-            updateAfterFit(fitResult);
         } catch (NullPointerException npE2) {
+            npE2.printStackTrace();
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setContentText("Error: Residue must be selected");
             alert.showAndWait();
@@ -1306,9 +1317,14 @@ public class PyController implements Initializable {
             } else {
                 double[] pars = curveFit.getEquation().getPars(); //pars = getPars(equationName);
                 double[] errs = curveFit.getEquation().getErrs(); //double[] errs = new double[pars.length];
-                double[] extras = new double[1];
+                double[] extras = new double[3];
+                double[] simExtras = simControls.getExtras();
                 extras[0] = 1.0;
+                for (int i = 0; i < simExtras.length; i++) {
+                    extras[i + 1] = simExtras[i];
+                }
                 PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
+
                 //equationCopy.setExtra(extras);
                 //System.out.println("Fit button expData extras size = " + expData.getExtras().size() + " extra[0] = " + extras[0]);
                 equations.add(plotEquation);
@@ -1667,11 +1683,16 @@ public class PyController implements Initializable {
     }
 
     public String getFittingMode() {
+        String fitMode = "cpmg";
         if (currentResProps == null) {
-            return "cpmg";
+            String simMode = getSimMode();
+            if (simMode != null) {
+                fitMode = simMode;
+            }
         } else {
-            return currentResProps.getExpMode();
+            fitMode = currentResProps.getExpMode();
         }
+        return fitMode.toLowerCase();
     }
 
     public EquationFitter getFitter() {
@@ -1732,6 +1753,9 @@ public class PyController implements Initializable {
 
     public String getSimMode() {
         String simSelected = simChoice.getSelectionModel().getSelectedItem();
+        if (simSelected == null) {
+            return "cpmg";
+        }
         String simMode = simSelected.substring(9, simSelected.length()).toLowerCase();
         return simMode;
     }
@@ -1794,4 +1818,124 @@ public class PyController implements Initializable {
 
     }
 
+    public void setSimData(EquationFitter equationFitter) {
+        ArrayList<Double> xValues = getSimXData();
+        ArrayList<Double> yValues = getSimYData();
+        double[] extras = simControls.getExtras();
+        ArrayList[] allXValues = new ArrayList[extras.length + 1];
+        allXValues[0] = xValues;
+        ArrayList<Double> errValues = new ArrayList<>();
+        for (int i = 0; i < yValues.size(); i++) {
+            errValues.add(yValues.get(i) * 0.05);
+        }
+        for (int j = 0; j < extras.length; j++) {
+            ArrayList<Double> xValuesEx = new ArrayList<>();
+            for (int i = 0; i < yValues.size(); i++) {
+                xValuesEx.add(extras[j]);
+            }
+            allXValues[1 + j] = xValuesEx;
+        }
+        equationFitter.setData(allXValues, yValues, errValues);
+    }
+
+    public void guessSimData() {
+        EquationFitter equationFitter = getFitter();
+        setSimData(equationFitter);
+        String equationName = simControls.getEquation();
+        List<ParValueInterface> guesses = equationFitter.guessPars(equationName, absValueModeCheckBox.isSelected());
+        simControls.updateSliders(guesses, equationName);
+        simControls.simSliderAction("");
+    }
+
+    public void fitSimData() {
+        EquationFitter equationFitter = getFitter();
+        setSimData(equationFitter);
+        String equationName = simControls.getEquation();
+        equationFitter.setupFit(equationName, absValueModeCheckBox.isSelected());
+        int[][] map = equationFitter.getFitModel().getMap();
+        double[] sliderGuesses = null;
+        if (sliderGuessCheckBox.isSelected()) {
+            sliderGuesses = simControls.sliderGuess(equationName, map);
+        }
+        if (nSimCheckBox.isSelected()) {
+            int newNSims = (int) Double.parseDouble(nSimTextField.getText());
+            equationFitter.getFitModel().setNSim(newNSims);
+        }
+        fitResult = equationFitter.doFit(equationName, absValueModeCheckBox.isSelected(), nonParBootStrapCheckBox.isSelected(), sliderGuesses);
+        updateAfterFit(fitResult);
+    }
+
+    ArrayList<Double> getSimXData() {
+        ObservableList<XYChart.Series<Double, Double>> allData = xychart.getData();
+        ArrayList<Double> xValues = new ArrayList<>();
+        for (XYChart.Series<Double, Double> series : allData) {
+            for (XYChart.Data<Double, Double> dataPoint : series.getData()) {
+                double x = dataPoint.getXValue();
+                xValues.add(x);
+            }
+        }
+        return xValues;
+    }
+
+    ArrayList<Double> getSimYData() {
+        ObservableList<XYChart.Series<Double, Double>> allData = xychart.getData();
+        ArrayList<Double> yValues = new ArrayList<>();
+        for (XYChart.Series<Double, Double> series : allData) {
+            for (XYChart.Data<Double, Double> dataPoint : series.getData()) {
+                double y = dataPoint.getYValue();
+                yValues.add(y);
+            }
+        }
+        return yValues;
+    }
+
+    @FXML
+    void showSimData(ActionEvent e) {
+        ObservableList<XYChart.Series<Double, Double>> allData = FXCollections.observableArrayList();
+        String equationName = simControls.getEquation();
+        EquationType eType = ResidueFitter.getEquationType(equationName);
+        int[][] map = eType.makeMap(1);
+        EquationFitter equationFitter = getFitter();
+        equationFitter.getFitModel().setMap(map);
+        double[] sliderGuesses = simControls.sliderGuess(equationName, map);
+        double[] xBounds = xychart.getXBounds();
+        double xMax = xBounds[1];
+        double xMin = xBounds[0];
+        double[] yBounds = xychart.getYBounds();
+        double sdev = Math.abs(yBounds[1] - yBounds[0]) * 0.02;
+        int nIncr = 20;
+        if (getFittingMode().equals("cest")) {
+            nIncr = 100;
+        }
+        double fieldRef = 1.0;
+        int iLine = 0;
+        List<XYChart.Series<Double, Double>> data = new ArrayList<>();
+        XYChart.Series<Double, Double> series = new XYChart.Series<>();
+        series.setName("sim" + ":" + "0");
+        data.add(series);
+        for (PlotEquation eqn : xychart.plotEquations) {
+            double delta = (xMax - xMin) / nIncr;
+            if (iLine == 0) {
+                fieldRef = eqn.getExtra(0);
+            }
+//            plotEquation.equation.setFieldRef(fieldRef);
+            double[] extras = eqn.getExtras();
+            double[] ax = new double[extras.length];
+//            System.out.println("extras " + extras.length);
+            for (int j = 1; j < extras.length; j++) {
+                ax[j] = extras[j];
+            }
+            for (int i = 1; i < nIncr - 1; i++) {
+                double xValue = xMin + i * delta;
+                ax[0] = xValue;
+                double yValue = eqn.calculate(sliderGuesses, ax, eqn.getExtra(0) / fieldRef);
+                yValue += sdev * rand.nextGaussian();
+                XYChart.Data dataPoint = new XYChart.Data(xValue, yValue);
+                dataPoint.setExtraValue(new Double(sdev));
+                series.getData().add(dataPoint);
+            }
+        }
+        allData.addAll(data);
+        xychart.setData(allData);
+    }
 }
