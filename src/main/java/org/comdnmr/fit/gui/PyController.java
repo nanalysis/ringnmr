@@ -1899,14 +1899,9 @@ public class PyController implements Initializable {
         equationFitter.getFitModel().setMap(map);
         double[] sliderGuesses = simControls.sliderGuess(equationName, map);
         double[] xBounds = xychart.getXBounds();
-        double xMax = xBounds[1];
-        double xMin = xBounds[0];
         double[] yBounds = xychart.getYBounds();
         double sdev = Math.abs(yBounds[1] - yBounds[0]) * 0.02;
-        int nIncr = 20;
-        if (getFittingMode().equals("cest")) {
-            nIncr = 100;
-        }
+        double[] xValues = equationFitter.getSimX();
         double fieldRef = 1.0;
         int iLine = 0;
         List<XYChart.Series<Double, Double>> data = new ArrayList<>();
@@ -1914,7 +1909,6 @@ public class PyController implements Initializable {
         series.setName("sim" + ":" + "0");
         data.add(series);
         for (PlotEquation eqn : xychart.plotEquations) {
-            double delta = (xMax - xMin) / nIncr;
             if (iLine == 0) {
                 fieldRef = eqn.getExtra(0);
             }
@@ -1925,8 +1919,8 @@ public class PyController implements Initializable {
             for (int j = 1; j < extras.length; j++) {
                 ax[j] = extras[j];
             }
-            for (int i = 1; i < nIncr - 1; i++) {
-                double xValue = xMin + i * delta;
+            for (int i = 0; i < xValues.length; i++) {
+                double xValue = xValues[i];
                 ax[0] = xValue;
                 double yValue = eqn.calculate(sliderGuesses, ax, eqn.getExtra(0) / fieldRef);
                 yValue += sdev * rand.nextGaussian();
