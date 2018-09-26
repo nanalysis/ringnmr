@@ -353,6 +353,13 @@ public class CESTControls implements EquationControls {
         //controller.updateChartEquations(equationName, pars, errs, fields);
     }
 
+    public double[] getExtras() {
+        double B1field = B1FIELD.getValue();
+        double Tex = TEX.getValue();
+        double[] extras = {B1field, Tex};
+        return extras;
+    }
+
     double[][] getPars(String equationName) {
         double kex = KEX.getValue();
         double pb = PB.getValue();
@@ -448,7 +455,7 @@ public class CESTControls implements EquationControls {
         return pars;
 
     }
-    
+
     public double[] sliderGuess(String equationName, int[][] map) {
         double kex = KEX.getValue();
         double pb = PB.getValue();
@@ -531,7 +538,7 @@ public class CESTControls implements EquationControls {
 //        for(int i=0; i<guesses.length; i++){
 //            System.out.println("slider guess: " + i + " " + guesses[i]);
 //        }
-        
+
         return guesses;
 
     }
@@ -582,7 +589,7 @@ public class CESTControls implements EquationControls {
     public String getEquation() {
         return equationSelector.getValue();
     }
-    
+
     public List<String> getParNames() {
         String equationName = equationSelector.getValue().toString();
         List<String> parNames1 = new ArrayList<>();
@@ -656,10 +663,10 @@ public class CESTControls implements EquationControls {
                     List<Double> dataExtras = expData.getExtras();
                     double[] errs = new double[pars.length];
                     double[] extras = new double[3];
-                    for (int j = 0; j < dataExtras.size()/2; j++) {
+                    for (int j = 0; j < dataExtras.size() / 2; j++) {
                         extras[0] = 1.0;
-                        extras[1] = dataExtras.get(2*j);
-                        extras[2] = dataExtras.get(2*j+1);
+                        extras[1] = dataExtras.get(2 * j);
+                        extras[2] = dataExtras.get(2 * j + 1);
 //                        System.out.println("resInfo Res Num = " + resInfo.getResNum());
 //                        System.out.println("extras size = " + expData.getExtras().size());
                         //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[1] = " + extras[1]);

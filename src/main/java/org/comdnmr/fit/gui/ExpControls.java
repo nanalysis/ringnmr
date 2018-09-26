@@ -122,10 +122,10 @@ public class ExpControls implements EquationControls {
             vBox.getChildren().add(hBox);
         }
 
-        if (controller.simulate == true){
+        if (controller.simulate == true) {
             equationAction();
         }
-        
+
         equationSelector.valueProperty().addListener(e -> {
             equationAction();
         });
@@ -215,7 +215,7 @@ public class ExpControls implements EquationControls {
         return guesses;
 
     }
-        
+
     @Override
     public void updateStates(List<int[]> allStates) {
 
@@ -237,7 +237,7 @@ public class ExpControls implements EquationControls {
     public String getEquation() {
         return equationSelector.getValue();
     }
-    
+
     public List<String> getParNames() {
         String equationName = equationSelector.getValue().toString();
         List<String> parNames1 = new ArrayList<>();
@@ -253,6 +253,11 @@ public class ExpControls implements EquationControls {
                 break;
         }
         return parNames1;
+    }
+
+    public double[] getExtras() {
+        double[] extras = {};
+        return extras;
     }
 
     double[] getPars(String equationName) {

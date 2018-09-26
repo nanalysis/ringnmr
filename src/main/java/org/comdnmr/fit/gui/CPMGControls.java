@@ -272,6 +272,12 @@ public class CPMGControls implements EquationControls {
         //controller.updateChartEquations(equationName, pars, errs, fields);
     }
 
+    public double[] getExtras() {
+        double B1field = FIELD2.getValue();
+        double[] extras = {B1field};
+        return extras;
+    }
+
     double[] getPars(String equationName) {
         double r2 = R2.getValue();
         double kEx = KEX.getValue();
@@ -343,8 +349,8 @@ public class CPMGControls implements EquationControls {
         int nPars = CalcRDisp.getNPars(map);
         double[] guesses = new double[nPars];
         System.out.println(equationName + " nPars " + nPars);
-        for (int i=0;i<map.length;i++) {
-            for (int j=0;j<map[i].length;j++) {
+        for (int i = 0; i < map.length; i++) {
+            for (int j = 0; j < map[i].length; j++) {
                 System.out.print(map[i][j] + " ");
             }
             System.out.println(" i " + i);
@@ -380,7 +386,7 @@ public class CPMGControls implements EquationControls {
         return guesses;
 
     }
-        
+
     @Override
     public void updateStates(List<int[]> allStates) {
         StringBuilder sBuilder = new StringBuilder();
@@ -427,7 +433,7 @@ public class CPMGControls implements EquationControls {
     public String getEquation() {
         return equationSelector.getValue();
     }
-    
+
     public List<String> getParNames() {
         String equationName = equationSelector.getValue().toString();
         List<String> parNames1 = new ArrayList<>();
