@@ -16,17 +16,19 @@ import org.comdnmr.fit.calc.ParValueInterface;
 public interface EquationControls {
 
     String getEquation();
-    
+
     List<String> getParNames();
+
+    public double[] getExtras();
 
     VBox makeControls(PyController controller);
 
     void updateSliders(List<ParValueInterface> parValues, String equationName);
-    
+
     void updateStates(List<int[]> allStates);
 
     public void simSliderAction(String label);
-    
+
     public double[] sliderGuess(String equationName, int[][] map);
 
 }
