@@ -22,15 +22,17 @@ public interface EquationFitter {
     public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderGuesses);
 
     public void setupFit(String eqn, boolean absMode);
-    
+
     public List<ParValueInterface> guessPars(String eqn, boolean absMode);
-    
+
     public double rms(double[] pars);
 
     public void setData(ResidueProperties resProps, String[] resNums);
-    
+
+    public void setData(List<Double>[] allXValues, List<Double> yValues, List<Double> errValues);
+
     public int[] getStateCount();
-    
+
     public int[][] getStates();
 
     public default CPMGFitResult getResults(EquationFitter fitter, String eqn, String[] parNames, String[] resNums, int[][] map, int[][] states, double[] usedFields, int nGroupPars, double[] pars, double[] errEstimates, double aic, double rms, double[][] simPars) {
@@ -71,7 +73,7 @@ public interface EquationFitter {
             // fixme
             double[] extras = new double[usedFields.length];
             System.arraycopy(usedFields, 0, extras, 0, usedFields.length);
-                        //System.out.println("getResults got called with extras length = " + extras.length);
+            //System.out.println("getResults got called with extras length = " + extras.length);
             PlotEquation plotEquation = new PlotEquation(eqn, parArray, errArray, extras);
             CurveFit curveFit = new CurveFit(stateString, resNums[states[iCurve][0]], parMap, plotEquation);
             curveFits.add(curveFit);

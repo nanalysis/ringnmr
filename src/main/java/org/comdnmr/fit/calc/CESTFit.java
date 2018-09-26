@@ -110,6 +110,11 @@ public class CESTFit implements EquationFitter {
         }
     }
 
+    @Override
+    public void setData(List<Double>[] allXValues, List<Double> yValues, List<Double> errValues) {
+        setData(allXValues[0], allXValues[1], allXValues[2], yValues, errValues);
+    }
+
     public void setData(List<Double> xValues0, List<Double> xValues1, List<Double> xValues2, List<Double> yValues, List<Double> errValues) {
         xValues = new ArrayList[3];
         xValues[0] = new ArrayList<>();
@@ -228,16 +233,16 @@ public class CESTFit implements EquationFitter {
     public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderguesses) {
         double[][] xvals = new double[xValues.length][xValues[0].size()];
         double[] yvals = new double[yValues.size()];
-        for (int i=0; i<xvals.length;  i++) {
-            for (int j=0; j<xvals[0].length; j++) {
+        for (int i = 0; i < xvals.length; i++) {
+            for (int j = 0; j < xvals[0].length; j++) {
                 xvals[i][j] = xValues[i].get(j);
             }
         }
-        for (int i=0; i<yvals.length;  i++) {
+        for (int i = 0; i < yvals.length; i++) {
             yvals[i] = yValues.get(i);
         }
         double[][] peaks = CESTEquations.cestPeakGuess(xvals, yvals);
-        if (peaks.length >= 1){
+        if (peaks.length >= 1) {
             setupFit(eqn, absMode);
             int[][] map = calcCEST.getMap();
             double[] guesses;
@@ -247,8 +252,8 @@ public class CESTFit implements EquationFitter {
             } else {
                 guesses = calcCEST.guess();
             }
-    //        System.out.println("dofit guesses = " + guesses);
-    //        double[] guesses = setupFit(eqn, absMode);
+            //        System.out.println("dofit guesses = " + guesses);
+            //        double[] guesses = setupFit(eqn, absMode);
             double[][] boundaries = calcCEST.boundaries(guesses);
             double[] sigma = new double[guesses.length];
             for (int i = 0; i < guesses.length; i++) {
@@ -291,7 +296,7 @@ public class CESTFit implements EquationFitter {
             // fixme
             double[] extras = new double[xValues.length];
             extras[0] = usedFields[0];
-            for (int j=1;j<extras.length;j++) {
+            for (int j = 1; j < extras.length; j++) {
                 extras[j] = xValues[j].get(0);
             }
             return getResults(this, eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, simPars);
