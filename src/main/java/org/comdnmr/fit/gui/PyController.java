@@ -1,7 +1,10 @@
 package org.comdnmr.fit.gui;
 
+import de.jensd.fx.glyphs.GlyphsDude;
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -64,8 +67,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.event.EventHandler;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextArea;
@@ -77,12 +83,15 @@ import javafx.scene.layout.HBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.ToolBar;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import static org.comdnmr.fit.calc.DataIO.loadPeakFile;
 import static org.comdnmr.fit.calc.DataIO.loadTextFile;
 import org.python.util.InteractiveInterpreter;
+import org.yaml.snakeyaml.Yaml;
 
 public class PyController implements Initializable {
 
@@ -108,6 +117,10 @@ public class PyController implements Initializable {
     TabPane parTabPane;
     @FXML
     PropertySheet propertySheet;
+    @FXML
+    Label aicLabel;
+    @FXML
+    Label rmsLabel;
 
     @FXML
     VBox chartBox;
@@ -125,12 +138,12 @@ public class PyController implements Initializable {
 
     @FXML
     TextArea textArea;
-    
+
     ArrayList<String> history = new ArrayList<>();
     InteractiveInterpreter interpreter = MainApp.getInterpreter();
     int historyInd = 0;
     KeyCode prevKey = null;
-    
+
     @FXML
     ChoiceBox<String> simChoice;
 
@@ -203,6 +216,9 @@ public class PyController implements Initializable {
     TextField B1TextField = new TextField();
     TextField TexTextField = new TextField();
     ArrayList<HashMap<String, Object>> dataList = new ArrayList();
+    
+    @FXML
+    ToolBar navigatorToolBar = new ToolBar();
 
     @FXML
     private void pyAction(ActionEvent event) {
@@ -288,8 +304,7 @@ public class PyController implements Initializable {
         equationChoice.valueProperty().addListener(e -> {
             equationAction();
         });
-        
-      
+
         textArea.setEditable(true);
         textArea.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
@@ -301,8 +316,8 @@ public class PyController implements Initializable {
             @Override
             public void handle(KeyEvent keyEvent) {
                 KeyCode code = keyEvent.getCode();
-                if (code == KeyCode.ENTER || code == KeyCode.UP || code == KeyCode.DOWN)  {
-                     textArea.positionCaret(textArea.getText().lastIndexOf(">")+2);
+                if (code == KeyCode.ENTER || code == KeyCode.UP || code == KeyCode.DOWN) {
+                    textArea.positionCaret(textArea.getText().lastIndexOf(">") + 2);
                 }
             }
         });
@@ -315,7 +330,7 @@ public class PyController implements Initializable {
         // re-assigns standard output stream and error output stream
         System.setOut(printStream);
         System.setErr(printStream);
-        
+
         interpreter.setOut(printStream);
         interpreter.setErr(printStream);
 
@@ -330,8 +345,10 @@ public class PyController implements Initializable {
         splitPane.setDividerPositions(0.4, 0.7);
 
         setBoundsButton.setOnAction(this::setBounds);
-        
+
         textArea.appendText("> ");
+        
+        initResidueNavigator();
 
 //        mainController.setOnHidden(e -> Platform.exit());
     }
@@ -399,6 +416,83 @@ public class PyController implements Initializable {
         }
 
     }
+    
+    void initResidueNavigator() {
+
+        String iconSize = "12px";
+        String fontSize = "7pt";
+        ArrayList<Button> buttons = new ArrayList<>();
+        Button bButton;
+
+        bButton = GlyphsDude.createIconButton(FontAwesomeIcon.FAST_BACKWARD, "", iconSize, fontSize, ContentDisplay.GRAPHIC_ONLY);
+        bButton.setOnAction(e -> firstResidue(e));
+        buttons.add(bButton);
+        bButton = GlyphsDude.createIconButton(FontAwesomeIcon.BACKWARD, "", iconSize, fontSize, ContentDisplay.GRAPHIC_ONLY);
+        bButton.setOnAction(e -> previousResidue(e));
+        buttons.add(bButton);
+        bButton = GlyphsDude.createIconButton(FontAwesomeIcon.FORWARD, "", iconSize, fontSize, ContentDisplay.GRAPHIC_ONLY);
+        bButton.setOnAction(e -> nextResidue(e));
+        buttons.add(bButton);
+        bButton = GlyphsDude.createIconButton(FontAwesomeIcon.FAST_FORWARD, "", iconSize, fontSize, ContentDisplay.GRAPHIC_ONLY);
+        bButton.setOnAction(e -> lastResidue(e));
+        buttons.add(bButton);
+
+        navigatorToolBar.getItems().addAll(buttons);
+    }
+    
+    public void previousResidue(ActionEvent event) {
+        List<ResidueInfo> resInfo = currentResProps.getResidueValues();
+        List resNums = new ArrayList<>();
+        for (int i=0; i<resInfo.size(); i++) {
+            resNums.add(resInfo.get(i).getResNum());
+        }
+        Collections.sort(resNums);
+        if (currentResInfo != null) {
+            int resIndex = resNums.indexOf(currentResInfo.getResNum());
+            resIndex--;
+            if (resIndex <= 0) {
+                resIndex = 0;
+            }
+            int res = (int) resNums.get(resIndex);
+            XYBarChart chart = getActiveChart();
+            chart.showInfo(chart.currentSeriesName, 0, res, false);
+        }
+    }
+
+    public void firstResidue(ActionEvent event) {
+        if (currentResidues != null) {
+            int res = ChartUtil.minRes;
+            XYBarChart chart = getActiveChart();
+            chart.showInfo(chart.currentSeriesName, 0, res, false);
+        }
+    }
+
+    public void nextResidue(ActionEvent event) {
+        List<ResidueInfo> resInfo = currentResProps.getResidueValues();
+        List resNums = new ArrayList<>();
+        for (int i=0; i<resInfo.size(); i++) {
+            resNums.add(resInfo.get(i).getResNum());
+        }
+        Collections.sort(resNums);
+        if (currentResInfo != null) {
+            int resIndex = resNums.indexOf(currentResInfo.getResNum());
+            resIndex++;
+            if (resIndex >= resNums.size()) {
+                resIndex = resNums.size()-1;
+            }
+            int res = (int) resNums.get(resIndex);
+            XYBarChart chart = getActiveChart();
+            chart.showInfo(chart.currentSeriesName, 0, res, false);
+        }
+    }
+
+    public void lastResidue(ActionEvent event) {
+        if (currentResidues != null) {
+            int res = ChartUtil.maxRes;
+            XYBarChart chart = getActiveChart();
+            chart.showInfo(chart.currentSeriesName, 0, res, false);
+        }
+    }
 
     public void loadParameterFile(Event e) {
         FileChooser fileChooser = new FileChooser();
@@ -439,12 +533,12 @@ public class PyController implements Initializable {
         fileChoiceButton.setOnAction(e -> chooseFile(e));
         fileChoiceButton.setText("Browse");
         chosenFileLabel.setText("");
-        
+
         Button xpk2ChoiceButton = new Button();
         xpk2ChoiceButton.setOnAction(e -> chooseXPK2File(e));
         xpk2ChoiceButton.setText("Browse");
         chosenXPK2FileLabel.setText("");
-        
+
         Button paramFileChoiceButton = new Button();
         paramFileChoiceButton.setOnAction(e -> chooseParamFile(e));
         paramFileChoiceButton.setText("Browse");
@@ -587,7 +681,7 @@ public class PyController implements Initializable {
             ioe.printStackTrace();
         }
     }
-    
+
     public void chooseXPK2File(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("xpk2 File", "*.xpk2"));
@@ -636,11 +730,11 @@ public class PyController implements Initializable {
         String fileName = file.getName();
         chosenParamFileLabel.setText(directory + "/" + fileName);
     }
-    
+
     public void resetParamFile(ActionEvent event) {
         chosenParamFileLabel.setText("");
     }
-    
+
     public void addInfo(ActionEvent event) {
         addInfo();
     }
@@ -665,6 +759,15 @@ public class PyController implements Initializable {
         }
         hm.put("vcpmg", fxvals);
         dataList.add(hm);
+        Yaml yaml = new Yaml();
+        String s = yaml.dumpAsMap(hm);
+        String fileTail = chosenFileLabel.getText().substring(0, chosenFileLabel.getText().indexOf('.'));
+        try (FileWriter writer = new FileWriter(fileTail + ".yaml")) {
+            writer.write(s);
+        } catch (IOException ex) {
+            Logger.getLogger(DataIO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
     }
 
     public void clearDataList(ActionEvent event) {
@@ -796,13 +899,13 @@ public class PyController implements Initializable {
     public void clearConsole() {
         textArea.setText("> ");
     }
-    
+
     public void consoleInteraction(KeyEvent keyEvent) {
         KeyCode key = keyEvent.getCode();
         String text = textArea.getText();
-        int lastLineStart = text.lastIndexOf(">")+2;
+        int lastLineStart = text.lastIndexOf(">") + 2;
         int lastLineEnd = textArea.getLength();
-        String lastLine = text.substring(lastLineStart-2, lastLineEnd).trim();
+        String lastLine = text.substring(lastLineStart - 2, lastLineEnd).trim();
         String typed = text.substring(lastLineStart).trim();
         if (key == KeyCode.ENTER & lastLine.equals("> " + typed)) {
             history.add(typed);
@@ -820,7 +923,7 @@ public class PyController implements Initializable {
                 historyInd -= 1;
                 if (historyInd < 0) {
                     historyInd = 0;
-                } 
+                }
                 String command = history.get(historyInd);
                 textArea.replaceText(lastLineStart, lastLineEnd, command);
             }
@@ -828,13 +931,13 @@ public class PyController implements Initializable {
             if (history.size() > 0) {
                 prevKey = key;
                 historyInd += 1;
-                if (historyInd > history.size()-1) {
-                    historyInd = history.size()-1;
+                if (historyInd > history.size() - 1) {
+                    historyInd = history.size() - 1;
                 }
                 String command = history.get(historyInd);
                 textArea.replaceText(lastLineStart, lastLineEnd, command);
             }
-        } else if (key == KeyCode.ALPHANUMERIC  || key == KeyCode.DIGIT0) {
+        } else if (key == KeyCode.ALPHANUMERIC || key == KeyCode.DIGIT0) {
             prevKey = key;
         }
     }
@@ -1012,6 +1115,16 @@ public class PyController implements Initializable {
                     }
 
                     allParValues.addAll(parValues);
+                    CurveFit curveSet = currentResInfo.getCurveSet(useEquationName, state.replace("*", "0"));
+//                    System.out.println("curv " + useEquationName + " " + state + " " + curveSet);
+                    try {
+                        double aic = curveSet.getParMap().get("AIC");
+                        double rms = curveSet.getParMap().get("RMS");
+                        aicLabel.setText("AIC: " + aic);
+                        rmsLabel.setText(" RMS: " + rms);
+                    } catch (NullPointerException npEaic) {
+                        
+                    }
                 }
             }
             if (savePars) {
