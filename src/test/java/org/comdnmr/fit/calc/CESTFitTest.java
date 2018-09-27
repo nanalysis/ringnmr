@@ -129,6 +129,30 @@ public class CESTFitTest {
         }
     }
 
+    private void dumpPars(String name, double[] fitpars, double[] validpars, double[] fiterrs, double[] validerrs) { 
+        System.out.println(name);
+        System.out.print("Valid Pars:");
+        for(int i=0; i<validpars.length; i++){
+            System.out.printf("%10.3f ",validpars[i]);
+        }
+        System.out.print("\nFit Pars:  ");
+        for(int i=0; i<fitpars.length; i++){
+            System.out.printf("%10.3f ",fitpars[i]);
+        }
+        System.out.print("\nValid Err: ");
+        for(int i=0; i<validerrs.length; i++){
+            System.out.printf("%10.3f ",validerrs[i]);
+        }
+        System.out.print("\nFit   Err: ");
+        for(int i=0; i<fiterrs.length; i++){
+            System.out.printf("%10.3f ",fiterrs[i]);
+        }
+        System.out.print("\n");
+    }
+
+    private void dumpRMS(double fitRMS, double validRMS) {
+        System.out.printf("Fit RMS %10.3f Valid RMS %10.3f\n", fitRMS, validRMS);
+    }
 
     @Test
     public void testcestR1rhoPerturbation() {
@@ -141,33 +165,13 @@ public class CESTFitTest {
         double[] validpars = new double[]{159.40549413953838, 0.07848868547481112, 2705.7656176771607, -1244.26540485914, 2.3834525779746167,
                                           2.3834525779746167, 16.071477740770437, 134.1181936680427}; //{165.02477973700172, 0.07911350221009517, 2708.726939741288, -1244.5123148064008, 2.382606761775722, 15.637464131056309, 127.51875931837206};
 
-        System.out.print("cestR1rhoPerturbation valid parameters: ");
-        for(int i=0; i<validpars.length; i++){
-            System.out.print(validpars[i]+" ");
-        }
-        System.out.print("\ncestR1rhoPerturbation fit parameters: ");
-        for(int i=0; i<fitpars.length; i++){
-            System.out.print(fitpars[i]+" ");
-        }
-        System.out.print("\n");
-        
-//        Assert.assertArrayEquals(fitpars, validpars, 6.0e-13);
-        
         double[] fiterrs = fit.getErrs(0);
         double[] validerrs = new double[]{4.070771048976483, 7.910314021442713E-4, 2.1870880660250585, 4.25048585761765, 0.004839626206279982,
                                           0.004839626206279982, 0.33246477045330786, 4.989869976578456}; //{4.379924820081111, 0.0007986456868965598, 2.6001243193320365, 4.046178640951488, 0.0048026137212628375, 0.33970335899651316, 5.304491575138278};
+ 
+        dumpPars("cestR1rhoPerturbation", fitpars, validpars, fiterrs, validerrs);
 
-        System.out.print("cestR1rhoPerturbation valid errors: ");
-        for(int i=0; i<validerrs.length; i++){
-            System.out.print(validerrs[i]+" ");
-        }
-        System.out.print("\ncestR1rhoPerturbation fit errors: ");
-        for(int i=0; i<fiterrs.length; i++){
-            System.out.print(fiterrs[i]+" ");
-        }
-        
         Assert.assertArrayEquals(fiterrs, validerrs, 6.0e1);
-        
         
         for(int i=0; i<fitpars.length; i++){
             Assert.assertTrue(Math.abs(fitpars[i]-validpars[i]) < fiterrs[i]*4);
@@ -175,10 +179,8 @@ public class CESTFitTest {
         
         double fitrms = fit.getRms();
         double validrms = 0.012800369270230845;
-        
-        System.out.print("\ncestR1rhoPerturbation fit RMS: "+fitrms);
-        System.out.print("\ncestR1rhoPerturbation valid RMS: "+validrms);
-        System.out.print("\n");
+
+        dumpRMS(fitrms, validrms);
         
         Assert.assertEquals(fitrms, validrms, 6.0e-4);
     }
@@ -196,41 +198,19 @@ public class CESTFitTest {
         double[] validpars = new double[]{164.31219540872297, 0.08000559530543723, 2710.5848956396685, -1247.6238696374273, 2.3747806394904574,
                                             2.3747806394904574, 16.15024270349437, 125.73252396217907}; 
 
-        System.out.print("cestR1rhoSD valid parameters: ");
-        for(int i=0; i<validpars.length; i++){
-            System.out.print(validpars[i]+" ");
-        }
-        System.out.print("\ncestR1rhoSD fit parameters: ");
-        for(int i=0; i<fitpars.length; i++){
-            System.out.print(fitpars[i]+" ");
-        }
-        System.out.print("\n");
-        
-//        Assert.assertArrayEquals(fitpars, validpars, 6.0e-13);
-        
         double[] fiterrs = fit.getErrs(0);
         double[] validerrs = new double[]{4.694876487305635, 0.0008407892782788573, 2.6506158711548755, 4.4500688239216775, 0.00510500924091006,
                                             0.00510500924091006, 0.38366068154645305, 5.631002751559051}; 
+        dumpPars("cestR1rhoSD", fitpars, validpars, fiterrs, validerrs);
 
-        System.out.print("cestR1rhoSD valid errors: ");
-        for(int i=0; i<validerrs.length; i++){
-            System.out.print(validerrs[i]+" ");
-        }
-        System.out.print("\ncestR1rhoSD fit errors: ");
-        for(int i=0; i<fiterrs.length; i++){
-            System.out.print(fiterrs[i]+" ");
-        }
-        
         Assert.assertArrayEquals(fiterrs, validerrs, 6.0e1);
         
         testPars(fitpars, validpars, fiterrs);
         
         double fitrms = fit.getRms();
         double validrms = 0.012583146844688359;
-        
-        System.out.print("\ncestR1rhoSD fit RMS: "+fitrms);
-        System.out.print("\ncestR1rhoSD valid RMS: "+validrms);
-        System.out.print("\n");
+
+        dumpRMS(fitrms, validrms);
         
         Assert.assertEquals(fitrms, validrms, 6.0e-4);
     }
@@ -246,31 +226,11 @@ public class CESTFitTest {
         double[] validpars = new double[]{168.45940742687503, 0.07848006386286228, 2705.4283684664874, -1244.1504931304519, 2.3839104552778836,
                                             2.3839104552778836, 17.777799052418256, 132.49073925170381}; 
 
-        System.out.print("cestR1rhoBaldwinKay valid parameters: ");
-        for(int i=0; i<validpars.length; i++){
-            System.out.print(validpars[i]+" ");
-        }
-        System.out.print("\ncestR1rhoBaldwinKay fit parameters: ");
-        for(int i=0; i<fitpars.length; i++){
-            System.out.print(fitpars[i]+" ");
-        }
-        System.out.print("\n");
-        
-//        Assert.assertArrayEquals(fitpars, validpars, 6.0e-13);
-        
         double[] fiterrs = fit.getErrs(0);
         double[] validerrs = new double[]{4.527537134628853, 0.0007171967856360292, 2.3553917781329563, 3.3808605211180436, 0.004685962985573297,
                                             0.004685962985573297, 0.3932615215677069, 5.7049278404942605}; 
 
-        System.out.print("cestR1rhoBaldwinKay valid errors: ");
-        for(int i=0; i<validerrs.length; i++){
-            System.out.print(validerrs[i]+" ");
-        }
-        System.out.print("\ncestR1rhoBaldwinKay fit errors: ");
-        for(int i=0; i<fiterrs.length; i++){
-            System.out.print(fiterrs[i]+" ");
-        }
-        System.out.print("\n");
+        dumpPars("cestR1rhoBaldwinKay", fitpars, validpars, fiterrs, validerrs);
         
         Assert.assertArrayEquals(fiterrs, validerrs, 6.0e1);
         
@@ -278,10 +238,8 @@ public class CESTFitTest {
         
         double fitrms = fit.getRms();
         double validrms = 0.012936289591623533;
-        
-        System.out.print("\ncestR1rhoBaldwinKay fit RMS: "+fitrms);
-        System.out.print("\ncestR1rhoBaldwinKay valid RMS: "+validrms);
-        System.out.print("\n");
+
+        dumpRMS(fitrms, validrms);
         
         Assert.assertEquals(fitrms, validrms, 6.0e-4);
     }
@@ -297,30 +255,11 @@ public class CESTFitTest {
         double[] validpars = new double[]{288.937925578066, 0.07087265844081425, 2771.0529601396183, -1285.1744405197783, 2.4246256495623104,
                                             2.4246256495623104, 8.121844525582754, 8.121844525582754}; 
 
-        System.out.print("cestR1rhoN valid parameters: ");
-        for(int i=0; i<validpars.length; i++){
-            System.out.print(validpars[i]+" ");
-        }
-        System.out.print("\ncestR1rhoN fit parameters: ");
-        for(int i=0; i<fitpars.length; i++){
-            System.out.print(fitpars[i]+" ");
-        }
-        System.out.print("\n");
-        
-//        Assert.assertArrayEquals(fitpars, validpars, 6.0e-13);
-        
         double[] fiterrs = fit.getErrs(0);
         double[] validerrs = new double[]{3.58822964273236, 0.0006570223547152888, 2.5674908203535574, 3.0651902549305405, 0.004205721940200411,
                                             0.004205721940200411, 0.2937911953297107, 0.2937911953297107}; 
 
-        System.out.print("cestR1rhoN valid errors: ");
-        for(int i=0; i<validerrs.length; i++){
-            System.out.print(validerrs[i]+" ");
-        }
-        System.out.print("\ncestR1rhoN fit errors: ");
-        for(int i=0; i<fiterrs.length; i++){
-            System.out.print(fiterrs[i]+" ");
-        }
+        dumpPars("cestR1rhoN", fitpars, validpars, fiterrs, validerrs);
         
         Assert.assertArrayEquals(fiterrs, validerrs, 6.0e1);
        
@@ -329,10 +268,8 @@ public class CESTFitTest {
         double fitrms = fit.getRms();
         double validrms = 0.017326921720901785;
         
-        System.out.print("\ncestR1rhoN fit RMS: "+fitrms);
-        System.out.print("\ncestR1rhoN valid RMS: "+validrms);
-        System.out.print("\n");
-        
+        dumpRMS(fitrms, validrms);
+
         Assert.assertEquals(fitrms, validrms, 6.0e-4);
     }
     
