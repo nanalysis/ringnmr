@@ -81,7 +81,8 @@
                                                       
                                                     </ChoiceBox>
                                                     <Button text="Set" onAction="#setBestEquation" />
-
+                                                    <Label text="AIC: " fx:id="aicLabel"/>
+                                                    <Label text="RMS: " fx:id="rmsLabel"/>
                                                 </children>
                                             </HBox> 
                                         </top>
@@ -182,6 +183,7 @@
                         </VBox>
                     </items>
                 </SplitPane>
+                <ToolBar fx:id="navigatorToolBar" orientation="HORIZONTAL" BorderPane.alignment="CENTER"/>
                 <VBox fx:id="chartBox" VBox.vgrow="ALWAYS">
                     <children>
                         <SSRegion fx:id="ssregion" prefHeight="1" />
