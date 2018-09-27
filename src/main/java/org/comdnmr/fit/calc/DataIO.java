@@ -69,6 +69,7 @@ public class DataIO {
         boolean gotHeader = false;
         String[] peakRefs = null;
         double[] xValues = null;
+        String header = "";
         List<String> peakRefList = new ArrayList<>();
         //  Peak       Residue N       T1      T2      T11     T3      T4      T9      T5      T10     T12     T6      T7      T8
         int fakeRes = 1;
@@ -88,7 +89,7 @@ public class DataIO {
                 }
                 String[] sfields = line.split("\t", -1);
                 int offset = 3;
-                if (fileName.endsWith(".txt")) {
+                if (fileName.endsWith(".txt") && sline.startsWith("Residue") || header.startsWith("Residue")) {
                     offset = 1;
                 }
                 if (expMode.equals("cest") || expMode.equals("cpmg")) {
@@ -96,7 +97,7 @@ public class DataIO {
                 }
                 if (!gotHeader) {
                     int nfields = sfields.length;
-                    if (fileName.endsWith(".txt") && expMode.equals("cpmg")) {
+                    if (fileName.endsWith(".txt") && expMode.equals("cpmg") && sline.startsWith("Residue")) {
                         nfields = sfields.length+1;
                     }
                     int nValues = nfields - offset;
@@ -124,9 +125,10 @@ public class DataIO {
                         peakRefList.add(peakRefs[j]);
                     }
                     gotHeader = true;
+                    header = sline;
                 } else {
                     String residueNum = sfields[1].trim();
-                    if (fileName.endsWith(".txt")) {
+                    if (fileName.endsWith(".txt") &&  header.startsWith("Residue")) {
                         residueNum = sfields[0].trim();
                     }
                     if (residueNum.equals("")) {
