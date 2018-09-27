@@ -57,14 +57,12 @@ public class PlotEquation {
 
     public double calculate(double[] pars, double[] xValue, double field) {
         EquationType equationType = ResidueFitter.getEquationType(name);
-        equationType.setFieldRef(1.0);
         int[][] map = equationType.makeMap(1);
         return equationType.calculate(pars, map[0], xValue, 0, field);
     }
 
     public double calculate(double[] xValue, double field) {
         EquationType equationType = ResidueFitter.getEquationType(name);
-        equationType.setFieldRef(1.0);
         int[][] map = equationType.makeMap(1);
 
         double y = equationType.calculate(pars, map[0], xValue, 0, field);

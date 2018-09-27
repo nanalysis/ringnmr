@@ -38,7 +38,6 @@ public class CalcExpDecay extends FitModel {
         this.idNums = idNums.clone();
         this.idNums = new int[yValues.length];
         this.equation = ExpEquation.EXPAB;
-        this.equation.setFieldRef(fields);
         if (setNID()) {
             throw new IllegalArgumentException("Invalid idNums, some values not used");
         }
@@ -95,7 +94,6 @@ public class CalcExpDecay extends FitModel {
 
     public ArrayList<Double> simY(double[] par, double[][] xValues, double field) {
         ArrayList<Double> result = new ArrayList<>();
-        equation.setFieldRef(field);
         double[] x = new double[1];
         for (int i = 0; i < xValues[0].length; i++) {
             x[0] = xValues[0][i];

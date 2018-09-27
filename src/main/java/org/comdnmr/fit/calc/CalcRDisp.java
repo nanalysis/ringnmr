@@ -38,7 +38,6 @@ public class CalcRDisp extends FitModel {
         this.idNums = idNums.clone();
         this.idNums = new int[yValues.length];
         this.equation = CPMGEquation.CPMGFAST;
-        this.equation.setFieldRef(fields);
         if (setNID()) {
             throw new IllegalArgumentException("Invalid idNums, some values not used");
         }
@@ -96,7 +95,6 @@ public class CalcRDisp extends FitModel {
 
     public ArrayList<Double> simY(double[] par, double[][] xValues, double field) {
         ArrayList<Double> result = new ArrayList<>();
-        equation.setFieldRef(field);
         double[] ax = new double[1];
         for (int i = 0; i < yValues.length; i++) {
             ax[0] = xValues[0][i];

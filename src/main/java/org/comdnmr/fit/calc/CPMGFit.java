@@ -12,6 +12,7 @@ import org.apache.commons.math3.optim.PointValuePair;
  */
 public class CPMGFit implements EquationFitter {
 
+    public static double REF_FIELD = 500.0;
     public static final double[] SIMX = {25.0, 50.0, 100.0, 150.0, 250.0, 350.0, 500.0, 750.0, 1000.0};
 
     FitModel calcR = new CalcRDisp();
@@ -179,9 +180,11 @@ public class CPMGFit implements EquationFitter {
         setupFit(eqn, absMode);
         double[] guesses = calcR.guess();
         String[] parNames = calcR.getParNames();
+        int[][] map = calcR.getMap();
         List<ParValueInterface> parValues = new ArrayList<>();
         for (int i = 0; i < parNames.length; i++) {
-            ParValueInterface parValue = new ParValue(parNames[i], guesses[i]);
+            double guess = guesses[map[0][i]];
+            ParValueInterface parValue = new ParValue(parNames[i], guess);
             parValues.add(parValue);
         }
         return parValues;

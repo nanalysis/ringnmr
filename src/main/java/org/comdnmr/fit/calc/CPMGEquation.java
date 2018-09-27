@@ -95,7 +95,7 @@ public enum CPMGEquation implements EquationType {
                 value = R2;
             } else {
                 double tauCP = 1.0 / (2.0 * vu);
-                double fieldAdjust = field / fieldRef;
+                double fieldAdjust = field / CPMGFit.REF_FIELD;
                 Rex *= fieldAdjust * fieldAdjust;
                 value = R2 + Rex * (1 - 2.0 * FastMath.tanh(0.5 * kEx * tauCP) / (kEx * tauCP));
             }
@@ -118,7 +118,7 @@ public enum CPMGEquation implements EquationType {
                     rex = 0.0;
                 }
                 guesses[map[id][1]] = r2;
-                guesses[map[id][2]] = rex;
+                guesses[map[id][2]] = rex * Math.pow(CPMGFit.REF_FIELD / field, 2);
                 double tauMid = 1.0 / (2.0 * vMid);
                 if (rex >= 0) {
                     kExSum += 1.915 / (0.5 * tauMid); // 1.915 comes from solving equation iteratively at tcp rex 0.5 half max
@@ -215,18 +215,16 @@ public enum CPMGEquation implements EquationType {
     //                return value;
     //            }
     //        },
-    CPMGSLOW("cpmgslow", 2, "Kex", "pA", "R2", "dW") {
+    CPMGSLOW("cpmgslow", 2, "Kex", "pA", "R2", "dPPM") {
         @Override
         public double calculate(double[] par, int[] map, double[] x, int idNum, double field) {
             double kEx = par[map[0]];
             double pA = par[map[1]]; // p1-p2
             double r2 = par[map[2]];
-            double dW = par[map[3]];
+            double dPPM = par[map[3]];
             double pB = 1.0 - pA;
             double pDelta = pA - pB;
-            double fieldAdjust = field / fieldRef;
-            dW *= fieldAdjust;
-            dW *= 2.0 * Math.PI;
+            double dW = dPPM * field * 2.0 * Math.PI;
             double nu = x[0];
             double tauCP = 1.0 / (2.0 * nu);
             double psi = (pDelta * kEx) * (pDelta * kEx) - dW * dW + 4.0 * pA * pB * kEx * kEx;
@@ -267,8 +265,9 @@ public enum CPMGEquation implements EquationType {
                     kex = 1000.0;
                 }
                 double dw2 = rex / (pa * (1.0 - pa)) * kex;
+                double dPPM = Math.sqrt(dw2) / (2.0 * Math.PI) / field;
                 guesses[map[id][2]] = r2;
-                guesses[map[id][3]] = Math.sqrt(dw2) / (2.0 * Math.PI);
+                guesses[map[id][3]] = dPPM;
                 kExSum += kex;
             }
             guesses[0] = kExSum /= nID;
@@ -364,7 +363,6 @@ public enum CPMGEquation implements EquationType {
     final String equationName;
     final int nGroupPars;
     String[] parNames;
-    double fieldRef;
 
     public String getName() {
         return equationName;
@@ -372,13 +370,6 @@ public enum CPMGEquation implements EquationType {
 
     public String[] getParNames() {
         return parNames;
-    }
-
-    public void setFieldRef(double[] field) {
-        fieldRef = Arrays.stream(field).min().getAsDouble();
-    }
-    public void setFieldRef(double field) {
-        fieldRef = field;
     }
 
     public int getNGroupPars() {

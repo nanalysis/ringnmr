@@ -215,6 +215,7 @@ public class CESTFit implements EquationFitter {
         setupFit(eqn, absMode);
         double[] guesses = calcCEST.guess();
         String[] parNames = calcCEST.getParNames();
+        int[][] map = calcCEST.getMap();
         List<ParValueInterface> parValues = new ArrayList<>();
         int[][] map = calcCEST.getMap();
         for (int i = 0; i < parNames.length; i++) {

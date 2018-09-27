@@ -178,12 +178,12 @@ public class ExpFit implements EquationFitter {
     public List<ParValueInterface> guessPars(String eqn, boolean absMode) {
         setupFit(eqn, absMode);
         double[] guesses = expModel.guess();
-        //System.out.println("guesses length = " + guesses.length);
         String[] parNames = expModel.getParNames();
-        //System.out.println("parNames length = " + parNames.length);
+        int[][] map = expModel.getMap();
         List<ParValueInterface> parValues = new ArrayList<>();
         for (int i = 0; i < parNames.length; i++) {
-            ParValueInterface parValue = new ParValue(parNames[i], guesses[i]);
+            double guess = guesses[map[0][i]];
+            ParValueInterface parValue = new ParValue(parNames[i], guess);
             parValues.add(parValue);
         }
         return parValues;
