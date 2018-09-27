@@ -12,7 +12,7 @@ import java.util.Comparator;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.EigenDecomposition;
-import org.comdnmr.fit.calc.SavitzkyGolay;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 /**
  *
@@ -119,7 +119,7 @@ public class CESTEquations {
         return r1rho;
 
     }
-    
+
     public static double[] r1rhoPerturbationNoEx(double[] omega, double pb, double kex, double[] deltaA, double R1A, double R2A) {
         int size = omega.length;
         double pa = 1.0 - pb;
@@ -142,7 +142,7 @@ public class CESTEquations {
         }
         return r1rho;
     }
-    
+
     public static double[] r1rhoPerturbationNoEx2(double[] omega, double[] deltaA, double R1A, double R2A) {
         int size = omega.length;
 
@@ -160,7 +160,7 @@ public class CESTEquations {
         }
         return r1rho;
     }
-    
+
     public static double[] cestR1rhoPerturbationNoEx2(double[][] X, double deltaA0, double R1A, double R2A) {
         double[] omegarf = X[0];
         double[] omega1 = X[1];
@@ -185,7 +185,7 @@ public class CESTEquations {
         }
 
         double[] cest = new double[cos2t.length];
-        
+
         double[] r1rho = r1rhoPerturbationNoEx2(omega1, deltaA, R1A, R2A);
         //double[] cest = new double[cos2t.length];
         for (int i = 0; i < cos2t.length; i++) {
@@ -658,19 +658,19 @@ public class CESTEquations {
         final double position;
         final double depth;
         final double width;
-        final int widthLB;
-        final int widthUB;
+        final double widthLB;
+        final double widthUB;
         final int pkInd;
-        
+
         Double getDepth() {
             return depth;
         }
-        
+
         Double getPosition() {
             return depth;
         }
 
-        Peak(double position, double depth, double width, int widthLB, int widthUB, int pkInd) {
+        Peak(double position, double depth, double width, double widthLB, double widthUB, int pkInd) {
             this.position = position;
             this.depth = depth;
             this.width = width;
@@ -679,203 +679,154 @@ public class CESTEquations {
             this.pkInd = pkInd;
         }
     }
-    
+
     public static double[] smoothCEST(double[] vec, int j1, int j2, int order, int smoothSize, double[] X) {
         // Applies a Savitzky-Golay filter to the data for smoothing.
         SavitzkyGolay sg = new SavitzkyGolay();
         double[] smoothed = new double[X.length];
         try {
-          smoothed = sg.runningSavitzkyGolaySmoothing(vec, j1, j2, order, smoothSize, X);  
+            smoothed = sg.runningSavitzkyGolaySmoothing(vec, j1, j2, order, smoothSize, X);
         } catch (Exception e) {
             System.out.println("Smooth-size should be one of 5,7,9,...,25");
         }
         return smoothed;
     }
 
+    static double getBaseline(double[] vec) {
+        int winSize = 8;
+        double maxValue = Double.NEGATIVE_INFINITY;
+        double sDev = 0.0;
+        DescriptiveStatistics stat = new DescriptiveStatistics(winSize);
+        for (int i = 0; i < vec.length; i++) {
+            stat.addValue(vec[i]);
+            if (i >= (winSize - 1)) {
+                double mean = stat.getMean();
+                if (mean > maxValue) {
+                    maxValue = mean;
+                    sDev = stat.getStandardDeviation();
+                }
+            }
+        }
+        return maxValue;
+    }
+
     public static double[][] cestPeakGuess(double[][] xvals, double[] yvals) {
         // Estimates CEST peak positions for initial guesses for before fitting.
 
         List<Peak> peaks = new ArrayList<>();
-        double previousYdiff = 0;
-        double y = 0;
-        double x = 0;
-        double w = 0;
-        double prevY = 0;
-
         double B1val = xvals[1][0];
-        
+
         double[] syvals = new double[yvals.length];
-          
+        double baseline = getBaseline(yvals);
+
         yvals = smoothCEST(yvals, 0, yvals.length, 3, 21, syvals);
 
-        for (int i = 3; i < yvals.length - 2; i++) {
-            double ydiff = yvals[i] - yvals[i - 1];
-            double ydiff2l = yvals[i - 3] - yvals[i - 1];
-            double ydiff2r = yvals[i + 2] - yvals[i];
-            double ydiff2l1 = yvals[i - 2] - yvals[i - 1];
-            double ydiff2r1 = yvals[i + 1] - yvals[i];
-            if (Math.abs(yvals[1] - yvals[i - 1]) / yvals[1] > 0.02) { //peak intensity threshold
-                if (ydiff > 0 & previousYdiff < 0) { //look for sign changes going from - to +
-                    if (ydiff2l > 0.0 & ydiff2l1 > 0.0 & ydiff2r > 0.0 & ydiff2r1 > 0.0) {
-                        y = yvals[i - 1];
-                        x = xvals[0][i - 1];
-                    } else if (ydiff2l > 0.0 & ydiff2l1 > 0.0 & ydiff2r < 0.0 & ydiff2r1 < 0.0) {
-                        y = yvals[i - 1];
-                        x = xvals[0][i - 1];
-                    } else if (ydiff2l < 0.0 & ydiff2l1 < 0.0 & ydiff2r > 0.0 & ydiff2r1 > 0.0) {
-                        y = yvals[i - 1];
-                        x = xvals[0][i - 1];
-                    } else if (ydiff2l < 0.0 & ydiff2l1 > 0.0 & ydiff2r > 0.0 & ydiff2r1 > 0.0) {
-                        y = yvals[i - 1];
-                        x = xvals[0][i - 1];
+        // A point must have a lower value than this number of points on each
+        // side of the point in order to be a peak.
+        int nP = 2;
+
+        // A threshold to use when deciding if a point is deep enough
+        // The points fractional drop from baseline must be greater than this
+        // to be a peak
+        double threshold = 0.02;
+        for (int i = nP; i < yvals.length - nP; i++) {
+            if (Math.abs(baseline - yvals[i - 1]) / baseline > threshold) {
+                boolean ok = true;
+                for (int j = i - nP; j <= (i + nP); j++) {
+                    if (yvals[i] > yvals[j]) {
+                        ok = false;
+                        break;
                     }
-                } else if (ydiff == 0) {
-                    if (ydiff2l > 0.0 & ydiff2l1 > 0.0 & ydiff2r > 0.0 & ydiff2r1 > 0.0) {
-                        double yavg = (yvals[i] + yvals[i - 1]) / 2;
-                        double xavg = (xvals[0][i] + xvals[0][i - 1]) / 2;
-                        y = yavg; 
-                        x = xavg;
-                    } else if (ydiff2l > 0.0 & ydiff2l1 > 0.0 & ydiff2r < 0.0 & ydiff2r1 < 0.0) {
-                        double yavg = (yvals[i] + yvals[i - 1]) / 2;
-                        double xavg = (xvals[0][i] + xvals[0][i - 1]) / 2;
-                        y = yavg; 
-                        x = xavg;
-                    } else if (ydiff2l < 0.0 & ydiff2l1 < 0.0 & ydiff2r > 0.0 & ydiff2r1 > 0.0) {
-                        double yavg = (yvals[i] + yvals[i - 1]) / 2;
-                        double xavg = (xvals[0][i] + xvals[0][i - 1]) / 2;
-                        y = yavg; 
-                        x = xavg;
-                    } else if (ydiff2l < 0.0 & ydiff2l1 > 0.0 & ydiff2r > 0.0 & ydiff2r1 > 0.0) {
-                        double yavg = (yvals[i] + yvals[i - 1]) / 2;
-                        double xavg = (xvals[0][i] + xvals[0][i - 1]) / 2;
-                        y = yavg; 
-                        x = xavg;
-                    }
-                } 
-                if (y != prevY) {
-                    // FWHM calculation
-                    double halfinten = (yvals[1] - yvals[i - 1]) / 2 + yvals[i - 1];
-                    double distance = Math.abs(yvals[1] - halfinten);
-                    int idx = 0;
-                    int idx1 = 0;
-                    for (int c = i - 10; c < i; c++) {
-                        if (c < 0) {
-                            c = 0;
+                }
+                int iCenter = i;
+                if (ok) {
+                    double halfinten = (baseline - yvals[iCenter]) / 2 + yvals[iCenter];
+                    double[] halfPos = new double[2];
+
+                    // search from peak center in both directions to find
+                    // the peak width.  Find a value above and below the 
+                    // half-height and interpolate to get the width on each
+                    // side.
+                    for (int k = 0; k < 2; k++) {
+                        int iDir = k * 2 - 1; // make iDir -1, 1
+                        int j = iCenter + iDir;
+                        double dUp = Double.MAX_VALUE;
+                        double dLow = Double.MAX_VALUE;
+                        int iUp = 0;
+                        int iLow = 0;
+                        while ((j >= 0) && (j < yvals.length)) {
+                            double delta = yvals[j] - halfinten;
+                            if (delta < 0.0) {
+                                if (Math.abs(delta) < dUp) {
+                                    dUp = Math.abs(delta);
+                                    iUp = j;
+                                }
+                            } else {
+                                if (Math.abs(delta) < dLow) {
+                                    dLow = Math.abs(delta);
+                                    iLow = j;
+                                }
+                                break;
+                            }
+                            j += iDir;
                         }
-                        double cdistance = Math.abs(yvals[c] - halfinten);
-                        if (cdistance < distance) {
-                            idx = c;
-                            distance = cdistance;
+                        if ((dLow == Double.MAX_VALUE) || (dUp == Double.MAX_VALUE)) {
+                            ok = false;
+                            break;
                         }
+                        double delta = dLow + dUp;
+                        halfPos[k] = xvals[0][iLow] * dUp / delta + xvals[0][iUp] * dLow / delta;
                     }
-                    double halfleft = xvals[0][idx];// /(2*Math.PI);
-                    double distance1 = Math.abs(yvals[1] - halfinten);
-                    double cmax = i + 10;
-                    if (cmax > yvals.length - 1) {
-                        cmax = yvals.length - 1;
+                    if (ok) {
+                        double xCenter = xvals[0][iCenter];
+                        double yCenter = yvals[iCenter];
+                        double width = Math.abs(halfPos[0] - halfPos[1]);
+                        double widthL = Math.abs(halfPos[0] - xCenter);
+                        double widthR = Math.abs(halfPos[1] - xCenter);
+                        Peak peak = new Peak(xCenter, yCenter, width, widthL, widthR, iCenter);
+                        peaks.add(peak);
                     }
-                    for (int c = i + 1; c < cmax; c++) {
-                        double cdistance1 = Math.abs(yvals[c] - halfinten);
-                        if (cdistance1 < distance1) {
-                            idx1 = c;
-                            distance1 = cdistance1;
-                        }
-                    }
-                    double halfright = xvals[0][idx1];// /(2*Math.PI);
-                    w = Math.abs(halfright - halfleft);
-                    Peak peak  = new Peak(x, y, w, idx, idx1, i-1);
-                    peaks.add(peak);
                 }
             }
-            previousYdiff = ydiff;
-            prevY = y;
+
             if (xvals[1][i] != B1val) {
                 break;
             }
         }
-        
+
         peaks.sort(Comparator.comparingDouble(Peak::getDepth));
 
-//        System.out.println("yvals[1] = " + yvals[1]);
-//
 //        for (int i = 0; i < peaks.size(); i++) {
 //            System.out.println("peaks guess " + i + " x = " + peaks.get(i).position);
 //            System.out.println("peaks guess " + i + " y = " + peaks.get(i).depth);
 //            System.out.println("peaks guess " + i + " fwhm = " + peaks.get(i).width);
 //        }
-        
         List<Peak> peaks2 = peaks;
         if (peaks.size() >= 2) {
             peaks2 = peaks.subList(0, 2);
         } else if (peaks.size() == 1) {
+            // If there is only one peak found add another peak on the side
+            // with the largest width
             peaks2 = peaks.subList(0, 1);
-            int peakInd = peaks2.get(0).pkInd;
-            int wLBind = peaks2.get(0).widthLB;
-            int wUBind = peaks2.get(0).widthUB;
-            for (int i = wLBind; i < peakInd - 3; i++) { //try to find peak left shoulder, if exists.
-                double ydiff = yvals[i] - yvals[i - 1];
-                double ydiff2l = yvals[i - 3] - yvals[i - 2];
-                double ydiff2r = yvals[i + 2] - yvals[i + 1];
-                double ydiff2l1 = yvals[i - 2] - yvals[i - 1];
-                double ydiff2r1 = yvals[i + 1] - yvals[i];
-                double slope = Math.abs(ydiff / (xvals[0][i] - xvals[0][i-1]));
-                double slope2l = Math.abs(ydiff2l / (xvals[0][i-3] - xvals[0][i-2]));
-                double slope2r = Math.abs(ydiff2r / (xvals[0][i+2] - xvals[0][i+1]));
-                double slope2l1 = Math.abs(ydiff2l1 / (xvals[0][i-2] - xvals[0][i-1]));
-                double slope2r1 = Math.abs(ydiff2r1 / (xvals[0][i+1] - xvals[0][i]));
-                if (ydiff > 0 & previousYdiff > 0 & slope2l + slope2l1 > slope + slope2r + slope2r1 & slope2l1 > slope2r1 & slope2r > slope2r1) {
-                    y = yvals[i - 1];
-                    x = xvals[0][i - 1];
-                } else if (ydiff < 0 & previousYdiff < 0 & slope2r + slope2r1 + slope > slope2l + slope2l1 & slope2r1 > slope2l1 & slope2l > slope2l1) {
-                    y = yvals[i - 1];
-                    x = xvals[0][i - 1];
-                }
-                if (y != prevY) {
-                   Peak peak  = new Peak(x, y, 1000., i-10, i+10, i-1);
-                   peaks2.add(peak); 
-                }
-                previousYdiff = ydiff;
-                prevY = y;
+            Peak peak = peaks2.get(0);
+            double newCenter;
+            if (peak.widthLB > peak.widthUB) {
+                newCenter = peak.position - peak.widthLB / 2.0;
+            } else {
+                newCenter = peak.position + peak.widthUB / 2.0;
             }
-            for (int i = peakInd + 3; i < wUBind; i++) { //try to find peak right shoulder, if exists.
-                double ydiff = yvals[i] - yvals[i - 1];
-                double ydiff2l = yvals[i - 3] - yvals[i - 2];
-                double ydiff2r = yvals[i + 2] - yvals[i + 1];
-                double ydiff2l1 = yvals[i - 2] - yvals[i - 1];
-                double ydiff2r1 = yvals[i + 1] - yvals[i];
-                double slope = Math.abs(ydiff / (xvals[0][i] - xvals[0][i-1]));
-                double slope2l = Math.abs(ydiff2l / (xvals[0][i-3] - xvals[0][i-2]));
-                double slope2r = Math.abs(ydiff2r / (xvals[0][i+2] - xvals[0][i+1]));
-                double slope2l1 = Math.abs(ydiff2l1 / (xvals[0][i-2] - xvals[0][i-1]));
-                double slope2r1 = Math.abs(ydiff2r1 / (xvals[0][i+1] - xvals[0][i]));
-                if (ydiff > 0 & previousYdiff > 0 & slope2l + slope2l1 > slope + slope2r + slope2r1 & slope2l1 > slope2r1 & slope2r > slope2r1) {
-                    y = yvals[i - 1];
-                    x = xvals[0][i - 1];
-                } else if (ydiff < 0 & previousYdiff < 0 & slope2r + slope2r1 + slope > slope2l + slope2l1 & slope2r1 > slope2l1 & slope2l > slope2l1) {
-                    y = yvals[i - 1];
-                    x = xvals[0][i - 1];
-                }
-                if (y != prevY) {
-                   Peak peak  = new Peak(x, y, 500., i-10, i+10, i-1);
-                   peaks2.add(peak); 
-                }
-                previousYdiff = ydiff;
-                prevY = y;
-            }
+            double newDepth = (baseline + peak.depth) / 2.0;
+            Peak newPeak = new Peak(newCenter, newDepth, peak.width, peak.widthLB, peak.widthUB, peak.pkInd);
+            peaks2.add(newPeak);
         }
-        
+
         peaks2.sort(Comparator.comparingDouble(Peak::getDepth));
         if (peaks.size() > 2) {
             peaks2 = peaks.subList(0, 2);
         }
-        
+
         peaks2.sort(Comparator.comparingDouble(Peak::getPosition).reversed());
-        
-        double baseline = yvals[1];
-        if (yvals[yvals.length - 1] > baseline) {
-            baseline = yvals[yvals.length - 1];
-        }
-        
+
         double peak1diff = Math.abs(peaks2.get(0).depth - baseline);
         double peak2diff = peak1diff;
         if (peaks2.size() == 2) {
@@ -887,9 +838,9 @@ public class CESTEquations {
             if (peaks2.get(0).depth > peaks2.get(1).depth && peaks2.get(1).depth != 0) {
                 index = 1;
             }
-                peaks1[0][0] = peaks2.get(index).position;
-                peaks1[0][1] = peaks2.get(index).depth;
-                peaks1[0][2] = peaks2.get(index).width;
+            peaks1[0][0] = peaks2.get(index).position;
+            peaks1[0][1] = peaks2.get(index).depth;
+            peaks1[0][2] = peaks2.get(index).width;
             return peaks1;
         } else {
             double[][] peaks1 = new double[peaks2.size()][3];
@@ -912,20 +863,16 @@ public class CESTEquations {
 //                System.out.println(i + " " + j + " " + peaks[i][j]);
 //            }
 //        }
+        double baseline = getBaseline(yvals);
 
-        double baseline = yvals[1];
-        if (yvals[yvals.length - 1] > baseline) {
-            baseline = yvals[yvals.length - 1];
-        }
-        
         if (peaks.length > 1) {
             double[] pb = new double[peaks.length / 2];
 
             if (peaks.length == 2) {
                 if (peaks[0][1] > peaks[1][1]) {
-                    pb[0] = ((baseline-peaks[0][1]) / (baseline-peaks[1][1])) / 4;
+                    pb[0] = ((baseline - peaks[0][1]) / (baseline - peaks[1][1])) / 4;
                 } else {
-                    pb[0] = ((baseline-peaks[1][1]) / (baseline-peaks[0][1])) / 4;
+                    pb[0] = ((baseline - peaks[1][1]) / (baseline - peaks[0][1])) / 4;
                 }
             } else {
                 for (int i = 0; i < pb.length; i++) {
@@ -962,6 +909,7 @@ public class CESTEquations {
                 double kex = (awidth + bwidth) / 2;
                 double kb = pb * kex;
                 double ka = (1 - pb) * kex;
+                System.out.println("pkw " + " " + peaks[0][2] + " " + awidth + " ka " + ka);
                 r2[0][0] = Math.abs(awidth - ka); //R2A
                 r2[1][0] = Math.abs(bwidth - kb); //R2B
             } else {
@@ -986,6 +934,7 @@ public class CESTEquations {
 
             for (int i = 0; i < r2[0].length; i++) {
                 double awidth = peaks[0][2] / (2 * Math.PI);
+                System.out.println("pkw " + i + " " + peaks[0][2] + " " + awidth);
                 r2[0][0] = awidth; //R2A
                 r2[1][0] = awidth; //R2B
             }
@@ -1019,10 +968,7 @@ public class CESTEquations {
         // Estimates CEST R1 values from data baseline intensity and Tex for initial guesses for before fitting.
         // Reference: Palmer, A. G. "Chemical exchange in biomacromolecules: Past, present, and future." J. Mag. Res. 241 (2014) 3-17.
 
-        double baseline = yvals[1];
-        if (yvals[yvals.length - 1] > baseline) {
-            baseline = yvals[yvals.length - 1];
-        }
+        double baseline = getBaseline(yvals);
         double[] r1 = {-Math.log(baseline) / 0.3, -Math.log(baseline) / 0.3}; //{R1A, R1B}
         if (Tex != null) {
             r1[0] = -Math.log(baseline) / Tex; //R1A
