@@ -66,10 +66,12 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Optional;
+import javafx.beans.property.SimpleStringProperty;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.Random;
@@ -242,7 +244,7 @@ public class PyController implements Initializable {
             simControls.simSliderAction("");
         } catch (NullPointerException npE) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setContentText("Error: Residue must be selected");
+            alert.setContentText("Error: Residue must be selected in display equation");
             alert.showAndWait();
             return;
         }
@@ -1166,6 +1168,7 @@ public class PyController implements Initializable {
     }
 
     public void updateTableWithPars(List<ParValueInterface> parValues) {
+        DecimalFormat df = new DecimalFormat();
         ObservableList<ParValueInterface> data = FXCollections.observableArrayList();
         data.addAll(parValues);
         parameterTable.itemsProperty().setValue(data);
@@ -1173,14 +1176,36 @@ public class PyController implements Initializable {
         TableColumn<ParValueInterface, String> residueColumn = new TableColumn<>("Residue");
         TableColumn<ParValueInterface, String> stateColumn = new TableColumn<>("State");
         TableColumn<ParValueInterface, String> nameColumn = new TableColumn<>("Name");
-        TableColumn<ParValueInterface, Double> valueColumn = new TableColumn<>("Value");
-        TableColumn<ParValueInterface, Double> errorColumn = new TableColumn<>("Error");
+        TableColumn<ParValueInterface, String> valueColumn = new TableColumn<>("Value");
+        TableColumn<ParValueInterface, String> errorColumn = new TableColumn<>("Error");
 
         residueColumn.setCellValueFactory(new PropertyValueFactory<>("Residue"));
         stateColumn.setCellValueFactory(new PropertyValueFactory<>("State"));
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("Name"));
-        valueColumn.setCellValueFactory(new PropertyValueFactory<>("Value"));
-        errorColumn.setCellValueFactory(new PropertyValueFactory<>("Error"));
+        valueColumn.setCellValueFactory(c -> {
+            SimpleStringProperty property = new SimpleStringProperty();
+            double errValue = c.getValue().getError();
+            int nSig = (int) Math.floor(Math.log10(errValue)) - 1;
+            nSig = -nSig;
+            if (nSig < 0) {
+                nSig = 0;
+            }
+            df.setMaximumFractionDigits(nSig);
+            property.setValue(df.format(c.getValue().getValue()));
+            return property;
+        });
+        errorColumn.setCellValueFactory(c -> {
+            SimpleStringProperty property = new SimpleStringProperty();
+            double errValue = c.getValue().getError();
+            int nSig = (int) Math.floor(Math.log10(errValue));
+            nSig = -nSig;
+            if (nSig < 0) {
+                nSig = 0;
+            }
+            df.setMaximumFractionDigits(nSig);
+            property.setValue(df.format(errValue));
+            return property;
+        });
 
         parameterTable.getColumns().clear();
         parameterTable.getColumns().addAll(residueColumn, stateColumn, nameColumn, valueColumn, errorColumn);
@@ -1391,7 +1416,7 @@ public class PyController implements Initializable {
         } catch (NullPointerException npE2) {
             npE2.printStackTrace();
             Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setContentText("Error: Residue must be selected");
+            alert.setContentText("Error: Residue must be selected when fitting");
             alert.showAndWait();
             return;
         }
@@ -1419,7 +1444,7 @@ public class PyController implements Initializable {
                 double[] errs = curveFit.getEquation().getErrs(); //double[] errs = new double[pars.length];
                 double[] extras = new double[3];
                 for (int j = 0; j < expData.getExtras().size() / 2; j++) {
-                    extras[0] = 1.0;
+                    extras[0] = expData.getField();
                     extras[1] = expData.getExtras().get(2 * j);
                     extras[2] = expData.getExtras().get(2 * j + 1);
 //                    System.out.println("Fit button expData extras size = " + expData.getExtras().size() + " extra[1] = " + extras[1]);

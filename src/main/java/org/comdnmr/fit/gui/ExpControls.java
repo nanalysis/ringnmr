@@ -163,35 +163,9 @@ public class ExpControls implements EquationControls {
         if (equationName.equals("CPMGSLOW") && label.equals("Rex")) {
             return;
         }
-        double a = A.getValue();
-        double r = R.getValue();
-        double c = C.getValue();
         A.setText();
         R.setText();
         C.setText();
-        double[] pars;
-        switch (equationName) {
-            case "EXPAB":
-                pars = new double[2];
-                pars[0] = a;
-                pars[1] = r;
-
-                break;
-            case "EXPABC":
-                pars = new double[3];
-                pars[0] = a;
-                pars[1] = r;
-                pars[2] = r;
-
-                break;
-            default:
-                return;
-        }
-//        double[] errs = new double[pars.length];
-//        int nFields = 1;
-//        double[] fields = new double[nFields];
-//        fields[0] = 1.0;
-//        controller.updateChartEquations(equationName, pars, errs, fields);
         updateEquations();
     }
 

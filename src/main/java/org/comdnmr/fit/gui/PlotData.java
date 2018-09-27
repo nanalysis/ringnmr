@@ -228,7 +228,6 @@ public class PlotData extends ScatterChart {
         if (polyLines.isEmpty()) {
             return;
         }
-        double fieldRef = 1.0;
         for (PlotEquation plotEquation : plotEquations) {
             //System.out.println("paintLines No. Eqns = " + plotEquations.size());
             if (plotEquation == null) {
@@ -241,13 +240,9 @@ public class PlotData extends ScatterChart {
             double max = xAxis.getUpperBound();
             int nIncr = 100;
             double delta = (max - min) / nIncr;
-            if (iLine == 0) {
-                fieldRef = plotEquation.getExtra(0);
-            }
 //            plotEquation.equation.setFieldRef(fieldRef);
             double[] extras = plotEquation.getExtras();
             double[] ax = new double[extras.length];
-//            System.out.println("extras " + extras.length);
             for (int i = 1; i < nIncr - 1; i++) {
                 double xValue = min + i * delta;
                 double x = xAxis.getDisplayPosition(xValue);
@@ -255,7 +250,7 @@ public class PlotData extends ScatterChart {
                 for (int j = 1; j < extras.length; j++) {
                     ax[j] = extras[j];
                 }
-                double yValue = plotEquation.calculate(ax, plotEquation.getExtra(0) / fieldRef);
+                double yValue = plotEquation.calculate(ax, plotEquation.getExtra(0));
                 double y = yAxis.getDisplayPosition(yValue);
                 points.add(x);
                 points.add(y);

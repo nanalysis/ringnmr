@@ -17,20 +17,18 @@ import javafx.scene.control.Slider;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import org.comdnmr.fit.calc.CPMGEquation;
 import org.comdnmr.fit.calc.CPMGFit;
 import org.comdnmr.fit.calc.ParValueInterface;
 import org.comdnmr.fit.calc.PlotEquation;
 import org.comdnmr.fit.calc.ResidueInfo;
 import org.comdnmr.fit.calc.ResidueProperties;
-import static org.comdnmr.fit.gui.CPMGControls.PARS.DW;
 import static org.comdnmr.fit.gui.CPMGControls.PARS.FIELD2;
 import static org.comdnmr.fit.gui.CPMGControls.PARS.KEX;
 import static org.comdnmr.fit.gui.CPMGControls.PARS.PA;
 import static org.comdnmr.fit.gui.CPMGControls.PARS.R2;
 import static org.comdnmr.fit.gui.CPMGControls.PARS.REX;
-import static org.comdnmr.fit.gui.PyController.defaultField;
 import org.comdnmr.fit.calc.CalcRDisp;
+import static org.comdnmr.fit.gui.CPMGControls.PARS.DPPM;
 
 /**
  *
@@ -42,14 +40,14 @@ public class CPMGControls implements EquationControls {
     ChoiceBox<String> equationSelector;
     ChoiceBox<String> stateSelector;
 
-    String[] parNames = {"R2", "Kex", "Rex", "pA", "dW", "Field2"};
+    String[] parNames = {"R2", "Kex", "Rex", "pA", "dPPM", "Field2"};
 
     enum PARS implements ParControls {
         R2("R2", 0.0, 50.0, 10.0, 10.0),
         KEX("Kex", 0.0, 4000.0, 500.0, 500.0),
         REX("Rex", 0.0, 50.0, 10.0, 8.0),
         PA("pA", 0.5, 0.99, 0.1, 0.9),
-        DW("dW", 0.0, 400.0, 100.0, 100.0),
+        DPPM("dPPM", 0.0, 2.0, 0.2, 0.2),
         FIELD2("Field2", 500.0, 1200.0, 100.0, 600.0);
 
         String name;
@@ -174,21 +172,21 @@ public class CPMGControls implements EquationControls {
                 REX.disabled(true);
                 KEX.disabled(true);
                 PA.disabled(true);
-                DW.disabled(true);
+                DPPM.disabled(true);
                 break;
             case "CPMGFAST":
                 R2.disabled(false);
                 REX.disabled(false);
                 KEX.disabled(false);
                 PA.disabled(true);
-                DW.disabled(true);
+                DPPM.disabled(true);
                 break;
             case "CPMGSLOW":
                 R2.disabled(false);
                 REX.disabled(true);
                 KEX.disabled(false);
                 PA.disabled(false);
-                DW.disabled(false);
+                DPPM.disabled(false);
                 break;
             default:
                 return;
@@ -219,57 +217,13 @@ public class CPMGControls implements EquationControls {
         if (equationName.equals("CPMGSLOW") && label.equals("Rex")) {
             return;
         }
-        double r2 = R2.getValue();
-        double kEx = KEX.getValue();
-        double rEx = REX.getValue();
-        double pA = PA.getValue();
-        double dW = DW.getValue();
-        double field2 = FIELD2.getValue();
         R2.setText();
         KEX.setText();
         REX.setText();
         PA.setText();
-        DW.setText();
+        DPPM.setText();
         FIELD2.setText();
-        double[] pars;
-        switch (equationName) {
-            case "NOEX":
-                pars = new double[1];
-                pars[0] = r2;
-
-                break;
-            case "CPMGFAST":
-                pars = new double[3];
-                pars[0] = kEx;
-                pars[1] = r2;
-                pars[2] = rEx;
-                break;
-            case "CPMGSLOW":
-                pars = new double[4];
-                pars[0] = kEx;
-                pars[1] = pA;
-                pars[2] = r2;
-                pars[3] = dW;
-                break;
-            default:
-                return;
-        }
-//        if (equationName.equals("CPMGSLOW")) {
-//            int[] map = {0, 1, 2, 3};
-//            rEx = CPMGEquation.CPMGSLOW.getRex(pars, map);
-//            REX.setValue(rEx);
-//        }
-
-//        double[] errs = new double[pars.length];
-//        int nFields = field2 > (defaultField + 10) ? 2 : 1; // addTo 10.0 to make sure slider set near to bottom gives 1 field
-//        double[] fields = new double[nFields];
-//        fields[0] = 1.0;
-//        if (nFields > 1) {
-//            fields[1] = field2 / defaultField;
-//        }
         updateEquations();
-
-        //controller.updateChartEquations(equationName, pars, errs, fields);
     }
 
     public double[] getExtras() {
@@ -283,7 +237,7 @@ public class CPMGControls implements EquationControls {
         double kEx = KEX.getValue();
         double rEx = REX.getValue();
         double pA = PA.getValue();
-        double dW = DW.getValue();
+        double dPPM = DPPM.getValue();
         double field2 = FIELD2.getValue();
         double[] pars;
         switch (equationName) {
@@ -303,7 +257,7 @@ public class CPMGControls implements EquationControls {
                 pars[0] = kEx;
                 pars[1] = pA;
                 pars[2] = r2;
-                pars[3] = dW;
+                pars[3] = dPPM;
                 break;
             default:
                 pars = null;
@@ -330,7 +284,7 @@ public class CPMGControls implements EquationControls {
                 pars[0] = parValues.get("Kex").getValue();
                 pars[1] = parValues.get("pA").getValue();
                 pars[2] = parValues.get("R2").getValue();
-                pars[3] = parValues.get("dW").getValue();
+                pars[3] = parValues.get("dPPM").getValue();
                 break;
             default:
                 pars = null;
@@ -344,7 +298,7 @@ public class CPMGControls implements EquationControls {
         double kEx = KEX.getValue();
         double rEx = REX.getValue();
         double pA = PA.getValue();
-        double dW = DW.getValue();
+        double dPPM = DPPM.getValue();
         double field2 = FIELD2.getValue();
         int nPars = CalcRDisp.getNPars(map);
         double[] guesses = new double[nPars];
@@ -374,7 +328,7 @@ public class CPMGControls implements EquationControls {
                     System.out.println(map[id][2]);
                     System.out.println(map[id][3]);
                     guesses[map[id][2]] = r2;
-                    guesses[map[id][3]] = dW;
+                    guesses[map[id][3]] = dPPM;
                 }
                 guesses[0] = kEx;
                 guesses[1] = pA;
@@ -452,7 +406,7 @@ public class CPMGControls implements EquationControls {
                 parNames1.add("Kex");
                 parNames1.add("pA");
                 parNames1.add("R2");
-                parNames1.add("dW");
+                parNames1.add("dPPM");
                 parNames1.add("Field2");
                 break;
         }
@@ -469,37 +423,37 @@ public class CPMGControls implements EquationControls {
             pars = getPars(equationName);
             double[] errs = new double[pars.length];
             double[] extras = new double[1];
-            extras[0] = 1.0;
+            extras[0] = CPMGFit.REF_FIELD;
             PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
             equations.add(plotEquation);
         } else {
             double[] fields = resProps.getFields();
+            double[] extras = new double[1];
             String currentState = stateSelector.getValue();
-            double field2;
             if (resInfo != null) {
                 for (String state : stateSelector.getItems()) {
                     int iField = Integer.parseInt(state.substring(0, 1));
-                    if (state.equals(currentState)) {
+                    List<ParValueInterface> parValues = resInfo.getParValues(equationName, state);
+                    if (state.equals(currentState) || parValues.isEmpty()) {
                         pars = getPars(equationName);
-                        fields[iField] = FIELD2.getValue();
+                        if (state.equals(currentState)) {
+                            extras[0] = FIELD2.getValue();
+                        } else {
+                            extras[0] = fields[iField];
+                        }
                     } else {
                         try {
                             Map<String, ParValueInterface> parMap = new HashMap<>();
-                            List<ParValueInterface> parValues = resInfo.getParValues(equationName, state);
                             for (ParValueInterface parValue : parValues) {
                                 parMap.put(parValue.getName(), parValue);
                             }
                             pars = getPars(equationName, parMap);
                         } catch (NullPointerException npEcpmgpar) {
-                            Alert alert = new Alert(Alert.AlertType.ERROR);
-                            alert.setContentText("Error: Residue must be selected");
-                            alert.showAndWait();
-                            return;
+                            continue;
                         }
+                        extras[0] = fields[iField];
                     }
                     double[] errs = new double[pars.length];
-                    double[] extras = new double[1];
-                    extras[0] = fields[iField] / fields[0];
                     PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
                     equations.add(plotEquation);
                 }
