@@ -909,7 +909,6 @@ public class CESTEquations {
                 double kex = (awidth + bwidth) / 2;
                 double kb = pb * kex;
                 double ka = (1 - pb) * kex;
-                System.out.println("pkw " + " " + peaks[0][2] + " " + awidth + " ka " + ka);
                 r2[0][0] = Math.abs(awidth - ka); //R2A
                 r2[1][0] = Math.abs(bwidth - kb); //R2B
             } else {
@@ -934,7 +933,6 @@ public class CESTEquations {
 
             for (int i = 0; i < r2[0].length; i++) {
                 double awidth = peaks[0][2] / (2 * Math.PI);
-                System.out.println("pkw " + i + " " + peaks[0][2] + " " + awidth);
                 r2[0][0] = awidth; //R2A
                 r2[1][0] = awidth; //R2B
             }
