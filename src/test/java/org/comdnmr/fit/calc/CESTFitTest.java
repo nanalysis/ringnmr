@@ -116,7 +116,18 @@ public class CESTFitTest {
                                                 0.003, 0.003, 0.003, 0.003, 0.003);
     
     
-    
+   
+    private void testPars(double[] fitpars, double[] validpars, double[] fiterrs) { 
+        double scale = 4.0;
+        for(int i=0; i<fitpars.length; i++){
+            boolean inRange = Math.abs(fitpars[i]-validpars[i]) < fiterrs[i]*scale;
+            if (!inRange) {
+                System.out.println("par diff = " + i + " " + Math.abs(fitpars[i]-validpars[i]));
+                System.out.println("err * " + scale + " = " + fiterrs[i]*scale);
+            }
+            Assert.assertTrue(inRange);
+        }
+    }
 
 
     @Test
@@ -212,11 +223,7 @@ public class CESTFitTest {
         
         Assert.assertArrayEquals(fiterrs, validerrs, 6.0e1);
         
-        for(int i=0; i<fitpars.length; i++){
-//            System.out.println("par diff = " + Math.abs(fitpars[i]-validpars[i]));
-//            System.out.println("err * 3 = " + fiterrs[i]*3);
-            Assert.assertTrue(Math.abs(fitpars[i]-validpars[i]) < fiterrs[i]*5);
-        }
+        testPars(fitpars, validpars, fiterrs);
         
         double fitrms = fit.getRms();
         double validrms = 0.012583146844688359;
@@ -263,14 +270,11 @@ public class CESTFitTest {
         for(int i=0; i<fiterrs.length; i++){
             System.out.print(fiterrs[i]+" ");
         }
+        System.out.print("\n");
         
         Assert.assertArrayEquals(fiterrs, validerrs, 6.0e1);
         
-        for(int i=0; i<fitpars.length; i++){
-//            System.out.println("par diff = " + Math.abs(fitpars[i]-validpars[i]));
-//            System.out.println("err * 3 = " + fiterrs[i]*3);
-            Assert.assertTrue(Math.abs(fitpars[i]-validpars[i]) < fiterrs[i]*4);
-        }
+        testPars(fitpars, validpars, fiterrs);
         
         double fitrms = fit.getRms();
         double validrms = 0.012936289591623533;
@@ -319,12 +323,8 @@ public class CESTFitTest {
         }
         
         Assert.assertArrayEquals(fiterrs, validerrs, 6.0e1);
-        
-        for(int i=0; i<fitpars.length; i++){
-//            System.out.println("par diff = " + Math.abs(fitpars[i]-validpars[i]));
-//            System.out.println("err * 3 = " + fiterrs[i]*3);
-            Assert.assertTrue(Math.abs(fitpars[i]-validpars[i]) < fiterrs[i]*3);
-        }
+       
+        testPars(fitpars, validpars, fiterrs);
         
         double fitrms = fit.getRms();
         double validrms = 0.017326921720901785;
