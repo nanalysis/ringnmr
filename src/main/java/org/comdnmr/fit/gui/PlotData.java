@@ -110,6 +110,14 @@ public class PlotData extends ScatterChart {
     public void autoscaleBounds() {
         xAxis.setAutoRanging(true);
         yAxis.setAutoRanging(true);
+//        System.out.print("\n" + xAxis.getLowerBound() + " " + xAxis.getUpperBound() + " " + xAxis.getTickUnit());
+//        System.out.print("\n" + yAxis.getLowerBound() + " " + yAxis.getUpperBound() + " " + yAxis.getTickUnit());
+        PyController.mainController.xLowerBoundTextField.setText(Double.toString(xAxis.getLowerBound()));
+        PyController.mainController.xUpperBoundTextField.setText(Double.toString(xAxis.getUpperBound()));
+        PyController.mainController.yLowerBoundTextField.setText(Double.toString(yAxis.getLowerBound()));
+        PyController.mainController.yUpperBoundTextField.setText(Double.toString(yAxis.getUpperBound()));
+        PyController.mainController.xTickTextField.setText(Double.toString(xAxis.getTickUnit()));
+        PyController.mainController.yTickTextField.setText(Double.toString(yAxis.getTickUnit()));
     }
 
     void mouseClicked(MouseEvent e, XYChart chart) {

@@ -843,23 +843,23 @@ public class PyController implements Initializable {
             hm2.put("mode", hmdf.get("fitmode"));
             hm2.put("file", paramFileName);
 //            hmdf.put("vcpmg", hmdf.get("vcpmg").toString());
-            if (hmdf.get("fitmode").equals("exp")) {
-                HashMap hmd1 = new HashMap();
-                hmd1.put("c0", 2);
-                hmd1.put("delta0", 0);
-                hmd1.put("delta", 0.008);
-                hmdf.put("delays", hmd1);
-                hmdf.remove("vcpmg");
-            }
+//            if (hmdf.get("fitmode").equals("exp")) {
+//                HashMap hmd1 = new HashMap();
+//                hmd1.put("c0", 2);
+//                hmd1.put("delta0", 0);
+//                hmd1.put("delta", 0.008);
+//                hmdf.put("delays", hmd1);
+////                hmdf.remove("vcpmg");
+//            }
             Set keySet = hmdf.keySet();
             if (!hmdf.get("fitmode").equals("cest")) {
                 keySet.remove("Tex");
                 keySet.remove("B1field");
             }
-            if (hmdf.get("fitmode").equals("cest")) {
-                keySet.remove("Tex");
-                keySet.remove("B1field");
-            }
+//            if (hmdf.get("fitmode").equals("cest")) {
+//                keySet.remove("Tex");
+//                keySet.remove("B1field");
+//            }
             keySet.remove("fitmode");
             keySet.remove("paramFile");
             List keys = Arrays.asList(keySet);
