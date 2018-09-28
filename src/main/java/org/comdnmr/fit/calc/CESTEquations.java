@@ -803,12 +803,12 @@ public class CESTEquations {
         }
 
         peaks.sort(Comparator.comparingDouble(Peak::getDepth));
-        System.out.println("min at " + xAtYMin + " " + yMin);
-        for (int i = 0; i < peaks.size(); i++) {
-            System.out.println("peaks guess " + i + " x = " + peaks.get(i).position);
-            System.out.println("peaks guess " + i + " y = " + peaks.get(i).depth);
-            System.out.println("peaks guess " + i + " fwhm = " + peaks.get(i).width);
-        }
+//        System.out.println("min at " + xAtYMin + " " + yMin);
+//        for (int i = 0; i < peaks.size(); i++) {
+//            System.out.println("peaks guess " + i + " x = " + peaks.get(i).position);
+//            System.out.println("peaks guess " + i + " y = " + peaks.get(i).depth);
+//            System.out.println("peaks guess " + i + " fwhm = " + peaks.get(i).width);
+//        }
         List<Peak> peaks2 = peaks;
         if (peaks.size() >= 2) {
             peaks2 = peaks.subList(0, 2);
@@ -829,11 +829,11 @@ public class CESTEquations {
         }
 
         peaks2.sort(Comparator.comparingDouble(Peak::getDepth));
-        for (int i = 0; i < peaks2.size(); i++) {
-            System.out.println("peaks guess " + i + " x = " + peaks2.get(i).position);
-            System.out.println("peaks guess " + i + " y = " + peaks2.get(i).depth);
-            System.out.println("peaks guess " + i + " fwhm = " + peaks2.get(i).width);
-        }
+//        for (int i = 0; i < peaks2.size(); i++) {
+//            System.out.println("peaks guess " + i + " x = " + peaks2.get(i).position);
+//            System.out.println("peaks guess " + i + " y = " + peaks2.get(i).depth);
+//            System.out.println("peaks guess " + i + " fwhm = " + peaks2.get(i).width);
+//        }
 
         double peak1diff = Math.abs(peaks2.get(0).depth - baseline);
         double peak2diff = peak1diff;
