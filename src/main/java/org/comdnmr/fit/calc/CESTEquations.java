@@ -692,7 +692,7 @@ public class CESTEquations {
         return smoothed;
     }
 
-    static double getBaseline(double[] vec) {
+    static double[] getBaseline(double[] vec) {
         int winSize = 8;
         double maxValue = Double.NEGATIVE_INFINITY;
         double sDev = 0.0;
@@ -707,7 +707,8 @@ public class CESTEquations {
                 }
             }
         }
-        return maxValue;
+        double[] result = {maxValue, sDev};
+        return result;
     }
 
     public static double[][] cestPeakGuess(double[][] xvals, double[] yvals) {
@@ -717,20 +718,27 @@ public class CESTEquations {
         double B1val = xvals[1][0];
 
         double[] syvals = new double[yvals.length];
-        double baseline = getBaseline(yvals);
+        double[] baseValues = getBaseline(yvals);
+        double baseline = baseValues[0];
 
-        yvals = smoothCEST(yvals, 0, yvals.length, 3, 21, syvals);
+        yvals = smoothCEST(yvals, 0, yvals.length, 3, 11, syvals);
 
         // A point must have a lower value than this number of points on each
         // side of the point in order to be a peak.
         int nP = 2;
+        double baseRatio = 3.0;
 
         // A threshold to use when deciding if a point is deep enough
-        // The points fractional drop from baseline must be greater than this
-        // to be a peak
-        double threshold = 0.02;
+        // calculated as baseline - a multiple of the standard deviation estimate
+        double threshold = baseline - baseValues[1] * baseRatio;
+        double yMin = Double.MAX_VALUE;
+        double xAtYMin = 0.0;
         for (int i = nP; i < yvals.length - nP; i++) {
-            if (Math.abs(baseline - yvals[i - 1]) / baseline > threshold) {
+            if (yvals[i] < yMin) {
+                yMin = yvals[i];
+                xAtYMin = xvals[0][i];
+            }
+            if (yvals[i] < threshold) {
                 boolean ok = true;
                 for (int j = i - nP; j <= (i + nP); j++) {
                     if (yvals[i] > yvals[j]) {
@@ -795,12 +803,12 @@ public class CESTEquations {
         }
 
         peaks.sort(Comparator.comparingDouble(Peak::getDepth));
-
-//        for (int i = 0; i < peaks.size(); i++) {
-//            System.out.println("peaks guess " + i + " x = " + peaks.get(i).position);
-//            System.out.println("peaks guess " + i + " y = " + peaks.get(i).depth);
-//            System.out.println("peaks guess " + i + " fwhm = " + peaks.get(i).width);
-//        }
+        System.out.println("min at " + xAtYMin + " " + yMin);
+        for (int i = 0; i < peaks.size(); i++) {
+            System.out.println("peaks guess " + i + " x = " + peaks.get(i).position);
+            System.out.println("peaks guess " + i + " y = " + peaks.get(i).depth);
+            System.out.println("peaks guess " + i + " fwhm = " + peaks.get(i).width);
+        }
         List<Peak> peaks2 = peaks;
         if (peaks.size() >= 2) {
             peaks2 = peaks.subList(0, 2);
@@ -821,10 +829,11 @@ public class CESTEquations {
         }
 
         peaks2.sort(Comparator.comparingDouble(Peak::getDepth));
-        if (peaks.size() > 2) {
-            peaks2 = peaks.subList(0, 2);
+        for (int i = 0; i < peaks2.size(); i++) {
+            System.out.println("peaks guess " + i + " x = " + peaks2.get(i).position);
+            System.out.println("peaks guess " + i + " y = " + peaks2.get(i).depth);
+            System.out.println("peaks guess " + i + " fwhm = " + peaks2.get(i).width);
         }
-
         peaks2.sort(Comparator.comparingDouble(Peak::getPosition).reversed());
 
         double peak1diff = Math.abs(peaks2.get(0).depth - baseline);
@@ -863,7 +872,8 @@ public class CESTEquations {
 //                System.out.println(i + " " + j + " " + peaks[i][j]);
 //            }
 //        }
-        double baseline = getBaseline(yvals);
+        double[] baseValues = getBaseline(yvals);
+        double baseline = baseValues[0];
 
         if (peaks.length > 1) {
             double[] pb = new double[peaks.length / 2];
@@ -966,7 +976,8 @@ public class CESTEquations {
         // Estimates CEST R1 values from data baseline intensity and Tex for initial guesses for before fitting.
         // Reference: Palmer, A. G. "Chemical exchange in biomacromolecules: Past, present, and future." J. Mag. Res. 241 (2014) 3-17.
 
-        double baseline = getBaseline(yvals);
+        double[] baseValues = getBaseline(yvals);
+        double baseline = baseValues[0];
         double[] r1 = {-Math.log(baseline) / 0.3, -Math.log(baseline) / 0.3}; //{R1A, R1B}
         if (Tex != null) {
             r1[0] = -Math.log(baseline) / Tex; //R1A
