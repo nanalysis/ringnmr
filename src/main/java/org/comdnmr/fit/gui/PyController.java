@@ -71,6 +71,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.Set;
 import javafx.beans.property.SimpleStringProperty;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -202,7 +203,7 @@ public class PyController implements Initializable {
     XYChart.Series MCseries = new XYChart.Series();
 
     GridPane inputInfoDisplay = new GridPane();
-    Scene inputScene = new Scene(inputInfoDisplay, 800, 500);
+    Scene inputScene = new Scene(inputInfoDisplay, 1000, 500);
     Stage infoStage = new Stage();
     Label chosenFileLabel = new Label();
     Label chosenXPK2FileLabel = new Label();
@@ -218,6 +219,8 @@ public class PyController implements Initializable {
     ChoiceBox<String> fitModeChoice = new ChoiceBox<>();
     TextField B1TextField = new TextField();
     TextField TexTextField = new TextField();
+    TextField yamlTextField = new TextField();
+    CheckBox ppmBox = new CheckBox("ppm to Hz");
     ArrayList<HashMap<String, Object>> dataList = new ArrayList();
 
     @FXML
@@ -531,8 +534,9 @@ public class PyController implements Initializable {
         Label fitModeLabel = new Label("  Experiment Type:  ");
         Label B1FieldLabel = new Label("  B1 Field:  ");
         Label TexLabel = new Label("  Tex:  ");
+        Label yamlLabel = new Label("  YAML File:  ");
 
-        Label[] labels = {fitModeLabel, fileLabel, xpk2FileLabel, fitFileLabel, fieldLabel, tempLabel, nucLabel, pLabel, modeLabel, tauLabel, B1FieldLabel, TexLabel, xValLabel};
+        Label[] labels = {fitModeLabel, fileLabel, xpk2FileLabel, fitFileLabel, fieldLabel, tempLabel, nucLabel, pLabel, modeLabel, tauLabel, B1FieldLabel, TexLabel, xValLabel, yamlLabel};
 
         Button fileChoiceButton = new Button();
         fileChoiceButton.setOnAction(e -> chooseFile(e));
@@ -551,6 +555,8 @@ public class PyController implements Initializable {
         paramFileResetButton.setOnAction(e -> resetParamFile(e));
         paramFileResetButton.setText("Reset");
         chosenParamFileLabel.setText("");
+        
+        ppmBox.setSelected(false);
 
         fieldTextField.setText("");
         tempTextField.setText("25.0");
@@ -564,6 +570,7 @@ public class PyController implements Initializable {
         xValTextArea.setText("");
         xValTextArea.setMaxWidth(240);
         xValTextArea.setWrapText(true);
+        yamlTextField.setText("");
 
         TextField[] texts = {fieldTextField, tempTextField, nucTextField, pTextField, modeTextField, tauTextField, B1TextField, TexTextField};
 
@@ -584,6 +591,33 @@ public class PyController implements Initializable {
         fitModeChoice.valueProperty().addListener(x -> {
             updateInfoInterface();
         });
+        
+        EventHandler<ActionEvent> boxevent = new EventHandler<ActionEvent>() { 
+  
+            public void handle(ActionEvent e) 
+            { 
+                String[] xvals = xValTextArea.getText().split("\t");
+                ArrayList<Double> fxvals = new ArrayList();
+                String xString = "";
+                if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST") && ppmBox.isSelected()) {
+                    for (int i = 0; i < xvals.length; i++) {
+                        fxvals.add(Double.parseDouble(xvals[i]) * Double.parseDouble(fieldTextField.getText()));
+                        xString += fxvals.get(i).toString() + "\t";
+                    }
+                    xValTextArea.setText(xString);
+                } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST") && !ppmBox.isSelected()) { 
+                    for (int i = 0; i < xvals.length; i++) {
+                        fxvals.add(Double.parseDouble(xvals[i]) / Double.parseDouble(fieldTextField.getText()));
+                        xString += fxvals.get(i).toString() + "\t";
+                    }
+                    xValTextArea.setText(xString);
+                }
+            } 
+
+        }; 
+
+        // set event to checkbox 
+        ppmBox.setOnAction(boxevent); 
 
         inputInfoDisplay.add(fitModeChoice, 1, 0);
         inputInfoDisplay.add(fileChoiceButton, 2, 1);
@@ -593,7 +627,9 @@ public class PyController implements Initializable {
         inputInfoDisplay.add(paramFileChoiceButton, 2, 3);
         inputInfoDisplay.add(paramFileResetButton, 3, 3);
         inputInfoDisplay.add(chosenParamFileLabel, 1, 3);
-        inputInfoDisplay.add(xValTextArea, 1, labels.length - 1, 2, 1);
+        inputInfoDisplay.add(xValTextArea, 1, labels.length - 2, 2, 1);
+        inputInfoDisplay.add(ppmBox, 3, labels.length - 2);
+        inputInfoDisplay.add(yamlTextField, 1, labels.length - 1);
 
         Button addButton = new Button();
         addButton.setOnAction(e -> addInfo(e));
@@ -605,20 +641,28 @@ public class PyController implements Initializable {
         clearButton.setText("Clear Data List");
         inputInfoDisplay.add(clearButton, 1, labels.length + 1);
 
+        Button yamlButton = new Button();
+        yamlButton.setOnAction(e -> makeYAML(e));
+        yamlButton.setText("Create YAML");
+        inputInfoDisplay.add(yamlButton, 2, labels.length - 1);
+        
         Button loadButton = new Button();
         loadButton.setOnAction(e -> loadInfo(e));
         loadButton.setText("Load");
-        inputInfoDisplay.add(loadButton, 2, labels.length);
+        inputInfoDisplay.add(loadButton, 2, labels.length + 1);
 
         if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CPMG")) {
             B1TextField.setDisable(true);
             tauTextField.setDisable(false);
+            ppmBox.setDisable(true);
         } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("EXP")) {
             B1TextField.setDisable(true);
             tauTextField.setDisable(true);
+            ppmBox.setDisable(true);
         } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST")) {
             B1TextField.setDisable(false);
             tauTextField.setDisable(true);
+            ppmBox.setDisable(false);
         }
 
         infoStage.setScene(inputScene);
@@ -630,12 +674,15 @@ public class PyController implements Initializable {
         if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CPMG")) {
             B1TextField.setDisable(true);
             tauTextField.setDisable(false);
+            ppmBox.setDisable(true);
         } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("EXP")) {
             B1TextField.setDisable(true);
             tauTextField.setDisable(true);
+            ppmBox.setDisable(true);
         } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST")) {
             B1TextField.setDisable(false);
             tauTextField.setDisable(true);
+            ppmBox.setDisable(false);
         }
 
     }
@@ -709,7 +756,7 @@ public class PyController implements Initializable {
                 if (sline.length() == 0) {
                     continue;
                 }
-                if (Character.isDigit(sline.charAt(0))) {
+                if (sline.startsWith("id")) {
                     break;
                 }
                 String[] sline1 = line.split("\t", -1);
@@ -759,22 +806,82 @@ public class PyController implements Initializable {
         hm.put("Tex", Double.parseDouble(TexTextField.getText()));
         String[] xvals = xValTextArea.getText().split("\t");
         ArrayList<Double> fxvals = new ArrayList();
-        for (int i = 0; i < xvals.length; i++) {
-            fxvals.add(Double.parseDouble(xvals[i]));
+        try {
+            for (int i = 0; i < xvals.length; i++) {
+                fxvals.add(Double.parseDouble(xvals[i]));
+            }
+        } catch (NumberFormatException nfe) {
+            fxvals = null;
         }
         hm.put("vcpmg", fxvals);
         dataList.add(hm);
+        String fileTail = chosenFileLabel.getText().substring(0, chosenFileLabel.getText().lastIndexOf('.'));
+        yamlTextField.setText(fileTail + ".yaml");
+//        for (int i=0; i<dataList.size(); i++) {
+//            System.out.println("dataList " + i + " " + dataList.get(i));
+//        }
+    }
+    
+    public void makeYAML(ActionEvent event) {
+        if (dataList.isEmpty()) {
+            addInfo();
+        }
+        makeYAML(dataList);
+    }
+    
+    public void makeYAML(List data) {
+        HashMap hm1 = new HashMap();
+        HashMap hm2 = new HashMap();
+        ArrayList<HashMap<String, Object>> dataHmList = new ArrayList();
+        
+        for (int i=0; i<data.size(); i++) {
+            HashMap hmdf = (HashMap) data.get(i);
+            HashMap hmd = new HashMap(hmdf);
+
+            String paramFile = (String) hmdf.get("paramFile");
+            String paramFileName = paramFile.substring(paramFile.lastIndexOf("/")+1, paramFile.length());
+            hm2.put("mode", hmdf.get("fitmode"));
+            hm2.put("file", paramFileName);
+//            hmdf.put("vcpmg", hmdf.get("vcpmg").toString());
+            if (hmdf.get("fitmode").equals("exp")) {
+                HashMap hmd1 = new HashMap();
+                hmd1.put("c0", 2);
+                hmd1.put("delta0", 0);
+                hmd1.put("delta", 0.008);
+                hmdf.put("delays", hmd1);
+                hmdf.remove("vcpmg");
+            }
+            Set keySet = hmdf.keySet();
+            if (!hmdf.get("fitmode").equals("cest")) {
+                keySet.remove("Tex");
+                keySet.remove("B1field");
+            }
+            if (hmdf.get("fitmode").equals("cest")) {
+                keySet.remove("Tex");
+                keySet.remove("B1field");
+            }
+            keySet.remove("fitmode");
+            keySet.remove("paramFile");
+            List keys = Arrays.asList(keySet);
+            hmd.keySet().retainAll(keys);
+            String dataFile = (String) hmdf.get("file");
+            String dataFileName = dataFile.substring(dataFile.lastIndexOf("/")+1, dataFile.length());
+            hmdf.put("file", dataFileName);
+            dataHmList.add(hmdf);
+        }
+        hm2.put("data", dataHmList);
+        hm1.put("fit", hm2);
+        
         Yaml yaml = new Yaml();
-        String s = yaml.dumpAsMap(hm);
-        String fileTail = chosenFileLabel.getText().substring(0, chosenFileLabel.getText().indexOf('.'));
-        try (FileWriter writer = new FileWriter(fileTail + ".yaml")) {
+        String s = yaml.dumpAsMap(hm1);
+        try (FileWriter writer = new FileWriter(yamlTextField.getText())) {
             writer.write(s);
+            System.out.println(yamlTextField.getText() + " written");
         } catch (IOException ex) {
             Logger.getLogger(DataIO.class.getName()).log(Level.SEVERE, null, ex);
         }
-
     }
-
+    
     public void clearDataList(ActionEvent event) {
         dataList.clear();
     }
