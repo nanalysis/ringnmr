@@ -139,6 +139,10 @@ public enum CESTEquation implements CESTEquationType {
                 dAbound = peaks[0][2]/2;
                 dBbound = dAbound;
             }
+                        double tex = xValues[2][0];
+            double r1A = guesses[map[id][1]];
+            double[] r1BouA = CESTEquations.r1Boundaries(r1A, tex, 0.1);
+
 //                boundaries[0][map[id][0]] = 0.0; //kex LB
 //                boundaries[1][map[id][0]] = guesses[map[id][0]] * 0; //kex UB
 //                boundaries[0][map[id][1]] = 0.0; //pb LB
@@ -147,8 +151,8 @@ public enum CESTEquation implements CESTEquationType {
                 boundaries[1][map[id][0]] = guesses[map[id][0]] + dAbound; //deltaA UB
 //                boundaries[0][map[id][3]] = guesses[map[id][3]] - dBbound; //deltaB LB
 //                boundaries[1][map[id][3]] = guesses[map[id][3]] + dBbound; //deltaB UB
-                boundaries[0][map[id][1]] = guesses[map[id][1]] - 0.1; //R1A LB
-                boundaries[1][map[id][1]] = guesses[map[id][1]] + 0.1; //R1A UB
+                boundaries[0][map[id][1]] = r1BouA[0]; //R1A LB
+                boundaries[1][map[id][1]] = r1BouA[1]; //R1A UB
 //                boundaries[0][map[id][5]] = guesses[map[id][5]] - 0.0; //R1B LB
 //                boundaries[1][map[id][5]] = guesses[map[id][5]] + 0.0; //R1B UB
                 boundaries[0][map[id][2]] = 0.1; //R2A LB

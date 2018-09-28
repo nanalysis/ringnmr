@@ -971,6 +971,14 @@ public class CESTEquations {
 
     }
 
+    public static double[] r1Boundaries(double r1, double tex, double delta) {
+        double baseline = Math.exp(-r1 * tex);
+        double r1Low = -Math.log(baseline + 0.1) / tex;
+        double r1Up = -Math.log(baseline - delta) / tex;
+        double[] result = {r1Low, r1Up};
+        return result;
+    }
+
     public static double[] cestR1Guess(double[] yvals, Double Tex) {
         // Estimates CEST R1 values from data baseline intensity and Tex for initial guesses for before fitting.
         // Reference: Palmer, A. G. "Chemical exchange in biomacromolecules: Past, present, and future." J. Mag. Res. 241 (2014) 3-17.

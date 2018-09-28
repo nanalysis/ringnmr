@@ -70,6 +70,12 @@ public interface CESTEquationType extends EquationType {
                 dAbound = peaks[0][2]/2;
                 dBbound = dAbound;
             }
+            double tex = xValues[2][0];
+            double r1A = guesses[map[id][4]];
+            double[] r1BouA = CESTEquations.r1Boundaries(r1A, tex, 0.1);
+            double r1B = guesses[map[id][5]];
+            double[] r1BouB = CESTEquations.r1Boundaries(r1B, tex, 0.1);
+
                 boundaries[0][map[id][0]] = 1.0; //kex LB
                 boundaries[1][map[id][0]] = guesses[map[id][0]] * 4; //kex UB
                 boundaries[0][map[id][1]] = 0.01; //pb LB
@@ -78,10 +84,10 @@ public interface CESTEquationType extends EquationType {
                 boundaries[1][map[id][2]] = guesses[map[id][2]] + dAbound; //deltaA UB
                 boundaries[0][map[id][3]] = guesses[map[id][3]] - dBbound; //deltaB LB
                 boundaries[1][map[id][3]] = guesses[map[id][3]] + dBbound; //deltaB UB
-                boundaries[0][map[id][4]] = guesses[map[id][4]] - 0.1; //R1A LB
-                boundaries[1][map[id][4]] = guesses[map[id][4]] + 0.1; //R1A UB
-                boundaries[0][map[id][5]] = guesses[map[id][5]] - 0.1; //R1B LB
-                boundaries[1][map[id][5]] = guesses[map[id][5]] + 0.1; //R1B UB
+                boundaries[0][map[id][4]] = r1BouA[0]; //R1A LB
+                boundaries[1][map[id][4]] = r1BouA[1]; //R1A UB
+                boundaries[0][map[id][5]] = r1BouB[0]; //R1B LB
+                boundaries[1][map[id][5]] = r1BouB[1]; //R1B UB
                 boundaries[0][map[id][6]] = 0.1; //R2A LB
                 boundaries[1][map[id][6]] = guesses[map[id][6]] * 4; //R2A UB
                 boundaries[0][map[id][7]] = 0.1; //R2B LB
