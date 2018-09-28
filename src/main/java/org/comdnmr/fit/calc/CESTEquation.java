@@ -51,8 +51,8 @@ public enum CESTEquation implements CESTEquationType {
                 double[][] r2 = CESTEquations.cestR2Guess(peaks, yValues);
                 guesses[map[id][0]] = CESTEquations.cestKexGuess(peaks); //112.0; //kex
                 guesses[map[id][1]] = CESTEquations.cestPbGuess(peaks, yValues); //0.1; //pb
-                guesses[map[id][2]] = peaks[peaks.length-1][0]; //400 * 2.0 * Math.PI; //deltaA
-                guesses[map[id][3]] = peaks[0][0]; //-250 * 2.0 * Math.PI; //deltaB
+                guesses[map[id][2]] = peaks[0][0]; //-250 * 2.0 * Math.PI; //deltaB
+                guesses[map[id][3]] = peaks[peaks.length-1][0]; //400 * 2.0 * Math.PI; //deltaA
                 guesses[map[id][4]] = r1[0]; //2.4; //R1A
                 guesses[map[id][5]] = r1[1]; //2.4; //R1B
                 guesses[map[id][6]] = r2[0][0]; //20.0; //R2A
@@ -111,7 +111,7 @@ public enum CESTEquation implements CESTEquationType {
                 double[][] r2 = CESTEquations.cestR2Guess(peaks, yValues);
 //                guesses[map[id][0]] = 0.00; //112.0; //kex
 //                guesses[map[id][1]] = 0.0; //0.1; //pb
-                guesses[map[id][0]] = peaks[peaks.length-1][0]; //400 * 2.0 * Math.PI; //deltaA
+                guesses[map[id][0]] = peaks[0][0]; //400 * 2.0 * Math.PI; //deltaA
 //                guesses[map[id][3]] = 0.0; //-250 * 2.0 * Math.PI; //deltaB
                 guesses[map[id][1]] = r1[0]; //2.4; //R1A
 //                guesses[map[id][5]] = 0.0; //2.4; //R1B
@@ -133,8 +133,8 @@ public enum CESTEquation implements CESTEquationType {
             double dAbound = 0;
             double dBbound = 0;
             if (peaks.length > 1) {
-                dAbound = peaks[1][2]/2;
-                dBbound = peaks[0][2]/2;
+                dAbound = peaks[0][2]/2;
+                dBbound = peaks[1][2]/2;
             } else if (peaks.length == 1) {
                 dAbound = peaks[0][2]/2;
                 dBbound = dAbound;
@@ -206,8 +206,8 @@ public enum CESTEquation implements CESTEquationType {
                 double[][] r2 = CESTEquations.cestR2Guess(peaks, yValues);
                 guesses[map[id][0]] = CESTEquations.cestKexGuess(peaks); //112.0; //kex
                 guesses[map[id][1]] = CESTEquations.cestPbGuess(peaks, yValues); //0.1; //pb
-                guesses[map[id][2]] = peaks[peaks.length-1][0]; //400 * 2.0 * Math.PI; //deltaA
-                guesses[map[id][3]] = peaks[0][0]; //-250 * 2.0 * Math.PI; //deltaB
+                guesses[map[id][2]] = peaks[0][0]; //-250 * 2.0 * Math.PI; //deltaB
+                guesses[map[id][3]] = peaks[peaks.length-1][0]; //400 * 2.0 * Math.PI; //deltaA
                 guesses[map[id][4]] = r1[0]; //2.4; //R1A
                 guesses[map[id][5]] = r1[1]; //2.4; //R1B
                 guesses[map[id][6]] = r2[0][0]; //r2[1][r2[0].length-1]/4; //20.0; //R2A
@@ -265,8 +265,8 @@ public enum CESTEquation implements CESTEquationType {
                 double[][] r2 = CESTEquations.cestR2Guess(peaks, yValues);
                 guesses[map[id][0]] = CESTEquations.cestKexGuess(peaks); //112.0; //kex
                 guesses[map[id][1]] = CESTEquations.cestPbGuess(peaks, yValues); //0.1; //pb
-                guesses[map[id][2]] = peaks[peaks.length-1][0]; //400 * 2.0 * Math.PI; //deltaA
-                guesses[map[id][3]] = peaks[0][0]; //-250 * 2.0 * Math.PI; //deltaB
+                guesses[map[id][2]] = peaks[0][0]; //-250 * 2.0 * Math.PI; //deltaB
+                guesses[map[id][3]] = peaks[peaks.length-1][0]; //400 * 2.0 * Math.PI; //deltaA
                 guesses[map[id][4]] = r1[0]; //2.4; //R1A
                 guesses[map[id][5]] = r1[1]; //2.4; //R1B
                 guesses[map[id][6]] = r2[0][0]; //r2[1][r2[0].length-1]/4; //20.0; //R2A
@@ -324,8 +324,8 @@ public enum CESTEquation implements CESTEquationType {
                 double[][] r2 = CESTEquations.cestR2Guess(peaks, yValues);
                 guesses[map[id][0]] = CESTEquations.cestKexGuess(peaks); //112.0; //kex
                 guesses[map[id][1]] = CESTEquations.cestPbGuess(peaks, yValues); //0.1; //pb
-                guesses[map[id][2]] = peaks[peaks.length-1][0]; //400 * 2.0 * Math.PI; //deltaA
-                guesses[map[id][3]] = peaks[0][0]; //-250 * 2.0 * Math.PI; //deltaB
+                guesses[map[id][2]] = peaks[0][0]; //-250 * 2.0 * Math.PI; //deltaB
+                guesses[map[id][3]] = peaks[peaks.length-1][0]; //400 * 2.0 * Math.PI; //deltaA
                 guesses[map[id][4]] = r1[0]; //2.4; //R1A
                 guesses[map[id][5]] = r1[1]; //2.4; //R1B
                 guesses[map[id][6]] = r2[0][0]; //r2[1][r2[0].length-1]/4; //20.0; //R2A
@@ -383,8 +383,8 @@ public enum CESTEquation implements CESTEquationType {
                 double[][] r2 = CESTEquations.cestR2Guess(peaks, yValues);
                 guesses[map[id][0]] = CESTEquations.cestKexGuess(peaks); //112.0; //kex
                 guesses[map[id][1]] = CESTEquations.cestPbGuess(peaks, yValues); //0.1; //pb
-                guesses[map[id][2]] = peaks[peaks.length-1][0]; //400 * 2.0 * Math.PI; //deltaA
-                guesses[map[id][3]] = peaks[0][0]; //-250 * 2.0 * Math.PI; //deltaB
+                guesses[map[id][2]] = peaks[0][0]; //-250 * 2.0 * Math.PI; //deltaB
+                guesses[map[id][3]] = peaks[peaks.length-1][0]; //400 * 2.0 * Math.PI; //deltaA
                 guesses[map[id][4]] = r1[0]; //2.4; //R1A
                 guesses[map[id][5]] = r1[1]; //2.4; //R1B
                 guesses[map[id][6]] = r2[0][0]; //r2[1][r2[0].length-1]/4; //20.0; //R2A
@@ -430,8 +430,8 @@ public enum CESTEquation implements CESTEquationType {
             double dAbound = 0;
             double dBbound = 0;
             if (peaks.length > 1) {
-                dAbound = peaks[1][2]/2;
-                dBbound = peaks[0][2]/2;
+                dAbound = peaks[0][2]/2;
+                dBbound = peaks[1][2]/2;
             } else if (peaks.length == 1) {
                 dAbound = peaks[0][2]/2;
                 dBbound = dAbound;
@@ -494,8 +494,8 @@ public enum CESTEquation implements CESTEquationType {
                 double[][] r2 = CESTEquations.cestR2Guess(peaks, yValues);
                 guesses[map[id][0]] = CESTEquations.cestKexGuess(peaks); //112.0; //kex
                 guesses[map[id][1]] = CESTEquations.cestPbGuess(peaks, yValues); //0.1; //pb
-                guesses[map[id][2]] = peaks[peaks.length-1][0]; //400 * 2.0 * Math.PI; //deltaA
-                guesses[map[id][3]] = peaks[0][0]; //-250 * 2.0 * Math.PI; //deltaB
+                guesses[map[id][2]] = peaks[0][0]; //-250 * 2.0 * Math.PI; //deltaB
+                guesses[map[id][3]] = peaks[peaks.length-1][0]; //400 * 2.0 * Math.PI; //deltaA
                 guesses[map[id][4]] = r1[0]; //2.4; //R1A
                 guesses[map[id][5]] = r1[1]; //2.4; //R1B
                 guesses[map[id][6]] = r2[0][0]; //r2[1][r2[0].length-1]/4; //20.0; //R2A
@@ -554,8 +554,8 @@ public enum CESTEquation implements CESTEquationType {
                 double[][] r2 = CESTEquations.cestR2Guess(peaks, yValues);
                 guesses[map[id][0]] = CESTEquations.cestKexGuess(peaks); //112.0; //kex
                 guesses[map[id][1]] = CESTEquations.cestPbGuess(peaks, yValues); //0.1; //pb
-                guesses[map[id][2]] = peaks[peaks.length-1][0]; //400 * 2.0 * Math.PI; //deltaA
-                guesses[map[id][3]] = peaks[0][0]; //-250 * 2.0 * Math.PI; //deltaB
+                guesses[map[id][2]] = peaks[0][0]; //-250 * 2.0 * Math.PI; //deltaB
+                guesses[map[id][3]] = peaks[peaks.length-1][0]; //400 * 2.0 * Math.PI; //deltaA
                 guesses[map[id][4]] = r1[0]; //2.4; //R1A
                 guesses[map[id][5]] = r1[1]; //2.4; //R1B
                 guesses[map[id][6]] = r2[0][0]; //r2[1][r2[0].length-1]/4; //20.0; //R2A

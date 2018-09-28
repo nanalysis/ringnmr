@@ -834,7 +834,6 @@ public class CESTEquations {
             System.out.println("peaks guess " + i + " y = " + peaks2.get(i).depth);
             System.out.println("peaks guess " + i + " fwhm = " + peaks2.get(i).width);
         }
-        peaks2.sort(Comparator.comparingDouble(Peak::getPosition).reversed());
 
         double peak1diff = Math.abs(peaks2.get(0).depth - baseline);
         double peak2diff = peak1diff;
