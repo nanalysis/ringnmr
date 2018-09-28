@@ -219,7 +219,7 @@ public class PyController implements Initializable {
     TextField B1TextField = new TextField();
     TextField TexTextField = new TextField();
     ArrayList<HashMap<String, Object>> dataList = new ArrayList();
-    
+
     @FXML
     ToolBar navigatorToolBar = new ToolBar();
 
@@ -352,7 +352,7 @@ public class PyController implements Initializable {
         setBoundsButton.setOnAction(this::setBounds);
 
         textArea.appendText("> ");
-        
+
         initResidueNavigator();
 
 //        mainController.setOnHidden(e -> Platform.exit());
@@ -421,7 +421,7 @@ public class PyController implements Initializable {
         }
 
     }
-    
+
     void initResidueNavigator() {
 
         String iconSize = "12px";
@@ -444,11 +444,11 @@ public class PyController implements Initializable {
 
         navigatorToolBar.getItems().addAll(buttons);
     }
-    
+
     public void previousResidue(ActionEvent event) {
         List<ResidueInfo> resInfo = currentResProps.getResidueValues();
         List resNums = new ArrayList<>();
-        for (int i=0; i<resInfo.size(); i++) {
+        for (int i = 0; i < resInfo.size(); i++) {
             resNums.add(resInfo.get(i).getResNum());
         }
         Collections.sort(resNums);
@@ -475,7 +475,7 @@ public class PyController implements Initializable {
     public void nextResidue(ActionEvent event) {
         List<ResidueInfo> resInfo = currentResProps.getResidueValues();
         List resNums = new ArrayList<>();
-        for (int i=0; i<resInfo.size(); i++) {
+        for (int i = 0; i < resInfo.size(); i++) {
             resNums.add(resInfo.get(i).getResNum());
         }
         Collections.sort(resNums);
@@ -483,7 +483,7 @@ public class PyController implements Initializable {
             int resIndex = resNums.indexOf(currentResInfo.getResNum());
             resIndex++;
             if (resIndex >= resNums.size()) {
-                resIndex = resNums.size()-1;
+                resIndex = resNums.size() - 1;
             }
             int res = (int) resNums.get(resIndex);
             XYBarChart chart = getActiveChart();
@@ -1128,7 +1128,7 @@ public class PyController implements Initializable {
                         aicLabel.setText("AIC: " + aic);
                         rmsLabel.setText(" RMS: " + rms);
                     } catch (NullPointerException npEaic) {
-                        
+
                     }
                 }
             }
@@ -1458,7 +1458,8 @@ public class PyController implements Initializable {
                 double[] errs = curveFit.getEquation().getErrs(); //double[] errs = new double[pars.length];
                 double[] extras = new double[3];
                 double[] simExtras = simControls.getExtras();
-                extras[0] = 1.0;
+                extras[0] = CPMGFit.REF_FIELD;
+
                 for (int i = 0; i < simExtras.length; i++) {
                     extras[i + 1] = simExtras[i];
                 }
@@ -2022,7 +2023,7 @@ public class PyController implements Initializable {
         for (XYChart.Series<Double, Double> series : allData) {
             for (XYChart.Data<Double, Double> dataPoint : series.getData()) {
                 double y = dataPoint.getYValue();
-                yValues.add(y);
+               yValues.add(y);
             }
         }
         return yValues;
@@ -2061,7 +2062,7 @@ public class PyController implements Initializable {
             for (int i = 0; i < xValues.length; i++) {
                 double xValue = xValues[i];
                 ax[0] = xValue;
-                double yValue = eqn.calculate(sliderGuesses, ax, eqn.getExtra(0) / fieldRef);
+                double yValue = eqn.calculate(sliderGuesses, ax, eqn.getExtra(0));
                 yValue += sdev * rand.nextGaussian();
                 XYChart.Data dataPoint = new XYChart.Data(xValue, yValue);
                 dataPoint.setExtraValue(new Double(sdev));
