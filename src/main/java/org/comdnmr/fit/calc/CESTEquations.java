@@ -120,74 +120,38 @@ public class CESTEquations {
 
     }
 
-    public static double[] r1rhoPerturbationNoEx(double[] omega, double pb, double kex, double[] deltaA, double R1A, double R2A) {
+    public static double[] r1rhoPerturbationNoEx(double[] omega, double[] deltaA, double R1A, double R2A) {
         int size = omega.length;
-        double pa = 1.0 - pb;
-
-        double k1 = pb * kex;
-        double km1 = pa * kex;
-
-        double dR = Math.abs(R2A);
 
         double[] r1rho = new double[size];
         for (int i = 0; i < size; i++) {
-            double dw = deltaA[i];
             double weA = Math.sqrt(omega[i] * omega[i] + deltaA[i] * deltaA[i]);
-//            double weB = Math.sqrt(omega[i] * omega[i] + deltaB[i] * deltaB[i]);
             double sin2t = (omega[i] / weA) * (omega[i] / weA);
-            double x = ((dw * dw) + (dR * dR)) * km1 + dR * ((weA * weA) + (km1 * km1));
-            double y = dR * (omega[i] * omega[i]);
-            double REx = k1 * x / y;
-            r1rho[i] = (1 - sin2t) * R1A + sin2t * R2A + sin2t * REx;
-        }
-        return r1rho;
-    }
-
-    public static double[] r1rhoPerturbationNoEx2(double[] omega, double[] deltaA, double R1A, double R2A) {
-        int size = omega.length;
-
-        double dR = Math.abs(R2A);
-
-        double[] r1rho = new double[size];
-        for (int i = 0; i < size; i++) {
-            double dw = deltaA[i];
-            double weA = Math.sqrt(omega[i] * omega[i] + deltaA[i] * deltaA[i]);
-//            double weB = Math.sqrt(omega[i] * omega[i] + deltaB[i] * deltaB[i]);
-            double sin2t = (omega[i] / weA) * (omega[i] / weA);
-            double x = dR * ((weA * weA));
-            double y = dR * (omega[i] * omega[i]);
             r1rho[i] = (1 - sin2t) * R1A + sin2t * R2A;
         }
         return r1rho;
     }
 
-    public static double[] cestR1rhoPerturbationNoEx2(double[][] X, double deltaA0, double R1A, double R2A) {
+    public static double[] cestR1rhoPerturbationNoEx(double[][] X, double deltaA0, double R1A, double R2A) {
         double[] omegarf = X[0];
         double[] omega1 = X[1];
         double[] Tex = X[2];
 
         double trad = Tex[0];//0.3;
+        int size = omegarf.length;
 
-        double pa = 1.0;
-        double[] deltaA = new double[omegarf.length];
-        double[] deltaB = new double[omegarf.length];
-        double[] omegaBar = new double[omegarf.length];
-        for (int i = 0; i < omegarf.length; i++) {
+        double[] cos2t = new double[size];
+        double[] deltaA = new double[size];
+        for (int i = 0; i < size; i++) {
             deltaA[i] = deltaA0 - omegarf[i];
-            omegaBar[i] = pa * deltaA[i];
-        }
-
-        double[] we = new double[omegaBar.length];
-        double[] cos2t = new double[omegaBar.length];
-        for (int i = 0; i < omegaBar.length; i++) {
-            we[i] = Math.sqrt(omega1[i] * omega1[i] + omegaBar[i] * omegaBar[i]);
-            cos2t[i] = (omegaBar[i] / we[i]) * (omegaBar[i] / we[i]);
+            double omegaBar = deltaA[i];
+            double we = Math.sqrt(omega1[i] * omega1[i] + omegaBar * omegaBar);
+            cos2t[i] = (omegaBar / we) * (omegaBar / we);
         }
 
         double[] cest = new double[cos2t.length];
 
-        double[] r1rho = r1rhoPerturbationNoEx2(omega1, deltaA, R1A, R2A);
-        //double[] cest = new double[cos2t.length];
+        double[] r1rho = r1rhoPerturbationNoEx(omega1, deltaA, R1A, R2A);
         for (int i = 0; i < cos2t.length; i++) {
             cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
         }
@@ -590,14 +554,7 @@ public class CESTEquations {
             }
 
         } else if (approx == "trottnoex") {
-            double[] r1rho = r1rhoPerturbationNoEx(omega1, pb, kex, deltaA, R1A, R2A);
-            //double[] cest = new double[cos2t.length];
-            for (int i = 0; i < cos2t.length; i++) {
-                cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
-            }
-
-        } else if (approx == "trottnoex2") {
-            double[] r1rho = r1rhoPerturbationNoEx2(omega1, deltaA, R1A, R2A);
+            double[] r1rho = r1rhoPerturbationNoEx(omega1, deltaA, R1A, R2A);
             //double[] cest = new double[cos2t.length];
             for (int i = 0; i < cos2t.length; i++) {
                 cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);

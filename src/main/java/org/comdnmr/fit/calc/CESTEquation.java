@@ -66,7 +66,7 @@ public enum CESTEquation implements CESTEquationType {
             double deltaA0 = par[map[0]];
             double R1A = par[map[1]];
             double R2A = par[map[2]];
-            double[] yCalc = CESTEquations.cestR1rhoPerturbationNoEx2(X, deltaA0, R1A, R2A);
+            double[] yCalc = CESTEquations.cestR1rhoPerturbationNoEx(X, deltaA0, R1A, R2A);
             return yCalc;
         }
 
