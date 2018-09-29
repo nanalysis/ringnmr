@@ -112,6 +112,43 @@ public class DataUtil {
 
         return mid;
     }
+    public static double getMidValueZero(double[] yValues, double[] xValues, int[] idValues, int id) {
+        double hh = DataUtil.getMaxValue(yValues) / 2.0;
+        double deltaUp = Double.MAX_VALUE;
+        double deltaDown = Double.MAX_VALUE;
+        double dUp, iUp;
+        double dDown, iDown;
+        dUp = iUp = dDown = iDown = 0;
+
+        for (int i = 0; i < xValues.length; i++) {
+            if (idValues[i] != id) {
+                continue;
+            }
+            double dvar = yValues[i];
+            double ivar = xValues[i];
+            double ddvar = dvar - hh;
+
+            if (ddvar >= 0 && ddvar < deltaUp) {
+                deltaUp = ddvar;
+                dUp = dvar;
+                iUp = ivar;
+            } else if (ddvar < 0 && -ddvar < deltaDown) {
+                deltaDown = -ddvar;
+                dDown = dvar;
+                iDown = ivar;
+            }
+        }
+
+        double mid;
+
+        if (dUp == dDown) {
+            mid = (iUp + iDown) / 2.0;
+        } else {
+            mid = ((hh - dDown) / (dUp - dDown) * (iUp - iDown)) + iDown;
+        }
+
+        return mid;
+    }
 
     public static double getMidValue1Side(double[] yValues, double[] xValues) {
         double hh = DataUtil.getMaxValue(yValues) / 2.0;

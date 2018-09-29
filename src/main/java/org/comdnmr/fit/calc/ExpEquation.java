@@ -33,7 +33,7 @@ public enum ExpEquation implements EquationType {
                 double minY = DataUtil.getMinValue(yValues, idNums, id);
                 double maxY = DataUtil.getMaxValue(yValues, idNums, id);
                 double mean = DataUtil.getMeanValue(yValues, idNums, id);
-                double vMid = DataUtil.getMidValue(yValues, xValues[0], idNums, id);
+                double vMid = DataUtil.getMidValueZero(yValues, xValues[0], idNums, id);
                 System.out.println(minY + " " + maxY + " " + mean + " " + vMid);
                 System.out.println(id + " " + map[id].length + " " + map[id][0] + " " + map[id][1]);
                 guesses[map[id][0]] = maxY;
