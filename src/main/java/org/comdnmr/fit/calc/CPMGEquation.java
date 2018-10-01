@@ -125,6 +125,10 @@ public enum CPMGEquation implements EquationType {
                 }
             }
             guesses[0] = kExSum /= nID;
+            if (guesses[0] > CoMDPreferences.getCPMGMaxFreq()) {
+                guesses[0] = CoMDPreferences.getCPMGMaxFreq() * 0.9;
+            }
+
             return guesses;
         }
 
@@ -134,7 +138,7 @@ public enum CPMGEquation implements EquationType {
             for (int id = 0; id < map.length; id++) {
                 int iPar = map[id][0];
                 boundaries[0][iPar] = 0.0;
-                boundaries[1][iPar] = guesses[iPar] * 4;
+                boundaries[1][iPar] = Math.min(guesses[iPar] * 4, CoMDPreferences.getCPMGMaxFreq());
                 iPar = map[id][1];
                 boundaries[0][iPar] = 0.0;
                 boundaries[1][iPar] = guesses[iPar] * 4;
@@ -261,8 +265,8 @@ public enum CPMGEquation implements EquationType {
                 double rex = maxY - r2;
                 double tauMid = 1.0 / (2.0 * vMid);
                 double kex = 1.915 / (0.5 * tauMid); // 1.915 comes from solving equation iteratively at tcp rex 0.5 half max
-                if (kex > 1000.0) {
-                    kex = 1000.0;
+                if (kex > CoMDPreferences.getCPMGMaxFreq()) {
+                    kex = CoMDPreferences.getCPMGMaxFreq() * 0.9;
                 }
                 double dw2 = rex / (pa * (1.0 - pa)) * kex;
                 double dPPM = Math.sqrt(dw2) / (2.0 * Math.PI) / field;
@@ -281,7 +285,7 @@ public enum CPMGEquation implements EquationType {
             for (int id = 0; id < map.length; id++) {
                 int iPar = map[id][0];
                 boundaries[0][iPar] = 0.0;
-                boundaries[1][iPar] = guesses[iPar] * 4;
+                boundaries[1][iPar] = Math.min(guesses[iPar] * 4, CoMDPreferences.getCPMGMaxFreq());
                 iPar = map[id][1];
                 boundaries[0][iPar] = 0.5;
                 boundaries[1][iPar] = 0.99;
