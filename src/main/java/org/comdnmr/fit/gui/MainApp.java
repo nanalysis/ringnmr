@@ -3,6 +3,8 @@ package org.comdnmr.fit.gui;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import javafx.application.Application;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
@@ -16,6 +18,7 @@ public class MainApp extends Application {
     public static Stage primaryStage;
     public static ScriptEngine engine;
     public static InteractiveInterpreter interpreter = new InteractiveInterpreter();
+    public static PreferencesController preferencesController;
 
     public static void main(String[] args) throws ScriptException {
         engine = new ScriptEngineManager().getEngineByName("jython");
@@ -46,9 +49,8 @@ public class MainApp extends Application {
 //        } catch (IOException | ScriptException ioE) {
 //        }
     }
-    
+
     public static InteractiveInterpreter getInterpreter() {
         return interpreter;
     }
-    
 }

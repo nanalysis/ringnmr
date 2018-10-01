@@ -39,6 +39,8 @@
                                     <MenuItem text="Save R File..." onAction="#saveBarToRFile"/>                            
                                 </items>
                             </Menu>
+                            <MenuItem text="Preferences..." onAction="#showPreferences"/>
+
                         </items>
                     </Menu>
                     <Menu text="Chart">

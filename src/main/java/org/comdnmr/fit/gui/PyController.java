@@ -94,6 +94,8 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import static org.comdnmr.fit.calc.DataIO.loadPeakFile;
 import static org.comdnmr.fit.calc.DataIO.loadTextFile;
+import static org.comdnmr.fit.gui.MainApp.preferencesController;
+import static org.comdnmr.fit.gui.MainApp.primaryStage;
 import org.python.util.InteractiveInterpreter;
 import org.yaml.snakeyaml.Yaml;
 
@@ -2179,4 +2181,17 @@ public class PyController implements Initializable {
         allData.addAll(data);
         xychart.setData(allData);
     }
+    
+       @FXML
+    private void showPreferences(ActionEvent event) {
+        if (preferencesController == null) {
+            preferencesController = PreferencesController.create(primaryStage);
+        }
+        if (preferencesController != null) {
+            preferencesController.getStage().show();
+        } else {
+            System.out.println("Coudn't make controller");
+        }
+    }
+
 }

@@ -20,6 +20,12 @@
             <version>0.8</version>
         </dependency>
         <dependency>
+            <groupId>org.nmrfx</groupId>
+            <artifactId>nmrfxutils</artifactId>
+            <version>10.2.20</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>org.python</groupId>
             <artifactId>jython-standalone</artifactId>
             <version>2.7.0</version>
