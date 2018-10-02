@@ -35,7 +35,7 @@ public abstract class FitModel implements MultivariateFunction {
     double[] fields;
     int[] idNums;
     int[][] map;
-    int nSim = 200;
+    int nSim = 50;
     int nID = 1;
     boolean reportFitness = false;
     boolean absMode = false;
