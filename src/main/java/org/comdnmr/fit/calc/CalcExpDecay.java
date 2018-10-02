@@ -105,6 +105,7 @@ public class CalcExpDecay extends FitModel {
 
     public double[] simBounds(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma) {
         reportFitness = false;
+        int nSim = CoMDPreferences.getSampleSize();
         int nPar = start.length;
         parValues = new double[nPar][nSim];
         double[] yPred = getPredicted(start);
@@ -135,6 +136,7 @@ public class CalcExpDecay extends FitModel {
     public double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma) {
         reportFitness = false;
         int nPar = start.length;
+        int nSim = CoMDPreferences.getSampleSize();
         parValues = new double[nPar][nSim];
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
@@ -170,6 +172,7 @@ public class CalcExpDecay extends FitModel {
     public double[] simBoundsBootstrapStream(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma) {
         reportFitness = false;
         int nPar = start.length;
+        int nSim = CoMDPreferences.getSampleSize();
         parValues = new double[nPar][nSim];
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];

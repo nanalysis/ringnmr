@@ -13,8 +13,8 @@ import java.util.prefs.Preferences;
  */
 public class CoMDPreferences {
 
-    static Double cpmgMaxFreq = null;
-    static Integer sampleSize = null;
+    static private Double cpmgMaxFreq = null;
+    static private Integer sampleSize = null;
 
     static Preferences getPrefs() {
         Preferences prefs = Preferences.userNodeForPackage(CoMDPreferences.class);

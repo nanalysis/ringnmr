@@ -35,7 +35,6 @@ public abstract class FitModel implements MultivariateFunction {
     double[] fields;
     int[] idNums;
     int[][] map;
-    int nSim = 50;
     int nID = 1;
     boolean reportFitness = false;
     boolean absMode = false;
@@ -204,10 +203,6 @@ public abstract class FitModel implements MultivariateFunction {
 
     public void setAbsMode(boolean value) {
         this.absMode = value;
-    }
-
-    public void setNSim(int value) {
-        this.nSim = value;
     }
 
     public double[] getPredicted(double[] par) {
