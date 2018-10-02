@@ -1515,9 +1515,6 @@ public class PyController implements Initializable {
                     sliderGuesses = simControls.sliderGuess(equationName, map);
                 }
                 if (nSimCheckBox.isSelected()) {
-//                nSimTextField.setText("10");
-                    int newNSims = (int) Double.parseDouble(nSimTextField.getText());
-                    equationFitter.getFitModel().setNSim(newNSims);
                 }
                 fitResult = equationFitter.doFit(equationName, absValueModeCheckBox.isSelected(), nonParBootStrapCheckBox.isSelected(), sliderGuesses);
                 updateAfterFit(fitResult);
@@ -2107,8 +2104,6 @@ public class PyController implements Initializable {
             sliderGuesses = simControls.sliderGuess(equationName, map);
         }
         if (nSimCheckBox.isSelected()) {
-            int newNSims = (int) Double.parseDouble(nSimTextField.getText());
-            equationFitter.getFitModel().setNSim(newNSims);
         }
         fitResult = equationFitter.doFit(equationName, absValueModeCheckBox.isSelected(), nonParBootStrapCheckBox.isSelected(), sliderGuesses);
         updateAfterFit(fitResult);
