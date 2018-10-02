@@ -90,13 +90,16 @@ public class PreferencesController implements Initializable {
         maxFreqItem = new DoubleRangeOperationItem((obs, oldV, newV) -> {
             CoMDPreferences.setCPMGMaxFreq((Double) newV);
         }, 2000.0, 100.0, 5000.0, "CPMG", "Max Freq", "Max Frequency");
+        IntRangeOperationItem nSamplesItem = new IntRangeOperationItem((obs, oldV, newV) -> {
+            CoMDPreferences.setSampleSize((Integer) newV);
+        }, CoMDPreferences.getSampleSize(), 10, 500, "Error Estimates", "N Samples", "Number of bootstrap samples");
         ChoiceOperationItem locationTypeItem = new ChoiceOperationItem(locationListener, getLocation(), locationChoices, "File Locations", "location", "Directory Location for Dataset");
 
         DirectoryOperationItem locationFileItem = new DirectoryOperationItem(datasetListener, getDatasetDirectory().getPath(), "File Locations", "Datasets", "desc");
 
         int nProcessesDefault = Runtime.getRuntime().availableProcessors() / 2;
         IntRangeOperationItem nProcessesItem = new IntRangeOperationItem(nprocessListener, nProcessesDefault, 1, 32, "Processor", "NProcesses", "How many parallel processes to run during processing");
-        prefSheet.getItems().addAll(locationTypeItem, locationFileItem, nProcessesItem, maxFreqItem);
+        prefSheet.getItems().addAll(locationTypeItem, locationFileItem, nProcessesItem, maxFreqItem, nSamplesItem);
 
     }
 
