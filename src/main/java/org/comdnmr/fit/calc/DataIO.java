@@ -98,7 +98,7 @@ public class DataIO {
                 if (!gotHeader) {
                     int nfields = sfields.length;
                     if (fileName.endsWith(".txt") && expMode.equals("cpmg") && sline.startsWith("Residue")) {
-                        nfields = sfields.length+1;
+                        nfields = sfields.length + 1;
                     }
                     int nValues = nfields - offset;
                     xValues = new double[nValues];
@@ -128,7 +128,7 @@ public class DataIO {
                     header = sline;
                 } else {
                     String residueNum = sfields[1].trim();
-                    if (fileName.endsWith(".txt") &&  header.startsWith("Residue")) {
+                    if (fileName.endsWith(".txt") && header.startsWith("Residue")) {
                         residueNum = sfields[0].trim();
                     }
                     if (residueNum.equals("")) {
@@ -202,12 +202,12 @@ public class DataIO {
                     if (expMode.equals("cest")) {
                         double[] B1field = expData.getB1Field();
                         List<Double> B1fieldList = new ArrayList<>();
-                        for (int i=0; i<B1field.length; i++) {
+                        for (int i = 0; i < B1field.length; i++) {
                             B1fieldList.add(B1field[i] * 2 * Math.PI);
                         }
                         double[] Tex = expData.getTex();
                         List<Double> TexList = new ArrayList<>();
-                        for (int i=0; i<Tex.length; i++) {
+                        for (int i = 0; i < Tex.length; i++) {
                             TexList.add(Tex[i]);
                         }
                         List<Double> bFieldUniqueValue = new ArrayList<>();
@@ -289,7 +289,7 @@ public class DataIO {
                     } else {
                         try {
                             double b1Field = Double.parseDouble(sfields[0].trim());
-                            if (bFieldUniqueValue.contains(b1Field) == false){
+                            if (bFieldUniqueValue.contains(b1Field) == false) {
                                 bFieldUniqueValue.add(b1Field);
                             }
                             double offsetFreq = Double.parseDouble(sfields[1].trim());
@@ -307,10 +307,10 @@ public class DataIO {
                 }
                 ResidueData residueData = new ResidueData(expData, residueNum, xValueLists, yValueList, errValueList);
                 expData.addResidueData(residueNum, residueData);
-                List<Double> extrasList = new ArrayList<>(bFieldUniqueValue.size()*2);
-                for (int i=0; i<bFieldUniqueValue.size(); i++) {
-                    extrasList.add(2*i, bFieldUniqueValue.get(i) * 2.0 * Math.PI);
-                    extrasList.add(2*i+1, TexList.get(i));
+                List<Double> extrasList = new ArrayList<>(bFieldUniqueValue.size() * 2);
+                for (int i = 0; i < bFieldUniqueValue.size(); i++) {
+                    extrasList.add(2 * i, bFieldUniqueValue.get(i) * 2.0 * Math.PI);
+                    extrasList.add(2 * i + 1, TexList.get(i));
                 }
 //                System.out.println("res num = " + residueNum);
 //                System.out.println("bfield unique value size = " + bFieldUniqueValue.size());
@@ -513,7 +513,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 if (fitMode.equals("exp")) {
                     equationType = ExpEquation.valueOf(equationName);
                     equationNames = ExpFit.getEquationNames();
-                } else if (fitMode.equals("cest")) { 
+                } else if (fitMode.equals("cest")) {
                     equationType = CESTEquation.valueOf(equationName);
                     equationNames = CESTFit.getEquationNames();
                 } else {
@@ -598,8 +598,6 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             tauCPMG = tauCPMG == null ? 1.0 : tauCPMG;  // fixme throw error if  ratemode and no tauCPMG
             Double Tex = (Double) dataMap3.get("Tex");
             Double B1field = (Double) dataMap3.get("B1field");
-            double[] B1fieldList = new double[vcpmgList.size()];
-            double[] TexList = new double[vcpmgList.size()];
 
             String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
             String fileMode = (String) dataMap3.get("mode");
@@ -613,7 +611,11 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 delayCalc[1] = delayMap.get("c0").doubleValue();
                 delayCalc[2] = delayMap.get("delta").doubleValue();
             }
+            double[] B1fieldList;
+            double[] TexList;
             if (expMode.equals("cest")) {
+                B1fieldList = new double[vcpmgList.size()];
+                TexList = new double[vcpmgList.size()];
                 for (int i = 0; i < B1fieldList.length; i++) {
                     B1fieldList[i] = B1field;
                     TexList[i] = Tex;
