@@ -185,10 +185,10 @@
                         </VBox>
                     </items>
                 </SplitPane>
-                <ToolBar fx:id="navigatorToolBar" orientation="HORIZONTAL" BorderPane.alignment="CENTER"/>
                 <VBox fx:id="chartBox" VBox.vgrow="ALWAYS">
                     <children>
                         <SSRegion fx:id="ssregion" prefHeight="1" />
+                        <ToolBar fx:id="navigatorToolBar" orientation="HORIZONTAL" BorderPane.alignment="CENTER"/>
                     </children>
                 </VBox>
                 <VBox>
