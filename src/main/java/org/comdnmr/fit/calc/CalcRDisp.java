@@ -93,6 +93,17 @@ public class CalcRDisp extends FitModel {
         }
     }
 
+    @Override
+    public double[] simY(double[] par) {
+        double[] ax = new double[1];
+        double[] yv = new double[yValues.length];
+        for (int i = 0; i < yValues.length; i++) {
+            ax[0] = xValues[0][i];
+            yv[i] = equation.calculate(par, map[idNums[i]], ax, idNums[i], fieldValues[i]);
+        }
+        return yv;
+    }
+
     public ArrayList<Double> simY(double[] par, double[][] xValues, double field) {
         ArrayList<Double> result = new ArrayList<>();
         double[] ax = new double[1];
@@ -137,7 +148,7 @@ public class CalcRDisp extends FitModel {
         int nSim = CoMDPreferences.getSampleSize();
         int nPar = start.length;
         parValues = new double[nPar][nSim];
-        double[] yPred = getPredicted(start);
+        double[] yPred = simY(start);
         double[] yValuesOrig = yValues.clone();
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
@@ -173,87 +184,74 @@ public class CalcRDisp extends FitModel {
         return parSDev;
     }
 
-    public double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma) {
-        reportFitness = false;
-        int nPar = start.length;
-        int nSim = CoMDPreferences.getSampleSize();
-        parValues = new double[nPar][nSim];
-        double[][] rexValues = new double[nID][nSim];
-        rexErrors = new double[nID];
-        double[] yPred = getPredicted(start);
-        IntStream.range(0, nSim).parallel().forEach(i -> {
-//        IntStream.range(0, nSim).forEach(i -> {
-            CalcRDisp rDisp = new CalcRDisp(xValues, yPred, errValues, fieldValues, fields, idNums);
-            rDisp.setEquation(equation.getName());
-            rDisp.setAbsMode(absMode);
-            double[] newY = new double[yValues.length];
+    private synchronized CalcRDisp setupParametricBootstrap(double[] yPred) {
+        double[] newY = new double[yValues.length];
+        for (int k = 0; k < yValues.length; k++) {
+            newY[k] = yPred[k] + errValues[k] * random.nextGaussian();
+        }
+        CalcRDisp rDisp = new CalcRDisp(xValues, newY, errValues, fieldValues, fields, idNums);
+        rDisp.setEquation(equation.getName());
+        rDisp.setAbsMode(absMode);
+        rDisp.setXY(xValues, newY);
+        rDisp.setIds(idNums);
+        rDisp.setMap(map);
+        return rDisp;
+    }
+
+    private CalcRDisp setupNonParametricBootstrap(double[] yPred) {
+        CalcRDisp rDisp = new CalcRDisp(xValues, yValues, errValues, fieldValues, fields, idNums);
+        rDisp.setEquation(equation.getName());
+        rDisp.setAbsMode(absMode);
+        double[][] newX = new double[1][yValues.length];
+        double[] newY = new double[yValues.length];
+        double[] newErr = new double[yValues.length];
+        double[] newFieldValues = new double[yValues.length];
+        int[] newID = new int[yValues.length];
+        int iTry = 0;
+        do {
             for (int k = 0; k < yValues.length; k++) {
-                newY[k] = yPred[k] + errValues[k] * random.nextGaussian();
+                int rI = random.nextInt(yValues.length);
+                newX[0][k] = xValues[0][rI];
+                newY[k] = yValues[rI];
+                newErr[k] = errValues[rI];
+                newFieldValues[k] = fieldValues[rI];
+                newID[k] = idNums[rI];
             }
-            rDisp.setXY(xValues, newY);
-            rDisp.setIds(idNums);
-            rDisp.setMap(map);
+            iTry++;
+        } while (!checkID(idNums, newID, 2) && (iTry < 10));
+        // fixme  idNum should be set in above loop
+        rDisp.setXY(newX, newY);
+        rDisp.setErr(newErr);
+        rDisp.setFieldValues(newFieldValues);
+        rDisp.setIds(newID);
+        rDisp.setMap(map);
+        return rDisp;
+    }
 
-            PointValuePair result = rDisp.refine(start, lowerBounds, upperBounds, inputSigma);
-            double[] rPoint = result.getPoint();
-            for (int j = 0; j < nPar; j++) {
-                parValues[j][i] = rPoint[j];
-            }
-            if (equation == CPMGEquation.CPMGSLOW) {
-                for (int j = 0; j < map.length; j++) {
-                    rexValues[j][i] = equation.getRex(result.getPoint(), map[j]);
-                }
-            }
-        });
-
-        double[] parSDev = new double[nPar];
-        for (int i = 0; i < nPar; i++) {
-            DescriptiveStatistics dStat = new DescriptiveStatistics(parValues[i]);
-            parSDev[i] = dStat.getStandardDeviation();
-        }
-        if (equation == CPMGEquation.CPMGSLOW) {
-            for (int j = 0; j < nID; j++) {
-                DescriptiveStatistics dStat = new DescriptiveStatistics(rexValues[j]);
-                rexErrors[j] = dStat.getStandardDeviation();
-            }
-        }
-        return parSDev;
+    public double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma) {
+        return simBoundsStream(start, lowerBounds, upperBounds, inputSigma, true);
     }
 
     public double[] simBoundsBootstrapStream(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma) {
+        return simBoundsStream(start, lowerBounds, upperBounds, inputSigma, false);
+    }
+
+    public double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma, boolean nonParametric) {
         reportFitness = false;
         int nPar = start.length;
         int nSim = CoMDPreferences.getSampleSize();
         parValues = new double[nPar][nSim];
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
+        double[] yPred = simY(start);
         IntStream.range(0, nSim).parallel().forEach(i -> {
-            CalcRDisp rDisp = new CalcRDisp(xValues, yValues, errValues, fieldValues, fields, idNums);
-            rDisp.setEquation(equation.getName());
-            rDisp.setAbsMode(absMode);
-            double[][] newX = new double[1][yValues.length];
-            double[] newY = new double[yValues.length];
-            double[] newErr = new double[yValues.length];
-            double[] newFieldValues = new double[yValues.length];
-            int[] newID = new int[yValues.length];
-            int iTry = 0;
-            do {
-                for (int k = 0; k < yValues.length; k++) {
-                    int rI = random.nextInt(yValues.length);
-                    newX[0][k] = xValues[0][rI];
-                    newY[k] = yValues[rI];
-                    newErr[k] = errValues[rI];
-                    newFieldValues[k] = fieldValues[rI];
-                    newID[k] = idNums[rI];
-                }
-                iTry++;
-            } while (!checkID(idNums, newID, 2) && (iTry < 10));
-            // fixme  idNum should be set in above loop
-            rDisp.setXY(newX, newY);
-            rDisp.setErr(newErr);
-            rDisp.setFieldValues(newFieldValues);
-            rDisp.setIds(newID);
-            rDisp.setMap(map);
+//        IntStream.range(0, nSim).forEach(i -> {
+            CalcRDisp rDisp;
+            if (nonParametric) {
+                rDisp = setupNonParametricBootstrap(yPred);
+            } else {
+                rDisp = setupParametricBootstrap(yPred);
+            }
 
             PointValuePair result = rDisp.refine(start, lowerBounds, upperBounds, inputSigma);
             double[] rPoint = result.getPoint();
