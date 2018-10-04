@@ -557,7 +557,7 @@ public class PyController implements Initializable {
         paramFileResetButton.setOnAction(e -> resetParamFile(e));
         paramFileResetButton.setText("Reset");
         chosenParamFileLabel.setText("");
-        
+
         ppmBox.setSelected(false);
 
         fieldTextField.setText("");
@@ -593,11 +593,10 @@ public class PyController implements Initializable {
         fitModeChoice.valueProperty().addListener(x -> {
             updateInfoInterface();
         });
-        
-        EventHandler<ActionEvent> boxevent = new EventHandler<ActionEvent>() { 
-  
-            public void handle(ActionEvent e) 
-            { 
+
+        EventHandler<ActionEvent> boxevent = new EventHandler<ActionEvent>() {
+
+            public void handle(ActionEvent e) {
                 String[] xvals = xValTextArea.getText().split("\t");
                 ArrayList<Double> fxvals = new ArrayList();
                 String xString = "";
@@ -607,19 +606,19 @@ public class PyController implements Initializable {
                         xString += fxvals.get(i).toString() + "\t";
                     }
                     xValTextArea.setText(xString);
-                } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST") && !ppmBox.isSelected()) { 
+                } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST") && !ppmBox.isSelected()) {
                     for (int i = 0; i < xvals.length; i++) {
                         fxvals.add(Double.parseDouble(xvals[i]) / Double.parseDouble(fieldTextField.getText()));
                         xString += fxvals.get(i).toString() + "\t";
                     }
                     xValTextArea.setText(xString);
                 }
-            } 
+            }
 
-        }; 
+        };
 
         // set event to checkbox 
-        ppmBox.setOnAction(boxevent); 
+        ppmBox.setOnAction(boxevent);
 
         inputInfoDisplay.add(fitModeChoice, 1, 0);
         inputInfoDisplay.add(fileChoiceButton, 2, 1);
@@ -647,7 +646,7 @@ public class PyController implements Initializable {
         yamlButton.setOnAction(e -> makeYAML(e));
         yamlButton.setText("Create YAML");
         inputInfoDisplay.add(yamlButton, 2, labels.length - 1);
-        
+
         Button loadButton = new Button();
         loadButton.setOnAction(e -> loadInfo(e));
         loadButton.setText("Load");
@@ -823,25 +822,25 @@ public class PyController implements Initializable {
 //            System.out.println("dataList " + i + " " + dataList.get(i));
 //        }
     }
-    
+
     public void makeYAML(ActionEvent event) {
         if (dataList.isEmpty()) {
             addInfo();
         }
         makeYAML(dataList);
     }
-    
+
     public void makeYAML(List data) {
         HashMap hm1 = new HashMap();
         HashMap hm2 = new HashMap();
         ArrayList<HashMap<String, Object>> dataHmList = new ArrayList();
-        
-        for (int i=0; i<data.size(); i++) {
+
+        for (int i = 0; i < data.size(); i++) {
             HashMap hmdf = (HashMap) data.get(i);
             HashMap hmd = new HashMap(hmdf);
 
             String paramFile = (String) hmdf.get("paramFile");
-            String paramFileName = paramFile.substring(paramFile.lastIndexOf("/")+1, paramFile.length());
+            String paramFileName = paramFile.substring(paramFile.lastIndexOf("/") + 1, paramFile.length());
             hm2.put("mode", hmdf.get("fitmode"));
             hm2.put("file", paramFileName);
 //            hmdf.put("vcpmg", hmdf.get("vcpmg").toString());
@@ -867,13 +866,13 @@ public class PyController implements Initializable {
             List keys = Arrays.asList(keySet);
             hmd.keySet().retainAll(keys);
             String dataFile = (String) hmdf.get("file");
-            String dataFileName = dataFile.substring(dataFile.lastIndexOf("/")+1, dataFile.length());
+            String dataFileName = dataFile.substring(dataFile.lastIndexOf("/") + 1, dataFile.length());
             hmdf.put("file", dataFileName);
             dataHmList.add(hmdf);
         }
         hm2.put("data", dataHmList);
         hm1.put("fit", hm2);
-        
+
         Yaml yaml = new Yaml();
         String s = yaml.dumpAsMap(hm1);
         try (FileWriter writer = new FileWriter(yamlTextField.getText())) {
@@ -883,7 +882,7 @@ public class PyController implements Initializable {
             Logger.getLogger(DataIO.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     public void clearDataList(ActionEvent event) {
         dataList.clear();
     }
@@ -1537,6 +1536,9 @@ public class PyController implements Initializable {
         for (int iCurve = 0; iCurve < nCurves; iCurve++) {
             CurveFit curveFit = fitResult.getCurveFit(iCurve);
             List<ParValueInterface> parValues = curveFit.getParValues();
+            equationChoice.getSelectionModel().select(fitResult.getEquationName());
+            aicLabel.setText("AIC: " + fitResult.getAicc());
+            rmsLabel.setText(" RMS: " + fitResult.getRms());
             updateTableWithPars(parValues);
             simControls.updateSliders(parValues, fitResult.getEquationName());
             String equationName = fitResult.getEquationName(); //equationSelector.getValue();
@@ -2132,7 +2134,7 @@ public class PyController implements Initializable {
         for (XYChart.Series<Double, Double> series : allData) {
             for (XYChart.Data<Double, Double> dataPoint : series.getData()) {
                 double y = dataPoint.getYValue();
-               yValues.add(y);
+                yValues.add(y);
             }
         }
         return yValues;
@@ -2181,8 +2183,8 @@ public class PyController implements Initializable {
         allData.addAll(data);
         xychart.setData(allData);
     }
-    
-       @FXML
+
+    @FXML
     private void showPreferences(ActionEvent event) {
         if (preferencesController == null) {
             preferencesController = PreferencesController.create(primaryStage);
