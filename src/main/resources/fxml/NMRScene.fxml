@@ -135,8 +135,7 @@
                                             </HBox>
                                             <HBox>
                                                 <children>
-                                                    <CheckBox text="ChangeNumMCSims:" fx:id="nSimCheckBox"/>
-                                                    <TextField text="200" fx:id="nSimTextField" prefWidth="100"/>
+                                                    <CheckBox text="Calc Errors" fx:id="calcErrorsCheckBox"/>
                                                 </children>
                                             </HBox> 
                                             <HBox>

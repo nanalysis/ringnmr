@@ -76,12 +76,14 @@ import javafx.beans.property.SimpleStringProperty;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.Random;
+import java.util.stream.Collectors;
 import javafx.event.EventHandler;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.SplitPane;
 import static org.comdnmr.fit.gui.ChartUtil.residueProperties;
 import javafx.scene.Scene;
+import javafx.scene.chart.Axis;
 import javafx.scene.chart.ScatterChart;
 import javafx.scene.layout.HBox;
 import javafx.scene.control.Label;
@@ -94,6 +96,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import static org.comdnmr.fit.calc.DataIO.loadPeakFile;
 import static org.comdnmr.fit.calc.DataIO.loadTextFile;
+import org.comdnmr.fit.calc.FitModel;
 import static org.comdnmr.fit.gui.MainApp.preferencesController;
 import static org.comdnmr.fit.gui.MainApp.primaryStage;
 import org.python.util.InteractiveInterpreter;
@@ -156,7 +159,7 @@ public class PyController implements Initializable {
     @FXML
     CheckBox sliderGuessCheckBox;
     @FXML
-    CheckBox nSimCheckBox;
+    CheckBox calcErrorsCheckBox;
     @FXML
     TextField nSimTextField;
 
@@ -202,7 +205,6 @@ public class PyController implements Initializable {
     ChoiceBox<String> MCxArrayChoice = new ChoiceBox<>();
     ChoiceBox<String> MCyArrayChoice = new ChoiceBox<>();
     XYChart activeMCchart;
-    XYChart.Series MCseries = new XYChart.Series();
 
     GridPane inputInfoDisplay = new GridPane();
     Scene inputScene = new Scene(inputInfoDisplay, 1000, 500);
@@ -359,6 +361,8 @@ public class PyController implements Initializable {
         textArea.appendText("> ");
 
         initResidueNavigator();
+        calcErrorsCheckBox.selectedProperty().addListener(e -> FitModel.setCalcError(calcErrorsCheckBox.isSelected()));
+        calcErrorsCheckBox.setSelected(true);
 
 //        mainController.setOnHidden(e -> Platform.exit());
     }
@@ -557,7 +561,7 @@ public class PyController implements Initializable {
         paramFileResetButton.setOnAction(e -> resetParamFile(e));
         paramFileResetButton.setText("Reset");
         chosenParamFileLabel.setText("");
-        
+
         ppmBox.setSelected(false);
 
         fieldTextField.setText("");
@@ -593,11 +597,10 @@ public class PyController implements Initializable {
         fitModeChoice.valueProperty().addListener(x -> {
             updateInfoInterface();
         });
-        
-        EventHandler<ActionEvent> boxevent = new EventHandler<ActionEvent>() { 
-  
-            public void handle(ActionEvent e) 
-            { 
+
+        EventHandler<ActionEvent> boxevent = new EventHandler<ActionEvent>() {
+
+            public void handle(ActionEvent e) {
                 String[] xvals = xValTextArea.getText().split("\t");
                 ArrayList<Double> fxvals = new ArrayList();
                 String xString = "";
@@ -607,19 +610,19 @@ public class PyController implements Initializable {
                         xString += fxvals.get(i).toString() + "\t";
                     }
                     xValTextArea.setText(xString);
-                } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST") && !ppmBox.isSelected()) { 
+                } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST") && !ppmBox.isSelected()) {
                     for (int i = 0; i < xvals.length; i++) {
                         fxvals.add(Double.parseDouble(xvals[i]) / Double.parseDouble(fieldTextField.getText()));
                         xString += fxvals.get(i).toString() + "\t";
                     }
                     xValTextArea.setText(xString);
                 }
-            } 
+            }
 
-        }; 
+        };
 
         // set event to checkbox 
-        ppmBox.setOnAction(boxevent); 
+        ppmBox.setOnAction(boxevent);
 
         inputInfoDisplay.add(fitModeChoice, 1, 0);
         inputInfoDisplay.add(fileChoiceButton, 2, 1);
@@ -647,7 +650,7 @@ public class PyController implements Initializable {
         yamlButton.setOnAction(e -> makeYAML(e));
         yamlButton.setText("Create YAML");
         inputInfoDisplay.add(yamlButton, 2, labels.length - 1);
-        
+
         Button loadButton = new Button();
         loadButton.setOnAction(e -> loadInfo(e));
         loadButton.setText("Load");
@@ -823,25 +826,25 @@ public class PyController implements Initializable {
 //            System.out.println("dataList " + i + " " + dataList.get(i));
 //        }
     }
-    
+
     public void makeYAML(ActionEvent event) {
         if (dataList.isEmpty()) {
             addInfo();
         }
         makeYAML(dataList);
     }
-    
+
     public void makeYAML(List data) {
         HashMap hm1 = new HashMap();
         HashMap hm2 = new HashMap();
         ArrayList<HashMap<String, Object>> dataHmList = new ArrayList();
-        
-        for (int i=0; i<data.size(); i++) {
+
+        for (int i = 0; i < data.size(); i++) {
             HashMap hmdf = (HashMap) data.get(i);
             HashMap hmd = new HashMap(hmdf);
 
             String paramFile = (String) hmdf.get("paramFile");
-            String paramFileName = paramFile.substring(paramFile.lastIndexOf("/")+1, paramFile.length());
+            String paramFileName = paramFile.substring(paramFile.lastIndexOf("/") + 1, paramFile.length());
             hm2.put("mode", hmdf.get("fitmode"));
             hm2.put("file", paramFileName);
 //            hmdf.put("vcpmg", hmdf.get("vcpmg").toString());
@@ -867,13 +870,13 @@ public class PyController implements Initializable {
             List keys = Arrays.asList(keySet);
             hmd.keySet().retainAll(keys);
             String dataFile = (String) hmdf.get("file");
-            String dataFileName = dataFile.substring(dataFile.lastIndexOf("/")+1, dataFile.length());
+            String dataFileName = dataFile.substring(dataFile.lastIndexOf("/") + 1, dataFile.length());
             hmdf.put("file", dataFileName);
             dataHmList.add(hmdf);
         }
         hm2.put("data", dataHmList);
         hm1.put("fit", hm2);
-        
+
         Yaml yaml = new Yaml();
         String s = yaml.dumpAsMap(hm1);
         try (FileWriter writer = new FileWriter(yamlTextField.getText())) {
@@ -883,7 +886,7 @@ public class PyController implements Initializable {
             Logger.getLogger(DataIO.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     public void clearDataList(ActionEvent event) {
         dataList.clear();
     }
@@ -1514,8 +1517,6 @@ public class PyController implements Initializable {
                 if (sliderGuessCheckBox.isSelected()) {
                     sliderGuesses = simControls.sliderGuess(equationName, map);
                 }
-                if (nSimCheckBox.isSelected()) {
-                }
                 fitResult = equationFitter.doFit(equationName, absValueModeCheckBox.isSelected(), nonParBootStrapCheckBox.isSelected(), sliderGuesses);
                 updateAfterFit(fitResult);
             }
@@ -1708,88 +1709,85 @@ public class PyController implements Initializable {
         //Populate ChoiceBoxes with fitting variable names
         MCxArrayChoice.getItems().clear();
         MCyArrayChoice.getItems().clear();
-        MCxArrayChoice.getItems().addAll(simControls.getParNames());
-        MCyArrayChoice.getItems().addAll(simControls.getParNames());
-        MCxArrayChoice.setValue(simControls.getParNames().get(1));
-        MCyArrayChoice.setValue(simControls.getParNames().get(0));
-
-        try {
-            MCxArrayChoice.valueProperty().addListener(x -> {
-                updateMCplot();
-            });
-            MCyArrayChoice.valueProperty().addListener(y -> {
-                updateMCplot();
-            });
-        } catch (NullPointerException npEmc1) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setContentText("Error: Fit must first be performed.");
-            alert.showAndWait();
-            return;
+        Map<String, double[]> simsMap = null;
+        if (fitResult != null) {
+            simsMap = fitResult.getSimsMap();
+        } else if (residueFitter != null) {
+            simsMap = residueFitter.getFitResult().getSimsMap();
         }
+        if (simsMap != null) {
+            List<String> simParNames = simsMap.keySet().stream().sorted().collect(Collectors.toList());
+            MCxArrayChoice.getItems().addAll(simParNames);
+            MCyArrayChoice.getItems().addAll(simParNames);
+            MCxArrayChoice.setValue(simParNames.get(1));
+            MCyArrayChoice.setValue(simParNames.get(0));
 
-        HBox hBox = new HBox();
-        HBox.setHgrow(hBox, Priority.ALWAYS);
-        hBox.getChildren().addAll(xlabel, MCxArrayChoice, ylabel, MCyArrayChoice);
-
-        //Create the Scatter chart  
-        NumberAxis MCxAxis = new NumberAxis();
-        NumberAxis MCyAxis = new NumberAxis();
-        ScatterChart<Number, Number> MCchart = new ScatterChart(MCxAxis, MCyAxis);
-        MCxAxis.setAutoRanging(true);
-        MCxAxis.setForceZeroInRange(false);
-        MCyAxis.setAutoRanging(true);
-        MCyAxis.setForceZeroInRange(false);
-
-        MCxAxis.setLabel(MCxArrayChoice.getValue());
-        MCyAxis.setLabel(MCyArrayChoice.getValue());
-
-        //Prepare XYChart.Series objects by setting data 
-        MCseries.getData().clear();
-        int xInd = MCxArrayChoice.getSelectionModel().getSelectedIndex();
-        int yInd = MCyArrayChoice.getSelectionModel().getSelectedIndex();
-        if (fitResult != null && fitResult.getSimPars() != null) {
-            for (int i = 0; i < fitResult.getSimPars()[xInd].length; i++) {
-                MCseries.getData().add(new XYChart.Data(fitResult.getSimPars()[xInd][i], fitResult.getSimPars()[yInd][i]));
+            try {
+                MCxArrayChoice.valueProperty().addListener(x -> {
+                    updateMCplot();
+                });
+                MCyArrayChoice.valueProperty().addListener(y -> {
+                    updateMCplot();
+                });
+            } catch (NullPointerException npEmc1) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setContentText("Error: Fit must first be performed.");
+                alert.showAndWait();
+                return;
             }
 
-            //Setting the data to scatter chart   
-            MCchart.getData().clear();
-            MCchart.getData().addAll(MCseries);
+            HBox hBox = new HBox();
+            HBox.setHgrow(hBox, Priority.ALWAYS);
+            hBox.getChildren().addAll(xlabel, MCxArrayChoice, ylabel, MCyArrayChoice);
 
+            //Create the Scatter chart  
+            NumberAxis MCxAxis = new NumberAxis();
+            NumberAxis MCyAxis = new NumberAxis();
+            ScatterChart<Number, Number> MCchart = new ScatterChart(MCxAxis, MCyAxis);
+            MCxAxis.setAutoRanging(true);
+            MCxAxis.setForceZeroInRange(false);
+            MCyAxis.setAutoRanging(true);
+            MCyAxis.setForceZeroInRange(false);
             activeMCchart = MCchart;
 
             MCdisplay.getChildren().clear();
             MCdisplay.getChildren().add(hBox);
             MCdisplay.getChildren().add(activeMCchart);
-
             MCStage.setScene(stageScene);
             MCStage.show();
-        } else if (residueFitter.getFitResult() != null && residueFitter.getFitResult().getSimPars() != null) {
-            for (int i = 0; i < residueFitter.getFitResult().getSimPars()[xInd].length; i++) {
-                MCseries.getData().add(new XYChart.Data(residueFitter.getFitResult().getSimPars()[xInd][i], residueFitter.getFitResult().getSimPars()[yInd][i]));
-            }
-
-            //Setting the data to scatter chart   
-            MCchart.getData().clear();
-            MCchart.getData().addAll(MCseries);
-
-            activeMCchart = MCchart;
-
-            MCdisplay.getChildren().clear();
-            MCdisplay.getChildren().add(hBox);
-            MCdisplay.getChildren().add(activeMCchart);
-
-            MCStage.setScene(stageScene);
-            MCStage.show();
-        } else {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setContentText("Error: Fit must first be performed.");
-            alert.showAndWait();
-            return;
+            updateMCplot();
         }
-
     }
 
+    void updateMCplot() {
+        Map<String, double[]> simsMap = null;
+        if (fitResult != null) {
+            simsMap = fitResult.getSimsMap();
+        } else if (residueFitter != null) {
+            simsMap = residueFitter.getFitResult().getSimsMap();
+        }
+        if (simsMap != null) {
+            Axis<Number> xAxis = activeChart.getXAxis();
+            Axis<Number> yAxis = activeChart.getXAxis();
+            String xElem = MCxArrayChoice.getValue();
+            String yElem = MCyArrayChoice.getValue();
+            xAxis.setLabel(xElem);
+            yAxis.setLabel(yElem);
+            XYChart.Series<Number, Number> series = new XYChart.Series();
+            activeMCchart.getData().clear();
+            activeMCchart.getData().add(series);
+            //Prepare XYChart.Series objects by setting data 
+            series.getData().clear();
+            double[] xValues = simsMap.get(xElem);
+            double[] yValues = simsMap.get(yElem);
+            for (int i = 0; i < xValues.length; i++) {
+                series.getData().add(new XYChart.Data(xValues[i], yValues[i]));
+            }
+            //Setting the data to scatter chart   
+        }
+    }
+
+    /*
     public void updateMCplot() {
         try {
             //Create the Scatter chart 
@@ -1840,7 +1838,7 @@ public class PyController implements Initializable {
         }
 
     }
-
+     */
     public void saveBarChart() throws IOException {
         FileChooser chooser = new FileChooser();
         chooser.setInitialFileName("barchart.png");
@@ -2037,7 +2035,7 @@ public class PyController implements Initializable {
                     break;
                 }
                 for (String residue : residues) {
-                    System.out.println("get resd " + residue + " " + expData.getResidueData(residue));
+//                    System.out.println("get resd " + residue + " " + expData.getResidueData(residue));
 
                     resDatas.add(expData.getResidueData(residue));
                 }
@@ -2103,8 +2101,6 @@ public class PyController implements Initializable {
         if (sliderGuessCheckBox.isSelected()) {
             sliderGuesses = simControls.sliderGuess(equationName, map);
         }
-        if (nSimCheckBox.isSelected()) {
-        }
         fitResult = equationFitter.doFit(equationName, absValueModeCheckBox.isSelected(), nonParBootStrapCheckBox.isSelected(), sliderGuesses);
         updateAfterFit(fitResult);
     }
@@ -2127,7 +2123,7 @@ public class PyController implements Initializable {
         for (XYChart.Series<Double, Double> series : allData) {
             for (XYChart.Data<Double, Double> dataPoint : series.getData()) {
                 double y = dataPoint.getYValue();
-               yValues.add(y);
+                yValues.add(y);
             }
         }
         return yValues;
@@ -2176,8 +2172,8 @@ public class PyController implements Initializable {
         allData.addAll(data);
         xychart.setData(allData);
     }
-    
-       @FXML
+
+    @FXML
     private void showPreferences(ActionEvent event) {
         if (preferencesController == null) {
             preferencesController = PreferencesController.create(primaryStage);
