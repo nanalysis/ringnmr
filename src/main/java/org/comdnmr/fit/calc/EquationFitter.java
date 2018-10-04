@@ -8,6 +8,8 @@ package org.comdnmr.fit.calc;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 /**
  *
@@ -41,6 +43,16 @@ public interface EquationFitter {
         int nNonGroup = parNames.length - nGroupPars;
         List<CurveFit> curveFits = new ArrayList<>();
 //        System.out.println("ning " + nCurves);
+        Map<String, double[]> simsMap = new HashMap<>();
+        for (int i = 0; i < map.length; i++) {
+            for (int j = 0; j < map[i].length; j++) {
+                String key = parNames[j] + " " + (map[i][j] - map[0][j]);
+//                System.out.println(i + " " + j + " " + key + " " + map[i][j] + " " + pars[map[i][j]]);
+//                DescriptiveStatistics dStat = new DescriptiveStatistics(simPars[map[i][j]]);
+                simsMap.put(key, simPars[map[i][j]]);
+//                System.out.println(dStat);
+            }
+        }
         int nCurves = states.length;
         for (int iCurve = 0; iCurve < nCurves; iCurve++) {
             String stateString = ResidueProperties.getStateString(states[iCurve]);
@@ -80,7 +92,7 @@ public interface EquationFitter {
             CurveFit curveFit = new CurveFit(stateString, resNums[states[iCurve][0]], parMap, plotEquation);
             curveFits.add(curveFit);
         }
-        CPMGFitResult fitResult = new CPMGFitResult(parNames, curveFits, eqn, nGroupPars, aic, rms, simPars);
+        CPMGFitResult fitResult = new CPMGFitResult(parNames, curveFits, eqn, nGroupPars, aic, rms, simsMap);
         return fitResult;
     }
 }
