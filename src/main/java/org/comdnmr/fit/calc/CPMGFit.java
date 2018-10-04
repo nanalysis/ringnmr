@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import org.apache.commons.math3.optim.PointValuePair;
+import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
+import org.apache.commons.math3.stat.inference.TTest;
 
 /**
  *
@@ -95,7 +97,6 @@ public class CPMGFit implements EquationFitter {
         this.resNums = resNums.clone();
         nResidues = resNums.length;
         int id = 0;
-        resProps.setupMaps();
         stateCount = resProps.getStateCount(resNums.length);
         Collection<ExperimentData> expDataList = resProps.getExperimentData();
         nCurves = resNums.length * expDataList.size();
@@ -240,13 +241,44 @@ public class CPMGFit implements EquationFitter {
 
         String[] parNames = calcR.getParNames();
         double[] errEstimates;
-        if (nonParBootStrap) {
-            errEstimates = calcR.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
-        } else {
-            errEstimates = calcR.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma);
+        double[][] simPars = null;
+        boolean ok = true;
+        if (FitModel.getCalcError()) {
+            if (nonParBootStrap) {
+                errEstimates = calcR.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
+            } else {
+                errEstimates = calcR.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma);
 
+            }
+            simPars = calcR.getSimPars();
+            TTest tTest = new TTest();
+            for (String parName : parNames) {
+                int parIndex = -1;
+                if (parName.equals("Kex")) {
+                    parIndex = 0;
+                }
+                if (parName.equals("Rex")) {
+                    parIndex = 2;
+                }
+                if (parIndex != -1) {
+                    boolean valid = tTest.tTest(0.0, simPars[map[0][parIndex]], 0.02);
+                    SummaryStatistics sStat = new SummaryStatistics();
+                    for (double v : simPars[map[0][parIndex]]) {
+                        sStat.addValue(v);
+                    }
+                    // System.out.println(sStat.toString());
+                    double alpha = tTest.tTest(0.0, simPars[map[0][parIndex]]);
+                    double mean = sStat.getMean();
+                    double sdev = sStat.getStandardDeviation();
+                    if (!valid) {
+                        ok = false;
+                    }
+//                    System.out.println(parName + " " + parIndex + " " + valid + " " + alpha + " " + mean + " " + sdev);
+                }
+            }
+        } else {
+            errEstimates = new double[pars.length];
         }
-        double[][] simPars = calcR.getSimPars();
         return getResults(this, eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, simPars);
     }
 
