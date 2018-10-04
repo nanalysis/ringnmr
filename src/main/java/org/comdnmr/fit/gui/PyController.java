@@ -202,6 +202,8 @@ public class PyController implements Initializable {
 
     VBox MCdisplay = new VBox();
     Scene stageScene = new Scene(MCdisplay, 500, 500);
+    Stage MCStage = null;
+
     ChoiceBox<String> MCxArrayChoice = new ChoiceBox<>();
     ChoiceBox<String> MCyArrayChoice = new ChoiceBox<>();
     XYChart activeMCchart;
@@ -1704,27 +1706,21 @@ public class PyController implements Initializable {
 
     public void showMCplot(ActionEvent event) {
         //Create new Stage for popup window  
-        Stage MCStage = new Stage();
-        MCStage.setTitle("Monte Carlo Results: " + simControls.getEquation());
-        Label xlabel = new Label("  X Array:  ");
-        Label ylabel = new Label("  Y Array:  ");
+        if ((MCStage == null) || !MCStage.isShowing()) {
+            MCStage = new Stage();
+            MCStage.setTitle("Monte Carlo Results: " + simControls.getEquation());
+            Label xlabel = new Label("  X Array:  ");
+            Label ylabel = new Label("  Y Array:  ");
 
-        //Populate ChoiceBoxes with fitting variable names
-        MCxArrayChoice.getItems().clear();
-        MCyArrayChoice.getItems().clear();
-        Map<String, double[]> simsMap = null;
-        if (fitResult != null) {
-            simsMap = fitResult.getSimsMap();
-        } else if (residueFitter != null) {
-            simsMap = residueFitter.getFitResult().getSimsMap();
-        }
-        if (simsMap != null) {
-            List<String> simParNames = simsMap.keySet().stream().sorted().collect(Collectors.toList());
-            MCxArrayChoice.getItems().addAll(simParNames);
-            MCyArrayChoice.getItems().addAll(simParNames);
-            MCxArrayChoice.setValue(simParNames.get(1));
-            MCyArrayChoice.setValue(simParNames.get(0));
-
+            //Populate ChoiceBoxes with fitting variable names
+            MCxArrayChoice.getItems().clear();
+            MCyArrayChoice.getItems().clear();
+            Map<String, double[]> simsMap = null;
+            if (fitResult != null) {
+                simsMap = fitResult.getSimsMap();
+            } else if (residueFitter != null) {
+                simsMap = residueFitter.getFitResult().getSimsMap();
+            }
             try {
                 MCxArrayChoice.valueProperty().addListener(x -> {
                     updateMCplot();
@@ -1752,24 +1748,53 @@ public class PyController implements Initializable {
             MCyAxis.setAutoRanging(true);
             MCyAxis.setForceZeroInRange(false);
             activeMCchart = MCchart;
-
             MCdisplay.getChildren().clear();
             MCdisplay.getChildren().add(hBox);
             MCdisplay.getChildren().add(activeMCchart);
             MCStage.setScene(stageScene);
-            MCStage.show();
-            updateMCplot();
+        }
+        updateMCPlotChoices();
+        MCStage.show();
+        updateMCplot();
+
+    }
+
+    Map<String, double[]> getMCSimsMap() {
+        Map<String, double[]> simsMap = null;
+        CPMGFitResult showFitResult;
+        if (currentResInfo != null) {
+            showFitResult = currentResInfo.getFitResult(currentEquationName);
+        } else {
+            showFitResult = fitResult;
+        }
+        if (showFitResult == null) {
+            showFitResult = fitResult;
+        }
+        if (showFitResult != null) {
+            simsMap = showFitResult.getSimsMap();
+        }
+        return simsMap;
+
+    }
+
+    void updateMCPlotChoices() {
+        Map<String, double[]> simsMap = getMCSimsMap();
+
+        MCxArrayChoice.getItems().clear();
+        MCyArrayChoice.getItems().clear();
+        if (simsMap != null) {
+            List<String> simParNames = simsMap.keySet().stream().sorted().collect(Collectors.toList());
+            MCxArrayChoice.getItems().addAll(simParNames);
+            MCyArrayChoice.getItems().addAll(simParNames);
+            MCxArrayChoice.setValue(simParNames.get(1));
+            MCyArrayChoice.setValue(simParNames.get(0));
         }
     }
 
     void updateMCplot() {
-        Map<String, double[]> simsMap = null;
-        if (fitResult != null) {
-            simsMap = fitResult.getSimsMap();
-        } else if (residueFitter != null) {
-            simsMap = residueFitter.getFitResult().getSimsMap();
-        }
+        Map<String, double[]> simsMap = getMCSimsMap();
         if (simsMap != null) {
+
             Axis<Number> xAxis = activeChart.getXAxis();
             Axis<Number> yAxis = activeChart.getXAxis();
             String xElem = MCxArrayChoice.getValue();
@@ -1783,66 +1808,16 @@ public class PyController implements Initializable {
             series.getData().clear();
             double[] xValues = simsMap.get(xElem);
             double[] yValues = simsMap.get(yElem);
-            for (int i = 0; i < xValues.length; i++) {
-                series.getData().add(new XYChart.Data(xValues[i], yValues[i]));
+            if ((xValues != null) && (yValues != null)) {
+                for (int i = 0; i < xValues.length; i++) {
+                    series.getData().add(new XYChart.Data(xValues[i], yValues[i]));
+                }
             }
             //Setting the data to scatter chart   
         }
     }
 
-    /*
-    public void updateMCplot() {
-        try {
-            //Create the Scatter chart 
-            MCdisplay.getChildren().remove(activeMCchart);
-            NumberAxis MCxAxis = new NumberAxis();
-            NumberAxis MCyAxis = new NumberAxis();
-            ScatterChart<Number, Number> MCchart = new ScatterChart(MCxAxis, MCyAxis);
-            MCxAxis.setAutoRanging(true);
-            MCxAxis.setForceZeroInRange(false);
-            MCyAxis.setAutoRanging(true);
-            MCyAxis.setForceZeroInRange(false);
-
-            MCxAxis.setLabel(MCxArrayChoice.getSelectionModel().getSelectedItem());
-            MCyAxis.setLabel(MCyArrayChoice.getSelectionModel().getSelectedItem());
-
-            MCseries.getData().clear();
-            int xInd = MCxArrayChoice.getSelectionModel().getSelectedIndex();
-            int yInd = MCyArrayChoice.getSelectionModel().getSelectedIndex();
-            if (fitResult != null && fitResult.getSimPars() != null) {
-                double[][] simPars = fitResult.getSimPars();
-                for (int i = 0; i < simPars[xInd].length; i++) {
-                    MCseries.getData().add(new XYChart.Data(simPars[xInd][i], simPars[yInd][i]));
-                }
-
-                MCchart.getData().clear();
-                MCchart.getData().addAll(MCseries);
-
-                activeMCchart = MCchart;
-                MCdisplay.getChildren().add(activeMCchart);
-            } else if (residueFitter.getFitResult() != null && residueFitter.getFitResult().getSimPars() != null) {
-                double[][] simPars = residueFitter.getFitResult().getSimPars();
-                for (int i = 0; i < residueFitter.getFitResult().getSimPars()[xInd].length; i++) {
-                    MCseries.getData().add(new XYChart.Data(simPars[xInd][i], simPars[yInd][i]));
-                }
-
-                MCchart.getData().clear();
-                MCchart.getData().addAll(MCseries);
-
-                activeMCchart = MCchart;
-                MCdisplay.getChildren().add(activeMCchart);
-            } else {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setContentText("Error: Fit must first be performed.");
-                alert.showAndWait();
-                return;
-            }
-        } catch (ArrayIndexOutOfBoundsException aioobE) {
-        }
-
-    }
-     */
-    public void saveBarChart() throws IOException {
+      public void saveBarChart() throws IOException {
         FileChooser chooser = new FileChooser();
         chooser.setInitialFileName("barchart.png");
         File file = chooser.showSaveDialog(MainApp.primaryStage);
@@ -2147,6 +2122,7 @@ public class PyController implements Initializable {
         double[] xValues = equationFitter.getSimX();
         double fieldRef = 1.0;
         int iLine = 0;
+
         List<XYChart.Series<Double, Double>> data = new ArrayList<>();
         XYChart.Series<Double, Double> series = new XYChart.Series<>();
         series.setName("sim" + ":" + "0");
