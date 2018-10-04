@@ -38,6 +38,7 @@ public abstract class FitModel implements MultivariateFunction {
     int nID = 1;
     boolean reportFitness = false;
     boolean absMode = false;
+    private static boolean calcError = true;
     double[][] parValues;
 
     public class Checker extends SimpleValueChecker {
@@ -98,6 +99,15 @@ public abstract class FitModel implements MultivariateFunction {
     public double[] simY(double[] par) {
         double[] yCalc = equation.calculate(par, map[0], xValues, idNums[0], fields[0]);
         return yCalc;
+    }
+
+    public static void setCalcError(boolean state) {
+        System.out.println("set calc " + state);
+        calcError = state;
+    }
+
+    public static boolean getCalcError() {
+        return calcError;
     }
 
     public abstract int[] getMask();
