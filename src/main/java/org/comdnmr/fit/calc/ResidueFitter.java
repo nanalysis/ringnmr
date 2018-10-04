@@ -41,6 +41,7 @@ public class ResidueFitter {
 
     public void fitResidues(ResidueProperties resProps, List<List<String>> residueFitGroups) {
         this.resProps = resProps;
+        resProps.setupMaps();
         this.residueFitGroups = residueFitGroups;
         setProcessingOn();
         updateProgress(0.0);
@@ -189,6 +190,7 @@ public class ResidueFitter {
 
     public List<ResidueInfo> fitResidues(ResidueProperties resProps, String[] resNums, int groupId, String useEquation) {
         this.resProps = resProps;
+        resProps.setupMaps();
         Map<String, CPMGFitResult> fitResults = new HashMap<>();
         double aicMin = Double.MAX_VALUE;
         String bestEquation = "NOEX";
@@ -211,7 +213,6 @@ public class ResidueFitter {
 
             EquationFitter equationFitter = getFitter();
             equationFitter.setData(resProps, resNums);
-            System.out.println("Residue " + resNums[0]);
             fitResult = equationFitter.doFit(equationName, resProps.isAbsValueMode(), !resProps.getBootStrapMode().equals("parametric"), null);
             fitResults.put(equationName, fitResult);
             if (fitResult.getAicc() < aicMin) {
@@ -220,7 +221,7 @@ public class ResidueFitter {
                     bestEquation = equationName;
                 }
             }
-            System.out.println("fit " + fitResult.getAicc() + " " + aicMin + " " + bestEquation);
+//            System.out.println("fit " + fitResult.getAicc() + " " + aicMin + " " + bestEquation);
         }
         List<ResidueInfo> resInfoList = new ArrayList<>();
         Map<String, ResidueInfo> resMap = new HashMap<>();
@@ -249,7 +250,7 @@ public class ResidueFitter {
     public CPMGFitResult getFitResult() {
         return fitResult;
     }
-    
+
     private class FitResidues {
 
         String script;
