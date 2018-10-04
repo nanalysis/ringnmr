@@ -238,13 +238,17 @@ public class ExpFit implements EquationFitter {
 
         String[] parNames = expModel.getParNames();
         double[] errEstimates;
-        if (nonParBootStrap) {
-            errEstimates = expModel.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
+        double[][] simPars = null;
+        if (FitModel.getCalcError()) {
+            if (nonParBootStrap) {
+                errEstimates = expModel.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
+            } else {
+                errEstimates = expModel.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma);
+            }
+            simPars = expModel.getSimPars();
         } else {
-            errEstimates = expModel.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma);
-
+            errEstimates = new double[pars.length];
         }
-        double[][] simPars = expModel.getSimPars();
         return getResults(this, eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, simPars);
     }
 

@@ -286,13 +286,18 @@ public class CESTFit implements EquationFitter {
 
             String[] parNames = calcCEST.getParNames();
             double[] errEstimates;
-            if (nonParBootStrap) {
-                errEstimates = calcCEST.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
-            } else {
-                errEstimates = calcCEST.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma);
+            double[][] simPars = null;
+            if (FitModel.getCalcError()) {
+                if (nonParBootStrap) {
+                    errEstimates = calcCEST.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
+                } else {
+                    errEstimates = calcCEST.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma);
 
+                }
+                simPars = calcCEST.getSimPars();
+            } else {
+                errEstimates = new double[pars.length];
             }
-            double[][] simPars = calcCEST.getSimPars();
             // fixme
             double[] extras = new double[xValues.length];
             extras[0] = usedFields[0];
@@ -312,7 +317,7 @@ public class CESTFit implements EquationFitter {
         double value = firstValue;
         for (int i = 0; i < nPoints; i++) {
             x[i] = value;
-            value += 2.0*Math.abs(firstValue) / (nPoints - 1);
+            value += 2.0 * Math.abs(firstValue) / (nPoints - 1);
 
         }
         return x;
