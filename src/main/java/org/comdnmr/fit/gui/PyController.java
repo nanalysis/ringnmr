@@ -1535,6 +1535,9 @@ public class PyController implements Initializable {
         for (int iCurve = 0; iCurve < nCurves; iCurve++) {
             CurveFit curveFit = fitResult.getCurveFit(iCurve);
             List<ParValueInterface> parValues = curveFit.getParValues();
+            equationChoice.getSelectionModel().select(fitResult.getEquationName());
+            aicLabel.setText("AIC: " + fitResult.getAicc());
+            rmsLabel.setText(" RMS: " + fitResult.getRms());
             updateTableWithPars(parValues);
             simControls.updateSliders(parValues, fitResult.getEquationName());
             String equationName = fitResult.getEquationName(); //equationSelector.getValue();
