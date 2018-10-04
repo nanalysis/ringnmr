@@ -229,6 +229,9 @@ public class ResidueFitter {
             ResidueInfo residueInfo = new ResidueInfo(resProps, Integer.parseInt(residueNumber), groupId, resNums.length);
             resInfoList.add(residueInfo);
             resMap.put(residueNumber, residueInfo);
+            for (String equationName : equationNames) {
+                residueInfo.addFitResult(fitResult);
+            }
         }
 
         for (String equationName : equationNames) {
@@ -236,6 +239,7 @@ public class ResidueFitter {
                 continue;
             }
             fitResult = fitResults.get(equationName);
+
             int nCurves = fitResult.getNCurves();
             for (int iCurve = 0; iCurve < nCurves; iCurve++) {
                 CurveFit curveFit = fitResult.getCurveFit(iCurve);

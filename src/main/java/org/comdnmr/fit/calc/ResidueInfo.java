@@ -22,6 +22,7 @@ public class ResidueInfo {
 
     int resNum;
     Map<String, Map<String, CurveFit>> curveSets = new LinkedHashMap<>();
+    Map<String, CPMGFitResult> fitResults = new LinkedHashMap<>();
     PlotEquation bestEquation = null;
     double[] extraValues;
     String[] peakRefs;
@@ -96,6 +97,20 @@ public class ResidueInfo {
         this.groupId = groupId;
         this.groupSize = groupSize;
         this.peakNum = peakNum;
+    }
+
+    public void addFitResult(CPMGFitResult fitResult) {
+        fitResults.put(fitResult.getEquationName(), fitResult);
+    }
+
+    public CPMGFitResult getFitResult(String equationName) {
+        String useEquationName;
+        if (equationName.startsWith("best")) {
+            useEquationName = bestEquation.name;
+        } else {
+            useEquationName = equationName;
+        }
+        return fitResults.get(useEquationName);
     }
 
     public Collection<CurveFit> getCurveSets(String equationName) {
