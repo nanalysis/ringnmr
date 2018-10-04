@@ -5,7 +5,6 @@
  */
 package org.comdnmr.fit.calc;
 
-import java.util.Arrays;
 import org.apache.commons.math3.util.FastMath;
 
 /**
@@ -101,7 +100,7 @@ public enum CPMGEquation implements EquationType {
             }
             return value;
         }
-
+        
         @Override
         public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
             int nPars = CalcRDisp.getNPars(map);
