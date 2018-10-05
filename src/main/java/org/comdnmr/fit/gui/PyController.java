@@ -76,16 +76,12 @@ import javafx.beans.property.SimpleStringProperty;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.Random;
-import java.util.stream.Collectors;
 import javafx.event.EventHandler;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.SplitPane;
 import static org.comdnmr.fit.gui.ChartUtil.residueProperties;
 import javafx.scene.Scene;
-import javafx.scene.chart.Axis;
-import javafx.scene.chart.ScatterChart;
-import javafx.scene.layout.HBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Button;
@@ -184,6 +180,8 @@ public class PyController implements Initializable {
     @FXML
     SplitPane splitPane;
 
+    BootstrapSamplePlots bootstrapSamplePlots = null;
+
     //final ContextMenu axisMenu = new ContextMenu();
     static double defaultField = 500.0;
 
@@ -199,14 +197,6 @@ public class PyController implements Initializable {
     boolean simulate = true;
 
     CPMGFitResult fitResult;
-
-    VBox MCdisplay = new VBox();
-    Scene stageScene = new Scene(MCdisplay, 500, 500);
-    Stage MCStage = null;
-
-    ChoiceBox<String> MCxArrayChoice = new ChoiceBox<>();
-    ChoiceBox<String> MCyArrayChoice = new ChoiceBox<>();
-    XYChart activeMCchart;
 
     GridPane inputInfoDisplay = new GridPane();
     Scene inputScene = new Scene(inputInfoDisplay, 1000, 500);
@@ -1704,120 +1694,7 @@ public class PyController implements Initializable {
         return null;
     }
 
-    public void showMCplot(ActionEvent event) {
-        //Create new Stage for popup window  
-        if ((MCStage == null) || !MCStage.isShowing()) {
-            MCStage = new Stage();
-            MCStage.setTitle("Monte Carlo Results: " + simControls.getEquation());
-            Label xlabel = new Label("  X Array:  ");
-            Label ylabel = new Label("  Y Array:  ");
-
-            //Populate ChoiceBoxes with fitting variable names
-            MCxArrayChoice.getItems().clear();
-            MCyArrayChoice.getItems().clear();
-            Map<String, double[]> simsMap = null;
-            if (fitResult != null) {
-                simsMap = fitResult.getSimsMap();
-            } else if (residueFitter != null) {
-                simsMap = residueFitter.getFitResult().getSimsMap();
-            }
-            try {
-                MCxArrayChoice.valueProperty().addListener(x -> {
-                    updateMCplot();
-                });
-                MCyArrayChoice.valueProperty().addListener(y -> {
-                    updateMCplot();
-                });
-            } catch (NullPointerException npEmc1) {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setContentText("Error: Fit must first be performed.");
-                alert.showAndWait();
-                return;
-            }
-
-            HBox hBox = new HBox();
-            HBox.setHgrow(hBox, Priority.ALWAYS);
-            hBox.getChildren().addAll(xlabel, MCxArrayChoice, ylabel, MCyArrayChoice);
-
-            //Create the Scatter chart  
-            NumberAxis MCxAxis = new NumberAxis();
-            NumberAxis MCyAxis = new NumberAxis();
-            ScatterChart<Number, Number> MCchart = new ScatterChart(MCxAxis, MCyAxis);
-            MCxAxis.setAutoRanging(true);
-            MCxAxis.setForceZeroInRange(false);
-            MCyAxis.setAutoRanging(true);
-            MCyAxis.setForceZeroInRange(false);
-            activeMCchart = MCchart;
-            MCdisplay.getChildren().clear();
-            MCdisplay.getChildren().add(hBox);
-            MCdisplay.getChildren().add(activeMCchart);
-            MCStage.setScene(stageScene);
-        }
-        updateMCPlotChoices();
-        MCStage.show();
-        updateMCplot();
-
-    }
-
-    Map<String, double[]> getMCSimsMap() {
-        Map<String, double[]> simsMap = null;
-        CPMGFitResult showFitResult;
-        if (currentResInfo != null) {
-            showFitResult = currentResInfo.getFitResult(currentEquationName);
-        } else {
-            showFitResult = fitResult;
-        }
-        if (showFitResult == null) {
-            showFitResult = fitResult;
-        }
-        if (showFitResult != null) {
-            simsMap = showFitResult.getSimsMap();
-        }
-        return simsMap;
-
-    }
-
-    void updateMCPlotChoices() {
-        Map<String, double[]> simsMap = getMCSimsMap();
-
-        MCxArrayChoice.getItems().clear();
-        MCyArrayChoice.getItems().clear();
-        if (simsMap != null) {
-            List<String> simParNames = simsMap.keySet().stream().sorted().collect(Collectors.toList());
-            MCxArrayChoice.getItems().addAll(simParNames);
-            MCyArrayChoice.getItems().addAll(simParNames);
-            MCxArrayChoice.setValue(simParNames.get(1));
-            MCyArrayChoice.setValue(simParNames.get(0));
-        }
-    }
-
-    void updateMCplot() {
-        Map<String, double[]> simsMap = getMCSimsMap();
-        if (simsMap != null) {
-
-            Axis<Number> xAxis = activeChart.getXAxis();
-            Axis<Number> yAxis = activeChart.getXAxis();
-            String xElem = MCxArrayChoice.getValue();
-            String yElem = MCyArrayChoice.getValue();
-            xAxis.setLabel(xElem);
-            yAxis.setLabel(yElem);
-            XYChart.Series<Number, Number> series = new XYChart.Series();
-            activeMCchart.getData().clear();
-            activeMCchart.getData().add(series);
-            //Prepare XYChart.Series objects by setting data 
-            series.getData().clear();
-            double[] xValues = simsMap.get(xElem);
-            double[] yValues = simsMap.get(yElem);
-            if ((xValues != null) && (yValues != null)) {
-                for (int i = 0; i < xValues.length; i++) {
-                    series.getData().add(new XYChart.Data(xValues[i], yValues[i]));
-                }
-            }
-            //Setting the data to scatter chart   
-        }
-    }
-
-      public void saveBarChart() throws IOException {
+    public void saveBarChart() throws IOException {
         FileChooser chooser = new FileChooser();
         chooser.setInitialFileName("barchart.png");
         File file = chooser.showSaveDialog(MainApp.primaryStage);
@@ -1902,6 +1779,18 @@ public class PyController implements Initializable {
         node.snapshot(spa, image);
         ImageIO.write(SwingFXUtils.fromFXImage(image, null), "png", file);
 
+    }
+
+    public CPMGFitResult getFitResult() {
+        return fitResult;
+    }
+
+    public ResidueInfo getResidueInfo() {
+        return currentResInfo;
+    }
+
+    public String getEquationName() {
+        return currentEquationName;
     }
 
     public String getFittingMode() {
@@ -2150,6 +2039,14 @@ public class PyController implements Initializable {
         }
         allData.addAll(data);
         xychart.setData(allData);
+    }
+
+    @FXML
+    public void showMCplot(ActionEvent event) {
+        if (bootstrapSamplePlots == null) {
+            bootstrapSamplePlots = new BootstrapSamplePlots(this);
+        }
+        bootstrapSamplePlots.showMCplot();
     }
 
     @FXML
