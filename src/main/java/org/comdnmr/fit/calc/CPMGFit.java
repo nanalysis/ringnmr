@@ -17,7 +17,7 @@ public class CPMGFit implements EquationFitter {
     public static double REF_FIELD = 500.0;
     public static final double[] SIMX = {25.0, 50.0, 100.0, 150.0, 250.0, 350.0, 500.0, 750.0, 1000.0};
 
-    FitModel calcR = new CalcRDisp();
+    CalcRDisp calcR = new CalcRDisp();
     static List<String> equationNameList = Arrays.asList(CPMGEquation.getEquationNames());
     List<Double> xValues = new ArrayList<>();
     List<Double> yValues = new ArrayList<>();
@@ -242,7 +242,18 @@ public class CPMGFit implements EquationFitter {
         String[] parNames = calcR.getParNames();
         double[] errEstimates;
         double[][] simPars = null;
-        boolean ok = true;
+        boolean exchangeValid = true;
+        double[] rexValues = calcR.getRex(pars);
+        boolean okRex = false;
+        double rexRatio = CoMDPreferences.getRexRatio();
+        for (double rexValue : rexValues) {
+            if (rexValue > rexRatio * rms) {
+                okRex = true;
+                break;
+            }
+        }
+        exchangeValid = okRex;
+
         if (FitModel.getCalcError()) {
             if (nonParBootStrap) {
                 errEstimates = calcR.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
@@ -256,6 +267,9 @@ public class CPMGFit implements EquationFitter {
                 int parIndex = -1;
                 if (parName.equals("Kex")) {
                     parIndex = 0;
+                    if (pars[parIndex] < errEstimates[parIndex]) {
+                        exchangeValid = false;
+                    }
                 }
                 if (parName.equals("Rex")) {
                     parIndex = 2;
@@ -271,7 +285,7 @@ public class CPMGFit implements EquationFitter {
                     double mean = sStat.getMean();
                     double sdev = sStat.getStandardDeviation();
                     if (!valid) {
-                        ok = false;
+                        exchangeValid = false;
                     }
 //                    System.out.println(parName + " " + parIndex + " " + valid + " " + alpha + " " + mean + " " + sdev);
                 }
@@ -279,7 +293,7 @@ public class CPMGFit implements EquationFitter {
         } else {
             errEstimates = new double[pars.length];
         }
-        return getResults(this, eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, simPars);
+        return getResults(this, eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, simPars, exchangeValid);
     }
 
     public double[] getSimX() {

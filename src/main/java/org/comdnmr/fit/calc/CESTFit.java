@@ -304,7 +304,7 @@ public class CESTFit implements EquationFitter {
             for (int j = 1; j < extras.length; j++) {
                 extras[j] = xValues[j].get(0);
             }
-            return getResults(this, eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, simPars);
+            return getResults(this, eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, simPars, true);
         } else {
             return null;
         }

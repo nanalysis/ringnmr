@@ -69,37 +69,7 @@ public class CPMGFitResult {
     }
 
     public boolean exchangeValid() {
-        boolean valid = true;
-        double[] pars = getPars(0);
-        double[] errs = getErrs(0);
-        switch (equationName) {
-            case "NOEX":
-                break;
-            case "CPMGFAST":
-            case "CPMGSLOW":
-                if (errs[0] > pars[0]) {
-                    valid = false;
-                }
-                break;
-            case "CESTR1RHOPERTURBATIONNOEX":
-                break;
-            case "CESTR1RHOPERTURBATION":
-            case "CESTR1RHOSD":
-            case "CESTR1RHOBALDWINKAY":
-            case "CESTR1RHON":
-            case "CESTR1RHOEXACT1":
-            case "CESTEXACT0":
-            case "CESTEXACT1":
-            case "CESTEXACT2":
-                if (Math.abs(pars[2] - pars[3]) < 100.0) {
-                    valid = false;
-                }
-                break;
-            default: {
-
-            }
-        }
-        return valid;
+        return hasExchange;
     }
 
     public  Map<String, double[]> getSimsMap() {
@@ -113,8 +83,9 @@ public class CPMGFitResult {
     private final String equationName;
     private final int nGroupPars;
     private final  Map<String, double[]> simsMap;
+    private final boolean hasExchange;
 
-    public CPMGFitResult(String[] fitParNames, List<CurveFit> curveFits, String equationName, int nGroupPars, double aicc, double rms, Map<String, double[]> simsMap) {
+    public CPMGFitResult(String[] fitParNames, List<CurveFit> curveFits, String equationName, int nGroupPars, double aicc, double rms, Map<String, double[]> simsMap, boolean hasExchange) {
         this.curveFits.addAll(curveFits);
         this.fitParNames = fitParNames.clone();
         this.equationName = equationName;
@@ -122,5 +93,6 @@ public class CPMGFitResult {
         this.aicc = aicc;
         this.rms = rms;
         this.simsMap = simsMap;
+        this.hasExchange = hasExchange;
     }
 }

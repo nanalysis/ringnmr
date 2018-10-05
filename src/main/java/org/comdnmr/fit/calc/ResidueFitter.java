@@ -230,7 +230,7 @@ public class ResidueFitter {
             resInfoList.add(residueInfo);
             resMap.put(residueNumber, residueInfo);
             for (String equationName : equationNames) {
-                residueInfo.addFitResult(fitResult);
+                residueInfo.addFitResult(fitResults.get(equationName));
             }
         }
 

@@ -14,6 +14,7 @@ import java.util.prefs.Preferences;
 public class CoMDPreferences {
 
     static private Double cpmgMaxFreq = null;
+    static private Double rexRatio = null;
     static private Integer sampleSize = null;
 
     static Preferences getPrefs() {
@@ -54,4 +55,22 @@ public class CoMDPreferences {
             getPrefs().remove("SAMPLE_SIZE");
         }
     }
+
+    public static Double getRexRatio() {
+        if (rexRatio == null) {
+            String value = getPrefs().get("REX_RATIO", "3.0");
+            rexRatio = Double.parseDouble(value);
+        }
+        return rexRatio;
+    }
+
+    public static void setRexRatio(Double value) {
+        rexRatio = value;
+        if (value != null) {
+            getPrefs().put("REX_RATIO", value.toString());
+        } else {
+            getPrefs().remove("REX_RATIO");
+        }
+    }
+
 }
