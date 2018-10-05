@@ -207,7 +207,7 @@ public class PyController implements Initializable {
     XYChart activeMCchart;
 
     GridPane inputInfoDisplay = new GridPane();
-    Scene inputScene = new Scene(inputInfoDisplay, 1000, 500);
+    Scene inputScene = new Scene(inputInfoDisplay, 1000, 600);
     Stage infoStage = new Stage();
     Label chosenFileLabel = new Label();
     Label chosenXPK2FileLabel = new Label();
@@ -225,6 +225,8 @@ public class PyController implements Initializable {
     TextField TexTextField = new TextField();
     TextField yamlTextField = new TextField();
     CheckBox ppmBox = new CheckBox("ppm to Hz");
+    ChoiceBox<String> errModeChoice = new ChoiceBox<>();
+    TextField errPercentTextField = new TextField();
     ArrayList<HashMap<String, Object>> dataList = new ArrayList();
 
     @FXML
@@ -541,8 +543,11 @@ public class PyController implements Initializable {
         Label B1FieldLabel = new Label("  B1 Field:  ");
         Label TexLabel = new Label("  Tex:  ");
         Label yamlLabel = new Label("  YAML File:  ");
+        Label errModeLabel = new Label("  Error Mode:  ");
+        Label errPercentLabel = new Label("  Error Value:  ");
 
-        Label[] labels = {fitModeLabel, fileLabel, xpk2FileLabel, fitFileLabel, fieldLabel, tempLabel, nucLabel, pLabel, modeLabel, tauLabel, B1FieldLabel, TexLabel, xValLabel, yamlLabel};
+        Label[] labels = {fitModeLabel, fileLabel, xpk2FileLabel, fitFileLabel, fieldLabel, tempLabel, nucLabel, pLabel, modeLabel, 
+            tauLabel, B1FieldLabel, TexLabel, errModeLabel, errPercentLabel, xValLabel, yamlLabel};
 
         Button fileChoiceButton = new Button();
         fileChoiceButton.setOnAction(e -> chooseFile(e));
@@ -573,6 +578,7 @@ public class PyController implements Initializable {
         fitModeTextField.setText("cpmg");
         B1TextField.setText("20.0");
         TexTextField.setText("0.5");
+        errPercentTextField.setText("5");
         xValTextArea.setText("");
         xValTextArea.setMaxWidth(240);
         xValTextArea.setWrapText(true);
@@ -623,6 +629,11 @@ public class PyController implements Initializable {
 
         // set event to checkbox 
         ppmBox.setOnAction(boxevent);
+        
+        errModeChoice.getItems().add("percent");
+        errModeChoice.getItems().add("replicates");
+        errModeChoice.getItems().add("noise");
+        errModeChoice.setValue("percent");
 
         inputInfoDisplay.add(fitModeChoice, 1, 0);
         inputInfoDisplay.add(fileChoiceButton, 2, 1);
@@ -632,6 +643,8 @@ public class PyController implements Initializable {
         inputInfoDisplay.add(paramFileChoiceButton, 2, 3);
         inputInfoDisplay.add(paramFileResetButton, 3, 3);
         inputInfoDisplay.add(chosenParamFileLabel, 1, 3);
+        inputInfoDisplay.add(errModeChoice, 1, labels.length - 4);
+        inputInfoDisplay.add(errPercentTextField, 1, labels.length - 3);
         inputInfoDisplay.add(xValTextArea, 1, labels.length - 2, 2, 1);
         inputInfoDisplay.add(ppmBox, 3, labels.length - 2);
         inputInfoDisplay.add(yamlTextField, 1, labels.length - 1);
@@ -809,6 +822,8 @@ public class PyController implements Initializable {
         hm.put("fitmode", fitModeChoice.getSelectionModel().getSelectedItem().toLowerCase());
         hm.put("B1field", Double.parseDouble(B1TextField.getText()));
         hm.put("Tex", Double.parseDouble(TexTextField.getText()));
+        hm.put("errMode", errModeChoice.getSelectionModel().getSelectedItem());
+        hm.put("errValue", Double.parseDouble(errPercentTextField.getText()));
         String[] xvals = xValTextArea.getText().split("\t");
         ArrayList<Double> fxvals = new ArrayList();
         try {
@@ -846,8 +861,16 @@ public class PyController implements Initializable {
             String paramFile = (String) hmdf.get("paramFile");
             String paramFileName = paramFile.substring(paramFile.lastIndexOf("/") + 1, paramFile.length());
             hm2.put("mode", hmdf.get("fitmode"));
-            hm2.put("file", paramFileName);
+            if (!paramFileName.equals("")) {
+                hm2.put("file", paramFileName);
+            } else {
+                hm2.put("file", "analysis.txt");
+            }
 //            hmdf.put("vcpmg", hmdf.get("vcpmg").toString());
+            HashMap hmde = new HashMap();
+            hmde.put("mode", hmdf.get("errMode"));
+            hmde.put("value", hmdf.get("errValue"));
+            hmdf.put("error", hmde);
 //            if (hmdf.get("fitmode").equals("exp")) {
 //                HashMap hmd1 = new HashMap();
 //                hmd1.put("c0", 2);
@@ -867,6 +890,8 @@ public class PyController implements Initializable {
 //            }
             keySet.remove("fitmode");
             keySet.remove("paramFile");
+            keySet.remove("errMode");
+            keySet.remove("errValue");
             List keys = Arrays.asList(keySet);
             hmd.keySet().retainAll(keys);
             String dataFile = (String) hmdf.get("file");
@@ -945,8 +970,8 @@ public class PyController implements Initializable {
                 String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
                 String fileMode = (String) dataMap3.get("mode");
                 HashMap<String, Object> errorPars = new HashMap(); //(HashMap<String, Object>) dataMap3.get("error");
-                errorPars.put("mode", "percent");
-                errorPars.put("value", 5);
+                errorPars.put("mode", dataMap3.get("errMode"));
+                errorPars.put("value", dataMap3.get("errValue"));
                 Object delayField = dataMap3.get("delays");
                 System.out.println("delays " + delayField);
                 double[] delayCalc = {0.0, 0.0, 1.0};
