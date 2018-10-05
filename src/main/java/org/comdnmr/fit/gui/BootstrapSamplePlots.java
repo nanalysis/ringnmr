@@ -43,20 +43,11 @@ public class BootstrapSamplePlots {
         //Create new Stage for popup window
         if ((stage == null) || !stage.isShowing()) {
             stage = new Stage();
-            stage.setTitle("Monte Carlo Results: " + pyController.simControls.getEquation());
             Label xlabel = new Label("  X Array:  ");
             Label ylabel = new Label("  Y Array:  ");
             //Populate ChoiceBoxes with fitting variable names
             xArrayChoice.getItems().clear();
             yArrayChoice.getItems().clear();
-            Map<String, double[]> simsMap = null;
-            CPMGFitResult fitResult = pyController.getFitResult();
-            ResidueFitter residueFitter = pyController.residueFitter;
-            if (fitResult != null) {
-                simsMap = fitResult.getSimsMap();
-            } else if (residueFitter != null) {
-                simsMap = residueFitter.getFitResult().getSimsMap();
-            }
             try {
                 xArrayChoice.valueProperty().addListener((Observable x) -> {
                     updateMCplot();
@@ -82,6 +73,7 @@ public class BootstrapSamplePlots {
             MCyAxis.setAutoRanging(true);
             MCyAxis.setForceZeroInRange(false);
             activeChart = MCchart;
+            activeChart.setLegendVisible(false);
             borderPane.setTop(hBox);
             borderPane.setCenter(activeChart);
             stage.setScene(stageScene);
@@ -112,7 +104,6 @@ public class BootstrapSamplePlots {
                     series.getData().add(new XYChart.Data(xValues[i], yValues[i]));
                 }
             }
-            //Setting the data to scatter chart
         }
     }
 
@@ -133,16 +124,21 @@ public class BootstrapSamplePlots {
         Map<String, double[]> simsMap = null;
         CPMGFitResult showFitResult = null;
         ResidueInfo currentResInfo = pyController.getResidueInfo();
-        String currentEquationName = pyController.simControls.getEquation();
+        String currentEquationName = "";
         if (currentResInfo != null) {
+            currentEquationName = pyController.getParametersEquation();
             showFitResult = currentResInfo.getFitResult(currentEquationName);
         }
         if (showFitResult == null) {
+            currentEquationName = pyController.simControls.getEquation();
             showFitResult = pyController.getFitResult();
         }
         if (showFitResult != null) {
             simsMap = showFitResult.getSimsMap();
+        } else {
+            System.out.println("no results");
         }
+        stage.setTitle("Monte Carlo Results: " + currentEquationName);
         return simsMap;
     }
 

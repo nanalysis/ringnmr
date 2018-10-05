@@ -1861,6 +1861,10 @@ public class PyController implements Initializable {
             }
         }
     }
+    
+    public String getParametersEquation() {
+        return equationChoice.getValue();
+    }
 
     public String getSimMode() {
         String simSelected = simChoice.getSelectionModel().getSelectedItem();
