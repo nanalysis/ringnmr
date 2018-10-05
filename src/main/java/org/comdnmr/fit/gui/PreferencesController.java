@@ -40,7 +40,6 @@ import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import org.comdnmr.fit.calc.CPMGEquation;
 import org.comdnmr.fit.calc.CoMDPreferences;
 import org.comdnmr.fit.calc.ExperimentData;
 import org.controlsfx.control.PropertySheet;
@@ -90,6 +89,9 @@ public class PreferencesController implements Initializable {
         maxFreqItem = new DoubleRangeOperationItem((obs, oldV, newV) -> {
             CoMDPreferences.setCPMGMaxFreq((Double) newV);
         }, 2000.0, 100.0, 5000.0, "CPMG", "Max Freq", "Max Frequency");
+        DoubleRangeOperationItem rexRatioItem = new DoubleRangeOperationItem((obs, oldV, newV) -> {
+            CoMDPreferences.setRexRatio((Double) newV);
+        }, 3.0, 0.0, 10.0, "CPMG", "Rex Ratio", "Rex must be this many times rmsd");
         IntRangeOperationItem nSamplesItem = new IntRangeOperationItem((obs, oldV, newV) -> {
             CoMDPreferences.setSampleSize((Integer) newV);
         }, CoMDPreferences.getSampleSize(), 10, 500, "Error Estimates", "N Samples", "Number of bootstrap samples");
@@ -99,7 +101,7 @@ public class PreferencesController implements Initializable {
 
         int nProcessesDefault = Runtime.getRuntime().availableProcessors() / 2;
         IntRangeOperationItem nProcessesItem = new IntRangeOperationItem(nprocessListener, nProcessesDefault, 1, 32, "Processor", "NProcesses", "How many parallel processes to run during processing");
-        prefSheet.getItems().addAll(locationTypeItem, locationFileItem, nProcessesItem, maxFreqItem, nSamplesItem);
+        prefSheet.getItems().addAll(locationTypeItem, locationFileItem, nProcessesItem, maxFreqItem, rexRatioItem, nSamplesItem);
 
     }
 
