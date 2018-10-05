@@ -100,7 +100,7 @@ public enum CPMGEquation implements EquationType {
             }
             return value;
         }
-        
+
         @Override
         public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
             int nPars = CalcRDisp.getNPars(map);
@@ -301,10 +301,15 @@ public enum CPMGEquation implements EquationType {
 
         @Override
         public double getRex(double[] pars, int[] map) {
-            double rex = 0.0;
-            if (pars[map[3]] != 0.0) {
-                rex = pars[map[1]] * (1.0 - pars[map[1]]) * pars[map[0]] / (1.0 + Math.pow(pars[map[0]] / pars[map[3]], 2));
-            }
+            double[] x = new double[1];
+            x[0] = 10.0;
+            double y0 = calculate(pars, map, x, 0, CPMGFit.REF_FIELD);
+            x[0] = 1.0e4;
+            double y1 = calculate(pars, map, x, 0, CPMGFit.REF_FIELD);
+            double rex = y0-y1;
+//            if (pars[map[3]] != 0.0) {
+//                rex = pars[map[1]] * (1.0 - pars[map[1]]) * pars[map[0]] / (1.0 + Math.pow(pars[map[0]] / pars[map[3]], 2));
+//            }
             return rex;
         }
 
