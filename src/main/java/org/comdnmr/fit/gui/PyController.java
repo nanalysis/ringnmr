@@ -95,6 +95,7 @@ import static org.comdnmr.fit.calc.DataIO.loadTextFile;
 import org.comdnmr.fit.calc.FitModel;
 import static org.comdnmr.fit.gui.MainApp.preferencesController;
 import static org.comdnmr.fit.gui.MainApp.primaryStage;
+import org.controlsfx.control.textfield.TextFields;
 import org.python.util.InteractiveInterpreter;
 import org.yaml.snakeyaml.Yaml;
 
@@ -199,11 +200,11 @@ public class PyController implements Initializable {
     CPMGFitResult fitResult;
 
     GridPane inputInfoDisplay = new GridPane();
-    Scene inputScene = new Scene(inputInfoDisplay, 1000, 600);
+    Scene inputScene = new Scene(inputInfoDisplay, 600, 600);
     Stage infoStage = new Stage();
-    Label chosenFileLabel = new Label();
-    Label chosenXPK2FileLabel = new Label();
-    Label chosenParamFileLabel = new Label();
+    TextField chosenFileLabel = new TextField();
+    TextField chosenXPK2FileLabel = new TextField();
+    TextField chosenParamFileLabel = TextFields.createClearableTextField();
     TextField fieldTextField = new TextField();
     TextField tempTextField = new TextField();
     TextField nucTextField = new TextField();
@@ -211,7 +212,6 @@ public class PyController implements Initializable {
     TextField modeTextField = new TextField();
     TextField tauTextField = new TextField();
     TextArea xValTextArea = new TextArea();
-    TextField fitModeTextField = new TextField();
     ChoiceBox<String> fitModeChoice = new ChoiceBox<>();
     TextField B1TextField = new TextField();
     TextField TexTextField = new TextField();
@@ -223,7 +223,6 @@ public class PyController implements Initializable {
     Button fileChoiceButton = new Button();
     Button xpk2ChoiceButton = new Button();
     Button paramFileChoiceButton = new Button();
-    Button paramFileResetButton = new Button();
     Button addButton = new Button();
     Button clearButton = new Button();
     Button yamlButton = new Button();
@@ -562,12 +561,12 @@ public class PyController implements Initializable {
 //        Button paramFileChoiceButton = new Button();
         paramFileChoiceButton.setOnAction(e -> chooseParamFile(e));
         paramFileChoiceButton.setText("Browse");
-//        Button paramFileResetButton = new Button();
-        paramFileResetButton.setOnAction(e -> resetParamFile(e));
-        paramFileResetButton.setText("Reset");
         chosenParamFileLabel.setText("");
 
         ppmBox.setSelected(false);
+        
+        double textFieldWidth = 100;
+        double xValAreaWidth = 150; //240;
 
         fieldTextField.setText("");
         tempTextField.setText("25.0");
@@ -575,12 +574,12 @@ public class PyController implements Initializable {
         pTextField.setText("20.0");
         modeTextField.setText("mpk2");
         tauTextField.setText("0.04");
-        fitModeTextField.setText("cpmg");
         B1TextField.setText("20.0");
         TexTextField.setText("0.5");
         errPercentTextField.setText("5");
+        errPercentTextField.setMaxWidth(textFieldWidth);
         xValTextArea.setText("");
-        xValTextArea.setMaxWidth(240);
+        xValTextArea.setMaxWidth(xValAreaWidth);
         xValTextArea.setWrapText(true);
         yamlTextField.setText("");
 
@@ -593,8 +592,9 @@ public class PyController implements Initializable {
         }
         for (int i = 0; i < texts.length; i++) {
             inputInfoDisplay.add(texts[i], 1, i + 4);
+            texts[i].setMaxWidth(textFieldWidth);
         }
-
+        
         fitModeChoice.getItems().add("Select");
         fitModeChoice.getItems().add("CPMG");
         fitModeChoice.getItems().add("EXP");
@@ -642,13 +642,16 @@ public class PyController implements Initializable {
         inputInfoDisplay.add(xpk2ChoiceButton, 2, 2);
         inputInfoDisplay.add(chosenXPK2FileLabel, 1, 2);
         inputInfoDisplay.add(paramFileChoiceButton, 2, 3);
-        inputInfoDisplay.add(paramFileResetButton, 3, 3);
         inputInfoDisplay.add(chosenParamFileLabel, 1, 3);
         inputInfoDisplay.add(errModeChoice, 1, labels.length - 4);
         inputInfoDisplay.add(errPercentTextField, 1, labels.length - 3);
-        inputInfoDisplay.add(xValTextArea, 1, labels.length - 2, 2, 1);
-        inputInfoDisplay.add(ppmBox, 3, labels.length - 2);
+        inputInfoDisplay.add(xValTextArea, 1, labels.length - 2, 1, 1);
+        inputInfoDisplay.add(ppmBox, 2, labels.length - 2);
         inputInfoDisplay.add(yamlTextField, 1, labels.length - 1);
+        
+        chosenFileLabel.setMaxWidth(200);
+        chosenXPK2FileLabel.setMaxWidth(200);
+        chosenParamFileLabel.setMaxWidth(200);
 
 //        Button addButton = new Button();
         addButton.setOnAction(e -> addInfo(e));
@@ -682,12 +685,14 @@ public class PyController implements Initializable {
             B1TextField.setDisable(true);
             tauTextField.setDisable(true);
             ppmBox.setDisable(true);
+            chosenFileLabel.setDisable(true);
+            chosenXPK2FileLabel.setDisable(true);
+            chosenParamFileLabel.setDisable(true);
             fieldTextField.setDisable(true);
             tempTextField.setDisable(true);
             nucTextField.setDisable(true);
             pTextField.setDisable(true);
             modeTextField.setDisable(true);
-            fitModeTextField.setDisable(true);
             TexTextField.setDisable(true);
             errPercentTextField.setDisable(true);
             xValTextArea.setDisable(true);
@@ -696,18 +701,19 @@ public class PyController implements Initializable {
             fileChoiceButton.setDisable(true);
             xpk2ChoiceButton.setDisable(true);
             paramFileChoiceButton.setDisable(true);
-            paramFileResetButton.setDisable(true);
             addButton.setDisable(true);
             clearButton.setDisable(true);
             yamlButton.setDisable(true);
             loadButton.setDisable(true);
         } else if (!fitModeChoice.getSelectionModel().getSelectedItem().equals("Select")) {
+            chosenFileLabel.setDisable(false);
+            chosenXPK2FileLabel.setDisable(false);
+            chosenParamFileLabel.setDisable(false);
             fieldTextField.setDisable(false);
             tempTextField.setDisable(false);
             nucTextField.setDisable(false);
             pTextField.setDisable(false);
             modeTextField.setDisable(false);
-            fitModeTextField.setDisable(false);
             TexTextField.setDisable(false);
             errPercentTextField.setDisable(false);
             xValTextArea.setDisable(false);
@@ -716,7 +722,6 @@ public class PyController implements Initializable {
             fileChoiceButton.setDisable(false);
             xpk2ChoiceButton.setDisable(false);
             paramFileChoiceButton.setDisable(false);
-            paramFileResetButton.setDisable(false);
             addButton.setDisable(false);
             clearButton.setDisable(false);
             yamlButton.setDisable(false);
