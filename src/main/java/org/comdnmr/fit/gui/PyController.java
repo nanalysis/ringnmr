@@ -1220,8 +1220,8 @@ public class PyController implements Initializable {
                     CurveFit curveSet = currentResInfo.getCurveSet(useEquationName, state.replace("*", "0"));
 //                    System.out.println("curv " + useEquationName + " " + state + " " + curveSet);
                     try {
-                        double aic = curveSet.getParMap().get("AIC");
-                        double rms = curveSet.getParMap().get("RMS");
+                        String aic = String.format("%.2f", curveSet.getParMap().get("AIC"));
+                        String rms = String.format("%.2f", curveSet.getParMap().get("RMS"));
                         aicLabel.setText("AIC: " + aic);
                         rmsLabel.setText(" RMS: " + rms);
                     } catch (NullPointerException npEaic) {
@@ -1521,8 +1521,10 @@ public class PyController implements Initializable {
             CurveFit curveFit = fitResult.getCurveFit(iCurve);
             List<ParValueInterface> parValues = curveFit.getParValues();
             equationChoice.getSelectionModel().select(fitResult.getEquationName());
-            aicLabel.setText("AIC: " + fitResult.getAicc());
-            rmsLabel.setText(" RMS: " + fitResult.getRms());
+            String aic = String.format("%.2f", fitResult.getAicc());
+            String rms = String.format("%.2f", fitResult.getRms());
+            aicLabel.setText("AIC: " + aic);
+            rmsLabel.setText(" RMS: " + rms);
             updateTableWithPars(parValues);
             simControls.updateSliders(parValues, fitResult.getEquationName());
             String equationName = fitResult.getEquationName(); //equationSelector.getValue();
