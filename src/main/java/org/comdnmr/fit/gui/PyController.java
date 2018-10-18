@@ -220,6 +220,14 @@ public class PyController implements Initializable {
     ChoiceBox<String> errModeChoice = new ChoiceBox<>();
     TextField errPercentTextField = new TextField();
     ArrayList<HashMap<String, Object>> dataList = new ArrayList();
+    Button fileChoiceButton = new Button();
+    Button xpk2ChoiceButton = new Button();
+    Button paramFileChoiceButton = new Button();
+    Button paramFileResetButton = new Button();
+    Button addButton = new Button();
+    Button clearButton = new Button();
+    Button yamlButton = new Button();
+    Button loadButton = new Button();
 
     @FXML
     ToolBar navigatorToolBar = new ToolBar();
@@ -541,20 +549,20 @@ public class PyController implements Initializable {
         Label[] labels = {fitModeLabel, fileLabel, xpk2FileLabel, fitFileLabel, fieldLabel, tempLabel, nucLabel, pLabel, modeLabel, 
             tauLabel, B1FieldLabel, TexLabel, errModeLabel, errPercentLabel, xValLabel, yamlLabel};
 
-        Button fileChoiceButton = new Button();
+//        Button fileChoiceButton = new Button();
         fileChoiceButton.setOnAction(e -> chooseFile(e));
         fileChoiceButton.setText("Browse");
         chosenFileLabel.setText("");
 
-        Button xpk2ChoiceButton = new Button();
+//        Button xpk2ChoiceButton = new Button();
         xpk2ChoiceButton.setOnAction(e -> chooseXPK2File(e));
         xpk2ChoiceButton.setText("Browse");
         chosenXPK2FileLabel.setText("");
 
-        Button paramFileChoiceButton = new Button();
+//        Button paramFileChoiceButton = new Button();
         paramFileChoiceButton.setOnAction(e -> chooseParamFile(e));
         paramFileChoiceButton.setText("Browse");
-        Button paramFileResetButton = new Button();
+//        Button paramFileResetButton = new Button();
         paramFileResetButton.setOnAction(e -> resetParamFile(e));
         paramFileResetButton.setText("Reset");
         chosenParamFileLabel.setText("");
@@ -587,10 +595,11 @@ public class PyController implements Initializable {
             inputInfoDisplay.add(texts[i], 1, i + 4);
         }
 
+        fitModeChoice.getItems().add("Select");
         fitModeChoice.getItems().add("CPMG");
         fitModeChoice.getItems().add("EXP");
         fitModeChoice.getItems().add("CEST");
-        fitModeChoice.setValue("CPMG");
+        fitModeChoice.setValue("Select");
 
         fitModeChoice.valueProperty().addListener(x -> {
             updateInfoInterface();
@@ -641,58 +650,90 @@ public class PyController implements Initializable {
         inputInfoDisplay.add(ppmBox, 3, labels.length - 2);
         inputInfoDisplay.add(yamlTextField, 1, labels.length - 1);
 
-        Button addButton = new Button();
+//        Button addButton = new Button();
         addButton.setOnAction(e -> addInfo(e));
         addButton.setText("Add to Data List");
         inputInfoDisplay.add(addButton, 1, labels.length);
 
-        Button clearButton = new Button();
+//        Button clearButton = new Button();
         clearButton.setOnAction(e -> clearDataList(e));
         clearButton.setText("Clear Data List");
         inputInfoDisplay.add(clearButton, 1, labels.length + 1);
 
-        Button yamlButton = new Button();
+//        Button yamlButton = new Button();
         yamlButton.setOnAction(e -> makeYAML(e));
         yamlButton.setText("Create YAML");
         inputInfoDisplay.add(yamlButton, 2, labels.length - 1);
 
-        Button loadButton = new Button();
+//        Button loadButton = new Button();
         loadButton.setOnAction(e -> loadInfo(e));
         loadButton.setText("Load");
         inputInfoDisplay.add(loadButton, 2, labels.length + 1);
 
-        if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CPMG")) {
-            B1TextField.setDisable(true);
-            tauTextField.setDisable(false);
-            ppmBox.setDisable(true);
-        } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("EXP")) {
-            B1TextField.setDisable(true);
-            tauTextField.setDisable(true);
-            ppmBox.setDisable(true);
-        } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST")) {
-            B1TextField.setDisable(false);
-            tauTextField.setDisable(true);
-            ppmBox.setDisable(false);
-        }
+        updateInfoInterface();
 
         infoStage.setScene(inputScene);
         infoStage.show();
 
     }
 
-    public void updateInfoInterface() {
-        if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CPMG")) {
-            B1TextField.setDisable(true);
-            tauTextField.setDisable(false);
-            ppmBox.setDisable(true);
-        } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("EXP")) {
+    public void updateInfoInterface() { 
+        if (fitModeChoice.getSelectionModel().getSelectedItem().equals("Select")) {
             B1TextField.setDisable(true);
             tauTextField.setDisable(true);
             ppmBox.setDisable(true);
-        } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST")) {
-            B1TextField.setDisable(false);
-            tauTextField.setDisable(true);
-            ppmBox.setDisable(false);
+            fieldTextField.setDisable(true);
+            tempTextField.setDisable(true);
+            nucTextField.setDisable(true);
+            pTextField.setDisable(true);
+            modeTextField.setDisable(true);
+            fitModeTextField.setDisable(true);
+            TexTextField.setDisable(true);
+            errPercentTextField.setDisable(true);
+            xValTextArea.setDisable(true);
+            yamlTextField.setDisable(true);
+            errModeChoice.setDisable(true);
+            fileChoiceButton.setDisable(true);
+            xpk2ChoiceButton.setDisable(true);
+            paramFileChoiceButton.setDisable(true);
+            paramFileResetButton.setDisable(true);
+            addButton.setDisable(true);
+            clearButton.setDisable(true);
+            yamlButton.setDisable(true);
+            loadButton.setDisable(true);
+        } else if (!fitModeChoice.getSelectionModel().getSelectedItem().equals("Select")) {
+            fieldTextField.setDisable(false);
+            tempTextField.setDisable(false);
+            nucTextField.setDisable(false);
+            pTextField.setDisable(false);
+            modeTextField.setDisable(false);
+            fitModeTextField.setDisable(false);
+            TexTextField.setDisable(false);
+            errPercentTextField.setDisable(false);
+            xValTextArea.setDisable(false);
+            yamlTextField.setDisable(false);
+            errModeChoice.setDisable(false);
+            fileChoiceButton.setDisable(false);
+            xpk2ChoiceButton.setDisable(false);
+            paramFileChoiceButton.setDisable(false);
+            paramFileResetButton.setDisable(false);
+            addButton.setDisable(false);
+            clearButton.setDisable(false);
+            yamlButton.setDisable(false);
+            loadButton.setDisable(false);
+            if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CPMG")) {
+                B1TextField.setDisable(true);
+                tauTextField.setDisable(false);
+                ppmBox.setDisable(true);
+            } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("EXP")) {
+                B1TextField.setDisable(true);
+                tauTextField.setDisable(true);
+                ppmBox.setDisable(true);
+            } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST")) {
+                B1TextField.setDisable(false);
+                tauTextField.setDisable(true);
+                ppmBox.setDisable(false);
+            }
         }
 
     }
@@ -1028,6 +1069,9 @@ public class PyController implements Initializable {
             reschartNode.setResProps(resProp);
             PyController.mainController.setControls();
         }
+        
+        fitModeChoice.setValue("Select");
+        updateInfoInterface();
     }
 
     public void clearConsole() {
