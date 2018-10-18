@@ -40,6 +40,7 @@
                                 </items>
                             </Menu>
                             <MenuItem text="Preferences..." onAction="#showPreferences"/>
+                            <MenuItem text="Show Console" onAction="#showConsole"/>
 
                         </items>
                     </Menu>
@@ -188,12 +189,6 @@
                     <children>
                         <SSRegion fx:id="ssregion" prefHeight="1" />
                         <ToolBar fx:id="navigatorToolBar" orientation="HORIZONTAL" BorderPane.alignment="CENTER"/>
-                    </children>
-                </VBox>
-                <VBox>
-                    <children>
-                        <Button text="Clear Console" onAction="#clearConsole" />
-                        <TextArea fx:id="textArea" editable="false" VBox.vgrow="ALWAYS"/>
                     </children>
                 </VBox>
 

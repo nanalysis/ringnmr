@@ -94,6 +94,7 @@ import static org.comdnmr.fit.calc.DataIO.loadPeakFile;
 import static org.comdnmr.fit.calc.DataIO.loadTextFile;
 import org.comdnmr.fit.calc.FitModel;
 import static org.comdnmr.fit.gui.MainApp.preferencesController;
+import static org.comdnmr.fit.gui.MainApp.console;
 import static org.comdnmr.fit.gui.MainApp.primaryStage;
 import org.controlsfx.control.textfield.TextFields;
 import org.python.util.InteractiveInterpreter;
@@ -141,14 +142,6 @@ public class PyController implements Initializable {
     Menu axisMenu;
     @FXML
     BorderPane simPane;
-
-    @FXML
-    TextArea textArea;
-
-    ArrayList<String> history = new ArrayList<>();
-    InteractiveInterpreter interpreter = MainApp.getInterpreter();
-    int historyInd = 0;
-    KeyCode prevKey = null;
 
     @FXML
     ChoiceBox<String> simChoice;
@@ -318,34 +311,6 @@ public class PyController implements Initializable {
             equationAction();
         });
 
-        textArea.setEditable(true);
-        textArea.setOnKeyPressed(new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent keyEvent) {
-                consoleInteraction(keyEvent);
-            }
-        });
-        textArea.setOnKeyReleased(new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent keyEvent) {
-                KeyCode code = keyEvent.getCode();
-                if (code == KeyCode.ENTER || code == KeyCode.UP || code == KeyCode.DOWN) {
-                    textArea.positionCaret(textArea.getText().lastIndexOf(">") + 2);
-                }
-            }
-        });
-
-        PrintStream printStream = new PrintStream(new ConsoleRedirect(textArea));
-        // keeps reference of standard output stream
-        //standardOut = System.out;
-        //standardErr = System.err;
-
-        // re-assigns standard output stream and error output stream
-        System.setOut(printStream);
-        System.setErr(printStream);
-
-        interpreter.setOut(printStream);
-        interpreter.setErr(printStream);
 
         simChoice.getItems().add("Simulate CPMG");
         simChoice.getItems().add("Simulate EXP");
@@ -359,7 +324,6 @@ public class PyController implements Initializable {
 
         setBoundsButton.setOnAction(this::setBounds);
 
-        textArea.appendText("> ");
 
         initResidueNavigator();
         calcErrorsCheckBox.selectedProperty().addListener(e -> FitModel.setCalcError(calcErrorsCheckBox.isSelected()));
@@ -1079,51 +1043,6 @@ public class PyController implements Initializable {
         updateInfoInterface();
     }
 
-    public void clearConsole() {
-        textArea.setText("> ");
-    }
-
-    public void consoleInteraction(KeyEvent keyEvent) {
-        KeyCode key = keyEvent.getCode();
-        String text = textArea.getText();
-        int lastLineStart = text.lastIndexOf(">") + 2;
-        int lastLineEnd = textArea.getLength();
-        String lastLine = text.substring(lastLineStart - 2, lastLineEnd).trim();
-        String typed = text.substring(lastLineStart).trim();
-        if (key == KeyCode.ENTER & lastLine.equals("> " + typed)) {
-            history.add(typed);
-            historyInd = history.size();
-            if (history.size() == 1 || prevKey == KeyCode.UP || prevKey == KeyCode.DOWN) {
-                textArea.appendText("\n");
-            }
-            interpreter.runsource(typed);
-            textArea.appendText("> ");
-        } else if (key == KeyCode.ENTER & typed.equals("")) {
-            textArea.appendText("> ");
-        } else if (key == KeyCode.UP) {
-            if (history.size() > 0) {
-                prevKey = key;
-                historyInd -= 1;
-                if (historyInd < 0) {
-                    historyInd = 0;
-                }
-                String command = history.get(historyInd);
-                textArea.replaceText(lastLineStart, lastLineEnd, command);
-            }
-        } else if (key == KeyCode.DOWN) {
-            if (history.size() > 0) {
-                prevKey = key;
-                historyInd += 1;
-                if (historyInd > history.size() - 1) {
-                    historyInd = history.size() - 1;
-                }
-                String command = history.get(historyInd);
-                textArea.replaceText(lastLineStart, lastLineEnd, command);
-            }
-        } else if (key == KeyCode.ALPHANUMERIC || key == KeyCode.DIGIT0) {
-            prevKey = key;
-        }
-    }
 
     public void updateXYChartLabels() {
         if ((simControls instanceof CPMGControls)) {
@@ -2136,6 +2055,18 @@ public class PyController implements Initializable {
             preferencesController.getStage().show();
         } else {
             System.out.println("Coudn't make controller");
+        }
+    }
+    
+    @FXML
+    private void showConsole(ActionEvent event) {
+        if (console == null) {
+            console = ConsoleRedirect.create();
+        }
+        if (console != null) {
+            console.show();
+        } else {
+            System.out.println("Coudn't make console");
         }
     }
 

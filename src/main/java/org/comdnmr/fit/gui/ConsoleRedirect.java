@@ -7,9 +7,26 @@ package org.comdnmr.fit.gui;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintStream;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.ResourceBundle;
 import javafx.application.Platform;
+import javafx.event.EventHandler;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.Scene;
 
 import javafx.scene.control.TextArea;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.Pane;
+import javafx.stage.Screen;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import org.python.util.InteractiveInterpreter;
 
 /**
  * This class extends from OutputStream to redirect output to a TextArea
@@ -17,12 +34,83 @@ import javafx.scene.control.TextArea;
  * @author Martha Beckwith
  *
  */
-public class ConsoleRedirect extends OutputStream {
-
+public class ConsoleRedirect extends OutputStream implements Initializable {
+    
+    @FXML
     private TextArea textArea;
+    Stage stage;
+    ArrayList<String> history = new ArrayList<>();
+    InteractiveInterpreter interpreter = MainApp.getInterpreter();
+    int historyInd = 0;
+    KeyCode prevKey = null;
 
-    public ConsoleRedirect(TextArea textArea) {
-        this.textArea = textArea;
+//    public ConsoleRedirect(TextArea textArea) {
+//        this.textArea = textArea;
+//    }
+    
+    public void initialize(URL url, ResourceBundle rb) {
+        initializeConsole();
+        MainApp.setConsoleController(this);
+    }
+    
+    public static ConsoleRedirect create() {
+        FXMLLoader loader = new FXMLLoader(PyController.class.getResource("/fxml/ConsoleScene.fxml"));
+        ConsoleRedirect controller = null;
+        Stage stage = new Stage(StageStyle.DECORATED);
+
+        try {
+            Scene scene = new Scene((Pane) loader.load());
+            stage.setScene(scene);
+//            scene.getStylesheets().add("/styles/consolescene.css");
+
+            controller = loader.<ConsoleRedirect>getController();
+            controller.stage = stage;
+            stage.setTitle("CoMD/NMR Console");
+            stage.show();
+            Screen screen = Screen.getPrimary();
+            Rectangle2D screenSize = screen.getBounds();
+            stage.toFront();
+            stage.setY(screenSize.getHeight() - stage.getHeight());
+            ConsoleRedirect consoleController = controller;
+            stage.setOnCloseRequest(e -> consoleController.close());
+        } catch (IOException ioE) {
+            ioE.printStackTrace();
+            System.out.println(ioE.getMessage());
+        }
+
+        return controller;
+
+    }
+    
+    public void initializeConsole() {
+        
+        textArea.setEditable(true);
+        textArea.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent keyEvent) {
+                consoleInteraction(keyEvent);
+            }
+        });
+        textArea.setOnKeyReleased(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent keyEvent) {
+                KeyCode code = keyEvent.getCode();
+                if (code == KeyCode.ENTER || code == KeyCode.UP || code == KeyCode.DOWN) {
+                    textArea.positionCaret(textArea.getText().lastIndexOf(">") + 2);
+                }
+            }
+        });
+
+        PrintStream printStream = new PrintStream(this);
+        // re-assigns standard output stream and error output stream
+        System.setOut(printStream);
+        System.setErr(printStream);
+
+        interpreter.setOut(printStream);
+        interpreter.setErr(printStream);
+        
+        textArea.appendText("> ");
+
     }
 
     @Override
@@ -40,6 +128,61 @@ public class ConsoleRedirect extends OutputStream {
                 //textArea.positionCaret(String.valueOf((char)b).length());
                 textArea.appendText("");
             });
+        }
+    }
+    
+    public void clearConsole() {
+        textArea.setText("> ");
+    }
+    
+    public void close() {
+        stage.hide();
+    }
+
+    public void show() {
+        stage.show();
+        stage.toFront();
+    }
+
+    public void consoleInteraction(KeyEvent keyEvent) {
+        KeyCode key = keyEvent.getCode();
+        String text = textArea.getText();
+        int lastLineStart = text.lastIndexOf(">") + 2;
+        int lastLineEnd = textArea.getLength();
+        String lastLine = text.substring(lastLineStart - 2, lastLineEnd).trim();
+        String typed = text.substring(lastLineStart).trim();
+        if (key == KeyCode.ENTER & lastLine.equals("> " + typed)) {
+            history.add(typed);
+            historyInd = history.size();
+            if (history.size() == 1 || prevKey == KeyCode.UP || prevKey == KeyCode.DOWN) {
+                textArea.appendText("\n");
+            }
+            interpreter.runsource(typed);
+            textArea.appendText("> ");
+        } else if (key == KeyCode.ENTER & typed.equals("")) {
+            textArea.appendText("> ");
+        } else if (key == KeyCode.UP) {
+            if (history.size() > 0) {
+                prevKey = key;
+                historyInd -= 1;
+                if (historyInd < 0) {
+                    historyInd = 0;
+                }
+                String command = history.get(historyInd);
+                textArea.replaceText(lastLineStart, lastLineEnd, command);
+            }
+        } else if (key == KeyCode.DOWN) {
+            if (history.size() > 0) {
+                prevKey = key;
+                historyInd += 1;
+                if (historyInd > history.size() - 1) {
+                    historyInd = history.size() - 1;
+                }
+                String command = history.get(historyInd);
+                textArea.replaceText(lastLineStart, lastLineEnd, command);
+            }
+        } else if (key == KeyCode.ALPHANUMERIC || key == KeyCode.DIGIT0) {
+            prevKey = key;
         }
     }
 }

@@ -19,6 +19,7 @@ public class MainApp extends Application {
     public static ScriptEngine engine;
     public static InteractiveInterpreter interpreter = new InteractiveInterpreter();
     public static PreferencesController preferencesController;
+    public static ConsoleRedirect console;
 
     public static void main(String[] args) throws ScriptException {
         engine = new ScriptEngineManager().getEngineByName("jython");
@@ -52,5 +53,9 @@ public class MainApp extends Application {
 
     public static InteractiveInterpreter getInterpreter() {
         return interpreter;
+    }
+    
+    public static void setConsoleController(ConsoleRedirect controller) {
+        console = controller;
     }
 }
