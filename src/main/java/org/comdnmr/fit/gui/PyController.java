@@ -1578,26 +1578,36 @@ public class PyController implements Initializable {
 
     @FXML
     public void fitResidues(ActionEvent event) {
-        fitResult = null;
-        residueFitter.fitResidues(currentResProps);
+        if (getFittingMode().equals("cest")) {
+            ChooseCESTFitEquations.allRes = true;
+            ChooseCESTFitEquations.create();
+        } else {
+            fitResult = null;
+            residueFitter.fitResidues(currentResProps);
+        }
     }
 
     @FXML
     public void fitGroupResidues(ActionEvent event) {
-        fitResult = null;
-        List<List<String>> allResidues = new ArrayList<>();
-        List<String> groupResidues = new ArrayList<>();
-        XYBarChart chart = getActiveChart();
-        groupResidues.addAll(chart.selectedResidues);
-        if (!groupResidues.isEmpty()) {
-            allResidues.add(groupResidues);
-            currentResProps.setAbsValueMode(absValueModeCheckBox.isSelected());
-            if (nonParBootStrapCheckBox.isSelected()) {
-                currentResProps.setBootStrapMode("nonparametric");
-            } else {
-                currentResProps.setBootStrapMode("parametric");
-            }
-            residueFitter.fitResidues(currentResProps, allResidues);
+        if (getFittingMode().equals("cest")) {
+            ChooseCESTFitEquations.allRes = false;
+            ChooseCESTFitEquations.create();
+        } else {
+            fitResult = null;
+            List<List<String>> allResidues = new ArrayList<>();
+            List<String> groupResidues = new ArrayList<>();
+            XYBarChart chart = getActiveChart();
+            groupResidues.addAll(chart.selectedResidues);
+            if (!groupResidues.isEmpty()) {
+                allResidues.add(groupResidues);
+                currentResProps.setAbsValueMode(absValueModeCheckBox.isSelected());
+                if (nonParBootStrapCheckBox.isSelected()) {
+                    currentResProps.setBootStrapMode("nonparametric");
+                } else {
+                    currentResProps.setBootStrapMode("parametric");
+                }
+                residueFitter.fitResidues(currentResProps, allResidues);
+            } 
         }
     }
 
@@ -1848,7 +1858,7 @@ public class PyController implements Initializable {
     void equationAction() {
         if (equationChoice.getUserData() == null) {
             String equationName = equationChoice.getValue();
-            if (!currentStates.isEmpty()) {
+            if (!currentStates.isEmpty() && equationName != null) {
                 // copy it so it doesn't get cleared by clear call in updateTableWithPars
                 List<int[]> useStates = new ArrayList<>(currentStates);
                 updateTableWithPars(currentMapName, currentResidues, equationName, currentState, useStates, false);
