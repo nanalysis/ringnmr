@@ -143,11 +143,6 @@
                                                     <CheckBox text="Calc Errors" fx:id="calcErrorsCheckBox"/>
                                                 </children>
                                             </HBox> 
-                                            <HBox>
-                                                <children>
-                                                    <StatusBar fx:id="statusBar" HBox.hgrow="ALWAYS"/>
-                                                </children>
-                                            </HBox>
                                         </children>
 
                                     </VBox>
@@ -192,7 +187,12 @@
                 <VBox fx:id="chartBox" VBox.vgrow="ALWAYS">
                     <children>
                         <SSRegion fx:id="ssregion" prefHeight="1" />
-                        <ToolBar fx:id="navigatorToolBar" orientation="HORIZONTAL" BorderPane.alignment="CENTER"/>
+                        <HBox>
+                            <children>
+                                <ToolBar fx:id="navigatorToolBar" orientation="HORIZONTAL" BorderPane.alignment="CENTER"/>
+                                <StatusBar fx:id="statusBar" HBox.hgrow="ALWAYS"/>
+                            </children>
+                        </HBox>
                     </children>
                 </VBox>
 
