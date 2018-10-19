@@ -175,6 +175,11 @@ public class CESTFit implements EquationFitter {
     public static List<String> getEquationNames() {
         return equationNameList;
     }
+    
+    public static List<String> setEquationNames(List<String> eqnNames) {
+        equationNameList = eqnNames;
+        return equationNameList;
+    }
 
     public int[] getStateCount() {
         return stateCount;
