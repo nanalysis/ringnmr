@@ -23,6 +23,7 @@
                             <MenuItem text="Load Project File..." onAction="#loadParameterFile" fx:id="loadMenuItem"/>
                             <MenuItem text="Input Project Parameters..." onAction="#inputParameters" fx:id="inputMenuItem"/>
                             <MenuItem text="Load Secondary Structure..." onAction="loadSecondaryStructure(event)" fx:id="loadSSMenuItem"/>
+                            <MenuItem text="Load Sim File..." onAction="#loadSimData"/>
                             <MenuItem text="Save Analysis..." onAction="#saveParameters" fx:id="savePars"/>
                             <MenuItem text="Save Bar Chart..." onAction="#saveBarChart" fx:id="saveBarChartButton"/>
                             <MenuItem text="Save XY Chart..." onAction="#saveXYChart" fx:id="saveXYChartButton"/>

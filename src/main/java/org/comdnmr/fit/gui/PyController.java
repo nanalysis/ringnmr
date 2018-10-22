@@ -95,6 +95,7 @@ import static org.comdnmr.fit.calc.DataIO.loadTextFile;
 import org.comdnmr.fit.calc.FitModel;
 import static org.comdnmr.fit.gui.MainApp.preferencesController;
 import static org.comdnmr.fit.gui.MainApp.primaryStage;
+import org.controlsfx.dialog.ExceptionDialog;
 import org.python.util.InteractiveInterpreter;
 import org.yaml.snakeyaml.Yaml;
 
@@ -538,7 +539,7 @@ public class PyController implements Initializable {
         Label errModeLabel = new Label("  Error Mode:  ");
         Label errPercentLabel = new Label("  Error Value:  ");
 
-        Label[] labels = {fitModeLabel, fileLabel, xpk2FileLabel, fitFileLabel, fieldLabel, tempLabel, nucLabel, pLabel, modeLabel, 
+        Label[] labels = {fitModeLabel, fileLabel, xpk2FileLabel, fitFileLabel, fieldLabel, tempLabel, nucLabel, pLabel, modeLabel,
             tauLabel, B1FieldLabel, TexLabel, errModeLabel, errPercentLabel, xValLabel, yamlLabel};
 
         Button fileChoiceButton = new Button();
@@ -621,7 +622,7 @@ public class PyController implements Initializable {
 
         // set event to checkbox 
         ppmBox.setOnAction(boxevent);
-        
+
         errModeChoice.getItems().add("percent");
         errModeChoice.getItems().add("replicates");
         errModeChoice.getItems().add("noise");
@@ -1886,7 +1887,7 @@ public class PyController implements Initializable {
             }
         }
     }
-    
+
     public String getParametersEquation() {
         return equationChoice.getValue();
     }
@@ -2068,6 +2069,34 @@ public class PyController implements Initializable {
         }
         allData.addAll(data);
         xychart.setData(allData);
+    }
+
+    @FXML
+    void loadSimData(ActionEvent e) {
+        ObservableList<XYChart.Series<Double, Double>> allData = FXCollections.observableArrayList();
+        FileChooser fileChooser = new FileChooser();
+        File file = fileChooser.showOpenDialog(null);
+        if (file != null) {
+            try {
+                List<Double>[] dataValues = DataIO.loadSimData(file);
+                List<XYChart.Series<Double, Double>> data = new ArrayList<>();
+                XYChart.Series<Double, Double> series = new XYChart.Series<>();
+                series.setName("sim" + ":" + "0");
+                data.add(series);
+                for (int i = 0; i < dataValues[0].size(); i++) {
+                    XYChart.Data dataPoint = new XYChart.Data(dataValues[0].get(i), dataValues[1].get(i));
+                    if (!dataValues[2].isEmpty()) {
+                        dataPoint.setExtraValue(new Double(dataValues[2].get(i)));
+                    }
+                    series.getData().add(dataPoint);
+                }
+                allData.addAll(data);
+                xychart.setData(allData);
+            } catch (IOException ioE) {
+                ExceptionDialog dialog = new ExceptionDialog(ioE);
+                dialog.showAndWait();
+            }
+        }
     }
 
     @FXML
