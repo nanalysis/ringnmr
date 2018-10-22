@@ -646,50 +646,30 @@ public class PyController implements Initializable {
 
     public void updateInfoInterface() { 
         if (fitModeChoice.getSelectionModel().getSelectedItem().equals("Select")) {
-            B1TextField.setDisable(true);
-            tauTextField.setDisable(true);
+            TextField[] textFields = {B1TextField, tauTextField, fieldTextField, tempTextField, nucTextField, pTextField, modeTextField, TexTextField, 
+                errPercentTextField, yamlTextField, chosenFileLabel, chosenXPK2FileLabel, chosenParamFileLabel};
+            Button[] buttons = {fileChoiceButton, xpk2ChoiceButton, paramFileChoiceButton, addButton, clearButton, yamlButton, loadButton};
+            for (int i=0; i<textFields.length; i++) {
+                textFields[i].setDisable(true);
+            }
+            for (int i=0; i<buttons.length; i++) {
+                buttons[i].setDisable(true);
+            }
             ppmBox.setDisable(true);
-            chosenFileLabel.setDisable(true);
-            chosenXPK2FileLabel.setDisable(true);
-            chosenParamFileLabel.setDisable(true);
-            fieldTextField.setDisable(true);
-            tempTextField.setDisable(true);
-            nucTextField.setDisable(true);
-            pTextField.setDisable(true);
-            modeTextField.setDisable(true);
-            TexTextField.setDisable(true);
-            errPercentTextField.setDisable(true);
             xValTextArea.setDisable(true);
-            yamlTextField.setDisable(true);
             errModeChoice.setDisable(true);
-            fileChoiceButton.setDisable(true);
-            xpk2ChoiceButton.setDisable(true);
-            paramFileChoiceButton.setDisable(true);
-            addButton.setDisable(true);
-            clearButton.setDisable(true);
-            yamlButton.setDisable(true);
-            loadButton.setDisable(true);
         } else if (!fitModeChoice.getSelectionModel().getSelectedItem().equals("Select")) {
-            chosenFileLabel.setDisable(false);
-            chosenXPK2FileLabel.setDisable(false);
-            chosenParamFileLabel.setDisable(false);
-            fieldTextField.setDisable(false);
-            tempTextField.setDisable(false);
-            nucTextField.setDisable(false);
-            pTextField.setDisable(false);
-            modeTextField.setDisable(false);
-            TexTextField.setDisable(false);
-            errPercentTextField.setDisable(false);
+            TextField[] textFields = {fieldTextField, tempTextField, nucTextField, pTextField, modeTextField, TexTextField, 
+                errPercentTextField, yamlTextField, chosenFileLabel, chosenXPK2FileLabel, chosenParamFileLabel};
+            Button[] buttons = {fileChoiceButton, xpk2ChoiceButton, paramFileChoiceButton, addButton, clearButton, yamlButton, loadButton};
+            for (int i=0; i<textFields.length; i++) {
+                textFields[i].setDisable(false);
+            }
+            for (int i=0; i<buttons.length; i++) {
+                buttons[i].setDisable(false);
+            }
             xValTextArea.setDisable(false);
-            yamlTextField.setDisable(false);
             errModeChoice.setDisable(false);
-            fileChoiceButton.setDisable(false);
-            xpk2ChoiceButton.setDisable(false);
-            paramFileChoiceButton.setDisable(false);
-            addButton.setDisable(false);
-            clearButton.setDisable(false);
-            yamlButton.setDisable(false);
-            loadButton.setDisable(false);
             if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CPMG")) {
                 B1TextField.setDisable(true);
                 tauTextField.setDisable(false);
