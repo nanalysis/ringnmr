@@ -23,10 +23,13 @@
                             <MenuItem text="Load Project File..." onAction="#loadParameterFile" fx:id="loadMenuItem"/>
                             <MenuItem text="Input Project Parameters..." onAction="#inputParameters" fx:id="inputMenuItem"/>
                             <MenuItem text="Load Secondary Structure..." onAction="loadSecondaryStructure(event)" fx:id="loadSSMenuItem"/>
-                            <MenuItem text="Load Sim File..." onAction="#loadSimData"/>
-                            <MenuItem text="Save Analysis..." onAction="#saveParameters" fx:id="savePars"/>
-                            <MenuItem text="Save Bar Chart..." onAction="#saveBarChart" fx:id="saveBarChartButton"/>
-                            <MenuItem text="Save XY Chart..." onAction="#saveXYChart" fx:id="saveXYChartButton"/>
+                            <Menu text="Save">
+                                <items>
+                                    <MenuItem text="Save Analysis..." onAction="#saveParameters" fx:id="savePars"/>
+                                    <MenuItem text="Save Bar Chart..." onAction="#saveBarChart" fx:id="saveBarChartButton"/>
+                                    <MenuItem text="Save XY Chart..." onAction="#saveXYChart" fx:id="saveXYChartButton"/>                       
+                                </items>
+                            </Menu>
                             <Menu text="Export XY Chart">
                                 <items>
                                     <MenuItem text="Save Grace File..." onAction="#saveGraceFile" fx:id="saveGraceButton"/>
@@ -41,6 +44,7 @@
                                 </items>
                             </Menu>
                             <MenuItem text="Preferences..." onAction="#showPreferences"/>
+                            <MenuItem text="Show Console" onAction="#showConsole"/>
 
                         </items>
                     </Menu>
@@ -57,6 +61,7 @@
                             <MenuItem text="Fit All" onAction="#fitResidues" fx:id="FitResidues"/>
                             <MenuItem text="Fit Selected" onAction="#fitGroupResidues" fx:id="FitGroupResidues"/>
                             <MenuItem  text="Halt" onAction="#haltFit" fx:id="haltProcessButton" />
+                            <MenuItem text="Monte Carlo Plot" onAction="#showMCplot" fx:id="MCPlot"/>
                         </items>
                     </Menu>
                 </MenuBar>
@@ -114,7 +119,6 @@
                                                     <Button text="Gen" onAction="#showSimData" fx:id="Gen"/>
                                                     <Button text="Guess" onAction="#guesses" fx:id="Guesses"/>
                                                     <Button text="Fit" onAction="#fitEquation" fx:id="FitEquation"/>
-                                                    <Button text="Monte Carlo Plot" onAction="#showMCplot" fx:id="MCPlot"/>
                                                 </children>
                                             </HBox>
                                         </top>
@@ -129,21 +133,16 @@
                                             </HBox> 
                                             <HBox>
                                                 <children>
-                                                    <CheckBox text="AbsMode" fx:id="absValueModeCheckBox"/>
-                                                    <CheckBox text="BootStrap" fx:id="nonParBootStrapCheckBox"/>
-                                                    <CheckBox text="SliderGuess" fx:id="sliderGuessCheckBox"/>
+                                                    <CheckBox text="Absolute Value Mode  " fx:id="absValueModeCheckBox"/>
+                                                    <CheckBox text="Non-Parametric Fit" fx:id="nonParBootStrapCheckBox"/>
                                                 </children>
                                             </HBox>
                                             <HBox>
                                                 <children>
-                                                    <CheckBox text="Calc Errors" fx:id="calcErrorsCheckBox"/>
+                                                    <CheckBox text="Calculate Errors          " fx:id="calcErrorsCheckBox"/>
+                                                    <CheckBox text="Slider Guess" fx:id="sliderGuessCheckBox"/>
                                                 </children>
                                             </HBox> 
-                                            <HBox>
-                                                <children>
-                                                    <StatusBar fx:id="statusBar" HBox.hgrow="ALWAYS"/>
-                                                </children>
-                                            </HBox>
                                         </children>
 
                                     </VBox>
@@ -188,13 +187,12 @@
                 <VBox fx:id="chartBox" VBox.vgrow="ALWAYS">
                     <children>
                         <SSRegion fx:id="ssregion" prefHeight="1" />
-                        <ToolBar fx:id="navigatorToolBar" orientation="HORIZONTAL" BorderPane.alignment="CENTER"/>
-                    </children>
-                </VBox>
-                <VBox>
-                    <children>
-                        <Button text="Clear Console" onAction="#clearConsole" />
-                        <TextArea fx:id="textArea" editable="false" VBox.vgrow="ALWAYS"/>
+                        <HBox>
+                            <children>
+                                <ToolBar fx:id="navigatorToolBar" orientation="HORIZONTAL" BorderPane.alignment="CENTER"/>
+                                <StatusBar fx:id="statusBar" HBox.hgrow="ALWAYS"/>
+                            </children>
+                        </HBox>
                     </children>
                 </VBox>
 
