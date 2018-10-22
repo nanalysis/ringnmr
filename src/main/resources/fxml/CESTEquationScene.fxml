@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.net.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import org.comdnmr.fit.gui.*?>
+<?import org.controlsfx.control.*?>
+
+
+<BorderPane id="AnchorPane" prefHeight="200.0" prefWidth="600.0" styleClass="mainFxmlClass" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.comdnmr.fit.gui.ChooseCESTFitEquations">
+    
+    <top>
+        <HBox>
+            <children>
+                <VBox>
+                    <children>
+                        <Label text="Fast Equations"/>
+                        <CheckBox fx:id="NoExCheckBox" text="No Exchange"/>
+                        <CheckBox fx:id="PerturbationCheckBox" text="R1rho Perturbation    "/>
+                        <CheckBox fx:id="BaldwinKayCheckBox" text="R1rho Baldwin-Kay    "/>
+                        <CheckBox fx:id="SDCheckBox" text="R1rho SD"/>
+                        <CheckBox fx:id="NCheckBox" text="R1rho N"/>
+                    </children>
+                </VBox>
+                <VBox>
+                    <children>
+                        <Label text="Slow Equations"/>
+                        <CheckBox fx:id="R1rhoExact1CheckBox" text="R1rho Exact1"/>
+                        <CheckBox fx:id="Exact0CheckBox" text="Exact0"/>
+                        <CheckBox fx:id="Exact1CheckBox" text="Exact1"/>
+                        <CheckBox fx:id="Exact2CheckBox" text="Exact2"/>
+                    </children>
+                </VBox>
+            </children>
+        </HBox>
+    </top>
+    <bottom>
+        <Button fx:id="startFitsButton" text="Start Fitting" onAction="#fitEquations"/>
+    </bottom>
+</BorderPane>
