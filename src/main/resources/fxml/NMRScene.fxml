@@ -61,6 +61,7 @@
                             <MenuItem text="Fit All" onAction="#fitResidues" fx:id="FitResidues"/>
                             <MenuItem text="Fit Selected" onAction="#fitGroupResidues" fx:id="FitGroupResidues"/>
                             <MenuItem  text="Halt" onAction="#haltFit" fx:id="haltProcessButton" />
+                            <MenuItem text="Monte Carlo Plot" onAction="#showMCplot" fx:id="MCPlot"/>
                         </items>
                     </Menu>
                 </MenuBar>
@@ -118,7 +119,6 @@
                                                     <Button text="Gen" onAction="#showSimData" fx:id="Gen"/>
                                                     <Button text="Guess" onAction="#guesses" fx:id="Guesses"/>
                                                     <Button text="Fit" onAction="#fitEquation" fx:id="FitEquation"/>
-                                                    <Button text="Monte Carlo Plot" onAction="#showMCplot" fx:id="MCPlot"/>
                                                 </children>
                                             </HBox>
                                         </top>
