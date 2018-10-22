@@ -133,14 +133,14 @@
                                             </HBox> 
                                             <HBox>
                                                 <children>
-                                                    <CheckBox text="AbsMode" fx:id="absValueModeCheckBox"/>
-                                                    <CheckBox text="BootStrap" fx:id="nonParBootStrapCheckBox"/>
-                                                    <CheckBox text="SliderGuess" fx:id="sliderGuessCheckBox"/>
+                                                    <CheckBox text="Absolute Value Mode  " fx:id="absValueModeCheckBox"/>
+                                                    <CheckBox text="Non-Parametric Fit" fx:id="nonParBootStrapCheckBox"/>
                                                 </children>
                                             </HBox>
                                             <HBox>
                                                 <children>
-                                                    <CheckBox text="Calc Errors" fx:id="calcErrorsCheckBox"/>
+                                                    <CheckBox text="Calculate Errors          " fx:id="calcErrorsCheckBox"/>
+                                                    <CheckBox text="Slider Guess" fx:id="sliderGuessCheckBox"/>
                                                 </children>
                                             </HBox> 
                                         </children>
