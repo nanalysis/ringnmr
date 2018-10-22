@@ -789,4 +789,36 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         //System.out.println("\ng10inten: " + g10inten);
         //System.out.println("\ng10err: " + g10err);
     }
+
+    public static List<Double>[] loadSimData(File file) throws IOException, IllegalArgumentException {
+        Path path = file.toPath();
+        List<Double> xValues = new ArrayList<>();
+        List<Double> yValues = new ArrayList<>();
+        List<Double> errValues = new ArrayList<>();
+        try (BufferedReader fileReader = Files.newBufferedReader(path)) {
+            while (true) {
+                String line = fileReader.readLine();
+                if (line == null) {
+                    break;
+                }
+
+                String sline = line.trim();
+                if (sline.length() == 0) {
+                    continue;
+                }
+                if (sline.contains("#")) {
+                    continue;
+                }
+                String[] sfields = line.split("\t", -1);
+
+                xValues.add(Double.parseDouble(sfields[0]));
+                yValues.add(Double.parseDouble(sfields[1]));
+                if (sfields.length > 2) {
+                    errValues.add(Double.parseDouble(sfields[2]));
+                }
+            }
+        }
+        List[] result = {xValues, yValues, errValues};
+        return result;
+    }
 }
