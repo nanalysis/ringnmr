@@ -106,5 +106,19 @@ public class CoMDPreferences {
         }
         return cestEqnList;
     }
+    
+    public static boolean getEqnState(String equation) {
+        Preferences prefs = Preferences.userNodeForPackage(ExperimentData.class);
+        String eqns = prefs.get("CESTEQNS", null);
+        String[] cestEqnPrefList = eqns.split("\n");
+        boolean state = false;
+        for (String cestEqnPref : cestEqnPrefList) {
+            String[] cestEqnPrefs = cestEqnPref.split(";");
+            if (cestEqnPrefs[0].equals(equation) && cestEqnPrefs[1].equals("true")) {
+                state = true;
+            }
+        }
+        return state;
+    }
 
 }
