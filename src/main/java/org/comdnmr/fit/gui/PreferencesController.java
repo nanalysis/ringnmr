@@ -117,7 +117,8 @@ public class PreferencesController implements Initializable {
             "CESTEXACT0", "CESTEXACT1", "CESTEXACT2"));
         prefSheet.getItems().addAll(locationTypeItem, locationFileItem, nProcessesItem, maxFreqItem, rexRatioItem, nSamplesItem);
         for (String eqn : cestEqnChoices) {
-            BooleanOperationItem cestEqnListItem = new BooleanOperationItem(cestEqnListener, false, "CEST Equations", eqn, "List of equations to use during CEST Fitting");
+            boolean defaultState = CoMDPreferences.getEqnState(eqn);
+            BooleanOperationItem cestEqnListItem = new BooleanOperationItem(cestEqnListener, defaultState, "CEST Equations", eqn, "List of equations to use during CEST Fitting");
             prefSheet.getItems().add(cestEqnListItem);
         }
 
