@@ -83,16 +83,24 @@
                                 <Tab text="Parameters" closable="false" > 
                                     <BorderPane HBox.hgrow="ALWAYS">
                                         <top>
-                                            <HBox>
-                                                <children>
-                                                    <ChoiceBox fx:id="equationChoice">
-                                                      
-                                                    </ChoiceBox>
-                                                    <Button text="Set" onAction="#setBestEquation" />
-                                                    <Label text="AIC: " fx:id="aicLabel"/>
-                                                    <Label text="RMS: " fx:id="rmsLabel"/>
-                                                </children>
-                                            </HBox> 
+                                            <VBox>
+                                                <HBox>
+                                                    <children>
+                                                        <ChoiceBox fx:id="equationChoice">
+
+                                                        </ChoiceBox>
+                                                        <Button text="Set" onAction="#setBestEquation" />
+                                                    </children>
+                                                </HBox> 
+                                                <HBox>
+                                                    <children>
+                                                        <Label text="AIC: " fx:id="aicLabel1"/>
+                                                        <Label text="" fx:id="aicLabel"/>
+                                                        <Label text="  RMS: " fx:id="rmsLabel1"/>
+                                                        <Label text="" fx:id="rmsLabel"/>
+                                                    </children>
+                                                </HBox> 
+                                            </VBox>
                                         </top>
                                            
                                         <center>
