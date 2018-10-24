@@ -45,6 +45,7 @@
                             </Menu>
                             <MenuItem text="Preferences..." onAction="#showPreferences"/>
                             <MenuItem text="Show Console" onAction="#showConsole"/>
+                            <MenuItem text="Exit" onAction="#exitProgram"/>
 
                         </items>
                     </Menu>

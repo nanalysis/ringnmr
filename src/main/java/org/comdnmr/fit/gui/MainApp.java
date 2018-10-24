@@ -3,6 +3,7 @@ package org.comdnmr.fit.gui;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
@@ -45,6 +46,10 @@ public class MainApp extends Application {
             ioE.printStackTrace();
 
         }
+        primaryStage.setOnCloseRequest(e -> {
+            Platform.exit();
+            System.exit(0);
+        });
 //        try (FileReader fileReader = new FileReader(parameters.getRaw().get(0))) {
 //            engine.eval(fileReader);
 //        } catch (FileNotFoundException fnfE) {
@@ -55,11 +60,11 @@ public class MainApp extends Application {
     public static InteractiveInterpreter getInterpreter() {
         return interpreter;
     }
-    
+
     public static void setConsoleController(ConsoleRedirect controller) {
         console = controller;
     }
-    
+
     public static void setCESTEquationController(ChooseCESTFitEquations controller) {
         CESTEquationChooser = controller;
     }

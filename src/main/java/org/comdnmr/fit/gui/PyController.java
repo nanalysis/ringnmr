@@ -194,7 +194,6 @@ public class PyController implements Initializable {
 
     CPMGFitResult fitResult;
 
-
     @FXML
     ToolBar navigatorToolBar = new ToolBar();
 
@@ -285,7 +284,6 @@ public class PyController implements Initializable {
             equationAction();
         });
 
-
         simChoice.getItems().add("Simulate CPMG");
         simChoice.getItems().add("Simulate EXP");
         simChoice.getItems().add("Simulate CEST");
@@ -297,7 +295,6 @@ public class PyController implements Initializable {
         splitPane.setDividerPositions(0.4, 0.7);
 
         setBoundsButton.setOnAction(this::setBounds);
-
 
         initResidueNavigator();
         calcErrorsCheckBox.selectedProperty().addListener(e -> FitModel.setCalcError(calcErrorsCheckBox.isSelected()));
@@ -462,7 +459,7 @@ public class PyController implements Initializable {
             ChartUtil.loadParameters(file.toString());
         }
     }
-    
+
     @FXML
     public void inputParameters(ActionEvent event) {
         if (inputDataInterface == null) {
@@ -1009,8 +1006,8 @@ public class PyController implements Initializable {
 //            ChooseCESTFitEquations.allRes = true;
 //            ChooseCESTFitEquations.create();
 //        } else {
-            fitResult = null;
-            residueFitter.fitResidues(currentResProps);
+        fitResult = null;
+        residueFitter.fitResidues(currentResProps);
 //        }
     }
 
@@ -1020,21 +1017,21 @@ public class PyController implements Initializable {
 //            ChooseCESTFitEquations.allRes = false;
 //            ChooseCESTFitEquations.create();
 //        } else {
-            fitResult = null;
-            List<List<String>> allResidues = new ArrayList<>();
-            List<String> groupResidues = new ArrayList<>();
-            XYBarChart chart = getActiveChart();
-            groupResidues.addAll(chart.selectedResidues);
-            if (!groupResidues.isEmpty()) {
-                allResidues.add(groupResidues);
-                currentResProps.setAbsValueMode(absValueModeCheckBox.isSelected());
-                if (nonParBootStrapCheckBox.isSelected()) {
-                    currentResProps.setBootStrapMode("nonparametric");
-                } else {
-                    currentResProps.setBootStrapMode("parametric");
-                }
-                residueFitter.fitResidues(currentResProps, allResidues);
-            } 
+        fitResult = null;
+        List<List<String>> allResidues = new ArrayList<>();
+        List<String> groupResidues = new ArrayList<>();
+        XYBarChart chart = getActiveChart();
+        groupResidues.addAll(chart.selectedResidues);
+        if (!groupResidues.isEmpty()) {
+            allResidues.add(groupResidues);
+            currentResProps.setAbsValueMode(absValueModeCheckBox.isSelected());
+            if (nonParBootStrapCheckBox.isSelected()) {
+                currentResProps.setBootStrapMode("nonparametric");
+            } else {
+                currentResProps.setBootStrapMode("parametric");
+            }
+            residueFitter.fitResidues(currentResProps, allResidues);
+        }
 //        }
     }
 
@@ -1524,7 +1521,7 @@ public class PyController implements Initializable {
             System.out.println("Coudn't make controller");
         }
     }
-    
+
     @FXML
     private void showConsole(ActionEvent event) {
         if (console == null) {
@@ -1535,6 +1532,12 @@ public class PyController implements Initializable {
         } else {
             System.out.println("Coudn't make console");
         }
+    }
+
+    @FXML
+    private void exitProgram() {
+        Platform.exit();
+        System.exit(0);
     }
 
 }
