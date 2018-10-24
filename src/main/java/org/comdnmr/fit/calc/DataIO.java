@@ -598,6 +598,10 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             tauCPMG = tauCPMG == null ? 1.0 : tauCPMG;  // fixme throw error if  ratemode and no tauCPMG
             Double Tex = (Double) dataMap3.get("Tex");
             Double B1field = (Double) dataMap3.get("B1field");
+            
+            File file = new File(dataFileName).getAbsoluteFile();
+            dataFileName = file.getName();
+            String fileTail = dataFileName.substring(0, dataFileName.indexOf('.'));
 
             String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
             String fileMode = (String) dataMap3.get("mode");
@@ -627,7 +631,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             System.out.println("err " + errorPars);
             if ((fileMode != null) && fileMode.equals("mpk2")) {
                 if (vcpmgList == null) {
-                    ExperimentData expData = new ExperimentData(textFileName, nucleus, field, temperature, tauCPMG, null, expMode, errorPars, delayCalc, B1fieldList, TexList);
+                    ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, tauCPMG, null, expMode, errorPars, delayCalc, B1fieldList, TexList);
 //                    loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, null, expMode, errorPars, delayCalc);
                     loadPeakFile(textFileName, expData, resProp);
                 } else {
@@ -635,7 +639,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     for (int i = 0; i < vcpmgs.length; i++) {
                         vcpmgs[i] = vcpmgList.get(i).doubleValue();
                     }
-                    ExperimentData expData = new ExperimentData(textFileName, nucleus, field, temperature, tauCPMG, vcpmgs, expMode, errorPars, delayCalc, B1fieldList, TexList);
+                    ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, tauCPMG, vcpmgs, expMode, errorPars, delayCalc, B1fieldList, TexList);
 //                    loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs, expMode, errorPars, delayCalc);
                     loadPeakFile(textFileName, expData, resProp);
                 }
@@ -646,7 +650,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 for (int i = 0; i < vcpmgs.length; i++) {
                     vcpmgs[i] = vcpmgList.get(i).doubleValue();
                 }
-                ExperimentData expData = new ExperimentData(textFileName, nucleus, field, temperature, tauCPMG, vcpmgs, expMode, errorPars, delayCalc, B1fieldList, TexList);
+                ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, tauCPMG, vcpmgs, expMode, errorPars, delayCalc, B1fieldList, TexList);
 //                loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs, expMode, errorPars, delayCalc);
                 loadPeakFile(textFileName, expData, resProp);
             }
