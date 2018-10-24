@@ -469,9 +469,9 @@ public enum CESTEquation implements CESTEquationType {
     }
     
     public static String[] getEquationNames() {
-        String[] equationNames = new String[CoMDPreferences.getEqns().size()];
+        String[] equationNames = new String[CoMDPreferences.getActiveCESTEquations().size()];
         for (int i=0; i<equationNames.length; i++) {
-            equationNames[i] = CoMDPreferences.getEqns().get(i);
+            equationNames[i] = CoMDPreferences.getActiveCESTEquations().get(i);
         }
         return equationNames;
     }

@@ -20,7 +20,8 @@ public class CoMDPreferences {
     static private Double cpmgMaxFreq = null;
     static private Double rexRatio = null;
     static private Integer sampleSize = null;
-    private static Map<String, Boolean> eqnMap = new HashMap<>();
+    private static Map<String, Boolean> eqnMap = null;
+    private static String DEFAULT_CEST_EQNS = "CESTR1RHOPERTURBATIONNOEX;true\nCESTR1RHOPERTURBATION;true";
 
     static Preferences getPrefs() {
         Preferences prefs = Preferences.userNodeForPackage(CoMDPreferences.class);
@@ -77,46 +78,76 @@ public class CoMDPreferences {
             getPrefs().remove("REX_RATIO");
         }
     }
-    
+
     public static void setEqnMap(Map<String, Boolean> map) {
         eqnMap = map;
     }
-    public static void saveEqnPrefs() {
-        Preferences prefs = Preferences.userNodeForPackage(ExperimentData.class);
+
+    static Map<String, Boolean> getEqnMap() {
+        if (eqnMap == null) {
+            Preferences prefs = Preferences.userNodeForPackage(ExperimentData.class);
+            String eqns = prefs.get("CEST_EQNS", DEFAULT_CEST_EQNS);
+            eqnMap = stringToMap(eqns);
+        }
+        return eqnMap;
+    }
+
+    static Map<String, Boolean> stringToMap(String s) {
+        Map<String, Boolean> map = new HashMap<>();
+        String[] stringList = s.split("\n");
+        for (String strValue : stringList) {
+            String[] strValueParts = strValue.split(";");
+            if (strValueParts[1].equals("true")) {
+                map.put(strValueParts[0], Boolean.TRUE);
+            } else {
+                map.put(strValueParts[0], Boolean.FALSE);
+            }
+        }
+        return map;
+    }
+
+    static String mapToString(Map<String, Boolean> map) {
         StringBuilder sBuilder = new StringBuilder();
-        for (String eqn : eqnMap.keySet()){
+        for (String eqn : map.keySet()) {
             sBuilder.append(eqn);
             sBuilder.append(';');
             sBuilder.append(eqnMap.get(eqn));
             sBuilder.append("\n");
         }
-        prefs.put("CESTEQNS", sBuilder.toString());
+        return sBuilder.toString();
     }
 
-    public static List<String> getEqns() {
+    public static void saveEqnPrefs() {
         Preferences prefs = Preferences.userNodeForPackage(ExperimentData.class);
-        String eqns = prefs.get("CESTEQNS", null);
-        String[] cestEqnPrefList = eqns.split("\n");
+        String eqnString = DEFAULT_CEST_EQNS;
+        if (eqnMap != null) {
+            eqnString = mapToString(getEqnMap());
+        }
+        prefs.put("CEST_EQNS", eqnString);
+    }
+
+    public static List<String> getActiveCESTEquations() {
+        Map<String, Boolean> map = getEqnMap();
         List<String> cestEqnList = new ArrayList<>();
-        for (String cestEqnPref : cestEqnPrefList) {
-            String[] cestEqnPrefs = cestEqnPref.split(";");
-            if (cestEqnPrefs[1].equals("true")) {
-                cestEqnList.add(cestEqnPrefs[0]);
+        for (String eqn : map.keySet()) {
+            if (map.get(eqn)) {
+                cestEqnList.add(eqn);
             }
         }
         return cestEqnList;
     }
-    
-    public static boolean getEqnState(String equation) {
-        Preferences prefs = Preferences.userNodeForPackage(ExperimentData.class);
-        String eqns = prefs.get("CESTEQNS", null);
-        String[] cestEqnPrefList = eqns.split("\n");
+
+    public static void setCESTEquationState(String equation, boolean state) {
+        Map<String, Boolean> map = getEqnMap();
+        map.put(equation, state);
+        saveEqnPrefs();
+    }
+
+    public static boolean getCESTEquationState(String equation) {
+        Map<String, Boolean> map = getEqnMap();
         boolean state = false;
-        for (String cestEqnPref : cestEqnPrefList) {
-            String[] cestEqnPrefs = cestEqnPref.split(";");
-            if (cestEqnPrefs[0].equals(equation) && cestEqnPrefs[1].equals("true")) {
-                state = true;
-            }
+        if (map.containsKey(equation) && map.get(equation)) {
+            state = true;
         }
         return state;
     }
