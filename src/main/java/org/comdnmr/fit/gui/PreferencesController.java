@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +46,7 @@ import org.comdnmr.fit.calc.ExperimentData;
 import org.controlsfx.control.PropertySheet;
 import org.nmrfx.utils.properties.DoubleRangeOperationItem;
 import org.nmrfx.utils.properties.NvFxPropertyEditorFactory;
+import org.nmrfx.utils.properties.BooleanOperationItem;
 
 /**
  *
@@ -58,6 +60,7 @@ public class PreferencesController implements Initializable {
     ChangeListener<String> datasetListener;
     ChangeListener<String> locationListener;
     ChangeListener<Integer> nprocessListener;
+    ChangeListener<Boolean> cestEqnListener;
     Stage stage;
 
     static File nestaNMR = null;
@@ -66,6 +69,7 @@ public class PreferencesController implements Initializable {
     static String location = null;
     static Integer nProcesses = null;
     DoubleRangeOperationItem maxFreqItem;
+    Map<String, Boolean> map = new HashMap<>();
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -82,6 +86,12 @@ public class PreferencesController implements Initializable {
         };
         nprocessListener = (ObservableValue<? extends Integer> observableValue, Integer n1, Integer n2) -> {
             setNProcesses(n2);
+        };
+        cestEqnListener = (ObservableValue<? extends Boolean> observableValue, Boolean cest1, Boolean cest2) -> {
+            BooleanOperationItem item = (BooleanOperationItem) observableValue;
+            map.put(item.getName(), cest2);
+            CoMDPreferences.setEqnMap(map);
+            CoMDPreferences.saveEqnPrefs();
         };
         ArrayList<String> locationChoices = new ArrayList<>();
         locationChoices.add("FID directory");
@@ -101,7 +111,16 @@ public class PreferencesController implements Initializable {
 
         int nProcessesDefault = Runtime.getRuntime().availableProcessors() / 2;
         IntRangeOperationItem nProcessesItem = new IntRangeOperationItem(nprocessListener, nProcessesDefault, 1, 32, "Processor", "NProcesses", "How many parallel processes to run during processing");
+        
+        ArrayList<String> cestEqnChoices = new ArrayList<>();
+        cestEqnChoices.addAll(Arrays.asList("CESTR1RHOPERTURBATIONNOEX", "CESTR1RHOPERTURBATION", "CESTR1RHOBALDWINKAY", "CESTR1RHOSD", "CESTR1RHON", "CESTR1RHOEXACT1",
+            "CESTEXACT0", "CESTEXACT1", "CESTEXACT2"));
         prefSheet.getItems().addAll(locationTypeItem, locationFileItem, nProcessesItem, maxFreqItem, rexRatioItem, nSamplesItem);
+        for (String eqn : cestEqnChoices) {
+            boolean defaultState = CoMDPreferences.getEqnState(eqn);
+            BooleanOperationItem cestEqnListItem = new BooleanOperationItem(cestEqnListener, defaultState, "CEST Equations", eqn, "List of equations to use during CEST Fitting");
+            prefSheet.getItems().add(cestEqnListItem);
+        }
 
     }
 
@@ -312,5 +331,5 @@ public class PreferencesController implements Initializable {
         }
 
     }
-
+   
 }

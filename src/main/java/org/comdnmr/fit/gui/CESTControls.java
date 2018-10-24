@@ -16,6 +16,7 @@ import javafx.scene.control.Slider;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import org.comdnmr.fit.calc.CESTEquation;
 import org.comdnmr.fit.calc.CESTFit;
 import org.comdnmr.fit.calc.ExperimentData;
 import org.comdnmr.fit.calc.ParValueInterface;
@@ -128,8 +129,8 @@ public class CESTControls implements EquationControls {
     public VBox makeControls(PyController controller) {
         this.controller = controller;
         equationSelector = new ChoiceBox<>();
-        equationSelector.getItems().addAll(CESTFit.getEquationNames());
-        equationSelector.setValue(CESTFit.getEquationNames().get(0));
+        equationSelector.getItems().addAll(CESTEquation.getAllEquationNames());
+        equationSelector.setValue(CESTEquation.getAllEquationNames()[0]);
         stateSelector = new ChoiceBox<>();
         stateSelector.getItems().addAll("0:0:0", "1:0:0");
         stateSelector.setValue("0:0:0");

@@ -1004,21 +1004,21 @@ public class PyController implements Initializable {
 
     @FXML
     public void fitResidues(ActionEvent event) {
-        if (getFittingMode().equals("cest")) {
-            ChooseCESTFitEquations.allRes = true;
-            ChooseCESTFitEquations.create();
-        } else {
+//        if (getFittingMode().equals("cest")) {
+//            ChooseCESTFitEquations.allRes = true;
+//            ChooseCESTFitEquations.create();
+//        } else {
             fitResult = null;
             residueFitter.fitResidues(currentResProps);
-        }
+//        }
     }
 
     @FXML
     public void fitGroupResidues(ActionEvent event) {
-        if (getFittingMode().equals("cest")) {
-            ChooseCESTFitEquations.allRes = false;
-            ChooseCESTFitEquations.create();
-        } else {
+//        if (getFittingMode().equals("cest")) {
+//            ChooseCESTFitEquations.allRes = false;
+//            ChooseCESTFitEquations.create();
+//        } else {
             fitResult = null;
             List<List<String>> allResidues = new ArrayList<>();
             List<String> groupResidues = new ArrayList<>();
@@ -1034,7 +1034,7 @@ public class PyController implements Initializable {
                 }
                 residueFitter.fitResidues(currentResProps, allResidues);
             } 
-        }
+//        }
     }
 
     public void refreshFit() {
