@@ -462,9 +462,17 @@ public enum CESTEquation implements CESTEquationType {
         this.nGroupPars = nGroupPars;
     }
 
-    public static String[] getEquationNames() {
+    public static String[] getAllEquationNames() {
         String[] equationNames = {"CESTR1RHOPERTURBATIONNOEX", "CESTR1RHOPERTURBATION", "CESTR1RHOSD", "CESTR1RHOBALDWINKAY", "CESTR1RHON", 
             "CESTR1RHOEXACT1","CESTEXACT0", "CESTEXACT1", "CESTEXACT2"};
+        return equationNames;
+    }
+    
+    public static String[] getEquationNames() {
+        String[] equationNames = new String[CoMDPreferences.getEqns().size()];
+        for (int i=0; i<equationNames.length; i++) {
+            equationNames[i] = CoMDPreferences.getEqns().get(i);
+        }
         return equationNames;
     }
 
