@@ -648,9 +648,9 @@ public class PyController implements Initializable {
 //                    System.out.println("curv " + useEquationName + " " + state + " " + curveSet);
                     try {
                         String aic = String.format("%.2f", curveSet.getParMap().get("AIC"));
-                        String rms = String.format("%.2f", curveSet.getParMap().get("RMS"));
-                        aicLabel.setText("AIC: " + aic);
-                        rmsLabel.setText(" RMS: " + rms);
+                        String rms = String.format("%.3f", curveSet.getParMap().get("RMS"));
+                        aicLabel.setText(aic);
+                        rmsLabel.setText(rms);
                     } catch (NullPointerException npEaic) {
 
                     }
@@ -949,9 +949,9 @@ public class PyController implements Initializable {
             List<ParValueInterface> parValues = curveFit.getParValues();
             equationChoice.getSelectionModel().select(fitResult.getEquationName());
             String aic = String.format("%.2f", fitResult.getAicc());
-            String rms = String.format("%.2f", fitResult.getRms());
-            aicLabel.setText("AIC: " + aic);
-            rmsLabel.setText(" RMS: " + rms);
+            String rms = String.format("%.3f", fitResult.getRms());
+            aicLabel.setText(aic);
+            rmsLabel.setText(rms);
             updateTableWithPars(parValues);
             simControls.updateSliders(parValues, fitResult.getEquationName());
             String equationName = fitResult.getEquationName(); //equationSelector.getValue();
@@ -1005,21 +1005,21 @@ public class PyController implements Initializable {
 
     @FXML
     public void fitResidues(ActionEvent event) {
-        if (getFittingMode().equals("cest")) {
-            ChooseCESTFitEquations.allRes = true;
-            ChooseCESTFitEquations.create();
-        } else {
+//        if (getFittingMode().equals("cest")) {
+//            ChooseCESTFitEquations.allRes = true;
+//            ChooseCESTFitEquations.create();
+//        } else {
             fitResult = null;
             residueFitter.fitResidues(currentResProps);
-        }
+//        }
     }
 
     @FXML
     public void fitGroupResidues(ActionEvent event) {
-        if (getFittingMode().equals("cest")) {
-            ChooseCESTFitEquations.allRes = false;
-            ChooseCESTFitEquations.create();
-        } else {
+//        if (getFittingMode().equals("cest")) {
+//            ChooseCESTFitEquations.allRes = false;
+//            ChooseCESTFitEquations.create();
+//        } else {
             fitResult = null;
             List<List<String>> allResidues = new ArrayList<>();
             List<String> groupResidues = new ArrayList<>();
@@ -1035,7 +1035,7 @@ public class PyController implements Initializable {
                 }
                 residueFitter.fitResidues(currentResProps, allResidues);
             } 
-        }
+//        }
     }
 
     public void refreshFit() {
