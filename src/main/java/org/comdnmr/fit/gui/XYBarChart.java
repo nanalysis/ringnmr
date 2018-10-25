@@ -207,6 +207,7 @@ public class XYBarChart extends XYChart<Number, Number> {
         String mapName = seriesNameParts[0];
         ResidueProperties resProps = ChartUtil.residueProperties.get(mapName);
         showInfo(resProps, seriesName);
+        layoutPlotChildren();
     }
 
     void showInfo() {
@@ -471,6 +472,10 @@ public class XYBarChart extends XYChart<Number, Number> {
                 rect.setLayoutX(x1);
                 rect.setLayoutY(0.0);
                 rect.setFill(Color.LIGHTGRAY);
+                String resName = String.valueOf(resNum);
+                if (selectedResidues.contains(resName)) {
+                    rect.setFill(Color.ORANGE);
+                }
                 rect.setOnMouseClicked(e -> mouseClickedOnPresenceBar(e, resNum, width));
 
                 presenceGroup.getChildren().add(rect);
@@ -478,7 +483,7 @@ public class XYBarChart extends XYChart<Number, Number> {
         }
 
     }
-
+    
     public void addSS(ArrayList<SecondaryStructure> secondaryStructures) {
 //        painter = new SSPainter(canvas, xAxis, yAxis, secondaryStructures);
         painter = new SSPainter(xAxis, yAxis, secondaryStructures);
