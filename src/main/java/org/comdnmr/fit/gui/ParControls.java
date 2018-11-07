@@ -28,4 +28,6 @@ public interface ParControls {
 
     double getValue();
     
+    void updateLimits(double min, double max);
+    
 }
