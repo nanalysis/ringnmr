@@ -709,6 +709,17 @@ public class PyController implements Initializable {
 
         parameterTable.getColumns().clear();
         parameterTable.getColumns().addAll(residueColumn, stateColumn, nameColumn, valueColumn, errorColumn);
+        ArrayList indices = new ArrayList<>();
+        for (int i=0; i<parValues.size(); i++) {
+            String state = stateColumn.getCellObservableValue(parValues.get(i)).getValue();
+            String parName = nameColumn.getCellObservableValue(parValues.get(i)).getValue();
+            if (!state.equals("0:0:0") & parName.equals("Kex") || !state.equals("0:0:0") & parName.equals("pA")) {
+                indices.add(i);
+            }
+        }
+        for (int i=0; i<indices.size(); i++) {
+            parameterTable.getItems().remove((int) indices.get(i)-i);
+        }
     }
 
     public void selectTableRow(String seriesName, int index) {
