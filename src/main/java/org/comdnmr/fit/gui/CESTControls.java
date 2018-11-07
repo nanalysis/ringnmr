@@ -17,7 +17,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.comdnmr.fit.calc.CESTEquation;
-import org.comdnmr.fit.calc.CESTFit;
 import org.comdnmr.fit.calc.ExperimentData;
 import org.comdnmr.fit.calc.ParValueInterface;
 import org.comdnmr.fit.calc.PlotEquation;
@@ -46,12 +45,15 @@ public class CESTControls implements EquationControls {
     ChoiceBox<String> stateSelector;
 
     String[] parNames = {"Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B", "B1field", "Tex"};
+    
+    static PyController controller = PyController.mainController;
+    static final double[] xVals = controller.currentResProps.getExperimentData().stream().findFirst().get().getXVals();
 
     enum PARS implements ParControls {
         KEX("Kex", 0.0, 1000.0, 100.0, 150.0),
         PB("Pb", 0.0, 1.0, 0.1, 0.1),
-        DELTAA0("deltaA0", -6000.0, 6000.0, 1000.0, 2700.0),
-        DELTAB0("deltaB0", -6000.0, 6000.0, 1000.0, -1250.0),
+        DELTAA0("deltaA0", Math.round(xVals[1]/1000)*1000, Math.round(xVals[xVals.length-1]/1000)*1000, 1000.0, 2700.0),
+        DELTAB0("deltaB0", Math.round(xVals[1]/1000)*1000, Math.round(xVals[xVals.length-1]/1000)*1000, 1000.0, -1250.0),
         R1A("R1A", 0.0, 10.0, 1.0, 2.5),
         R1B("R1B", 0.0, 10.0, 1.0, 2.5),
         R2A("R2A", 0.0, 200.0, 50.0, 15.0),
@@ -123,7 +125,7 @@ public class CESTControls implements EquationControls {
     }
 
     boolean updatingTable = false;
-    PyController controller;
+//    PyController controller;
 
     @Override
     public VBox makeControls(PyController controller) {
