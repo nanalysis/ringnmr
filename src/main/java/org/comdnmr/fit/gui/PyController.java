@@ -723,8 +723,10 @@ public class PyController implements Initializable {
         for (int i=0; i<parValues.size(); i++) {
             String state = stateColumn.getCellObservableValue(parValues.get(i)).getValue();
             String parName = nameColumn.getCellObservableValue(parValues.get(i)).getValue();
-            if (!state.equals("0:0:0") & parName.equals("Kex") || !state.equals("0:0:0") & parName.equals("pA")) {
-                indices.add(i);
+            if (state != null & parName != null) {
+                if (!state.equals("0:0:0") & parName.equals("Kex") || !state.equals("0:0:0") & parName.equals("pA")) {
+                    indices.add(i);
+                }
             }
         }
         for (int i=0; i<indices.size(); i++) {
