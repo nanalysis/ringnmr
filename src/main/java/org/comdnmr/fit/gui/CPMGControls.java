@@ -104,6 +104,12 @@ public class CPMGControls implements EquationControls {
         public double getValue() {
             return slider.getValue();
         }
+        
+        @Override
+        public void updateLimits(double min, double max) {
+            slider.setMin(min);
+            slider.setMax(max);
+        }
 
     }
 

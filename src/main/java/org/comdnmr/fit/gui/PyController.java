@@ -231,9 +231,13 @@ public class PyController implements Initializable {
             equationChoice.getItems().add("+");
             equationChoice.getItems().addAll(CESTFit.getEquationNames());
             equationChoice.setValue(CESTFit.getEquationNames().get(0));
-            double[] xVals = currentResProps.getExperimentData().stream().findFirst().get().getXVals();
-            xLowerBoundTextField.setText(String.valueOf(Math.round(xVals[1]/1000)*1000));
-            xUpperBoundTextField.setText(String.valueOf(Math.round(xVals[xVals.length-1]/1000)*1000));
+            xLowerBoundTextField.setText("-6000.0");
+            xUpperBoundTextField.setText("6000.0");
+            if (currentResProps.getExperimentData() != null) {
+                double[] xVals = currentResProps.getExperimentData().stream().findFirst().get().getXVals();
+                xLowerBoundTextField.setText(String.valueOf(Math.round(xVals[1]/1000)*1000));
+                xUpperBoundTextField.setText(String.valueOf(Math.round(xVals[xVals.length-1]/1000)*1000));
+            }
             yLowerBoundTextField.setText("0.0");
             yUpperBoundTextField.setText("1.0");
             xTickTextField.setText("2000.0");
@@ -332,6 +336,7 @@ public class PyController implements Initializable {
             update = true;
         } else if (getSimMode().equals("cest") && !(simControls instanceof CESTControls)) {
             simControls = new CESTControls();
+            ((CESTControls) simControls).updateDeltaLimits();
             equationChoice.getItems().clear();
             equationChoice.getItems().add("+");
             equationChoice.getItems().addAll(CESTFit.getEquationNames());
@@ -467,10 +472,15 @@ public class PyController implements Initializable {
             yTickTextField.setText("50.0");
         } else if ((simControls instanceof CESTControls)) {
             xychart.setNames("CEST", "Offset (Hz)", "I(t)/I(0)", "20");
-            double[] xVals = currentResProps.getExperimentData().stream().findFirst().get().getXVals();
-            xychart.setBounds(Math.round(xVals[1]/1000)*1000, Math.round(xVals[xVals.length-1]/1000)*1000, 0.0, 1.0, 2000.0, 0.25);
-            xLowerBoundTextField.setText(String.valueOf(Math.round(xVals[1]/1000)*1000));
-            xUpperBoundTextField.setText(String.valueOf(Math.round(xVals[xVals.length-1]/1000)*1000));
+            xychart.setBounds(-6000, 6000, 0.0, 1.0, 2000.0, 0.25);
+            xLowerBoundTextField.setText("-6000.0");
+            xUpperBoundTextField.setText("6000.0");
+            if (currentResProps != null) {
+                double[] xVals = currentResProps.getExperimentData().stream().findFirst().get().getXVals();
+                xychart.setBounds(Math.round(xVals[1]/1000)*1000, Math.round(xVals[xVals.length-1]/1000)*1000, 0.0, 1.0, 2000.0, 0.25);
+                xLowerBoundTextField.setText(String.valueOf(Math.round(xVals[1]/1000)*1000));
+                xUpperBoundTextField.setText(String.valueOf(Math.round(xVals[xVals.length-1]/1000)*1000));
+            }
             yLowerBoundTextField.setText("0.0");
             yUpperBoundTextField.setText("1.0");
             xTickTextField.setText("2000.0");
