@@ -359,6 +359,9 @@ public class InputDataInterface {
         int sfInd = Arrays.asList(head.get(2)).indexOf("sf");
         int codeInd = Arrays.asList(head.get(2)).indexOf("code");
         String field = Arrays.asList(head.get(4)).get(sfInd);
+        if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CPMG")) {
+            field = Arrays.asList(head.get(3)).get(sfInd);
+        }
         String nuc = Arrays.asList(head.get(4)).get(codeInd);
         nuc = nuc.replaceAll("[^a-zA-Z]", "");
         nucTextField.setText(nuc);
