@@ -75,11 +75,11 @@ public class InputDataInterface {
     Button clearButton = new Button();
     Button yamlButton = new Button();
     Button loadButton = new Button();
-    
+
     public InputDataInterface(PyController controller) {
         pyController = controller;
     }
-    
+
     public void inputParameters() {
 
         infoStage.setTitle("Input Data Parameters");
@@ -100,7 +100,7 @@ public class InputDataInterface {
         Label errModeLabel = new Label("  Error Mode:  ");
         Label errPercentLabel = new Label("  Error Value:  ");
 
-        Label[] labels = {fitModeLabel, fileLabel, xpk2FileLabel, fitFileLabel, fieldLabel, tempLabel, nucLabel, pLabel, modeLabel, 
+        Label[] labels = {fitModeLabel, fileLabel, xpk2FileLabel, fitFileLabel, fieldLabel, tempLabel, nucLabel, pLabel, modeLabel,
             tauLabel, B1FieldLabel, TexLabel, errModeLabel, errPercentLabel, xValLabel, yamlLabel};
 
 //        Button fileChoiceButton = new Button();
@@ -119,7 +119,7 @@ public class InputDataInterface {
         chosenParamFileLabel.setText("");
 
         ppmBox.setSelected(false);
-        
+
         double textFieldWidth = 100;
         double xValAreaWidth = 150; //240;
 
@@ -149,11 +149,9 @@ public class InputDataInterface {
             inputInfoDisplay.add(texts[i], 1, i + 4);
             texts[i].setMaxWidth(textFieldWidth);
         }
-        
-        fitModeChoice.getItems().add("Select");
-        fitModeChoice.getItems().add("CPMG");
-        fitModeChoice.getItems().add("EXP");
-        fitModeChoice.getItems().add("CEST");
+
+        fitModeChoice.getItems().clear();
+        fitModeChoice.getItems().addAll(Arrays.asList("Select", "CPMG", "EXP", "CEST"));
         fitModeChoice.setValue("Select");
 
         fitModeChoice.valueProperty().addListener(x -> {
@@ -185,7 +183,7 @@ public class InputDataInterface {
 
         // set event to checkbox 
         ppmBox.setOnAction(boxevent);
-        
+
         errModeChoice.getItems().add("percent");
         errModeChoice.getItems().add("replicates");
         errModeChoice.getItems().add("noise");
@@ -203,7 +201,7 @@ public class InputDataInterface {
         inputInfoDisplay.add(xValTextArea, 1, labels.length - 2, 1, 1);
         inputInfoDisplay.add(ppmBox, 2, labels.length - 2);
         inputInfoDisplay.add(yamlTextField, 1, labels.length - 1);
-        
+
         chosenFileLabel.setMaxWidth(200);
         chosenXPK2FileLabel.setMaxWidth(200);
         chosenParamFileLabel.setMaxWidth(200);
@@ -235,44 +233,46 @@ public class InputDataInterface {
 
     }
 
-    public void updateInfoInterface() { 
-        if (fitModeChoice.getSelectionModel().getSelectedItem().equals("Select")) {
-            TextField[] textFields = {B1TextField, tauTextField, fieldTextField, tempTextField, nucTextField, pTextField, modeTextField, TexTextField, 
-                errPercentTextField, yamlTextField, chosenFileLabel, chosenXPK2FileLabel, chosenParamFileLabel};
-            Button[] buttons = {fileChoiceButton, xpk2ChoiceButton, paramFileChoiceButton, addButton, clearButton, yamlButton, loadButton};
-            for (TextField textField : textFields) {
-                textField.setDisable(true);
-            }
-            for (Button button : buttons) {
-                button.setDisable(true);
-            }
-            ppmBox.setDisable(true);
-            xValTextArea.setDisable(true);
-            errModeChoice.setDisable(true);
-        } else if (!fitModeChoice.getSelectionModel().getSelectedItem().equals("Select")) {
-            TextField[] textFields = {fieldTextField, tempTextField, nucTextField, pTextField, modeTextField, TexTextField, 
-                errPercentTextField, yamlTextField, chosenFileLabel, chosenXPK2FileLabel, chosenParamFileLabel};
-            Button[] buttons = {fileChoiceButton, xpk2ChoiceButton, paramFileChoiceButton, addButton, clearButton, yamlButton, loadButton};
-            for (TextField textField : textFields) {
-                textField.setDisable(false);
-            }
-            for (Button button : buttons) {
-                button.setDisable(false);
-            }
-            xValTextArea.setDisable(false);
-            errModeChoice.setDisable(false);
-            if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CPMG")) {
-                B1TextField.setDisable(true);
-                tauTextField.setDisable(false);
+    public void updateInfoInterface() {
+        if (fitModeChoice.getSelectionModel().getSelectedItem() != null) {
+            if (fitModeChoice.getSelectionModel().getSelectedItem().equals("Select")) {
+                TextField[] textFields = {B1TextField, tauTextField, fieldTextField, tempTextField, nucTextField, pTextField, modeTextField, TexTextField,
+                    errPercentTextField, yamlTextField, chosenFileLabel, chosenXPK2FileLabel, chosenParamFileLabel};
+                Button[] buttons = {fileChoiceButton, xpk2ChoiceButton, paramFileChoiceButton, addButton, clearButton, yamlButton, loadButton};
+                for (TextField textField : textFields) {
+                    textField.setDisable(true);
+                }
+                for (Button button : buttons) {
+                    button.setDisable(true);
+                }
                 ppmBox.setDisable(true);
-            } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("EXP")) {
-                B1TextField.setDisable(true);
-                tauTextField.setDisable(true);
-                ppmBox.setDisable(true);
-            } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST")) {
-                B1TextField.setDisable(false);
-                tauTextField.setDisable(true);
-                ppmBox.setDisable(false);
+                xValTextArea.setDisable(true);
+                errModeChoice.setDisable(true);
+            } else if (!fitModeChoice.getSelectionModel().getSelectedItem().equals("Select")) {
+                TextField[] textFields = {fieldTextField, tempTextField, nucTextField, pTextField, modeTextField, TexTextField,
+                    errPercentTextField, yamlTextField, chosenFileLabel, chosenXPK2FileLabel, chosenParamFileLabel};
+                Button[] buttons = {fileChoiceButton, xpk2ChoiceButton, paramFileChoiceButton, addButton, clearButton, yamlButton, loadButton};
+                for (TextField textField : textFields) {
+                    textField.setDisable(false);
+                }
+                for (Button button : buttons) {
+                    button.setDisable(false);
+                }
+                xValTextArea.setDisable(false);
+                errModeChoice.setDisable(false);
+                if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CPMG")) {
+                    B1TextField.setDisable(true);
+                    tauTextField.setDisable(false);
+                    ppmBox.setDisable(true);
+                } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("EXP")) {
+                    B1TextField.setDisable(true);
+                    tauTextField.setDisable(true);
+                    ppmBox.setDisable(true);
+                } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST")) {
+                    B1TextField.setDisable(false);
+                    tauTextField.setDisable(true);
+                    ppmBox.setDisable(false);
+                }
             }
         }
 
@@ -609,7 +609,7 @@ public class InputDataInterface {
             reschartNode.setResProps(resProp);
             PyController.mainController.setControls();
         }
-        
+
         fitModeChoice.setValue("Select");
         updateInfoInterface();
     }
