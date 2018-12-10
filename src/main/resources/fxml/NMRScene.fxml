@@ -43,6 +43,7 @@
                                     <MenuItem text="Save R File..." onAction="#saveBarToRFile"/>                            
                                 </items>
                             </Menu>
+                            <MenuItem text="Load Sample Data..." onAction="#loadSimData"/>
                             <MenuItem text="Preferences..." onAction="#showPreferences"/>
                             <MenuItem text="Show Console" onAction="#showConsole"/>
                             <MenuItem text="Exit" onAction="#exitProgram"/>

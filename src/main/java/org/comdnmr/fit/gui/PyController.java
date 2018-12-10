@@ -1477,7 +1477,7 @@ public class PyController implements Initializable {
     }
 
     @FXML
-    void loadSimData(ActionEvent e) {
+    public void loadSimData(ActionEvent e) {
         ObservableList<XYChart.Series<Double, Double>> allData = FXCollections.observableArrayList();
         FileChooser fileChooser = new FileChooser();
         File file = fileChooser.showOpenDialog(null);
