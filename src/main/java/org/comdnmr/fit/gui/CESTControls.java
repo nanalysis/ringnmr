@@ -45,11 +45,11 @@ public class CESTControls implements EquationControls {
     ChoiceBox<String> stateSelector;
 
     String[] parNames = {"Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B", "B1field", "Tex"};
-    
+
     static PyController controller = PyController.mainController;
     static final double DELTA_MIN = -6000.0;
     static final double DELTA_MAX = 6000.0;
-    
+
     enum PARS implements ParControls {
         KEX("Kex", 0.0, 1000.0, 100.0, 150.0),
         PB("Pb", 0.0, 1.0, 0.1, 0.1),
@@ -122,7 +122,7 @@ public class CESTControls implements EquationControls {
         public double getValue() {
             return slider.getValue();
         }
-        
+
         @Override
         public void updateLimits(double min, double max) {
             slider.setMin(min);
@@ -130,7 +130,7 @@ public class CESTControls implements EquationControls {
         }
 
     }
-    
+
     public void updateDeltaLimits() {
         PARS.DELTAA0.updateLimits(DELTA_MIN, DELTA_MAX);
         PARS.DELTAB0.updateLimits(DELTA_MIN, DELTA_MAX);
@@ -587,12 +587,14 @@ public class CESTControls implements EquationControls {
             if (control != null) {
                 control.setValue(parValue.getValue());
                 if (control.getName().equals("deltaA0") || control.getName().equals("deltaB0")) {
-                    if (controller.currentResProps.getExperimentData() != null) {
-                        double[] xVals = controller.currentResProps.getExperimentData().stream().findFirst().get().getXVals();
-                        double min = Math.round(xVals[1]/1000)*1000;
-                        double max = Math.round(xVals[xVals.length-1]/1000)*1000;
-                        control.updateLimits(min, max);
-                    } 
+                    if (controller.currentResProps != null) {
+                        if (controller.currentResProps.getExperimentData() != null) {
+                            double[] xVals = controller.currentResProps.getExperimentData().stream().findFirst().get().getXVals();
+                            double min = Math.round(xVals[1] / 1000) * 1000;
+                            double max = Math.round(xVals[xVals.length - 1] / 1000) * 1000;
+                            control.updateLimits(min, max);
+                        }
+                    }
                 }
             }
         }
