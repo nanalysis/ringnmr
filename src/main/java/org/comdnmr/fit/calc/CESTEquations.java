@@ -640,13 +640,13 @@ public class CESTEquations {
     public static double[] smoothCEST(double[] vec, int j1, int j2, int order, int smoothSize, double[] X) {
         // Applies a Savitzky-Golay filter to the data for smoothing.
         SavitzkyGolay sg = new SavitzkyGolay();
-        double[] smoothed = new double[X.length];
         try {
-            smoothed = sg.runningSavitzkyGolaySmoothing(vec, j1, j2, order, smoothSize, X);
+            double[] smoothed = sg.runningSavitzkyGolaySmoothing(vec, j1, j2, order, smoothSize, X);
+            return smoothed;
         } catch (Exception e) {
             System.out.println("Smooth-size should be one of 5,7,9,...,25");
+            return X;
         }
-        return smoothed;
     }
 
     static double[] getBaseline(double[] vec) {
@@ -677,8 +677,22 @@ public class CESTEquations {
         double[] syvals = new double[yvals.length];
         double[] baseValues = getBaseline(yvals);
         double baseline = baseValues[0];
+        int smoothSize;
+        if (yvals.length < 20) {
+            smoothSize = 0;
+        } else if (yvals.length < 30) {
+            smoothSize = 5;
+        } else if (yvals.length < 40) {
+            smoothSize = 7;
+        } else if (yvals.length < 50) {
+            smoothSize = 9;
+        } else {
+            smoothSize = 11;
+        }
 
-        yvals = smoothCEST(yvals, 0, yvals.length, 3, 11, syvals);
+        if (smoothSize != 0) {
+            yvals = smoothCEST(yvals, 0, yvals.length, 3, smoothSize, syvals);
+        }
 
         // A point must have a lower value than this number of points on each
         // side of the point in order to be a peak.
