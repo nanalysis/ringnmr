@@ -13,17 +13,22 @@ rem
 
 if "%OS%" == "Windows_NT" setlocal
 
-set nvjver=${project.version}
-set nvjpmain=org.comdnmr.fit.gui.MainApp
+set comdnmrver=${project.version}
+set comdnmrmain=org.comdnmr.fit.gui.MainApp
 
 
 set dir=%~dp0
+set javaexe=java
 
-set cp="%dir%\comdnmrgui-%nvjver%.jar;${wclasspath};%CLASSPATH%"
+set cp="%dir%comdnmrgui-%nvjver%.jar;%dir%lib/Manifest.jar"
 
-if "%TCLLIBPATH%" == "" goto nullTcllib
-set tcllibpath=-DTCLLIBPATH="%TCLLIBPATH%"
-:nullTcllib
+set testjava=%dir%jre\bin\java.exe
 
-java %tcllibpath% -cp %cp% %JAVA_OPTS% %nvjpmain% %*
+if exist %testjava% (
+    set javaexe="%testjava%"
+    set cp="%dir%lib/comdnmrgui-%comdnmrver%.jar;%dir%lib/%Manifest.jar"
+)
+
+
+%javaexe%  -cp %cp% %JAVA_OPTS% %comdnmrmain% %*
 
