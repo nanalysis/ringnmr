@@ -19,13 +19,15 @@ set comdnmrmain=org.comdnmr.comdnmr.chart.MainApp
 set dir=%~dp0
 
 set javaexe=java
-set cp="%dir%\comdnmr-%comdnmrver%.jar;${wclasspath};%CLASSPATH%"
+set cp="%dir%comdnmr-%ncomdnmrver%.jar;%dir%lib/Manifest.jar"
 
-set testjava=%dir%jre\bin\java
+
+set testjava=%dir%jre\bin\java.exe
 
 if exist %testjava% (
     set javaexe="%testjava%"
-    set cp="%dir%\lib\comdnmr-%comdnmrver%.jar;${wclasspath};%CLASSPATH%"
+    set cp="%dir%lib/comdnmr-%comdnmrver%.jar;%dir%lib/%Manifest.jar"
+
 )
 
 
