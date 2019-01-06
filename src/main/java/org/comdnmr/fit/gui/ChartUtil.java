@@ -249,7 +249,7 @@ public class ChartUtil {
         return data;
     }
 
-    public static ArrayList<PlotEquation> getEquations(String seriesName, String[] residues, String equationName, String state, double field) {
+    public static ArrayList<PlotEquation> getEquations(ExperimentData expData, String seriesName, String[] residues, String equationName, String state, double field) {
         ResidueProperties residueProps = residueProperties.get(seriesName);
         //System.out.println(" series name is " + seriesName);
         ArrayList<PlotEquation> equations = new ArrayList<>();
@@ -274,24 +274,22 @@ public class ChartUtil {
                 if (curveSet != null) {
                     PlotEquation equation = curveSet.getEquation();
                     if (optionalData.isPresent() && optionalData.get().getExtras().size() > 0) {
-                        ExperimentData expData = optionalData.get();
+//                        ExperimentData expData = optionalData.get();
                         double[] pars = curveSet.getEquation().getPars(); //pars = getPars(equationName);
                         double[] errs = curveSet.getEquation().getErrs(); //double[] errs = new double[pars.length];
                         double[] extras = new double[3];
-                        for (int j = 0; j < expData.getExtras().size() / 2; j++) {
+//                        for (int j = 0; j < expData.getExtras().size() / 2; j++) {
 //                        extras[0] = field;
 //                        extras[1] = expData.getExtras().get(j);
 //                        //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[1] = " + extras[1]);
 //                        PlotEquation equationCopy = equation.clone();
 //                        equationCopy.setExtra(extras);
                             extras[0] = 1.0;
-                            extras[1] = expData.getExtras().get(2 * j);
-                            extras[2] = expData.getExtras().get(2 * j + 1);
-//                        System.out.println("Fit button expData extras size = " + expData.getExtras().size() + " extra[1] = " + extras[1]);
+                            extras[1] = expData.getExtras().get(0);
+                            extras[2] = expData.getExtras().get(1);
                             PlotEquation equationCopy = new PlotEquation(useEquationName, pars, errs, extras);
 
                             equations.add(equationCopy);
-                        }
                     } else {
                         double[] extras = new double[1];
                         extras[0] = field;
