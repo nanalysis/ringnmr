@@ -21,15 +21,15 @@ public class ExperimentData {
     final String expMode;
     final HashMap<String, Object> errorPars;
     final double[] delayCalc;
-    final double[] B1field;
-    final double[] Tex;
+    final Double B1field;
+    final Double Tex;
     double errFraction = 0.05;
     final String nucleus;
     List<Double> extras = new ArrayList<>();
     private String state = "";
 
-    public ExperimentData(String name, String nucleus, double field, double temperature, Double tau, double[] xvals, 
-            String expMode, HashMap<String, Object> errorPars, double[] delayCalc, double[] B1field, double[] Tex) {
+    public ExperimentData(String name, String nucleus, double field, double temperature, Double tau, double[] xvals,
+            String expMode, HashMap<String, Object> errorPars, double[] delayCalc, Double B1field, Double Tex) {
         this.name = name;
         this.field = field;
         this.temperature = temperature;
@@ -45,6 +45,14 @@ public class ExperimentData {
         }
         this.nucleus = nucleus;
         residueData = new HashMap<>();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sBuilder = new StringBuilder();
+        sBuilder.append(name).append(" ").append(field).append(" ").
+                append(B1field).append(" nres ").append(residueData.size());
+        return sBuilder.toString();
     }
 
     public String getName() {
@@ -100,28 +108,28 @@ public class ExperimentData {
     public Double getTau() {
         return tau;
     }
-    
+
     public double[] getXVals() {
         return xvals;
     }
-    
+
     public String getExpMode() {
         return expMode;
     }
-    
+
     public HashMap<String, Object> getErrorPars() {
         return errorPars;
     }
-    
+
     public double[] getDelayCalc() {
         return delayCalc;
     }
-    
-    public double[] getB1Field() {
+
+    public Double getB1Field() {
         return B1field;
     }
-    
-    public double[] getTex() {
+
+    public Double getTex() {
         return Tex;
     }
 }
