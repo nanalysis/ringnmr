@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -38,6 +39,9 @@ public class DataIO {
 //        ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, tau, xvals, expMode, errorPars, delayCalc, B1field);
 //        String fileName = expData.getName();
         Path path = Paths.get(fileName);
+        if (Files.notExists(path, LinkOption.NOFOLLOW_LINKS)) {
+            throw new FileNotFoundException(fileName);
+        }
         HashMap<String, Object> errorPars = expData.getErrorPars();
         String expMode = expData.getExpMode();
         double[] xVals = expData.getXVals();
@@ -289,7 +293,7 @@ public class DataIO {
                         double intensity = Double.parseDouble(sfields[1].trim());
                         double error = 0.01;
                         if (nValues > 2) {
-                            error = Double.parseDouble(sfields[3].trim());
+                            error = Double.parseDouble(sfields[2].trim());
                         }
                         xValueList.add(offsetFreq * 2 * Math.PI);
                         yValueList.add(intensity);
@@ -656,7 +660,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
 
     }
 
-    public static ResidueProperties loadParameters(String fileName) {
+    public static ResidueProperties loadParameters(String fileName) throws FileNotFoundException, IOException {
         File yamlFile = new File(fileName).getAbsoluteFile();
         ResidueProperties resProp = null;
         try (InputStream input = new FileInputStream(yamlFile)) {
@@ -678,14 +682,6 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     getDataValues(resProp, dataMap2, dirPath, expMode);
                 }
             }
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(DataIO.class.getName()).log(Level.SEVERE, null, ex);
-            System.out.println(ex.getMessage());
-            return null;
-        } catch (IOException ex) {
-            Logger.getLogger(DataIO.class.getName()).log(Level.SEVERE, null, ex);
-            System.out.println(ex.getMessage());
-            return null;
         }
         //        residueProperties.put(resProp.getName(), resProp);
 
