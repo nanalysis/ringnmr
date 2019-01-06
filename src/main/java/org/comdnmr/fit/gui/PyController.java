@@ -235,8 +235,8 @@ public class PyController implements Initializable {
             xUpperBoundTextField.setText("6000.0");
             if (currentResProps.getExperimentData() != null) {
                 double[] xVals = currentResProps.getExperimentData().stream().findFirst().get().getXVals();
-                xLowerBoundTextField.setText(String.valueOf(Math.round(xVals[1]/1000)*1000));
-                xUpperBoundTextField.setText(String.valueOf(Math.round(xVals[xVals.length-1]/1000)*1000));
+                xLowerBoundTextField.setText(String.valueOf(Math.round(xVals[1] / 1000) * 1000));
+                xUpperBoundTextField.setText(String.valueOf(Math.round(xVals[xVals.length - 1] / 1000) * 1000));
             }
             yLowerBoundTextField.setText("0.0");
             yUpperBoundTextField.setText("1.0");
@@ -477,9 +477,11 @@ public class PyController implements Initializable {
             xUpperBoundTextField.setText("6000.0");
             if (currentResProps != null) {
                 double[] xVals = currentResProps.getExperimentData().stream().findFirst().get().getXVals();
-                xychart.setBounds(Math.round(xVals[1]/1000)*1000, Math.round(xVals[xVals.length-1]/1000)*1000, 0.0, 1.0, 2000.0, 0.25);
-                xLowerBoundTextField.setText(String.valueOf(Math.round(xVals[1]/1000)*1000));
-                xUpperBoundTextField.setText(String.valueOf(Math.round(xVals[xVals.length-1]/1000)*1000));
+                if (xVals != null) {
+                    xychart.setBounds(Math.round(xVals[1] / 1000) * 1000, Math.round(xVals[xVals.length - 1] / 1000) * 1000, 0.0, 1.0, 2000.0, 0.25);
+                    xLowerBoundTextField.setText(String.valueOf(Math.round(xVals[1] / 1000) * 1000));
+                    xUpperBoundTextField.setText(String.valueOf(Math.round(xVals[xVals.length - 1] / 1000) * 1000));
+                }
             }
             yLowerBoundTextField.setText("0.0");
             yUpperBoundTextField.setText("1.0");
@@ -679,10 +681,6 @@ public class PyController implements Initializable {
 
     public void updateTableWithPars(List<ParValueInterface> parValues) {
         DecimalFormat df = new DecimalFormat();
-        ObservableList<ParValueInterface> data = FXCollections.observableArrayList();
-        data.addAll(parValues);
-        parameterTable.itemsProperty().setValue(data);
-
         TableColumn<ParValueInterface, String> residueColumn = new TableColumn<>("Residue");
         TableColumn<ParValueInterface, String> stateColumn = new TableColumn<>("State");
         TableColumn<ParValueInterface, String> nameColumn = new TableColumn<>("Name");
@@ -719,19 +717,24 @@ public class PyController implements Initializable {
 
         parameterTable.getColumns().clear();
         parameterTable.getColumns().addAll(residueColumn, stateColumn, nameColumn, valueColumn, errorColumn);
-        ArrayList indices = new ArrayList<>();
-        for (int i=0; i<parValues.size(); i++) {
-            String state = stateColumn.getCellObservableValue(parValues.get(i)).getValue();
-            String parName = nameColumn.getCellObservableValue(parValues.get(i)).getValue();
-            if (state != null & parName != null) {
-                if (!state.equals("0:0:0") & parName.equals("Kex") || !state.equals("0:0:0") & parName.equals("pA")) {
-                    indices.add(i);
+        ObservableList<ParValueInterface> data = FXCollections.observableArrayList();
+
+        for (ParValueInterface parValue : parValues) {
+            String state = parValue.getState();
+            String parName = parValue.getName();
+            boolean ok = true;
+            // remove redundant parameters 
+            if ((state != null) && (parName != null)) {
+                if (!state.equals("0:0:0") && (parName.equals("Kex") || parName.equals("dPPM")
+                        || parName.equals("pA") || parName.equals("Rex"))) {
+                    ok = false;
                 }
             }
+            if (ok) {
+                data.add(parValue);
+            }
         }
-        for (int i=0; i<indices.size(); i++) {
-            parameterTable.getItems().remove((int) indices.get(i)-i);
-        }
+        parameterTable.itemsProperty().setValue(data);
     }
 
     public void selectTableRow(String seriesName, int index) {
@@ -794,9 +797,6 @@ public class PyController implements Initializable {
         }
         currentResProps = ChartUtil.residueProperties.get(setName);
         chart.setResProps(currentResProps);
-        if (currentResProps != null) {
-            defaultField = currentResProps.getFields()[0];
-        }
     }
 
     void makeAxisMenu() {
@@ -972,6 +972,12 @@ public class PyController implements Initializable {
                     extras[2] = expData.getExtras().get(2 * j + 1);
 //                    System.out.println("Fit button expData extras size = " + expData.getExtras().size() + " extra[1] = " + extras[1]);
                     PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
+                    for (int i = 0; i < extras.length; i++) {
+                        System.out.println(iCurve + " " + i + " extra " + extras[i]);
+                    }
+                    for (int i = 0; i < pars.length; i++) {
+                        System.out.println(iCurve + " " + i + " pars " + pars[i]);
+                    }
                     //equationCopy.setExtra(extras);
 
                     equations.add(plotEquation);
@@ -979,18 +985,28 @@ public class PyController implements Initializable {
             } else {
                 double[] pars = curveFit.getEquation().getPars(); //pars = getPars(equationName);
                 double[] errs = curveFit.getEquation().getErrs(); //double[] errs = new double[pars.length];
-                double[] extras = new double[3];
+                double[] extras = curveFit.getEquation().getExtras();
                 double[] simExtras = simControls.getExtras();
-                extras[0] = CPMGFit.REF_FIELD;
-
+//                extras[0] = CPMGFit.REF_FIELD;
+//System.out.println("extras " + extras[0]);
                 for (int i = 0; i < simExtras.length; i++) {
-                    extras[i + 1] = simExtras[i];
+                    System.out.println("simextras " + i + " " + simExtras[i]);
+//                    extras[i + 1] = simExtras[i];
+                }
+                for (int i = 0; i < extras.length; i++) {
+                    System.out.println(iCurve + " " + i + " extra " + extras[i]);
+                }
+                for (int i = 0; i < simExtras.length; i++) {
+                    System.out.println(iCurve + " " + i + " simExtras " + simExtras[i]);
+                }
+                for (int i = 0; i < pars.length; i++) {
+                    System.out.println(iCurve + " " + i + " pars " + pars[i]);
                 }
                 PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
 
                 //equationCopy.setExtra(extras);
                 //System.out.println("Fit button expData extras size = " + expData.getExtras().size() + " extra[0] = " + extras[0]);
-                equations.add(plotEquation);
+                equations.add(curveFit.getEquation());
 
             }
 //            double[] pars = curveFit.getEquation().getPars();
@@ -1374,7 +1390,9 @@ public class PyController implements Initializable {
         for (int i = 0; i < yValues.size(); i++) {
             errValues.add(yValues.get(i) * 0.05);
         }
+        System.out.println("xval len " + xValues.size());
         for (int j = 0; j < extras.length; j++) {
+            System.out.println("set sim " + j + " " + extras[j]);
             ArrayList<Double> xValuesEx = new ArrayList<>();
             for (int i = 0; i < yValues.size(); i++) {
                 xValuesEx.add(extras[j]);
