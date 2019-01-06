@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -200,30 +201,7 @@ public class DataIO {
                         continue;
                     }
                     if (expMode.equals("cest")) {
-                        double[] B1field = expData.getB1Field();
-                        List<Double> B1fieldList = new ArrayList<>();
-                        for (int i = 0; i < B1field.length; i++) {
-                            B1fieldList.add(B1field[i] * 2 * Math.PI);
-                        }
-                        double[] Tex = expData.getTex();
-                        List<Double> TexList = new ArrayList<>();
-                        for (int i = 0; i < Tex.length; i++) {
-                            TexList.add(Tex[i]);
-                        }
-                        List<Double> bFieldUniqueValue = new ArrayList<>();
-                        bFieldUniqueValue.add(B1fieldList.get(0));
-                        List<Double> TexList1 = new ArrayList<>();
-                        TexList1.add(TexList.get(0));
-                        List<Double>[] xValueLists = new ArrayList[3];
-                        xValueLists[0] = xValueList;
-                        xValueLists[1] = B1fieldList;
-                        xValueLists[2] = TexList;
-                        ResidueData residueData = new ResidueData(expData, residueNum, xValueLists, yValueList, errValueList);
-                        expData.addResidueData(residueNum, residueData);
-                        expData.getExtras().clear();
-                        expData.setExtras(bFieldUniqueValue);
-                        expData.setExtras(TexList1);
-//                        System.out.println("expData extras = " + expData.getExtras());
+                        processCESTData(expData, residueNum, xValueList, yValueList, errValueList);
                     } else {
                         ResidueData residueData = new ResidueData(expData, residueNum, xValueList, yValueList, errValueList, peakRefList);
                         expData.addResidueData(residueNum, residueData);
@@ -243,90 +221,97 @@ public class DataIO {
         }
     }
 
-    public static void loadCESTFiles(Path dirPath, ResidueProperties resProp, String nucleus,
+    public static void processCESTData(ExperimentData expData, String residueNum,
+            List<Double> xValueList, List<Double> yValueList, List<Double> errValueList) {
+        Double B1field = expData.getB1Field();
+        List<Double> B1fieldList = new ArrayList<>();
+        for (int i = 0; i < xValueList.size(); i++) {
+            B1fieldList.add(B1field * 2 * Math.PI);
+        }
+        double Tex = expData.getTex();
+        List<Double> TexList = new ArrayList<>();
+        for (int i = 0; i < xValueList.size(); i++) {
+            TexList.add(Tex);
+        }
+        List<Double> bFieldUniqueValue = new ArrayList<>();
+        bFieldUniqueValue.add(B1fieldList.get(0));
+        List<Double> TexList1 = new ArrayList<>();
+        TexList1.add(TexList.get(0));
+        List<Double>[] xValueLists = new ArrayList[3];
+        xValueLists[0] = xValueList;
+        xValueLists[1] = B1fieldList;
+        xValueLists[2] = TexList;
+        System.out.println("add residue " + residueNum);
+        ResidueData residueData = new ResidueData(expData, residueNum, xValueLists, yValueList, errValueList);
+        expData.addResidueData(residueNum, residueData);
+        expData.getExtras().clear();
+        expData.setExtras(bFieldUniqueValue);
+        expData.setExtras(TexList1);
+
+    }
+
+    public static void loadXYFile(String fileName, ExperimentData expData,
+            String residueNum, ResidueProperties resProp, String nucleus,
             double temperature, double field,
             HashMap<String, Object> errorPars) throws IOException, IllegalArgumentException {
-        System.out.println("load cest file " + dirPath);
-        String fileTail = dirPath.getFileName().toString();
-        //fileTail = fileTail.substring(0, fileTail.indexOf('.'));
-//System.out.println("exp name " + fileTail);
-//        ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature);
-        ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, null, null, null, errorPars, null, null, null);
-        resProp.addExperimentData(fileTail, expData);
-        Files.newDirectoryStream(dirPath, "res*.txt").forEach(resPath -> {
-            System.out.println("load " + resPath.toString());
-            boolean gotHeader = false;
-            List<Double> bFieldUniqueValue = new ArrayList<>();
-            List<Double> TexList = new ArrayList<>();
-            List<Double> bValueValueList = new ArrayList<>();
-            List<Double> offsetValueList = new ArrayList<>();
-            List<Double>[] xValueLists = new ArrayList[3];
-            xValueLists[1] = bValueValueList;
-            xValueLists[0] = offsetValueList;
-            xValueLists[2] = TexList;
-            List<Double> yValueList = new ArrayList<>();
-            List<Double> errValueList = new ArrayList<>();
-            String resFileTail = resPath.getFileName().toString();
-            String residueNum = resFileTail.substring(3, resFileTail.indexOf("."));
-            try (BufferedReader fileReader = Files.newBufferedReader(resPath)) {
-                while (true) {
-                    String line = fileReader.readLine();
-                    if (line == null) {
-                        break;
-                    }
+        boolean gotHeader = false;
+        int nValues = 0;
+        List<Double> xValueList = new ArrayList<>();
+        List<Double> yValueList = new ArrayList<>();
+        List<Double> errValueList = new ArrayList<>();
+        System.out.println("Load XY file " + fileName);
+
+        resProp.addExperimentData(expData.getName(), expData);
+
+        try (BufferedReader fileReader = new BufferedReader(new FileReader(fileName))) {
+            while (true) {
+                String line = fileReader.readLine();
+                if (line == null) {
+                    break;
+                }
+
 //            String line = fileReader.readLine();
-                    String sline = line.trim();
-                    if (sline.length() == 0) {
-                        continue;
-                    }
-                    if (sline.charAt(0) == '#') {
-                        continue;
-                    }
-                    String[] sfields = line.split("\t", -1);
-                    if (!gotHeader) {
-                        int nValues = sfields.length;
-                        gotHeader = true;
-                    } else {
-                        try {
-                            double b1Field = Double.parseDouble(sfields[0].trim());
-                            if (bFieldUniqueValue.contains(b1Field) == false) {
-                                bFieldUniqueValue.add(b1Field);
-                            }
-                            double offsetFreq = Double.parseDouble(sfields[1].trim());
-                            double intensity = Double.parseDouble(sfields[2].trim());
-                            double error = Double.parseDouble(sfields[3].trim());
-                            bValueValueList.add(b1Field * 2 * Math.PI);
-                            offsetValueList.add(offsetFreq * 2 * Math.PI);
-                            TexList.add(0.3);
-                            yValueList.add(intensity);
-                            errValueList.add(error);
-                        } catch (NumberFormatException nFE) {
-                            continue;
+                String sline = line.trim();
+                if (sline.length() == 0) {
+                    continue;
+                }
+                if (sline.charAt(0) == '#') {
+                    continue;
+                }
+                String[] sfields = line.split("\t", -1);
+                if (!gotHeader) {
+                    nValues = sfields.length;
+                    gotHeader = true;
+                } else {
+                    try {
+
+                        double offsetFreq = Double.parseDouble(sfields[0].trim());
+                        double intensity = Double.parseDouble(sfields[1].trim());
+                        double error = 0.01;
+                        if (nValues > 2) {
+                            error = Double.parseDouble(sfields[3].trim());
                         }
+                        xValueList.add(offsetFreq * 2 * Math.PI);
+                        yValueList.add(intensity);
+                        errValueList.add(error);
+                    } catch (NumberFormatException nFE) {
+                        System.out.println(nFE.getMessage());
+                        continue;
                     }
                 }
-                ResidueData residueData = new ResidueData(expData, residueNum, xValueLists, yValueList, errValueList);
-                expData.addResidueData(residueNum, residueData);
-                List<Double> extrasList = new ArrayList<>(bFieldUniqueValue.size() * 2);
-                for (int i = 0; i < bFieldUniqueValue.size(); i++) {
-                    extrasList.add(2 * i, bFieldUniqueValue.get(i) * 2.0 * Math.PI);
-                    extrasList.add(2 * i + 1, TexList.get(i));
-                }
-//                System.out.println("res num = " + residueNum);
-//                System.out.println("bfield unique value size = " + bFieldUniqueValue.size());
-//                System.out.println("extras list size = " + extrasList.size());
-                expData.getExtras().clear();
-                expData.setExtras(extrasList);
-//                System.out.println("expData extras size = " + expData.getExtras().size());
-                ResidueInfo residueInfo = resProp.getResidueInfo(residueNum);
-                if (residueInfo == null) {
-                    residueInfo = new ResidueInfo(resProp, Integer.parseInt(residueNum), 0, 0, 0);
-                    resProp.addResidueInfo(residueNum, residueInfo);
-                }
-            } catch (IOException ex) {
-                Logger.getLogger(DataIO.class.getName()).log(Level.SEVERE, null, ex);
             }
-        });
+        } catch (IOException ex) {
+            System.out.println(ex.getMessage());
+
+            Logger.getLogger(DataIO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        processCESTData(expData, residueNum, xValueList, yValueList, errValueList);
+        ResidueInfo residueInfo = resProp.getResidueInfo(residueNum);
+        if (residueInfo == null) {
+            residueInfo = new ResidueInfo(resProp, Integer.parseInt(residueNum), 0, 0, 0);
+            resProp.addResidueInfo(residueNum, residueInfo);
+        }
+
     }
 
     public static void loadTextFile(String fileName, ResidueProperties resProp, String nucleus, double temperature, double field) throws IOException, IllegalArgumentException {
@@ -574,22 +559,14 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         }
     }
 
-    static void getCESTValues(ResidueProperties resProp, Map<String, Object> dataMap2, Path dirPath) throws IOException {
-        ArrayList<HashMap<String, Object>> dataList = (ArrayList<HashMap<String, Object>>) dataMap2.get("data");
-        for (HashMap<String, Object> dataMap3 : dataList) {
-            Double temperature = (Double) dataMap3.get("temperature");
-            Double field = (Double) dataMap3.get("field");
-            String nucleus = (String) dataMap3.get("nucleus");
-            HashMap<String, Object> errorPars = (HashMap<String, Object>) dataMap3.get("error");
-            loadCESTFiles(dirPath, resProp, nucleus, temperature, field, errorPars);
-        }
-    }
-
     static void getDataValues(ResidueProperties resProp, Map<String, Object> dataMap2, Path dirPath, String expMode) throws IOException {
 
         ArrayList<HashMap<String, Object>> dataList = (ArrayList<HashMap<String, Object>>) dataMap2.get("data");
+        loadDataMaps(resProp, dirPath, expMode, dataList);
+    }
+
+    public static void loadDataMaps(ResidueProperties resProp, Path dirPath, String expMode, ArrayList<HashMap<String, Object>> dataList) throws IOException {
         for (HashMap<String, Object> dataMap3 : dataList) {
-            String dataFileName = (String) dataMap3.get("file");
             Double temperature = (Double) dataMap3.get("temperature");
             Double field = (Double) dataMap3.get("field");
             String nucleus = (String) dataMap3.get("nucleus");
@@ -598,13 +575,14 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             tauCPMG = tauCPMG == null ? 1.0 : tauCPMG;  // fixme throw error if  ratemode and no tauCPMG
             Double Tex = (Double) dataMap3.get("Tex");
             Double B1field = (Double) dataMap3.get("B1field");
-            
-            File file = new File(dataFileName).getAbsoluteFile();
-            dataFileName = file.getName();
-            String fileTail = dataFileName.substring(0, dataFileName.indexOf('.'));
 
-            String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
             String fileMode = (String) dataMap3.get("mode");
+
+//            String dataFileName = (String) dataMap3.get("file");
+//            File file = new File(dataFileName).getAbsoluteFile();
+//            dataFileName = file.getName();
+//            String fileTail = dataFileName.substring(0, dataFileName.indexOf('.'));
+//            String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
             HashMap<String, Object> errorPars = (HashMap<String, Object>) dataMap3.get("error");
             Object delayField = dataMap3.get("delays");
             System.out.println("delays " + delayField);
@@ -615,23 +593,18 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 delayCalc[1] = delayMap.get("c0").doubleValue();
                 delayCalc[2] = delayMap.get("delta").doubleValue();
             }
-            double[] B1fieldList;
-            double[] TexList;
-            if (expMode.equals("cest")) {
-                B1fieldList = new double[vcpmgList.size()];
-                TexList = new double[vcpmgList.size()];
-                for (int i = 0; i < B1fieldList.length; i++) {
-                    B1fieldList[i] = B1field;
-                    TexList[i] = Tex;
-                }
-            } else {
-                B1fieldList = null;
-                TexList = null;
-            }
             System.out.println("err " + errorPars);
+
             if ((fileMode != null) && fileMode.equals("mpk2")) {
+                String dataFileName = (String) dataMap3.get("file");
+                File file = new File(dataFileName).getAbsoluteFile();
+                dataFileName = file.getName();
+                String fileTail = dataFileName.substring(0, dataFileName.indexOf('.'));
+                String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
                 if (vcpmgList == null) {
-                    ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, tauCPMG, null, expMode, errorPars, delayCalc, B1fieldList, TexList);
+                    ExperimentData expData = new ExperimentData(fileTail,
+                            nucleus, field, temperature, tauCPMG, null, expMode,
+                            errorPars, delayCalc, B1field, Tex);
 //                    loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, null, expMode, errorPars, delayCalc);
                     loadPeakFile(textFileName, expData, resProp);
                 } else {
@@ -639,20 +612,45 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     for (int i = 0; i < vcpmgs.length; i++) {
                         vcpmgs[i] = vcpmgList.get(i).doubleValue();
                     }
-                    ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, tauCPMG, vcpmgs, expMode, errorPars, delayCalc, B1fieldList, TexList);
+                    ExperimentData expData = new ExperimentData(fileTail,
+                            nucleus, field, temperature, tauCPMG, vcpmgs, expMode,
+                            errorPars, delayCalc, B1field, Tex);
 //                    loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs, expMode, errorPars, delayCalc);
                     loadPeakFile(textFileName, expData, resProp);
                 }
-            } else if (vcpmgList == null) {
-                loadTextFile(textFileName, resProp, nucleus, temperature, field);
-            } else {
-                double[] vcpmgs = new double[vcpmgList.size()];
-                for (int i = 0; i < vcpmgs.length; i++) {
-                    vcpmgs[i] = vcpmgList.get(i).doubleValue();
+
+            } else if ((fileMode != null) && fileMode.equals("xy")) {
+                List<Map<String, Object>> filesMaps = (List<Map<String, Object>>) dataMap3.get("files");
+                String expName = (String) dataMap3.get("name").toString();
+                ExperimentData expData = new ExperimentData(expName,
+                        nucleus, field, temperature, tauCPMG, null, expMode,
+                        errorPars, delayCalc, B1field, Tex);
+                for (Map<String, Object> filesMap : filesMaps) {
+                    String residueNum = filesMap.get("residue").toString();
+                    String dataFileName = (String) filesMap.get("file");
+                    File file = new File(dataFileName).getAbsoluteFile();
+                    dataFileName = file.getName();
+                    String fileTail = dataFileName.substring(0, dataFileName.indexOf('.'));
+                    String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
+                    loadXYFile(textFileName, expData, residueNum, resProp, nucleus,
+                            temperature, field, errorPars);
                 }
-                ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, tauCPMG, vcpmgs, expMode, errorPars, delayCalc, B1fieldList, TexList);
-//                loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs, expMode, errorPars, delayCalc);
-                loadPeakFile(textFileName, expData, resProp);
+            } else if (vcpmgList == null) {
+                String dataFileName = (String) dataMap3.get("file");
+                File file = new File(dataFileName).getAbsoluteFile();
+                dataFileName = file.getName();
+                String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
+                loadTextFile(textFileName, resProp, nucleus, temperature, field);
+//            } else {
+//                double[] vcpmgs = new double[vcpmgList.size()];
+//                for (int i = 0; i < vcpmgs.length; i++) {
+//                    vcpmgs[i] = vcpmgList.get(i).doubleValue();
+//                }
+//                ExperimentData expData = new ExperimentData(fileTail,
+//                        nucleus, field, temperature, tauCPMG, vcpmgs, expMode,
+//                        errorPars, delayCalc, B1field, Tex);
+////                loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs, expMode, errorPars, delayCalc);
+//                loadPeakFile(textFileName, expData, resProp);
             }
         }
 
@@ -679,14 +677,6 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     getFitParameters(resProp, dataMap2);
                     getDataValues(resProp, dataMap2, dirPath, expMode);
                 }
-                Map cestMap = (HashMap<String, Object>) dataMap.get("cest");
-                if (cestMap != null) {
-                    String expMode = "cest";
-                    resProp = DataIO.loadParametersFromFile(expMode, "cest.txt");
-                    resProp.setExpMode(expMode);
-                    getCESTValues(resProp, cestMap, dirPath);
-                }
-
             }
         } catch (FileNotFoundException ex) {
             Logger.getLogger(DataIO.class.getName()).log(Level.SEVERE, null, ex);
@@ -744,54 +734,6 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             Logger.getLogger(DataIO.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-    }
-
-    public static void loadCESTTextFile(String[] files) throws IOException, IllegalArgumentException {
-
-        String filepath = "/home/mbeckwith/cest/CEST_tutorial/";
-
-        List<Double> offset = new ArrayList<>();
-        List<Double> g08inten = new ArrayList<>();
-        List<Double> g08err = new ArrayList<>();
-        List<Double> g10inten = new ArrayList<>();
-        List<Double> g10err = new ArrayList<>();
-
-        for (int i = 0; i < files.length; i++) {
-            String fileName = filepath + files[i] + ".csv";
-            Path path = Paths.get(fileName);
-
-            try (BufferedReader fileReader = Files.newBufferedReader(path)) {
-                while (true) {
-                    String line = fileReader.readLine();
-                    if (line == null) {
-                        break;
-                    }
-
-                    String sline = line.trim();
-                    if (sline.length() == 0) {
-                        continue;
-                    }
-
-                    if (sline.contains("#")) {
-                        continue;
-                    }
-
-                    String[] sfields = line.split(",", -1);
-
-                    offset.add(Double.parseDouble(sfields[0]));
-                    g08inten.add(Double.parseDouble(sfields[1]));
-                    g08err.add(Double.parseDouble(sfields[2]));
-                    g10inten.add(Double.parseDouble(sfields[3]));
-                    g10err.add(Double.parseDouble(sfields[4]));
-
-                }
-            }
-        }
-        //System.out.println("\noffset: " + offset);
-        //System.out.println("\ng08inten: " + g08inten);
-        //System.out.println("\ng08err: " + g08err);
-        //System.out.println("\ng10inten: " + g10inten);
-        //System.out.println("\ng10err: " + g10err);
     }
 
     public static List<Double>[] loadSimData(File file) throws IOException, IllegalArgumentException {
