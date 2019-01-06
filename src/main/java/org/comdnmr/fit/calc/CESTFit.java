@@ -78,7 +78,7 @@ public class CESTFit implements EquationFitter {
         nCurves = resNums.length * expDataList.size();
         
         // fixme??
-        nCurves = 1;
+        nCurves = resNums.length;
         states = new int[nCurves][];
         int k = 0;
         int resIndex = 0;
