@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -12,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,9 +29,6 @@ import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.comdnmr.fit.calc.DataIO;
-import static org.comdnmr.fit.calc.DataIO.loadPeakFile;
-import static org.comdnmr.fit.calc.DataIO.loadTextFile;
-import org.comdnmr.fit.calc.ExperimentData;
 import org.comdnmr.fit.calc.ResidueProperties;
 import static org.comdnmr.fit.gui.ChartUtil.residueProperties;
 import org.controlsfx.control.textfield.TextFields;
@@ -499,94 +494,15 @@ public class InputDataInterface {
 
         File file = null; //new File(chosenFileLabel.getText()).getAbsoluteFile();
         ResidueProperties resProp = null;
+        String expMode = fitModeChoice.getSelectionModel().getSelectedItem().toLowerCase();
+        Path dirPath = new File("").toPath();
         try {
-//            System.out.println(dataList);
-            for (HashMap<String, Object> dataMap3 : dataList) {
-                String dataFileName = (String) dataMap3.get("file");
-                String fitFile = (String) dataMap3.get("paramFile");
-                Double temperature = (Double) dataMap3.get("temperature");
-                Double field = (Double) dataMap3.get("field");
-                String nucleus = (String) dataMap3.get("nucleus");
-                List<Number> vcpmgList = (List<Number>) dataMap3.get("vcpmg");
-                Double tauCPMG = (Double) dataMap3.get("tau");
-                tauCPMG = tauCPMG == null ? 1.0 : tauCPMG;  // fixme throw error if  ratemode and no tauCPMG
-                Double B1field = (Double) dataMap3.get("B1field");
-                Double Tex = (Double) dataMap3.get("Tex");
-                double[] B1fieldList = new double[vcpmgList.size()];
-                double[] TexList = new double[vcpmgList.size()];
-
-                file = new File(dataFileName).getAbsoluteFile();
-                Path path = file.toPath();
-                Path dirPath = path.getParent();
-                dataFileName = file.getName();
-                String fileTail = dataFileName.substring(0, dataFileName.indexOf('.'));
-
-//                ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature);
-                resProp = new ResidueProperties(fileTail, dataFileName);
-                String expMode = (String) dataMap3.get("fitmode");
-                expMode = expMode.toLowerCase();
-                if (!fitFile.equals("")) {
-                    resProp = DataIO.loadParametersFromFile(expMode, fitFile);
-                }
-                resProp.setExpMode(expMode);
-
-                if (expMode.equals("cest")) {
-                    for (int i = 0; i < B1fieldList.length; i++) {
-                        B1fieldList[i] = B1field;
-                        TexList[i] = Tex;
-                    }
-                } else {
-                    B1fieldList = null;
-                    TexList = null;
-                }
-
-//                System.out.println(dirPath);
-//                System.out.println(dataFileName);
-//                System.out.println(path);
-                String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
-                String fileMode = (String) dataMap3.get("mode");
-                HashMap<String, Object> errorPars = new HashMap(); //(HashMap<String, Object>) dataMap3.get("error");
-                errorPars.put("mode", dataMap3.get("errMode"));
-                errorPars.put("value", dataMap3.get("errValue"));
-                Object delayField = dataMap3.get("delays");
-                System.out.println("delays " + delayField);
-                double[] delayCalc = {0.0, 0.0, 1.0};
-                if (delayField instanceof Map) {
-                    Map<String, Number> delayMap = (Map<String, Number>) delayField;
-                    delayCalc[0] = delayMap.get("delta0").doubleValue();
-                    delayCalc[1] = delayMap.get("c0").doubleValue();
-                    delayCalc[2] = delayMap.get("delta").doubleValue();
-                }
-                System.out.println("err " + errorPars);
-                if ((fileMode != null) && fileMode.equals("mpk2")) {
-                    if (vcpmgList == null) {
-                        ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, tauCPMG, null, expMode, errorPars, delayCalc, B1fieldList, TexList);
-//                        loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, null, expMode, errorPars, delayCalc);
-                        loadPeakFile(textFileName, expData, resProp);
-                    } else {
-                        double[] vcpmgs = new double[vcpmgList.size()];
-                        for (int i = 0; i < vcpmgs.length; i++) {
-                            vcpmgs[i] = vcpmgList.get(i).doubleValue();
-                        }
-                        ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, tauCPMG, vcpmgs, expMode, errorPars, delayCalc, B1fieldList, TexList);
-//                        loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs, expMode, errorPars, delayCalc);
-                        loadPeakFile(textFileName, expData, resProp);
-                    }
-                } else if (vcpmgList == null) {
-                    loadTextFile(textFileName, resProp, nucleus, temperature, field);
-                } else {
-                    double[] vcpmgs = new double[vcpmgList.size()];
-                    for (int i = 0; i < vcpmgs.length; i++) {
-                        vcpmgs[i] = vcpmgList.get(i).doubleValue();
-                    }
-                    ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, tauCPMG, vcpmgs, expMode, errorPars, delayCalc, B1fieldList, TexList);
-//                    loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs, expMode, errorPars, delayCalc);
-                    loadPeakFile(textFileName, expData, resProp);
-                }
-            }
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
+            DataIO.loadDataMaps(resProp, dirPath, expMode, dataList);
+        } catch (IOException ex) {
+            // fixme
+            return;
         }
+
         if (file != null) {
             if (PyController.mainController.activeChart != null) {
                 PyController.mainController.clearChart();
