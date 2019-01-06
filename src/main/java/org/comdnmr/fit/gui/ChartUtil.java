@@ -27,7 +27,6 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.chart.XYChart.Series;
 import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Transform;
-import org.comdnmr.fit.calc.CPMGFitResult;
 import org.comdnmr.fit.calc.CurveFit;
 import org.comdnmr.fit.calc.DataIO;
 import org.comdnmr.fit.calc.ExperimentData;
@@ -270,34 +269,34 @@ public class ChartUtil {
                 if (curveSet != null) {
                     PlotEquation equation = curveSet.getEquation();
                     if (optionalData.isPresent() && optionalData.get().getExtras().size() > 0) {
-                      ExperimentData expData = optionalData.get();
-                      double[] pars = curveSet.getEquation().getPars(); //pars = getPars(equationName);
-                      double[] errs = curveSet.getEquation().getErrs(); //double[] errs = new double[pars.length];
-                      double[] extras = new double[3];
-                      for (int j = 0; j < expData.getExtras().size() / 2; j++) {
+                        ExperimentData expData = optionalData.get();
+                        double[] pars = curveSet.getEquation().getPars(); //pars = getPars(equationName);
+                        double[] errs = curveSet.getEquation().getErrs(); //double[] errs = new double[pars.length];
+                        double[] extras = new double[3];
+                        for (int j = 0; j < expData.getExtras().size() / 2; j++) {
 //                        extras[0] = field;
 //                        extras[1] = expData.getExtras().get(j);
 //                        //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[1] = " + extras[1]);
 //                        PlotEquation equationCopy = equation.clone();
 //                        equationCopy.setExtra(extras);
-                        extras[0] = 1.0;
-                        extras[1] = expData.getExtras().get(2 * j);
-                        extras[2] = expData.getExtras().get(2 * j + 1);
+                            extras[0] = 1.0;
+                            extras[1] = expData.getExtras().get(2 * j);
+                            extras[2] = expData.getExtras().get(2 * j + 1);
 //                        System.out.println("Fit button expData extras size = " + expData.getExtras().size() + " extra[1] = " + extras[1]);
-                        PlotEquation equationCopy = new PlotEquation(useEquationName, pars, errs, extras);
+                            PlotEquation equationCopy = new PlotEquation(useEquationName, pars, errs, extras);
 
-                        equations.add(equationCopy);
-                      }
+                            equations.add(equationCopy);
+                        }
                     } else {
                         double[] extras = new double[1];
                         extras[0] = field;
                         PlotEquation equationCopy = equation.clone();
                         equationCopy.setExtra(extras);
                         //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[0] = " + extras[0]);
-                        equations.add(equationCopy);        
-                    
+                        equations.add(equationCopy);
+
                     }
-                    
+
                 }
             }
         }
