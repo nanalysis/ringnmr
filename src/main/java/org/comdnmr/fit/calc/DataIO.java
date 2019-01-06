@@ -572,13 +572,18 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
     public static void loadDataMaps(ResidueProperties resProp, Path dirPath, String expMode, ArrayList<HashMap<String, Object>> dataList) throws IOException {
         for (HashMap<String, Object> dataMap3 : dataList) {
             Double temperature = (Double) dataMap3.get("temperature");
-            Double field = (Double) dataMap3.get("field");
+            if (temperature == null) {
+                temperature = (Double) dataMap3.get("temperatureK");
+            } else {
+                temperature += 273.15;
+            }
+            Double B0field = (Double) dataMap3.get("B0");
             String nucleus = (String) dataMap3.get("nucleus");
             List<Number> vcpmgList = (List<Number>) dataMap3.get("vcpmg");
             Double tauCPMG = (Double) dataMap3.get("tau");
             tauCPMG = tauCPMG == null ? 1.0 : tauCPMG;  // fixme throw error if  ratemode and no tauCPMG
             Double Tex = (Double) dataMap3.get("Tex");
-            Double B1field = (Double) dataMap3.get("B1field");
+            Double B1field = (Double) dataMap3.get("B1");
 
             String fileMode = (String) dataMap3.get("mode");
 
@@ -607,7 +612,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
                 if (vcpmgList == null) {
                     ExperimentData expData = new ExperimentData(fileTail,
-                            nucleus, field, temperature, tauCPMG, null, expMode,
+                            nucleus, B0field, temperature, tauCPMG, null, expMode,
                             errorPars, delayCalc, B1field, Tex);
 //                    loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, null, expMode, errorPars, delayCalc);
                     loadPeakFile(textFileName, expData, resProp);
@@ -617,7 +622,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                         vcpmgs[i] = vcpmgList.get(i).doubleValue();
                     }
                     ExperimentData expData = new ExperimentData(fileTail,
-                            nucleus, field, temperature, tauCPMG, vcpmgs, expMode,
+                            nucleus, B0field, temperature, tauCPMG, vcpmgs, expMode,
                             errorPars, delayCalc, B1field, Tex);
 //                    loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs, expMode, errorPars, delayCalc);
                     loadPeakFile(textFileName, expData, resProp);
@@ -627,7 +632,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 List<Map<String, Object>> filesMaps = (List<Map<String, Object>>) dataMap3.get("files");
                 String expName = (String) dataMap3.get("name").toString();
                 ExperimentData expData = new ExperimentData(expName,
-                        nucleus, field, temperature, tauCPMG, null, expMode,
+                        nucleus, B0field, temperature, tauCPMG, null, expMode,
                         errorPars, delayCalc, B1field, Tex);
                 for (Map<String, Object> filesMap : filesMaps) {
                     String residueNum = filesMap.get("residue").toString();
@@ -637,14 +642,14 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     String fileTail = dataFileName.substring(0, dataFileName.indexOf('.'));
                     String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
                     loadXYFile(textFileName, expData, residueNum, resProp, nucleus,
-                            temperature, field, errorPars);
+                            temperature, B0field, errorPars);
                 }
             } else if (vcpmgList == null) {
                 String dataFileName = (String) dataMap3.get("file");
                 File file = new File(dataFileName).getAbsoluteFile();
                 dataFileName = file.getName();
                 String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
-                loadTextFile(textFileName, resProp, nucleus, temperature, field);
+                loadTextFile(textFileName, resProp, nucleus, temperature, B0field);
 //            } else {
 //                double[] vcpmgs = new double[vcpmgList.size()];
 //                for (int i = 0; i < vcpmgs.length; i++) {
