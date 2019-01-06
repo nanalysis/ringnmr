@@ -76,37 +76,44 @@ public class CESTFit implements EquationFitter {
         stateCount = resProps.getStateCount(resNums.length);
         Collection<ExperimentData> expDataList = resProps.getExperimentData();
         nCurves = resNums.length * expDataList.size();
+        
+        // fixme??
+        nCurves = 1;
         states = new int[nCurves][];
         int k = 0;
         int resIndex = 0;
+        List<Double> fieldList = new ArrayList<>();
         for (String resNum : resNums) {
             for (ExperimentData expData : expDataList) {
-                states[k++] = resProps.getStateIndices(resIndex, expData);
+                states[k] = resProps.getStateIndices(resIndex, expData);
                 ResidueData resData = expData.getResidueData(resNum);
-                //  need peakRefs
-                double field = expData.getField();
-                double[][] x = resData.getXValues();
+                if (resData != null) {
+                    //  need peakRefs
+                    double field = expData.getField();
+                    fieldList.add(field);
+                    double[][] x = resData.getXValues();
 //                System.out.println("setData x length = " + x.length);
-                double[] y = resData.getYValues();
-                double[] err = resData.getErrValues();
-                for (int i = 0; i < y.length; i++) {
-                    xValues[0].add(x[0][i]);
-                    xValues[1].add(x[1][i]);
-                    xValues[2].add(x[2][i]);
-                    yValues.add(y[i]);
-                    errValues.add(err[i]);
-                    fieldValues.add(field);
-                    idValues.add(id);
+                    double[] y = resData.getYValues();
+                    double[] err = resData.getErrValues();
+                    for (int i = 0; i < y.length; i++) {
+                        xValues[0].add(x[0][i]);
+                        xValues[1].add(x[1][i]);
+                        xValues[2].add(x[2][i]);
+                        yValues.add(y[i]);
+                        errValues.add(err[i]);
+                        fieldValues.add(field);
+                        idValues.add(id);
+                    }
+                    // fixme ?? id++;
                 }
-                id++;
-
             }
+            k++;
             resIndex++;
         }
-        usedFields = new double[expDataList.size()];
+        usedFields = new double[fieldList.size()];
         int iExp = 0;
-        for (ExperimentData expData : expDataList) {
-            usedFields[iExp++] = expData.getField();
+        for (Double field : fieldList) {
+            usedFields[iExp++] = field;
         }
     }
 
@@ -175,7 +182,7 @@ public class CESTFit implements EquationFitter {
     public static List<String> getEquationNames() {
         return equationNameList;
     }
-    
+
     public static List<String> setEquationNames(List<String> eqnNames) {
         equationNameList = eqnNames;
         return equationNameList;
@@ -267,6 +274,7 @@ public class CESTFit implements EquationFitter {
             }
             PointValuePair result = calcCEST.refine(guesses, boundaries[0], boundaries[1], sigma);
             double[] pars = result.getPoint();
+            System.out.println(eqn);
 
             for (int i = 0; i < map.length; i++) {
                 for (int j = 0; j < map[i].length; j++) {
