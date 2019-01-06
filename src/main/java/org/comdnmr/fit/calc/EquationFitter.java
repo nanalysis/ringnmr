@@ -85,8 +85,8 @@ public interface EquationFitter {
 
             parMap.put("Equation", 1.0 + fitter.getEquationNameList().indexOf(eqn));
             // fixme
-            double[] extras = new double[usedFields.length];
-            System.arraycopy(usedFields, 0, extras, 0, usedFields.length);
+            double[] extras = new double[1];
+            extras[0] = usedFields[states[iCurve][1]];
             //System.out.println("getResults got called with extras length = " + extras.length);
             PlotEquation plotEquation = new PlotEquation(eqn, parArray, errArray, extras);
             CurveFit curveFit = new CurveFit(stateString, resNums[states[iCurve][0]], parMap, plotEquation);
