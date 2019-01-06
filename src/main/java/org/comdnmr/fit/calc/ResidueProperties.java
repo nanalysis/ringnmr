@@ -36,6 +36,13 @@ public class ResidueProperties {
         this.fileName = fileName;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sBuilder = new StringBuilder();
+        sBuilder.append(name).append(" ").append(fileName).append(" resmap ").append(residueMap.size());
+        return sBuilder.toString();
+    }
+
     public String getName() {
         return name;
     }
