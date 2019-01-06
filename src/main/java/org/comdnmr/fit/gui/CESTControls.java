@@ -685,15 +685,14 @@ public class CESTControls implements EquationControls {
             if (resProps != null) {
                 optionalData = resProps.getExperimentData().stream().findFirst();
                 if (optionalData.isPresent() && optionalData.get().getExtras().size() > 0) {
-                    ExperimentData expData = optionalData.get();
-                    pars = getPars(equationName)[0];
-                    List<Double> dataExtras = expData.getExtras();
-                    double[] errs = new double[pars.length];
-                    double[] extras = new double[3];
-                    for (int j = 0; j < dataExtras.size() / 2; j++) {
+                    for (ExperimentData expData : resProps.getExperimentData()) {
+                        pars = getPars(equationName)[0];
+                        List<Double> dataExtras = expData.getExtras();
+                        double[] errs = new double[pars.length];
+                        double[] extras = new double[3];
                         extras[0] = 1.0;
-                        extras[1] = dataExtras.get(2 * j);
-                        extras[2] = dataExtras.get(2 * j + 1);
+                        extras[1] = dataExtras.get(0);
+                        extras[2] = dataExtras.get(1);
 //                        System.out.println("resInfo Res Num = " + resInfo.getResNum());
 //                        System.out.println("extras size = " + expData.getExtras().size());
                         //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[1] = " + extras[1]);
