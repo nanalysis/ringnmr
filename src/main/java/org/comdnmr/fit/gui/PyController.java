@@ -1363,7 +1363,7 @@ public class PyController implements Initializable {
                 }
                 List<XYChart.Series<Double, Double>> data = ChartUtil.getMapData(mapName, expName, residues);
                 allData.addAll(data);
-                equations.addAll(ChartUtil.getEquations(mapName, residues, equationName, expData.getState(), expData.getField()));
+                equations.addAll(ChartUtil.getEquations(expData, mapName, residues, equationName, expData.getState(), expData.getField()));
                 int[] states = resProps.getStateIndices(0, expData);
                 allStates.add(states);
             }
