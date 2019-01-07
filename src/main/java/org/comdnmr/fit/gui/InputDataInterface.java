@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -26,6 +27,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.comdnmr.fit.calc.DataIO;
@@ -46,6 +48,7 @@ public class InputDataInterface {
     GridPane inputInfoDisplay = new GridPane();
     Scene inputScene = new Scene(inputInfoDisplay, 600, 600);
     Stage infoStage = new Stage();
+    TextField chosenDirLabel = new TextField();
     TextField chosenFileLabel = new TextField();
     TextField chosenXPK2FileLabel = new TextField();
     TextField chosenParamFileLabel = TextFields.createClearableTextField();
@@ -63,6 +66,7 @@ public class InputDataInterface {
     ChoiceBox<String> errModeChoice = new ChoiceBox<>();
     TextField errPercentTextField = new TextField();
     ArrayList<HashMap<String, Object>> dataList = new ArrayList();
+    Button dirChoiceButton = new Button();
     Button fileChoiceButton = new Button();
     Button xpk2ChoiceButton = new Button();
     Button paramFileChoiceButton = new Button();
@@ -70,6 +74,7 @@ public class InputDataInterface {
     Button clearButton = new Button();
     Button yamlButton = new Button();
     Button loadButton = new Button();
+    Path dirPath = null;
 
     public InputDataInterface(PyController controller) {
         pyController = controller;
@@ -79,6 +84,7 @@ public class InputDataInterface {
 
         infoStage.setTitle("Input Data Parameters");
         Label fileLabel = new Label("  File:  ");
+        Label dirLabel = new Label("  Directory:  ");
         Label xpk2FileLabel = new Label("  XPK2 File:  ");
         Label fitFileLabel = new Label("  Fit Parameter File:  ");
         Label fieldLabel = new Label("  B0 Field (1H MHz) :  ");
@@ -94,8 +100,12 @@ public class InputDataInterface {
         Label errModeLabel = new Label("  Error Mode:  ");
         Label errPercentLabel = new Label("  Error Value:  ");
 
-        Label[] labels = {fitModeLabel, fileLabel, xpk2FileLabel, fitFileLabel, fieldLabel, tempLabel, nucLabel, pLabel, modeLabel,
+        Label[] labels = {fitModeLabel, dirLabel, fileLabel, xpk2FileLabel, fitFileLabel, fieldLabel, tempLabel, nucLabel, pLabel, modeLabel,
             tauLabel, B1FieldLabel, errModeLabel, errPercentLabel, xValLabel, yamlLabel};
+
+        dirChoiceButton.setText("Browse");
+        dirChoiceButton.setOnAction(e -> chooseDirectory(e));
+        chosenDirLabel.setText("");
 
 //        Button fileChoiceButton = new Button();
         fileChoiceButton.setOnAction(e -> chooseFile(e));
@@ -139,7 +149,7 @@ public class InputDataInterface {
             inputInfoDisplay.add(labels[i], 0, i);
         }
         for (int i = 0; i < texts.length; i++) {
-            inputInfoDisplay.add(texts[i], 1, i + 4);
+            inputInfoDisplay.add(texts[i], 1, i + 5);
             texts[i].setMaxWidth(textFieldWidth);
         }
 
@@ -183,12 +193,14 @@ public class InputDataInterface {
         errModeChoice.setValue("percent");
 
         inputInfoDisplay.add(fitModeChoice, 1, 0);
-        inputInfoDisplay.add(fileChoiceButton, 2, 1);
-        inputInfoDisplay.add(chosenFileLabel, 1, 1);
-        inputInfoDisplay.add(xpk2ChoiceButton, 2, 2);
-        inputInfoDisplay.add(chosenXPK2FileLabel, 1, 2);
-        inputInfoDisplay.add(paramFileChoiceButton, 2, 3);
-        inputInfoDisplay.add(chosenParamFileLabel, 1, 3);
+        inputInfoDisplay.add(dirChoiceButton, 2, 1);
+        inputInfoDisplay.add(chosenDirLabel, 1, 1);
+        inputInfoDisplay.add(fileChoiceButton, 2, 2);
+        inputInfoDisplay.add(chosenFileLabel, 1, 2);
+        inputInfoDisplay.add(xpk2ChoiceButton, 2, 3);
+        inputInfoDisplay.add(chosenXPK2FileLabel, 1, 3);
+        inputInfoDisplay.add(paramFileChoiceButton, 2, 4);
+        inputInfoDisplay.add(chosenParamFileLabel, 1, 4);
         inputInfoDisplay.add(errModeChoice, 1, labels.length - 4);
         inputInfoDisplay.add(errPercentTextField, 1, labels.length - 3);
         inputInfoDisplay.add(xValTextArea, 1, labels.length - 2, 1, 1);
@@ -212,6 +224,7 @@ public class InputDataInterface {
 //        Button yamlButton = new Button();
         yamlButton.setOnAction(e -> makeYAML(e));
         yamlButton.setText("Create YAML");
+        yamlButton.disableProperty().bind(yamlTextField.textProperty().isEmpty());
         inputInfoDisplay.add(yamlButton, 2, labels.length - 1);
 
 //        Button loadButton = new Button();
@@ -231,7 +244,7 @@ public class InputDataInterface {
             if (fitModeChoice.getSelectionModel().getSelectedItem().equals("Select")) {
                 TextField[] textFields = {B1TextField, tauTextField, fieldTextField, tempTextField, nucTextField, pTextField, modeTextField,
                     errPercentTextField, yamlTextField, chosenFileLabel, chosenXPK2FileLabel, chosenParamFileLabel};
-                Button[] buttons = {fileChoiceButton, xpk2ChoiceButton, paramFileChoiceButton, addButton, clearButton, yamlButton, loadButton};
+                Button[] buttons = {fileChoiceButton, xpk2ChoiceButton, paramFileChoiceButton, addButton, clearButton, loadButton};
                 for (TextField textField : textFields) {
                     textField.setDisable(true);
                 }
@@ -244,7 +257,7 @@ public class InputDataInterface {
             } else if (!fitModeChoice.getSelectionModel().getSelectedItem().equals("Select")) {
                 TextField[] textFields = {fieldTextField, tempTextField, nucTextField, pTextField, modeTextField,
                     errPercentTextField, yamlTextField, chosenFileLabel, chosenXPK2FileLabel, chosenParamFileLabel};
-                Button[] buttons = {fileChoiceButton, xpk2ChoiceButton, paramFileChoiceButton, addButton, clearButton, yamlButton, loadButton};
+                Button[] buttons = {fileChoiceButton, xpk2ChoiceButton, paramFileChoiceButton, addButton, clearButton, loadButton};
                 for (TextField textField : textFields) {
                     textField.setDisable(false);
                 }
@@ -271,24 +284,29 @@ public class InputDataInterface {
 
     }
 
+    public void chooseDirectory(ActionEvent event) {
+        DirectoryChooser dirChooser = new DirectoryChooser();
+        File file = dirChooser.showDialog(infoStage);
+        chosenDirLabel.setText(file.toString());
+        dirPath = file.toPath();
+    }
+
     public void chooseFile(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("mpk2 or txt File", "*.mpk2", "*.txt"));
         File file = fileChooser.showOpenDialog(infoStage);
-        String directory = file.getParent();
-        String fileName = file.getName();
-        chosenFileLabel.setText(directory + "/" + fileName);
+        Path path = dirPath.relativize(file.toPath());
+        chosenFileLabel.setText(path.toString());
     }
 
     public void chooseXPK2File(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("xpk2 File", "*.xpk2"));
         File file = fileChooser.showOpenDialog(infoStage);
-        String directory = file.getParent();
-        String fileName = file.getName();
-        chosenXPK2FileLabel.setText(directory + "/" + fileName);
+        Path path = dirPath.relativize(file.toPath());
+        chosenXPK2FileLabel.setText(path.toString());
 
-        Path path1 = Paths.get(directory + "/" + fileName);
+        Path path1 = file.toPath();
 
         List<String[]> head = new ArrayList<>();
 
@@ -355,7 +373,7 @@ public class InputDataInterface {
 
         hm.put("error", hmde);
 
-        String[] xvals = xValTextArea.getText().split("\t");
+        String[] xvals = xValTextArea.getText().trim().split("\t");
         if (xvals.length > 0) {
             ArrayList<Double> fxvals = new ArrayList();
             try {
@@ -403,6 +421,9 @@ public class InputDataInterface {
             if (!hmd.get("fitmode").equals("cest")) {
                 keySet.remove("B1");
             }
+            if ((hmd.get("vcpmg") == null) || (hmd.get("vcpmg").toString().equals(""))) {
+                keySet.remove("vcpmg");
+            }
             keySet.remove("fitmode");
             keySet.remove("paramFile");
             hmd.keySet().retainAll(keySet);
@@ -416,7 +437,8 @@ public class InputDataInterface {
 
         Yaml yaml = new Yaml();
         String s = yaml.dumpAsMap(hm1);
-        try (FileWriter writer = new FileWriter(yamlTextField.getText())) {
+        Path path = FileSystems.getDefault().getPath(dirPath.toString(), yamlTextField.getText());
+        try (FileWriter writer = new FileWriter(path.toFile())) {
             writer.write(s);
             System.out.println(yamlTextField.getText() + " written");
         } catch (IOException ex) {
@@ -432,11 +454,12 @@ public class InputDataInterface {
         if (dataList.isEmpty()) {
             addInfo();
         }
+        File projectDirFile = new File(chosenDirLabel.getText().trim());
+        dirPath = projectDirFile.toPath();
 
         ResidueProperties resProp = null;
         String expMode = fitModeChoice.getSelectionModel().getSelectedItem().toLowerCase();
-        Path dirPath = new File("").toPath();
-        resProp = new ResidueProperties("a", "b");
+        resProp = new ResidueProperties(projectDirFile.getName(), projectDirFile.toString());
         expMode = expMode.toLowerCase();
         resProp.setExpMode(expMode);
 
