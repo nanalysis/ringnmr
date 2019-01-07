@@ -81,7 +81,7 @@ public class InputDataInterface {
         Label fileLabel = new Label("  File:  ");
         Label xpk2FileLabel = new Label("  XPK2 File:  ");
         Label fitFileLabel = new Label("  Fit Parameter File:  ");
-        Label fieldLabel = new Label("  Field:  ");
+        Label fieldLabel = new Label("  B0 Field (1H MHz) :  ");
         Label tempLabel = new Label("  Temperature:  ");
         Label nucLabel = new Label("  Nucleus:  ");
         Label pLabel = new Label("  Pressure:  ");
@@ -313,10 +313,7 @@ public class InputDataInterface {
         }
         int sfInd = Arrays.asList(head.get(2)).indexOf("sf");
         int codeInd = Arrays.asList(head.get(2)).indexOf("code");
-        String field = Arrays.asList(head.get(4)).get(sfInd);
-        if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CPMG")) {
-            field = Arrays.asList(head.get(3)).get(sfInd);
-        }
+        String field = Arrays.asList(head.get(3)).get(sfInd);
         String nuc = Arrays.asList(head.get(4)).get(codeInd);
         nuc = nuc.replaceAll("[^a-zA-Z]", "");
         nucTextField.setText(nuc);
