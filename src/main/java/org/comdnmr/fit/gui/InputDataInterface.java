@@ -278,44 +278,6 @@ public class InputDataInterface {
         String directory = file.getParent();
         String fileName = file.getName();
         chosenFileLabel.setText(directory + "/" + fileName);
-
-        Path path = Paths.get(directory + "/" + fileName);
-
-        try (BufferedReader fileReader = Files.newBufferedReader(path)) {
-            while (true) {
-                String line = fileReader.readLine();
-                if (line == null) {
-                    break;
-                }
-                String sline = line.trim();
-                if (sline.length() == 0) {
-                    continue;
-                }
-                if (fileName.endsWith(".mpk2") && !sline.startsWith("id") || fileName.endsWith(".txt") && !sline.startsWith("Residue")) {
-                    break;
-                }
-                String xVals = null;
-                if (sline.startsWith("id")) {
-                    xVals = line.substring(13);
-                } else if (sline.startsWith("Residue")) {
-                    if (sline.contains("Hz")) {
-                        xVals = line.substring(8).replaceAll(" Hz\t", "\t").replaceAll(" Hz", "");
-                    } else if (sline.contains("1/S")) {
-                        xVals = line.substring(8).replaceAll(" 1/S\t", "\t").replaceAll(" 1/S", "");
-                        StringBuilder xVals1 = new StringBuilder(xVals);
-                        xVals1.insert(0, "0.0\t");
-                        xVals = xVals1.toString();
-                    } else if (sline.contains("S")) {
-                        xVals = line.substring(8).replaceAll(" S\t", "\t").replaceAll(" S", "");
-                    } else if (sline.contains("On")) {
-                        xVals = line.substring(8).replaceAll(" On\t", "\t").replaceAll(" On", "");
-                    }
-                }
-                xValTextArea.setText(xVals);
-            }
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-        }
     }
 
     public void chooseXPK2File(ActionEvent event) {
@@ -397,15 +359,17 @@ public class InputDataInterface {
         hm.put("error", hmde);
 
         String[] xvals = xValTextArea.getText().split("\t");
-        ArrayList<Double> fxvals = new ArrayList();
-        try {
-            for (String xval : xvals) {
-                fxvals.add(Double.parseDouble(xval));
+        if (xvals.length > 0) {
+            ArrayList<Double> fxvals = new ArrayList();
+            try {
+                for (String xval : xvals) {
+                    fxvals.add(Double.parseDouble(xval));
+                }
+            } catch (NumberFormatException nfe) {
+                fxvals = null;
             }
-        } catch (NumberFormatException nfe) {
-            fxvals = null;
+            hm.put("vcpmg", fxvals);
         }
-        hm.put("vcpmg", fxvals);
         dataList.add(hm);
         String fileTail = chosenFileLabel.getText().substring(0, chosenFileLabel.getText().lastIndexOf('.'));
         yamlTextField.setText(fileTail + ".yaml");
