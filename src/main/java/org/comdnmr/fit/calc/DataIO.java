@@ -245,7 +245,6 @@ public class DataIO {
         xValueLists[0] = xValueList;
         xValueLists[1] = B1fieldList;
         xValueLists[2] = TexList;
-        System.out.println("add residue " + residueNum);
         ResidueData residueData = new ResidueData(expData, residueNum, xValueLists, yValueList, errValueList);
         expData.addResidueData(residueNum, residueData);
         expData.getExtras().clear();
@@ -605,27 +604,37 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             System.out.println("err " + errorPars);
 
             if ((fileMode != null) && fileMode.equals("mpk2")) {
+
                 String dataFileName = (String) dataMap3.get("file");
-                File file = new File(dataFileName).getAbsoluteFile();
-                dataFileName = file.getName();
-                String fileTail = dataFileName.substring(0, dataFileName.indexOf('.'));
-                String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
+                File dataFile = new File(dataFileName);
+                String fileTail = dataFile.getName();
+                int dot = fileTail.lastIndexOf(".");
+                fileTail = fileTail.substring(0, dot);
+                if (!dataFile.isAbsolute()) {
+                    dataFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
+                }
                 if (vcpmgList == null) {
                     ExperimentData expData = new ExperimentData(fileTail,
                             nucleus, B0field, temperature, tauCPMG, null, expMode,
                             errorPars, delayCalc, B1field, Tex);
 //                    loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, null, expMode, errorPars, delayCalc);
-                    loadPeakFile(textFileName, expData, resProp);
+                    loadPeakFile(dataFileName, expData, resProp);
                 } else {
                     double[] vcpmgs = new double[vcpmgList.size()];
                     for (int i = 0; i < vcpmgs.length; i++) {
                         vcpmgs[i] = vcpmgList.get(i).doubleValue();
                     }
-                    ExperimentData expData = new ExperimentData(fileTail,
-                            nucleus, B0field, temperature, tauCPMG, vcpmgs, expMode,
-                            errorPars, delayCalc, B1field, Tex);
+                    ExperimentData expData;
+                    try {
+                        expData = new ExperimentData(fileTail,
+                                nucleus, B0field, temperature, tauCPMG, vcpmgs, expMode,
+                                errorPars, delayCalc, B1field, Tex);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        return;
+                    }
 //                    loadPeakFile(textFileName, resProp, nucleus, temperature, field, tauCPMG, vcpmgs, expMode, errorPars, delayCalc);
-                    loadPeakFile(textFileName, expData, resProp);
+                    loadPeakFile(dataFileName, expData, resProp);
                 }
 
             } else if ((fileMode != null) && fileMode.equals("xy")) {
