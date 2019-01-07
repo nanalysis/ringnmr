@@ -32,6 +32,7 @@ import org.comdnmr.fit.calc.DataIO;
 import org.comdnmr.fit.calc.ResidueProperties;
 import static org.comdnmr.fit.gui.ChartUtil.residueProperties;
 import org.controlsfx.control.textfield.TextFields;
+import org.controlsfx.dialog.ExceptionDialog;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -385,16 +386,20 @@ public class InputDataInterface {
         hm.put("file", chosenFileLabel.getText());
         hm.put("paramFile", chosenParamFileLabel.getText());
         hm.put("temperature", Double.parseDouble(tempTextField.getText()));
-        hm.put("field", Double.parseDouble(fieldTextField.getText()));
+        hm.put("B0", Double.parseDouble(fieldTextField.getText()));
         hm.put("nucleus", nucTextField.getText());
         hm.put("tau", Double.parseDouble(tauTextField.getText()));
         hm.put("pressure", Double.parseDouble(pTextField.getText()));
         hm.put("mode", modeTextField.getText());
         hm.put("fitmode", fitModeChoice.getSelectionModel().getSelectedItem().toLowerCase());
-        hm.put("B1field", Double.parseDouble(B1TextField.getText()));
+        hm.put("B1", Double.parseDouble(B1TextField.getText()));
         hm.put("Tex", Double.parseDouble(TexTextField.getText()));
-        hm.put("errMode", errModeChoice.getSelectionModel().getSelectedItem());
-        hm.put("errValue", Double.parseDouble(errPercentTextField.getText()));
+        HashMap hmde = new HashMap();
+        hmde.put("mode", errModeChoice.getSelectionModel().getSelectedItem());
+        hmde.put("value", Double.parseDouble(errPercentTextField.getText()));
+
+        hm.put("error", hmde);
+
         String[] xvals = xValTextArea.getText().split("\t");
         ArrayList<Double> fxvals = new ArrayList();
         try {
@@ -437,38 +442,21 @@ public class InputDataInterface {
             } else {
                 hm2.put("file", "analysis.txt");
             }
-//            hmdf.put("vcpmg", hmdf.get("vcpmg").toString());
-            HashMap hmde = new HashMap();
-            hmde.put("mode", hmdf.get("errMode"));
-            hmde.put("value", hmdf.get("errValue"));
-            hmdf.put("error", hmde);
-//            if (hmdf.get("fitmode").equals("exp")) {
-//                HashMap hmd1 = new HashMap();
-//                hmd1.put("c0", 2);
-//                hmd1.put("delta0", 0);
-//                hmd1.put("delta", 0.008);
-//                hmdf.put("delays", hmd1);
-////                hmdf.remove("vcpmg");
-//            }
-            Set keySet = hmdf.keySet();
-            if (!hmdf.get("fitmode").equals("cest")) {
+            Set keySet = hmd.keySet();
+            if (!hmd.get("fitmode").equals("cest")) {
                 keySet.remove("Tex");
-                keySet.remove("B1field");
+                keySet.remove("B1");
             }
-//            if (hmdf.get("fitmode").equals("cest")) {
-//                keySet.remove("Tex");
-//                keySet.remove("B1field");
-//            }
+            if (hmd.get("fitmode").equals("cest")) {
+                keySet.remove("tau");
+            }
             keySet.remove("fitmode");
             keySet.remove("paramFile");
-            keySet.remove("errMode");
-            keySet.remove("errValue");
-            List keys = Arrays.asList(keySet);
-            hmd.keySet().retainAll(keys);
+            hmd.keySet().retainAll(keySet);
             String dataFile = (String) hmdf.get("file");
             String dataFileName = dataFile.substring(dataFile.lastIndexOf("/") + 1, dataFile.length());
-            hmdf.put("file", dataFileName);
-            dataHmList.add(hmdf);
+            hmd.put("file", dataFileName);
+            dataHmList.add(hmd);
         }
         hm2.put("data", dataHmList);
         hm1.put("fit", hm2);
@@ -492,42 +480,44 @@ public class InputDataInterface {
             addInfo();
         }
 
-        File file = null; //new File(chosenFileLabel.getText()).getAbsoluteFile();
         ResidueProperties resProp = null;
         String expMode = fitModeChoice.getSelectionModel().getSelectedItem().toLowerCase();
         Path dirPath = new File("").toPath();
+        resProp = new ResidueProperties("a", "b");
+        expMode = expMode.toLowerCase();
+        resProp.setExpMode(expMode);
+
         try {
             DataIO.loadDataMaps(resProp, dirPath, expMode, dataList);
         } catch (IOException ex) {
-            // fixme
+            ExceptionDialog dialog = new ExceptionDialog(ex);
+            dialog.showAndWait();
             return;
         }
 
-        if (file != null) {
-            if (PyController.mainController.activeChart != null) {
-                PyController.mainController.clearChart();
-                PyController.mainController.currentResidues = null;
-                PyController.mainController.simulate = false;
-                PyController.mainController.fitResult = null;
-            }
-            XYBarChart reschartNode = PyController.mainController.getActiveChart();
-            if (reschartNode == null) {
-                reschartNode = PyController.mainController.addChart();
-
-            }
-//            ResidueProperties resProp = DataIO.loadParameters(fileName);
-            residueProperties.put(resProp.getName(), resProp);
-            String parName = "Kex";
-            if (resProp.getExpMode().equals("exp")) {
-                parName = "R";
-            }
-            ObservableList<XYChart.Series<Double, Double>> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
-            PyController.mainController.currentResProps = resProp;
-            PyController.mainController.makeAxisMenu();
-            PyController.mainController.setYAxisType(resProp.getName(), "best", "0:0:0", parName);
-            reschartNode.setResProps(resProp);
-            PyController.mainController.setControls();
+        if (PyController.mainController.activeChart != null) {
+            PyController.mainController.clearChart();
+            PyController.mainController.currentResidues = null;
+            PyController.mainController.simulate = false;
+            PyController.mainController.fitResult = null;
         }
+        XYBarChart reschartNode = PyController.mainController.getActiveChart();
+        if (reschartNode == null) {
+            reschartNode = PyController.mainController.addChart();
+
+        }
+//            ResidueProperties resProp = DataIO.loadParameters(fileName);
+        residueProperties.put(resProp.getName(), resProp);
+        String parName = "Kex";
+        if (resProp.getExpMode().equals("exp")) {
+            parName = "R";
+        }
+        ObservableList<XYChart.Series<Double, Double>> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
+        PyController.mainController.currentResProps = resProp;
+        PyController.mainController.makeAxisMenu();
+        PyController.mainController.setYAxisType(resProp.getName(), "best", "0:0:0", parName);
+        reschartNode.setResProps(resProp);
+        PyController.mainController.setControls();
 
         fitModeChoice.setValue("Select");
         updateInfoInterface();
