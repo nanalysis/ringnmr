@@ -22,14 +22,13 @@ public class ExperimentData {
     final HashMap<String, Object> errorPars;
     final double[] delayCalc;
     final Double B1field;
-    final Double Tex;
     double errFraction = 0.05;
     final String nucleus;
     List<Double> extras = new ArrayList<>();
     private String state = "";
 
     public ExperimentData(String name, String nucleus, double field, double temperature, Double tau, double[] xvals,
-            String expMode, HashMap<String, Object> errorPars, double[] delayCalc, Double B1field, Double Tex) {
+            String expMode, HashMap<String, Object> errorPars, double[] delayCalc, Double B1field) {
         this.name = name;
         this.field = field;
         this.temperature = temperature;
@@ -39,7 +38,6 @@ public class ExperimentData {
         this.errorPars = errorPars;
         this.delayCalc = delayCalc;
         this.B1field = B1field;
-        this.Tex = Tex;
         if (nucleus == null) {
             nucleus = "H";
         }
@@ -127,9 +125,5 @@ public class ExperimentData {
 
     public Double getB1Field() {
         return B1field;
-    }
-
-    public Double getTex() {
-        return Tex;
     }
 }
