@@ -58,7 +58,6 @@ public class InputDataInterface {
     TextArea xValTextArea = new TextArea();
     ChoiceBox<String> fitModeChoice = new ChoiceBox<>();
     TextField B1TextField = new TextField();
-    TextField TexTextField = new TextField();
     TextField yamlTextField = new TextField();
     CheckBox ppmBox = new CheckBox("ppm to Hz");
     ChoiceBox<String> errModeChoice = new ChoiceBox<>();
@@ -91,13 +90,12 @@ public class InputDataInterface {
         Label xValLabel = new Label("  X Values:  ");
         Label fitModeLabel = new Label("  Experiment Type:  ");
         Label B1FieldLabel = new Label("  B1 Field:  ");
-        Label TexLabel = new Label("  Tex:  ");
         Label yamlLabel = new Label("  YAML File:  ");
         Label errModeLabel = new Label("  Error Mode:  ");
         Label errPercentLabel = new Label("  Error Value:  ");
 
         Label[] labels = {fitModeLabel, fileLabel, xpk2FileLabel, fitFileLabel, fieldLabel, tempLabel, nucLabel, pLabel, modeLabel,
-            tauLabel, B1FieldLabel, TexLabel, errModeLabel, errPercentLabel, xValLabel, yamlLabel};
+            tauLabel, B1FieldLabel, errModeLabel, errPercentLabel, xValLabel, yamlLabel};
 
 //        Button fileChoiceButton = new Button();
         fileChoiceButton.setOnAction(e -> chooseFile(e));
@@ -126,7 +124,6 @@ public class InputDataInterface {
         modeTextField.setText("mpk2");
         tauTextField.setText("0.04");
         B1TextField.setText("20.0");
-        TexTextField.setText("0.5");
         errPercentTextField.setText("5");
         errPercentTextField.setMaxWidth(textFieldWidth);
         xValTextArea.setText("");
@@ -134,7 +131,7 @@ public class InputDataInterface {
         xValTextArea.setWrapText(true);
         yamlTextField.setText("");
 
-        TextField[] texts = {fieldTextField, tempTextField, nucTextField, pTextField, modeTextField, tauTextField, B1TextField, TexTextField};
+        TextField[] texts = {fieldTextField, tempTextField, nucTextField, pTextField, modeTextField, tauTextField, B1TextField};
 
         inputInfoDisplay.getChildren().clear();
 
@@ -232,7 +229,7 @@ public class InputDataInterface {
     public void updateInfoInterface() {
         if (fitModeChoice.getSelectionModel().getSelectedItem() != null) {
             if (fitModeChoice.getSelectionModel().getSelectedItem().equals("Select")) {
-                TextField[] textFields = {B1TextField, tauTextField, fieldTextField, tempTextField, nucTextField, pTextField, modeTextField, TexTextField,
+                TextField[] textFields = {B1TextField, tauTextField, fieldTextField, tempTextField, nucTextField, pTextField, modeTextField,
                     errPercentTextField, yamlTextField, chosenFileLabel, chosenXPK2FileLabel, chosenParamFileLabel};
                 Button[] buttons = {fileChoiceButton, xpk2ChoiceButton, paramFileChoiceButton, addButton, clearButton, yamlButton, loadButton};
                 for (TextField textField : textFields) {
@@ -245,7 +242,7 @@ public class InputDataInterface {
                 xValTextArea.setDisable(true);
                 errModeChoice.setDisable(true);
             } else if (!fitModeChoice.getSelectionModel().getSelectedItem().equals("Select")) {
-                TextField[] textFields = {fieldTextField, tempTextField, nucTextField, pTextField, modeTextField, TexTextField,
+                TextField[] textFields = {fieldTextField, tempTextField, nucTextField, pTextField, modeTextField,
                     errPercentTextField, yamlTextField, chosenFileLabel, chosenXPK2FileLabel, chosenParamFileLabel};
                 Button[] buttons = {fileChoiceButton, xpk2ChoiceButton, paramFileChoiceButton, addButton, clearButton, yamlButton, loadButton};
                 for (TextField textField : textFields) {
@@ -266,7 +263,7 @@ public class InputDataInterface {
                     ppmBox.setDisable(true);
                 } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST")) {
                     B1TextField.setDisable(false);
-                    tauTextField.setDisable(true);
+                    tauTextField.setDisable(false);
                     ppmBox.setDisable(false);
                 }
             }
@@ -393,7 +390,6 @@ public class InputDataInterface {
         hm.put("mode", modeTextField.getText());
         hm.put("fitmode", fitModeChoice.getSelectionModel().getSelectedItem().toLowerCase());
         hm.put("B1", Double.parseDouble(B1TextField.getText()));
-        hm.put("Tex", Double.parseDouble(TexTextField.getText()));
         HashMap hmde = new HashMap();
         hmde.put("mode", errModeChoice.getSelectionModel().getSelectedItem());
         hmde.put("value", Double.parseDouble(errPercentTextField.getText()));
@@ -444,11 +440,7 @@ public class InputDataInterface {
             }
             Set keySet = hmd.keySet();
             if (!hmd.get("fitmode").equals("cest")) {
-                keySet.remove("Tex");
                 keySet.remove("B1");
-            }
-            if (hmd.get("fitmode").equals("cest")) {
-                keySet.remove("tau");
             }
             keySet.remove("fitmode");
             keySet.remove("paramFile");
