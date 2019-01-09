@@ -41,8 +41,8 @@ public class R1RhoEquations {
             double x = (pa * pb * (dw * dw)) * sin2t;
             double y = (weA * weA) * (weB * weB) / (we * we) + kex * kex;
             double z = x * (1 + 2 * (kex * kex) * (pa * (weA * weA) + pb * (weB * weB)) / ((weA * weA) * (weB * weB) + (we * we) * (kex * kex)));
-            r1rho[i] = kex * x / (y - z);
-            r1rho[i] = (1 - sin2t) * R1Bar + sin2t * R2Bar + r1rho[i];
+            double REx = kex * x / (y - z);
+            r1rho[i] = (1 - sin2t) * R1Bar + sin2t * R2Bar + REx;
         }
         return r1rho;
     }
