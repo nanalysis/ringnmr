@@ -1,4 +1,3 @@
-
 package org.comdnmr.fit.calc;
 
 import java.util.ArrayList;
@@ -28,36 +27,22 @@ public class R1RhoEquations {
         // R1A, R1B: R10 relaxation rate constants of A and B states
         // R2A, R2B: R20 relaxation rate constants of A and B states
         double pa = 1.0 - pb;
-        double[] dw = new double[deltaA.length];
-        double[] omegaBar = new double[deltaA.length];
-        for (int i = 0; i < deltaA.length; i++) {
-            dw[i] = deltaB[i] - deltaA[i];
-            omegaBar[i] = pa * deltaA[i] + pb * deltaB[i];
-        }
-        double[] weA = new double[omega.length];
-        double[] weB = new double[omega.length];
-        double[] we = new double[omega.length];
-        double[] sin2t = new double[omega.length];
-        for (int i = 0; i < omega.length; i++) {
-            weA[i] = Math.sqrt(omega[i] * omega[i] + deltaA[i] * deltaA[i]);
-            weB[i] = Math.sqrt(omega[i] * omega[i] + deltaB[i] * deltaB[i]);
-            we[i] = Math.sqrt(omega[i] * omega[i] + omegaBar[i] * omegaBar[i]);
-            sin2t[i] = (omega[i] / we[i]) * (omega[i] / we[i]);
-        }
-        double k1 = pb * kex;
-        double km1 = pa * kex;
+        int size = omega.length;
         double R1Bar = pa * R1A + pb * R1B;
         double R2Bar = pa * R2A + pb * R2B;
-        double[] x = new double[weA.length];
-        double[] y = new double[weB.length];
-        double[] z = new double[weB.length];
-        double[] r1rho = new double[x.length];
-        for (int i = 0; i < weA.length; i++) {
-            x[i] = (pa * pb * (dw[i] * dw[i])) * sin2t[i];
-            y[i] = (weA[i] * weA[i]) * (weB[i] * weB[i]) / (we[i] * we[i]) + kex * kex;
-            z[i] = x[i] * (1 + 2 * (kex * kex) * (pa * (weA[i] * weA[i]) + pb * (weB[i] * weB[i])) / ((weA[i] * weA[i]) * (weB[i] * weB[i]) + (we[i] * we[i]) * (kex * kex)));
-            r1rho[i] = kex * x[i] / (y[i] - z[i]);
-            r1rho[i] = (1 - sin2t[i]) * R1Bar + sin2t[i] * R2Bar + r1rho[i];
+        double[] r1rho = new double[size];
+        for (int i = 0; i < size; i++) {
+            double dw = deltaB[i] - deltaA[i];
+            double omegaBar = pa * deltaA[i] + pb * deltaB[i];
+            double weA = Math.sqrt(omega[i] * omega[i] + deltaA[i] * deltaA[i]);
+            double weB = Math.sqrt(omega[i] * omega[i] + deltaB[i] * deltaB[i]);
+            double we = Math.sqrt(omega[i] * omega[i] + omegaBar * omegaBar);
+            double sin2t = (omega[i] / we) * (omega[i] / we);
+            double x = (pa * pb * (dw * dw)) * sin2t;
+            double y = (weA * weA) * (weB * weB) / (we * we) + kex * kex;
+            double z = x * (1 + 2 * (kex * kex) * (pa * (weA * weA) + pb * (weB * weB)) / ((weA * weA) * (weB * weB) + (we * we) * (kex * kex)));
+            r1rho[i] = kex * x / (y - z);
+            r1rho[i] = (1 - sin2t) * R1Bar + sin2t * R2Bar + r1rho[i];
         }
         return r1rho;
     }
@@ -205,5 +190,5 @@ public class R1RhoEquations {
         }
         return r1rho;
     }
-    
+
 }

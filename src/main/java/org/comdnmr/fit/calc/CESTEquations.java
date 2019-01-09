@@ -305,7 +305,7 @@ public class CESTEquations {
 
         double[] cest = new double[cos2t.length];
 
-        if (approx == "laguerre") {
+        if ("laguerre".equals(approx)) {
             // if(R2.length == 1){
             double[] r1rho = R1RhoEquations.r1rhoLaguerre(omega1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
             //double[] cest = new double[cos2t.length];
@@ -315,28 +315,28 @@ public class CESTEquations {
 //            } else {
 //                System.out.print("Error: Incorrect number of values for R2. Input one value for R2.");
 //            } 
-        } else if (approx == "trott") {
+        } else if ("trott".equals(approx)) {
             double[] r1rho = R1RhoEquations.r1rhoPerturbation(omega1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
             //double[] cest = new double[cos2t.length];
             for (int i = 0; i < cos2t.length; i++) {
                 cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
             }
 
-        } else if (approx == "trottnoex") {
+        } else if ("trottnoex".equals(approx)) {
             double[] r1rho = R1RhoEquations.r1rhoPerturbationNoEx(omega1, deltaA, R1A, R2A);
             //double[] cest = new double[cos2t.length];
             for (int i = 0; i < cos2t.length; i++) {
                 cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
             }
 
-        } else if (approx == "baldwinkay") {
+        } else if ("baldwinkay".equals(approx)) {
             double[] r1rho = R1RhoEquations.r1rhoBaldwinKay(omega1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
             //double[] cest = new double[cos2t.length];
             for (int i = 0; i < cos2t.length; i++) {
                 cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
             }
 
-        } else if (approx == "sd") {
+        } else if ("sd".equals(approx)) {
             int wlen = 11;
 
             double omegaSD = 0.2;   // fractional variation in B1
