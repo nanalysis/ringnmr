@@ -636,7 +636,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     loadPeakFile(dataFileName, expData, resProp);
                 }
 
-            } else if ((fileMode != null) && fileMode.equals("xy")) {
+            } else if ((fileMode != null) && fileMode.equals("ires")) {
                 List<Map<String, Object>> filesMaps = (List<Map<String, Object>>) dataMap3.get("files");
                 String expName = (String) dataMap3.get("name").toString();
                 ExperimentData expData = new ExperimentData(expName,
@@ -658,16 +658,21 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 dataFileName = file.getName();
                 String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
                 loadTextFile(textFileName, resProp, nucleus, temperature, B0field);
-//            } else {
-//                double[] vcpmgs = new double[vcpmgList.size()];
-//                for (int i = 0; i < vcpmgs.length; i++) {
-//                    vcpmgs[i] = vcpmgList.get(i).doubleValue();
-//                }
-//                ExperimentData expData = new ExperimentData(fileTail,
-//                        nucleus, field, temperature, tau, vcpmgs, expMode,
-//                        errorPars, delayCalc, B1field);
-////                loadPeakFile(textFileName, resProp, nucleus, temperature, field, tau, vcpmgs, expMode, errorPars, delayCalc);
-//                loadPeakFile(textFileName, expData, resProp);
+            } else {
+                String dataFileName = (String) dataMap3.get("file");
+                String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
+                double[] vcpmgs = new double[vcpmgList.size()];
+                for (int i = 0; i < vcpmgs.length; i++) {
+                    vcpmgs[i] = vcpmgList.get(i).doubleValue();
+                }
+                String fileTail = dataFileName;
+                int dot = dataFileName.lastIndexOf(".");
+                fileTail = dataFileName.substring(0, dot);
+
+                ExperimentData expData = new ExperimentData(fileTail,
+                        nucleus, B0field, temperature, tau, vcpmgs, expMode,
+                        errorPars, delayCalc, B1field);
+                loadPeakFile(textFileName, expData, resProp);
             }
         }
 
