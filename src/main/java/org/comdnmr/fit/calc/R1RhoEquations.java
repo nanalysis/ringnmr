@@ -58,51 +58,29 @@ public class R1RhoEquations {
         // deltaB: offset of B state (angular units, 1/s)
         // R1A, R1B: R10 relaxation rate constants of A and B states
         // R2A, R2B: R20 relaxation rate constants of A and B states
+        int size = omega.length;
         double pa = 1.0 - pb;
-        double[] dw = new double[deltaA.length];
-        double[] omegaBar = new double[deltaA.length];
-        for (int i = 0; i < deltaA.length; i++) {
-            dw[i] = deltaB[i] - deltaA[i];
-            omegaBar[i] = pa * deltaA[i] + pb * deltaB[i];
-        }
         double dR = R2B - R2A;
-        double[] weA = new double[omega.length];
-        double[] weB = new double[omega.length];
-        double[] we = new double[omega.length];
-        double[] sin2t = new double[omega.length];
-        double[] cos2t = new double[omega.length];
-        double[] tan2t = new double[omega.length];
-        for (int i = 0; i < omega.length; i++) {
-            weA[i] = Math.sqrt(omega[i] * omega[i] + deltaA[i] * deltaA[i]);
-            weB[i] = Math.sqrt(omega[i] * omega[i] + deltaB[i] * deltaB[i]);
-            we[i] = Math.sqrt(omega[i] * omega[i] + omegaBar[i] * omegaBar[i]);
-            sin2t[i] = (omega[i] / we[i]) * (omega[i] / we[i]);
-            cos2t[i] = 1 - sin2t[i];
-            tan2t[i] = sin2t[i] / cos2t[i];
-        }
-        double k1 = pb * kex;
-        double km1 = pa * kex;
-        double[] f1p = new double[dw.length];
-        double[] f2p = new double[omega.length];
-        double[] dp = new double[weA.length];
-        double[] f1 = new double[weA.length];
-        double[] f2 = new double[omega.length];
-        double[] f3 = new double[omega.length];
-        double[] c1 = new double[tan2t.length];
-        double[] c2 = new double[tan2t.length];
-        double[] rex = new double[f1.length];
-        double[] r1rho = new double[sin2t.length];
-        for (int i = 0; i < dw.length; i++) {
-            f1p[i] = (pa * pb * (dw[i] * dw[i]));
-            f2p[i] = kex * kex + omega[i] * omega[i] + (deltaA[i] * deltaA[i]) * (deltaB[i] * deltaB[i]) / (omegaBar[i] * omegaBar[i]);
-            dp[i] = kex * kex + (weA[i] * weA[i]) * (weB[i] * weB[i]) / (we[i] * we[i]);
-            f1[i] = pb * (weA[i] * weA[i] + kex * kex + dR * pa * kex);
-            f2[i] = 2 * kex + omega[i] * omega[i] / kex + dR * pa;
-            f3[i] = 3 * pb * kex + (2 * pa * kex + omega[i] * omega[i] / kex + dR + dR * (pb * pb) * (kex * kex) / (weA[i] * weA[i])) * ((weA[i] * weA[i]) / (omega[i] * omega[i]));
-            c1[i] = (f2p[i] + (f1p[i] + dR * (f3[i] - f2[i])) * tan2t[i]) / (dp[i] + dR * f3[i] * sin2t[i]);
-            c2[i] = (dp[i] / sin2t[i] - f2p[i] / tan2t[i] - f1p[i] + dR * f2[i]) / (dp[i] + dR * f3[i] * sin2t[i]);
-            rex[i] = (f1p[i] * kex + dR * f1[i]) / (dp[i] + dR * f3[i] * sin2t[i]);
-            r1rho[i] = c1[i] * R1A * cos2t[i] + sin2t[i] * (c2[i] * R2A + rex[i]);
+        double[] r1rho = new double[size];
+        for (int i = 0; i < size; i++) {
+            double dw = deltaB[i] - deltaA[i];
+            double omegaBar = pa * deltaA[i] + pb * deltaB[i];
+            double weA = Math.sqrt(omega[i] * omega[i] + deltaA[i] * deltaA[i]);
+            double weB = Math.sqrt(omega[i] * omega[i] + deltaB[i] * deltaB[i]);
+            double we = Math.sqrt(omega[i] * omega[i] + omegaBar * omegaBar);
+            double sin2t = (omega[i] / we) * (omega[i] / we);
+            double cos2t = 1 - sin2t;
+            double tan2t = sin2t / cos2t;
+            double f1p = (pa * pb * (dw * dw));
+            double f2p = kex * kex + omega[i] * omega[i] + (deltaA[i] * deltaA[i]) * (deltaB[i] * deltaB[i]) / (omegaBar * omegaBar);
+            double dp = kex * kex + (weA * weA) * (weB * weB) / (we * we);
+            double f1 = pb * (weA * weA + kex * kex + dR * pa * kex);
+            double f2 = 2 * kex + omega[i] * omega[i] / kex + dR * pa;
+            double f3 = 3 * pb * kex + (2 * pa * kex + omega[i] * omega[i] / kex + dR + dR * (pb * pb) * (kex * kex) / (weA * weA)) * ((weA * weA) / (omega[i] * omega[i]));
+            double c1 = (f2p + (f1p + dR * (f3 - f2)) * tan2t) / (dp + dR * f3 * sin2t);
+            double c2 = (dp / sin2t - f2p / tan2t - f1p + dR * f2) / (dp + dR * f3 * sin2t);
+            double rex = (f1p * kex + dR * f1) / (dp + dR * f3 * sin2t);
+            r1rho[i] = c1 * R1A * cos2t + sin2t * (c2 * R2A + rex);
         }
         return r1rho;
     }
