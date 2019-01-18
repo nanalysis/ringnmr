@@ -253,7 +253,7 @@ public class DataIO {
 
     }
 
-    public static void loadXYFile(String fileName, ExperimentData expData,
+    public static void loadResidueDataFile(String fileName, ExperimentData expData,
             String residueNum, ResidueProperties resProp, String nucleus,
             double temperature, double field,
             HashMap<String, Object> errorPars) throws IOException, IllegalArgumentException {
@@ -422,7 +422,7 @@ public class DataIO {
         return errorA;
     }
 
-    public static ResidueProperties loadParametersFromFile(String fitMode, String fileName) throws IOException {
+    public static ResidueProperties loadResultsFile(String fitMode, String fileName) throws IOException {
         Path path = Paths.get(fileName);
         String fileTail = path.getFileName().toString();
         fileTail = fileTail.substring(0, fileTail.indexOf('.'));
@@ -561,13 +561,13 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         }
     }
 
-    static void getDataValues(ResidueProperties resProp, Map<String, Object> dataMap2, Path dirPath, String expMode) throws IOException {
+    static void processYAMLDataSections(ResidueProperties resProp, Map<String, Object> dataMap2, Path dirPath, String expMode) throws IOException {
 
         ArrayList<HashMap<String, Object>> dataList = (ArrayList<HashMap<String, Object>>) dataMap2.get("data");
-        loadDataMaps(resProp, dirPath, expMode, dataList);
+        DataIO.processYAMLDataSections(resProp, dirPath, expMode, dataList);
     }
 
-    public static void loadDataMaps(ResidueProperties resProp, Path dirPath, String expMode, ArrayList<HashMap<String, Object>> dataList) throws IOException {
+    public static void processYAMLDataSections(ResidueProperties resProp, Path dirPath, String expMode, ArrayList<HashMap<String, Object>> dataList) throws IOException {
         for (HashMap<String, Object> dataMap3 : dataList) {
             Double temperature = (Double) dataMap3.get("temperature");
             if (temperature == null) {
@@ -648,7 +648,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     dataFileName = file.getName();
                     String fileTail = dataFileName.substring(0, dataFileName.indexOf('.'));
                     String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
-                    loadXYFile(textFileName, expData, residueNum, resProp, nucleus,
+                    loadResidueDataFile(textFileName, expData, residueNum, resProp, nucleus,
                             temperature, B0field, errorPars);
                 }
             } else if (vcpmgList == null) {
@@ -677,7 +677,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
 
     }
 
-    public static ResidueProperties loadParameters(String fileName) throws FileNotFoundException, IOException {
+    public static ResidueProperties loadYAMLFile(String fileName) throws FileNotFoundException, IOException {
         File yamlFile = new File(fileName).getAbsoluteFile();
         ResidueProperties resProp = null;
         try (InputStream input = new FileInputStream(yamlFile)) {
@@ -693,20 +693,23 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     String expMode = (String) dataMap2.get("mode");
                     expMode = expMode == null ? "cpmg" : expMode;
                     String parFileName = FileSystems.getDefault().getPath(dirPath.toString(), parName).toString();
-                    resProp = DataIO.loadParametersFromFile(expMode, parFileName);
+                    resProp = DataIO.loadResultsFile(expMode, parFileName);
                     resProp.setExpMode(expMode);
                     getFitParameters(resProp, dataMap2);
-                    getDataValues(resProp, dataMap2, dirPath, expMode);
+                    processYAMLDataSections(resProp, dataMap2, dirPath, expMode);
                 }
             }
         }
+        //        residueProperties.put(resProp.getName(), resProp);
+        //        residueProperties.put(resProp.getName(), resProp);
+        //        residueProperties.put(resProp.getName(), resProp);
         //        residueProperties.put(resProp.getName(), resProp);
 
         return resProp;
 
     }
 
-    public static void saveParametersToFile(String fileName, ResidueProperties resProp) {
+    public static void saveResultsFile(String fileName, ResidueProperties resProp) {
         String[] headerFields = {"Residue", "Peak", "GrpSz", "Group", "State", "Equation", "RMS", "AIC", "Best"};
         StringBuilder headerBuilder = new StringBuilder();
         String[] cpmgFields = {"R2", "Rex", "Kex", "pA", "dPPM"};
@@ -749,7 +752,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
 
     }
 
-    public static List<Double>[] loadSimData(File file) throws IOException, IllegalArgumentException {
+    public static List<Double>[] loadSimDataFile(File file) throws IOException, IllegalArgumentException {
         Path path = file.toPath();
         List<Double> xValues = new ArrayList<>();
         List<Double> yValues = new ArrayList<>();

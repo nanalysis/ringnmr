@@ -404,11 +404,8 @@ def getResidues(resProp):
 def fitProject(resProp, groups, equationName):
     expDataSets = resProp.getExperimentData()
     residueFitter = ResidueFitter()
-    if len(groups) == 0:
-        groups = getResidues(resProp)
     groupID = 0
     for group in groups:
-        print 'fit',group
         sgroup = [str(groupNum) for groupNum in group]
         resInfoList = residueFitter.fitResidues(resProp, sgroup, groupID, equationName)
         groupID += 1
@@ -437,6 +434,23 @@ def fitGroups(groups):
                 fitGroup(expList,[resNum],groupID)
                 groupID += 1
 
+def genGroups(groups, residues):
+    fullGroups = []
+    for resNum in residues:
+        resNum = int(resNum[0])
+        inGroup = False
+        for group in groups:
+            if resNum in group:
+                inGroup = True
+                break
+        if inGroup:
+            if resNum == group[0]:
+                fullGroups += [group]
+        else:
+            if not onlyGroups:
+                fullGroups.append([resNum])
+    return fullGroups
+
 def parseArgs():
     global serialMode
     global onlyGroups
@@ -449,28 +463,24 @@ def parseArgs():
     parser.add_argument("-p", dest="projectFile",default='', help="Project file (.yaml) to load")
     parser.add_argument("fileNames",nargs="*")
     args = parser.parse_args()
-    print args
 
     serialMode = args.serialMode
     onlyGroups = args.onlyGroups
     fileNames = args.fileNames
     projectFile = args.projectFile
     equationName = args.equationName
-    print 'fileNames',fileNames
 
     groups = [] 
-    print 'gL',args.groupList
     if len(args.groupList) > 0:
         sgroups = args.groupList.split(' ')
-        print 'sg',sgroups
         groups = []
         for group in sgroups:
             group = [int(groupNum) for groupNum in group.split(',')]
             groups.append(group)
-        print 'g',groups
 
     if projectFile != '':
         resProp = loadProject(projectFile)
+        groups = genGroups(groups, getResidues(resProp))
         fitProject(resProp, groups, equationName)
     else:
         loadDataFiles(fileNames)
