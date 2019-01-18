@@ -434,7 +434,7 @@ public class DataIO {
         }
 
         /*
-Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 Rex.sd	    Kex	 Kex.sd	     pA	  pA.sd	     dW	  dW.sd
+Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 Rex.sd	    Kex	 Kex.sd	     pA	  pA.sd	     dPPM	  dPPM.sd
 36	    26	    1	    0	    NOEX	  1.28	 49.95		   9.22	   0.09								
 36	    26	    1	    0	CPMGFAST	  0.25	  7.44	best	   8.88	   0.09	   2.94	   0.08	 259.33	  17.97				
 36	    26	    1	    0	CPMGSLOW	  0.28	 14.05		   8.89	   0.09			 164.36	  53.17	   0.96	   0.14	  24.51	   6.76
@@ -710,7 +710,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
     public static void saveParametersToFile(String fileName, ResidueProperties resProp) {
         String[] headerFields = {"Residue", "Peak", "GrpSz", "Group", "State", "Equation", "RMS", "AIC", "Best"};
         StringBuilder headerBuilder = new StringBuilder();
-        String[] cpmgFields = {"R2", "Rex", "Kex", "pA", "dW"};
+        String[] cpmgFields = {"R2", "Rex", "Kex", "pA", "dPPM"};
         String[] expFields = {"A", "R"};
         String[] cestFields = {"Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B"};
         String[] parFields;
