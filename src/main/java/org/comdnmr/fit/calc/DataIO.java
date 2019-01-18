@@ -347,9 +347,8 @@ public class DataIO {
                     xValues = new double[1][nValues];
                     peakRefs = new String[nValues];
                     for (int i = 1; i < sfields.length - 1; i += 2) {
-                        double tau = Double.parseDouble(sfields[i].trim());
-                        double vcpmg = 1000.0 / (2.0 * tau);
-                        xValues[0][j] = vcpmg;
+                        double xValue = Double.parseDouble(sfields[i].trim());
+                        xValues[0][j] = xValue;
                         peakRefs[j] = String.valueOf(j);
                         j++;
                     }
