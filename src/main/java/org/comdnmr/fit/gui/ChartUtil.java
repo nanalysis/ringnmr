@@ -393,7 +393,7 @@ public class ChartUtil {
         }
         ResidueProperties resProp = null;
         try {
-            resProp = DataIO.loadParameters(fileName);
+            resProp = DataIO.loadYAMLFile(fileName);
         } catch (IOException ex) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Parameter file error");

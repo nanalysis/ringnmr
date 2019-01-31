@@ -464,7 +464,7 @@ public class InputDataInterface {
         resProp.setExpMode(expMode);
 
         try {
-            DataIO.loadDataMaps(resProp, dirPath, expMode, dataList);
+            DataIO.processYAMLDataSections(resProp, dirPath, expMode, dataList);
         } catch (IOException ex) {
             ExceptionDialog dialog = new ExceptionDialog(ex);
             dialog.showAndWait();

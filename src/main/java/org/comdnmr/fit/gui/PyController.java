@@ -1070,7 +1070,7 @@ public class PyController implements Initializable {
         FileChooser fileChooser = new FileChooser();
         File file = fileChooser.showSaveDialog(MainApp.primaryStage);
         if (file != null) {
-            DataIO.saveParametersToFile(file.getAbsolutePath(), currentResProps);
+            DataIO.saveResultsFile(file.getAbsolutePath(), currentResProps);
         }
     }
 
@@ -1501,7 +1501,7 @@ public class PyController implements Initializable {
         File file = fileChooser.showOpenDialog(null);
         if (file != null) {
             try {
-                List<Double>[] dataValues = DataIO.loadSimData(file);
+                List<Double>[] dataValues = DataIO.loadSimDataFile(file);
                 List<XYChart.Series<Double, Double>> data = new ArrayList<>();
                 XYChart.Series<Double, Double> series = new XYChart.Series<>();
                 series.setName("sim" + ":" + "0");
