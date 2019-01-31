@@ -74,6 +74,8 @@ public class DataIO {
         boolean gotHeader = false;
         String[] peakRefs = null;
         double[] xValues = null;
+        int offset = 0;
+        int residueField = -1;
         String header = "";
         List<String> peakRefList = new ArrayList<>();
         //  Peak       Residue N       T1      T2      T11     T3      T4      T9      T5      T10     T12     T6      T7      T8
@@ -93,18 +95,39 @@ public class DataIO {
                     continue;
                 }
                 String[] sfields = line.split("\t", -1);
-                int offset = 3;
-                if (fileName.endsWith(".txt") && sline.startsWith("Residue") || header.startsWith("Residue")) {
-                    offset = 1;
-                }
-                if (expMode.equals("cest") || expMode.equals("cpmg")) {
-                    offset++;
-                }
                 if (!gotHeader) {
                     int nfields = sfields.length;
-                    if (fileName.endsWith(".txt") && expMode.equals("cpmg") && sline.startsWith("Residue")) {
-                        nfields = sfields.length + 1;
+                    if (fileName.endsWith(".mpk2")) {
+                        // find last field that starts with "lab"
+                        //   .mpk2 files have peak labels in columns like "lab1", "lab2"
+                        //   intensities start in next column
+
+                        for (int i = nfields - 1; i >= 0; i--) {
+                            if (sfields[i].startsWith("lab")) {
+                                offset = i + 1;
+                                break;
+                            }
+                        }
+                        // find first lab1,lab2... field to get residue number from
+                        for (int i = 0; i < nfields; i++) {
+                            if (sfields[i].startsWith("lab")) {
+                                residueField = i;
+                                break;
+                            }
+                        }
+                    } else {
+                        for (int i = 0; i < nfields; i++) {
+                            if (sfields[i].startsWith("Res")) {
+                                residueField = i;
+                                offset = i + 1;
+                                break;
+                            }
+                        }
                     }
+                    if (expMode.equals("cest") || expMode.equals("cpmg")) {
+                        offset++;
+                    }
+
                     int nValues = nfields - offset;
                     xValues = new double[nValues];
                     peakRefs = new String[nValues];
@@ -120,11 +143,7 @@ public class DataIO {
                             } catch (NumberFormatException nFE) {
                             }
                         } else {
-                            if (expMode.equals("exp")) {
-                                xValues[j] = xVals[j];
-                            } else {
-                                xValues[j] = xVals[j + 1];
-                            }
+                            xValues[j] = xVals[j];
                         }
                         peakRefs[j] = String.valueOf(j);
                         peakRefList.add(peakRefs[j]);
@@ -132,9 +151,9 @@ public class DataIO {
                     gotHeader = true;
                     header = sline;
                 } else {
-                    String residueNum = sfields[1].trim();
-                    if (fileName.endsWith(".txt") && header.startsWith("Residue")) {
-                        residueNum = sfields[0].trim();
+                    String residueNum = "";
+                    if (residueField != -1) {
+                        residueNum = sfields[residueField].trim();
                     }
                     if (residueNum.equals("")) {
                         residueNum = String.valueOf(fakeRes);
