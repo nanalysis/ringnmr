@@ -386,7 +386,7 @@ def loadDataFiles(fileNames):
         expList.append(cpmgExp)
 
 def loadProject(fileName):
-    resProp = DataIO.loadParameters(fileName)
+    resProp = DataIO.loadYAMLFile(fileName)
     return resProp
 
 def getResidues(resProp):
@@ -412,7 +412,7 @@ def fitProject(resProp, groups, equationName):
         for resInfo in resInfoList:
             fitResNum = resInfo.resNum;
             resProp.addResidueInfo(str(fitResNum), resInfo)
-    DataIO.saveParametersToFile('output.txt',resProp)
+    DataIO.saveResultsFile('output.txt',resProp)
 
 def fitGroups(groups):
     writeHeader()
