@@ -28,22 +28,56 @@ import org.yaml.snakeyaml.Yaml;
  */
 public class DataIO {
 
-    enum XCONVERSION {
+    enum XCONV {
         IDENTITY() {
         },
         TAU2() {
             @Override
-            double convert(double value) {
+            double convert(double value, double[] pars) {
                 return 1000.0 / (2.0 * value);
+            }
+        },
+        CALC() {
+            @Override
+            double convert(double value, double[] pars) {
+                return pars[0] + pars[2] * (value + pars[1]);
             }
         };
 
-        double convert(double value) {
+        double convert(double value, double[] pars) {
             return value;
         }
     }
 
-    public static void loadPeakFile(String fileName, ExperimentData expData, ResidueProperties resProp) throws IOException, IllegalArgumentException { //(String fileName, ResidueProperties resProp, String nucleus,
+    enum YCONV {
+        IDENTITY() {
+        },
+        RATE() {
+            @Override
+            Double convert(double value, double refValue, double tau) {
+                Double result = null;
+                if ((value < refValue) && (value > 0.0)) {
+                    result = -Math.log(value / refValue) / tau;
+
+                }
+                return result;
+            }
+        },
+        NORMALIZE() {
+            @Override
+            Double convert(double value, double refValue, double tau) {
+                return value / refValue;
+            }
+        };
+
+        Double convert(double value, double refValue, double tau) {
+            return value;
+        }
+    }
+
+    public static void loadPeakFile(String fileName, ExperimentData expData,
+            ResidueProperties resProp, XCONV xConv, YCONV yConv)
+            throws IOException, IllegalArgumentException { //(String fileName, ResidueProperties resProp, String nucleus,
 //            double temperature, double field, double tau, double[] vcpmgs, String expMode,
 //            HashMap<String, Object> errorPars, double[] delayCalc) throws IOException, IllegalArgumentException {
         System.out.println("load peak file");
@@ -152,8 +186,7 @@ public class DataIO {
                         if (xVals == null) {
                             try {
                                 double x = Double.parseDouble(sfields[i].trim());
-                                xValues[j] = delayCalc[0] + delayCalc[2] * (x + delayCalc[1]);
-//                                System.out.println(x + " " + xValues[j]);
+                                xValues[j] = xConv.convert(x, delayCalc);
 
                             } catch (NumberFormatException nFE) {
                             }
@@ -190,34 +223,11 @@ public class DataIO {
                         if ((valueStr.length() == 0) || valueStr.equals("NA")) {
                             continue;
                         }
-                        double yValue;
+                        Double yValue;
                         double intensity;
                         try {
                             intensity = Double.parseDouble(sfields[i].trim());
-                            if (expMode.equals("cpmg")) {
-                                if (intensity > refIntensity) {
-                                    ok = false;
-                                    continue;
-                                }
-                                if (intensity < 0.0) {
-                                    ok = false;
-                                    continue;
-                                }
-
-                                yValue = -Math.log(intensity / refIntensity) / tau;
-                            } else if (expMode.equals("cest")) {
-//                                if (intensity > refIntensity) {
-//                                    ok = false;
-//                                    continue;
-//                                }
-//                                if (intensity < 0.0) {
-//                                    ok = false;
-//                                    continue;
-//                                }
-                                yValue = intensity / refIntensity;
-                            } else {
-                                yValue = intensity;
-                            }
+                            yValue = yConv.convert(intensity, refIntensity, tau);
                         } catch (NumberFormatException nFE) {
                             continue;
                         }
@@ -352,7 +362,7 @@ public class DataIO {
     }
 
     public static void loadTextFile(String fileName, ResidueProperties resProp,
-            String nucleus, double temperature, double field, XCONVERSION xConv)
+            String nucleus, double temperature, double field, XCONV xConv)
             throws IOException, IllegalArgumentException {
         Path path = Paths.get(fileName);
         String fileTail = path.getFileName().toString();
@@ -384,7 +394,7 @@ public class DataIO {
                     peakRefs = new String[nValues];
                     for (int i = 1; i < sfields.length - 1; i += 2) {
                         double xValue = Double.parseDouble(sfields[i].trim());
-                        xValues[0][j] = xConv.convert(xValue);
+                        xValues[0][j] = xConv.convert(xValue, null);
                         peakRefs[j] = String.valueOf(j);
                         j++;
                     }
@@ -611,6 +621,36 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             } else {
                 temperature += 273.15;
             }
+            XCONV xConv;
+            YCONV yConv;
+            switch (expMode) {
+                case "cpmg":
+                    xConv = XCONV.TAU2;
+                    yConv = YCONV.RATE;
+                    break;
+                case "cest":
+                    xConv = XCONV.IDENTITY;
+                    yConv = YCONV.NORMALIZE;
+                    break;
+                default:
+                    xConv = XCONV.IDENTITY;
+                    yConv = YCONV.IDENTITY;
+            }
+            if (dataMap3.containsKey("xconv")) {
+                String xConvStr = dataMap3.get("xconv").toString();
+                xConv = XCONV.valueOf(xConvStr.toUpperCase());
+                if (xConv == null) {
+                    throw new IOException("Bad xconversion type");
+                }
+            }
+            if (dataMap3.containsKey("yconv")) {
+                String xConvStr = dataMap3.get("yconv").toString();
+                yConv = YCONV.valueOf(xConvStr.toUpperCase());
+                if (yConv == null) {
+                    throw new IOException("Bad yconversion type");
+                }
+            }
+
             Double B0field = (Double) dataMap3.get("B0");
             String nucleus = (String) dataMap3.get("nucleus");
             List<Number> vcpmgList = (List<Number>) dataMap3.get("vcpmg");
@@ -652,7 +692,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                             nucleus, B0field, temperature, tau, null, expMode,
                             errorPars, delayCalc, B1field);
 //                    loadPeakFile(textFileName, resProp, nucleus, temperature, field, tau, null, expMode, errorPars, delayCalc);
-                    loadPeakFile(dataFileName, expData, resProp);
+                    loadPeakFile(dataFileName, expData, resProp, xConv, yConv);
                 } else {
                     double[] vcpmgs = new double[vcpmgList.size()];
                     for (int i = 0; i < vcpmgs.length; i++) {
@@ -668,7 +708,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                         return;
                     }
 //                    loadPeakFile(textFileName, resProp, nucleus, temperature, field, tau, vcpmgs, expMode, errorPars, delayCalc);
-                    loadPeakFile(dataFileName, expData, resProp);
+                    loadPeakFile(dataFileName, expData, resProp, xConv, yConv);
                 }
 
             } else if ((fileMode != null) && fileMode.equals("ires")) {
@@ -689,15 +729,6 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 }
             } else if (vcpmgList == null) {
                 String dataFileName = (String) dataMap3.get("file");
-                XCONVERSION xConv = XCONVERSION.IDENTITY;
-                if (dataMap3.containsKey("xconv")) {
-                    String xConvStr = dataMap3.get("xconv").toString();
-                    xConv = XCONVERSION.valueOf(xConvStr.toUpperCase());
-                    if (xConv == null) {
-                        throw new IOException("Bad xconversion type");
-                    }
-                }
-
                 File file = new File(dataFileName).getAbsoluteFile();
                 dataFileName = file.getName();
                 String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
@@ -716,7 +747,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 ExperimentData expData = new ExperimentData(fileTail,
                         nucleus, B0field, temperature, tau, vcpmgs, expMode,
                         errorPars, delayCalc, B1field);
-                loadPeakFile(textFileName, expData, resProp);
+                loadPeakFile(textFileName, expData, resProp, xConv, yConv);
             }
         }
 
