@@ -28,6 +28,21 @@ import org.yaml.snakeyaml.Yaml;
  */
 public class DataIO {
 
+    enum XCONVERSION {
+        IDENTITY() {
+        },
+        TAU2() {
+            @Override
+            double convert(double value) {
+                return 1000.0 / (2.0 * value);
+            }
+        };
+
+        double convert(double value) {
+            return value;
+        }
+    }
+
     public static void loadPeakFile(String fileName, ExperimentData expData, ResidueProperties resProp) throws IOException, IllegalArgumentException { //(String fileName, ResidueProperties resProp, String nucleus,
 //            double temperature, double field, double tau, double[] vcpmgs, String expMode,
 //            HashMap<String, Object> errorPars, double[] delayCalc) throws IOException, IllegalArgumentException {
@@ -336,7 +351,9 @@ public class DataIO {
 
     }
 
-    public static void loadTextFile(String fileName, ResidueProperties resProp, String nucleus, double temperature, double field) throws IOException, IllegalArgumentException {
+    public static void loadTextFile(String fileName, ResidueProperties resProp,
+            String nucleus, double temperature, double field, XCONVERSION xConv)
+            throws IOException, IllegalArgumentException {
         Path path = Paths.get(fileName);
         String fileTail = path.getFileName().toString();
         fileTail = fileTail.substring(0, fileTail.indexOf('.'));
@@ -367,7 +384,7 @@ public class DataIO {
                     peakRefs = new String[nValues];
                     for (int i = 1; i < sfields.length - 1; i += 2) {
                         double xValue = Double.parseDouble(sfields[i].trim());
-                        xValues[0][j] = xValue;
+                        xValues[0][j] = xConv.convert(xValue);
                         peakRefs[j] = String.valueOf(j);
                         j++;
                     }
@@ -672,10 +689,19 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 }
             } else if (vcpmgList == null) {
                 String dataFileName = (String) dataMap3.get("file");
+                XCONVERSION xConv = XCONVERSION.IDENTITY;
+                if (dataMap3.containsKey("xconv")) {
+                    String xConvStr = dataMap3.get("xconv").toString();
+                    xConv = XCONVERSION.valueOf(xConvStr.toUpperCase());
+                    if (xConv == null) {
+                        throw new IOException("Bad xconversion type");
+                    }
+                }
+
                 File file = new File(dataFileName).getAbsoluteFile();
                 dataFileName = file.getName();
                 String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
-                loadTextFile(textFileName, resProp, nucleus, temperature, B0field);
+                loadTextFile(textFileName, resProp, nucleus, temperature, B0field, xConv);
             } else {
                 String dataFileName = (String) dataMap3.get("file");
                 String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
