@@ -83,10 +83,10 @@ public class InputDataInterface {
     public void inputParameters() {
 
         infoStage.setTitle("Input Data Parameters");
-        Label fileLabel = new Label("  File:  ");
+        Label fileLabel = new Label("  MPK2 File:  ");
         Label dirLabel = new Label("  Directory:  ");
         Label xpk2FileLabel = new Label("  XPK2 File:  ");
-        Label fitFileLabel = new Label("  Fit Parameter File:  ");
+        Label fitFileLabel = new Label("  CoMD/NMR Analysis File:  ");
         Label fieldLabel = new Label("  B0 Field (1H MHz) :  ");
         Label tempLabel = new Label("  Temperature:  ");
         Label nucLabel = new Label("  Nucleus:  ");
