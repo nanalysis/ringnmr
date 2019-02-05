@@ -180,6 +180,7 @@ public class DataIO {
                     int nValues = nfields - offset;
                     xValues = new double[nValues];
                     peakRefs = new String[nValues];
+                    System.out.println("off " + offset + " " + nfields);
                     for (int i = offset; i < nfields; i++) {
                         int j = i - offset;
                         // fixme assumes first vcpmg is the 0 ref 
@@ -275,6 +276,7 @@ public class DataIO {
         List<Double> B1fieldList = new ArrayList<>();
         for (int i = 0; i < xValueList.size(); i++) {
             B1fieldList.add(B1field * 2 * Math.PI);
+            xValueList.set(i, xValueList.get(i) * 2 * Math.PI);
         }
         double tau = expData.getTau();
         List<Double> tauList = new ArrayList<>();
