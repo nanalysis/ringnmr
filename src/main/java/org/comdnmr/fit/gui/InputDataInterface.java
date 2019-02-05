@@ -287,64 +287,72 @@ public class InputDataInterface {
     public void chooseDirectory(ActionEvent event) {
         DirectoryChooser dirChooser = new DirectoryChooser();
         File file = dirChooser.showDialog(infoStage);
-        chosenDirLabel.setText(file.toString());
-        dirPath = file.toPath();
+        if (file != null) {
+            chosenDirLabel.setText(file.toString());
+            dirPath = file.toPath();
+        }
     }
 
     public void chooseFile(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("mpk2 or txt File", "*.mpk2", "*.txt"));
         File file = fileChooser.showOpenDialog(infoStage);
-        Path path = dirPath.relativize(file.toPath());
-        chosenFileLabel.setText(path.toString());
+        if (file != null) {
+            Path path = dirPath.relativize(file.toPath());
+            chosenFileLabel.setText(path.toString());
+        }
     }
 
     public void chooseXPK2File(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("xpk2 File", "*.xpk2"));
         File file = fileChooser.showOpenDialog(infoStage);
-        Path path = dirPath.relativize(file.toPath());
-        chosenXPK2FileLabel.setText(path.toString());
+        if (file != null) {
+            Path path = dirPath.relativize(file.toPath());
+            chosenXPK2FileLabel.setText(path.toString());
 
-        Path path1 = file.toPath();
+            Path path1 = file.toPath();
 
-        List<String[]> head = new ArrayList<>();
+            List<String[]> head = new ArrayList<>();
 
-        try (BufferedReader fileReader = Files.newBufferedReader(path1)) {
-            while (true) {
-                String line = fileReader.readLine();
-                if (line == null) {
-                    break;
+            try (BufferedReader fileReader = Files.newBufferedReader(path1)) {
+                while (true) {
+                    String line = fileReader.readLine();
+                    if (line == null) {
+                        break;
+                    }
+                    String sline = line.trim();
+                    if (sline.length() == 0) {
+                        continue;
+                    }
+                    if (sline.startsWith("id")) {
+                        break;
+                    }
+                    String[] sline1 = line.split("\t", -1);
+                    head.add(sline1);
                 }
-                String sline = line.trim();
-                if (sline.length() == 0) {
-                    continue;
-                }
-                if (sline.startsWith("id")) {
-                    break;
-                }
-                String[] sline1 = line.split("\t", -1);
-                head.add(sline1);
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
             }
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
+            int sfInd = Arrays.asList(head.get(2)).indexOf("sf");
+            int codeInd = Arrays.asList(head.get(2)).indexOf("code");
+            String field = Arrays.asList(head.get(3)).get(sfInd);
+            String nuc = Arrays.asList(head.get(4)).get(codeInd);
+            nuc = nuc.replaceAll("[^a-zA-Z]", "");
+            nucTextField.setText(nuc);
+            fieldTextField.setText(field);
         }
-        int sfInd = Arrays.asList(head.get(2)).indexOf("sf");
-        int codeInd = Arrays.asList(head.get(2)).indexOf("code");
-        String field = Arrays.asList(head.get(3)).get(sfInd);
-        String nuc = Arrays.asList(head.get(4)).get(codeInd);
-        nuc = nuc.replaceAll("[^a-zA-Z]", "");
-        nucTextField.setText(nuc);
-        fieldTextField.setText(field);
     }
 
     public void chooseParamFile(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("txt File", "*.txt"));
         File file = fileChooser.showOpenDialog(infoStage);
-        String directory = file.getParent();
-        String fileName = file.getName();
-        chosenParamFileLabel.setText(directory + "/" + fileName);
+        if (file != null) {
+            String directory = file.getParent();
+            String fileName = file.getName();
+            chosenParamFileLabel.setText(directory + "/" + fileName);
+        }
     }
 
     public void clearParamFile(ActionEvent event) {
