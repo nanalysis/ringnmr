@@ -281,6 +281,11 @@ public class PyController implements Initializable {
         initResidueNavigator();
         calcErrorsCheckBox.selectedProperty().addListener(e -> FitModel.setCalcError(calcErrorsCheckBox.isSelected()));
         calcErrorsCheckBox.setSelected(true);
+        XYBarChart reschartNode = PyController.mainController.getActiveChart();
+        if (reschartNode == null) {
+            reschartNode = PyController.mainController.addChart();
+
+        }
 
 //        mainController.setOnHidden(e -> Platform.exit());
     }
