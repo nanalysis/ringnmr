@@ -251,9 +251,9 @@ public class PyController implements Initializable {
             xLowerBoundTextField.setText("0.0");
             xUpperBoundTextField.setText("1.25");
             yLowerBoundTextField.setText("0.0");
-            yUpperBoundTextField.setText("200.0");
+            yUpperBoundTextField.setText("1.25");
             xTickTextField.setText("0.25");
-            yTickTextField.setText("50.0");
+            yTickTextField.setText("0.25");
         } else {
             System.out.println("Error: no fitting mode selected.");
         }
@@ -468,13 +468,13 @@ public class PyController implements Initializable {
             yTickTextField.setText("5.0");
         } else if ((simControls instanceof ExpControls)) {
             xychart.setNames("Exp", "Time (s)", "Intensity", "0");
-            xychart.setBounds(0.0, 1.25, 0.0, 200.0, 0.25, 50.0);
+            xychart.setBounds(0.0, 1.25, 0.0, 1.25, 0.25, 0.25);
             xLowerBoundTextField.setText("0.0");
             xUpperBoundTextField.setText("1.25");
             yLowerBoundTextField.setText("0.0");
-            yUpperBoundTextField.setText("200.0");
+            yUpperBoundTextField.setText("1.25");
             xTickTextField.setText("0.25");
-            yTickTextField.setText("50.0");
+            yTickTextField.setText("0.25");
         } else if ((simControls instanceof CESTControls)) {
             xychart.setNames("CEST", "Offset (Hz)", "I(t)/I(0)", "20");
             xychart.setBounds(-6000, 6000, 0.0, 1.0, 2000.0, 0.25);

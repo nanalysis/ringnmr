@@ -139,10 +139,7 @@ public class ExpControls implements EquationControls {
     }
 
     void equationAction() {
-        String equationName = equationSelector.getValue();
-        if (equationName == "") {
-            equationName = equationSelector.getItems().get(0);
-        }
+        String equationName = getEquation(); //equationSelector.getValue();
         switch (equationName) {
             case "EXPAB":
                 A.disabled(false);
@@ -215,7 +212,11 @@ public class ExpControls implements EquationControls {
     }
 
     public String getEquation() {
-        return equationSelector.getValue();
+        String equationName = equationSelector.getValue();
+        if (equationName == "") {
+            equationName = equationSelector.getItems().get(0);
+        }
+        return equationName; //equationSelector.getValue();
     }
 
     public List<String> getParNames() {
@@ -271,7 +272,7 @@ public class ExpControls implements EquationControls {
         ResidueProperties resProps = controller.currentResProps;
         List<PlotEquation> equations = new ArrayList<>();
         double[] pars;
-        String equationName = equationSelector.getValue();
+        String equationName = getEquation(); //equationSelector.getValue();
         if (resProps == null) {
             pars = getPars(equationName);
             double[] errs = new double[pars.length];

@@ -240,6 +240,9 @@ public class ChartUtil {
                 for (int i = 0; i < nValues; i++) {
                     double x = xValues[0][i];
                     double y = yValues[i];
+                    if (PyController.mainController.getFittingMode().equals("exp")) {
+                        y /= yValues[0];
+                    }
                     XYChart.Data dataPoint = new XYChart.Data(x, y);
                     dataPoint.setExtraValue(resData.getDataValues().get(i));
                     series.getData().add(dataPoint);
@@ -284,12 +287,12 @@ public class ChartUtil {
 //                        //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[1] = " + extras[1]);
 //                        PlotEquation equationCopy = equation.clone();
 //                        equationCopy.setExtra(extras);
-                            extras[0] = 1.0;
-                            extras[1] = expData.getExtras().get(0);
-                            extras[2] = expData.getExtras().get(1);
-                            PlotEquation equationCopy = new PlotEquation(useEquationName, pars, errs, extras);
+                        extras[0] = 1.0;
+                        extras[1] = expData.getExtras().get(0);
+                        extras[2] = expData.getExtras().get(1);
+                        PlotEquation equationCopy = new PlotEquation(useEquationName, pars, errs, extras);
 
-                            equations.add(equationCopy);
+                        equations.add(equationCopy);
                     } else {
                         double[] extras = new double[1];
                         extras[0] = field;

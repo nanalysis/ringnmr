@@ -295,6 +295,10 @@ public class InputDataInterface {
 
     public void chooseFile(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
+        if (dirPath != null) {
+            File userDirectory = new File(dirPath.toString());
+            fileChooser.setInitialDirectory(userDirectory);
+        }
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("mpk2 or txt File", "*.mpk2", "*.txt"));
         File file = fileChooser.showOpenDialog(infoStage);
         if (file != null) {
@@ -305,6 +309,10 @@ public class InputDataInterface {
 
     public void chooseXPK2File(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
+        if (dirPath != null) {
+            File userDirectory = new File(dirPath.toString());
+            fileChooser.setInitialDirectory(userDirectory);
+        }
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("xpk2 File", "*.xpk2"));
         File file = fileChooser.showOpenDialog(infoStage);
         if (file != null) {
@@ -346,6 +354,10 @@ public class InputDataInterface {
 
     public void chooseParamFile(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
+        if (dirPath != null) {
+            File userDirectory = new File(dirPath.toString());
+            fileChooser.setInitialDirectory(userDirectory);
+        }
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("txt File", "*.txt"));
         File file = fileChooser.showOpenDialog(infoStage);
         if (file != null) {
