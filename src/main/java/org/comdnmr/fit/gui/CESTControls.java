@@ -589,12 +589,14 @@ public class CESTControls implements EquationControls {
                 if (control.getName().equals("deltaA0") || control.getName().equals("deltaB0")) {
                     if (controller.currentResProps != null) {
                         if (controller.currentResProps.getExperimentData() != null) {
-                            double[] xVals = controller.currentResProps.getExperimentData().stream().findFirst().get().getXVals();
+//                            double[] xVals = controller.currentResProps.getExperimentData().stream().findFirst().get().getXVals();
+                            String resNum = String.valueOf(controller.currentResProps.getResidueValues().get(0).getResNum());
+                            double[] xVals = controller.currentResProps.getExperimentData().stream().findFirst().get().getResidueData(resNum).getXValues()[0];
                             if (xVals != null) {
                                 double min = Math.round(xVals[1] / 1000) * 1000;
                                 double max = Math.round(xVals[xVals.length - 1] / 1000) * 1000;
                                 control.updateLimits(min, max);
-                            }
+                            } 
                         }
                     }
                 }
