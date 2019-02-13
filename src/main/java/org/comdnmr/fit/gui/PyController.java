@@ -756,6 +756,26 @@ public class PyController implements Initializable {
         }
 
     }
+    
+    public String getPeakNumFromTable(String seriesName, int index) {
+        parTabPane.getSelectionModel().select(1);
+        List<ResidueData.DataValue> data = resInfoTable.getItems();
+        int iRow = 0;
+        int peakNum = 0;
+        String name = "";
+        for (ResidueData.DataValue dValue : data) {
+            if ((dValue.getIndex() == index) && ((dValue.getName() + ":" + dValue.getResidue()).equals(seriesName))) {
+                resInfoTable.getSelectionModel().clearAndSelect(iRow);
+                resInfoTable.scrollTo(iRow);
+            }
+            name = data.get(iRow).getName();
+            peakNum = data.get(iRow).getPeak();
+            iRow++;
+
+        }
+//        System.out.println("selected row peak num = " + peakNum);
+        return name + "." + String.valueOf(peakNum);
+    }
 
     public void clearChart(Event e) {
         clearChart();
