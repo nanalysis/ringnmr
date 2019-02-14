@@ -125,6 +125,7 @@ public class DataIO {
         double[] xValues = null;
         int offset = 0;
         int residueField = -1;
+        int peakField = -1;
         String header = "";
         List<String> peakRefList = new ArrayList<>();
         //  Peak       Residue N       T1      T2      T11     T3      T4      T9      T5      T10     T12     T6      T7      T8
@@ -161,6 +162,13 @@ public class DataIO {
                         for (int i = 0; i < nfields; i++) {
                             if (sfields[i].startsWith("lab")) {
                                 residueField = i;
+                                break;
+                            }
+                        }
+                        // find id label to get peak number
+                        for (int i = 0; i < nfields; i++) {
+                            if (sfields[i].startsWith("id")) {
+                                peakField = i;
                                 break;
                             }
                         }
@@ -201,8 +209,12 @@ public class DataIO {
                     header = sline;
                 } else {
                     String residueNum = "";
+                    int peakNum = -1;
                     if (residueField != -1) {
                         residueNum = sfields[residueField].trim();
+                    }
+                    if (peakField != -1) {
+                        peakNum = (int) Double.parseDouble(sfields[peakField].trim());
                     }
                     if (residueNum.equals("")) {
                         residueNum = String.valueOf(fakeRes);
@@ -250,9 +262,9 @@ public class DataIO {
                         continue;
                     }
                     if (expMode.equals("cest")) {
-                        processCESTData(expData, residueNum, xValueList, yValueList, errValueList);
+                        processCESTData(expData, residueNum, xValueList, yValueList, errValueList, peakNum);
                     } else {
-                        ResidueData residueData = new ResidueData(expData, residueNum, xValueList, yValueList, errValueList, peakRefList);
+                        ResidueData residueData = new ResidueData(expData, residueNum, xValueList, yValueList, errValueList, peakRefList, peakNum);
                         expData.addResidueData(residueNum, residueData);
                     }
                     ResidueInfo residueInfo = resProp.getResidueInfo(residueNum);
@@ -271,7 +283,7 @@ public class DataIO {
     }
 
     public static void processCESTData(ExperimentData expData, String residueNum,
-            List<Double> xValueList, List<Double> yValueList, List<Double> errValueList) {
+            List<Double> xValueList, List<Double> yValueList, List<Double> errValueList, int peakNum) {
         Double B1field = expData.getB1Field();
         List<Double> B1fieldList = new ArrayList<>();
         for (int i = 0; i < xValueList.size(); i++) {
@@ -291,7 +303,7 @@ public class DataIO {
         xValueLists[0] = xValueList;
         xValueLists[1] = B1fieldList;
         xValueLists[2] = tauList;
-        ResidueData residueData = new ResidueData(expData, residueNum, xValueLists, yValueList, errValueList);
+        ResidueData residueData = new ResidueData(expData, residueNum, xValueLists, yValueList, errValueList, peakNum);
         expData.addResidueData(residueNum, residueData);
         expData.getExtras().clear();
         expData.setExtras(bFieldUniqueValue);
@@ -354,7 +366,7 @@ public class DataIO {
 
             Logger.getLogger(DataIO.class.getName()).log(Level.SEVERE, null, ex);
         }
-        processCESTData(expData, residueNum, xValueList, yValueList, errValueList);
+        processCESTData(expData, residueNum, xValueList, yValueList, errValueList, 0);
         ResidueInfo residueInfo = resProp.getResidueInfo(residueNum);
         if (residueInfo == null) {
             residueInfo = new ResidueInfo(resProp, Integer.parseInt(residueNum), 0, 0, 0);
