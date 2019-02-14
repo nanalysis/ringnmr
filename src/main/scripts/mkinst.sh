@@ -33,7 +33,7 @@ do
 
     mkdir jre
     cd jre
-    tar xzf ~/.install4j7/jres/$jreFileName
+    tar xzf ~/.install4j6/jres/$jreFileName
     cd ..
     cd ..
     pwd
