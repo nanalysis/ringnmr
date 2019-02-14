@@ -92,7 +92,8 @@ public class XYBarChart extends XYChart<Number, Number> {
      *
      * @param xAxis The x axis to use
      * @param yAxis The y axis to use
-     * @param data The data to use, this is the actual list used so any changes to it will be reflected in the chart
+     * @param data The data to use, this is the actual list used so any changes
+     * to it will be reflected in the chart
      */
     public XYBarChart(Axis<Number> xAxis, Axis<Number> yAxis, ObservableList<XYChart.Series<Number, Number>> data) {
         this(xAxis, yAxis);
@@ -197,10 +198,8 @@ public class XYBarChart extends XYChart<Number, Number> {
         if (!appendMode) {
             selectedResidues.clear();
             selectedResidues.add(resString);
-        } else {
-            if (!selectedResidues.contains(resString)) {
-                selectedResidues.add(resString);
-            }
+        } else if (!selectedResidues.contains(resString)) {
+            selectedResidues.add(resString);
         }
         currentSeriesName = seriesName;
         String[] seriesNameParts = seriesName.split("\\|");
@@ -379,9 +378,10 @@ public class XYBarChart extends XYChart<Number, Number> {
     }
 
     /**
-     * This is called when the range has been invalidated and we need to update it. If the axis are auto ranging then we
-     * compile a list of all data that the given axis has to plot and call invalidateRange() on the axis passing it that
-     * data.
+     * This is called when the range has been invalidated and we need to update
+     * it. If the axis are auto ranging then we compile a list of all data that
+     * the given axis has to plot and call invalidateRange() on the axis passing
+     * it that data.
      */
     @Override
     protected void updateAxisRange() {
@@ -483,7 +483,7 @@ public class XYBarChart extends XYChart<Number, Number> {
         }
 
     }
-    
+
     public void addSS(ArrayList<SecondaryStructure> secondaryStructures) {
 //        painter = new SSPainter(canvas, xAxis, yAxis, secondaryStructures);
         painter = new SSPainter(xAxis, yAxis, secondaryStructures);
