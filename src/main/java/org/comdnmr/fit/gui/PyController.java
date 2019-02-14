@@ -575,41 +575,40 @@ public class PyController implements Initializable {
             data.addAll(resData.getDataValues());
         }
         resInfoTable.itemsProperty().setValue(data);
-
+        
+        TableColumn<ResidueData.DataValue, String> nameColumn = new TableColumn<>("Name");
+        TableColumn<ResidueData.DataValue, String> resColumn = new TableColumn<>("Residue");
+        TableColumn<ResidueData.DataValue, String> errColumn = new TableColumn<>("Error");
+        TableColumn<ResidueData.DataValue, String> peakColumn = new TableColumn<>("Peak");
+        
+        nameColumn.setCellValueFactory(new PropertyValueFactory<>("Name"));
+        resColumn.setCellValueFactory(new PropertyValueFactory<>("Residue"));
+        errColumn.setCellValueFactory(new PropertyValueFactory<>("Error"));
+        peakColumn.setCellValueFactory(new PropertyValueFactory<>("Peak"));
+        
+        resInfoTable.getColumns().clear();
+        resInfoTable.getColumns().addAll(nameColumn, resColumn, errColumn, peakColumn);
+            
         if (getFittingMode().equals("cpmg")) {
-            TableColumn<ResidueData.DataValue, String> nameColumn = new TableColumn<>("Name");
-            TableColumn<ResidueData.DataValue, String> resColumn = new TableColumn<>("Residue");
             TableColumn<ResidueData.DataValue, Double> xColumn = new TableColumn<>("Vcpmg");
             TableColumn<ResidueData.DataValue, Double> yColumn = new TableColumn<>("Reff");
-            TableColumn<ResidueData.DataValue, String> errColumn = new TableColumn<>("Error");
-            TableColumn<ResidueData.DataValue, String> peakColumn = new TableColumn<>("Peak");
 
-            nameColumn.setCellValueFactory(new PropertyValueFactory<>("Name"));
-            resColumn.setCellValueFactory(new PropertyValueFactory<>("Residue"));
             xColumn.setCellValueFactory(new PropertyValueFactory<>("X0"));
             yColumn.setCellValueFactory(new PropertyValueFactory<>("Y"));
-            errColumn.setCellValueFactory(new PropertyValueFactory<>("Error"));
-            peakColumn.setCellValueFactory(new PropertyValueFactory<>("Peak"));
 
             resInfoTable.getColumns().clear();
             resInfoTable.getColumns().addAll(nameColumn, resColumn, xColumn, yColumn, errColumn, peakColumn);
         } else if (getFittingMode().equals("cest")) {
-            TableColumn<ResidueData.DataValue, String> nameColumn = new TableColumn<>("Name");
-            TableColumn<ResidueData.DataValue, String> resColumn = new TableColumn<>("Residue");
             TableColumn<ResidueData.DataValue, Double> x0Column = new TableColumn<>("Offset");
             TableColumn<ResidueData.DataValue, Double> x1Column = new TableColumn<>("B1 Field");
             TableColumn<ResidueData.DataValue, Double> yColumn = new TableColumn<>("Intensity");
-            TableColumn<ResidueData.DataValue, String> errColumn = new TableColumn<>("Error");
 
-            nameColumn.setCellValueFactory(new PropertyValueFactory<>("Name"));
-            resColumn.setCellValueFactory(new PropertyValueFactory<>("Residue"));
             x0Column.setCellValueFactory(new PropertyValueFactory<>("X0"));
             x1Column.setCellValueFactory(new PropertyValueFactory<>("X1"));
             yColumn.setCellValueFactory(new PropertyValueFactory<>("Y"));
-            errColumn.setCellValueFactory(new PropertyValueFactory<>("Error"));
 
             resInfoTable.getColumns().clear();
-            resInfoTable.getColumns().addAll(nameColumn, resColumn, x0Column, x1Column, yColumn, errColumn);
+            resInfoTable.getColumns().addAll(nameColumn, resColumn, x0Column, x1Column, yColumn, errColumn, peakColumn);
         }
     }
 
@@ -756,6 +755,26 @@ public class PyController implements Initializable {
 
         }
 
+    }
+    
+    public String getPeakNumFromTable(String seriesName, int index) {
+        parTabPane.getSelectionModel().select(1);
+        List<ResidueData.DataValue> data = resInfoTable.getItems();
+        int iRow = 0;
+        int peakNum = 0;
+        String name = "";
+        for (ResidueData.DataValue dValue : data) {
+            if ((dValue.getIndex() == index) && ((dValue.getName() + ":" + dValue.getResidue()).equals(seriesName))) {
+                resInfoTable.getSelectionModel().clearAndSelect(iRow);
+                resInfoTable.scrollTo(iRow);
+            }
+            name = data.get(iRow).getName();
+            peakNum = data.get(iRow).getPeak();
+            iRow++;
+
+        }
+//        System.out.println("selected row peak num = " + peakNum);
+        return name + "." + String.valueOf(peakNum);
     }
 
     public void clearChart(Event e) {

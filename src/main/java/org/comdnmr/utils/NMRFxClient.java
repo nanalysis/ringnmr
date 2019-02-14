@@ -28,7 +28,7 @@ public class NMRFxClient {
         try {
             client = new NMRFxClient(port);
         } catch (IOException ioE) {
-
+            System.out.println(ioE.getMessage());
         }
         return client;
     }
