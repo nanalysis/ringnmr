@@ -15,6 +15,7 @@ public class ResidueData {
     double[] errValues;
     double[] yValues;
     String[] peakRefs;
+    int peakNum;
 
     public ResidueData(ExperimentData expData, String residueNum, double[][] x, double[] y, double[] err) {
         this.resNum = residueNum;
@@ -47,9 +48,10 @@ public class ResidueData {
         }
     }
 
-    public ResidueData(ExperimentData expData, String residueNum, List<Double>[] xValueList, List<Double> yValueList, List<Double> errValueList) {
+    public ResidueData(ExperimentData expData, String residueNum, List<Double>[] xValueList, List<Double> yValueList, List<Double> errValueList, int peakNum) {
         this.expData = expData;
         this.resNum = residueNum;
+        this.peakNum = peakNum;
         int nValues = yValueList.size();
         int nX = xValueList.length;
 //        System.out.println("make res data " + nX);
@@ -65,9 +67,10 @@ public class ResidueData {
         }
     }
 
-    public ResidueData(ExperimentData expData, String residueNum, List<Double> xValueList, List<Double> yValueList, List<Double> errValueList, List<String> peakRefList) {
+    public ResidueData(ExperimentData expData, String residueNum, List<Double> xValueList, List<Double> yValueList, List<Double> errValueList, List<String> peakRefList, int peakNum) {
         this.expData = expData;
         this.resNum = residueNum;
+        this.peakNum = peakNum;
         int nValues = xValueList.size();
         this.xValues = new double[1][nValues];
         this.yValues = new double[nValues];
@@ -135,11 +138,16 @@ public class ResidueData {
             return resInfo.errValues[index];
         }
 
-        public String getPeak() {
+        public String getRefPeak() {
             String peak = "";
             if (resInfo.peakRefs != null) {
                 peak = resInfo.peakRefs[index];
             }
+            return peak;
+        }
+        
+        public int getPeak() {
+            int peak = resInfo.peakNum;
             return peak;
         }
 
