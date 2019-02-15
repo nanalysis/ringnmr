@@ -27,6 +27,7 @@ public class NMRFxClient {
         NMRFxClient client = null;
         try {
             client = new NMRFxClient(port);
+            System.out.println("Connected to NMRFx server started from port " + port);
         } catch (IOException ioE) {
             System.out.println(ioE.getMessage());
         }

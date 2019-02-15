@@ -22,6 +22,7 @@
                         <items>
                             <MenuItem text="Load Project File..." onAction="#loadParameterFile" fx:id="loadMenuItem"/>
                             <MenuItem text="Input Project Parameters..." onAction="#inputParameters" fx:id="inputMenuItem"/>
+                            <MenuItem text="Connect to NMRFx Server..." onAction="#startServer" fx:id = "serverMenuItem"/>
                             <MenuItem text="Load Secondary Structure..." onAction="loadSecondaryStructure(event)" fx:id="loadSSMenuItem"/>
                             <Menu text="Save">
                                 <items>
@@ -112,8 +113,15 @@
                                     </BorderPane>
                                 </Tab>
                                 <Tab text="Data" closable="false" > 
-                                    <TableView fx:id="resInfoTable" prefHeight="200" VBox.vgrow="ALWAYS"  >
-                                    </TableView>
+                                    <BorderPane fx:id="dataPane">
+                                        <top>
+                                            <Button text="show NMRFx peak" onAction="#nmrFxMessage" fx:id="nmrFxPeakButton" />
+                                        </top>
+                                        <center>
+                                            <TableView fx:id="resInfoTable" prefHeight="200" VBox.vgrow="ALWAYS"  >
+                                            </TableView>
+                                        </center>
+                                    </BorderPane>
                                 </Tab>
                                 <Tab text="Simulate" closable="false" > 
                                     <BorderPane fx:id="simPane" HBox.hgrow="ALWAYS">
