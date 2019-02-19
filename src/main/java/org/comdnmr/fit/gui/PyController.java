@@ -2,7 +2,11 @@ package org.comdnmr.fit.gui;
 
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -76,6 +80,7 @@ import org.comdnmr.fit.calc.FitModel;
 import static org.comdnmr.fit.gui.MainApp.preferencesController;
 import static org.comdnmr.fit.gui.MainApp.console;
 import static org.comdnmr.fit.gui.MainApp.primaryStage;
+import org.comdnmr.utils.NMRFxClient;
 import org.controlsfx.dialog.ExceptionDialog;
 
 public class PyController implements Initializable {
@@ -92,6 +97,8 @@ public class PyController implements Initializable {
     @FXML
     PlotData xychart;
 
+    @FXML
+    Button nmrFxPeakButton;
     @FXML
     TableView resInfoTable;
     @FXML
@@ -154,6 +161,7 @@ public class PyController implements Initializable {
 
     BootstrapSamplePlots bootstrapSamplePlots = null;
     InputDataInterface inputDataInterface = null;
+    NMRFxClient cl;
 
     //final ContextMenu axisMenu = new ContextMenu();
     static double defaultField = 500.0;
@@ -286,6 +294,8 @@ public class PyController implements Initializable {
             reschartNode = PyController.mainController.addChart();
 
         }
+        nmrFxPeakButton.setDisable(true);
+        nmrFxPeakButton.setOnAction(e -> nmrFxMessage(e));
 
 //        mainController.setOnHidden(e -> Platform.exit());
     }
@@ -456,6 +466,47 @@ public class PyController implements Initializable {
         inputDataInterface.inputParameters();
     }
 
+    @FXML
+    public void startServer(ActionEvent event) {
+        String homeDir = System.getProperty("user.home");
+        File f = new File(homeDir + "/ports.txt");
+        int port = 8021;
+        if (!f.exists() && !f.isDirectory()) {
+            Alert alert = new Alert(Alert.AlertType.WARNING, "NMRFx Server port file " + "\n" + f + "\ndoesn't exist. \nCreate NMRFx server first in NMRFxProcessor GUI.");
+            alert.showAndWait();
+        } else {
+            try {
+                BufferedReader reader = new BufferedReader(new FileReader(f));
+                String text = null;
+                while ((text = reader.readLine()) != null) {
+                    port = Integer.parseInt(text);
+                }
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            cl = NMRFxClient.makeClient(port);
+            nmrFxPeakButton.setDisable(false);
+        }
+    }
+    
+    public NMRFxClient getClient() {
+        return cl;
+    }
+    
+    @FXML
+    void nmrFxMessage(ActionEvent e) { 
+        String peakNum = "";
+        peakNum = getPeakNumFromTable();
+        NMRFxClient cl = PyController.mainController.getClient();
+        try {
+            cl.sendMessage("show peak " + peakNum);
+        } catch (IOException ioE) {
+            System.out.println(ioE.getMessage());
+        }
+    }
+
     public void updateXYChartLabels() {
         if ((simControls instanceof CPMGControls)) {
             xychart.setNames("CPMG", "\u03BD (cpmg)", "R2 (\u03BD)", "0");
@@ -575,20 +626,20 @@ public class PyController implements Initializable {
             data.addAll(resData.getDataValues());
         }
         resInfoTable.itemsProperty().setValue(data);
-        
+
         TableColumn<ResidueData.DataValue, String> nameColumn = new TableColumn<>("Name");
         TableColumn<ResidueData.DataValue, String> resColumn = new TableColumn<>("Residue");
         TableColumn<ResidueData.DataValue, String> errColumn = new TableColumn<>("Error");
         TableColumn<ResidueData.DataValue, String> peakColumn = new TableColumn<>("Peak");
-        
+
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("Name"));
         resColumn.setCellValueFactory(new PropertyValueFactory<>("Residue"));
         errColumn.setCellValueFactory(new PropertyValueFactory<>("Error"));
         peakColumn.setCellValueFactory(new PropertyValueFactory<>("Peak"));
-        
+
         resInfoTable.getColumns().clear();
         resInfoTable.getColumns().addAll(nameColumn, resColumn, errColumn, peakColumn);
-            
+
         if (getFittingMode().equals("cpmg")) {
             TableColumn<ResidueData.DataValue, Double> xColumn = new TableColumn<>("Vcpmg");
             TableColumn<ResidueData.DataValue, Double> yColumn = new TableColumn<>("Reff");
@@ -756,23 +807,25 @@ public class PyController implements Initializable {
         }
 
     }
-    
-    public String getPeakNumFromTable(String seriesName, int index) {
+
+    public String getPeakNumFromTable() { //getPeakNumFromTable(String seriesName, int index)
         parTabPane.getSelectionModel().select(1);
         List<ResidueData.DataValue> data = resInfoTable.getItems();
         int iRow = 0;
         int peakNum = 0;
         String name = "";
-        for (ResidueData.DataValue dValue : data) {
-            if ((dValue.getIndex() == index) && ((dValue.getName() + ":" + dValue.getResidue()).equals(seriesName))) {
-                resInfoTable.getSelectionModel().clearAndSelect(iRow);
-                resInfoTable.scrollTo(iRow);
-            }
-            name = data.get(iRow).getName();
-            peakNum = data.get(iRow).getPeak();
-            iRow++;
-
-        }
+//        for (ResidueData.DataValue dValue : data) {
+//            if ((dValue.getIndex() == index) && ((dValue.getName() + ":" + dValue.getResidue()).equals(seriesName))) {
+//                resInfoTable.getSelectionModel().clearAndSelect(iRow);
+//                resInfoTable.scrollTo(iRow);
+//            }
+//            name = data.get(iRow).getName();
+//            peakNum = data.get(iRow).getPeak();
+//            iRow++;
+//
+//        }
+        name = data.get(iRow).getName();
+        peakNum = data.get(iRow).getPeak();
 //        System.out.println("selected row peak num = " + peakNum);
         return name + "." + String.valueOf(peakNum);
     }

@@ -25,7 +25,6 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.Group;
 import javafx.scene.control.Label;
-import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 
 import javafx.scene.paint.Color;
@@ -34,7 +33,6 @@ import org.comdnmr.fit.calc.PlotEquation;
 import org.comdnmr.fit.calc.ResidueData;
 import org.comdnmr.fit.calc.ResidueProperties;
 import static org.comdnmr.fit.gui.ChartUtil.residueProperties;
-import org.comdnmr.utils.NMRFxClient;
 
 public class PlotData extends ScatterChart {
 
@@ -179,13 +177,7 @@ public class PlotData extends ScatterChart {
                 Node node = item.getNode();
                 if (node != null) {
 //                    node.onMouseClickedProperty().addListener(e -> dumpNode(item));
-                    node.setOnMouseClicked(e -> {
-                        if (e.getButton().equals(MouseButton.PRIMARY)) { //left-click on data point
-                            dumpNode(series.getName(), item);
-                        } else if (e.getButton().equals(MouseButton.SECONDARY)) { //right-click on data point
-                            nmrFxMessage(series.getName(), item);
-                        }
-                    });
+                    node.setOnMouseClicked(e -> dumpNode(series.getName(), item)); 
                     if (node instanceof Group) {
                         Group group = (Group) node;
                         Line line = (Line) group.getChildren().get(1);
@@ -209,21 +201,6 @@ public class PlotData extends ScatterChart {
 
     }
 
-    void nmrFxMessage(String seriesName, Data<Double, Double> data) {
-        Object extraValue = data.getExtraValue();
-        String peakNum = "";
-        if (extraValue instanceof ResidueData.DataValue) {
-            ResidueData.DataValue dataValue = (ResidueData.DataValue) extraValue;
-            peakNum = PyController.mainController.getPeakNumFromTable(seriesName, dataValue.getIndex());
-        }
-        int port = 8021;
-        NMRFxClient cl = NMRFxClient.makeClient(port);
-        try {
-            cl.sendMessage("show peak " + peakNum);
-        } catch (IOException ioE) {
-            System.out.println(ioE.getMessage());
-        }
-    }
 
     void paintLinesSeries(ArrayList<Polyline> polyLines, NumberAxis xAxis, NumberAxis yAxis) {
         int i = 0;
