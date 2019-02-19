@@ -497,11 +497,19 @@ public class PyController implements Initializable {
     
     @FXML
     void nmrFxMessage(ActionEvent e) { 
-        String peakNum = "";
-        peakNum = getPeakNumFromTable();
+        String peakNum = getPeakNumFromTable();
         NMRFxClient cl = PyController.mainController.getClient();
         try {
-            cl.sendMessage("show peak " + peakNum);
+            String[] peakSplit = peakNum.split("\\.");
+            String peakName = peakSplit[0];
+            String peakNumber = peakSplit[1];
+            String peakString = peakNum;
+            if (!peakName.equals("")) {
+                peakString = peakNumber + "/" + peakName;
+            } else if (peakName.equals("")) {
+                peakString = peakNumber;   
+            }
+            cl.sendMessage("showpeak/" + peakString);
         } catch (IOException ioE) {
             System.out.println(ioE.getMessage());
         }
