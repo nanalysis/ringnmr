@@ -352,7 +352,7 @@ public class DataIO {
                         if (nValues > 2) {
                             error = Double.parseDouble(sfields[2].trim());
                         }
-                        xValueList.add(offsetFreq * 2 * Math.PI);
+                        xValueList.add(offsetFreq);
                         yValueList.add(intensity);
                         errValueList.add(error);
                     } catch (NumberFormatException nFE) {
