@@ -629,6 +629,9 @@ public class CESTEquations {
                 }
             }
 //            System.out.println("pb guess = " + pb[0]);
+            if (pb[0] > 0.25) {
+                pb[0] = 0.25;
+            }
             return pb[0];
         } else {
             return 0.1;

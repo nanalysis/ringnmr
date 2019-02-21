@@ -182,6 +182,8 @@ public class ResidueFitter {
             fitter = new ExpFit();
         } else if (resProps.getExpMode().equals("cest")) {
             fitter = new CESTFit();
+        } else if (resProps.getExpMode().equals("r1rho")) {
+            fitter = new R1RhoFit();
         } else {
             throw new IllegalArgumentException("Invalid mode " + resProps.getExpMode());
         }
@@ -203,6 +205,9 @@ public class ResidueFitter {
         } else if (resProps.getExpMode().equals("cest")) {
             equationNames = CESTFit.getEquationNames();
             bestEquation = "CESTR1RHOPERTURBATIONNOEX";
+        } else if (resProps.getExpMode().equals("r1rho")) {
+            equationNames = R1RhoFit.getEquationNames();
+            bestEquation = "R1RHOPERTURBATIONNOEX";
         } else {
             throw new IllegalArgumentException("Invalid mode " + resProps.getExpMode());
         }
@@ -302,7 +307,11 @@ public class ResidueFitter {
             try {
                 equationType = ExpEquation.valueOf(name);
             } catch (IllegalArgumentException iaE2) {
-                equationType = CESTEquation.valueOf(name);
+                try {
+                    equationType = CESTEquation.valueOf(name);
+                } catch (IllegalArgumentException iaE3) {
+                    equationType = R1RhoEquation.valueOf(name);
+                }
             }
         }
         return equationType;

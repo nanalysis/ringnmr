@@ -352,7 +352,12 @@ public class DataIO {
                         if (nValues > 2) {
                             error = Double.parseDouble(sfields[2].trim());
                         }
-                        xValueList.add(offsetFreq * 2 * Math.PI);
+                        String expMode = expData.getExpMode();
+                        if (expMode.equals("cest") || expMode.equals("r1rho")) {
+                            xValueList.add(offsetFreq);
+                        } else {
+                            xValueList.add(offsetFreq * 2 * Math.PI);
+                        }
                         yValueList.add(intensity);
                         errValueList.add(error);
                     } catch (NumberFormatException nFE) {
