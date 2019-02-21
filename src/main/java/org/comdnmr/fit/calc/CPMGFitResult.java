@@ -52,6 +52,13 @@ public class CPMGFitResult {
         return rms;
     }
 
+    /**
+     * @return the reduced chi-squared statistic
+     */
+    public double getRChiSq() {
+        return rChiSq;
+    }
+
     public CurveFit getCurveFit(int iCurve) {
         return curveFits.get(iCurve);
     }
@@ -72,7 +79,7 @@ public class CPMGFitResult {
         return hasExchange;
     }
 
-    public  Map<String, double[]> getSimsMap() {
+    public Map<String, double[]> getSimsMap() {
         return simsMap;
     }
 
@@ -80,18 +87,20 @@ public class CPMGFitResult {
     private final List<CurveFit> curveFits = new ArrayList<>();
     private final double aicc;
     private final double rms;
+    private final double rChiSq;
     private final String equationName;
     private final int nGroupPars;
-    private final  Map<String, double[]> simsMap;
+    private final Map<String, double[]> simsMap;
     private final boolean hasExchange;
 
-    public CPMGFitResult(String[] fitParNames, List<CurveFit> curveFits, String equationName, int nGroupPars, double aicc, double rms, Map<String, double[]> simsMap, boolean hasExchange) {
+    public CPMGFitResult(String[] fitParNames, List<CurveFit> curveFits, String equationName, int nGroupPars, double aicc, double rms, double rChiSq, Map<String, double[]> simsMap, boolean hasExchange) {
         this.curveFits.addAll(curveFits);
         this.fitParNames = fitParNames.clone();
         this.equationName = equationName;
         this.nGroupPars = nGroupPars;
         this.aicc = aicc;
         this.rms = rms;
+        this.rChiSq = rChiSq;
         this.simsMap = simsMap;
         this.hasExchange = hasExchange;
     }

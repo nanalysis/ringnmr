@@ -230,6 +230,8 @@ public class ExpFit implements EquationFitter {
          */
         double aic = expModel.getAICc(pars);
         double rms = expModel.getRMS(pars);
+        double rChiSq = expModel.getReducedChiSq(pars);
+
 //        System.out.println("rms " + rms);
         int nGroupPars = expModel.getNGroupPars();
         for (int i = 0; i < guesses.length; i++) {
@@ -249,7 +251,7 @@ public class ExpFit implements EquationFitter {
         } else {
             errEstimates = new double[pars.length];
         }
-        return getResults(this, eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, simPars, true);
+        return getResults(this, eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, true);
     }
 
     public double[] getSimX() {

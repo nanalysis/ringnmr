@@ -291,6 +291,8 @@ public class CESTFit implements EquationFitter {
 
             double aic = calcCEST.getAICc(pars);
             double rms = calcCEST.getRMS(pars);
+            double rChiSq = calcCEST.getReducedChiSq(pars);
+
             System.out.println("rms " + rms);
             int nGroupPars = calcCEST.getNGroupPars();
             for (int i = 0; i < guesses.length; i++) {
@@ -317,7 +319,7 @@ public class CESTFit implements EquationFitter {
             for (int j = 1; j < extras.length; j++) {
                 extras[j] = xValues[j].get(0);
             }
-            return getResults(this, eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, simPars, true);
+            return getResults(this, eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, true);
         } else {
             return null;
         }

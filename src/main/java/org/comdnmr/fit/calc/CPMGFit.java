@@ -233,6 +233,7 @@ public class CPMGFit implements EquationFitter {
          */
         double aic = calcR.getAICc(pars);
         double rms = calcR.getRMS(pars);
+        double rChiSq = calcR.getReducedChiSq(pars);
 //        System.out.println("rms " + rms);
         int nGroupPars = calcR.getNGroupPars();
         for (int i = 0; i < guesses.length; i++) {
@@ -293,7 +294,7 @@ public class CPMGFit implements EquationFitter {
         } else {
             errEstimates = new double[pars.length];
         }
-        return getResults(this, eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, simPars, exchangeValid);
+        return getResults(this, eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, exchangeValid);
     }
 
     public double[] getSimX() {
