@@ -113,6 +113,8 @@ public class PyController implements Initializable {
     Label aicLabel;
     @FXML
     Label rmsLabel;
+    @FXML
+    Label rChiSqLabel;
 
     @FXML
     VBox chartBox;
@@ -239,16 +241,16 @@ public class PyController implements Initializable {
             equationChoice.getItems().add("+");
             equationChoice.getItems().addAll(CESTFit.getEquationNames());
             equationChoice.setValue(CESTFit.getEquationNames().get(0));
-            xLowerBoundTextField.setText("-6000.0");
-            xUpperBoundTextField.setText("6000.0");
+            xLowerBoundTextField.setText("-20.0");
+            xUpperBoundTextField.setText("20.0");
             if (currentResProps.getExperimentData() != null) {
                 double[] xVals = currentResProps.getExperimentData().stream().findFirst().get().getXVals();
-                xLowerBoundTextField.setText(String.valueOf(Math.round(xVals[1] / 1000) * 1000));
-                xUpperBoundTextField.setText(String.valueOf(Math.round(xVals[xVals.length - 1] / 1000) * 1000));
+                xLowerBoundTextField.setText(String.valueOf(Math.floor(xVals[1] / 2) * 2));
+                xUpperBoundTextField.setText(String.valueOf(Math.ceil(xVals[xVals.length - 1] / 2) * 2));
             }
             yLowerBoundTextField.setText("0.0");
             yUpperBoundTextField.setText("1.0");
-            xTickTextField.setText("2000.0");
+            xTickTextField.setText("1.0");
             yTickTextField.setText("0.25");
         } else if (getFittingMode().equals("exp")) {
             simControls = new ExpControls();
@@ -490,13 +492,13 @@ public class PyController implements Initializable {
             nmrFxPeakButton.setDisable(false);
         }
     }
-    
+
     public NMRFxClient getClient() {
         return cl;
     }
-    
+
     @FXML
-    void nmrFxMessage(ActionEvent e) { 
+    void nmrFxMessage(ActionEvent e) {
         String peakNum = getPeakNumFromTable();
         NMRFxClient cl = PyController.mainController.getClient();
         try {
@@ -507,7 +509,7 @@ public class PyController implements Initializable {
             if (!peakName.equals("")) {
                 peakString = peakNumber + "/" + peakName;
             } else if (peakName.equals("")) {
-                peakString = peakNumber;   
+                peakString = peakNumber;
             }
             cl.sendMessage("showpeak/" + peakString);
         } catch (IOException ioE) {
@@ -535,21 +537,21 @@ public class PyController implements Initializable {
             xTickTextField.setText("0.25");
             yTickTextField.setText("0.25");
         } else if ((simControls instanceof CESTControls)) {
-            xychart.setNames("CEST", "Offset (Hz)", "I(t)/I(0)", "20");
-            xychart.setBounds(-6000, 6000, 0.0, 1.0, 2000.0, 0.25);
-            xLowerBoundTextField.setText("-6000.0");
-            xUpperBoundTextField.setText("6000.0");
+            xychart.setNames("CEST", "Offset (PPM)", "I(t)/I(0)", "20");
+            xychart.setBounds(-20, 20, 0.0, 1.0, 2.0, 0.25);
+            xLowerBoundTextField.setText("-20.0");
+            xUpperBoundTextField.setText("20.0");
             if (currentResProps != null) {
                 double[] xVals = currentResProps.getExperimentData().stream().findFirst().get().getXVals();
                 if (xVals != null) {
-                    xychart.setBounds(Math.round(xVals[1] / 1000) * 1000, Math.round(xVals[xVals.length - 1] / 1000) * 1000, 0.0, 1.0, 2000.0, 0.25);
-                    xLowerBoundTextField.setText(String.valueOf(Math.round(xVals[1] / 1000) * 1000));
-                    xUpperBoundTextField.setText(String.valueOf(Math.round(xVals[xVals.length - 1] / 1000) * 1000));
+                    xychart.setBounds(Math.floor(xVals[1] / 2) * 2, Math.ceil(xVals[xVals.length - 1] / 2) * 2, 0.0, 1.0, 1.0, 0.25);
+                    xLowerBoundTextField.setText(String.valueOf(Math.floor(xVals[1] / 2) * 2));
+                    xUpperBoundTextField.setText(String.valueOf(Math.ceil(xVals[xVals.length - 1] / 2) * 2));
                 }
             }
             yLowerBoundTextField.setText("0.0");
             yUpperBoundTextField.setText("1.0");
-            xTickTextField.setText("2000.0");
+            xTickTextField.setText("2.0");
             yTickTextField.setText("0.25");
         }
     }
@@ -700,8 +702,10 @@ public class PyController implements Initializable {
                     try {
                         String aic = String.format("%.2f", curveSet.getParMap().get("AIC"));
                         String rms = String.format("%.3f", curveSet.getParMap().get("RMS"));
+                        String rChiSq = String.format("%.2f", curveSet.getParMap().get("rChiSq"));
                         aicLabel.setText(aic);
                         rmsLabel.setText(rms);
+                        rChiSqLabel.setText(rChiSq);
                     } catch (NullPointerException npEaic) {
 
                     }
@@ -1034,8 +1038,10 @@ public class PyController implements Initializable {
             equationChoice.getSelectionModel().select(fitResult.getEquationName());
             String aic = String.format("%.2f", fitResult.getAicc());
             String rms = String.format("%.3f", fitResult.getRms());
+            String rChiSq = String.format("%.2f", fitResult.getRChiSq());
             aicLabel.setText(aic);
             rmsLabel.setText(rms);
+            rChiSqLabel.setText(rChiSq);
             updateTableWithPars(parValues);
             simControls.updateSliders(parValues, fitResult.getEquationName());
             String equationName = fitResult.getEquationName(); //equationSelector.getValue();
