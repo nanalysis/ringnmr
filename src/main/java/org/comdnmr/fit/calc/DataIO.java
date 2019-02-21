@@ -285,10 +285,11 @@ public class DataIO {
     public static void processCESTData(ExperimentData expData, String residueNum,
             List<Double> xValueList, List<Double> yValueList, List<Double> errValueList, int peakNum) {
         Double B1field = expData.getB1Field();
+        Double B0field = expData.field;
         List<Double> B1fieldList = new ArrayList<>();
         for (int i = 0; i < xValueList.size(); i++) {
-            B1fieldList.add(B1field * 2 * Math.PI);
-            xValueList.set(i, xValueList.get(i) * 2 * Math.PI);
+            B1fieldList.add(B1field);
+            xValueList.set(i, xValueList.get(i) / (B0field));  // fixme  need check as to whether this should be done
         }
         double tau = expData.getTau();
         List<Double> tauList = new ArrayList<>();

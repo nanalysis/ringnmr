@@ -26,7 +26,7 @@ public enum CESTEquation implements CESTEquationType {
             double R1B = par[map[5]];
             double R2A = par[map[6]];
             double R2B = par[map[7]];
-            double[] yCalc = CESTEquations.cestR1rhoApprox("trott", X, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
+            double[] yCalc = CESTEquations.cestR1rhoApprox("trott", X, field, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
             return yCalc;
         }
 
@@ -34,7 +34,7 @@ public enum CESTEquation implements CESTEquationType {
             int nPars = CalcCEST.getNPars(map);
             double[] guesses = new double[nPars];
             for (int id = 0; id < map.length; id++) {
-                double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues);
+                double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues, field);
                 double tex = xValues[2][0];
                 double[] r1 = CESTEquations.cestR1Guess(yValues, tex);
                 double[][] r2 = CESTEquations.cestR2Guess(peaks, yValues);
@@ -46,6 +46,7 @@ public enum CESTEquation implements CESTEquationType {
                 guesses[map[id][5]] = r1[1]; //2.4; //R1B
                 guesses[map[id][6]] = r2[0][0]; //20.0; //R2A
                 guesses[map[id][7]] = r2[1][0]; //100.0; //R2B
+
             }
             return guesses;
 
@@ -66,7 +67,7 @@ public enum CESTEquation implements CESTEquationType {
             double deltaA0 = par[map[0]];
             double R1A = par[map[1]];
             double R2A = par[map[2]];
-            double[] yCalc = CESTEquations.cestR1rhoPerturbationNoEx(X, deltaA0, R1A, R2A);
+            double[] yCalc = CESTEquations.cestR1rhoPerturbationNoEx(X, field, deltaA0, R1A, R2A);
             return yCalc;
         }
 
@@ -74,7 +75,7 @@ public enum CESTEquation implements CESTEquationType {
             int nPars = CalcCEST.getNPars(map);
             double[] guesses = new double[nPars];
             for (int id = 0; id < map.length; id++) {
-                double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues);
+                double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues, field);
                 double tex = xValues[2][0];
                 double[] r1 = CESTEquations.cestR1Guess(yValues, tex);
                 double[][] r2 = CESTEquations.cestR2Guess(peaks, yValues);
@@ -90,12 +91,13 @@ public enum CESTEquation implements CESTEquationType {
         public double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
             double[][] boundaries = new double[2][guesses.length];
             int id = 0;
-            double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues);
+            double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues, field);
             double dAbound = 0;
-            dAbound = peaks[0][2] / 2;
+            dAbound = (peaks[0][2] / field) / 2;
             double tex = xValues[2][0];
             double r1A = guesses[map[id][1]];
             double[] r1BouA = CESTEquations.r1Boundaries(r1A, tex, 0.1);
+            System.out.println(guesses[map[id][0]] + " " + dAbound + " " + tex + " " + r1A + " " + r1BouA + " " + guesses[map[id][2]]);
 
             boundaries[0][map[id][0]] = guesses[map[id][0]] - dAbound; //deltaA LB
             boundaries[1][map[id][0]] = guesses[map[id][0]] + dAbound; //deltaA UB
@@ -103,6 +105,9 @@ public enum CESTEquation implements CESTEquationType {
             boundaries[1][map[id][1]] = r1BouA[1]; //R1A UB
             boundaries[0][map[id][2]] = 0.1; //R2A LB
             boundaries[1][map[id][2]] = guesses[map[id][2]] * 4; //R2A UB
+            if (boundaries[1][map[id][2]] < 200.0) {
+                boundaries[1][map[id][2]] = 200.0;
+            }
             return boundaries;
         }
 
@@ -126,7 +131,7 @@ public enum CESTEquation implements CESTEquationType {
             double R1B = par[map[5]];
             double R2A = par[map[6]];
             double R2B = par[map[7]];
-            double[] yCalc = CESTEquations.cestR1rhoApprox("sd", X, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
+            double[] yCalc = CESTEquations.cestR1rhoApprox("sd", X, field, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
             return yCalc;
         }
 
@@ -134,7 +139,7 @@ public enum CESTEquation implements CESTEquationType {
             int nPars = CalcCEST.getNPars(map);
             double[] guesses = new double[nPars];
             for (int id = 0; id < map.length; id++) {
-                double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues);
+                double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues, field);
                 double tex = xValues[2][0];
                 double[] r1 = CESTEquations.cestR1Guess(yValues, tex);
                 double[][] r2 = CESTEquations.cestR2Guess(peaks, yValues);
@@ -170,7 +175,7 @@ public enum CESTEquation implements CESTEquationType {
             double R1B = par[map[5]];
             double R2A = par[map[6]];
             double R2B = par[map[7]];
-            double[] yCalc = CESTEquations.cestR1rhoApprox("baldwinkay", X, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
+            double[] yCalc = CESTEquations.cestR1rhoApprox("baldwinkay", X, field, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
             return yCalc;
         }
 
@@ -178,7 +183,7 @@ public enum CESTEquation implements CESTEquationType {
             int nPars = CalcCEST.getNPars(map);
             double[] guesses = new double[nPars];
             for (int id = 0; id < map.length; id++) {
-                double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues);
+                double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues, field);
                 double tex = xValues[2][0];
                 double[] r1 = CESTEquations.cestR1Guess(yValues, tex);
                 double[][] r2 = CESTEquations.cestR2Guess(peaks, yValues);
@@ -214,7 +219,7 @@ public enum CESTEquation implements CESTEquationType {
             double R1B = par[map[5]];
             double R2A = par[map[6]];
             double R2B = par[map[7]];
-            double[] yCalc = CESTEquations.cestR1rhoApprox("laguerre", X, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
+            double[] yCalc = CESTEquations.cestR1rhoApprox("laguerre", X, field, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
             return yCalc;
         }
 
@@ -222,7 +227,7 @@ public enum CESTEquation implements CESTEquationType {
             int nPars = CalcCEST.getNPars(map);
             double[] guesses = new double[nPars];
             for (int id = 0; id < map.length; id++) {
-                double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues);
+                double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues, field);
                 double tex = xValues[2][0];
                 double[] r1 = CESTEquations.cestR1Guess(yValues, tex);
                 double[][] r2 = CESTEquations.cestR2Guess(peaks, yValues);
@@ -257,7 +262,7 @@ public enum CESTEquation implements CESTEquationType {
             double R1B = par[map[5]];
             double R2A = par[map[6]];
             double R2B = par[map[7]];
-            double[] yCalc = CESTEquations.cestR1rhoExact1(X, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
+            double[] yCalc = CESTEquations.cestR1rhoExact1(X, field, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
             return yCalc;
         }
 
@@ -269,7 +274,7 @@ public enum CESTEquation implements CESTEquationType {
                 double maxY = DataUtil.getMaxValue(yValues, idNums, id);
                 double mean = DataUtil.getMeanValue(yValues, idNums, id);
                 double vMid = DataUtil.getMidValue(yValues, xValues[0], idNums, id);
-                double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues);
+                double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues, field);
                 double tex = xValues[2][0];
                 double[] r1 = CESTEquations.cestR1Guess(yValues, tex);
                 double[][] r2 = CESTEquations.cestR2Guess(peaks, yValues);
@@ -305,7 +310,7 @@ public enum CESTEquation implements CESTEquationType {
             double R1B = par[map[5]];
             double R2A = par[map[6]];
             double R2B = par[map[7]];
-            double[] yCalc = CESTEquations.cestExact0(X, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
+            double[] yCalc = CESTEquations.cestExact0(X, field, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
             return yCalc;
         }
 
@@ -313,14 +318,14 @@ public enum CESTEquation implements CESTEquationType {
         public double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
             double[][] boundaries = new double[2][guesses.length];
             int id = 0;
-            double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues);
+            double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues, field);
             double dAbound = 0;
             double dBbound = 0;
             if (peaks.length > 1) {
-                dAbound = peaks[0][2] / 2;
-                dBbound = peaks[1][2] / 2;
+                dAbound = (peaks[0][2] / field) / 2;
+                dBbound = (peaks[1][2] / field) / 2;
             } else if (peaks.length == 1) {
-                dAbound = peaks[0][2] / 2;
+                dAbound = (peaks[0][2] / field) / 2;
                 dBbound = dAbound;
             }
             boundaries[0][map[id][0]] = 1.0; //kex LB
@@ -355,7 +360,7 @@ public enum CESTEquation implements CESTEquationType {
             double R1B = par[map[5]];
             double R2A = par[map[6]];
             double R2B = par[map[7]];
-            double[] yCalc = CESTEquations.cestExact0(X, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
+            double[] yCalc = CESTEquations.cestExact0(X, field, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
             return yCalc;
         }
 
@@ -363,7 +368,7 @@ public enum CESTEquation implements CESTEquationType {
             int nPars = CalcCEST.getNPars(map);
             double[] guesses = new double[nPars];
             for (int id = 0; id < map.length; id++) {
-                double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues);
+                double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues, field);
                 double tex = xValues[2][0];
                 double[] r1 = CESTEquations.cestR1Guess(yValues, tex);
                 double[][] r2 = CESTEquations.cestR2Guess(peaks, yValues);
@@ -399,7 +404,7 @@ public enum CESTEquation implements CESTEquationType {
             double R1B = par[map[5]];
             double R2A = par[map[6]];
             double R2B = par[map[7]];
-            double[] yCalc = CESTEquations.cestExact0(X, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
+            double[] yCalc = CESTEquations.cestExact0(X, field, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
             return yCalc;
         }
 
@@ -407,7 +412,7 @@ public enum CESTEquation implements CESTEquationType {
             int nPars = CalcCEST.getNPars(map);
             double[] guesses = new double[nPars];
             for (int id = 0; id < map.length; id++) {
-                double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues);
+                double[][] peaks = CESTEquations.cestPeakGuess(xValues, yValues, field);
                 double tex = xValues[2][0];
                 double[] r1 = CESTEquations.cestR1Guess(yValues, tex);
                 double[][] r2 = CESTEquations.cestR2Guess(peaks, yValues);
@@ -463,14 +468,14 @@ public enum CESTEquation implements CESTEquationType {
     }
 
     public static String[] getAllEquationNames() {
-        String[] equationNames = {"CESTR1RHOPERTURBATIONNOEX", "CESTR1RHOPERTURBATION", "CESTR1RHOSD", "CESTR1RHOBALDWINKAY", "CESTR1RHON", 
-            "CESTR1RHOEXACT1","CESTEXACT0", "CESTEXACT1", "CESTEXACT2"};
+        String[] equationNames = {"CESTR1RHOPERTURBATIONNOEX", "CESTR1RHOPERTURBATION", "CESTR1RHOSD", "CESTR1RHOBALDWINKAY", "CESTR1RHON",
+            "CESTR1RHOEXACT1", "CESTEXACT0", "CESTEXACT1", "CESTEXACT2"};
         return equationNames;
     }
-    
+
     public static String[] getEquationNames() {
         String[] equationNames = new String[CoMDPreferences.getActiveCESTEquations().size()];
-        for (int i=0; i<equationNames.length; i++) {
+        for (int i = 0; i < equationNames.length; i++) {
             equationNames[i] = CoMDPreferences.getActiveCESTEquations().get(i);
         }
         return equationNames;

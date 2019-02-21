@@ -76,7 +76,7 @@ public class CESTFit implements EquationFitter {
         stateCount = resProps.getStateCount(resNums.length);
         Collection<ExperimentData> expDataList = resProps.getExperimentData();
         nCurves = resNums.length * expDataList.size();
-        
+
         // fixme??
         nCurves = resNums.length;
         states = new int[nCurves][];
@@ -253,7 +253,7 @@ public class CESTFit implements EquationFitter {
         for (int i = 0; i < yvals.length; i++) {
             yvals[i] = yValues.get(i);
         }
-        double[][] peaks = CESTEquations.cestPeakGuess(xvals, yvals);
+        double[][] peaks = CESTEquations.cestPeakGuess(xvals, yvals, fieldValues.get(0));
         if (peaks.length >= 1) {
             setupFit(eqn, absMode);
             int[][] map = calcCEST.getMap();
@@ -283,9 +283,9 @@ public class CESTFit implements EquationFitter {
                 System.out.println("");
             }
 
-            System.out.print("Fit pars ");
+            System.out.print("Fit pars \n");
             for (int i = 0; i < pars.length; i++) {
-                System.out.printf(" %.3f", pars[i]);
+                System.out.printf("%d %.3f %.3f %.3f %.3f\n", i, guesses[i], boundaries[0][i], pars[i], boundaries[1][i]);
             }
             System.out.println("");
 
