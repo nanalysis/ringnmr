@@ -61,6 +61,7 @@ public class PreferencesController implements Initializable {
     ChangeListener<String> locationListener;
     ChangeListener<Integer> nprocessListener;
     ChangeListener<Boolean> cestEqnListener;
+    ChangeListener<Boolean> r1rhoEqnListener;
     Stage stage;
 
     static File nestaNMR = null;
@@ -90,6 +91,10 @@ public class PreferencesController implements Initializable {
             BooleanOperationItem item = (BooleanOperationItem) observableValue;
             CoMDPreferences.setCESTEquationState(item.getName(), cest2);
         };
+        r1rhoEqnListener = (ObservableValue<? extends Boolean> observableValue, Boolean r1rho1, Boolean r1rho2) -> {
+            BooleanOperationItem item = (BooleanOperationItem) observableValue;
+            CoMDPreferences.setR1RhoEquationState(item.getName(), r1rho2);
+        };
         ArrayList<String> locationChoices = new ArrayList<>();
         locationChoices.add("FID directory");
         locationChoices.add("Dataset directory");
@@ -112,12 +117,19 @@ public class PreferencesController implements Initializable {
         ArrayList<String> cestEqnChoices = new ArrayList<>();
         cestEqnChoices.addAll(Arrays.asList("CESTR1RHOPERTURBATIONNOEX", "CESTR1RHOPERTURBATION", "CESTR1RHOBALDWINKAY", "CESTR1RHOSD", "CESTR1RHON", "CESTR1RHOEXACT1",
                 "CESTEXACT0", "CESTEXACT1", "CESTEXACT2"));
+        ArrayList<String> r1rhoEqnChoices = new ArrayList<>();
+        r1rhoEqnChoices.addAll(Arrays.asList("R1RHOPERTURBATIONNOEX", "R1RHOPERTURBATION", "R1RHOBALDWINKAY", "R1RHOLAGUERRE", "R1RHOEXACT"));
 //        prefSheet.getItems().addAll(locationTypeItem, locationFileItem, nProcessesItem, maxFreqItem, rexRatioItem, nSamplesItem);
         prefSheet.getItems().addAll(nProcessesItem, maxFreqItem, rexRatioItem, nSamplesItem);
         for (String eqn : cestEqnChoices) {
             boolean defaultState = CoMDPreferences.getCESTEquationState(eqn);
             BooleanOperationItem cestEqnListItem = new BooleanOperationItem(cestEqnListener, defaultState, "CEST Equations", eqn, "List of equations to use during CEST Fitting");
             prefSheet.getItems().add(cestEqnListItem);
+        }
+        for (String eqn1 : r1rhoEqnChoices) {
+            boolean defaultState = CoMDPreferences.getR1RhoEquationState(eqn1);
+            BooleanOperationItem r1rhoEqnListItem = new BooleanOperationItem(r1rhoEqnListener, defaultState, "R1Rho Equations", eqn1, "List of equations to use during R1Rho Fitting");
+            prefSheet.getItems().add(r1rhoEqnListItem);
         }
 
     }
