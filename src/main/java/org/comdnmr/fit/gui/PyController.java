@@ -77,6 +77,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ToolBar;
 import org.comdnmr.fit.calc.FitModel;
+import org.comdnmr.fit.calc.R1RhoFit;
 import static org.comdnmr.fit.gui.MainApp.preferencesController;
 import static org.comdnmr.fit.gui.MainApp.console;
 import static org.comdnmr.fit.gui.MainApp.primaryStage;
@@ -264,6 +265,23 @@ public class PyController implements Initializable {
             yUpperBoundTextField.setText("1.25");
             xTickTextField.setText("0.25");
             yTickTextField.setText("0.25");
+        } else if (getFittingMode().equals("r1rho")) {
+            simControls = new R1RhoControls();
+            equationChoice.getItems().clear();
+            equationChoice.getItems().add("+");
+            equationChoice.getItems().addAll(R1RhoFit.getEquationNames());
+            equationChoice.setValue(R1RhoFit.getEquationNames().get(0));
+            xLowerBoundTextField.setText("-8000.0");
+            xUpperBoundTextField.setText("4000.0");
+            if (currentResProps.getExperimentData() != null) {
+                double[] xVals = currentResProps.getExperimentData().stream().findFirst().get().getXVals();
+                xLowerBoundTextField.setText(String.valueOf(Math.round(xVals[1] / 1000) * 1000));
+                xUpperBoundTextField.setText(String.valueOf(Math.round(xVals[xVals.length - 1] / 1000) * 1000));
+            }
+            yLowerBoundTextField.setText("0.0");
+            yUpperBoundTextField.setText("50.0");
+            xTickTextField.setText("2000.0");
+            yTickTextField.setText("5.0");
         } else {
             System.out.println("Error: no fitting mode selected.");
         }
@@ -279,6 +297,7 @@ public class PyController implements Initializable {
         simChoice.getItems().add("Simulate CPMG");
         simChoice.getItems().add("Simulate EXP");
         simChoice.getItems().add("Simulate CEST");
+        simChoice.getItems().add("Simulate R1Rho");
         simChoice.setValue("Simulate CPMG");
         simChoice.valueProperty().addListener(s -> {
             simAction();
@@ -326,6 +345,13 @@ public class PyController implements Initializable {
             equationChoice.getItems().addAll(CESTFit.getEquationNames());
             equationChoice.setValue(CESTFit.getEquationNames().get(0));
             update = true;
+        } else if (getFittingMode().equals("r1rho") && !(simControls instanceof R1RhoControls)) {
+            simControls = new R1RhoControls();
+            equationChoice.getItems().clear();
+            equationChoice.getItems().add("+");
+            equationChoice.getItems().addAll(R1RhoFit.getEquationNames());
+            equationChoice.setValue(R1RhoFit.getEquationNames().get(0));
+            update = true;
         }
         if (update) {
             VBox vBox = simControls.makeControls(mainController);
@@ -358,6 +384,14 @@ public class PyController implements Initializable {
             equationChoice.getItems().add("+");
             equationChoice.getItems().addAll(CESTFit.getEquationNames());
             equationChoice.setValue(CESTFit.getEquationNames().get(0));
+            update = true;
+        } else if (getFittingMode().equals("r1rho") && !(simControls instanceof R1RhoControls)) {
+            simControls = new R1RhoControls();
+            ((R1RhoControls) simControls).updateDeltaLimits();
+            equationChoice.getItems().clear();
+            equationChoice.getItems().add("+");
+            equationChoice.getItems().addAll(R1RhoFit.getEquationNames());
+            equationChoice.setValue(R1RhoFit.getEquationNames().get(0));
             update = true;
         }
         if (update) {
@@ -553,6 +587,23 @@ public class PyController implements Initializable {
             yUpperBoundTextField.setText("1.0");
             xTickTextField.setText("2.0");
             yTickTextField.setText("0.25");
+        } else if ((simControls instanceof R1RhoControls)) {
+            xychart.setNames("R1Rho", "Offset (Hz)", "R1Rho", "20");
+            xychart.setBounds(-8000, 4000, 0.0, 50.0, 2000.0, 5.0);
+            xLowerBoundTextField.setText("-8000.0");
+            xUpperBoundTextField.setText("4000.0");
+            if (currentResProps != null) {
+                double[] xVals = currentResProps.getExperimentData().stream().findFirst().get().getXVals();
+                if (xVals != null) {
+                    xychart.setBounds(Math.round(xVals[1] / 1000) * 1000, Math.round(xVals[xVals.length - 1] / 1000) * 1000, 0.0, 1.0, 2000.0, 0.25);
+                    xLowerBoundTextField.setText(String.valueOf(Math.round(xVals[1] / 1000) * 1000));
+                    xUpperBoundTextField.setText(String.valueOf(Math.round(xVals[xVals.length - 1] / 1000) * 1000));
+                }
+            }
+            yLowerBoundTextField.setText("0.0");
+            yUpperBoundTextField.setText("50.0");
+            xTickTextField.setText("2000.0");
+            yTickTextField.setText("5.0");
         }
     }
 
@@ -660,6 +711,17 @@ public class PyController implements Initializable {
             resInfoTable.getColumns().clear();
             resInfoTable.getColumns().addAll(nameColumn, resColumn, xColumn, yColumn, errColumn, peakColumn);
         } else if (getFittingMode().equals("cest")) {
+            TableColumn<ResidueData.DataValue, Double> x0Column = new TableColumn<>("Offset");
+            TableColumn<ResidueData.DataValue, Double> x1Column = new TableColumn<>("B1 Field");
+            TableColumn<ResidueData.DataValue, Double> yColumn = new TableColumn<>("Intensity");
+
+            x0Column.setCellValueFactory(new PropertyValueFactory<>("X0"));
+            x1Column.setCellValueFactory(new PropertyValueFactory<>("X1"));
+            yColumn.setCellValueFactory(new PropertyValueFactory<>("Y"));
+
+            resInfoTable.getColumns().clear();
+            resInfoTable.getColumns().addAll(nameColumn, resColumn, x0Column, x1Column, yColumn, errColumn, peakColumn);
+        } else if (getFittingMode().equals("r1rho")) {
             TableColumn<ResidueData.DataValue, Double> x0Column = new TableColumn<>("Offset");
             TableColumn<ResidueData.DataValue, Double> x1Column = new TableColumn<>("B1 Field");
             TableColumn<ResidueData.DataValue, Double> yColumn = new TableColumn<>("Intensity");
@@ -1053,14 +1115,13 @@ public class PyController implements Initializable {
             }
 
             if (optionalData.isPresent() && optionalData.get().getExtras().size() > 0) {
-                ExperimentData expData = optionalData.get();
-                double[] pars = curveFit.getEquation().getPars(); //pars = getPars(equationName);
-                double[] errs = curveFit.getEquation().getErrs(); //double[] errs = new double[pars.length];
-                double[] extras = new double[3];
-                for (int j = 0; j < expData.getExtras().size() / 2; j++) {
+                for (ExperimentData expData : currentResProps.getExperimentData()) {
+                    double[] pars = curveFit.getEquation().getPars(); //pars = getPars(equationName);
+                    double[] errs = curveFit.getEquation().getErrs(); //double[] errs = new double[pars.length];
+                    double[] extras = new double[3];
                     extras[0] = expData.getField();
-                    extras[1] = expData.getExtras().get(2 * j);
-                    extras[2] = expData.getExtras().get(2 * j + 1);
+                    extras[1] = expData.getExtras().get(0);
+                    extras[2] = expData.getExtras().get(1);
 //                    System.out.println("Fit button expData extras size = " + expData.getExtras().size() + " extra[1] = " + extras[1]);
                     PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
                     for (int i = 0; i < extras.length; i++) {
@@ -1073,6 +1134,26 @@ public class PyController implements Initializable {
 
                     equations.add(plotEquation);
                 }
+//                ExperimentData expData = optionalData.get();
+//                double[] pars = curveFit.getEquation().getPars(); //pars = getPars(equationName);
+//                double[] errs = curveFit.getEquation().getErrs(); //double[] errs = new double[pars.length];
+//                double[] extras = new double[3];
+//                for (int j = 0; j < expData.getExtras().size() / 2; j++) {
+//                    extras[0] = expData.getField();
+//                    extras[1] = expData.getExtras().get(2 * j);
+//                    extras[2] = expData.getExtras().get(2 * j + 1);
+////                    System.out.println("Fit button expData extras size = " + expData.getExtras().size() + " extra[1] = " + extras[1]);
+//                    PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
+//                    for (int i = 0; i < extras.length; i++) {
+//                        System.out.println(iCurve + " " + i + " extra " + extras[i]);
+//                    }
+//                    for (int i = 0; i < pars.length; i++) {
+//                        System.out.println(iCurve + " " + i + " pars " + pars[i]);
+//                    }
+//                    //equationCopy.setExtra(extras);
+//
+//                    equations.add(plotEquation);
+//                }
             } else {
                 double[] pars = curveFit.getEquation().getPars(); //pars = getPars(equationName);
                 double[] errs = curveFit.getEquation().getErrs(); //double[] errs = new double[pars.length];
@@ -1351,6 +1432,8 @@ public class PyController implements Initializable {
             return new CPMGFit();
         } else if (getFittingMode().equals("cest")) {
             return new CESTFit();
+        } else if (getFittingMode().equals("r1rho")) {
+            return new R1RhoFit();
         }
         return null;
     }
@@ -1364,6 +1447,7 @@ public class PyController implements Initializable {
         String[] cpmgTypes = {"R2", "Rex", "Kex", "pA", "dW", "RMS", "AIC", "Equation"};
         String[] expTypes = {"A", "R", "C", "RMS", "AIC", "Equation"};
         String[] cestTypes = {"kex", "pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B", "RMS", "AIC", "Equation"};
+        String[] r1rhoTypes = {"kex", "pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B", "RMS", "AIC", "Equation"};
         String[] nullTypes = {"RMS", "AIC", "Equation"};
         if (getFittingMode().equals("exp")) {
             return expTypes;
@@ -1371,6 +1455,8 @@ public class PyController implements Initializable {
             return cpmgTypes;
         } else if (getFittingMode().equals("cest")) {
             return cestTypes;
+        } else if (getFittingMode().equals("r1rho")) {
+            return r1rhoTypes;
         }
         return nullTypes;
     }
