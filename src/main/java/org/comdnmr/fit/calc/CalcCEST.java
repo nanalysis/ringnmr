@@ -68,6 +68,9 @@ public class CalcCEST extends FitModel {
 
         for (int i = 0; i < yValues.length; i++) {
             double delta = (yCalc[i] - yValues[i]);
+            if (weightByError) {
+                delta /= errValues[i];
+            }
             sumAbs += FastMath.abs(delta);
             sumSq += delta * delta;
         }
@@ -76,9 +79,9 @@ public class CalcCEST extends FitModel {
 //        }
 //        System.out.println(Math.sqrt(sumSq/yValues.length));
         if (absMode) {
-            return sumAbs;
+            return sumAbs / (yValues.length - par.length);
         } else {
-            return sumSq;
+            return sumSq / (yValues.length - par.length);
         }
     }
 

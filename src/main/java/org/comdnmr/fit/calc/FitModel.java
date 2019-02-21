@@ -38,6 +38,7 @@ public abstract class FitModel implements MultivariateFunction {
     int nID = 1;
     boolean reportFitness = false;
     boolean absMode = false;
+    boolean weightByError = true;
     private static boolean calcError = true;
     double[][] parValues;
 

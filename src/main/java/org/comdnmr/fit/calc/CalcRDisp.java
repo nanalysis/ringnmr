@@ -73,6 +73,9 @@ public class CalcRDisp extends FitModel {
             value = equation.calculate(par, map[idNums[i]], ax, idNums[i], fieldValues[i]);
             //System.out.println( "xxxxxxxxxxx " + value + " " + yValues[i] + " " + equation.name());
             double delta = (value - yValues[i]);
+            if (weightByError) {
+                delta /= errValues[i];
+            }
             //System.out.print(xValues[i] + " " + yValues[i] + " " + value + " " + (delta*delta) + " ");
             //double delta = (value - yValues[i]) / errValues[i];
             sumAbs += FastMath.abs(delta);
@@ -87,9 +90,9 @@ public class CalcRDisp extends FitModel {
         }
 
         if (absMode) {
-            return sumAbs;
+            return sumAbs / (yValues.length - par.length);
         } else {
-            return sumSq;
+            return sumSq / (yValues.length - par.length);
         }
     }
 
