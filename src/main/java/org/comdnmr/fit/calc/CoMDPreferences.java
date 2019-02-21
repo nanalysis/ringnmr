@@ -21,7 +21,9 @@ public class CoMDPreferences {
     static private Double rexRatio = null;
     static private Integer sampleSize = null;
     private static Map<String, Boolean> eqnMap = null;
+    private static Map<String, Boolean> eqnMap1 = null;
     private static String DEFAULT_CEST_EQNS = "CESTR1RHOPERTURBATIONNOEX;true\nCESTR1RHOPERTURBATION;true";
+    private static String DEFAULT_R1RHO_EQNS = "R1RHOPERTURBATIONNOEX;true\nR1RHOPERTURBATION;true";
 
     static Preferences getPrefs() {
         Preferences prefs = Preferences.userNodeForPackage(CoMDPreferences.class);
@@ -91,6 +93,15 @@ public class CoMDPreferences {
         }
         return eqnMap;
     }
+    
+    static Map<String, Boolean> getR1RhoEqnMap() {
+        if (eqnMap1 == null) {
+            Preferences prefs = Preferences.userNodeForPackage(ExperimentData.class);
+            String eqns = prefs.get("R1RHO_EQNS", DEFAULT_R1RHO_EQNS);
+            eqnMap1 = stringToMap(eqns);
+        }
+        return eqnMap1;
+    }
 
     static Map<String, Boolean> stringToMap(String s) {
         Map<String, Boolean> map = new HashMap<>();
@@ -125,6 +136,15 @@ public class CoMDPreferences {
         }
         prefs.put("CEST_EQNS", eqnString);
     }
+    
+    public static void saveR1RhoEqnPrefs() {
+        Preferences prefs = Preferences.userNodeForPackage(ExperimentData.class);
+        String eqnString = DEFAULT_R1RHO_EQNS;
+        if (eqnMap1 != null) {
+            eqnString = mapToString(getR1RhoEqnMap());
+        }
+        prefs.put("R1RHO_EQNS", eqnString);
+    }
 
     public static List<String> getActiveCESTEquations() {
         Map<String, Boolean> map = getEqnMap();
@@ -136,6 +156,17 @@ public class CoMDPreferences {
         }
         return cestEqnList;
     }
+    
+    public static List<String> getActiveR1RhoEquations() {
+        Map<String, Boolean> map = getR1RhoEqnMap();
+        List<String> r1rhoEqnList = new ArrayList<>();
+        for (String eqn : map.keySet()) {
+            if (map.get(eqn)) {
+                r1rhoEqnList.add(eqn);
+            }
+        }
+        return r1rhoEqnList;
+    }
 
     public static void setCESTEquationState(String equation, boolean state) {
         Map<String, Boolean> map = getEqnMap();
@@ -145,6 +176,21 @@ public class CoMDPreferences {
 
     public static boolean getCESTEquationState(String equation) {
         Map<String, Boolean> map = getEqnMap();
+        boolean state = false;
+        if (map.containsKey(equation) && map.get(equation)) {
+            state = true;
+        }
+        return state;
+    }
+    
+    public static void setR1RhoEquationState(String equation, boolean state) {
+        Map<String, Boolean> map = getR1RhoEqnMap();
+        map.put(equation, state);
+        saveR1RhoEqnPrefs();
+    }
+
+    public static boolean getR1RhoEquationState(String equation) {
+        Map<String, Boolean> map = getR1RhoEqnMap();
         boolean state = false;
         if (map.containsKey(equation) && map.get(equation)) {
             state = true;
