@@ -154,7 +154,7 @@ public class InputDataInterface {
         }
 
         fitModeChoice.getItems().clear();
-        fitModeChoice.getItems().addAll(Arrays.asList("Select", "CPMG", "EXP", "CEST"));
+        fitModeChoice.getItems().addAll(Arrays.asList("Select", "CPMG", "EXP", "CEST", "R1RHO"));
         fitModeChoice.setValue("Select");
 
         fitModeChoice.valueProperty().addListener(x -> {
@@ -167,13 +167,15 @@ public class InputDataInterface {
                 String[] xvals = xValTextArea.getText().split("\t");
                 ArrayList<Double> fxvals = new ArrayList();
                 String xString = "";
-                if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST") && ppmBox.isSelected()) {
+                if ((fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST") || fitModeChoice.getSelectionModel().getSelectedItem().equals("R1RHO")) 
+                        && ppmBox.isSelected()) {
                     for (int i = 0; i < xvals.length; i++) {
                         fxvals.add(Double.parseDouble(xvals[i]) * Double.parseDouble(fieldTextField.getText()));
                         xString += fxvals.get(i).toString() + "\t";
                     }
                     xValTextArea.setText(xString);
-                } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST") && !ppmBox.isSelected()) {
+                } else if ((fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST") || fitModeChoice.getSelectionModel().getSelectedItem().equals("R1RHO"))
+                        && !ppmBox.isSelected()) {
                     for (int i = 0; i < xvals.length; i++) {
                         fxvals.add(Double.parseDouble(xvals[i]) / Double.parseDouble(fieldTextField.getText()));
                         xString += fxvals.get(i).toString() + "\t";
@@ -274,7 +276,7 @@ public class InputDataInterface {
                     B1TextField.setDisable(true);
                     tauTextField.setDisable(true);
                     ppmBox.setDisable(true);
-                } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST")) {
+                } else if ((fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST") || fitModeChoice.getSelectionModel().getSelectedItem().equals("R1RHO"))) {
                     B1TextField.setDisable(false);
                     tauTextField.setDisable(false);
                     ppmBox.setDisable(false);
@@ -438,7 +440,7 @@ public class InputDataInterface {
                 hm2.put("file", "analysis.txt");
             }
             Set keySet = hmd.keySet();
-            if (!hmd.get("fitmode").equals("cest")) {
+            if (!hmd.get("fitmode").equals("cest") && !hmd.get("fitmode").equals("r1rho")) {
                 keySet.remove("B1");
             }
             if ((hmd.get("vcpmg") == null) || (hmd.get("vcpmg").toString().equals(""))) {
