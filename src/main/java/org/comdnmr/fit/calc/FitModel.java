@@ -212,6 +212,22 @@ public abstract class FitModel implements MultivariateFunction {
         return aicc;
     }
 
+    public double getReducedChiSq(double[] par) {
+        double rss = 0.0;
+        double[] x = new double[xValues.length];
+        for (int i = 0; i < yValues.length; i++) {
+            for (int j = 0; j < x.length; j++) {
+                x[j] = xValues[j][i];
+            }
+            final double value;
+            value = calculate(par, map[idNums[i]], x, idNums[i], fieldValues[i]);
+
+            double delta = (value - yValues[i]) / errValues[i];
+            rss += delta * delta;
+        }
+        return rss / (yValues.length - par.length);
+    }
+
     public void setAbsMode(boolean value) {
         this.absMode = value;
     }
