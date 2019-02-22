@@ -271,17 +271,17 @@ public class PyController implements Initializable {
             equationChoice.getItems().add("+");
             equationChoice.getItems().addAll(R1RhoFit.getEquationNames());
             equationChoice.setValue(R1RhoFit.getEquationNames().get(0));
-            xLowerBoundTextField.setText("-8000.0");
-            xUpperBoundTextField.setText("4000.0");
+            xLowerBoundTextField.setText("-20.0");
+            xUpperBoundTextField.setText("20.0");
             if (currentResProps.getExperimentData() != null) {
                 double[] xVals = currentResProps.getExperimentData().stream().findFirst().get().getXVals();
-                xLowerBoundTextField.setText(String.valueOf(Math.round(xVals[1] / 1000) * 1000));
-                xUpperBoundTextField.setText(String.valueOf(Math.round(xVals[xVals.length - 1] / 1000) * 1000));
+                xLowerBoundTextField.setText(String.valueOf(Math.floor(xVals[1] / 2) * 2));
+                xUpperBoundTextField.setText(String.valueOf(Math.ceil(xVals[xVals.length - 1] / 2) * 2));
             }
             yLowerBoundTextField.setText("0.0");
             yUpperBoundTextField.setText("50.0");
-            xTickTextField.setText("2000.0");
-            yTickTextField.setText("5.0");
+            xTickTextField.setText("1.0");
+            yTickTextField.setText("0.25");
         } else {
             System.out.println("Error: no fitting mode selected.");
         }
@@ -588,21 +588,21 @@ public class PyController implements Initializable {
             xTickTextField.setText("2.0");
             yTickTextField.setText("0.25");
         } else if ((simControls instanceof R1RhoControls)) {
-            xychart.setNames("R1Rho", "Offset (Hz)", "R1Rho", "20");
-            xychart.setBounds(-8000, 4000, 0.0, 50.0, 2000.0, 5.0);
-            xLowerBoundTextField.setText("-8000.0");
-            xUpperBoundTextField.setText("4000.0");
+            xychart.setNames("R1Rho", "Offset (PPM)", "R1Rho", "20");
+            xychart.setBounds(-20, 20, 0.0, 1.0, 2.0, 0.25);
+            xLowerBoundTextField.setText("-20.0");
+            xUpperBoundTextField.setText("20.0");
             if (currentResProps != null) {
                 double[] xVals = currentResProps.getExperimentData().stream().findFirst().get().getXVals();
                 if (xVals != null) {
-                    xychart.setBounds(Math.round(xVals[1] / 1000) * 1000, Math.round(xVals[xVals.length - 1] / 1000) * 1000, 0.0, 1.0, 2000.0, 0.25);
-                    xLowerBoundTextField.setText(String.valueOf(Math.round(xVals[1] / 1000) * 1000));
-                    xUpperBoundTextField.setText(String.valueOf(Math.round(xVals[xVals.length - 1] / 1000) * 1000));
+                    xychart.setBounds(Math.floor(xVals[1] / 2) * 2, Math.ceil(xVals[xVals.length - 1] / 2) * 2, 0.0, 1.0, 1.0, 0.25);
+                    xLowerBoundTextField.setText(String.valueOf(Math.floor(xVals[1] / 2) * 2));
+                    xUpperBoundTextField.setText(String.valueOf(Math.ceil(xVals[xVals.length - 1] / 2) * 2));
                 }
             }
             yLowerBoundTextField.setText("0.0");
             yUpperBoundTextField.setText("50.0");
-            xTickTextField.setText("2000.0");
+            xTickTextField.setText("2.0");
             yTickTextField.setText("5.0");
         }
     }

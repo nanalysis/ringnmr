@@ -16,6 +16,7 @@ import javafx.scene.control.Slider;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import org.comdnmr.fit.calc.CPMGFit;
 import org.comdnmr.fit.calc.R1RhoEquation;
 import org.comdnmr.fit.calc.ExperimentData;
 import org.comdnmr.fit.calc.ParValueInterface;
@@ -47,19 +48,19 @@ public class R1RhoControls implements EquationControls {
     String[] parNames = {"Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B", "B1field", "Tex"};
 
     static PyController controller = PyController.mainController;
-    static final double DELTA_MIN = -6000.0;
-    static final double DELTA_MAX = 6000.0;
+    static final double DELTA_MIN = -20.0;
+    static final double DELTA_MAX = 20.0;
 
     enum PARS implements ParControls {
         KEX("Kex", 0.0, 1000.0, 100.0, 150.0),
         PB("Pb", 0.0, 1.0, 0.1, 0.1),
-        DELTAA0("deltaA0", DELTA_MIN, DELTA_MAX, 1000.0, 2700.0),
-        DELTAB0("deltaB0", DELTA_MIN, DELTA_MAX, 1000.0, -1250.0),
+        DELTAA0("deltaA0", DELTA_MIN, DELTA_MAX, 5.0, 3.0),
+        DELTAB0("deltaB0", DELTA_MIN, DELTA_MAX, 5.0, -2.0),
         R1A("R1A", 0.0, 10.0, 1.0, 2.5),
         R1B("R1B", 0.0, 10.0, 1.0, 2.5),
         R2A("R2A", 0.0, 200.0, 50.0, 15.0),
         R2B("R2B", 0.0, 200.0, 50.0, 120.0),
-        B1FIELD("B1field", 0.0, 200.0, 50.0, 20.0 * 2 * Math.PI),
+        B1FIELD("B1field", 0.0, 100.0, 20.0, 20.0),
         TEX("Tex", 0.0, 1.0, 0.1, 0.3);
 
         String name;
@@ -551,10 +552,10 @@ public class R1RhoControls implements EquationControls {
 //                            String resNum = String.valueOf(controller.currentResProps.getResidueValues().get(0).getResNum());
 //                            double[] xVals = controller.currentResProps.getExperimentData().stream().findFirst().get().getResidueData(resNum).getXValues()[0];
                             if (xVals != null) {
-                                double min = Math.round(xVals[1] / 1000) * 1000;
-                                double max = Math.round(xVals[xVals.length - 1] / 1000) * 1000;
+                                double min = Math.round(xVals[1] / 2.0) * 2.0;
+                                double max = Math.round(xVals[xVals.length - 1] / 2.0) * 2.0;
                                 control.updateLimits(min, max);
-                            } 
+                            }
                         }
                     }
                 }
@@ -638,14 +639,14 @@ public class R1RhoControls implements EquationControls {
                         List<Double> dataExtras = expData.getExtras();
                         double[] errs = new double[pars.length];
                         double[] extras = new double[3];
-                        extras[0] = 1.0;
+                        extras[0] = expData.getField();
                         extras[1] = dataExtras.get(0);
                         extras[2] = dataExtras.get(1);
 //                        System.out.println("resInfo Res Num = " + resInfo.getResNum());
 //                        System.out.println("extras size = " + expData.getExtras().size());
                         //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[1] = " + extras[1]);
-                        System.out.println("extras[1] = " + extras[1]);
-                        System.out.println("extras[2] = " + extras[2]);
+//                        System.out.println("extras[1] = " + extras[1]);
+//                        System.out.println("extras[2] = " + extras[2]);
                         PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
                         //equationCopy.setExtra(extras);
 
@@ -655,7 +656,7 @@ public class R1RhoControls implements EquationControls {
                     pars = getPars(equationName)[0];
                     double[] errs = new double[pars.length];
                     double[] extras = new double[1];
-                    extras[0] = 1.0;
+                    extras[0] = CPMGFit.REF_FIELD; // fixme
                     PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
                     //equationCopy.setExtra(extras);
                     //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[0] = " + extras[0]);
@@ -668,7 +669,7 @@ public class R1RhoControls implements EquationControls {
             extras1 = getPars(equationName)[1];
             double[] errs = new double[pars.length];
             double[] extras = new double[3];
-            extras[0] = 1.0;
+            extras[0] = CPMGFit.REF_FIELD; // fixme
             extras[1] = extras1[0]; //17.0 * 2 * Math.PI;
             extras[2] = extras1[1]; //0.3;
             //System.out.println("updateEquations got called without resProps; extras length = "+extras.length);
