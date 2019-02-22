@@ -287,7 +287,6 @@ public class ChartUtil {
 //                        //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[1] = " + extras[1]);
 //                        PlotEquation equationCopy = equation.clone();
 //                        equationCopy.setExtra(extras);
-                        System.out.println("get equations 1.0");
                         extras[0] = field;
                         extras[1] = expData.getExtras().get(0);
                         extras[2] = expData.getExtras().get(1);
