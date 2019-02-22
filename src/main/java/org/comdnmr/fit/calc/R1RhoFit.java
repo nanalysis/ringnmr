@@ -253,7 +253,7 @@ public class R1RhoFit implements EquationFitter {
         for (int i = 0; i < yvals.length; i++) {
             yvals[i] = yValues.get(i);
         }
-        double[][] peaks = R1RhoEquations.r1rhoPeakGuess(xvals, yvals);
+        double[][] peaks = R1RhoEquations.r1rhoPeakGuess(xvals, yvals, fieldValues.get(0));
         if (peaks.length >= 1) {
             setupFit(eqn, absMode);
             int[][] map = calcR1Rho.getMap();
@@ -269,7 +269,7 @@ public class R1RhoFit implements EquationFitter {
             double[][] boundaries = calcR1Rho.boundaries(guesses);
             double[] sigma = new double[guesses.length];
             for (int i = 0; i < guesses.length; i++) {
-                sigma[i] = (boundaries[1][i] - boundaries[0][i]) / 10.0;
+                sigma[i] = Math.abs(boundaries[1][i] - boundaries[0][i]) / 10.0;
                 System.out.println(i + " map " + map[0][i] + " bou0 " + boundaries[0][i] + " bou1 " + boundaries[1][i] + " sig " + sigma[i] + " gue " + guesses[i]);
             }
             PointValuePair result = calcR1Rho.refine(guesses, boundaries[0], boundaries[1], sigma);

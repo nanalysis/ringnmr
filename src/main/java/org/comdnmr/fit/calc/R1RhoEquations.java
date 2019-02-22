@@ -170,7 +170,7 @@ public class R1RhoEquations {
         }
         return r1rho;
     }
-    
+
     static double[] getBaseline(double[] vec) {
         int winSize = 8;
         double maxValue = Double.POSITIVE_INFINITY;
@@ -190,7 +190,7 @@ public class R1RhoEquations {
         return result;
     }
 
-    public static double[][] r1rhoPeakGuess(double[][] xvals, double[] yvals) {
+    public static double[][] r1rhoPeakGuess(double[][] xvals, double[] yvals, double field) {
         // Estimates CEST peak positions for initial guesses for before fitting.
 
         List<CESTEquations.Peak> peaks = new ArrayList<>();
@@ -215,7 +215,6 @@ public class R1RhoEquations {
 //        if (smoothSize != 0) {
 //            yvals = smoothCEST(yvals, 0, yvals.length, 3, smoothSize, syvals);
 //        }
-
         // A point must have a higher value than this number of points on each
         // side of the point in order to be a peak.
         int nP = 2;
@@ -287,9 +286,9 @@ public class R1RhoEquations {
                     if (ok) {
                         double xCenter = xvals[0][iCenter];
                         double yCenter = yvals[iCenter];
-                        double width = Math.abs(halfPos[0] - halfPos[1]);
-                        double widthL = Math.abs(halfPos[0] - xCenter);
-                        double widthR = Math.abs(halfPos[1] - xCenter);
+                        double width = Math.abs(halfPos[0] - halfPos[1]) * field;
+                        double widthL = Math.abs(halfPos[0] - xCenter) * field;
+                        double widthR = Math.abs(halfPos[1] - xCenter) * field;
                         CESTEquations.Peak peak = new CESTEquations.Peak(xCenter, yCenter, width, widthL, widthR, iCenter);
                         peaks.add(peak);
                     }
@@ -318,9 +317,9 @@ public class R1RhoEquations {
             CESTEquations.Peak peak = peaks2.get(0);
             double newCenter;
             if (peak.widthLB > peak.widthUB) {
-                newCenter = peak.position - peak.widthLB / 2.0;
+                newCenter = peak.position - peak.widthLB / field / 2.0;
             } else {
-                newCenter = peak.position + peak.widthUB / 2.0;
+                newCenter = peak.position + peak.widthUB / field / 2.0;
             }
             double newDepth = (baseline + peak.depth) / 2.0;
             CESTEquations.Peak newPeak = new CESTEquations.Peak(newCenter, newDepth, peak.width, peak.widthLB, peak.widthUB, peak.pkInd);
@@ -397,7 +396,7 @@ public class R1RhoEquations {
         }
 
     }
-    
+
     public static double[] r1rhoR1Guess(double[] yvals, Double Tex) {
         // Estimates CEST R1 values from data baseline intensity and Tex for initial guesses for before fitting.
         // Reference: Palmer, A. G. "Chemical exchange in biomacromolecules: Past, present, and future." J. Mag. Res. 241 (2014) 3-17.
@@ -418,7 +417,7 @@ public class R1RhoEquations {
 //        }
         return r1;
     }
-    
+
     public static double[][] r1rhoR2Guess(double[][] peaks, double[] yvals) {
         // Estimates CEST R2A and R2B values from peak widths for initial guesses for before fitting.
         // Uses the output from cestPeakGuess as the input.

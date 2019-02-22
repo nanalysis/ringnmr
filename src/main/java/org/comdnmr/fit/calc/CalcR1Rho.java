@@ -64,7 +64,7 @@ public class CalcR1Rho extends FitModel {
     public double value(double[] par) {
         double sumAbs = 0.0;
         double sumSq = 0.0;
-        double[] yCalc = equation.calculate(par, map[0], xValues, 0, 1.0);
+        double[] yCalc = equation.calculate(par, map[0], xValues, 0, fields[0]);
 
         for (int i = 0; i < yValues.length; i++) {
             double delta = (yCalc[i] - yValues[i]);
