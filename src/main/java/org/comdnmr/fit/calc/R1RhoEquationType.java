@@ -78,7 +78,7 @@ public interface R1RhoEquationType extends EquationType {
         double[] r1BouB = R1RhoEquations.r1Boundaries(r1B, tex, 0.1);
 
         boundaries[0][map[id][0]] = 1.0; //kex LB
-        boundaries[1][map[id][0]] = guesses[map[id][0]] * 4; //kex UB
+        boundaries[1][map[id][0]] = guesses[map[id][0]] * 5; //kex UB
         boundaries[0][map[id][1]] = 0.01; //pb LB
         boundaries[1][map[id][1]] = 0.25; //pb UB //guesses[1] * 4;
         boundaries[0][map[id][2]] = guesses[map[id][2]] - dAbound; //deltaA LB
