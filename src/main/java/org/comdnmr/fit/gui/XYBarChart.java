@@ -122,7 +122,6 @@ public class XYBarChart extends XYChart<Number, Number> {
         int nSeries = getData().size();
         for (int seriesIndex = 0; seriesIndex < getData().size(); seriesIndex++) {
             XYChart.Series<Number, Number> series = getData().get(seriesIndex);
-//            System.out.println("series " + series.getName());
             Iterator<XYChart.Data<Number, Number>> iter = getDisplayedDataIterator(series);
             Path seriesPath = null;
             if (series.getNode() instanceof Path) {
@@ -252,7 +251,6 @@ public class XYBarChart extends XYChart<Number, Number> {
         List<Series<Number, Number>> allSeries = this.getData();
         allSeries.forEach(series -> {
             String seriesName = series.getName();
-            System.out.println(seriesName);
             List<XYChart.Data<Number, Number>> data = series.getData();
             ArrayList<ArrayList<Double>> seriesData = new ArrayList<>(data.size());
             data.forEach(values -> {
