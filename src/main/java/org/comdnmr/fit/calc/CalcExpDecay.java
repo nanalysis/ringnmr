@@ -63,7 +63,8 @@ public class CalcExpDecay extends FitModel {
     }
 
     @Override
-    public double value(double[] par) {
+    public double value(double[] normPar) {
+        double[] par = deNormalize(normPar);
         double sumAbs = 0.0;
         double sumSq = 0.0;
         double[] ax = new double[1];

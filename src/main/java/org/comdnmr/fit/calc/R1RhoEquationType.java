@@ -78,7 +78,8 @@ public interface R1RhoEquationType extends EquationType {
         double[] r1BouB = R1RhoEquations.r1Boundaries(r1B, tex, 0.1);
 
         boundaries[0][map[id][0]] = 1.0; //kex LB
-        boundaries[1][map[id][0]] = guesses[map[id][0]] * 5; //kex UB
+       // boundaries[1][map[id][0]] = guesses[map[id][0]] * 5; //kex UB
+        boundaries[1][map[id][0]] = 500.0; //kex UB
         boundaries[0][map[id][1]] = 0.01; //pb LB
         boundaries[1][map[id][1]] = 0.25; //pb UB //guesses[1] * 4;
         boundaries[0][map[id][2]] = guesses[map[id][2]] - dAbound; //deltaA LB
@@ -89,12 +90,12 @@ public interface R1RhoEquationType extends EquationType {
         boundaries[1][map[id][4]] = r1BouA[1]; //R1A UB
         boundaries[0][map[id][5]] = r1BouB[0]; //R1B LB
         boundaries[1][map[id][5]] = r1BouB[1]; //R1B UB
-        boundaries[0][map[id][6]] = 0.1; //R2A LB
+        boundaries[0][map[id][6]] = 1.0; //R2A LB
 //        boundaries[1][map[id][6]] = guesses[map[id][6]] * 4; //R2A UB
-        boundaries[1][map[id][6]] = 200.0; //R2A UB
-        boundaries[0][map[id][7]] = 0.1; //R2B LB
+        boundaries[1][map[id][6]] = 250.0; //R2A UB
+        boundaries[0][map[id][7]] = 1.0; //R2B LB
 //        boundaries[1][map[id][7]] = guesses[map[id][7]] * 4; //R2B UB
-        boundaries[1][map[id][7]] = 200.0; //R2B UB
+        boundaries[1][map[id][7]] = 250.0; //R2B UB
         return boundaries;
     }
 

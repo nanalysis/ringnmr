@@ -61,7 +61,9 @@ public class CalcR1Rho extends FitModel {
     }
 
     @Override
-    public double value(double[] par) {
+    public double value(double[] normPar) {
+        double[] par = deNormalize(normPar);
+
         double sumAbs = 0.0;
         double sumSq = 0.0;
         double[] yCalc = equation.calculate(par, map[0], xValues, 0, fields[0]);

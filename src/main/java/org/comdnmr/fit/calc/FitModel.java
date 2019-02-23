@@ -41,6 +41,8 @@ public abstract class FitModel implements MultivariateFunction {
     boolean weightByError = true;
     private static boolean calcError = true;
     double[][] parValues;
+    double[] lowerBounds;
+    double[] upperBounds;
 
     public class Checker extends SimpleValueChecker {
 
@@ -67,6 +69,8 @@ public abstract class FitModel implements MultivariateFunction {
     public abstract void setEquation(String eqName);
 
     public PointValuePair refine(double[] guess, double[] lowerBounds, double[] upperBounds, double[] inputSigma) {
+        this.lowerBounds = lowerBounds.clone();
+        this.upperBounds = upperBounds.clone();
         startTime = System.currentTimeMillis();
         DEFAULT_RANDOMGENERATOR.setSeed(1);
         double lambdaMul = 3.0;
@@ -76,6 +80,12 @@ public abstract class FitModel implements MultivariateFunction {
         double stopFitness = 0.0;
         int diagOnly = 0;
         double tol = 1.0e-5;
+        double[] normLower = new double[guess.length];
+        double[] normUpper = new double[guess.length];
+        Arrays.fill(normLower, 0.0);
+        Arrays.fill(normUpper, 100.0);
+        Arrays.fill(inputSigma, 10.0);
+        double[] normGuess = normalize(guess);
         //new Checker(100 * Precision.EPSILON, 100 * Precision.SAFE_MIN, nSteps));
         CMAESOptimizer optimizer = new CMAESOptimizer(nSteps, stopFitness, true, diagOnly, 0,
                 DEFAULT_RANDOMGENERATOR, true,
@@ -88,13 +98,31 @@ public abstract class FitModel implements MultivariateFunction {
                     new CMAESOptimizer.Sigma(inputSigma),
                     new MaxEval(2000000),
                     new ObjectiveFunction(this), GoalType.MINIMIZE,
-                    new SimpleBounds(lowerBounds, upperBounds),
-                    new InitialGuess(guess));
+                    new SimpleBounds(normLower, normUpper),
+                    new InitialGuess(normGuess));
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return result;
+        PointValuePair deNormResult = new PointValuePair(deNormalize(result.getPoint()), result.getValue());
 
+        return deNormResult;
+
+    }
+
+    double[] normalize(double[] pars) {
+        double[] normPars = new double[pars.length];
+        for (int i = 0; i < pars.length; i++) {
+            normPars[i] = 100.0 * (pars[i] - lowerBounds[i]) / (upperBounds[i] - lowerBounds[i]);
+        }
+        return normPars;
+    }
+
+    double[] deNormalize(double[] normPars) {
+        double[] pars = new double[normPars.length];
+        for (int i = 0; i < pars.length; i++) {
+            pars[i] = normPars[i] / 100.0 * (upperBounds[i] - lowerBounds[i]) + lowerBounds[i];
+        }
+        return pars;
     }
 
     public double[] simY(double[] par) {
