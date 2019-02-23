@@ -58,7 +58,8 @@ public class PreferencesController implements Initializable {
     PropertySheet prefSheet;
     ChangeListener<String> stringListener;
     ChangeListener<String> datasetListener;
-    ChangeListener<String> locationListener;
+    ChangeListener<String> optimizerListener;
+    ChangeListener<String> bootStrapOptimizerListener;
     ChangeListener<Integer> nprocessListener;
     ChangeListener<Boolean> cestEqnListener;
     ChangeListener<Boolean> r1rhoEqnListener;
@@ -81,8 +82,11 @@ public class PreferencesController implements Initializable {
         datasetListener = (ObservableValue<? extends String> observableValue, String string, String string2) -> {
             setDatasetDirectory(new File(string2.trim()));
         };
-        locationListener = (ObservableValue<? extends String> observableValue, String string, String string2) -> {
-            setLocation(string2.trim());
+        optimizerListener = (ObservableValue<? extends String> observableValue, String string, String string2) -> {
+            CoMDPreferences.setOptimizer(string2.trim());
+        };
+        bootStrapOptimizerListener = (ObservableValue<? extends String> observableValue, String string, String string2) -> {
+            CoMDPreferences.setBootStrapOptimizer(string2.trim());
         };
         nprocessListener = (ObservableValue<? extends Integer> observableValue, Integer n1, Integer n2) -> {
             setNProcesses(n2);
@@ -95,9 +99,9 @@ public class PreferencesController implements Initializable {
             BooleanOperationItem item = (BooleanOperationItem) observableValue;
             CoMDPreferences.setR1RhoEquationState(item.getName(), r1rho2);
         };
-        ArrayList<String> locationChoices = new ArrayList<>();
-        locationChoices.add("FID directory");
-        locationChoices.add("Dataset directory");
+        ArrayList<String> optimizers = new ArrayList<>();
+        optimizers.add("CMA-ES");
+        optimizers.add("BOBYQA");
         maxFreqItem = new DoubleRangeOperationItem((obs, oldV, newV) -> {
             CoMDPreferences.setCPMGMaxFreq((Double) newV);
         }, 2000.0, 100.0, 5000.0, "CPMG", "Max Freq", "Max Frequency");
@@ -106,8 +110,11 @@ public class PreferencesController implements Initializable {
         }, 3.0, 0.0, 10.0, "CPMG", "Rex Ratio", "Rex must be this many times rmsd");
         IntRangeOperationItem nSamplesItem = new IntRangeOperationItem((obs, oldV, newV) -> {
             CoMDPreferences.setSampleSize((Integer) newV);
-        }, CoMDPreferences.getSampleSize(), 10, 500, "Error Estimates", "N Samples", "Number of bootstrap samples");
-        ChoiceOperationItem locationTypeItem = new ChoiceOperationItem(locationListener, getLocation(), locationChoices, "File Locations", "location", "Directory Location for Dataset");
+        }, CoMDPreferences.getSampleSize(), 10, 500, "Optimizer", "Bootstrap Samples", "Number of bootstrap samples");
+        ChoiceOperationItem optimizerChoiceItem = new ChoiceOperationItem(optimizerListener,
+                CoMDPreferences.getOptimizer(), optimizers, "Optimizer", "Refine Optimizer", "Optimizer for refinement");
+        ChoiceOperationItem bootStrapOptimizerrChoiceItem = new ChoiceOperationItem(bootStrapOptimizerListener,
+                CoMDPreferences.getBootStrapOptimizer(), optimizers, "Optimizer", "Bootstrap Optimizer", "Optimizer for bootstrap");
 
         DirectoryOperationItem locationFileItem = new DirectoryOperationItem(datasetListener, getDatasetDirectory().getPath(), "File Locations", "Datasets", "desc");
 
@@ -120,7 +127,7 @@ public class PreferencesController implements Initializable {
         ArrayList<String> r1rhoEqnChoices = new ArrayList<>();
         r1rhoEqnChoices.addAll(Arrays.asList("R1RHOPERTURBATIONNOEX", "R1RHOPERTURBATION", "R1RHOBALDWINKAY", "R1RHOLAGUERRE", "R1RHOEXACT"));
 //        prefSheet.getItems().addAll(locationTypeItem, locationFileItem, nProcessesItem, maxFreqItem, rexRatioItem, nSamplesItem);
-        prefSheet.getItems().addAll(nProcessesItem, maxFreqItem, rexRatioItem, nSamplesItem);
+        prefSheet.getItems().addAll(nProcessesItem, maxFreqItem, rexRatioItem, nSamplesItem, optimizerChoiceItem, bootStrapOptimizerrChoiceItem);
         for (String eqn : cestEqnChoices) {
             boolean defaultState = CoMDPreferences.getCESTEquationState(eqn);
             BooleanOperationItem cestEqnListItem = new BooleanOperationItem(cestEqnListener, defaultState, "CEST Equations", eqn, "List of equations to use during CEST Fitting");
