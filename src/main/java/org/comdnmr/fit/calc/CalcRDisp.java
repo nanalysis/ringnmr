@@ -147,7 +147,7 @@ public class CalcRDisp extends FitModel {
         return equation.getKex(pars);
     }
 
-    public double[] simBounds(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma) {
+    public double[] simBounds(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) {
         reportFitness = false;
         int nSim = CoMDPreferences.getSampleSize();
         int nPar = start.length;
@@ -235,15 +235,15 @@ public class CalcRDisp extends FitModel {
         return rDisp;
     }
 
-    public double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma) {
+    public double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) {
         return simBoundsStream(start, lowerBounds, upperBounds, inputSigma, true);
     }
 
-    public double[] simBoundsBootstrapStream(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma) {
+    public double[] simBoundsBootstrapStream(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) {
         return simBoundsStream(start, lowerBounds, upperBounds, inputSigma, false);
     }
 
-    public double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma, boolean nonParametric) {
+    public double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma, boolean nonParametric) {
         reportFitness = false;
         int nPar = start.length;
         int nSim = CoMDPreferences.getSampleSize();

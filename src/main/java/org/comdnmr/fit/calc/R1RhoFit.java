@@ -267,10 +267,9 @@ public class R1RhoFit implements EquationFitter {
             //        System.out.println("dofit guesses = " + guesses);
             //        double[] guesses = setupFit(eqn, absMode);
             double[][] boundaries = calcR1Rho.boundaries(guesses);
-            double[] sigma = new double[guesses.length];
+            double sigma = FitModel.SIGMA_DEFAULT;
             for (int i = 0; i < guesses.length; i++) {
-                sigma[i] = Math.abs(boundaries[1][i] - boundaries[0][i]) / 10.0;
-                System.out.println(i + " map " + map[0][i] + " bou0 " + boundaries[0][i] + " bou1 " + boundaries[1][i] + " sig " + sigma[i] + " gue " + guesses[i]);
+                System.out.println(i + " map " + map[0][i] + " bou0 " + boundaries[0][i] + " bou1 " + boundaries[1][i] + " gue " + guesses[i]);
             }
             PointValuePair result = calcR1Rho.refine(guesses, boundaries[0],
                     boundaries[1], sigma, CoMDPreferences.getOptimizer());
@@ -295,9 +294,7 @@ public class R1RhoFit implements EquationFitter {
             double rChiSq = calcR1Rho.getReducedChiSq(pars);
             System.out.println("rms " + rms);
             int nGroupPars = calcR1Rho.getNGroupPars();
-            for (int i = 0; i < guesses.length; i++) {
-                sigma[i] /= 2.0;
-            }
+            sigma /= 2.0;
 
             String[] parNames = calcR1Rho.getParNames();
             double[] errEstimates;

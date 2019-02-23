@@ -267,11 +267,7 @@ public class CESTFit implements EquationFitter {
             //        System.out.println("dofit guesses = " + guesses);
             //        double[] guesses = setupFit(eqn, absMode);
             double[][] boundaries = calcCEST.boundaries(guesses);
-            double[] sigma = new double[guesses.length];
-            for (int i = 0; i < guesses.length; i++) {
-                sigma[i] = (boundaries[1][i] - boundaries[0][i]) / 10.0;
-                //System.out.println(i + " map " + map[0][i] + " bou0 " + boundaries[0][i] + " bou1 " + boundaries[1][i] + " sig " + sigma[i] + " gue " + guesses[i]);
-            }
+            double sigma = FitModel.SIGMA_DEFAULT;
             PointValuePair result = calcCEST.refine(guesses, boundaries[0],
                     boundaries[1], sigma, CoMDPreferences.getOptimizer());
             double[] pars = result.getPoint();
@@ -296,9 +292,7 @@ public class CESTFit implements EquationFitter {
 
             System.out.println("rms " + rms);
             int nGroupPars = calcCEST.getNGroupPars();
-            for (int i = 0; i < guesses.length; i++) {
-                sigma[i] /= 2.0;
-            }
+            sigma /= 2.0;
 
             String[] parNames = calcCEST.getParNames();
             double[] errEstimates;

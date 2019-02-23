@@ -207,11 +207,7 @@ public class ExpFit implements EquationFitter {
         }
 //        System.out.println("dofit guesses = " + guesses);
         double[][] boundaries = expModel.boundaries(guesses);
-        double[] sigma = new double[guesses.length];
-        for (int i = 0; i < guesses.length; i++) {
-            sigma[i] = (boundaries[1][i] - boundaries[0][i]) / 10.0;
-//            System.out.println(i + " " + boundaries[0][i] + " " + boundaries[1][i] + " " + sigma[i]);
-        }
+        double sigma = FitModel.SIGMA_DEFAULT;
         PointValuePair result = expModel.refine(guesses, boundaries[0], boundaries[1],
                 sigma, CoMDPreferences.getOptimizer());
         double[] pars = result.getPoint();
@@ -235,9 +231,7 @@ public class ExpFit implements EquationFitter {
 
 //        System.out.println("rms " + rms);
         int nGroupPars = expModel.getNGroupPars();
-        for (int i = 0; i < guesses.length; i++) {
-            sigma[i] /= 2.0;
-        }
+        sigma /= 2.0;
 
         String[] parNames = expModel.getParNames();
         double[] errEstimates;

@@ -25,6 +25,7 @@ public abstract class FitModel implements MultivariateFunction {
 
     // fixme is there a thread safe RandomGenerator
     public final RandomGenerator DEFAULT_RANDOMGENERATOR = new MersenneTwister(1);
+    static double SIGMA_DEFAULT = 10.0;
     int reportAt = 10;
 
     EquationType equation;
@@ -69,7 +70,7 @@ public abstract class FitModel implements MultivariateFunction {
 
     public abstract void setEquation(String eqName);
 
-    public PointValuePair refine(double[] guess, double[] lowerBounds, double[] upperBounds, double[] inputSigma, String type) {
+    public PointValuePair refine(double[] guess, double[] lowerBounds, double[] upperBounds, double inputSigma, String type) {
         if (type.equals("BOBYQA")) {
             return refineBOBYQA(guess, lowerBounds, upperBounds, inputSigma);
         } else {
@@ -78,7 +79,7 @@ public abstract class FitModel implements MultivariateFunction {
         }
     }
 
-    public PointValuePair refineCMAES(double[] guess, double[] lowerBounds, double[] upperBounds, double[] inputSigma) {
+    public PointValuePair refineCMAES(double[] guess, double[] lowerBounds, double[] upperBounds, double inputSigma) {
         this.lowerBounds = lowerBounds.clone();
         this.upperBounds = upperBounds.clone();
         startTime = System.currentTimeMillis();
@@ -92,9 +93,10 @@ public abstract class FitModel implements MultivariateFunction {
         double tol = 1.0e-5;
         double[] normLower = new double[guess.length];
         double[] normUpper = new double[guess.length];
+        double[] sigma = new double[guess.length];
         Arrays.fill(normLower, 0.0);
         Arrays.fill(normUpper, 100.0);
-        Arrays.fill(inputSigma, 10.0);
+        Arrays.fill(sigma, inputSigma);
         double[] normGuess = normalize(guess);
         //new Checker(100 * Precision.EPSILON, 100 * Precision.SAFE_MIN, nSteps));
         CMAESOptimizer optimizer = new CMAESOptimizer(nSteps, stopFitness, true, diagOnly, 0,
@@ -105,7 +107,7 @@ public abstract class FitModel implements MultivariateFunction {
         try {
             result = optimizer.optimize(
                     new CMAESOptimizer.PopulationSize(lambda),
-                    new CMAESOptimizer.Sigma(inputSigma),
+                    new CMAESOptimizer.Sigma(sigma),
                     new MaxEval(2000000),
                     new ObjectiveFunction(this), GoalType.MINIMIZE,
                     new SimpleBounds(normLower, normUpper),
@@ -118,7 +120,7 @@ public abstract class FitModel implements MultivariateFunction {
         return deNormResult;
     }
 
-    public PointValuePair refineBOBYQA(double[] guess, double[] lowerBounds, double[] upperBounds, double[] inputSigma) {
+    public PointValuePair refineBOBYQA(double[] guess, double[] lowerBounds, double[] upperBounds, double inputSigma) {
         this.lowerBounds = lowerBounds.clone();
         this.upperBounds = upperBounds.clone();
         startTime = System.currentTimeMillis();
@@ -134,13 +136,12 @@ public abstract class FitModel implements MultivariateFunction {
         double[] normUpper = new double[guess.length];
         Arrays.fill(normLower, 0.0);
         Arrays.fill(normUpper, 100.0);
-        Arrays.fill(inputSigma, 10.0);
         double[] normGuess = normalize(guess);
         //new Checker(100 * Precision.EPSILON, 100 * Precision.SAFE_MIN, nSteps));
 
         int n = guess.length;
         int nInterp = 2 * n + 1;
-        double initialRadius = 10.0;
+        double initialRadius = inputSigma;
         double stopRadius = 1.0e-5;
         BOBYQAOptimizer optimizer = new BOBYQAOptimizer(nInterp, initialRadius, stopRadius);
         PointValuePair result = null;
@@ -191,11 +192,11 @@ public abstract class FitModel implements MultivariateFunction {
 
     public abstract int[] getMask();
 
-    public abstract double[] simBounds(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma);
+    public abstract double[] simBounds(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma);
 
-    public abstract double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma);
+    public abstract double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma);
 
-    public abstract double[] simBoundsBootstrapStream(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma);
+    public abstract double[] simBoundsBootstrapStream(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma);
 
     public abstract double[][] getSimPars();
 

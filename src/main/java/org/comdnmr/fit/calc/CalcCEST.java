@@ -97,7 +97,7 @@ public class CalcCEST extends FitModel {
         return parValues;
     }
 
-    public double[] simBounds(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma) {
+    public double[] simBounds(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) {
         reportFitness = false;
         int nPar = start.length;
         int nSim = CoMDPreferences.getSampleSize();
@@ -129,7 +129,7 @@ public class CalcCEST extends FitModel {
         return parSDev;
     }
 
-    public double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma) {
+    public double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) {
         reportFitness = false;
         int nPar = start.length;
         int nSim = CoMDPreferences.getSampleSize();
@@ -168,7 +168,7 @@ public class CalcCEST extends FitModel {
         return parSDev;
     }
 
-    public double[] simBoundsBootstrapStream(double[] start, double[] lowerBounds, double[] upperBounds, double[] inputSigma) {
+    public double[] simBoundsBootstrapStream(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) {
         reportFitness = false;
         int nPar = start.length;
         int nSim = CoMDPreferences.getSampleSize();
