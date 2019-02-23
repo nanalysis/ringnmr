@@ -262,9 +262,9 @@ public class PyController implements Initializable {
             xLowerBoundTextField.setText("0.0");
             xUpperBoundTextField.setText("1.25");
             yLowerBoundTextField.setText("0.0");
-            yUpperBoundTextField.setText("1.25");
+            yUpperBoundTextField.setText("100.0");
             xTickTextField.setText("0.25");
-            yTickTextField.setText("0.25");
+            yTickTextField.setText("10.0");
         } else if (getFittingMode().equals("r1rho")) {
             simControls = new R1RhoControls();
             equationChoice.getItems().clear();
@@ -567,9 +567,9 @@ public class PyController implements Initializable {
             xLowerBoundTextField.setText("0.0");
             xUpperBoundTextField.setText("1.25");
             yLowerBoundTextField.setText("0.0");
-            yUpperBoundTextField.setText("1.25");
+            yUpperBoundTextField.setText("100.0");
             xTickTextField.setText("0.25");
-            yTickTextField.setText("0.25");
+            yTickTextField.setText("10.0");
         } else if ((simControls instanceof CESTControls)) {
             xychart.setNames("CEST", "Offset (PPM)", "I(t)/I(0)", "20");
             xychart.setBounds(-20, 20, 0.0, 1.0, 2.0, 0.25);

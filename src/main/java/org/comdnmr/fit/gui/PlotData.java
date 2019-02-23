@@ -260,13 +260,6 @@ public class PlotData extends ScatterChart {
                     ax[j] = extras[j];
                 }
                 double yValue = plotEquation.calculate(ax, plotEquation.getExtra(0));
-                if (PyController.mainController.getFittingMode().equals("exp")) {
-                    double[] refAx = new double[ax.length];
-                    for (int r = 0; i < refAx.length; i++) {
-                        refAx[r] = min + 1 * delta;
-                    }
-                    yValue /= plotEquation.calculate(refAx, plotEquation.getExtra(0));
-                }
                 double y = yAxis.getDisplayPosition(yValue);
                 points.add(x);
                 points.add(y);
