@@ -76,7 +76,7 @@ public class R1RhoFit implements EquationFitter {
         stateCount = resProps.getStateCount(resNums.length);
         Collection<ExperimentData> expDataList = resProps.getExperimentData();
         nCurves = resNums.length * expDataList.size();
-        
+
         // fixme??
         nCurves = resNums.length;
         states = new int[nCurves][];
@@ -272,7 +272,8 @@ public class R1RhoFit implements EquationFitter {
                 sigma[i] = Math.abs(boundaries[1][i] - boundaries[0][i]) / 10.0;
                 System.out.println(i + " map " + map[0][i] + " bou0 " + boundaries[0][i] + " bou1 " + boundaries[1][i] + " sig " + sigma[i] + " gue " + guesses[i]);
             }
-            PointValuePair result = calcR1Rho.refine(guesses, boundaries[0], boundaries[1], sigma);
+            PointValuePair result = calcR1Rho.refine(guesses, boundaries[0],
+                    boundaries[1], sigma, CoMDPreferences.getOptimizer());
             double[] pars = result.getPoint();
             System.out.println(eqn);
 
@@ -318,7 +319,7 @@ public class R1RhoFit implements EquationFitter {
             for (int j = 1; j < extras.length; j++) {
                 extras[j] = xValues[j].get(0);
             }
-            return getResults(this, eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms,rChiSq, simPars, true);
+            return getResults(this, eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, true);
         } else {
             return null;
         }

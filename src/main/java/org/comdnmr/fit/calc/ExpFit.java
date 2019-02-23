@@ -212,7 +212,8 @@ public class ExpFit implements EquationFitter {
             sigma[i] = (boundaries[1][i] - boundaries[0][i]) / 10.0;
 //            System.out.println(i + " " + boundaries[0][i] + " " + boundaries[1][i] + " " + sigma[i]);
         }
-        PointValuePair result = expModel.refine(guesses, boundaries[0], boundaries[1], sigma);
+        PointValuePair result = expModel.refine(guesses, boundaries[0], boundaries[1],
+                sigma, CoMDPreferences.getOptimizer());
         double[] pars = result.getPoint();
         /*
         for (int i = 0; i < map.length; i++) {

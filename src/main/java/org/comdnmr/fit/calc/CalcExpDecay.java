@@ -116,11 +116,14 @@ public class CalcExpDecay extends FitModel {
         double[] yValuesOrig = yValues.clone();
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
+        String optimizer = CoMDPreferences.getBootStrapOptimizer();
+
         for (int i = 0; i < nSim; i++) {
             for (int k = 0; k < yValues.length; k++) {
                 yValues[k] = yPred[k] + errValues[k] * random.nextGaussian();
             }
-            PointValuePair result = refine(start, lowerBounds, upperBounds, inputSigma);
+            PointValuePair result = refine(start, lowerBounds, upperBounds,
+                    inputSigma, optimizer);
             double[] rPoint = result.getPoint();
             for (int j = 0; j < nPar; j++) {
                 parValues[j][i] = rPoint[j];
@@ -145,6 +148,8 @@ public class CalcExpDecay extends FitModel {
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
         double[] yPred = getPredicted(start);
+        String optimizer = CoMDPreferences.getBootStrapOptimizer();
+
         IntStream.range(0, nSim).parallel().forEach(i -> {
 //        IntStream.range(0, nSim).forEach(i -> {
             CalcExpDecay rDisp = new CalcExpDecay(xValues, yPred, errValues, fieldValues, fields, idNums);
@@ -158,7 +163,8 @@ public class CalcExpDecay extends FitModel {
             rDisp.setIds(idNums);
             rDisp.setMap(map);
 
-            PointValuePair result = rDisp.refine(start, lowerBounds, upperBounds, inputSigma);
+            PointValuePair result = rDisp.refine(start, lowerBounds, upperBounds,
+                    inputSigma, optimizer);
             double[] rPoint = result.getPoint();
             for (int j = 0; j < nPar; j++) {
                 parValues[j][i] = rPoint[j];
@@ -180,6 +186,8 @@ public class CalcExpDecay extends FitModel {
         parValues = new double[nPar][nSim];
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
+        String optimizer = CoMDPreferences.getBootStrapOptimizer();
+
         IntStream.range(0, nSim).parallel().forEach(i -> {
             CalcExpDecay rDisp = new CalcExpDecay(xValues, yValues, errValues, fieldValues, fields, idNums);
             rDisp.setEquation(equation.getName());
@@ -208,7 +216,8 @@ public class CalcExpDecay extends FitModel {
             rDisp.setIds(newID);
             rDisp.setMap(map);
 
-            PointValuePair result = rDisp.refine(start, lowerBounds, upperBounds, inputSigma);
+            PointValuePair result = rDisp.refine(start, lowerBounds, upperBounds,
+                    inputSigma, optimizer);
             double[] rPoint = result.getPoint();
             for (int j = 0; j < nPar; j++) {
                 parValues[j][i] = rPoint[j];

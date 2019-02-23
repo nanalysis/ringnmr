@@ -213,7 +213,8 @@ public class CPMGFit implements EquationFitter {
             sigma[i] = (boundaries[1][i] - boundaries[0][i]) / 10.0;
 //            System.out.printf("%3d %7.3f %7.3f %7.3f %7.3f\n",i,boundaries[0][i],boundaries[1][i],sigma[i], guesses[i]);
         }
-        PointValuePair result = calcR.refine(guesses, boundaries[0], boundaries[1], sigma);
+        PointValuePair result = calcR.refine(guesses, boundaries[0],
+                boundaries[1], sigma, CoMDPreferences.getOptimizer());
         double[] pars = result.getPoint();
         /*
         for (int i = 0; i < map.length; i++) {

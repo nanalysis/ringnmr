@@ -10,6 +10,7 @@ import org.apache.commons.math3.optim.SimpleBounds;
 import org.apache.commons.math3.optim.SimpleValueChecker;
 import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
 import org.apache.commons.math3.optim.nonlinear.scalar.ObjectiveFunction;
+import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.BOBYQAOptimizer;
 import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.CMAESOptimizer;
 import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.random.RandomGenerator;
@@ -68,7 +69,16 @@ public abstract class FitModel implements MultivariateFunction {
 
     public abstract void setEquation(String eqName);
 
-    public PointValuePair refine(double[] guess, double[] lowerBounds, double[] upperBounds, double[] inputSigma) {
+    public PointValuePair refine(double[] guess, double[] lowerBounds, double[] upperBounds, double[] inputSigma, String type) {
+        if (type.equals("BOBYQA")) {
+            return refineBOBYQA(guess, lowerBounds, upperBounds, inputSigma);
+        } else {
+            return refineCMAES(guess, lowerBounds, upperBounds, inputSigma);
+
+        }
+    }
+
+    public PointValuePair refineCMAES(double[] guess, double[] lowerBounds, double[] upperBounds, double[] inputSigma) {
         this.lowerBounds = lowerBounds.clone();
         this.upperBounds = upperBounds.clone();
         startTime = System.currentTimeMillis();
@@ -106,7 +116,47 @@ public abstract class FitModel implements MultivariateFunction {
         PointValuePair deNormResult = new PointValuePair(deNormalize(result.getPoint()), result.getValue());
 
         return deNormResult;
+    }
 
+    public PointValuePair refineBOBYQA(double[] guess, double[] lowerBounds, double[] upperBounds, double[] inputSigma) {
+        this.lowerBounds = lowerBounds.clone();
+        this.upperBounds = upperBounds.clone();
+        startTime = System.currentTimeMillis();
+        DEFAULT_RANDOMGENERATOR.setSeed(1);
+        double lambdaMul = 3.0;
+        int lambda = (int) (lambdaMul * FastMath.round(4 + 3 * FastMath.log(guess.length)));
+        //int nSteps = guess.length*1000;
+        int nSteps = 2000;
+        double stopFitness = 0.0;
+        int diagOnly = 0;
+        double tol = 1.0e-5;
+        double[] normLower = new double[guess.length];
+        double[] normUpper = new double[guess.length];
+        Arrays.fill(normLower, 0.0);
+        Arrays.fill(normUpper, 100.0);
+        Arrays.fill(inputSigma, 10.0);
+        double[] normGuess = normalize(guess);
+        //new Checker(100 * Precision.EPSILON, 100 * Precision.SAFE_MIN, nSteps));
+
+        int n = guess.length;
+        int nInterp = 2 * n + 1;
+        double initialRadius = 10.0;
+        double stopRadius = 1.0e-5;
+        BOBYQAOptimizer optimizer = new BOBYQAOptimizer(nInterp, initialRadius, stopRadius);
+        PointValuePair result = null;
+
+        try {
+            result = optimizer.optimize(
+                    new MaxEval(2000000),
+                    new ObjectiveFunction(this), GoalType.MINIMIZE,
+                    new SimpleBounds(normLower, normUpper),
+                    new InitialGuess(normGuess));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        PointValuePair deNormResult = new PointValuePair(deNormalize(result.getPoint()), result.getValue());
+
+        return deNormResult;
     }
 
     double[] normalize(double[] pars) {

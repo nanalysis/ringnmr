@@ -106,11 +106,13 @@ public class CalcCEST extends FitModel {
         double[] yValuesOrig = yValues.clone();
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
+        String optimizer = CoMDPreferences.getBootStrapOptimizer();
         for (int i = 0; i < nSim; i++) {
             for (int k = 0; k < yValues.length; k++) {
                 yValues[k] = yPred[k] + errValues[k] * random.nextGaussian();
             }
-            PointValuePair result = refine(start, lowerBounds, upperBounds, inputSigma);
+            PointValuePair result = refine(start, lowerBounds, upperBounds,
+                    inputSigma, optimizer);
             double[] rPoint = result.getPoint();
             for (int j = 0; j < nPar; j++) {
                 parValues[j][i] = rPoint[j];
@@ -135,6 +137,8 @@ public class CalcCEST extends FitModel {
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
         double[] yPred = getPredicted(start);
+        String optimizer = CoMDPreferences.getBootStrapOptimizer();
+
         IntStream.range(0, nSim).parallel().forEach(i -> {
 //        IntStream.range(0, nSim).forEach(i -> {
             CalcCEST rDisp = new CalcCEST(xValues, yPred, errValues, fieldValues, fields, idNums);
@@ -148,7 +152,8 @@ public class CalcCEST extends FitModel {
             rDisp.setIds(idNums);
             rDisp.setMap(map);
 
-            PointValuePair result = rDisp.refine(start, lowerBounds, upperBounds, inputSigma);
+            PointValuePair result = rDisp.refine(start, lowerBounds, upperBounds,
+                    inputSigma, optimizer);
             double[] rPoint = result.getPoint();
             for (int j = 0; j < nPar; j++) {
                 parValues[j][i] = rPoint[j];
@@ -170,6 +175,8 @@ public class CalcCEST extends FitModel {
         parValues = new double[nPar][nSim];
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
+        String optimizer = CoMDPreferences.getBootStrapOptimizer();
+
         IntStream.range(0, nSim).parallel().forEach(i -> {
             CalcCEST rDisp = new CalcCEST(xValues, yValues, errValues, fieldValues, fields, idNums);
             rDisp.setEquation(equation.getName());
@@ -200,7 +207,8 @@ public class CalcCEST extends FitModel {
             rDisp.setIds(newID);
             rDisp.setMap(map);
 
-            PointValuePair result = rDisp.refine(start, lowerBounds, upperBounds, inputSigma);
+            PointValuePair result = rDisp.refine(start, lowerBounds, upperBounds,
+                    inputSigma, optimizer);
             double[] rPoint = result.getPoint();
             for (int j = 0; j < nPar; j++) {
                 parValues[j][i] = rPoint[j];

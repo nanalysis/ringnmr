@@ -20,6 +20,8 @@ public class CoMDPreferences {
     static private Double cpmgMaxFreq = null;
     static private Double rexRatio = null;
     static private Integer sampleSize = null;
+    static private String optimizer = null;
+    static private String bootStrapOptimizer = null;
     private static Map<String, Boolean> cestEqnMap = null;
     private static Map<String, Boolean> r1rhoEqnMap = null;
     private static String DEFAULT_CEST_EQNS = "CESTR1RHOPERTURBATIONNOEX;true\nCESTR1RHOPERTURBATION;true";
@@ -64,6 +66,40 @@ public class CoMDPreferences {
         }
     }
 
+    public static String getOptimizer() {
+        if (optimizer == null) {
+            String value = getPrefs().get("OPTIMIZER", "CMA-ES");
+            optimizer = value;
+        }
+        return optimizer;
+    }
+
+    public static void setOptimizer(String value) {
+        optimizer = value;
+        if (value != null) {
+            getPrefs().put("OPTIMIZER", value);
+        } else {
+            getPrefs().remove("OPTIMIZER");
+        }
+    }
+
+    public static String getBootStrapOptimizer() {
+        if (bootStrapOptimizer == null) {
+            String value = getPrefs().get("BOOTSTRAP-OPTIMIZER", "CMA-ES");
+            bootStrapOptimizer = value;
+        }
+        return bootStrapOptimizer;
+    }
+
+    public static void setBootStrapOptimizer(String value) {
+        bootStrapOptimizer = value;
+        if (value != null) {
+            getPrefs().put("BOOTSTRAP-OPTIMIZER", value);
+        } else {
+            getPrefs().remove("BOOTSTRAP-OPTIMIZER");
+        }
+    }
+
     public static Double getRexRatio() {
         if (rexRatio == null) {
             String value = getPrefs().get("REX_RATIO", "3.0");
@@ -81,7 +117,6 @@ public class CoMDPreferences {
         }
     }
 
-
     static Map<String, Boolean> getCESTEqnMap() {
         if (cestEqnMap == null) {
             Preferences prefs = Preferences.userNodeForPackage(ExperimentData.class);
@@ -90,7 +125,7 @@ public class CoMDPreferences {
         }
         return cestEqnMap;
     }
-    
+
     static Map<String, Boolean> getR1RhoEqnMap() {
         if (r1rhoEqnMap == null) {
             Preferences prefs = Preferences.userNodeForPackage(ExperimentData.class);
@@ -133,7 +168,7 @@ public class CoMDPreferences {
         }
         prefs.put("CEST_EQNS", eqnString);
     }
-    
+
     public static void saveR1RhoEqnPrefs() {
         Preferences prefs = Preferences.userNodeForPackage(ExperimentData.class);
         String eqnString = DEFAULT_R1RHO_EQNS;
@@ -153,7 +188,7 @@ public class CoMDPreferences {
         }
         return cestEqnList;
     }
-    
+
     public static List<String> getActiveR1RhoEquations() {
         Map<String, Boolean> map = getR1RhoEqnMap();
         List<String> r1rhoEqnList = new ArrayList<>();
@@ -179,7 +214,7 @@ public class CoMDPreferences {
         }
         return state;
     }
-    
+
     public static void setR1RhoEquationState(String equation, boolean state) {
         Map<String, Boolean> map = getR1RhoEqnMap();
         map.put(equation, state);

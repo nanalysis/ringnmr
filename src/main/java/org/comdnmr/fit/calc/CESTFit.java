@@ -272,7 +272,8 @@ public class CESTFit implements EquationFitter {
                 sigma[i] = (boundaries[1][i] - boundaries[0][i]) / 10.0;
                 //System.out.println(i + " map " + map[0][i] + " bou0 " + boundaries[0][i] + " bou1 " + boundaries[1][i] + " sig " + sigma[i] + " gue " + guesses[i]);
             }
-            PointValuePair result = calcCEST.refine(guesses, boundaries[0], boundaries[1], sigma);
+            PointValuePair result = calcCEST.refine(guesses, boundaries[0],
+                    boundaries[1], sigma, CoMDPreferences.getOptimizer());
             double[] pars = result.getPoint();
             System.out.println(eqn);
 
