@@ -83,7 +83,7 @@ public class CESTEquations {
             double we = Math.sqrt(omegaB1[i] * omegaB1[i] + omegaBar * omegaBar);
             cos2t[i] = (omegaBar / we) * (omegaBar / we);
         }
-       // System.out.println(b1Field[0] + " " + omegaB1[0] + " " + R2A + " " + field);
+        // System.out.println(b1Field[0] + " " + omegaB1[0] + " " + R2A + " " + field);
 
         double[] cest = new double[cos2t.length];
 
@@ -312,75 +312,81 @@ public class CESTEquations {
 
         double[] cest = new double[cos2t.length];
 
-        if ("laguerre".equals(approx)) {
-            // if(R2.length == 1){
-            double[] r1rho = R1RhoEquations.r1rhoLaguerre(omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
-            //double[] cest = new double[cos2t.length];
-            for (int i = 0; i < cos2t.length; i++) {
-                cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
-            }
+        if (null != approx) {
+            switch (approx) {
+                case "laguerre": {
+                    // if(R2.length == 1){
+                    double[] r1rho = R1RhoEquations.r1rhoLaguerre(omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
+                    //double[] cest = new double[cos2t.length];
+                    for (int i = 0; i < cos2t.length; i++) {
+                        cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
+                    }
 //            } else {
 //                System.out.print("Error: Incorrect number of values for R2. Input one value for R2.");
 //            } 
-        } else if ("trott".equals(approx)) {
-            double[] r1rho = R1RhoEquations.r1rhoPerturbation(omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
-            //double[] cest = new double[cos2t.length];
-            for (int i = 0; i < cos2t.length; i++) {
-                cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
-            }
-
-        } else if ("trottnoex".equals(approx)) {
-            double[] r1rho = R1RhoEquations.r1rhoPerturbationNoEx(omegaB1, deltaA, R1A, R2A);
-            //double[] cest = new double[cos2t.length];
-            for (int i = 0; i < cos2t.length; i++) {
-                cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
-            }
-
-        } else if ("baldwinkay".equals(approx)) {
-            double[] r1rho = R1RhoEquations.r1rhoBaldwinKay(omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
-            //double[] cest = new double[cos2t.length];
-            for (int i = 0; i < cos2t.length; i++) {
-                cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
-            }
-
-        } else if ("sd".equals(approx)) {
-            int wlen = 11;
-
-            double omegaSD = 0.2;   // fractional variation in B1
-            double[] omwt = {0.022, 0.0444, 0.0777, 0.1159, 0.1473, 0.1596, 0.1473, 0.1159, 0.0777, 0.0444, 0.0216};
-            double omwtsum = 0;
-            for (int i = 0; i < omwt.length; i++) {
-                omwtsum += omwt[i];
-            }
-            for (int i = 0; i < omwt.length; i++) {
-                omwt[i] = omwt[i] / omwtsum;
-            }
-
-            double[] omegagauss = new double[wlen];
-            for (int i = 0; i < wlen; i++) {
-                omegagauss[i] = -2 * omegaSD + i * (2 * omegaSD - (-2 * omegaSD)) / (wlen - 1);
-            }
-
-            double[] magA = new double[omegaB1.length];
-            double[] omegatmp = new double[omegaB1.length];
-            double[] r1rho = new double[omegatmp.length];
-            //double[] cest = new double[r1rho.length];
-            for (int i = 0; i < wlen; i++) {
-                for (int j = 0; j < omegatmp.length; j++) {
-                    omegatmp[j] = omegaB1[j] * (1 + omegagauss[i]);
-                    we[j] = Math.sqrt(omegatmp[j] * omegatmp[j] + omegaBar[j] * omegaBar[j]);
-                    cos2t[j] = (omegaBar[j] / we[j]) * (omegaBar[j] / we[j]);
+                    break;
                 }
-
-                r1rho = R1RhoEquations.r1rhoPerturbation(omegatmp, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
-
-                for (int j = 0; j < cest.length; j++) {
-                    cest[j] = cos2t[j] * Math.exp(-trad * r1rho[j]);
-                    magA[j] = magA[j] + omwt[i] * cest[j];
+                case "trott": {
+                    double[] r1rho = R1RhoEquations.r1rhoPerturbation(omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
+                    //double[] cest = new double[cos2t.length];
+                    for (int i = 0; i < cos2t.length; i++) {
+                        cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
+                    }
+                    break;
                 }
-            }
+                case "trottnoex": {
+                    double[] r1rho = R1RhoEquations.r1rhoPerturbationNoEx(omegaB1, deltaA, R1A, R2A);
+                    //double[] cest = new double[cos2t.length];
+                    for (int i = 0; i < cos2t.length; i++) {
+                        cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
+                    }
+                    break;
+                }
+                case "baldwinkay": {
+                    double[] r1rho = R1RhoEquations.r1rhoBaldwinKay(omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
+                    //double[] cest = new double[cos2t.length];
+                    for (int i = 0; i < cos2t.length; i++) {
+                        cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
+                    }
+                    break;
+                }
+                case "sd": {
+                    int wlen = 11;
+                    double omegaSD = 0.2;   // fractional variation in B1
+                    double[] omwt = {0.022, 0.0444, 0.0777, 0.1159, 0.1473, 0.1596, 0.1473, 0.1159, 0.0777, 0.0444, 0.0216};
+                    double omwtsum = 0;
+                    for (int i = 0; i < omwt.length; i++) {
+                        omwtsum += omwt[i];
+                    }
+                    for (int i = 0; i < omwt.length; i++) {
+                        omwt[i] = omwt[i] / omwtsum;
+                    }
+                    double[] omegagauss = new double[wlen];
+                    for (int i = 0; i < wlen; i++) {
+                        omegagauss[i] = -2 * omegaSD + i * (2 * omegaSD - (-2 * omegaSD)) / (wlen - 1);
+                    }
+                    double[] magA = new double[omegaB1.length];
+                    double[] omegatmp = new double[omegaB1.length];
+                    for (int i = 0; i < wlen; i++) {
+                        for (int j = 0; j < omegatmp.length; j++) {
+                            omegatmp[j] = omegaB1[j] * (1 + omegagauss[i]);
+                            we[j] = Math.sqrt(omegatmp[j] * omegatmp[j] + omegaBar[j] * omegaBar[j]);
+                            cos2t[j] = (omegaBar[j] / we[j]) * (omegaBar[j] / we[j]);
+                        }
 
-            cest = magA;
+                        double[] r1rho = R1RhoEquations.r1rhoPerturbation(omegatmp, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
+
+                        for (int j = 0; j < cest.length; j++) {
+                            cest[j] = cos2t[j] * Math.exp(-trad * r1rho[j]);
+                            magA[j] = magA[j] + omwt[i] * cest[j];
+                        }
+                    }
+                    cest = magA;
+                    break;
+                }
+                default:
+                    break;
+            }
         }
 
         return cest;
@@ -654,8 +660,8 @@ public class CESTEquations {
 
         if (peaks.length > 1) {
             double[][] r2 = new double[2][peaks.length / 2];
-            double awidth = 0;
-            double bwidth = 0;
+            double awidth;
+            double bwidth;
 
             if (peaks.length == 2) {
                 if (peaks[0][1] > peaks[1][1]) {
