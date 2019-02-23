@@ -85,7 +85,7 @@ public class CoMDPreferences {
 
     public static String getBootStrapOptimizer() {
         if (bootStrapOptimizer == null) {
-            String value = getPrefs().get("BOOTSTRAP-OPTIMIZER", "CMA-ES");
+            String value = getPrefs().get("BOOTSTRAP-OPTIMIZER", "BOBYQA");
             bootStrapOptimizer = value;
         }
         return bootStrapOptimizer;
