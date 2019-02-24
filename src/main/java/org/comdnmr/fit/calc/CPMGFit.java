@@ -66,6 +66,7 @@ public class CPMGFit implements EquationFitter {
         return index;
     }
 
+    @Override
     public void setData(List<Double>[] allXValues, List<Double> yValues, List<Double> errValues) {
         xValues.clear();
         xValues.addAll(allXValues[0]);
@@ -75,7 +76,7 @@ public class CPMGFit implements EquationFitter {
         this.errValues.addAll(errValues);
         this.fieldValues.clear();
         this.idValues.clear();
-        for (int i = 0; i < yValues.size(); i++) {
+        for (Double yValue : yValues) {
             this.fieldValues.add(500.0);
             this.idValues.add(0);
         }
@@ -93,6 +94,7 @@ public class CPMGFit implements EquationFitter {
     }
 
     // public void setData(Collection<ExperimentData> expDataList, String[] resNums) {
+    @Override
     public void setData(ResidueProperties resProps, String[] resNums) {
         this.resNums = resNums.clone();
         nResidues = resNums.length;
@@ -131,6 +133,7 @@ public class CPMGFit implements EquationFitter {
         }
     }
 
+    @Override
     public FitModel getFitModel() {
         return calcR;
     }
@@ -144,14 +147,17 @@ public class CPMGFit implements EquationFitter {
         return equationNameList;
     }
 
+    @Override
     public int[] getStateCount() {
         return stateCount;
     }
 
+    @Override
     public int[][] getStates() {
         return states;
     }
 
+    @Override
     public void setupFit(String eqn, boolean absMode) {
         double[][] x = new double[1][yValues.size()];
         double[] y = new double[yValues.size()];
@@ -177,6 +183,7 @@ public class CPMGFit implements EquationFitter {
         calcR.setMap(stateCount, states);
     }
 
+    @Override
     public List<ParValueInterface> guessPars(String eqn, boolean absMode) {
         setupFit(eqn, absMode);
         double[] guesses = calcR.guess();
@@ -191,11 +198,13 @@ public class CPMGFit implements EquationFitter {
         return parValues;
     }
 
+    @Override
     public double rms(double[] pars) {
         double rms = calcR.getRMS(pars);
         return rms;
     }
 
+    @Override
     public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderguesses) {
         setupFit(eqn, absMode);
         int[][] map = calcR.getMap();
@@ -238,7 +247,6 @@ public class CPMGFit implements EquationFitter {
         String[] parNames = calcR.getParNames();
         double[] errEstimates;
         double[][] simPars = null;
-        boolean exchangeValid = true;
         double[] rexValues = calcR.getRex(pars);
         boolean okRex = false;
         double rexRatio = CoMDPreferences.getRexRatio();
@@ -248,7 +256,7 @@ public class CPMGFit implements EquationFitter {
                 break;
             }
         }
-        exchangeValid = okRex;
+        boolean exchangeValid = okRex;
 
         if (FitModel.getCalcError()) {
             if (nonParBootStrap) {
@@ -292,6 +300,7 @@ public class CPMGFit implements EquationFitter {
         return getResults(this, eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, exchangeValid);
     }
 
+    @Override
     public double[] getSimX() {
         return SIMX;
     }

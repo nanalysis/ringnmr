@@ -3,6 +3,10 @@ package org.comdnmr.fit.calc;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 import org.apache.commons.math3.analysis.MultivariateFunction;
+import org.apache.commons.math3.exception.DimensionMismatchException;
+import org.apache.commons.math3.exception.NotPositiveException;
+import org.apache.commons.math3.exception.NotStrictlyPositiveException;
+import org.apache.commons.math3.exception.TooManyEvaluationsException;
 import org.apache.commons.math3.optim.InitialGuess;
 import org.apache.commons.math3.optim.MaxEval;
 import org.apache.commons.math3.optim.PointValuePair;
@@ -52,6 +56,7 @@ public abstract class FitModel implements MultivariateFunction {
             super(relativeThreshold, absoluteThreshold, maxIter);
         }
 
+        @Override
         public boolean converged(final int iteration, final PointValuePair previous, final PointValuePair current) {
             boolean converged = super.converged(iteration, previous, current);
             if (reportFitness) {
@@ -112,7 +117,7 @@ public abstract class FitModel implements MultivariateFunction {
                     new ObjectiveFunction(this), GoalType.MINIMIZE,
                     new SimpleBounds(normLower, normUpper),
                     new InitialGuess(normGuess));
-        } catch (Exception e) {
+        } catch (DimensionMismatchException | NotPositiveException | NotStrictlyPositiveException | TooManyEvaluationsException e) {
             e.printStackTrace();
         }
         PointValuePair deNormResult = new PointValuePair(deNormalize(result.getPoint()), result.getValue());
@@ -214,7 +219,7 @@ public abstract class FitModel implements MultivariateFunction {
         this.fieldValues = fieldValues;
     }
 
-    boolean setNID() {
+    final boolean setNID() {
         nID = Arrays.stream(idNums).max().getAsInt() + 1;
         boolean[] checkIDs = new boolean[nID];
         Arrays.stream(idNums).forEach(id -> checkIDs[id] = true);
@@ -323,12 +328,6 @@ public abstract class FitModel implements MultivariateFunction {
     public void setMap(int[] stateCount, int[][] states) {
         this.map = new int[states.length][stateCount.length];
         this.map = equation.makeMap(stateCount, states, getMask());
-        for (int i = 0; i < map.length; i++) {
-//            for (int j = 0; j < map[i].length; j++) {
-//                System.out.print(" " + map[i][j]);
-//            }
-//            System.out.println(" map");
-        }
     }
 
     public int[][] getMap() {
@@ -376,7 +375,7 @@ public abstract class FitModel implements MultivariateFunction {
             for (int i = 0; i < xValues.length; i++) {
                 if (FastMath.abs(fieldValues[i] - field) < 0.01) {
                     double yCalc = equation.calculate(par, map[idNums[i]], xValues[i], idNums[i], field);
-                    System.out.printf("%8.5f %8.5f %8.5f\n", xValues[i], yValues[i], yCalc);
+                    System.out.printf("%8.5f %8.5f %8.5f\n", xValues[0][i], yValues[i], yCalc);
                 }
             }
         }

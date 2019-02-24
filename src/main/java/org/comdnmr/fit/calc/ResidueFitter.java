@@ -18,7 +18,7 @@ import javafx.concurrent.Worker;
  */
 public class ResidueFitter {
 
-    private FitResidues processDataset = new FitResidues();
+    private final FitResidues processDataset = new FitResidues();
     final ReadOnlyObjectProperty<Worker.State> stateProperty = processDataset.worker.stateProperty();
     private boolean isProcessing = false;
     ResidueProperties resProps;
@@ -176,16 +176,21 @@ public class ResidueFitter {
 
     EquationFitter getFitter() {
         EquationFitter fitter;
-        if (resProps.getExpMode().equals("cpmg")) {
-            fitter = new CPMGFit();
-        } else if (resProps.getExpMode().equals("exp")) {
-            fitter = new ExpFit();
-        } else if (resProps.getExpMode().equals("cest")) {
-            fitter = new CESTFit();
-        } else if (resProps.getExpMode().equals("r1rho")) {
-            fitter = new R1RhoFit();
-        } else {
-            throw new IllegalArgumentException("Invalid mode " + resProps.getExpMode());
+        switch (resProps.getExpMode()) {
+            case "cpmg":
+                fitter = new CPMGFit();
+                break;
+            case "exp":
+                fitter = new ExpFit();
+                break;
+            case "cest":
+                fitter = new CESTFit();
+                break;
+            case "r1rho":
+                fitter = new R1RhoFit();
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid mode " + resProps.getExpMode());
         }
         return fitter;
     }
@@ -197,19 +202,24 @@ public class ResidueFitter {
         double aicMin = Double.MAX_VALUE;
         String bestEquation = "NOEX";
         List<String> equationNames;
-        if (resProps.getExpMode().equals("cpmg")) {
-            equationNames = CPMGFit.getEquationNames();
-        } else if (resProps.getExpMode().equals("exp")) {
-            equationNames = ExpFit.getEquationNames();
-            bestEquation = "EXPAB";
-        } else if (resProps.getExpMode().equals("cest")) {
-            equationNames = CESTFit.getEquationNames();
-            bestEquation = "CESTR1RHOPERTURBATIONNOEX";
-        } else if (resProps.getExpMode().equals("r1rho")) {
-            equationNames = R1RhoFit.getEquationNames();
-            bestEquation = "R1RHOPERTURBATIONNOEX";
-        } else {
-            throw new IllegalArgumentException("Invalid mode " + resProps.getExpMode());
+        switch (resProps.getExpMode()) {
+            case "cpmg":
+                equationNames = CPMGFit.getEquationNames();
+                break;
+            case "exp":
+                equationNames = ExpFit.getEquationNames();
+                bestEquation = "EXPAB";
+                break;
+            case "cest":
+                equationNames = CESTFit.getEquationNames();
+                bestEquation = "CESTR1RHOPERTURBATIONNOEX";
+                break;
+            case "r1rho":
+                equationNames = R1RhoFit.getEquationNames();
+                bestEquation = "R1RHOPERTURBATIONNOEX";
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid mode " + resProps.getExpMode());
         }
         for (String equationName : equationNames) {
             if ((useEquation != null) && !equationName.equals(useEquation)) {
@@ -268,8 +278,10 @@ public class ResidueFitter {
         private FitResidues() {
             worker = new Service<Integer>() {
 
+                @Override
                 protected Task createTask() {
                     return new Task() {
+                        @Override
                         protected Object call() {
                             updateStatus("Start processing");
                             updateTitle("Start Processing");
@@ -299,7 +311,7 @@ public class ResidueFitter {
     }
 
     public static EquationType getEquationType(String name) throws IllegalArgumentException {
-        EquationType equationType = null;
+        EquationType equationType;
 
         try {
             equationType = CPMGEquation.valueOf(name);

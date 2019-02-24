@@ -426,8 +426,8 @@ public class R1RhoEquations {
 
         if (peaks.length > 1) {
             double[][] r2 = new double[2][peaks.length / 2];
-            double awidth = 0;
-            double bwidth = 0;
+            double awidth;
+            double bwidth;
 
             if (peaks.length == 2) {
                 if (peaks[0][1] > peaks[1][1]) {

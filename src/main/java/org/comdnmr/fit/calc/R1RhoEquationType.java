@@ -11,6 +11,7 @@ package org.comdnmr.fit.calc;
  */
 public interface R1RhoEquationType extends EquationType {
 
+    @Override
     public default double calculate(double[] par, int[] map, double[] X, int idNum, double field) {
         double[][] x = new double[3][1];
         //System.out.println(x.length + " " + x[0].length + " X " + X.length);
@@ -21,6 +22,7 @@ public interface R1RhoEquationType extends EquationType {
         return y[0];
     }
 
+    @Override
     public default double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
         int nPars = CalcR1Rho.getNPars(map);
         double[] guesses = new double[nPars];
@@ -58,6 +60,7 @@ public interface R1RhoEquationType extends EquationType {
         return guesses;
     }
 
+    @Override
     public default double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
         double[][] boundaries = new double[2][guesses.length];
         int id = 0;
@@ -99,18 +102,22 @@ public interface R1RhoEquationType extends EquationType {
         return boundaries;
     }
 
+    @Override
     public default double getRex(double[] pars, int[] map) {
         return 0.0;
     }
 
+    @Override
     public default double getKex(double[] pars) {
         return pars[0];
     }
 
+    @Override
     public default double getKex(double[] pars, int id) {
         return pars[0];
     }
 
+    @Override
     public default int[][] makeMap(int n) {
         int nP = 8;
         int[][] map = new int[n][nP];
@@ -122,6 +129,7 @@ public interface R1RhoEquationType extends EquationType {
         return map;
     }
 
+    @Override
     public default int[][] makeMap(int n, int m) {
         int nP = m;
         int[][] map = new int[n][nP];
@@ -133,6 +141,7 @@ public interface R1RhoEquationType extends EquationType {
         return map;
     }
 
+    @Override
     public default int[][] makeMap(int[] stateCount, int[][] states, int[] r2Mask) {
         int[][] map = makeMap(1);
         return map;

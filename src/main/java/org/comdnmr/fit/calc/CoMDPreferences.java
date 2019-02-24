@@ -24,8 +24,8 @@ public class CoMDPreferences {
     static private String bootStrapOptimizer = null;
     private static Map<String, Boolean> cestEqnMap = null;
     private static Map<String, Boolean> r1rhoEqnMap = null;
-    private static String DEFAULT_CEST_EQNS = "CESTR1RHOPERTURBATIONNOEX;true\nCESTR1RHOPERTURBATION;true";
-    private static String DEFAULT_R1RHO_EQNS = "R1RHOPERTURBATIONNOEX;true\nR1RHOPERTURBATION;true";
+    private static final String DEFAULT_CEST_EQNS = "CESTR1RHOPERTURBATIONNOEX;true\nCESTR1RHOPERTURBATION;true";
+    private static final String DEFAULT_R1RHO_EQNS = "R1RHOPERTURBATIONNOEX;true\nR1RHOPERTURBATION;true";
 
     static Preferences getPrefs() {
         Preferences prefs = Preferences.userNodeForPackage(CoMDPreferences.class);

@@ -63,6 +63,7 @@ public class ExpFit implements EquationFitter {
         return index;
     }
 
+    @Override
     public void setData(List<Double>[] allXValues, List<Double> yValues, List<Double> errValues) {
         xValues.clear();
         xValues.addAll(allXValues[0]);
@@ -72,7 +73,7 @@ public class ExpFit implements EquationFitter {
         this.errValues.addAll(errValues);
         this.fieldValues.clear();
         this.idValues.clear();
-        for (int i = 0; i < yValues.size(); i++) {
+        for (Double yValue : yValues) {
             this.fieldValues.add(500.0);
             this.idValues.add(0);
         }
@@ -90,6 +91,7 @@ public class ExpFit implements EquationFitter {
     }
 
     // public void setData(Collection<ExperimentData> expDataList, String[] resNums) {
+    @Override
     public void setData(ResidueProperties resProps, String[] resNums) {
         this.resNums = resNums.clone();
         nResidues = resNums.length;
@@ -129,6 +131,7 @@ public class ExpFit implements EquationFitter {
         }
     }
 
+    @Override
     public FitModel getFitModel() {
         return expModel;
     }
@@ -142,14 +145,17 @@ public class ExpFit implements EquationFitter {
         return equationNameList;
     }
 
+    @Override
     public int[] getStateCount() {
         return stateCount;
     }
 
+    @Override
     public int[][] getStates() {
         return states;
     }
 
+    @Override
     public void setupFit(String eqn, boolean absMode) {
         double[][] x = new double[1][yValues.size()];
         double[] y = new double[yValues.size()];
@@ -175,6 +181,7 @@ public class ExpFit implements EquationFitter {
         expModel.setMap(stateCount, states);
     }
 
+    @Override
     public List<ParValueInterface> guessPars(String eqn, boolean absMode) {
         setupFit(eqn, absMode);
         double[] guesses = expModel.guess();
@@ -189,11 +196,13 @@ public class ExpFit implements EquationFitter {
         return parValues;
     }
 
+    @Override
     public double rms(double[] pars) {
         double rms = expModel.getRMS(pars);
         return rms;
     }
 
+    @Override
     public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderguesses) {
         setupFit(eqn, absMode);
 
@@ -249,6 +258,7 @@ public class ExpFit implements EquationFitter {
         return getResults(this, eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, true);
     }
 
+    @Override
     public double[] getSimX() {
         return SIMX;
     }

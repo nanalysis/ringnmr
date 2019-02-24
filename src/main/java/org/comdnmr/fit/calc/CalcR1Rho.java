@@ -1,6 +1,5 @@
 package org.comdnmr.fit.calc;
 
-import java.util.ArrayList;
 import java.util.stream.IntStream;
 import org.apache.commons.math3.optim.PointValuePair;
 import org.apache.commons.math3.random.RandomGenerator;
@@ -15,12 +14,12 @@ public class CalcR1Rho extends FitModel {
     int[] r2Mask = {0, 1, 3};
     double[] rexErrors = new double[nID];
     R1RhoEquations r1rhoEq = new R1RhoEquations();
-    double[][] parValues;
 
     public CalcR1Rho() {
         this.equation = R1RhoEquation.R1RHOPERTURBATION;
     }
 
+    @Override
     public void setEquation(String eqName) {
         equation = R1RhoEquation.valueOf(eqName.toUpperCase());
     }
@@ -48,14 +47,15 @@ public class CalcR1Rho extends FitModel {
 
     public static int getNPars(int[][] map) {
         int maxIndex = 0;
-        for (int i = 0; i < map.length; i++) {
-            for (int j = 0; j < map[i].length; j++) {
-                maxIndex = Math.max(map[i][j], maxIndex);
+        for (int[] map1 : map) {
+            for (int j = 0; j < map1.length; j++) {
+                maxIndex = Math.max(map1[j], maxIndex);
             }
         }
         return maxIndex + 1;
     }
 
+    @Override
     public int[] getMask() {
         return r2Mask;
     }
@@ -84,6 +84,7 @@ public class CalcR1Rho extends FitModel {
         }
     }
 
+    @Override
     public double[] getPredicted(double[] par) {
         double[] yPred = simY(par);
         return yPred;
@@ -94,6 +95,7 @@ public class CalcR1Rho extends FitModel {
         return parValues;
     }
 
+    @Override
     public double[] simBounds(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) {
         reportFitness = false;
         int nPar = start.length;
@@ -127,6 +129,7 @@ public class CalcR1Rho extends FitModel {
         return parSDev;
     }
 
+    @Override
     public double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) {
         reportFitness = false;
         int nPar = start.length;
@@ -166,6 +169,7 @@ public class CalcR1Rho extends FitModel {
         return parSDev;
     }
 
+    @Override
     public double[] simBoundsBootstrapStream(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) {
         reportFitness = false;
         int nPar = start.length;

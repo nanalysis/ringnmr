@@ -1,6 +1,5 @@
 package org.comdnmr.fit.calc;
 
-import java.util.ArrayList;
 import java.util.stream.IntStream;
 import org.apache.commons.math3.optim.PointValuePair;
 import org.apache.commons.math3.random.RandomGenerator;
@@ -15,12 +14,12 @@ public class CalcCEST extends FitModel {
     int[] r2Mask = {0, 1, 3};
     double[] rexErrors = new double[nID];
     CESTEquations cestEq = new CESTEquations();
-    double[][] parValues;
 
     public CalcCEST() {
         this.equation = CESTEquation.CESTR1RHOPERTURBATION;
     }
 
+    @Override
     public void setEquation(String eqName) {
         equation = CESTEquation.valueOf(eqName.toUpperCase());
     }
@@ -48,14 +47,15 @@ public class CalcCEST extends FitModel {
 
     public static int getNPars(int[][] map) {
         int maxIndex = 0;
-        for (int i = 0; i < map.length; i++) {
-            for (int j = 0; j < map[i].length; j++) {
-                maxIndex = Math.max(map[i][j], maxIndex);
+        for (int[] map1 : map) {
+            for (int j = 0; j < map1.length; j++) {
+                maxIndex = Math.max(map1[j], maxIndex);
             }
         }
         return maxIndex + 1;
     }
 
+    @Override
     public int[] getMask() {
         return r2Mask;
     }
@@ -87,6 +87,7 @@ public class CalcCEST extends FitModel {
         }
     }
 
+    @Override
     public double[] getPredicted(double[] par) {
         double[] yPred = simY(par);
         return yPred;
@@ -97,6 +98,7 @@ public class CalcCEST extends FitModel {
         return parValues;
     }
 
+    @Override
     public double[] simBounds(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) {
         reportFitness = false;
         int nPar = start.length;
@@ -129,6 +131,7 @@ public class CalcCEST extends FitModel {
         return parSDev;
     }
 
+    @Override
     public double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) {
         reportFitness = false;
         int nPar = start.length;
@@ -168,6 +171,7 @@ public class CalcCEST extends FitModel {
         return parSDev;
     }
 
+    @Override
     public double[] simBoundsBootstrapStream(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) {
         reportFitness = false;
         int nPar = start.length;

@@ -14,12 +14,12 @@ public class CalcExpDecay extends FitModel {
     static RandomGenerator random = new SynchronizedRandomGenerator(new Well19937c());
     int[] r2Mask = {0, 1, 3};
     double[] rexErrors = new double[nID];
-    double[][] parValues;
 
     public CalcExpDecay() {
         this.equation = ExpEquation.EXPAB;
     }
 
+    @Override
     public void setEquation(String eqName) {
         equation = ExpEquation.valueOf(eqName.toUpperCase());
     }
@@ -45,14 +45,15 @@ public class CalcExpDecay extends FitModel {
 
     public static int getNPars(int[][] map) {
         int maxIndex = 0;
-        for (int i = 0; i < map.length; i++) {
-            for (int j = 0; j < map[i].length; j++) {
-                maxIndex = Math.max(map[i][j], maxIndex);
+        for (int[] map1 : map) {
+            for (int j = 0; j < map1.length; j++) {
+                maxIndex = Math.max(map1[j], maxIndex);
             }
         }
         return maxIndex + 1;
     }
 
+    @Override
     public int[] getMask() {
         return r2Mask;
     }
@@ -107,6 +108,7 @@ public class CalcExpDecay extends FitModel {
         return result;
     }
 
+    @Override
     public double[] simBounds(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) {
         reportFitness = false;
         int nSim = CoMDPreferences.getSampleSize();
@@ -140,6 +142,7 @@ public class CalcExpDecay extends FitModel {
         return parSDev;
     }
 
+    @Override
     public double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) {
         reportFitness = false;
         int nPar = start.length;
@@ -179,6 +182,7 @@ public class CalcExpDecay extends FitModel {
         return parSDev;
     }
 
+    @Override
     public double[] simBoundsBootstrapStream(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) {
         reportFitness = false;
         int nPar = start.length;

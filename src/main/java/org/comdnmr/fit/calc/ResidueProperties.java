@@ -1,7 +1,6 @@
 package org.comdnmr.fit.calc;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,7 +17,7 @@ import java.util.stream.Collectors;
 public class ResidueProperties {
 
     Map<String, ExperimentData> expMaps = new HashMap<>();
-    private HashMap<String, ResidueInfo> residueMap = new HashMap<>();
+    private final HashMap<String, ResidueInfo> residueMap = new HashMap<>();
     final String name;
     String fileName = null;
     Map<Double, Integer> fieldMap = new LinkedHashMap();
@@ -169,7 +168,7 @@ public class ResidueProperties {
     }
 
     public int[] getStateIndices(int resIndex, ExperimentData expData) {
-        if (fieldMap.size() == 0) {
+        if (fieldMap.isEmpty()) {
             setupMaps();
         }
         int[] state = new int[4];
@@ -184,7 +183,7 @@ public class ResidueProperties {
     }
 
     int[] getStateCount(int nResidues) {
-        if (fieldMap.size() == 0) {
+        if (fieldMap.isEmpty()) {
             setupMaps();
         }
         int[] state = new int[4];

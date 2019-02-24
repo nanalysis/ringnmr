@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import javafx.scene.control.Alert;
 import org.apache.commons.math3.optim.PointValuePair;
 
 /**
@@ -132,7 +131,7 @@ public class R1RhoFit implements EquationFitter {
         xValues[2].addAll(xValues2);
         this.yValues.addAll(yValues);
         this.errValues.addAll(errValues);
-        for (int i = 0; i < yValues.size(); i++) {
+        for (Double yValue : yValues) {
             fieldValues.add(1.0);
             idValues.add(0);
         }
@@ -170,6 +169,7 @@ public class R1RhoFit implements EquationFitter {
         //System.out.print(this.yValues.size() + "\n");
     }
 
+    @Override
     public FitModel getFitModel() {
         return calcR1Rho;
     }
@@ -188,14 +188,17 @@ public class R1RhoFit implements EquationFitter {
         return equationNameList;
     }
 
+    @Override
     public int[] getStateCount() {
         return stateCount;
     }
 
+    @Override
     public int[][] getStates() {
         return states;
     }
 
+    @Override
     public void setupFit(String eqn, boolean absMode) {
         double[][] x = new double[3][yValues.size()];
         double[] y = new double[yValues.size()];
@@ -223,6 +226,7 @@ public class R1RhoFit implements EquationFitter {
         calcR1Rho.setMap(stateCount, states);
     }
 
+    @Override
     public List<ParValueInterface> guessPars(String eqn, boolean absMode) {
         setupFit(eqn, absMode);
         double[] guesses = calcR1Rho.guess();
@@ -236,6 +240,7 @@ public class R1RhoFit implements EquationFitter {
         return parValues;
     }
 
+    @Override
     public double rms(double[] pars) {
         double rms = calcR1Rho.getRMS(pars);
         return rms;
@@ -276,9 +281,9 @@ public class R1RhoFit implements EquationFitter {
             double[] pars = result.getPoint();
             System.out.println(eqn);
 
-            for (int i = 0; i < map.length; i++) {
-                for (int j = 0; j < map[i].length; j++) {
-                    System.out.printf(" %3d", map[i][j]);
+            for (int[] map1 : map) {
+                for (int j = 0; j < map1.length; j++) {
+                    System.out.printf(" %3d", map1[j]);
                 }
                 System.out.println("");
             }
@@ -322,6 +327,7 @@ public class R1RhoFit implements EquationFitter {
         }
     }
 
+    @Override
     public double[] getSimX() {
         int nPoints = 100;
         double[] x = new double[nPoints];

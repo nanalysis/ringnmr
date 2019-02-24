@@ -20,7 +20,6 @@ public enum ExpEquation implements EquationType {
             double R = par[map[1]];
             double delay = x[0];
             double value = A * Math.exp(-R * delay);
-//            System.out.println(delay + " " + A + " " + R + " " + value);
             return value;
         }
 
@@ -28,14 +27,9 @@ public enum ExpEquation implements EquationType {
         public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
             int nPars = CalcExpDecay.getNPars(map);
             double[] guesses = new double[nPars];
-            double kExSum = 0.0;
             for (int id = 0; id < map.length; id++) {
-                double minY = DataUtil.getMinValue(yValues, idNums, id);
                 double maxY = DataUtil.getMaxValue(yValues, idNums, id);
-                double mean = DataUtil.getMeanValue(yValues, idNums, id);
                 double vMid = DataUtil.getMidValueZero(yValues, xValues[0], idNums, id);
-                System.out.println(minY + " " + maxY + " " + mean + " " + vMid);
-                System.out.println(id + " " + map[id].length + " " + map[id][0] + " " + map[id][1]);
                 guesses[map[id][0]] = maxY;
                 guesses[map[id][1]] = -Math.log(0.5) / vMid;
 
@@ -46,11 +40,11 @@ public enum ExpEquation implements EquationType {
         @Override
         public double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
             double[][] boundaries = new double[2][guesses.length];
-            for (int id = 0; id < map.length; id++) {
-                int iPar = map[id][0];
+            for (int[] map1 : map) {
+                int iPar = map1[0];
                 boundaries[0][iPar] = 0.0;
                 boundaries[1][iPar] = guesses[iPar] * 4;
-                iPar = map[id][1];
+                iPar = map1[1];
                 boundaries[0][iPar] = 0.0;
                 boundaries[1][iPar] = guesses[iPar] * 4;
             }
@@ -92,6 +86,7 @@ public enum ExpEquation implements EquationType {
             return map;
         }
 
+        @Override
         public int[][] makeMap(int[] stateCount, int[][] states, int[] r2Mask) {
             int n = states.length;
             int[][] map = new int[n][2];
@@ -113,10 +108,12 @@ public enum ExpEquation implements EquationType {
     String[] parNames;
     double fieldRef;
 
+    @Override
     public String getName() {
         return equationName;
     }
 
+    @Override
     public String[] getParNames() {
         return parNames;
     }
@@ -129,6 +126,7 @@ public enum ExpEquation implements EquationType {
         fieldRef = field;
     }
 
+    @Override
     public int getNGroupPars() {
         return nGroupPars;
     }

@@ -45,6 +45,7 @@ public class ResidueInfo {
             this.state = state;
         }
 
+        @Override
         public String getName() {
             return parName;
         }
@@ -58,6 +59,7 @@ public class ResidueInfo {
             }
         }
 
+        @Override
         public double getValue() {
             Double value = resInfo.curveSets.get(equationName).get(state).parMap.get(parName);
             return value;
@@ -72,6 +74,7 @@ public class ResidueInfo {
             }
         }
 
+        @Override
         public double getError() {
             return getError(equationName);
         }
@@ -193,6 +196,7 @@ public class ResidueInfo {
         return dataValues;
     }
 
+    @Override
     public String toString() {
         StringBuilder sBuilder = new StringBuilder();
         PlotEquation plotEquation = bestEquation;
