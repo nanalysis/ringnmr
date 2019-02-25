@@ -17,7 +17,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
 import org.comdnmr.fit.calc.CPMGFitResult;
-import org.comdnmr.fit.calc.ResidueFitter;
 import org.comdnmr.fit.calc.ResidueInfo;
 
 /**
