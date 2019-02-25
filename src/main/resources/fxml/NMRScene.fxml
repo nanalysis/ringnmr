@@ -44,6 +44,7 @@
                                     <MenuItem text="Save R File..." onAction="#saveBarToRFile"/>                            
                                 </items>
                             </Menu>
+                            <MenuItem text="Print XY Chart..." onAction="#printXYChart"/>                       
                             <MenuItem text="Load Sample Data..." onAction="#loadSimData"/>
                             <MenuItem text="Preferences..." onAction="#showPreferences"/>
                             <MenuItem text="Show Console" onAction="#showConsole"/>
@@ -71,9 +72,6 @@
             </children>
         </HBox>
     </top>
-
-    <bottom>
-    </bottom>
 
     <center>
         <SplitPane orientation="vertical" fx:id="splitPane">
@@ -207,12 +205,6 @@
                 <VBox fx:id="chartBox" VBox.vgrow="ALWAYS">
                     <children>
                         <SSRegion fx:id="ssregion" prefHeight="1" />
-                        <HBox>
-                            <children>
-                                <ToolBar fx:id="navigatorToolBar" orientation="HORIZONTAL" BorderPane.alignment="CENTER"/>
-                                <StatusBar fx:id="statusBar" HBox.hgrow="ALWAYS"/>
-                            </children>
-                        </HBox>
                     </children>
                 </VBox>
 
@@ -224,6 +216,15 @@
     </right>
     <left>
     </left>
+    <bottom>
+        <HBox>
+            <children>
+                <ToolBar fx:id="navigatorToolBar" orientation="HORIZONTAL" BorderPane.alignment="CENTER"/>
+                <StatusBar fx:id="statusBar" HBox.hgrow="ALWAYS"/>
+            </children>
+        </HBox>
+    </bottom>
+
 
 
 </BorderPane>

@@ -69,6 +69,7 @@ import java.util.HashMap;
 import java.util.Optional;
 import javafx.beans.property.SimpleStringProperty;
 import java.util.Random;
+import javafx.print.PrinterJob;
 import javafx.scene.control.Alert;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.Label;
@@ -1735,6 +1736,32 @@ public class PyController implements Initializable {
     private void exitProgram() {
         Platform.exit();
         System.exit(0);
+    }
+
+    @FXML
+    private void printXYChart() {
+        printChart(xychart);
+    }
+    
+    @FXML
+    private void printBarChart() {
+        printChart(chartBox);
+    }
+
+    private void printChart(Node node) {
+        PrinterJob job = PrinterJob.createPrinterJob();
+        if (job != null) {
+            boolean selected = job.showPrintDialog(null);
+            if (selected) {
+                boolean pageSetup = job.showPageSetupDialog(null);
+                if (pageSetup) {
+                    boolean success = job.printPage(node);
+                    if (success) {
+                        job.endJob();
+                    }
+                }
+            }
+        }
     }
 
 }
