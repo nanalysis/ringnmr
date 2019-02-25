@@ -502,8 +502,9 @@ public class PyController implements Initializable {
 
     @FXML
     public void startServer(ActionEvent event) {
-        String homeDir = System.getProperty("user.home");
-        File f = new File(homeDir + "/ports.txt");
+        String tempDir = System.getProperty("java.io.tmpdir");
+        String userName = System.getProperty("user.name");
+        File f = new File(tempDir + "/NMRFx_" + userName + "_port.txt");
         int port = 8021;
         if (!f.exists() && !f.isDirectory()) {
             Alert alert = new Alert(Alert.AlertType.WARNING, "NMRFx Server port file " + "\n" + f + "\ndoesn't exist. \nCreate NMRFx server first in NMRFxProcessor GUI.");
