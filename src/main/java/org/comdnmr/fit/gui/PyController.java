@@ -12,6 +12,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import java.util.ResourceBundle;
 import java.net.URL;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -505,8 +507,10 @@ public class PyController implements Initializable {
 
     @FXML
     public void startServer(ActionEvent event) {
-        String homeDir = System.getProperty("user.home");
-        File f = new File(homeDir + "/ports.txt");
+        String tempDir = System.getProperty("java.io.tmpdir");
+        String userName = System.getProperty("user.name");
+        Path path = FileSystems.getDefault().getPath(tempDir, "NMRFx_" + userName + "_port.txt");
+        File f = path.toFile(); //new File(tempDir + "/NMRFx_" + userName + "_port.txt");
         int port = 8021;
         if (!f.exists() && !f.isDirectory()) {
             Alert alert = new Alert(Alert.AlertType.WARNING, "NMRFx Server port file " + "\n" + f + "\ndoesn't exist. \nCreate NMRFx server first in NMRFxProcessor GUI.");
