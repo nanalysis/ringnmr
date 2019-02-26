@@ -22,7 +22,7 @@
         <dependency>
             <groupId>org.nmrfx</groupId>
             <artifactId>nmrfxutils</artifactId>
-            <version>10.2.22</version>
+            <version>10.3.23</version>
             <scope>compile</scope>
         </dependency>
         <dependency>

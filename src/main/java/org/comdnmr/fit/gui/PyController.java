@@ -6,7 +6,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -27,8 +26,6 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Side;
 import javafx.scene.Node;
 import javafx.scene.SnapshotParameters;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Menu;
@@ -67,11 +64,12 @@ import org.controlsfx.control.StatusBar;
 import org.comdnmr.fit.calc.CESTFit;
 import java.text.DecimalFormat;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Optional;
 import javafx.beans.property.SimpleStringProperty;
 import java.util.Random;
 import javafx.print.PrinterJob;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Alert;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.Label;
@@ -85,7 +83,8 @@ import static org.comdnmr.fit.gui.MainApp.preferencesController;
 import static org.comdnmr.fit.gui.MainApp.console;
 import static org.comdnmr.fit.gui.MainApp.primaryStage;
 import org.comdnmr.utils.NMRFxClient;
-import org.controlsfx.dialog.ExceptionDialog;
+import org.nmrfx.chart.DataSeries;
+import org.nmrfx.chart.XYValue;
 
 public class PyController implements Initializable {
 
@@ -99,7 +98,7 @@ public class PyController implements Initializable {
     SSRegion ssregion;
 
     @FXML
-    PlotData xychart;
+    XYPlotDataPane chartPane;
 
     @FXML
     Button nmrFxPeakButton;
@@ -184,6 +183,7 @@ public class PyController implements Initializable {
     boolean simulate = true;
 
     CPMGFitResult fitResult;
+    PlotData xychart;
 
     @FXML
     ToolBar navigatorToolBar = new ToolBar();
@@ -320,6 +320,7 @@ public class PyController implements Initializable {
         }
         nmrFxPeakButton.setDisable(true);
         nmrFxPeakButton.setOnAction(e -> nmrFxMessage(e));
+        xychart = (PlotData) chartPane.getChart();
 
 //        mainController.setOnHidden(e -> Platform.exit());
     }
@@ -643,8 +644,7 @@ public class PyController implements Initializable {
     }
 
     public void autoscaleBounds(ActionEvent event) {
-        xychart.autoscaleBounds();
-
+        xychart.autoScale();
     }
 
     public void updateChartEquations(String equationName, double[] pars, double[] errs, double[] fields) {
@@ -660,7 +660,6 @@ public class PyController implements Initializable {
 
     public void showEquations(List<PlotEquation> equations) {
         xychart.setEquations(equations);
-        xychart.layoutPlotChildren();
 //        Optional<Double> rms = rms();
 
     }
@@ -932,10 +931,10 @@ public class PyController implements Initializable {
         double xMax = Math.ceil((ChartUtil.maxRes + 2) / 5.0) * 5.0;
         xAxis.setLowerBound(xMin);
         xAxis.setUpperBound(xMax);
-        xAxis.setTickUnit(10);
-        xAxis.setMinorTickCount(5);
-        yAxis.setMinWidth(75.0);
-        yAxis.setPrefWidth(75.0);
+//        xAxis.setTickUnit(10);
+//        xAxis.setMinorTickCount(5);
+//        yAxis.setMinWidth(75.0);
+//        yAxis.setPrefWidth(75.0);
 
         if (typeName.equals("Kex")) {
             chart.getYAxis().setLabel("Kex");
@@ -1332,44 +1331,44 @@ public class PyController implements Initializable {
         chooser.setInitialFileName("cpmgchart.png");
         File file = chooser.showSaveDialog(MainApp.primaryStage);
         if (file != null) {
-            snapit(xychart, file);
+            snapit(chartPane, file);
         }
     }
 
     public void exportExecutable(String fileSuggestion, String exportType, boolean saveBar) throws ScriptException {
-        FileChooser chooser = new FileChooser();
-        chooser.setInitialFileName(fileSuggestion);
-        File file = chooser.showSaveDialog(MainApp.primaryStage);
-        if (file != null) {
-            String filePath = file.getAbsolutePath();
-
-            Map<String, Object>[] plottedData = xychart.getPlottedData();
-            Map<String, Object> graphData = null;
-            graphData = xychart.getGraphData();
-            graphData.put("file", filePath);
-            graphData.put("exportType", exportType);
-            ArrayList<Object> barChartData;
-            if (!"grace".equals(exportType) && saveBar) {
-                ObservableList<Node> barNodes = chartBox.getChildren();
-                barChartData = new ArrayList<>(barNodes.size());
-                barNodes.forEach(node -> {
-                    if (node instanceof XYBarChart) {
-                        XYBarChart barChart = (XYBarChart) node;
-                        String barChartName = barChart.toString();
-                        HashMap<String, Object> chartData = barChart.getChartData();
-                        barChartData.add(chartData);
-                    }
-                });
-            } else {
-                barChartData = new ArrayList<>(0);
-            }
-
-            MainApp.engine.put("data", plottedData);
-            MainApp.engine.put("configData", graphData);
-            MainApp.engine.put("barChartData", barChartData);
-            MainApp.engine.eval("writer = Writer(configData,data,barChartData)");
-            MainApp.engine.eval("writer.writeFromExportData()");
-        }
+//        FileChooser chooser = new FileChooser();
+//        chooser.setInitialFileName(fileSuggestion);
+//        File file = chooser.showSaveDialog(MainApp.primaryStage);
+//        if (file != null) {
+//            String filePath = file.getAbsolutePath();
+//
+//            Map<String, Object>[] plottedData = xychart.getPlottedData();
+//            Map<String, Object> graphData = null;
+//            graphData = xychart.getGraphData();
+//            graphData.put("file", filePath);
+//            graphData.put("exportType", exportType);
+//            ArrayList<Object> barChartData;
+//            if (!"grace".equals(exportType) && saveBar) {
+//                ObservableList<Node> barNodes = chartBox.getChildren();
+//                barChartData = new ArrayList<>(barNodes.size());
+//                barNodes.forEach(node -> {
+//                    if (node instanceof XYBarChart) {
+//                        XYBarChart barChart = (XYBarChart) node;
+//                        String barChartName = barChart.toString();
+//                        HashMap<String, Object> chartData = barChart.getChartData();
+//                        barChartData.add(chartData);
+//                    }
+//                });
+//            } else {
+//                barChartData = new ArrayList<>(0);
+//            }
+//
+//            MainApp.engine.put("data", plottedData);
+//            MainApp.engine.put("configData", graphData);
+//            MainApp.engine.put("barChartData", barChartData);
+//            MainApp.engine.eval("writer = Writer(configData,data,barChartData)");
+//            MainApp.engine.eval("writer.writeFromExportData()");
+//        }
     }
 
     public void saveGraceFile() throws IOException, ScriptException {
@@ -1509,7 +1508,7 @@ public class PyController implements Initializable {
         currentResInfo = null;
         currentResProps = null;
         fitResult = null;
-        xychart.clear();
+        // fixme xychart.clear();
         chartBox.getChildren().remove(activeChart);
         activeChart = xyBarChart0;
         getSimMode();
@@ -1526,7 +1525,7 @@ public class PyController implements Initializable {
 
     void showInfo(ResidueProperties resProps, String equationName, String mapName, String state, String[] residues, PlotData plotData) {
         ArrayList<PlotEquation> equations = new ArrayList<>();
-        ObservableList<XYChart.Series<Double, Double>> allData = FXCollections.observableArrayList();
+        ObservableList<DataSeries> allData = FXCollections.observableArrayList();
         List<ResidueData> resDatas = new ArrayList<>();
         List<int[]> allStates = new ArrayList<>();
         if (resProps != null) {
@@ -1543,17 +1542,22 @@ public class PyController implements Initializable {
                 if (!ResidueProperties.matchStateString(state, expData.getState())) {
                     continue;
                 }
-                List<XYChart.Series<Double, Double>> data = ChartUtil.getMapData(mapName, expName, residues);
+                List<DataSeries> data = ChartUtil.getMapData(mapName, expName, residues);
                 allData.addAll(data);
                 equations.addAll(ChartUtil.getEquations(expData, mapName, residues, equationName, expData.getState(), expData.getField()));
                 int[] states = resProps.getStateIndices(0, expData);
                 allStates.add(states);
             }
         }
+        int i = 0;
+        for (DataSeries series : allData) {
+            series.setStroke(PlotData.colors[i % 8]);
+            series.setFill(PlotData.colors[i % 8]);
+            i++;
+        }
         plotData.setData(allData);
         setBounds();
         plotData.setEquations(equations);
-        plotData.layoutPlotChildren();
         updateTable(resDatas);
         if (residues != null) {
             updateTableWithPars(mapName, residues, equationName, state, allStates);
@@ -1608,10 +1612,10 @@ public class PyController implements Initializable {
     }
 
     ArrayList<Double> getSimXData() {
-        ObservableList<XYChart.Series<Double, Double>> allData = xychart.getData();
+        ObservableList<DataSeries> allData = xychart.getData();
         ArrayList<Double> xValues = new ArrayList<>();
-        for (XYChart.Series<Double, Double> series : allData) {
-            for (XYChart.Data<Double, Double> dataPoint : series.getData()) {
+        for (DataSeries series : allData) {
+            for (XYValue dataPoint : series.getData()) {
                 double x = dataPoint.getXValue();
                 xValues.add(x);
             }
@@ -1620,10 +1624,10 @@ public class PyController implements Initializable {
     }
 
     ArrayList<Double> getSimYData() {
-        ObservableList<XYChart.Series<Double, Double>> allData = xychart.getData();
+        ObservableList<DataSeries> allData = xychart.getData();
         ArrayList<Double> yValues = new ArrayList<>();
-        for (XYChart.Series<Double, Double> series : allData) {
-            for (XYChart.Data<Double, Double> dataPoint : series.getData()) {
+        for (DataSeries series : allData) {
+            for (XYValue dataPoint : series.getData()) {
                 double y = dataPoint.getYValue();
                 yValues.add(y);
             }
@@ -1633,7 +1637,7 @@ public class PyController implements Initializable {
 
     @FXML
     void showSimData(ActionEvent e) {
-        ObservableList<XYChart.Series<Double, Double>> allData = FXCollections.observableArrayList();
+        ObservableList<DataSeries> allData = FXCollections.observableArrayList();
         String equationName = simControls.getEquation();
         EquationType eType = ResidueFitter.getEquationType(equationName);
         int[][] map = eType.makeMap(1);
@@ -1647,8 +1651,8 @@ public class PyController implements Initializable {
         double fieldRef = 1.0;
         int iLine = 0;
 
-        List<XYChart.Series<Double, Double>> data = new ArrayList<>();
-        XYChart.Series<Double, Double> series = new XYChart.Series<>();
+        List<DataSeries> data = new ArrayList<>();
+        DataSeries series = new DataSeries();
         series.setName("sim" + ":" + "0");
         data.add(series);
         for (PlotEquation eqn : xychart.plotEquations) {
@@ -1667,41 +1671,42 @@ public class PyController implements Initializable {
                 ax[0] = xValue;
                 double yValue = eqn.calculate(sliderGuesses, ax, eqn.getExtra(0));
                 yValue += sdev * rand.nextGaussian();
-                XYChart.Data dataPoint = new XYChart.Data(xValue, yValue);
+                XYValue dataPoint = new XYValue(xValue, yValue);
                 dataPoint.setExtraValue(new Double(sdev));
                 series.getData().add(dataPoint);
             }
         }
         allData.addAll(data);
         xychart.setData(allData);
+//    
     }
 
     @FXML
     public void loadSimData(ActionEvent e) {
-        ObservableList<XYChart.Series<Double, Double>> allData = FXCollections.observableArrayList();
-        FileChooser fileChooser = new FileChooser();
-        File file = fileChooser.showOpenDialog(null);
-        if (file != null) {
-            try {
-                List<Double>[] dataValues = DataIO.loadSimDataFile(file);
-                List<XYChart.Series<Double, Double>> data = new ArrayList<>();
-                XYChart.Series<Double, Double> series = new XYChart.Series<>();
-                series.setName("sim" + ":" + "0");
-                data.add(series);
-                for (int i = 0; i < dataValues[0].size(); i++) {
-                    XYChart.Data dataPoint = new XYChart.Data(dataValues[0].get(i), dataValues[1].get(i));
-                    if (!dataValues[2].isEmpty()) {
-                        dataPoint.setExtraValue(new Double(dataValues[2].get(i)));
-                    }
-                    series.getData().add(dataPoint);
-                }
-                allData.addAll(data);
-                xychart.setData(allData);
-            } catch (IOException ioE) {
-                ExceptionDialog dialog = new ExceptionDialog(ioE);
-                dialog.showAndWait();
-            }
-        }
+//        ObservableList<XYChart.Series<Double, Double>> allData = FXCollections.observableArrayList();
+//        FileChooser fileChooser = new FileChooser();
+//        File file = fileChooser.showOpenDialog(null);
+//        if (file != null) {
+//            try {
+//                List<Double>[] dataValues = DataIO.loadSimDataFile(file);
+//                List<XYChart.Series<Double, Double>> data = new ArrayList<>();
+//                XYChart.Series<Double, Double> series = new XYChart.Series<>();
+//                series.setName("sim" + ":" + "0");
+//                data.add(series);
+//                for (int i = 0; i < dataValues[0].size(); i++) {
+//                    XYChart.Data dataPoint = new XYChart.Data(dataValues[0].get(i), dataValues[1].get(i));
+//                    if (!dataValues[2].isEmpty()) {
+//                        dataPoint.setExtraValue(new Double(dataValues[2].get(i)));
+//                    }
+//                    series.getData().add(dataPoint);
+//                }
+//                allData.addAll(data);
+//                xychart.setData(allData);
+//            } catch (IOException ioE) {
+//                ExceptionDialog dialog = new ExceptionDialog(ioE);
+//                dialog.showAndWait();
+//            }
+//        }
     }
 
     @FXML
@@ -1744,9 +1749,9 @@ public class PyController implements Initializable {
 
     @FXML
     private void printXYChart() {
-        printChart(xychart);
+        printChart(chartPane);
     }
-    
+
     @FXML
     private void printBarChart() {
         printChart(chartBox);

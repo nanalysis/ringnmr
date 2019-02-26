@@ -2,7 +2,6 @@ package org.comdnmr.fit.gui;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,8 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Stream;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -39,6 +36,9 @@ import org.comdnmr.fit.calc.PlotEquation;
 import org.comdnmr.fit.calc.ResidueInfo;
 import org.comdnmr.fit.calc.ResidueProperties;
 import org.comdnmr.fit.calc.ResidueData;
+import org.nmrfx.chart.DataSeries;
+import org.nmrfx.chart.XYEValue;
+import org.nmrfx.chart.XYValue;
 
 public class ChartUtil {
 
@@ -223,12 +223,12 @@ public class ChartUtil {
         return data;
     }
 
-    public static List<XYChart.Series<Double, Double>> getMapData(String seriesName, String expName, String[] residues) {
+    public static List<DataSeries> getMapData(String seriesName, String expName, String[] residues) {
         ResidueProperties resProps = residueProperties.get(seriesName);
         ExperimentData expData = resProps.getExperimentData(expName);
-        List<XYChart.Series<Double, Double>> data = new ArrayList<>();
+        List<DataSeries> data = new ArrayList<>();
         for (String resNum : residues) {
-            Series<Double, Double> series = new Series<>();
+            DataSeries series = new DataSeries();
             series.setName(expName + ":" + resNum);
             data.add(series);
             ResidueData resData = expData.getResidueData(resNum);
@@ -240,9 +240,10 @@ public class ChartUtil {
                 for (int i = 0; i < nValues; i++) {
                     double x = xValues[0][i];
                     double y = yValues[i];
-                    XYChart.Data dataPoint = new XYChart.Data(x, y);
+                    double err = errValues[i];
+                    XYValue dataPoint = new XYEValue(x, y, err);
                     dataPoint.setExtraValue(resData.getDataValues().get(i));
-                    series.getData().add(dataPoint);
+                    series.add(dataPoint);
                 }
             }
         }

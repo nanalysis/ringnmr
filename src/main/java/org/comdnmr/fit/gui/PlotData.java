@@ -4,9 +4,6 @@ import java.io.BufferedReader;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
-import javafx.scene.chart.XYChart.Series;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -15,16 +12,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
-import javafx.geometry.Side;
-import javafx.scene.Node;
-import javafx.scene.chart.ScatterChart;
-import javafx.scene.chart.XYChart.Data;
-import javafx.scene.shape.Polyline;
-import javafx.scene.shape.Circle;
-import javafx.scene.shape.Line;
-import javafx.scene.Group;
-import javafx.scene.control.Label;
+import javafx.collections.ListChangeListener;
+import javafx.geometry.Orientation;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.MouseEvent;
 
 import javafx.scene.paint.Color;
@@ -33,16 +23,22 @@ import org.comdnmr.fit.calc.PlotEquation;
 import org.comdnmr.fit.calc.ResidueData;
 import org.comdnmr.fit.calc.ResidueProperties;
 import static org.comdnmr.fit.gui.ChartUtil.residueProperties;
+import org.nmrfx.chart.Axis;
+import org.nmrfx.chart.DataSeries;
 
-public class PlotData extends ScatterChart {
+import org.nmrfx.chart.XYCanvasChart;
+import org.nmrfx.chart.XYValue;
+import org.nmrfx.graphicsio.GraphicsContextInterface;
+import org.nmrfx.graphicsio.GraphicsContextProxy;
+import org.nmrfx.graphicsio.GraphicsIOException;
 
-    NumberAxis xAxis;
-    NumberAxis yAxis;
-    ObservableList<XYChart.Series<Double, Double>> simData = FXCollections.observableArrayList();
+public class PlotData extends XYCanvasChart {
+
+    ObservableList<DataSeries> simData = FXCollections.observableArrayList();
     String fileName;
-    ArrayList<Polyline> polyLines = new ArrayList<>();
-    ArrayList<PlotEquation> plotEquations = new ArrayList<>();
-    static Color[] colors = {
+    ObservableList<PlotEquation> plotEquations = FXCollections.observableArrayList();
+
+    public static final Color[] colors = {
         Color.web("#1b9e77"),
         Color.web("#d95f02"),
         Color.web("#7570b3"),
@@ -54,18 +50,15 @@ public class PlotData extends ScatterChart {
         Color.web("#ff7f00"),
         Color.web("#6a3d9a"),};
 
-    public PlotData(NumberAxis xAxis, NumberAxis yAxis) {
-        super(xAxis, yAxis);
-        this.xAxis = xAxis;
-        this.yAxis = yAxis;
+    public PlotData(Canvas canvas, final Axis... AXIS) {
+        super(canvas, AXIS);
         init();
     }
 
-    public PlotData() {
-        super(new NumberAxis(), new NumberAxis());
-        xAxis = (NumberAxis) getXAxis();
-        yAxis = (NumberAxis) getYAxis();
-        init();
+    public static PlotData buildChart(Canvas canvas) {
+        Axis xAxis = new Axis(Orientation.HORIZONTAL, 0, 100, 400, 100.0);
+        Axis yAxis = new Axis(Orientation.VERTICAL, 0, 100, 100, 400);
+        return new PlotData(canvas, xAxis, yAxis);
     }
 
     void init() {
@@ -77,55 +70,52 @@ public class PlotData extends ScatterChart {
         yAxis.setLabel("Intensity");
         xAxis.setLabel("\u03BD (cpmg)");
         yAxis.setLabel("R2 (\u03BD)");
-        setTitle("CPMG");
-        setPrefHeight(200);
-        setLegendSide(Side.BOTTOM);
-        setLegendVisible(true);
-        xAxis.setAnimated(false);
-        yAxis.setAnimated(false);
-        setAnimated(false);
-        setNodeListeners(this);
-        setHorizontalZeroLineVisible(false);
-        setVerticalZeroLineVisible(false);
+        plotEquations.addListener((ListChangeListener) (e -> drawChart()));
+//        setTitle("CPMG");
+//        setPrefHeight(200);
+//        setLegendSide(Side.BOTTOM);
+//        setLegendVisible(true);
+//        xAxis.setAnimated(false);
+//        yAxis.setAnimated(false);
+//        setAnimated(false);
+//        setNodeListeners(this);
+//        setHorizontalZeroLineVisible(false);
+//        setVerticalZeroLineVisible(false);
     }
 
     public void setNames(String title, String xName, String yName, String yPad) {
         setTitle(title);
         xAxis.setLabel(xName);
         yAxis.setLabel(yName);
-        getYAxis().lookup(".axis-label").setStyle("-fx-label-padding: 0 0 " + yPad + " 0;");
     }
 
     public void setBounds(double xLower, double xUpper, double yLower, double yUpper, double xtick, double ytick) {
-        xAxis.setAutoRanging(false);
-        yAxis.setAutoRanging(false);
+//        xAxis.setAutoRanging(false);
+//        yAxis.setAutoRanging(false);
         xAxis.setLowerBound(xLower);
         xAxis.setUpperBound(xUpper);
         yAxis.setLowerBound(yLower);
         yAxis.setUpperBound(yUpper);
-        xAxis.setTickUnit(xtick);
-        yAxis.setTickUnit(ytick);
+        drawChart();
+//        xAxis.setTickUnit(xtick);
+//        yAxis.setTickUnit(ytick);
     }
 
     public void autoscaleBounds() {
-        xAxis.setAutoRanging(true);
-        yAxis.setAutoRanging(true);
+//        xAxis.setAutoRanging(true);
+//        yAxis.setAutoRanging(true);
 //        System.out.print("\n" + xAxis.getLowerBound() + " " + xAxis.getUpperBound() + " " + xAxis.getTickUnit());
 //        System.out.print("\n" + yAxis.getLowerBound() + " " + yAxis.getUpperBound() + " " + yAxis.getTickUnit());
         PyController.mainController.xLowerBoundTextField.setText(Double.toString(xAxis.getLowerBound()));
         PyController.mainController.xUpperBoundTextField.setText(Double.toString(xAxis.getUpperBound()));
         PyController.mainController.yLowerBoundTextField.setText(Double.toString(yAxis.getLowerBound()));
         PyController.mainController.yUpperBoundTextField.setText(Double.toString(yAxis.getUpperBound()));
-        PyController.mainController.xTickTextField.setText(Double.toString(xAxis.getTickUnit()));
-        PyController.mainController.yTickTextField.setText(Double.toString(yAxis.getTickUnit()));
+//        PyController.mainController.xTickTextField.setText(Double.toString(xAxis.getTickUnit()));
+//        PyController.mainController.yTickTextField.setText(Double.toString(yAxis.getTickUnit()));
     }
 
-    void mouseClicked(MouseEvent e, XYChart chart) {
+    void mouseClicked(MouseEvent e, XYCanvasChart chart) {
         chart.getData();
-    }
-
-    public void addCanvas(Canvas canvas) {
-        getPlotChildren().add(1, canvas);
     }
 
     public int getNumPlots() {
@@ -142,6 +132,7 @@ public class PlotData extends ScatterChart {
 //        System.out.println("set equations " + plotEquations.size());
         this.plotEquations.clear();
         this.plotEquations.addAll(plotEquations);
+        drawChart();
     }
 
     public void clear() {
@@ -150,75 +141,39 @@ public class PlotData extends ScatterChart {
     }
 
     @Override
-    protected void layoutPlotChildren() {
-        if (true || (polyLines.size() != plotEquations.size())) {
-            getPlotChildren().removeAll(polyLines);
-            polyLines.clear();
-            int nLines = plotEquations.size();
-            //System.out.println("layoutPlotChildren No. Eqns = " + nLines);
-            for (int i = 0; i < nLines; i++) {
-                Polyline polyLine = new Polyline();
-                polyLine.setStroke(colors[Math.min(colors.length - 1, i)]);
-                polyLines.add(polyLine);
-                getPlotChildren().add(0, polyLine);
-            }
-        }
-
-        super.layoutPlotChildren();
-        paintLines(polyLines, ((NumberAxis) getXAxis()), ((NumberAxis) getYAxis()));
-        setNodeListeners(this);
-    }
-
-    void setNodeListeners(XYChart chart) {
-        ObservableList<XYChart.Series<Double, Double>> data = chart.getData();
-        for (XYChart.Series<Double, Double> series : data) {
-            int j = 0;
-            for (Data<Double, Double> item : series.getData()) {
-                Node node = item.getNode();
-                if (node != null) {
-//                    node.onMouseClickedProperty().addListener(e -> dumpNode(item));
-                    node.setOnMouseClicked(e -> dumpNode(series.getName(), item)); 
-                    if (node instanceof Group) {
-                        Group group = (Group) node;
-                        Line line = (Line) group.getChildren().get(1);
-                        double errorY = getScaledError(item);
-                        line.setStartY(-errorY);
-                        line.setEndY(errorY);
-                    }
-                }
-            }
-
+    public void drawChart() {
+        super.drawChart();
+        try {
+            paintLines();
+        } catch (GraphicsIOException ex) {
+            ex.printStackTrace();
         }
     }
 
-    void dumpNode(String seriesName, Data<Double, Double> data) {
-        Object extraValue = data.getExtraValue();
+    void dumpNode(String seriesName, XYValue value) {
+        Object extraValue = value.getExtraValue();
         if (extraValue instanceof ResidueData.DataValue) {
             ResidueData.DataValue dataValue = (ResidueData.DataValue) extraValue;
             PyController.mainController.selectTableRow(seriesName, dataValue.getIndex());
-
-        }
-
-    }
-
-
-    void paintLinesSeries(ArrayList<Polyline> polyLines, NumberAxis xAxis, NumberAxis yAxis) {
-        int i = 0;
-        for (XYChart.Series<Double, Double> series : simData) {
-            ArrayList<Double> points = new ArrayList<>();
-            Polyline polyLine = polyLines.get(i);
-            polyLine.getPoints().clear();
-            for (Data<Double, Double> xyData : series.getData()) {
-                double x = xAxis.getDisplayPosition(xyData.getXValue());
-                double y = yAxis.getDisplayPosition(xyData.getYValue());
-                points.add(x);
-                points.add(y);
-            }
-            polyLine.getPoints().addAll(points);
-            i++;
         }
     }
 
+//    void paintLinesSeries(ArrayList<Polyline> polyLines, Axis xAxis, Axis yAxis) {
+//        int i = 0;
+//        for (DataSeries series : simData) {
+//            ArrayList<Double> points = new ArrayList<>();
+//            Polyline polyLine = polyLines.get(i);
+//            polyLine.getPoints().clear();
+//            for (Data<Double, Double> xyData : series.getData()) {
+//                double x = xAxis.getDisplayPosition(xyData.getXValue());
+//                double y = yAxis.getDisplayPosition(xyData.getYValue());
+//                points.add(x);
+//                points.add(y);
+//            }
+//            polyLine.getPoints().addAll(points);
+//            i++;
+//        }
+//    }
     public double[] getXBounds() {
         double[] bounds = {xAxis.getLowerBound(), xAxis.getUpperBound()};
         return bounds;
@@ -229,31 +184,28 @@ public class PlotData extends ScatterChart {
         return bounds;
     }
 
-    void paintLines(ArrayList<Polyline> polyLines, NumberAxis xAxis, NumberAxis yAxis) {
+    void paintLines() throws GraphicsIOException {
         //double[] fields = {11.7,14.04};
         //double[] par = {6.315686252794991, 8.612586767595255, 0.7538704344970752};
         //equation.setFieldRef(fields[0]);
-        int iLine = 0;
-        if (polyLines.isEmpty()) {
-            return;
-        }
+        GraphicsContext gCC = getCanvas().getGraphicsContext2D();
+        GraphicsContextInterface gC = new GraphicsContextProxy(gCC);
+
+        int nIncr = 100;
+        double[] xValues = new double[nIncr];
+        double[] yValues = new double[nIncr];
         for (PlotEquation plotEquation : plotEquations) {
             //System.out.println("paintLines No. Eqns = " + plotEquations.size());
             if (plotEquation == null) {
                 continue;
             }
-            ArrayList<Double> points = new ArrayList<>();
-            Polyline polyLine = polyLines.get(iLine);
-            polyLine.getPoints().clear();
             double min = xAxis.getLowerBound();
             double max = xAxis.getUpperBound();
-            int nIncr = 100;
-            double delta = (max - min) / nIncr;
-//            plotEquation.equation.setFieldRef(fieldRef);
+            double delta = (max - min) / (nIncr + 1);
             double[] extras = plotEquation.getExtras();
             double[] ax = new double[extras.length];
-            for (int i = 1; i < nIncr - 1; i++) {
-                double xValue = min + i * delta;
+            for (int i = 0; i < nIncr; i++) {
+                double xValue = min + (i + 1) * delta;
                 double x = xAxis.getDisplayPosition(xValue);
                 ax[0] = xValue;
                 for (int j = 1; j < extras.length; j++) {
@@ -261,20 +213,17 @@ public class PlotData extends ScatterChart {
                 }
                 double yValue = plotEquation.calculate(ax, plotEquation.getExtra(0));
                 double y = yAxis.getDisplayPosition(yValue);
-                points.add(x);
-                points.add(y);
+                xValues[i] = x;
+                yValues[i] = y;
             }
-            polyLine.getPoints().addAll(points);
-            iLine++;
-
+            gC.strokePolyline(xValues, yValues, nIncr);
         }
-
     }
 
-    private ObservableList<XYChart.Series<Double, Double>> loadChartData(String[] residues) throws IOException {
-        ObservableList<XYChart.Series<Double, Double>> data = FXCollections.observableArrayList();
+    private ObservableList<DataSeries> loadChartData(String[] residues) throws IOException {
+        ObservableList<DataSeries> data = FXCollections.observableArrayList();
         Path path = Paths.get(".", fileName);
-        Series<Double, Double> series = null;
+        DataSeries series = null;
         simData.clear();
         boolean inData = false;
         double[] xValues = null;
@@ -298,7 +247,7 @@ public class PlotData extends ScatterChart {
                         xValues[i - 2] = Double.parseDouble(sfields[i]);
                     }
                 } else if (Arrays.stream(residues).anyMatch(e -> e.equals(sfields[0]))) {
-                    series = new Series<>();
+                    series = new DataSeries();
                     data.add(series);
 
                     series.setName(sfields[0]);
@@ -312,7 +261,7 @@ public class PlotData extends ScatterChart {
                         if (series != null) {
                             double x = xValues[i];
                             double y = yValues[i];
-                            XYChart.Data dataPoint = new XYChart.Data(x, y);
+                            XYValue dataPoint = new XYValue(x, y);
                             series.getData().add(dataPoint);
                         }
 
@@ -366,14 +315,13 @@ public class PlotData extends ScatterChart {
         return graphData;
     }
 
-    void doLine(Series<Integer, Double> series, String line, double scale) {
-        String[] fields = line.split(" ");
-        Integer x = Integer.parseInt(fields[0]);
-        Double y = Double.parseDouble(fields[1]) * scale;
-        series.getData().add(new XYChart.Data(x, y));
-    }
-
-    private double getScaledError(XYChart.Data item) {
+//    void doLine(Series<Integer, Double> series, String line, double scale) {
+//        String[] fields = line.split(" ");
+//        Integer x = Integer.parseInt(fields[0]);
+//        Double y = Double.parseDouble(fields[1]) * scale;
+//        series.getData().add(new XYChart.Data(x, y));
+//    }
+    private double getScaledError(XYValue item) {
         Object extraValue = item.getExtraValue();
         double errorY = 0.0;
         if (extraValue instanceof ResidueData.DataValue) {
@@ -394,60 +342,18 @@ public class PlotData extends ScatterChart {
 
     }
 
-    private Node createNode(XYChart.Data item, int seriesIndex) {
-        Object extraValue = item.getExtraValue();
-        double errorY = getScaledError(item);
-        Group g = new Group();
-        Circle circle = new Circle(4.0);
-        circle.setFill(colors[Math.min(colors.length - 1, seriesIndex)]);
-        Line line = new Line(0, -errorY, 0, errorY);
-        g.getChildren().add(circle);
-        g.getChildren().add(line);
-        return g;
-    }
-
-    @Override
-    protected void seriesAdded(XYChart.Series series, int seriesIndex) {
-        super.seriesAdded(series, seriesIndex);
+    protected void seriesAdded(DataSeries series, int seriesIndex) {
         ResidueProperties residueProps = residueProperties.get("cest");
         ExperimentData expData = null;
         if (residueProps != null) {
             expData = residueProps.getExperimentData("cest"); // fixme
         }
         for (int j = 0; j < series.getData().size(); j++) {
-            XYChart.Data item = (XYChart.Data) series.getData().get(j);
-            Node node = createNode(item, seriesIndex);
-            Object dataObject = item.getExtraValue();
-            if (dataObject != null) {
-                if (dataObject instanceof ResidueData.DataValue) {
-                    ResidueData.DataValue dataValue = (ResidueData.DataValue) dataObject;
-                    double x1 = dataValue.getX1();
-                    double x1val = x1; //Math.round(100.0 * x1 / (2 * Math.PI)) / 100.0;
-                    if (expData != null && expData.getExtras().contains(x1val)) {
-                        node = createNode(item, expData.getExtras().indexOf(x1val) / 2);
-                    }
-                }
-            }
-            item.setNode(node);
-            super.dataItemAdded(series, j, item);
+            XYValue item = (XYValue) series.getData().get(j);
         }
-        updateLegend();
 //        if (expData != null) {
 //                cestLegend(expData.getExtras());
 //            }
-    }
-
-    protected void updateLegend() {
-        super.updateLegend();
-        Set<Node> items = lookupAll(".chart-legend-item");
-        int it = 0;
-        for (Node item : items) {
-            Label label = (Label) item;
-            Circle circle = new Circle(4.0);
-            circle.setFill(colors[Math.min(colors.length - 1, it)]);
-            label.setGraphic(circle);
-            it++;
-        }
     }
 
 //    protected void cestLegend(List<Double> b1fields) {
@@ -463,8 +369,8 @@ public class PlotData extends ScatterChart {
 //        }
 //    }
     public String getSeriesName(int iSeries) {
-        ObservableList<XYChart.Series<Double, Double>> data = getData();
-        XYChart.Series<Double, Double> series = data.get(iSeries);
+        ObservableList<DataSeries> data = getData();
+        DataSeries series = data.get(iSeries);
         String seriesName = series.getName();  // Can get residue by splitting semicolon
         return seriesName;
     }
@@ -478,8 +384,8 @@ public class PlotData extends ScatterChart {
     }
 
     public ArrayList<ArrayList<Double>> returnLine(int iSeries) {
-        ObservableList<XYChart.Series<Double, Double>> data = getData();
-        XYChart.Series<Double, Double> series = data.get(iSeries);
+        ObservableList<DataSeries> data = getData();
+        DataSeries series = data.get(iSeries);
         ArrayList<ArrayList<Double>> lineData = new ArrayList<>(series.getData().size());
         series.getData().forEach((value) -> {
             Double x = value.getXValue();

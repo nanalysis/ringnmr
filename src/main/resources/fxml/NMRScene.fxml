@@ -8,6 +8,8 @@
 <?import javafx.scene.layout.*?>
 <?import org.comdnmr.fit.gui.*?>
 <?import org.controlsfx.control.*?>
+<?import org.nmrfx.chart.XYChartPane?>
+
 
 
 <?language python?>
@@ -78,7 +80,7 @@
             <items>
                 <SplitPane orientation="horizontal" prefHeight="550">
                     <items>
-                        <PlotData fx:id="xychart" HBox.hgrow="ALWAYS" />
+                        <XYPlotDataPane fx:id="chartPane" HBox.hgrow="ALWAYS" />
                         <VBox HBox.hgrow="ALWAYS"  VBox.vgrow="ALWAYS" >
                             <TabPane fx:id="parTabPane"  VBox.vgrow="ALWAYS" >
                                 <Tab text="Parameters" closable="false" > 

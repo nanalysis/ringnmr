@@ -216,9 +216,8 @@ public class XYBarChart extends XYChart<Number, Number> {
     }
 
     void showInfo(ResidueProperties resProps, String seriesName) {
-        Node chartNode = ChartUtil.findNode(this.getScene(), "xychart");
         PyController controller = PyController.mainController;
-        PlotData plotData = (PlotData) chartNode;
+        PlotData xyCanvasChart = controller.xychart;
         String[] seriesNameParts = seriesName.split("\\|");
         if (seriesNameParts.length < 3) {
             return;
@@ -230,7 +229,7 @@ public class XYBarChart extends XYChart<Number, Number> {
         System.out.println("series " + seriesName + " map " + mapName + " eqn " + equationName + " state " + state);
         String[] residues = new String[selectedResidues.size()];
         selectedResidues.toArray(residues);
-        controller.showInfo(resProps, equationName, mapName, state, residues, plotData);
+        controller.showInfo(resProps, equationName, mapName, state, residues, xyCanvasChart);
     }
 
     public HashMap<String, Object> getChartData() {
