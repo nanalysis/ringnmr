@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Orientation;
 import javafx.scene.canvas.GraphicsContext;
@@ -31,6 +32,7 @@ import org.nmrfx.chart.XYValue;
 import org.nmrfx.graphicsio.GraphicsContextInterface;
 import org.nmrfx.graphicsio.GraphicsContextProxy;
 import org.nmrfx.graphicsio.GraphicsIOException;
+import org.nmrfx.graphicsio.SVGGraphicsContext;
 
 public class PlotData extends XYCanvasChart {
 
@@ -71,6 +73,7 @@ public class PlotData extends XYCanvasChart {
         xAxis.setLabel("\u03BD (cpmg)");
         yAxis.setLabel("R2 (\u03BD)");
         plotEquations.addListener((ListChangeListener) (e -> drawChart()));
+        getCanvas().setOnMouseClicked(e -> mouseClicked(e));
 //        setTitle("CPMG");
 //        setPrefHeight(200);
 //        setLegendSide(Side.BOTTOM);
@@ -101,21 +104,15 @@ public class PlotData extends XYCanvasChart {
 //        yAxis.setTickUnit(ytick);
     }
 
-    public void autoscaleBounds() {
-//        xAxis.setAutoRanging(true);
-//        yAxis.setAutoRanging(true);
-//        System.out.print("\n" + xAxis.getLowerBound() + " " + xAxis.getUpperBound() + " " + xAxis.getTickUnit());
-//        System.out.print("\n" + yAxis.getLowerBound() + " " + yAxis.getUpperBound() + " " + yAxis.getTickUnit());
-        PyController.mainController.xLowerBoundTextField.setText(Double.toString(xAxis.getLowerBound()));
-        PyController.mainController.xUpperBoundTextField.setText(Double.toString(xAxis.getUpperBound()));
-        PyController.mainController.yLowerBoundTextField.setText(Double.toString(yAxis.getLowerBound()));
-        PyController.mainController.yUpperBoundTextField.setText(Double.toString(yAxis.getUpperBound()));
-//        PyController.mainController.xTickTextField.setText(Double.toString(xAxis.getTickUnit()));
-//        PyController.mainController.yTickTextField.setText(Double.toString(yAxis.getTickUnit()));
-    }
+    void mouseClicked(MouseEvent e) {
+        Optional<Hit> hitOpt = pickChart(e.getX(), e.getY(), 5);
+        if (hitOpt.isPresent()) {
+            Hit hit = hitOpt.get();
+            System.out.println(hit.toString());
+            PyController.mainController.selectTableRow(hit.getSeries().getName(), hit.getIndex());
+            PyController.mainController.statusBar.setText(hit.toString());
 
-    void mouseClicked(MouseEvent e, XYCanvasChart chart) {
-        chart.getData();
+        }
     }
 
     public int getNumPlots() {
@@ -150,6 +147,16 @@ public class PlotData extends XYCanvasChart {
         }
     }
 
+    protected void exportVectorGraphics(SVGGraphicsContext svgGC) throws GraphicsIOException {
+
+        svgGC.save();
+        svgGC.clip();
+        svgGC.beginPath();
+        drawChart(svgGC);
+        paintLines(svgGC);
+        svgGC.restore();
+    }
+
     void dumpNode(String seriesName, XYValue value) {
         Object extraValue = value.getExtraValue();
         if (extraValue instanceof ResidueData.DataValue) {
@@ -158,22 +165,6 @@ public class PlotData extends XYCanvasChart {
         }
     }
 
-//    void paintLinesSeries(ArrayList<Polyline> polyLines, Axis xAxis, Axis yAxis) {
-//        int i = 0;
-//        for (DataSeries series : simData) {
-//            ArrayList<Double> points = new ArrayList<>();
-//            Polyline polyLine = polyLines.get(i);
-//            polyLine.getPoints().clear();
-//            for (Data<Double, Double> xyData : series.getData()) {
-//                double x = xAxis.getDisplayPosition(xyData.getXValue());
-//                double y = yAxis.getDisplayPosition(xyData.getYValue());
-//                points.add(x);
-//                points.add(y);
-//            }
-//            polyLine.getPoints().addAll(points);
-//            i++;
-//        }
-//    }
     public double[] getXBounds() {
         double[] bounds = {xAxis.getLowerBound(), xAxis.getUpperBound()};
         return bounds;
@@ -185,11 +176,12 @@ public class PlotData extends XYCanvasChart {
     }
 
     void paintLines() throws GraphicsIOException {
-        //double[] fields = {11.7,14.04};
-        //double[] par = {6.315686252794991, 8.612586767595255, 0.7538704344970752};
-        //equation.setFieldRef(fields[0]);
         GraphicsContext gCC = getCanvas().getGraphicsContext2D();
         GraphicsContextInterface gC = new GraphicsContextProxy(gCC);
+        paintLines(gC);
+    }
+
+    void paintLines(GraphicsContextInterface gC) throws GraphicsIOException {
 
         int nIncr = 100;
         double[] xValues = new double[nIncr];
@@ -216,6 +208,7 @@ public class PlotData extends XYCanvasChart {
                 xValues[i] = x;
                 yValues[i] = y;
             }
+            gC.setStroke(Color.BLACK);
             gC.strokePolyline(xValues, yValues, nIncr);
         }
     }

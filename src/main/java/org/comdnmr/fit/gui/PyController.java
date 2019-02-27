@@ -64,10 +64,12 @@ import org.controlsfx.control.StatusBar;
 import org.comdnmr.fit.calc.CESTFit;
 import java.text.DecimalFormat;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Optional;
 import javafx.beans.property.SimpleStringProperty;
 import java.util.Random;
 import javafx.print.PrinterJob;
+import javafx.scene.canvas.Canvas;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Alert;
@@ -83,8 +85,12 @@ import static org.comdnmr.fit.gui.MainApp.preferencesController;
 import static org.comdnmr.fit.gui.MainApp.console;
 import static org.comdnmr.fit.gui.MainApp.primaryStage;
 import org.comdnmr.utils.NMRFxClient;
+import org.controlsfx.dialog.ExceptionDialog;
 import org.nmrfx.chart.DataSeries;
+import org.nmrfx.chart.XYEValue;
 import org.nmrfx.chart.XYValue;
+import org.nmrfx.graphicsio.GraphicsIOException;
+import org.nmrfx.graphicsio.SVGGraphicsContext;
 
 public class PyController implements Initializable {
 
@@ -189,6 +195,7 @@ public class PyController implements Initializable {
     ToolBar navigatorToolBar = new ToolBar();
 
     static Random rand = new Random();
+    File initialDir = null;
 
     @FXML
     private void pyAction(ActionEvent event) {
@@ -644,7 +651,12 @@ public class PyController implements Initializable {
     }
 
     public void autoscaleBounds(ActionEvent event) {
-        xychart.autoScale();
+        double[] bounds = xychart.autoScale(true);
+        xLowerBoundTextField.setText(Double.toString(bounds[0]));
+        xUpperBoundTextField.setText(Double.toString(bounds[1]));
+        yLowerBoundTextField.setText(Double.toString(bounds[2]));
+        yUpperBoundTextField.setText(Double.toString(bounds[3]));
+
     }
 
     public void updateChartEquations(String equationName, double[] pars, double[] errs, double[] fields) {
@@ -1336,39 +1348,39 @@ public class PyController implements Initializable {
     }
 
     public void exportExecutable(String fileSuggestion, String exportType, boolean saveBar) throws ScriptException {
-//        FileChooser chooser = new FileChooser();
-//        chooser.setInitialFileName(fileSuggestion);
-//        File file = chooser.showSaveDialog(MainApp.primaryStage);
-//        if (file != null) {
-//            String filePath = file.getAbsolutePath();
-//
-//            Map<String, Object>[] plottedData = xychart.getPlottedData();
-//            Map<String, Object> graphData = null;
-//            graphData = xychart.getGraphData();
-//            graphData.put("file", filePath);
-//            graphData.put("exportType", exportType);
-//            ArrayList<Object> barChartData;
-//            if (!"grace".equals(exportType) && saveBar) {
-//                ObservableList<Node> barNodes = chartBox.getChildren();
-//                barChartData = new ArrayList<>(barNodes.size());
-//                barNodes.forEach(node -> {
-//                    if (node instanceof XYBarChart) {
-//                        XYBarChart barChart = (XYBarChart) node;
-//                        String barChartName = barChart.toString();
-//                        HashMap<String, Object> chartData = barChart.getChartData();
-//                        barChartData.add(chartData);
-//                    }
-//                });
-//            } else {
-//                barChartData = new ArrayList<>(0);
-//            }
-//
-//            MainApp.engine.put("data", plottedData);
-//            MainApp.engine.put("configData", graphData);
-//            MainApp.engine.put("barChartData", barChartData);
-//            MainApp.engine.eval("writer = Writer(configData,data,barChartData)");
-//            MainApp.engine.eval("writer.writeFromExportData()");
-//        }
+        FileChooser chooser = new FileChooser();
+        chooser.setInitialFileName(fileSuggestion);
+        File file = chooser.showSaveDialog(MainApp.primaryStage);
+        if (file != null) {
+            String filePath = file.getAbsolutePath();
+
+            Map<String, Object>[] plottedData = xychart.getPlottedData();
+            Map<String, Object> graphData = null;
+            graphData = xychart.getGraphData();
+            graphData.put("file", filePath);
+            graphData.put("exportType", exportType);
+            ArrayList<Object> barChartData;
+            if (!"grace".equals(exportType) && saveBar) {
+                ObservableList<Node> barNodes = chartBox.getChildren();
+                barChartData = new ArrayList<>(barNodes.size());
+                barNodes.forEach(node -> {
+                    if (node instanceof XYBarChart) {
+                        XYBarChart barChart = (XYBarChart) node;
+                        String barChartName = barChart.toString();
+                        HashMap<String, Object> chartData = barChart.getChartData();
+                        barChartData.add(chartData);
+                    }
+                });
+            } else {
+                barChartData = new ArrayList<>(0);
+            }
+
+            MainApp.engine.put("data", plottedData);
+            MainApp.engine.put("configData", graphData);
+            MainApp.engine.put("barChartData", barChartData);
+            MainApp.engine.eval("writer = Writer(configData,data,barChartData)");
+            MainApp.engine.eval("writer.writeFromExportData()");
+        }
     }
 
     public void saveGraceFile() throws IOException, ScriptException {
@@ -1683,30 +1695,34 @@ public class PyController implements Initializable {
 
     @FXML
     public void loadSimData(ActionEvent e) {
-//        ObservableList<XYChart.Series<Double, Double>> allData = FXCollections.observableArrayList();
-//        FileChooser fileChooser = new FileChooser();
-//        File file = fileChooser.showOpenDialog(null);
-//        if (file != null) {
-//            try {
-//                List<Double>[] dataValues = DataIO.loadSimDataFile(file);
-//                List<XYChart.Series<Double, Double>> data = new ArrayList<>();
-//                XYChart.Series<Double, Double> series = new XYChart.Series<>();
-//                series.setName("sim" + ":" + "0");
-//                data.add(series);
-//                for (int i = 0; i < dataValues[0].size(); i++) {
-//                    XYChart.Data dataPoint = new XYChart.Data(dataValues[0].get(i), dataValues[1].get(i));
-//                    if (!dataValues[2].isEmpty()) {
-//                        dataPoint.setExtraValue(new Double(dataValues[2].get(i)));
-//                    }
-//                    series.getData().add(dataPoint);
-//                }
-//                allData.addAll(data);
-//                xychart.setData(allData);
-//            } catch (IOException ioE) {
-//                ExceptionDialog dialog = new ExceptionDialog(ioE);
-//                dialog.showAndWait();
-//            }
-//        }
+        ObservableList<DataSeries> allData = FXCollections.observableArrayList();
+        FileChooser fileChooser = new FileChooser();
+        File file = fileChooser.showOpenDialog(null);
+        if (file != null) {
+            try {
+                List<Double>[] dataValues = DataIO.loadSimDataFile(file);
+                List<DataSeries> data = new ArrayList<>();
+                DataSeries series = new DataSeries();
+                series.setName("sim" + ":" + "0");
+                data.add(series);
+                for (int i = 0; i < dataValues[0].size(); i++) {
+                    XYValue dataPoint;
+                    if (!dataValues[2].isEmpty()) {
+                        dataPoint = new XYEValue(dataValues[0].get(i),
+                                dataValues[1].get(i), dataValues[2].get(i));
+                    } else {
+                        dataPoint = new XYValue(dataValues[0].get(i), dataValues[1].get(i));
+
+                    }
+                    series.getData().add(dataPoint);
+                }
+                allData.addAll(data);
+                xychart.setData(allData);
+            } catch (IOException ioE) {
+                ExceptionDialog dialog = new ExceptionDialog(ioE);
+                dialog.showAndWait();
+            }
+        }
     }
 
     @FXML
@@ -1769,6 +1785,34 @@ public class PyController implements Initializable {
                         job.endJob();
                     }
                 }
+            }
+        }
+    }
+
+    public File getInitialDirectory() {
+        if (initialDir == null) {
+            String homeDirName = System.getProperty("user.home");
+            initialDir = new File(homeDirName);
+        }
+        return initialDir;
+    }
+
+    @FXML
+    void exportSVGAction(ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Export to SVG");
+        fileChooser.setInitialDirectory(getInitialDirectory());
+        File selectedFile = fileChooser.showSaveDialog(null);
+        if (selectedFile != null) {
+            SVGGraphicsContext svgGC = new SVGGraphicsContext();
+            try {
+                Canvas canvas = xychart.getCanvas();
+                svgGC.create(true, canvas.getWidth(), canvas.getHeight(), selectedFile.toString());
+                xychart.exportVectorGraphics(svgGC);
+                svgGC.saveFile();
+            } catch (GraphicsIOException ex) {
+                ExceptionDialog eDialog = new ExceptionDialog(ex);
+                eDialog.showAndWait();
             }
         }
     }
