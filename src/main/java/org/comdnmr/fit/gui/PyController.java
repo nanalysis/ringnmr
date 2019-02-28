@@ -23,7 +23,6 @@ import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.geometry.Bounds;
-import javafx.geometry.Side;
 import javafx.scene.Node;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.CheckBox;
@@ -70,8 +69,7 @@ import javafx.beans.property.SimpleStringProperty;
 import java.util.Random;
 import javafx.print.PrinterJob;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Alert;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.Label;
@@ -79,6 +77,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ToolBar;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
 import org.comdnmr.fit.calc.FitModel;
 import org.comdnmr.fit.calc.R1RhoFit;
 import static org.comdnmr.fit.gui.MainApp.preferencesController;
@@ -86,6 +86,7 @@ import static org.comdnmr.fit.gui.MainApp.console;
 import static org.comdnmr.fit.gui.MainApp.primaryStage;
 import org.comdnmr.utils.NMRFxClient;
 import org.controlsfx.dialog.ExceptionDialog;
+import org.nmrfx.chart.Axis;
 import org.nmrfx.chart.DataSeries;
 import org.nmrfx.chart.XYEValue;
 import org.nmrfx.chart.XYValue;
@@ -95,9 +96,8 @@ import org.nmrfx.graphicsio.SVGGraphicsContext;
 public class PyController implements Initializable {
 
     public static PyController mainController;
-    XYBarChart activeChart;
-    @FXML
-    XYBarChart xyBarChart0;
+    ResidueChart activeChart;
+    List<ResidueChart> barCharts = new ArrayList<>();
 
     SSRegion activeSSregion;
     @FXML
@@ -126,7 +126,7 @@ public class PyController implements Initializable {
     Label rChiSqLabel;
 
     @FXML
-    VBox chartBox;
+    Pane chartBox;
     @FXML
     StatusBar statusBar;
     Circle statusCircle;
@@ -190,6 +190,7 @@ public class PyController implements Initializable {
 
     CPMGFitResult fitResult;
     PlotData xychart;
+    Canvas barPlotCanvas = new Canvas();
 
     @FXML
     ToolBar navigatorToolBar = new ToolBar();
@@ -226,7 +227,6 @@ public class PyController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         mainController = this;
-        activeChart = xyBarChart0;
         activeSSregion = ssregion;
         //propertySheet.setPropertyEditorFactory(new NvFxPropertyEditorFactory());
 //        propertySheet.setMode(PropertySheet.Mode.NAME);
@@ -320,16 +320,91 @@ public class PyController implements Initializable {
         initResidueNavigator();
         calcErrorsCheckBox.selectedProperty().addListener(e -> FitModel.setCalcError(calcErrorsCheckBox.isSelected()));
         calcErrorsCheckBox.setSelected(true);
-        XYBarChart reschartNode = PyController.mainController.getActiveChart();
-        if (reschartNode == null) {
-            reschartNode = PyController.mainController.addChart();
-
-        }
         nmrFxPeakButton.setDisable(true);
         nmrFxPeakButton.setOnAction(e -> nmrFxMessage(e));
         xychart = (PlotData) chartPane.getChart();
+        chartPane.widthProperty().addListener(e -> resizeXYPlotCanvas());
+        chartPane.heightProperty().addListener(e -> resizeXYPlotCanvas());
+        chartBox.widthProperty().addListener(e -> resizeBarPlotCanvas());
+        chartBox.heightProperty().addListener(e -> resizeBarPlotCanvas());
+        chartBox.getChildren().add(barPlotCanvas);
+        addChart();
+        barPlotCanvas.setOnMouseClicked(e -> mouseClickedOnBarCanvas(e));
 
 //        mainController.setOnHidden(e -> Platform.exit());
+    }
+
+    void resizeXYPlotCanvas() {
+        Canvas canvas = xychart.getCanvas();
+        GraphicsContext gC = canvas.getGraphicsContext2D();
+        canvas.setWidth(chartPane.getWidth());
+        canvas.setHeight(chartPane.getHeight());
+        gC.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        System.out.println("resize " + chartPane.getWidth() + " " + chartPane.getHeight());
+        xychart.setWidth(canvas.getWidth());
+        xychart.setHeight(canvas.getHeight());
+    }
+
+    void resizeBarPlotCanvas() {
+        double width = chartBox.getWidth();
+        double height = chartBox.getHeight();
+        barPlotCanvas.setWidth(width);
+        barPlotCanvas.setHeight(height);
+        GraphicsContext gC = barPlotCanvas.getGraphicsContext2D();
+        gC.clearRect(0, 0, barPlotCanvas.getWidth(), barPlotCanvas.getHeight());
+        double chartHeight = height / barCharts.size();
+        double yPos = 0.0;
+        for (ResidueChart residueChart : barCharts) {
+            residueChart.setWidth(width);
+            residueChart.setHeight(chartHeight);
+            residueChart.setYPos(yPos);
+            residueChart.autoScale(true);
+            residueChart.drawChart();
+            yPos += chartHeight;
+        }
+        refreshResidueCharts();
+    }
+
+    void setResidueChartBorder() {
+        double maxLeftBorder = 0.0;
+        for (ResidueChart residueChart : barCharts) {
+            double[] borders = residueChart.getMinBorders();
+            maxLeftBorder = Math.max(borders[0], maxLeftBorder);
+        }
+        for (ResidueChart residueChart : barCharts) {
+            residueChart.setMinLeftBorder(maxLeftBorder);
+        }
+    }
+
+    void refreshResidueCharts() {
+        setResidueChartBorder();
+        GraphicsContext gC = barPlotCanvas.getGraphicsContext2D();
+        gC.clearRect(0, 0, barPlotCanvas.getWidth(), barPlotCanvas.getHeight());
+        for (ResidueChart residueChart : barCharts) {
+            residueChart.drawChart();
+        }
+    }
+
+    void mouseClickedOnBarCanvas(MouseEvent e) {
+        double x = e.getX();
+        double y = e.getY();
+        for (ResidueChart residueChart : barCharts) {
+            Axis xAxis = residueChart.xAxis;
+            Axis yAxis = residueChart.yAxis;
+            if (residueChart.mouseClicked(e)) {
+                activeChart = residueChart;
+                break;
+            } else {
+                if ((x > xAxis.getXOrigin()) && (x < xAxis.getXOrigin() + xAxis.getWidth())) {
+                    if ((y < yAxis.getYOrigin()) && (y > xAxis.getYOrigin() - yAxis.getHeight())) {
+                        activeChart = residueChart;
+                        break;
+                    }
+                }
+
+            }
+        }
+        refreshResidueCharts();
     }
 
     public void setControls() {
@@ -449,7 +524,7 @@ public class PyController implements Initializable {
                 resIndex = 0;
             }
             int res = (int) resNums.get(resIndex);
-            XYBarChart chart = getActiveChart();
+            ResidueChart chart = getActiveChart();
             chart.showInfo(chart.currentSeriesName, 0, res, false);
         }
     }
@@ -457,7 +532,7 @@ public class PyController implements Initializable {
     public void firstResidue(ActionEvent event) {
         if (currentResidues != null) {
             int res = ChartUtil.minRes;
-            XYBarChart chart = getActiveChart();
+            ResidueChart chart = getActiveChart();
             chart.showInfo(chart.currentSeriesName, 0, res, false);
         }
     }
@@ -476,7 +551,7 @@ public class PyController implements Initializable {
                 resIndex = resNums.size() - 1;
             }
             int res = (int) resNums.get(resIndex);
-            XYBarChart chart = getActiveChart();
+            ResidueChart chart = getActiveChart();
             chart.showInfo(chart.currentSeriesName, 0, res, false);
         }
     }
@@ -484,7 +559,7 @@ public class PyController implements Initializable {
     public void lastResidue(ActionEvent event) {
         if (currentResidues != null) {
             int res = ChartUtil.maxRes;
-            XYBarChart chart = getActiveChart();
+            ResidueChart chart = getActiveChart();
             chart.showInfo(chart.currentSeriesName, 0, res, false);
         }
     }
@@ -676,24 +751,23 @@ public class PyController implements Initializable {
 
     }
 
-    public XYBarChart getActiveChart() {
+    public ResidueChart getActiveChart() {
         return activeChart;
     }
 
-    public XYBarChart addChart() {
-        XYBarChart newChart = new XYBarChart();
-        int nChildren = chartBox.getChildren().size();
-        chartBox.getChildren().add(0, newChart);
-        VBox.setVgrow(newChart, Priority.ALWAYS);
+    public ResidueChart addChart() {
+        ResidueChart newChart = ResidueChart.buildChart(barPlotCanvas);
+        barCharts.add(newChart);
         activeChart = newChart;
-        return newChart;
-
+        resizeBarPlotCanvas();
+        return activeChart;
     }
 
     public void removeChart(Event e) {
-        if ((activeChart != null) && (chartBox.getChildren().size() > 2)) {
-            chartBox.getChildren().remove(activeChart);
-            activeChart = (XYBarChart) chartBox.getChildren().get(0);
+        if ((activeChart != null) && (barCharts.size() > 1)) {
+            barCharts.remove(activeChart);
+            activeChart = barCharts.get(0);
+            resizeBarPlotCanvas();
         }
     }
 
@@ -929,15 +1003,20 @@ public class PyController implements Initializable {
     }
 
     public void setYAxisType(String setName, String eqnName, String state, String typeName) {
-        ObservableList<XYChart.Series<Double, Double>> data = ChartUtil.getParMapData(setName, eqnName, state, typeName);
-        XYBarChart chart = activeChart;
+        ObservableList<DataSeries> data = ChartUtil.getParMapData(setName, eqnName, state, typeName);
+        ResidueChart chart = activeChart;
 
-        ((XYChart) chart).getData().addAll(data);
+        chart.getData().addAll(data);
+        int i = 0;
+        for (DataSeries series : chart.getData()) {
+            series.setFill(PlotData.colors[i++ % PlotData.colors.length]);
+        }
         if (chart.currentSeriesName.equals("")) {
             chart.currentSeriesName = data.get(0).getName();
         }
-        NumberAxis xAxis = (NumberAxis) chart.getXAxis();
-        NumberAxis yAxis = (NumberAxis) chart.getYAxis();
+        chart.autoScale(true);
+        Axis xAxis = chart.xAxis;
+        Axis yAxis = chart.yAxis;
         xAxis.setAutoRanging(false);
         double xMin = Math.floor((ChartUtil.minRes - 2) / 5.0) * 5.0;
         double xMax = Math.ceil((ChartUtil.maxRes + 2) / 5.0) * 5.0;
@@ -949,21 +1028,22 @@ public class PyController implements Initializable {
 //        yAxis.setPrefWidth(75.0);
 
         if (typeName.equals("Kex")) {
-            chart.getYAxis().setLabel("Kex");
-            chart.setUnifyYAxes(true);
+            chart.yAxis.setLabel("Kex");
+//            chart.setUnifyYAxes(true); // fixme
         } else {
-            chart.getYAxis().setLabel(typeName);
-            chart.setUnifyYAxes(false);
+            chart.yAxis.setLabel(typeName);
+//            chart.setUnifyYAxes(false); // fixme
         }
         chart.setTitle(setName);
         if (chart.getData().size() > 1) {
-            chart.setLegendVisible(true);
-            chart.setLegendSide(Side.TOP);
+//            chart.setLegendVisible(true); // fixme
+//            chart.setLegendSide(Side.TOP);
         } else {
-            chart.setLegendVisible(false);
+            // chart.setLegendVisible(false); //fixme
         }
         currentResProps = ChartUtil.residueProperties.get(setName);
         chart.setResProps(currentResProps);
+        refreshResidueCharts();
     }
 
     void makeAxisMenu() {
@@ -1226,7 +1306,7 @@ public class PyController implements Initializable {
         fitResult = null;
         List<List<String>> allResidues = new ArrayList<>();
         List<String> groupResidues = new ArrayList<>();
-        XYBarChart chart = getActiveChart();
+        ResidueChart chart = getActiveChart();
         groupResidues.addAll(chart.selectedResidues);
         if (!groupResidues.isEmpty()) {
             allResidues.add(groupResidues);
@@ -1242,7 +1322,7 @@ public class PyController implements Initializable {
     }
 
     public void refreshFit() {
-        XYBarChart chart = getActiveChart();
+        ResidueChart chart = getActiveChart();
         chart.showInfo();
         makeAxisMenu();
     }
@@ -1263,7 +1343,7 @@ public class PyController implements Initializable {
     }
 
     public Double updateFitProgress(Double f) {
-        XYBarChart chart = getActiveChart();
+        ResidueChart chart = getActiveChart();
         String seriesName = chart.currentSeriesName;
         String[] sParts;
         if (seriesName.length() == 0) {
@@ -1522,7 +1602,7 @@ public class PyController implements Initializable {
         fitResult = null;
         // fixme xychart.clear();
         chartBox.getChildren().remove(activeChart);
-        activeChart = xyBarChart0;
+        activeChart = barCharts.get(0);
         getSimMode();
         setSimControls();
         updateXYChartLabels();

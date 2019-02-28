@@ -35,6 +35,7 @@ import org.comdnmr.fit.calc.ResidueProperties;
 import static org.comdnmr.fit.gui.ChartUtil.residueProperties;
 import org.controlsfx.control.textfield.TextFields;
 import org.controlsfx.dialog.ExceptionDialog;
+import org.nmrfx.chart.DataSeries;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -499,7 +500,7 @@ public class InputDataInterface {
             PyController.mainController.simulate = false;
             PyController.mainController.fitResult = null;
         }
-        XYBarChart reschartNode = PyController.mainController.getActiveChart();
+        ResidueChart reschartNode = PyController.mainController.getActiveChart();
         if (reschartNode == null) {
             reschartNode = PyController.mainController.addChart();
 
@@ -510,7 +511,7 @@ public class InputDataInterface {
         if (resProp.getExpMode().equals("exp")) {
             parName = "R";
         }
-        ObservableList<XYChart.Series<Double, Double>> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
+        ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
         PyController.mainController.currentResProps = resProp;
         PyController.mainController.makeAxisMenu();
         PyController.mainController.setYAxisType(resProp.getName(), "best", "0:0:0", parName);

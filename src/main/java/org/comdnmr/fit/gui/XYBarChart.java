@@ -175,7 +175,7 @@ public class XYBarChart extends XYChart<Number, Number> {
     }
 
     void mousePressed(MouseEvent e) {
-        PyController.mainController.activeChart = this;
+       // PyController.mainController.activeChart = this;
     }
 
     void mouseClickedOnPresenceBar(MouseEvent e, int resNum, double width) {
@@ -384,53 +384,53 @@ public class XYBarChart extends XYChart<Number, Number> {
     protected void updateAxisRange() {
         // For candle stick chart we need to override this method as we need to let the axis know that they need to be able
         // to cover the whole area occupied by the high to low range not just its center data value
-        if (!unifyYAxes) {
-            super.updateAxisRange();
-            return;
-        }
-        final Axis<Number> xa = getXAxis();
-        final Axis<Number> ya = getYAxis();
-        List<Number> xData = null;
-        List<Number> yData = null;
-        if (xa.isAutoRanging()) {
-            xData = new ArrayList<Number>();
-        }
-        if (ya.isAutoRanging()) {
-            yData = new ArrayList<Number>();
-        }
-        boolean foundPar = false;
-        for (String resPropName : ChartUtil.residueProperties.keySet()) {
-            ObservableList<XYChart.Series<Double, Double>> data = ChartUtil.getParMapData(resPropName, "best", "0:0:0", "Kex");
-            if ((data != null) && (xData != null || yData != null)) {
-                foundPar = true;
-                for (XYChart.Series<Double, Double> series : data) {
-                    for (XYChart.Data<Double, Double> xyData : series.getData()) {
-                        if (xData != null) {
-                            xData.add(xyData.getXValue());
-                        }
-                        if (yData != null) {
-                            ErrorExtraValues extras = (ErrorExtraValues) xyData.getExtraValue();
-                            if (extras != null) {
-                                yData.add(xyData.getYValue().doubleValue() + extras.getHighPercentile());
-                                yData.add(xyData.getYValue().doubleValue() - extras.getLowPercentile());
-                            } else {
-                                yData.add(xyData.getYValue());
-                            }
-                        }
-                    }
-                }
-            }
-
-        }
-        if (xData != null) {
-            xa.invalidateRange(xData);
-        }
-        if (yData != null) {
-            ya.invalidateRange(yData);
-        }
-        if (!foundPar) {
-            super.updateAxisRange();
-        }
+//        if (!unifyYAxes) {
+//            super.updateAxisRange();
+//            return;
+//        }
+//        final Axis<Number> xa = getXAxis();
+//        final Axis<Number> ya = getYAxis();
+//        List<Number> xData = null;
+//        List<Number> yData = null;
+//        if (xa.isAutoRanging()) {
+//            xData = new ArrayList<Number>();
+//        }
+//        if (ya.isAutoRanging()) {
+//            yData = new ArrayList<Number>();
+//        }
+//        boolean foundPar = false;
+//        for (String resPropName : ChartUtil.residueProperties.keySet()) {
+//            ObservableList<XYChart.Series<Double, Double>> data = ChartUtil.getParMapData(resPropName, "best", "0:0:0", "Kex");
+//            if ((data != null) && (xData != null || yData != null)) {
+//                foundPar = true;
+//                for (XYChart.Series<Double, Double> series : data) {
+//                    for (XYChart.Data<Double, Double> xyData : series.getData()) {
+//                        if (xData != null) {
+//                            xData.add(xyData.getXValue());
+//                        }
+//                        if (yData != null) {
+//                            ErrorExtraValues extras = (ErrorExtraValues) xyData.getExtraValue();
+//                            if (extras != null) {
+//                                yData.add(xyData.getYValue().doubleValue() + extras.getHighPercentile());
+//                                yData.add(xyData.getYValue().doubleValue() - extras.getLowPercentile());
+//                            } else {
+//                                yData.add(xyData.getYValue());
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//
+//        }
+//        if (xData != null) {
+//            xa.invalidateRange(xData);
+//        }
+//        if (yData != null) {
+//            ya.invalidateRange(yData);
+//        }
+//        if (!foundPar) {
+//            super.updateAxisRange();
+//        }
 
     }
 

@@ -206,11 +206,8 @@
                         </VBox>
                     </items>
                 </SplitPane>
-                <VBox fx:id="chartBox" VBox.vgrow="ALWAYS">
-                    <children>
-                        <SSRegion fx:id="ssregion" prefHeight="1" />
-                    </children>
-                </VBox>
+                <Pane fx:id="chartBox" VBox.vgrow="ALWAYS">
+                </Pane>
 
             </items>
         </SplitPane>

@@ -121,7 +121,7 @@ public class ChooseCESTFitEquations implements Initializable {
         ResidueFitter residueFitter = PyController.mainController.residueFitter;
         List<List<String>> allResidues = new ArrayList<>();
         List<String> groupResidues = new ArrayList<>();
-        XYBarChart chart = PyController.mainController.getActiveChart();
+        ResidueChart chart = PyController.mainController.getActiveChart();
         groupResidues.addAll(chart.selectedResidues);
     
         List<String> fitEquations = new ArrayList<>();

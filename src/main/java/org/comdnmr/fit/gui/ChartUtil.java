@@ -313,11 +313,11 @@ public class ChartUtil {
         return resInfo;
     }
 
-    public static ObservableList<XYChart.Series<Double, Double>> getParMapData(String mapName, String eqnName, String state, String parName) {
+    public static ObservableList<DataSeries> getParMapData(String mapName, String eqnName, String state, String parName) {
         ResidueProperties residueProps = residueProperties.get(mapName);
-        ObservableList<XYChart.Series<Double, Double>> data = FXCollections.observableArrayList();
+        ObservableList<DataSeries> data = FXCollections.observableArrayList();
 
-        Series<Double, Double> series = new Series<>();
+        DataSeries series = new DataSeries();
         series.setName(mapName + '|' + eqnName + "|" + state + "|" + parName);
         data.add(series);
         minRes = Integer.MAX_VALUE;
@@ -372,14 +372,14 @@ public class ChartUtil {
                 extra = new ErrorExtraValues(25, 0.0, 0.0);
             }
 
-            XYChart.Data dataPoint = new XYChart.Data(x, y, extra);
+            XYEValue dataPoint = new XYEValue(x, y, errUp);
             series.getData().add(dataPoint);
         }
         return data;
     }
 
     public static void loadParameters(String fileName) {
-        XYBarChart reschartNode = PyController.mainController.getActiveChart();
+        ResidueChart reschartNode = PyController.mainController.getActiveChart();
         if (reschartNode == null) {
             reschartNode = PyController.mainController.addChart();
 
@@ -407,7 +407,7 @@ public class ChartUtil {
         if (resProp.getExpMode().equals("exp")) {
             parName = "R";
         }
-        ObservableList<XYChart.Series<Double, Double>> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
+        ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
         PyController.mainController.currentResProps = resProp;
         PyController.mainController.makeAxisMenu();
         PyController.mainController.setYAxisType(resProp.getName(), "best", "0:0:0", parName);
