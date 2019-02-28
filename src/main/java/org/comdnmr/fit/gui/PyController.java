@@ -338,7 +338,6 @@ public class PyController implements Initializable {
         canvas.setWidth(chartPane.getWidth());
         canvas.setHeight(chartPane.getHeight());
         gC.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-        System.out.println("resize " + chartPane.getWidth() + " " + chartPane.getHeight());
         xychart.setWidth(canvas.getWidth());
         xychart.setHeight(canvas.getHeight());
     }
@@ -594,6 +593,7 @@ public class PyController implements Initializable {
         if (!ssValues.isEmpty()) {
             ssPainter = new SSPainter(barPlotCanvas, ssValues);
         }
+        resizeBarPlotCanvas();
     }
 
     @FXML
