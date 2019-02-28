@@ -47,4 +47,12 @@ public interface EquationType {
 
     public String getName();
 
+    public default double getMinX() {
+        return -10000.0;
+    }
+
+    public default double getMaxX() {
+        return 10000.0;
+    }
+
 }

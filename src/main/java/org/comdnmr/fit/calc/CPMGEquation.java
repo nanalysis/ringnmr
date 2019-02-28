@@ -383,6 +383,11 @@ public enum CPMGEquation implements EquationType {
     public int getNGroupPars() {
         return nGroupPars;
     }
+    
+    @Override
+    public double getMinX() {
+        return 5.0;
+    }
 
     CPMGEquation(String equationName, int nGroupPars, String... parNames) {
         this.equationName = equationName;
