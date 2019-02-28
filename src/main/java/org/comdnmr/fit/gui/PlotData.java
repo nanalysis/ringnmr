@@ -108,7 +108,6 @@ public class PlotData extends XYCanvasChart {
         Optional<Hit> hitOpt = pickChart(e.getX(), e.getY(), 5);
         if (hitOpt.isPresent()) {
             Hit hit = hitOpt.get();
-            System.out.println(hit.toString());
             PyController.mainController.selectTableRow(hit.getSeries().getName(), hit.getIndex());
             PyController.mainController.statusBar.setText(hit.toString());
 
@@ -126,7 +125,6 @@ public class PlotData extends XYCanvasChart {
     }
 
     public void setEquations(List<PlotEquation> plotEquations) {
-//        System.out.println("set equations " + plotEquations.size());
         this.plotEquations.clear();
         this.plotEquations.addAll(plotEquations);
         drawChart();
@@ -148,7 +146,6 @@ public class PlotData extends XYCanvasChart {
     }
 
     protected void exportVectorGraphics(SVGGraphicsContext svgGC) throws GraphicsIOException {
-
         svgGC.save();
         svgGC.clip();
         svgGC.beginPath();
@@ -187,7 +184,6 @@ public class PlotData extends XYCanvasChart {
         double[] xValues = new double[nIncr];
         double[] yValues = new double[nIncr];
         for (PlotEquation plotEquation : plotEquations) {
-            //System.out.println("paintLines No. Eqns = " + plotEquations.size());
             if (plotEquation == null) {
                 continue;
             }

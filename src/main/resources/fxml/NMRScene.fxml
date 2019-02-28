@@ -49,6 +49,7 @@
                             
                             <MenuItem text="Print XY Chart..." onAction="#printXYChart"/>                       
                             <MenuItem text="Export SVG XY Chart..." onAction="#exportSVGAction"/>                       
+                            <MenuItem text="Export SVG Bar Chart..." onAction="#exportBarPlotSVGAction"/>                       
                             <MenuItem text="Load Sample Data..." onAction="#loadSimData"/>
                             <MenuItem text="Preferences..." onAction="#showPreferences"/>
                             <MenuItem text="Show Console" onAction="#showConsole"/>

@@ -6,6 +6,8 @@
 package org.comdnmr.fit.gui;
 
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
@@ -39,7 +41,7 @@ public class SSPainter {
         this.nDisulfides = n;
         double diSulfideOffset = 0.0;
         if (nDisulfides > 0) {
-            diSulfideOffset = nDisulfides * arrowEdge  + 3;
+            diSulfideOffset = nDisulfides * arrowEdge + 3;
         }
 
         cHeight = 3.0 * height + diSulfideOffset;
@@ -53,12 +55,15 @@ public class SSPainter {
     void paintSS(double xPos, double yPos, double cWidth, double start, double end) {
         GraphicsContext gCC = canvas.getGraphicsContext2D();
         GraphicsContextInterface gC = new GraphicsContextProxy(gCC);
-        paintSS(gC, xPos, yPos, cWidth, start, end);
+        try {
+            gC.clearRect(xPos, yPos, cWidth, cHeight);
+            paintSS(gC, xPos, yPos, cWidth, start, end);
+        } catch (GraphicsIOException ex) {
+        }
     }
 
     void paintSS(GraphicsContextInterface gC, double xPos, double yPos, double cWidth, double resStart, double resEnd) {
         try {
-            gC.clearRect(xPos, yPos, cWidth, cHeight);
             final double xScale = cWidth / (resEnd - resStart);
             //  final double center = cHeight - 1.0 * height - arrowEdge;
             final double center = yPos + height + arrowEdge;

@@ -1237,12 +1237,12 @@ public class PyController implements Initializable {
                     extras[2] = expData.getExtras().get(1);
 //                    System.out.println("Fit button expData extras size = " + expData.getExtras().size() + " extra[1] = " + extras[1]);
                     PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
-                    for (int i = 0; i < extras.length; i++) {
-                        System.out.println(iCurve + " " + i + " extra " + extras[i]);
-                    }
-                    for (int i = 0; i < pars.length; i++) {
-                        System.out.println(iCurve + " " + i + " pars " + pars[i]);
-                    }
+//                    for (int i = 0; i < extras.length; i++) {
+//                        System.out.println(iCurve + " " + i + " extra " + extras[i]);
+//                    }
+//                    for (int i = 0; i < pars.length; i++) {
+//                        System.out.println(iCurve + " " + i + " pars " + pars[i]);
+//                    }
                     //equationCopy.setExtra(extras);
 
                     equations.add(plotEquation);
@@ -1275,18 +1275,18 @@ public class PyController implements Initializable {
 //                extras[0] = CPMGFit.REF_FIELD;
 //System.out.println("extras " + extras[0]);
                 for (int i = 0; i < simExtras.length; i++) {
-                    System.out.println("simextras " + i + " " + simExtras[i]);
+//                    System.out.println("simextras " + i + " " + simExtras[i]);
 //                    extras[i + 1] = simExtras[i];
                 }
-                for (int i = 0; i < extras.length; i++) {
-                    System.out.println(iCurve + " " + i + " extra " + extras[i]);
-                }
-                for (int i = 0; i < simExtras.length; i++) {
-                    System.out.println(iCurve + " " + i + " simExtras " + simExtras[i]);
-                }
-                for (int i = 0; i < pars.length; i++) {
-                    System.out.println(iCurve + " " + i + " pars " + pars[i]);
-                }
+                //for (int i = 0; i < extras.length; i++) {
+                    //System.out.println(iCurve + " " + i + " extra " + extras[i]);
+                //}
+                //for (int i = 0; i < simExtras.length; i++) {
+                    //System.out.println(iCurve + " " + i + " simExtras " + simExtras[i]);
+                //}
+                //for (int i = 0; i < pars.length; i++) {
+                    //System.out.println(iCurve + " " + i + " pars " + pars[i]);
+                //}
                 PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
 
                 //equationCopy.setExtra(extras);
@@ -1911,6 +1911,39 @@ public class PyController implements Initializable {
                 ExceptionDialog eDialog = new ExceptionDialog(ex);
                 eDialog.showAndWait();
             }
+        }
+    }
+
+    @FXML
+    void exportBarPlotSVGAction(ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Export to SVG");
+        fileChooser.setInitialDirectory(getInitialDirectory());
+        File selectedFile = fileChooser.showSaveDialog(null);
+        if (selectedFile != null) {
+            SVGGraphicsContext svgGC = new SVGGraphicsContext();
+            try {
+                svgGC.create(true, barPlotCanvas.getWidth(), barPlotCanvas.getHeight(), selectedFile.toString());
+                exportBarPlotSVGAction(svgGC);
+                svgGC.saveFile();
+            } catch (GraphicsIOException ex) {
+                ExceptionDialog eDialog = new ExceptionDialog(ex);
+                eDialog.showAndWait();
+            }
+        }
+    }
+
+    protected void exportBarPlotSVGAction(SVGGraphicsContext svgGC) throws GraphicsIOException {
+        svgGC.beginPath();
+        for (ResidueChart resChart : barCharts) {
+            resChart.drawChart(svgGC);
+        }
+        if (ssPainter != null) {
+            double ssHeight = ssPainter.getHeight();
+            Axis axis = activeChart.xAxis;
+            ssPainter.paintSS(svgGC, axis.getXOrigin(), barPlotCanvas.getHeight() - ssHeight,
+                    axis.getWidth(),
+                    axis.getLowerBound(), axis.getUpperBound());
         }
     }
 

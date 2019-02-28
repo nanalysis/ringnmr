@@ -87,7 +87,6 @@ public class ResidueChart extends XYCanvasBarChart {
     }
 
     void seriesChanged() {
-        System.out.println("draw chart " + getData().size());
         selectedResidues.clear();
         drawChart();
 

@@ -97,10 +97,8 @@ public class SecondaryStructure {
                 List<String> lines = Files.readAllLines(file.toPath(), Charset.defaultCharset());
                 for (String line : lines) {
                     line = line.trim();
-                    System.out.println("line " + line);
                     if ((line.length() != 0) && (line.charAt(0) != '#')) {
                         String[] fields = line.split(" +");
-                        System.out.println(fields.length);
                         if (fields.length > 2) {
                             try {
                                 int start = Integer.parseInt(fields[0]);
@@ -114,7 +112,6 @@ public class SecondaryStructure {
                                 if (fields.length > 4) {
                                     color = fields[4];
                                 }
-                                System.out.println(start + " " + end + " " + type + " " + label + " " + color);
                                 SecondaryStructure ss = new SecondaryStructure(start, end, type, label, color);
                                 ssValues.add(ss);
                             } catch (NumberFormatException nfE) {
