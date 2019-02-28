@@ -191,8 +191,9 @@ public class PlotData extends XYCanvasChart {
             if (plotEquation == null) {
                 continue;
             }
-            double min = xAxis.getLowerBound();
-            double max = xAxis.getUpperBound();
+            double min = Math.max(xAxis.getLowerBound(), plotEquation.getMinX());
+            double max = Math.min(xAxis.getUpperBound(), plotEquation.getMaxX());
+
             double delta = (max - min) / (nIncr + 1);
             double[] extras = plotEquation.getExtras();
             double[] ax = new double[extras.length];
