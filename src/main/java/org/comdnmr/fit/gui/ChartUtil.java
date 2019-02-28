@@ -8,11 +8,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Stream;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -322,7 +324,17 @@ public class ChartUtil {
         data.add(series);
         minRes = Integer.MAX_VALUE;
         maxRes = Integer.MIN_VALUE;
+        Collection<ExperimentData> expDataSets = residueProps.getExperimentData();
+        for (ExperimentData expData : expDataSets) {
+            for (String resNumS : expData.getResidues()) {
+                int resNum = Integer.parseInt(resNumS);
+                minRes = Math.min(resNum, minRes);
+                maxRes = Math.max(resNum, maxRes);
+            }
+        }
+
         List<ResidueInfo> resValues = residueProps.getResidueValues();
+
         for (ResidueInfo resInfo : resValues) {
             String useEquName = eqnName;
             if (resInfo == null) {
@@ -333,8 +345,6 @@ public class ChartUtil {
                 useEquName = resInfo.getBestEquationName();
             }
             int resNum = resInfo.getResNum();
-            minRes = Math.min(resNum, minRes);
-            maxRes = Math.max(resNum, maxRes);
             double x = resNum;
             Double errUp = null;
             Double y = resInfo.getParValue(useEquName, state, parName);

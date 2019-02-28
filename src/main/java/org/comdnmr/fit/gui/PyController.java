@@ -35,7 +35,6 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -99,7 +98,7 @@ public class PyController implements Initializable {
     ResidueChart activeChart;
     List<ResidueChart> barCharts = new ArrayList<>();
 
-    SSRegion activeSSregion;
+    SSPainter ssPainter = null;
     @FXML
     SSRegion ssregion;
 
@@ -227,7 +226,6 @@ public class PyController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         mainController = this;
-        activeSSregion = ssregion;
         //propertySheet.setPropertyEditorFactory(new NvFxPropertyEditorFactory());
 //        propertySheet.setMode(PropertySheet.Mode.NAME);
 //        propertySheet.setModeSwitcherVisible(false);
@@ -352,13 +350,16 @@ public class PyController implements Initializable {
         barPlotCanvas.setHeight(height);
         GraphicsContext gC = barPlotCanvas.getGraphicsContext2D();
         gC.clearRect(0, 0, barPlotCanvas.getWidth(), barPlotCanvas.getHeight());
+        if (ssPainter != null) {
+            height -= ssPainter.getHeight();
+        }
         double chartHeight = height / barCharts.size();
         double yPos = 0.0;
         for (ResidueChart residueChart : barCharts) {
             residueChart.setWidth(width);
             residueChart.setHeight(chartHeight);
             residueChart.setYPos(yPos);
-            residueChart.autoScale(true);
+            residueChart.autoScale(false);
             residueChart.drawChart();
             yPos += chartHeight;
         }
@@ -382,6 +383,13 @@ public class PyController implements Initializable {
         gC.clearRect(0, 0, barPlotCanvas.getWidth(), barPlotCanvas.getHeight());
         for (ResidueChart residueChart : barCharts) {
             residueChart.drawChart();
+        }
+        if (ssPainter != null) {
+            double ssHeight = ssPainter.getHeight();
+            Axis axis = activeChart.xAxis;
+            ssPainter.paintSS(axis.getXOrigin(), barPlotCanvas.getHeight() - ssHeight,
+                    axis.getWidth(),
+                    axis.getLowerBound(), axis.getUpperBound());
         }
     }
 
@@ -577,6 +585,14 @@ public class PyController implements Initializable {
                 fitResult = null;
             }
             ChartUtil.loadParameters(file.toString());
+        }
+    }
+
+    @FXML
+    public void loadSecondaryStructure() {
+        List<SecondaryStructure> ssValues = SecondaryStructure.loadFromFile();
+        if (!ssValues.isEmpty()) {
+            ssPainter = new SSPainter(barPlotCanvas, ssValues);
         }
     }
 
@@ -1014,10 +1030,11 @@ public class PyController implements Initializable {
         if (chart.currentSeriesName.equals("")) {
             chart.currentSeriesName = data.get(0).getName();
         }
-        chart.autoScale(true);
         Axis xAxis = chart.xAxis;
         Axis yAxis = chart.yAxis;
         xAxis.setAutoRanging(false);
+        yAxis.setAutoRanging(true);
+        chart.autoScale(false);
         double xMin = Math.floor((ChartUtil.minRes - 2) / 5.0) * 5.0;
         double xMax = Math.ceil((ChartUtil.maxRes + 2) / 5.0) * 5.0;
         xAxis.setLowerBound(xMin);
@@ -1444,12 +1461,12 @@ public class PyController implements Initializable {
                 ObservableList<Node> barNodes = chartBox.getChildren();
                 barChartData = new ArrayList<>(barNodes.size());
                 barNodes.forEach(node -> {
-                    if (node instanceof XYBarChart) {
-                        XYBarChart barChart = (XYBarChart) node;
-                        String barChartName = barChart.toString();
-                        HashMap<String, Object> chartData = barChart.getChartData();
-                        barChartData.add(chartData);
-                    }
+//                    if (node instanceof XYBarChart) {
+//                        XYBarChart barChart = (XYBarChart) node;
+//                        String barChartName = barChart.toString();
+//                        HashMap<String, Object> chartData = barChart.getChartData();
+//                        barChartData.add(chartData);
+//                    }
                 });
             } else {
                 barChartData = new ArrayList<>(0);

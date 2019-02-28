@@ -46,24 +46,7 @@ public class SSRegion extends Region {
     }
 
     public void addSS() {
-//        painter = new SSPainter(canvas, xAxis, yAxis, secondaryStructures);
-        if (secondaryStructures != null) {
-            painter = new SSPainter(xAxis, yAxis, secondaryStructures);
-            setPrefHeight(painter.getPrefHeight());
-            setMinHeight(painter.getPrefHeight());
-            group = null;
-            for (Node node : (ObservableList<Node>) getChildren()) {
-                if ((node.getId() != null) && node.getId().equals("ssanno")) {
-                    group = (Group) node;
-                }
-            }
-            if (group == null) {
-                group = new Group();
-                group.setId("ssanno");
-                getChildren().add(0, group);
-            }
-            painter.addSS(group);
-            //layout();
-        }
+// 
+
     }
 }

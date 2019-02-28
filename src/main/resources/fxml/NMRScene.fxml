@@ -25,7 +25,7 @@
                             <MenuItem text="Load Project File..." onAction="#loadParameterFile" fx:id="loadMenuItem"/>
                             <MenuItem text="Input Project Parameters..." onAction="#inputParameters" fx:id="inputMenuItem"/>
                             <MenuItem text="Connect to NMRFx Server..." onAction="#startServer" fx:id = "serverMenuItem"/>
-                            <MenuItem text="Load Secondary Structure..." onAction="loadSecondaryStructure(event)" fx:id="loadSSMenuItem"/>
+                            <MenuItem text="Load Secondary Structure..." onAction="#loadSecondaryStructure" fx:id="loadSSMenuItem"/>
                             <Menu text="Save">
                                 <items>
                                     <MenuItem text="Save Analysis..." onAction="#saveParameters" fx:id="savePars"/>
