@@ -29,7 +29,7 @@ public abstract class FitModel implements MultivariateFunction {
 
     // fixme is there a thread safe RandomGenerator
     public final RandomGenerator DEFAULT_RANDOMGENERATOR = new MersenneTwister(1);
-    static double SIGMA_DEFAULT = 10.0;
+    static double SIGMA_DEFAULT = 20.0;
     int reportAt = 10;
 
     EquationType equation;
@@ -142,6 +142,7 @@ public abstract class FitModel implements MultivariateFunction {
         Arrays.fill(normLower, 0.0);
         Arrays.fill(normUpper, 100.0);
         double[] normGuess = normalize(guess);
+        fixGuesses(normGuess);
         //new Checker(100 * Precision.EPSILON, 100 * Precision.SAFE_MIN, nSteps));
 
         int n = guess.length;
@@ -163,6 +164,16 @@ public abstract class FitModel implements MultivariateFunction {
         PointValuePair deNormResult = new PointValuePair(deNormalize(result.getPoint()), result.getValue());
 
         return deNormResult;
+    }
+
+    void fixGuesses(double[] guesses) {
+        for (int i = 0; i < guesses.length; i++) {
+            if (guesses[i] > 98.0) {
+                guesses[i] = 98.0;
+            } else if (guesses[i] < 2) {
+                guesses[i] = 2.0;
+            }
+        }
     }
 
     double[] normalize(double[] pars) {
