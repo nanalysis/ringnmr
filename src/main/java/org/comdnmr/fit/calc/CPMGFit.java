@@ -221,6 +221,12 @@ public class CPMGFit implements EquationFitter {
         PointValuePair result = calcR.refine(guesses, boundaries[0],
                 boundaries[1], sigma, CoMDPreferences.getOptimizer());
         double[] pars = result.getPoint();
+        System.out.print("Fit pars \n");
+        for (int i = 0; i < pars.length; i++) {
+            System.out.printf("%d %.3f %.3f %.3f %.3f\n", i, guesses[i], boundaries[0][i], pars[i], boundaries[1][i]);
+        }
+        System.out.println("");
+
         /*
         for (int i = 0; i < map.length; i++) {
             for (int j = 0; j < map[i].length; j++) {
@@ -240,6 +246,7 @@ public class CPMGFit implements EquationFitter {
         double aic = calcR.getAICc(pars);
         double rms = calcR.getRMS(pars);
         double rChiSq = calcR.getReducedChiSq(pars);
+        System.out.printf("%.3f %.3f %.3f\n", aic, rms, rChiSq);
 //        System.out.println("rms " + rms);
         int nGroupPars = calcR.getNGroupPars();
         sigma /= 2.0;
