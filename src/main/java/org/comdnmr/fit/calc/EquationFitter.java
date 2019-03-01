@@ -53,6 +53,7 @@ public interface EquationFitter {
 //                System.out.println(dStat);
             }
         }
+        simsMap.put("fit", simPars[simPars.length - 1]);
         int nCurves = states.length;
         for (int iCurve = 0; iCurve < nCurves; iCurve++) {
             String stateString = ResidueProperties.getStateString(states[iCurve]);

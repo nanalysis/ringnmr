@@ -100,7 +100,7 @@ public class CalcR1Rho extends FitModel {
         reportFitness = false;
         int nPar = start.length;
         int nSim = CoMDPreferences.getSampleSize();
-        parValues = new double[nPar][nSim];
+        parValues = new double[nPar + 1][nSim];
         double[] yPred = getPredicted(start);
         double[] yValuesOrig = yValues.clone();
         double[][] rexValues = new double[nID][nSim];
@@ -117,6 +117,7 @@ public class CalcR1Rho extends FitModel {
             for (int j = 0; j < nPar; j++) {
                 parValues[j][i] = rPoint[j];
             }
+            parValues[nPar][i] = result.getValue();
         }
         double[] parSDev = new double[nPar];
         for (int i = 0; i < nPar; i++) {
@@ -159,6 +160,7 @@ public class CalcR1Rho extends FitModel {
             for (int j = 0; j < nPar; j++) {
                 parValues[j][i] = rPoint[j];
             }
+            parValues[nPar][i] = result.getValue();
         });
 
         double[] parSDev = new double[nPar];
@@ -174,7 +176,7 @@ public class CalcR1Rho extends FitModel {
         reportFitness = false;
         int nPar = start.length;
         int nSim = CoMDPreferences.getSampleSize();
-        parValues = new double[nPar][nSim];
+        parValues = new double[nPar + 1][nSim];
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
         String optimizer = CoMDPreferences.getBootStrapOptimizer();
@@ -215,6 +217,8 @@ public class CalcR1Rho extends FitModel {
             for (int j = 0; j < nPar; j++) {
                 parValues[j][i] = rPoint[j];
             }
+            parValues[nPar][i] = result.getValue();
+
         });
 
         double[] parSDev = new double[nPar];
