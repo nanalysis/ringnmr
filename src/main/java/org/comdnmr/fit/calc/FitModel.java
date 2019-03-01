@@ -103,6 +103,8 @@ public abstract class FitModel implements MultivariateFunction {
         Arrays.fill(normUpper, 100.0);
         Arrays.fill(sigma, inputSigma);
         double[] normGuess = normalize(guess);
+        fixGuesses(normGuess);
+
         //new Checker(100 * Precision.EPSILON, 100 * Precision.SAFE_MIN, nSteps));
         CMAESOptimizer optimizer = new CMAESOptimizer(nSteps, stopFitness, true, diagOnly, 0,
                 DEFAULT_RANDOMGENERATOR, true,
