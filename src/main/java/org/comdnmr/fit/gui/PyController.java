@@ -181,6 +181,7 @@ public class PyController implements Initializable {
     ResidueFitter residueFitter;
     String currentMapName = "";
     String[] currentResidues;
+    List<String> fittingResidues = new ArrayList<>();
     String currentState = "";
     String currentEquationName;
     List<int[]> currentStates = new ArrayList<>();
@@ -1279,13 +1280,13 @@ public class PyController implements Initializable {
 //                    extras[i + 1] = simExtras[i];
                 }
                 //for (int i = 0; i < extras.length; i++) {
-                    //System.out.println(iCurve + " " + i + " extra " + extras[i]);
+                //System.out.println(iCurve + " " + i + " extra " + extras[i]);
                 //}
                 //for (int i = 0; i < simExtras.length; i++) {
-                    //System.out.println(iCurve + " " + i + " simExtras " + simExtras[i]);
+                //System.out.println(iCurve + " " + i + " simExtras " + simExtras[i]);
                 //}
                 //for (int i = 0; i < pars.length; i++) {
-                    //System.out.println(iCurve + " " + i + " pars " + pars[i]);
+                //System.out.println(iCurve + " " + i + " pars " + pars[i]);
                 //}
                 PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
 
@@ -1323,8 +1324,9 @@ public class PyController implements Initializable {
         fitResult = null;
         List<List<String>> allResidues = new ArrayList<>();
         List<String> groupResidues = new ArrayList<>();
-        ResidueChart chart = getActiveChart();
-        groupResidues.addAll(chart.selectedResidues);
+        fittingResidues.clear();
+        fittingResidues.addAll(ResidueChart.selectedResidues);
+        groupResidues.addAll(ResidueChart.selectedResidues);
         if (!groupResidues.isEmpty()) {
             allResidues.add(groupResidues);
             currentResProps.setAbsValueMode(absValueModeCheckBox.isSelected());
@@ -1340,6 +1342,9 @@ public class PyController implements Initializable {
 
     public void refreshFit() {
         ResidueChart chart = getActiveChart();
+        ResidueChart.selectedResidues.clear();
+        ResidueChart.selectedResidues.addAll(fittingResidues);
+        refreshResidueCharts();
         chart.showInfo();
         makeAxisMenu();
     }
@@ -1667,6 +1672,7 @@ public class PyController implements Initializable {
         plotData.setData(allData);
         setBounds();
         plotData.setEquations(equations);
+        System.out.println("did equa");
         updateTable(resDatas);
         if (residues != null) {
             updateTableWithPars(mapName, residues, equationName, state, allStates);
