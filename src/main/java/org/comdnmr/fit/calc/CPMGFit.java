@@ -173,7 +173,6 @@ public class CPMGFit implements EquationFitter {
             idNums[i] = idValues.get(i);
         }
         calcR.setEquation(eqn);
-        calcR.setAbsMode(absMode);
 
         calcR.setXY(x, y);
         calcR.setIds(idNums);
@@ -217,7 +216,7 @@ public class CPMGFit implements EquationFitter {
         }
 //        System.out.println("dofit guesses = " + guesses);
         double[][] boundaries = calcR.boundaries(guesses);
-        double sigma = FitModel.SIGMA_DEFAULT;
+        double sigma = CoMDPreferences.getStartingRadius();
         PointValuePair result = calcR.refine(guesses, boundaries[0],
                 boundaries[1], sigma, CoMDPreferences.getOptimizer());
         double[] pars = result.getPoint();

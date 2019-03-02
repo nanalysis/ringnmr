@@ -171,8 +171,6 @@ public class ExpFit implements EquationFitter {
             idNums[i] = idValues.get(i);
         }
         expModel.setEquation(eqn);
-        expModel.setAbsMode(absMode);
-
         expModel.setXY(x, y);
         expModel.setIds(idNums);
         expModel.setErr(err);
@@ -216,7 +214,7 @@ public class ExpFit implements EquationFitter {
         }
 //        System.out.println("dofit guesses = " + guesses);
         double[][] boundaries = expModel.boundaries(guesses);
-        double sigma = FitModel.SIGMA_DEFAULT;
+        double sigma = CoMDPreferences.getStartingRadius();
         PointValuePair result = expModel.refine(guesses, boundaries[0], boundaries[1],
                 sigma, CoMDPreferences.getOptimizer());
         double[] pars = result.getPoint();

@@ -70,7 +70,7 @@ public class CalcCEST extends FitModel {
 
         for (int i = 0; i < yValues.length; i++) {
             double delta = (yCalc[i] - yValues[i]);
-            if (weightByError) {
+            if (weightFit) {
                 delta /= errValues[i];
             }
             sumAbs += FastMath.abs(delta);
@@ -148,7 +148,6 @@ public class CalcCEST extends FitModel {
 //        IntStream.range(0, nSim).forEach(i -> {
             CalcCEST rDisp = new CalcCEST(xValues, yPred, errValues, fieldValues, fields, idNums);
             rDisp.setEquation(equation.getName());
-            rDisp.setAbsMode(absMode);
             double[] newY = new double[yValues.length];
             for (int k = 0; k < yValues.length; k++) {
                 newY[k] = yPred[k] + errValues[k] * random.nextGaussian();
@@ -187,7 +186,6 @@ public class CalcCEST extends FitModel {
         IntStream.range(0, nSim).parallel().forEach(i -> {
             CalcCEST rDisp = new CalcCEST(xValues, yValues, errValues, fieldValues, fields, idNums);
             rDisp.setEquation(equation.getName());
-            rDisp.setAbsMode(absMode);
             double[][] newX = new double[3][yValues.length];
             double[] newY = new double[yValues.length];
             double[] newErr = new double[yValues.length];

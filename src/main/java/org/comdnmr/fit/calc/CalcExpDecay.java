@@ -75,7 +75,7 @@ public class CalcExpDecay extends FitModel {
             value = equation.calculate(par, map[idNums[i]], ax, idNums[i], fieldValues[i]);
             //System.out.println( "xxxxxxxxxxx " + value + " " + yValues[i] + " " + equation.name());
             double delta = (value - yValues[i]);
-            if (weightByError) {
+            if (weightFit) {
                 delta /= errValues[i];
             }
             //System.out.print(xValues[i] + " " + yValues[i] + " " + value + " " + (delta*delta) + " ");
@@ -158,7 +158,6 @@ public class CalcExpDecay extends FitModel {
 //        IntStream.range(0, nSim).forEach(i -> {
             CalcExpDecay rDisp = new CalcExpDecay(xValues, yPred, errValues, fieldValues, fields, idNums);
             rDisp.setEquation(equation.getName());
-            rDisp.setAbsMode(absMode);
             double[] newY = new double[yValues.length];
             for (int k = 0; k < yValues.length; k++) {
                 newY[k] = yPred[k] + errValues[k] * random.nextGaussian();
@@ -198,7 +197,6 @@ public class CalcExpDecay extends FitModel {
         IntStream.range(0, nSim).parallel().forEach(i -> {
             CalcExpDecay rDisp = new CalcExpDecay(xValues, yValues, errValues, fieldValues, fields, idNums);
             rDisp.setEquation(equation.getName());
-            rDisp.setAbsMode(absMode);
             double[][] newX = new double[1][yValues.length];
             double[] newY = new double[yValues.length];
             double[] newErr = new double[yValues.length];

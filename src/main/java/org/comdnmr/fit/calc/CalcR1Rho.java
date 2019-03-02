@@ -70,17 +70,16 @@ public class CalcR1Rho extends FitModel {
 
         for (int i = 0; i < yValues.length; i++) {
             double delta = (yCalc[i] - yValues[i]);
+            if (weightFit) {
+                delta /= errValues[i];
+            }
             sumAbs += FastMath.abs(delta);
             sumSq += delta * delta;
         }
-//        for (double p:par) {
-//            System.out.print(p + " ");
-//        }
-//        System.out.println(Math.sqrt(sumSq/yValues.length));
         if (absMode) {
-            return sumAbs;
+            return sumAbs / (yValues.length - par.length);
         } else {
-            return sumSq;
+            return sumSq / (yValues.length - par.length);
         }
     }
 
@@ -145,7 +144,6 @@ public class CalcR1Rho extends FitModel {
 //        IntStream.range(0, nSim).forEach(i -> {
             CalcR1Rho rDisp = new CalcR1Rho(xValues, yPred, errValues, fieldValues, fields, idNums);
             rDisp.setEquation(equation.getName());
-            rDisp.setAbsMode(absMode);
             double[] newY = new double[yValues.length];
             for (int k = 0; k < yValues.length; k++) {
                 newY[k] = yPred[k] + errValues[k] * random.nextGaussian();
@@ -184,7 +182,6 @@ public class CalcR1Rho extends FitModel {
         IntStream.range(0, nSim).parallel().forEach(i -> {
             CalcR1Rho rDisp = new CalcR1Rho(xValues, yValues, errValues, fieldValues, fields, idNums);
             rDisp.setEquation(equation.getName());
-            rDisp.setAbsMode(absMode);
             double[][] newX = new double[3][yValues.length];
             double[] newY = new double[yValues.length];
             double[] newErr = new double[yValues.length];

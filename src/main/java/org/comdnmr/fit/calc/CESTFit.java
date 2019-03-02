@@ -216,8 +216,6 @@ public class CESTFit implements EquationFitter {
             idNums[i] = idValues.get(i);
         }
         calcCEST.setEquation(eqn);
-        calcCEST.setAbsMode(absMode);
-
         calcCEST.setXY(x, y);
         calcCEST.setIds(idNums);
         calcCEST.setErr(err);
@@ -272,7 +270,7 @@ public class CESTFit implements EquationFitter {
             //        System.out.println("dofit guesses = " + guesses);
             //        double[] guesses = setupFit(eqn, absMode);
             double[][] boundaries = calcCEST.boundaries(guesses);
-            double sigma = FitModel.SIGMA_DEFAULT;
+            double sigma = CoMDPreferences.getStartingRadius();
             PointValuePair result = calcCEST.refine(guesses, boundaries[0],
                     boundaries[1], sigma, CoMDPreferences.getOptimizer());
             double[] pars = result.getPoint();

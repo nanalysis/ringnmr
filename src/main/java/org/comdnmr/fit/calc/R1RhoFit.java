@@ -216,8 +216,6 @@ public class R1RhoFit implements EquationFitter {
             idNums[i] = idValues.get(i);
         }
         calcR1Rho.setEquation(eqn);
-        calcR1Rho.setAbsMode(absMode);
-
         calcR1Rho.setXY(x, y);
         calcR1Rho.setIds(idNums);
         calcR1Rho.setErr(err);
@@ -272,7 +270,7 @@ public class R1RhoFit implements EquationFitter {
             //        System.out.println("dofit guesses = " + guesses);
             //        double[] guesses = setupFit(eqn, absMode);
             double[][] boundaries = calcR1Rho.boundaries(guesses);
-            double sigma = FitModel.SIGMA_DEFAULT;
+            double sigma = CoMDPreferences.getStartingRadius();
             for (int i = 0; i < guesses.length; i++) {
                 System.out.println(i + " map " + map[0][i] + " bou0 " + boundaries[0][i] + " bou1 " + boundaries[1][i] + " gue " + guesses[i]);
             }

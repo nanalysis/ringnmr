@@ -75,7 +75,7 @@ public class CalcRDisp extends FitModel {
             value = equation.calculate(par, map[idNums[i]], ax, idNums[i], fieldValues[i]);
             //System.out.println( "xxxxxxxxxxx " + value + " " + yValues[i] + " " + equation.name());
             double delta = (value - yValues[i]);
-            if (weightByError) {
+            if (weightFit) {
                 delta /= errValues[i];
             }
             //System.out.print(xValues[i] + " " + yValues[i] + " " + value + " " + (delta*delta) + " ");
@@ -201,7 +201,6 @@ public class CalcRDisp extends FitModel {
             }
         CalcRDisp rDisp = new CalcRDisp(xValues, newY, errValues, fieldValues, fields, idNums);
         rDisp.setEquation(equation.getName());
-        rDisp.setAbsMode(absMode);
         rDisp.setXY(xValues, newY);
         rDisp.setIds(idNums);
         rDisp.setMap(map);
@@ -211,7 +210,6 @@ public class CalcRDisp extends FitModel {
     private CalcRDisp setupNonParametricBootstrap(double[] yPred) {
         CalcRDisp rDisp = new CalcRDisp(xValues, yValues, errValues, fieldValues, fields, idNums);
         rDisp.setEquation(equation.getName());
-        rDisp.setAbsMode(absMode);
         double[][] newX = new double[1][yValues.length];
         double[] newY = new double[yValues.length];
         double[] newErr = new double[yValues.length];
