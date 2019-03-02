@@ -156,12 +156,6 @@
                                             </HBox> 
                                             <HBox>
                                                 <children>
-                                                    <CheckBox text="Absolute Value Mode  " fx:id="absValueModeCheckBox"/>
-                                                    <CheckBox text="Non-Parametric Fit" fx:id="nonParBootStrapCheckBox"/>
-                                                </children>
-                                            </HBox>
-                                            <HBox>
-                                                <children>
                                                     <CheckBox text="Calculate Errors          " fx:id="calcErrorsCheckBox"/>
                                                     <CheckBox text="Slider Guess" fx:id="sliderGuessCheckBox"/>
                                                 </children>

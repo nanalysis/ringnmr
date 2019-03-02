@@ -144,12 +144,6 @@ public class ChooseCESTFitEquations implements Initializable {
             PyController.mainController.equationChoice.setValue(CESTFit.getEquationNames().get(0));
             if (!allRes) {  //fit selected residues
                 allResidues.add(groupResidues);
-                currentResProps.setAbsValueMode(PyController.mainController.absValueModeCheckBox.isSelected());
-                if (PyController.mainController.nonParBootStrapCheckBox.isSelected()) {
-                    currentResProps.setBootStrapMode("nonparametric");
-                } else {
-                    currentResProps.setBootStrapMode("parametric");
-                }
                 residueFitter.fitResidues(currentResProps, allResidues);
             } else {  //fit all residues
                 residueFitter.fitResidues(currentResProps);
