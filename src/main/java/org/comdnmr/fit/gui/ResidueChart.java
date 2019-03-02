@@ -35,6 +35,7 @@ public class ResidueChart extends XYCanvasBarChart {
     public static ResidueChart buildChart(Canvas canvas) {
         Axis xAxis = new Axis(Orientation.HORIZONTAL, 0, 100, 400, 100.0);
         Axis yAxis = new Axis(Orientation.VERTICAL, 0, 100, 100, 400);
+        yAxis.setZeroIncluded(true);
         return new ResidueChart(canvas, xAxis, yAxis);
     }
 
@@ -71,8 +72,10 @@ public class ResidueChart extends XYCanvasBarChart {
                 boolean appendMode = e.isShiftDown();
                 double f = e.getX() / xAxis.getWidth();
                 int seriesIndex = (int) Math.floor(getData().size() * f);
-                String seriesName = getData().get(seriesIndex).getName();
-                showInfo(seriesName, seriesIndex, intOpt.get(), appendMode);
+                if ((seriesIndex >= 0) && (seriesIndex < getData().size())) {
+                    String seriesName = getData().get(seriesIndex).getName();
+                    showInfo(seriesName, seriesIndex, intOpt.get(), appendMode);
+                }
             }
         }
         return hitChart;

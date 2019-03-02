@@ -68,6 +68,7 @@ public class PlotData extends XYCanvasChart {
         //yAxis.setAutoRanging(true);
         xAxis.setUpperBound(1000.0);
         yAxis.setUpperBound(60.0);
+        yAxis.setZeroIncluded(true);
         xAxis.setLabel("Time (s)");
         yAxis.setLabel("Intensity");
         xAxis.setLabel("\u03BD (cpmg)");
