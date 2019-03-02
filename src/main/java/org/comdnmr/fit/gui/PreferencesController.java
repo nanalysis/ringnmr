@@ -127,7 +127,36 @@ public class PreferencesController implements Initializable {
         ArrayList<String> r1rhoEqnChoices = new ArrayList<>();
         r1rhoEqnChoices.addAll(Arrays.asList("R1RHOPERTURBATIONNOEX", "R1RHOPERTURBATION", "R1RHOBALDWINKAY", "R1RHOLAGUERRE", "R1RHOEXACT"));
 //        prefSheet.getItems().addAll(locationTypeItem, locationFileItem, nProcessesItem, maxFreqItem, rexRatioItem, nSamplesItem);
-        prefSheet.getItems().addAll(nProcessesItem, maxFreqItem, rexRatioItem, nSamplesItem, optimizerChoiceItem, bootStrapOptimizerrChoiceItem);
+
+        DoubleRangeOperationItem startingRadiusItem = new DoubleRangeOperationItem((obs, oldV, newV) -> {
+            CoMDPreferences.setStartingRadius((Double) newV);
+        }, CoMDPreferences.getStartingRadius(), 1.0, 30.0, "Optimizer", "Starting Radius", "Iniital search radius for optimizer");
+        DoubleRangeOperationItem finalRadiusItem = new DoubleRangeOperationItem((obs, oldV, newV) -> {
+            CoMDPreferences.setFinalRadius((Double) newV);
+        }, CoMDPreferences.getFinalRadius(), -6, -1.0, "Optimizer", "Final Radius", "Final search radius for BOBYQA");
+        DoubleRangeOperationItem toleranceItem = new DoubleRangeOperationItem((obs, oldV, newV) -> {
+            CoMDPreferences.setTolerance((Double) newV);
+        }, CoMDPreferences.getTolerance(), -7.0, -1.0, "Optimizer", "Tolerance", "Final tolerance for CMA-ES");
+
+        BooleanOperationItem weightFitItem = new BooleanOperationItem(
+                (obs, oldV, newV) -> {
+                    CoMDPreferences.setWeightFit((Boolean) newV);
+                }, CoMDPreferences.getWeightFit(), "Optimizer", "Weight Fit",
+                "Weight residuals by error values");
+        BooleanOperationItem nonParametricItem = new BooleanOperationItem(
+                (obs, oldV, newV) -> {
+                    CoMDPreferences.setNonParametetric((Boolean) newV);
+                }, CoMDPreferences.getNonParametetric(), "Optimizer", "Non-Parametric",
+                "Bootstrapping with non-parametric method");
+        BooleanOperationItem absValueItem = new BooleanOperationItem(
+                (obs, oldV, newV) -> {
+                    CoMDPreferences.setAbsValueFit((Boolean) newV);
+                }, CoMDPreferences.getAbsValueFit(), "Optimizer", "Absolute Value",
+                "Fit absolute value of deviations (not squared)");
+
+        prefSheet.getItems().addAll(nProcessesItem, maxFreqItem, rexRatioItem,
+                absValueItem, nonParametricItem, nSamplesItem, optimizerChoiceItem, bootStrapOptimizerrChoiceItem,
+                startingRadiusItem, toleranceItem, finalRadiusItem, weightFitItem);
         for (String eqn : cestEqnChoices) {
             boolean defaultState = CoMDPreferences.getCESTEquationState(eqn);
             BooleanOperationItem cestEqnListItem = new BooleanOperationItem(cestEqnListener, defaultState, "CEST Equations", eqn, "List of equations to use during CEST Fitting");
