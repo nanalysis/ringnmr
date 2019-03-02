@@ -199,7 +199,7 @@ public class R1RhoFit implements EquationFitter {
     }
 
     @Override
-    public void setupFit(String eqn, boolean absMode) {
+    public void setupFit(String eqn) {
         double[][] x = new double[3][yValues.size()];
         double[] y = new double[yValues.size()];
         double[] err = new double[yValues.size()];
@@ -225,8 +225,8 @@ public class R1RhoFit implements EquationFitter {
     }
 
     @Override
-    public List<ParValueInterface> guessPars(String eqn, boolean absMode) {
-        setupFit(eqn, absMode);
+    public List<ParValueInterface> guessPars(String eqn) {
+        setupFit(eqn);
         double[] guesses = calcR1Rho.guess();
         String[] parNames = calcR1Rho.getParNames();
         List<ParValueInterface> parValues = new ArrayList<>();
@@ -245,7 +245,7 @@ public class R1RhoFit implements EquationFitter {
     }
 
     @Override
-    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderguesses) {
+    public CPMGFitResult doFit(String eqn, double[] sliderguesses) {
         double[][] xvals = new double[xValues.length][xValues[0].size()];
         double[] yvals = new double[yValues.size()];
         for (int i = 0; i < xvals.length; i++) {
@@ -258,7 +258,7 @@ public class R1RhoFit implements EquationFitter {
         }
         double[][] peaks = R1RhoEquations.r1rhoPeakGuess(xvals, yvals, fieldValues.get(0));
         if (peaks.length >= 1) {
-            setupFit(eqn, absMode);
+            setupFit(eqn);
             int[][] map = calcR1Rho.getMap();
             double[] guesses;
             if (sliderguesses != null) {
@@ -303,7 +303,7 @@ public class R1RhoFit implements EquationFitter {
             double[] errEstimates;
             double[][] simPars = null;
             if (FitModel.getCalcError()) {
-                if (nonParBootStrap) {
+                if (CoMDPreferences.getNonParametetric()) {
                     errEstimates = calcR1Rho.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
                 } else {
                     errEstimates = calcR1Rho.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma);

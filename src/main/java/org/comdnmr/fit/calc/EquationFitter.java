@@ -21,11 +21,11 @@ public interface EquationFitter {
 
     public FitModel getFitModel();
 
-    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderGuesses);
+    public CPMGFitResult doFit(String eqn, double[] sliderGuesses);
 
-    public void setupFit(String eqn, boolean absMode);
+    public void setupFit(String eqn);
 
-    public List<ParValueInterface> guessPars(String eqn, boolean absMode);
+    public List<ParValueInterface> guessPars(String eqn);
 
     public double rms(double[] pars);
 

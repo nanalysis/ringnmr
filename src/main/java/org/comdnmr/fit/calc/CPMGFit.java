@@ -158,7 +158,7 @@ public class CPMGFit implements EquationFitter {
     }
 
     @Override
-    public void setupFit(String eqn, boolean absMode) {
+    public void setupFit(String eqn) {
         double[][] x = new double[1][yValues.size()];
         double[] y = new double[yValues.size()];
         double[] err = new double[yValues.size()];
@@ -183,8 +183,8 @@ public class CPMGFit implements EquationFitter {
     }
 
     @Override
-    public List<ParValueInterface> guessPars(String eqn, boolean absMode) {
-        setupFit(eqn, absMode);
+    public List<ParValueInterface> guessPars(String eqn) {
+        setupFit(eqn);
         double[] guesses = calcR.guess();
         String[] parNames = calcR.getParNames();
         int[][] map = calcR.getMap();
@@ -204,8 +204,8 @@ public class CPMGFit implements EquationFitter {
     }
 
     @Override
-    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderguesses) {
-        setupFit(eqn, absMode);
+    public CPMGFitResult doFit(String eqn, double[] sliderguesses) {
+        setupFit(eqn);
         int[][] map = calcR.getMap();
         double[] guesses;
         if (sliderguesses != null) {
@@ -265,7 +265,7 @@ public class CPMGFit implements EquationFitter {
         boolean exchangeValid = okRex;
 
         if (FitModel.getCalcError()) {
-            if (nonParBootStrap) {
+            if (CoMDPreferences.getNonParametetric()) {
                 errEstimates = calcR.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
             } else {
                 errEstimates = calcR.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma);

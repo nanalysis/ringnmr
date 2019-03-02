@@ -156,7 +156,7 @@ public class ExpFit implements EquationFitter {
     }
 
     @Override
-    public void setupFit(String eqn, boolean absMode) {
+    public void setupFit(String eqn) {
         double[][] x = new double[1][yValues.size()];
         double[] y = new double[yValues.size()];
         double[] err = new double[yValues.size()];
@@ -180,8 +180,8 @@ public class ExpFit implements EquationFitter {
     }
 
     @Override
-    public List<ParValueInterface> guessPars(String eqn, boolean absMode) {
-        setupFit(eqn, absMode);
+    public List<ParValueInterface> guessPars(String eqn) {
+        setupFit(eqn);
         double[] guesses = expModel.guess();
         String[] parNames = expModel.getParNames();
         int[][] map = expModel.getMap();
@@ -201,8 +201,8 @@ public class ExpFit implements EquationFitter {
     }
 
     @Override
-    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderguesses) {
-        setupFit(eqn, absMode);
+    public CPMGFitResult doFit(String eqn, double[] sliderguesses) {
+        setupFit(eqn);
 
         int[][] map = expModel.getMap();
         double[] guesses;
@@ -244,7 +244,7 @@ public class ExpFit implements EquationFitter {
         double[] errEstimates;
         double[][] simPars = null;
         if (FitModel.getCalcError()) {
-            if (nonParBootStrap) {
+            if (CoMDPreferences.getNonParametetric()) {
                 errEstimates = expModel.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
             } else {
                 errEstimates = expModel.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma);
