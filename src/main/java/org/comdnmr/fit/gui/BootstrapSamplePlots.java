@@ -5,10 +5,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import javafx.beans.Observable;
 import javafx.scene.Scene;
-import javafx.scene.chart.Axis;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.ScatterChart;
-import javafx.scene.chart.XYChart;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
@@ -18,6 +14,11 @@ import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
 import org.comdnmr.fit.calc.CPMGFitResult;
 import org.comdnmr.fit.calc.ResidueInfo;
+import org.nmrfx.chart.Axis;
+import org.nmrfx.chart.DataSeries;
+import org.nmrfx.chart.XYCanvasChart;
+import org.nmrfx.chart.XYChartPane;
+import org.nmrfx.chart.XYValue;
 
 /**
  *
@@ -27,7 +28,7 @@ public class BootstrapSamplePlots {
 
     PyController pyController;
     Stage stage = null;
-    XYChart activeChart;
+    XYCanvasChart activeChart;
     BorderPane borderPane = new BorderPane();
     Scene stageScene = new Scene(borderPane, 500, 500);
 
@@ -40,7 +41,7 @@ public class BootstrapSamplePlots {
 
     public void showMCplot() {
         //Create new Stage for popup window
-        if ((stage == null) || !stage.isShowing()) {
+        if (stage == null) {
             stage = new Stage();
             Label xlabel = new Label("  X Array:  ");
             Label ylabel = new Label("  Y Array:  ");
@@ -64,17 +65,10 @@ public class BootstrapSamplePlots {
             HBox.setHgrow(hBox, Priority.ALWAYS);
             hBox.getChildren().addAll(xlabel, xArrayChoice, ylabel, yArrayChoice);
             //Create the Scatter chart
-            NumberAxis MCxAxis = new NumberAxis();
-            NumberAxis MCyAxis = new NumberAxis();
-            ScatterChart<Number, Number> MCchart = new ScatterChart(MCxAxis, MCyAxis);
-            MCxAxis.setAutoRanging(true);
-            MCxAxis.setForceZeroInRange(false);
-            MCyAxis.setAutoRanging(true);
-            MCyAxis.setForceZeroInRange(false);
-            activeChart = MCchart;
-            activeChart.setLegendVisible(false);
+            XYChartPane chartPane = new XYChartPane();
+            activeChart = chartPane.getChart();
             borderPane.setTop(hBox);
-            borderPane.setCenter(activeChart);
+            borderPane.setCenter(chartPane);
             stage.setScene(stageScene);
         }
         updateMCPlotChoices();
@@ -85,23 +79,31 @@ public class BootstrapSamplePlots {
     void updateMCplot() {
         Map<String, double[]> simsMap = getMCSimsMap();
         if (simsMap != null) {
-            Axis<Number> xAxis = activeChart.getXAxis();
-            Axis<Number> yAxis = activeChart.getYAxis();
+            Axis xAxis = activeChart.getXAxis();
+            Axis yAxis = activeChart.getYAxis();
             String xElem = xArrayChoice.getValue();
             String yElem = yArrayChoice.getValue();
-            xAxis.setLabel(xElem);
-            yAxis.setLabel(yElem);
-            XYChart.Series<Number, Number> series = new XYChart.Series();
-            activeChart.getData().clear();
-            activeChart.getData().add(series);
-            //Prepare XYChart.Series objects by setting data
-            series.getData().clear();
-            double[] xValues = simsMap.get(xElem);
-            double[] yValues = simsMap.get(yElem);
-            if ((xValues != null) && (yValues != null)) {
-                for (int i = 0; i < xValues.length; i++) {
-                    series.getData().add(new XYChart.Data(xValues[i], yValues[i]));
+            if ((xElem != null) && (yElem != null)) {
+                xAxis.setLabel(xElem);
+                yAxis.setLabel(yElem);
+                xAxis.setZeroIncluded(false);
+                yAxis.setZeroIncluded(false);
+                xAxis.setAutoRanging(true);
+                yAxis.setAutoRanging(true);
+                DataSeries series = new DataSeries();
+                activeChart.getData().clear();
+                //Prepare XYChart.Series objects by setting data
+                series.getData().clear();
+                double[] xValues = simsMap.get(xElem);
+                double[] yValues = simsMap.get(yElem);
+                if ((xValues != null) && (yValues != null)) {
+                    for (int i = 0; i < xValues.length; i++) {
+                        series.getData().add(new XYValue(xValues[i], yValues[i]));
+                    }
                 }
+                System.out.println("plot");
+                activeChart.getData().add(series);
+                activeChart.autoScale(true);
             }
         }
     }
