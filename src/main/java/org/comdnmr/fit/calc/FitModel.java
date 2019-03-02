@@ -29,7 +29,6 @@ public abstract class FitModel implements MultivariateFunction {
 
     // fixme is there a thread safe RandomGenerator
     public final RandomGenerator DEFAULT_RANDOMGENERATOR = new MersenneTwister(1);
-    static double SIGMA_DEFAULT = 20.0;
     int reportAt = 10;
 
     EquationType equation;
@@ -43,12 +42,12 @@ public abstract class FitModel implements MultivariateFunction {
     int[][] map;
     int nID = 1;
     boolean reportFitness = false;
-    boolean absMode = false;
-    boolean weightByError = true;
+    final boolean absMode = CoMDPreferences.getAbsValueFit();
     private static boolean calcError = true;
     double[][] parValues;
     double[] lowerBounds;
     double[] upperBounds;
+    final boolean weightFit = CoMDPreferences.getWeightFit();
 
     public class Checker extends SimpleValueChecker {
 
@@ -95,7 +94,8 @@ public abstract class FitModel implements MultivariateFunction {
         int nSteps = 2000;
         double stopFitness = 0.0;
         int diagOnly = 0;
-        double tol = 1.0e-5;
+        double tol = CoMDPreferences.getTolerance();
+        tol = Math.pow(10.0, tol);
         double[] normLower = new double[guess.length];
         double[] normUpper = new double[guess.length];
         double[] sigma = new double[guess.length];
@@ -138,7 +138,6 @@ public abstract class FitModel implements MultivariateFunction {
         int nSteps = 2000;
         double stopFitness = 0.0;
         int diagOnly = 0;
-        double tol = 1.0e-5;
         double[] normLower = new double[guess.length];
         double[] normUpper = new double[guess.length];
         Arrays.fill(normLower, 0.0);
@@ -150,7 +149,9 @@ public abstract class FitModel implements MultivariateFunction {
         int n = guess.length;
         int nInterp = 2 * n + 1;
         double initialRadius = inputSigma;
-        double stopRadius = 1.0e-5;
+        double stopRadius = CoMDPreferences.getFinalRadius();
+        stopRadius = Math.pow(10.0, stopRadius);
+
         BOBYQAOptimizer optimizer = new BOBYQAOptimizer(nInterp, initialRadius, stopRadius);
         PointValuePair result = null;
 
@@ -323,10 +324,6 @@ public abstract class FitModel implements MultivariateFunction {
             rss += delta * delta;
         }
         return rss / (yValues.length - par.length);
-    }
-
-    public void setAbsMode(boolean value) {
-        this.absMode = value;
     }
 
     public double[] getPredicted(double[] par) {
