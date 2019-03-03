@@ -24,7 +24,6 @@ public class CESTFit implements EquationFitter {
     int[][] states;
     int[] stateCount;
     String[] resNums;
-    static List<String> equationNameList = Arrays.asList(CESTEquation.getEquationNames());
 
     class StateCount {
 
@@ -180,12 +179,9 @@ public class CESTFit implements EquationFitter {
     }
 
     public static List<String> getEquationNames() {
-        return equationNameList;
-    }
-
-    public static List<String> setEquationNames(List<String> eqnNames) {
-        equationNameList = eqnNames;
-        return equationNameList;
+        List<String> activeEquations = CoMDPreferences.getActiveCESTEquations();
+        System.out.println(activeEquations.toString());
+        return activeEquations;
     }
 
     @Override
