@@ -69,7 +69,6 @@ public class CESTFit implements EquationFitter {
         xValues[2] = new ArrayList<>();
         this.resNums = resNums.clone();
         nResidues = resNums.length;
-        int id = 0;
         resProps.setupMaps();
         stateCount = resProps.getStateCount(resNums.length);
         Collection<ExperimentData> expDataList = resProps.getExperimentData();
@@ -80,6 +79,7 @@ public class CESTFit implements EquationFitter {
         states = new int[nCurves][];
         int k = 0;
         int resIndex = 0;
+        int id = 0;
         List<Double> fieldList = new ArrayList<>();
         for (String resNum : resNums) {
             for (ExperimentData expData : expDataList) {

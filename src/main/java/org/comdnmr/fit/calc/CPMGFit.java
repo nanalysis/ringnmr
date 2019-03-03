@@ -93,18 +93,19 @@ public class CPMGFit implements EquationFitter {
         states = new int[1][4];
     }
 
-    // public void setData(Collection<ExperimentData> expDataList, String[] resNums) {
     @Override
     public void setData(ResidueProperties resProps, String[] resNums) {
+        xValues.clear();
         this.resNums = resNums.clone();
         nResidues = resNums.length;
-        int id = 0;
-        stateCount = resProps.getStateCount(resNums.length);
+        
+        stateCount = resProps.getStateCount(nResidues);
         Collection<ExperimentData> expDataList = resProps.getExperimentData();
         nCurves = resNums.length * expDataList.size();
         states = new int[nCurves][];
         int k = 0;
         int resIndex = 0;
+        int id = 0;
         for (String resNum : resNums) {
             for (ExperimentData expData : expDataList) {
                 states[k++] = resProps.getStateIndices(resIndex, expData);
@@ -122,7 +123,6 @@ public class CPMGFit implements EquationFitter {
                     idValues.add(id);
                 }
                 id++;
-
             }
             resIndex++;
         }
