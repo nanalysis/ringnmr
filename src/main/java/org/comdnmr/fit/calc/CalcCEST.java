@@ -66,7 +66,15 @@ public class CalcCEST extends FitModel {
 
         double sumAbs = 0.0;
         double sumSq = 0.0;
-        double[] yCalc = equation.calculate(par, map[0], xValues, 0, fields[0]);
+        double[] yCalc = new double[yValues.length];
+        for (int id = 0; id < map.length; id++) {
+            double[][] x = CESTEquations.getXValues(xValues, idNums, id);
+            double[] yCalc1 = equation.calculate(par, map[id], x, id, fields[0]); // fixme what about field
+            int[] indicies = CESTEquations.getIndicies(idNums, id);
+            for (int i = 0; i < indicies.length; i++) {
+                yCalc[indicies[i]] = yCalc1[i];
+            }
+        }
 
         for (int i = 0; i < yValues.length; i++) {
             double delta = (yCalc[i] - yValues[i]);

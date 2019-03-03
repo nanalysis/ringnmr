@@ -73,9 +73,6 @@ public class CESTFit implements EquationFitter {
         stateCount = resProps.getStateCount(resNums.length);
         Collection<ExperimentData> expDataList = resProps.getExperimentData();
         nCurves = resNums.length * expDataList.size();
-
-        // fixme??
-        nCurves = resNums.length;
         states = new int[nCurves][];
         int k = 0;
         int resIndex = 0;
@@ -83,7 +80,7 @@ public class CESTFit implements EquationFitter {
         List<Double> fieldList = new ArrayList<>();
         for (String resNum : resNums) {
             for (ExperimentData expData : expDataList) {
-                states[k] = resProps.getStateIndices(resIndex, expData);
+                states[k++] = resProps.getStateIndices(resIndex, expData);
                 ResidueData resData = expData.getResidueData(resNum);
                 if (resData != null) {
                     //  need peakRefs
@@ -103,9 +100,9 @@ public class CESTFit implements EquationFitter {
                         idValues.add(id);
                     }
                     // fixme ?? id++;
+                    id++;
                 }
             }
-            k++;
             resIndex++;
         }
         usedFields = new double[fieldList.size()];
@@ -244,6 +241,7 @@ public class CESTFit implements EquationFitter {
     public CPMGFitResult doFit(String eqn, double[] sliderguesses) {
         double[][] xvals = new double[xValues.length][xValues[0].size()];
         double[] yvals = new double[yValues.size()];
+        int[] idNums = new int[yValues.size()];
         for (int i = 0; i < xvals.length; i++) {
             for (int j = 0; j < xvals[0].length; j++) {
                 xvals[i][j] = xValues[i].get(j);
@@ -251,8 +249,11 @@ public class CESTFit implements EquationFitter {
         }
         for (int i = 0; i < yvals.length; i++) {
             yvals[i] = yValues.get(i);
+            idNums[i] = idValues.get(i);
         }
-        double[][] peaks = CESTEquations.cestPeakGuess(xvals, yvals, fieldValues.get(0));
+        double[][] xy = CESTEquations.getXYValues(xvals, yvals, idNums, 0);
+        double[][] peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], fieldValues.get(0));
+
         if (peaks.length >= 1) {
             setupFit(eqn);
             int[][] map = calcCEST.getMap();

@@ -336,8 +336,28 @@ public abstract class FitModel implements MultivariateFunction {
     }
 
     public void setMap(int[] stateCount, int[][] states) {
+        System.out.println("states ");
+        for (int i=0;i<states.length;i++) {
+            for (int j=0;j<states[i].length;j++) {
+                System.out.print(states[i][j] + " ");
+             }
+            System.out.println("");
+        }
+        System.out.println(" stateCount");
+        for (int j=0;j<stateCount.length;j++) {
+            System.out.print(stateCount[j] + " ");
+        }
+        System.out.println(" ");
         this.map = new int[states.length][stateCount.length];
         this.map = equation.makeMap(stateCount, states, getMask());
+        System.out.println("map ");
+        for (int i=0;i<map.length;i++) {
+            for (int j=0;j<map[i].length;j++) {
+                System.out.print(map[i][j] + " ");
+             }
+            System.out.println("");
+         }
+        System.out.println("done ");
     }
 
     public int[][] getMap() {
