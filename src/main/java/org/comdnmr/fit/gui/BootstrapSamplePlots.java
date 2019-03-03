@@ -1,24 +1,33 @@
 package org.comdnmr.fit.gui;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javafx.beans.Observable;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
 import javafx.scene.Scene;
+import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.comdnmr.fit.calc.CPMGFitResult;
 import org.comdnmr.fit.calc.ResidueInfo;
+import org.controlsfx.dialog.ExceptionDialog;
 import org.nmrfx.chart.Axis;
 import org.nmrfx.chart.DataSeries;
 import org.nmrfx.chart.XYCanvasChart;
 import org.nmrfx.chart.XYChartPane;
 import org.nmrfx.chart.XYValue;
+import org.nmrfx.graphicsio.GraphicsIOException;
+import org.nmrfx.graphicsio.SVGGraphicsContext;
 
 /**
  *
@@ -63,7 +72,10 @@ public class BootstrapSamplePlots {
             }
             HBox hBox = new HBox();
             HBox.setHgrow(hBox, Priority.ALWAYS);
-            hBox.getChildren().addAll(xlabel, xArrayChoice, ylabel, yArrayChoice);
+            Button exportButton = new Button("Export");
+            exportButton.setOnAction(e -> exportBarPlotSVGAction(e));
+
+            hBox.getChildren().addAll(exportButton, xlabel, xArrayChoice, ylabel, yArrayChoice);
             //Create the Scatter chart
             XYChartPane chartPane = new XYChartPane();
             activeChart = chartPane.getChart();
@@ -141,6 +153,31 @@ public class BootstrapSamplePlots {
         }
         stage.setTitle("Monte Carlo Results: " + currentEquationName);
         return simsMap;
+    }
+
+    @FXML
+    void exportBarPlotSVGAction(ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Export to SVG");
+        fileChooser.setInitialDirectory(pyController.getInitialDirectory());
+        File selectedFile = fileChooser.showSaveDialog(null);
+        if (selectedFile != null) {
+            SVGGraphicsContext svgGC = new SVGGraphicsContext();
+            try {
+                Canvas canvas = activeChart.getCanvas();
+                svgGC.create(true, canvas.getWidth(), canvas.getHeight(), selectedFile.toString());
+                exportChart(svgGC);
+                svgGC.saveFile();
+            } catch (GraphicsIOException ex) {
+                ExceptionDialog eDialog = new ExceptionDialog(ex);
+                eDialog.showAndWait();
+            }
+        }
+    }
+
+    protected void exportChart(SVGGraphicsContext svgGC) throws GraphicsIOException {
+        svgGC.beginPath();
+        activeChart.drawChart(svgGC);
     }
 
 }
