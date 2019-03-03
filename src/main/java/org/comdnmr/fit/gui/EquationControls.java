@@ -6,7 +6,9 @@
 package org.comdnmr.fit.gui;
 
 import java.util.List;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.layout.VBox;
+import org.comdnmr.fit.calc.EquationFitter;
 import org.comdnmr.fit.calc.ParValueInterface;
 
 /**
@@ -14,21 +16,28 @@ import org.comdnmr.fit.calc.ParValueInterface;
  * @author Bruce Johnson
  */
 public interface EquationControls {
-
+    
     String getEquation();
-
+    
     List<String> getParNames();
-
+    
     public double[] getExtras();
-
+    
     VBox makeControls(PyController controller);
-
+    
     void updateSliders(List<ParValueInterface> parValues, String equationName);
-
+    
     void updateStates(List<int[]> allStates);
-
+    
     public void simSliderAction(String label);
-
+    
     public double[] sliderGuess(String equationName, int[][] map);
-
+    
+    default public void updateEquations(ChoiceBox<String> equationChoice, List<String> equationNames) {
+        equationChoice.getItems().clear();
+        equationChoice.getItems().add("+");
+        equationChoice.getItems().addAll(equationNames);
+        equationChoice.setValue(equationNames.get(0));
+    }
+    
 }

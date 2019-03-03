@@ -17,6 +17,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.comdnmr.fit.calc.CESTEquation;
+import org.comdnmr.fit.calc.CESTFit;
 import org.comdnmr.fit.calc.CPMGFit;
 import org.comdnmr.fit.calc.ExperimentData;
 import org.comdnmr.fit.calc.ParValueInterface;
@@ -130,6 +131,10 @@ public class CESTControls implements EquationControls {
             slider.setMax(max);
         }
 
+    }
+
+    public List<String> getEquationNameList() {
+        return CESTFit.getEquationNames();
     }
 
     public void updateDeltaLimits() {

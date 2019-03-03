@@ -230,10 +230,6 @@ public class PyController implements Initializable {
 //        simControls = new CPMGControls();
         if (getFittingMode().equals("cpmg")) {
             simControls = new CPMGControls();
-            equationChoice.getItems().clear();
-            equationChoice.getItems().add("+");
-            equationChoice.getItems().addAll(CPMGFit.getEquationNames());
-            equationChoice.setValue(CPMGFit.getEquationNames().get(0));
             xLowerBoundTextField.setText("0.0");
             xUpperBoundTextField.setText("1100.0");
             yLowerBoundTextField.setText("0.0");
@@ -242,10 +238,6 @@ public class PyController implements Initializable {
             yTickTextField.setText("5.0");
         } else if (getFittingMode().equals("cest")) {
             simControls = new CESTControls();
-            equationChoice.getItems().clear();
-            equationChoice.getItems().add("+");
-            equationChoice.getItems().addAll(CESTFit.getEquationNames());
-            equationChoice.setValue(CESTFit.getEquationNames().get(0));
             xLowerBoundTextField.setText("-20.0");
             xUpperBoundTextField.setText("20.0");
             if (currentResProps.getExperimentData() != null) {
@@ -259,10 +251,6 @@ public class PyController implements Initializable {
             yTickTextField.setText("0.25");
         } else if (getFittingMode().equals("exp")) {
             simControls = new ExpControls();
-            equationChoice.getItems().clear();
-            equationChoice.getItems().add("+");
-            equationChoice.getItems().addAll(ExpFit.getEquationNames());
-            equationChoice.setValue(ExpFit.getEquationNames().get(0));
             xLowerBoundTextField.setText("0.0");
             xUpperBoundTextField.setText("1.25");
             yLowerBoundTextField.setText("0.0");
@@ -271,10 +259,6 @@ public class PyController implements Initializable {
             yTickTextField.setText("10.0");
         } else if (getFittingMode().equals("r1rho")) {
             simControls = new R1RhoControls();
-            equationChoice.getItems().clear();
-            equationChoice.getItems().add("+");
-            equationChoice.getItems().addAll(R1RhoFit.getEquationNames());
-            equationChoice.setValue(R1RhoFit.getEquationNames().get(0));
             xLowerBoundTextField.setText("-20.0");
             xUpperBoundTextField.setText("20.0");
             if (currentResProps.getExperimentData() != null) {
@@ -294,6 +278,7 @@ public class PyController implements Initializable {
         residueFitter = new ResidueFitter(this::updateFitProgress, this::updateStatus);
         statusCircle = new Circle(10);
         statusBar.getLeftItems().add(statusCircle);
+        updateEquationChoices(getFittingMode());
         equationChoice.valueProperty().addListener(e -> {
             equationAction();
         });
@@ -415,36 +400,20 @@ public class PyController implements Initializable {
         if (getFittingMode().equals("cpmg") && !(simControls instanceof CPMGControls)) {
             simControls = new CPMGControls();
             update = true;
-            equationChoice.getItems().clear();
-            equationChoice.getItems().add("+");
-            equationChoice.getItems().addAll(CPMGFit.getEquationNames());
-            equationChoice.setValue(CPMGFit.getEquationNames().get(0));
-
         } else if (getFittingMode().equals("exp") && !(simControls instanceof ExpControls)) {
             simControls = new ExpControls();
-            equationChoice.getItems().clear();
-            equationChoice.getItems().add("+");
-            equationChoice.getItems().addAll(ExpFit.getEquationNames());
-            equationChoice.setValue(ExpFit.getEquationNames().get(0));
             update = true;
         } else if (getFittingMode().equals("cest") && !(simControls instanceof CESTControls)) {
             simControls = new CESTControls();
-            equationChoice.getItems().clear();
-            equationChoice.getItems().add("+");
-            equationChoice.getItems().addAll(CESTFit.getEquationNames());
-            equationChoice.setValue(CESTFit.getEquationNames().get(0));
             update = true;
         } else if (getFittingMode().equals("r1rho") && !(simControls instanceof R1RhoControls)) {
             simControls = new R1RhoControls();
-            equationChoice.getItems().clear();
-            equationChoice.getItems().add("+");
-            equationChoice.getItems().addAll(R1RhoFit.getEquationNames());
-            equationChoice.setValue(R1RhoFit.getEquationNames().get(0));
             update = true;
         }
         if (update) {
             VBox vBox = simControls.makeControls(mainController);
             simPane.centerProperty().set(vBox);
+            updateEquationChoices(getFittingMode());
         }
         updateXYChartLabels();
     }
@@ -454,40 +423,39 @@ public class PyController implements Initializable {
         if (getSimMode().equals("cpmg") && !(simControls instanceof CPMGControls)) {
             simControls = new CPMGControls();
             update = true;
-            equationChoice.getItems().clear();
-            equationChoice.getItems().add("+");
-            equationChoice.getItems().addAll(CPMGFit.getEquationNames());
-            equationChoice.setValue(CPMGFit.getEquationNames().get(0));
-
         } else if (getSimMode().equals("exp") && !(simControls instanceof ExpControls)) {
             simControls = new ExpControls();
-            equationChoice.getItems().clear();
-            equationChoice.getItems().add("+");
-            equationChoice.getItems().addAll(ExpFit.getEquationNames());
-            equationChoice.setValue(ExpFit.getEquationNames().get(0));
             update = true;
         } else if (getSimMode().equals("cest") && !(simControls instanceof CESTControls)) {
             simControls = new CESTControls();
             ((CESTControls) simControls).updateDeltaLimits();
-            equationChoice.getItems().clear();
-            equationChoice.getItems().add("+");
-            equationChoice.getItems().addAll(CESTFit.getEquationNames());
-            equationChoice.setValue(CESTFit.getEquationNames().get(0));
             update = true;
         } else if (getFittingMode().equals("r1rho") && !(simControls instanceof R1RhoControls)) {
             simControls = new R1RhoControls();
             ((R1RhoControls) simControls).updateDeltaLimits();
-            equationChoice.getItems().clear();
-            equationChoice.getItems().add("+");
-            equationChoice.getItems().addAll(R1RhoFit.getEquationNames());
-            equationChoice.setValue(R1RhoFit.getEquationNames().get(0));
             update = true;
         }
         if (update) {
+            updateEquationChoices(getSimMode());
             VBox vBox = simControls.makeControls(mainController);
             simPane.centerProperty().set(vBox);
         }
+    }
 
+    void updateEquationChoices() {
+        updateEquationChoices(getFittingMode());
+    }
+
+    void updateEquationChoices(String mode) {
+        if (mode.equals("cpmg")) {
+            simControls.updateEquations(equationChoice, CPMGFit.getEquationNames());
+        } else if (mode.equals("exp")) {
+            simControls.updateEquations(equationChoice, ExpFit.getEquationNames());
+        } else if (mode.equals("cest")) {
+            simControls.updateEquations(equationChoice, CESTFit.getEquationNames());
+        } else if (mode.equals("r1rho")) {
+            simControls.updateEquations(equationChoice, R1RhoFit.getEquationNames());
+        }
     }
 
     void initResidueNavigator() {

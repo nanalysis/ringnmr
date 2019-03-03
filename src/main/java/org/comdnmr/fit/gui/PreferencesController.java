@@ -94,10 +94,12 @@ public class PreferencesController implements Initializable {
         cestEqnListener = (ObservableValue<? extends Boolean> observableValue, Boolean cest1, Boolean cest2) -> {
             BooleanOperationItem item = (BooleanOperationItem) observableValue;
             CoMDPreferences.setCESTEquationState(item.getName(), cest2);
+            PyController.mainController.updateEquationChoices();
         };
         r1rhoEqnListener = (ObservableValue<? extends Boolean> observableValue, Boolean r1rho1, Boolean r1rho2) -> {
             BooleanOperationItem item = (BooleanOperationItem) observableValue;
             CoMDPreferences.setR1RhoEquationState(item.getName(), r1rho2);
+            PyController.mainController.updateEquationChoices();
         };
         ArrayList<String> optimizers = new ArrayList<>();
         optimizers.add("CMA-ES");
