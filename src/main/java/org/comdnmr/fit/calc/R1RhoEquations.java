@@ -190,11 +190,10 @@ public class R1RhoEquations {
         return result;
     }
 
-    public static double[][] r1rhoPeakGuess(double[][] xvals, double[] yvals, double field) {
+    public static double[][] r1rhoPeakGuess(double[] xvals, double[] yvals, double field) {
         // Estimates CEST peak positions for initial guesses for before fitting.
 
         List<CESTEquations.Peak> peaks = new ArrayList<>();
-        double B1val = xvals[1][0];
 
         double[] syvals = new double[yvals.length];
         double[] baseValues = getBaseline(yvals);
@@ -230,7 +229,7 @@ public class R1RhoEquations {
         for (int i = nP; i < yvals.length - nP; i++) {
             if (yvals[i] > yMax) {
                 yMax = yvals[i];
-                xAtYMax = xvals[0][i];
+                xAtYMax = xvals[i];
             }
             if (yvals[i] > threshold) {
                 boolean ok = true;
@@ -281,10 +280,10 @@ public class R1RhoEquations {
                             break;
                         }
                         double delta = dLow + dUp;
-                        halfPos[k] = xvals[0][iLow] * dUp / delta + xvals[0][iUp] * dLow / delta;
+                        halfPos[k] = xvals[iLow] * dUp / delta + xvals[iUp] * dLow / delta;
                     }
                     if (ok) {
-                        double xCenter = xvals[0][iCenter];
+                        double xCenter = xvals[iCenter];
                         double yCenter = yvals[iCenter];
                         double width = Math.abs(halfPos[0] - halfPos[1]) * field;
                         double widthL = Math.abs(halfPos[0] - xCenter) * field;
@@ -294,19 +293,15 @@ public class R1RhoEquations {
                     }
                 }
             }
-
-            if (xvals[1][i] != B1val) {
-                break;
-            }
         }
 
         peaks.sort(Comparator.comparingDouble(CESTEquations.Peak::getDepth));
-//        System.out.println("max at " + xAtYMax + " " + yMax);
-//        for (int i = 0; i < peaks.size(); i++) {
-//            System.out.println("orig peaks guess " + i + " x = " + peaks.get(i).position);
-//            System.out.println("orig peaks guess " + i + " y = " + peaks.get(i).depth);
-//            System.out.println("orig peaks guess " + i + " fwhm = " + peaks.get(i).width);
-//        }
+        System.out.println("max at " + xAtYMax + " " + yMax);
+        for (int i = 0; i < peaks.size(); i++) {
+            System.out.println("orig peaks guess " + i + " x = " + peaks.get(i).position);
+            System.out.println("orig peaks guess " + i + " y = " + peaks.get(i).depth);
+            System.out.println("orig peaks guess " + i + " fwhm = " + peaks.get(i).width);
+        }
         List<CESTEquations.Peak> peaks2 = peaks;
         if (peaks.size() >= 2) {
             peaks2 = peaks.subList(0, 2);
@@ -327,11 +322,11 @@ public class R1RhoEquations {
         }
 
         peaks2.sort(Comparator.comparingDouble(CESTEquations.Peak::getDepth));
-//        for (int i = 0; i < peaks2.size(); i++) {
-//            System.out.println("peaks guess " + i + " x = " + peaks2.get(i).position);
-//            System.out.println("peaks guess " + i + " y = " + peaks2.get(i).depth);
-//            System.out.println("peaks guess " + i + " fwhm = " + peaks2.get(i).width);
-//        }
+        for (int i = 0; i < peaks2.size(); i++) {
+            System.out.println("peaks guess " + i + " x = " + peaks2.get(i).position);
+            System.out.println("peaks guess " + i + " y = " + peaks2.get(i).depth);
+            System.out.println("peaks guess " + i + " fwhm = " + peaks2.get(i).width);
+        }
 
         double peak1diff = Math.abs(peaks2.get(0).depth - baseline);
         double peak2diff = peak1diff;
