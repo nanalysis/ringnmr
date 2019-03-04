@@ -34,6 +34,8 @@ public abstract class FitModel implements MultivariateFunction {
 
     EquationType equation;
     long startTime = 0;
+    long endTime = 0;
+    long fitTime = 0;
     double[][] xValues;
     double[] fieldValues;
     double[] yValues;
@@ -120,6 +122,8 @@ public abstract class FitModel implements MultivariateFunction {
         } catch (DimensionMismatchException | NotPositiveException | NotStrictlyPositiveException | TooManyEvaluationsException e) {
             e.printStackTrace();
         }
+        endTime = System.currentTimeMillis();
+        fitTime = endTime - startTime;
         PointValuePair deNormResult = new PointValuePair(deNormalize(result.getPoint()), result.getValue());
 
         return deNormResult;
@@ -160,6 +164,8 @@ public abstract class FitModel implements MultivariateFunction {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        endTime = System.currentTimeMillis();
+        fitTime = endTime - startTime;
         PointValuePair deNormResult = new PointValuePair(deNormalize(result.getPoint()), result.getValue());
 
         return deNormResult;

@@ -27,6 +27,7 @@ public class ExpFit implements EquationFitter {
     int[] stateCount;
     String[] resNums;
     static List<String> equationNameList = Arrays.asList(ExpEquation.getEquationNames());
+    long errTime;
 
     class StateCount {
 
@@ -246,16 +247,27 @@ public class ExpFit implements EquationFitter {
         double[] errEstimates;
         double[][] simPars = null;
         if (FitModel.getCalcError()) {
+            long startTime = System.currentTimeMillis();
             if (nonParBootStrap) {
                 errEstimates = expModel.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
+                long endTime = System.currentTimeMillis();
+                errTime = endTime - startTime;
             } else {
                 errEstimates = expModel.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma);
+                long endTime = System.currentTimeMillis();
+                errTime = endTime - startTime;
             }
             simPars = expModel.getSimPars();
         } else {
             errEstimates = new double[pars.length];
         }
-        return getResults(this, eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, true);
+        String refineOpt = CoMDPreferences.getOptimizer();
+        String bootstrapOpt = CoMDPreferences.getBootStrapOptimizer();
+        long fitTime = expModel.fitTime;
+        long bootTime = errTime;
+        int nSamples = CoMDPreferences.getSampleSize();
+        CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples);
+        return getResults(this, eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, true, curveStats);
     }
 
     @Override

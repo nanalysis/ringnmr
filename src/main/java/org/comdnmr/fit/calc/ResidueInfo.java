@@ -232,7 +232,7 @@ public class ResidueInfo {
     }
 
     //         String header = "Residue	Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 Rex.sd	    Kex	 Kex.sd	     pA	  pA.sd	     dW	  dW.sd";
-    public String toOutputString(String[] parNames) {
+    public String toOutputString(String[] parNames, boolean saveStats) {
         char sep = '\t';
         StringBuilder sBuilder = new StringBuilder();
         sBuilder.append(resNum).append(sep);
@@ -248,6 +248,11 @@ public class ResidueInfo {
                 sBuilder.append('\n');
                 sBuilder.append(commonString);
                 PlotEquation plotEquation = curveFit.plotEquation;
+                if (saveStats) {
+                    CurveFit.CurveFitStats curveStats = getFitResult(plotEquation.name).getCurveFitStats();
+                    String statString = curveStats.toString();
+                    sBuilder.append(statString);
+                }
                 sBuilder.append(curveFit.state).append(sep);// fixme
                 sBuilder.append(plotEquation.name).append(sep);
                 Map<String, Double> parMap = curveFit.getParMap();

@@ -48,4 +48,54 @@ public class CurveFit {
         return dataValues;
     }
 
+    public static class CurveFitStats {
+
+        final String refineOptimizer;
+        final String bootstrapOptimizer;
+        final long refineTime;
+        final long bootstrapTime;
+        final int nBootstrapSamples;
+
+        public CurveFitStats(String refineOpt, String bootstrapOpt, long fitTime, long bootTime, int nSamples) {
+            this.refineOptimizer = refineOpt;
+            this.bootstrapOptimizer = bootstrapOpt;
+            this.refineTime = fitTime;
+            this.bootstrapTime = bootTime;
+            this.nBootstrapSamples = nSamples;
+        }
+
+        public String getRefineOptimizer() {
+            return refineOptimizer;
+        }
+
+        public String getBootstrapOptimizer() {
+            return bootstrapOptimizer;
+        }
+
+        public long getRefineTime() {
+            return refineTime;
+        }
+
+        public long getBootstrapTime() {
+            return bootstrapTime;
+        }
+
+        public int nSamples() {
+            return nBootstrapSamples;
+        }
+
+        @Override
+        public String toString() {
+            char sep = '\t';
+            StringBuilder sBuilder = new StringBuilder();
+            sBuilder.append(refineOptimizer).append(sep);
+            sBuilder.append(refineTime).append(sep);
+            sBuilder.append(bootstrapOptimizer).append(sep);
+            sBuilder.append(bootstrapTime).append(sep);
+            sBuilder.append(nBootstrapSamples).append(sep);
+            String statString = sBuilder.toString();
+            return statString;
+        }
+    }
+
 }

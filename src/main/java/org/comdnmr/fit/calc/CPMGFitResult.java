@@ -82,6 +82,10 @@ public class CPMGFitResult {
     public Map<String, double[]> getSimsMap() {
         return simsMap;
     }
+    
+    public CurveFit.CurveFitStats getCurveFitStats() {
+        return curveFitStats;
+    }
 
     private final String[] fitParNames;
     private final List<CurveFit> curveFits = new ArrayList<>();
@@ -92,8 +96,10 @@ public class CPMGFitResult {
     private final int nGroupPars;
     private final Map<String, double[]> simsMap;
     private final boolean hasExchange;
+    private final CurveFit.CurveFitStats curveFitStats;
 
-    public CPMGFitResult(String[] fitParNames, List<CurveFit> curveFits, String equationName, int nGroupPars, double aicc, double rms, double rChiSq, Map<String, double[]> simsMap, boolean hasExchange) {
+    public CPMGFitResult(String[] fitParNames, List<CurveFit> curveFits, String equationName, int nGroupPars, double aicc, double rms, double rChiSq, 
+            Map<String, double[]> simsMap, boolean hasExchange, CurveFit.CurveFitStats curveStats) {
         this.curveFits.addAll(curveFits);
         this.fitParNames = fitParNames.clone();
         this.equationName = equationName;
@@ -103,5 +109,6 @@ public class CPMGFitResult {
         this.rChiSq = rChiSq;
         this.simsMap = simsMap;
         this.hasExchange = hasExchange;
+        this.curveFitStats = curveStats;
     }
 }

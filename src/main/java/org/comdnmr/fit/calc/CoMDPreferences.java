@@ -134,6 +134,14 @@ public class CoMDPreferences {
         }
         return r1rhoEqnMap;
     }
+    
+    public static void setCESTEqnMap(String eqns) {
+        cestEqnMap = stringToMap(eqns);
+    }
+
+    public static void setR1RhoEqnMap(String eqns) {
+        r1rhoEqnMap = stringToMap(eqns);
+    }
 
     static Map<String, Boolean> stringToMap(String s) {
         Map<String, Boolean> map = new HashMap<>();

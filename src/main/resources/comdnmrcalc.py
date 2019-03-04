@@ -7,6 +7,9 @@ import os.path
 import runpy
 #from optparse import OptionParser
 import argparse
+import org.comdnmr.fit.calc.CoMDPreferences as CoMDPreferences
+import org.comdnmr.fit.calc.CESTEquation as CESTEquation
+import org.comdnmr.fit.calc.R1RhoEquation as R1RhoEquation
 
 calcR = CalcRDisp()
 
@@ -16,7 +19,7 @@ def findDuplicates(vcpmgs):
         if not vcpmg in dupDict:
             dupDict[vcpmg] = []
         dupDict[vcpmg].append(i)
-   
+
     dups = []
     for i,vcpmg in enumerate(dupDict):
         if len(dupDict[vcpmg]) > 1:
@@ -59,14 +62,14 @@ def fitData(func,x,y,err,fields,fieldValues,idNums, nPar):
     #print x
     #print y
     #print fieldValues
-    #print idNums 
+    #print idNums
     func.setAbsMode(True)
     guesses = func.guess()
     boundaries = func.boundaries()
     sigma = []
     for bLow,bUp in zip(boundaries[0],boundaries[1]):
        sigma.append((bUp-bLow)/10.0)
-    
+
     result = func.refine(guesses, boundaries[0], boundaries[1], sigma)
     fitPars = result.getPoint()
 
@@ -132,7 +135,7 @@ def loadMetaFile(fileName):
             vcpmgs = [float(v) for v in values[2:]]
         else:
             print 'skip',line
-    
+
     f1.close()
     return (tCPMG,vcpmgs,fields)
 
@@ -155,9 +158,9 @@ class CPMGExperiment:
 
 class ResData:
     def __init__(self, x, y,err,  resNum,peakNum):
-        self.x = x    
-        self.y = y    
-        self.err = err    
+        self.x = x
+        self.y = y
+        self.err = err
         self.resNum = resNum
         self.peakNum = peakNum
 
@@ -228,7 +231,7 @@ def loadDataFile(fileName):
         peakNums.append(peakNum)
         dupSDevs.append(dupSDev)
         resDataValues[int(resNum)] = resData
-    
+
     f1.close()
     #return (resNums,useXs, useYs, useErrs, useFields, dupSDevs,peakNums,peakRefs)
     return (resDataValues,peakRefs)
@@ -241,7 +244,7 @@ class FitResult:
         self.rms = rms
         self.rex = rex
         self.rexErr = rexErr
-        self.kex = kex  
+        self.kex = kex
         self.values = {}
         self.sdevs = {}
 
@@ -264,7 +267,7 @@ class FitResult:
             if not "Rex" in parNames:
                 self.values[i,"Rex"] = rex[i]
                 self.sdevs[i,"Rex"] = rexErr[i]
-        
+
 def fitAllDataValuesOld(resDataValues,fields,peakRefs):
     for rD in resDataValues:
         aicMin = 1.0e9
@@ -338,7 +341,7 @@ def fitGroup(experiments,groupNums,groupID):
     eqnLine = ""
     fitResults = {}
     aicMin = 1.0e9
-       
+
     for eqn in ("NOEX","CPMGFAST","CPMGSLOW"):
         calcR.setEquation(eqn)
         parNames = calcR.getParNames()
@@ -378,7 +381,7 @@ def loadDataFiles(fileNames):
         parts = fileTail.split('_')
         temperature = float(parts[1])+273
         fieldValue = float(parts[2])
-   
+
         (resDataValues,peakRefs) =  loadText(fileName)
         cpmgExp = CPMGExperiment(fieldValue, temperature)
         cpmgExp.setData(resDataValues)
@@ -391,7 +394,7 @@ def loadProject(fileName):
 
 def getResidues(resProp):
     expDataSets = resProp.getExperimentData()
-    resSet = set() 
+    resSet = set()
     for expDataSet in expDataSets:
         residues = expDataSet.getResidues()
         for residue in residues:
@@ -401,7 +404,7 @@ def getResidues(resProp):
         residues.append([residue])
     return residues
 
-def fitProject(resProp, groups, equationName):
+def fitProject(resProp, groups, equationName, saveStats, outFileName):
     expDataSets = resProp.getExperimentData()
     residueFitter = ResidueFitter()
     groupID = 0
@@ -412,7 +415,7 @@ def fitProject(resProp, groups, equationName):
         for resInfo in resInfoList:
             fitResNum = resInfo.resNum;
             resProp.addResidueInfo(str(fitResNum), resInfo)
-    DataIO.saveResultsFile('output.txt',resProp)
+    DataIO.saveResultsFile(outFileName, resProp, saveStats)
 
 def fitGroups(groups):
     writeHeader()
@@ -461,6 +464,11 @@ def parseArgs():
     parser.add_argument("-o",dest='onlyGroups',action='store_true',help="Only fit data in groups")
     parser.add_argument("-g", dest="groupList",default='', help="Residues to fit in groups")
     parser.add_argument("-p", dest="projectFile",default='', help="Project file (.yaml) to load")
+    parser.add_argument("-r", dest="refineOpt", default="cma-es", help="Refine optimizer: cma-es or bobyqa. Default is cma-es.")
+    parser.add_argument("-b", dest="bootstrapOpt", default="bobyqa", help="Bootstrap optimizer: cma-es or bobyqa. Default is bobyqa.")
+    parser.add_argument("-n", dest="nBootstrapSamples", default=50, type=int, help="Number of Bootstrap samples. Default is 50.")
+    parser.add_argument("-S", dest="saveStats", action='store_true', help="Whether to output curve fitting stats.")
+    parser.add_argument("-O", dest="outFileName", default="output.txt", help="Output filename. Default is output.txt.")
     parser.add_argument("fileNames",nargs="*")
     args = parser.parse_args()
 
@@ -469,8 +477,17 @@ def parseArgs():
     fileNames = args.fileNames
     projectFile = args.projectFile
     equationName = args.equationName
+    refineOpt = args.refineOpt
+    bootstrapOpt = args.bootstrapOpt
+    nBootstrapSamples = args.nBootstrapSamples
+    saveStats = args.saveStats
+    outFileName = args.outFileName
 
-    groups = [] 
+    CoMDPreferences.setOptimizer(refineOpt)
+    CoMDPreferences.setBootStrapOptimizer(bootstrapOpt)
+    CoMDPreferences.setSampleSize(nBootstrapSamples)
+
+    groups = []
     if len(args.groupList) > 0:
         sgroups = args.groupList.split(' ')
         groups = []
@@ -481,7 +498,23 @@ def parseArgs():
     if projectFile != '':
         resProp = loadProject(projectFile)
         groups = genGroups(groups, getResidues(resProp))
-        fitProject(resProp, groups, equationName)
+        if equationName == None:
+            if resProp.getExpMode() == "cest":
+                equations = CESTEquation.getAllEquationNames()
+                for equation in equations:
+                    CoMDPreferences.setCESTEquationState(equation, True)
+            if resProp.getExpMode() == "r1rho":
+                equations = R1RhoEquation.getAllEquationNames()
+                for equation in equations:
+                    CoMDPreferences.setR1RhoEquationState(equation, True)
+        else:
+            if resProp.getExpMode() == "cest":
+                CoMDPreferences.setCESTEqnMap(equationName+";true")
+                CoMDPreferences.saveCESTEqnPrefs()
+            if resProp.getExpMode() == "r1rho":
+                CoMDPreferences.setR1RhoEqnMap(equationName+";true")
+                CoMDPreferences.saveR1RhoEqnPrefs()
+        fitProject(resProp, groups, equationName, saveStats, outFileName)
     else:
         loadDataFiles(fileNames)
         fitGroups(groups)
@@ -492,5 +525,5 @@ if len(sys.argv) > 1:
         sys.argv.pop(0)
         runpy.run_path(arg0)
     else:
-        sys.argv[0] = "comdnmrcalc.py" 
+        sys.argv[0] = "comdnmrcalc.py"
         parseArgs()
