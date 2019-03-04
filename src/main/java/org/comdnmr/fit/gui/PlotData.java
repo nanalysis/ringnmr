@@ -181,7 +181,7 @@ public class PlotData extends XYCanvasChart {
 
     void paintLines(GraphicsContextInterface gC) throws GraphicsIOException {
 
-        int nIncr = 100;
+        int nIncr = 256;
         double[] xValues = new double[nIncr];
         double[] yValues = new double[nIncr];
         for (PlotEquation plotEquation : plotEquations) {
