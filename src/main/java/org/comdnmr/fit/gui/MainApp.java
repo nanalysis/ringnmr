@@ -7,6 +7,8 @@ import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javax.script.ScriptEngine;
@@ -46,8 +48,8 @@ public class MainApp extends Application {
 
         }
         primaryStage.setOnCloseRequest(e -> {
-            Platform.exit();
-            System.exit(0);
+            checkExit();
+            e.consume();
         });
 //        try (FileReader fileReader = new FileReader(parameters.getRaw().get(0))) {
 //            engine.eval(fileReader);
@@ -62,5 +64,16 @@ public class MainApp extends Application {
 
     public static void setConsoleController(ConsoleRedirect controller) {
         console = controller;
+    }
+
+    public static void checkExit() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Exit program", ButtonType.CANCEL, ButtonType.YES);
+        alert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.YES) {
+                Platform.exit();
+                System.exit(0);
+            }
+        });
+
     }
 }

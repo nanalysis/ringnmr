@@ -22,35 +22,33 @@
                 <MenuBar>
                     <Menu text="File">
                         <items>
-                            <MenuItem text="Load Project File..." onAction="#loadParameterFile" fx:id="loadMenuItem"/>
-                            <MenuItem text="Input Project Parameters..." onAction="#inputParameters" fx:id="inputMenuItem"/>
+                            <Menu text="Load">
+                                <items>
+                                    <MenuItem text="Project File..." onAction="#loadParameterFile" fx:id="loadMenuItem"/>
+                                    <MenuItem text="Setup Parameters..." onAction="#inputParameters" fx:id="inputMenuItem"/>
+                                    <MenuItem text="Load Secondary Structure..." onAction="#loadSecondaryStructure" fx:id="loadSSMenuItem"/>
+                                    <MenuItem text="Chart  Data..." onAction="#loadSimData"/>
+                                </items>
+                            </Menu>
+                            <MenuItem text="Save Analysis..." onAction="#saveParameters" fx:id="savePars"/>
+                            <Menu text="Export Graphics">
+                                <items>
+                                    <MenuItem text="XY to SVG..." onAction="#exportSVGAction"/>                       
+                                    <MenuItem text="XY to PNG..." onAction="#saveXYChart" fx:id="saveXYChartButton"/>                       
+                                    <MenuItem text="Residue to SVG..." onAction="#exportBarPlotSVGAction"/>                       
+                                    <MenuItem text="Residue to PNG..." onAction="#saveBarChart" fx:id="saveBarChartButton"/>
+                                </items>
+                            </Menu>
+                            <Menu text="Save Interactive Charts...">
+                                <items>
+                                    <MenuItem text="XY to Grace..." onAction="#saveGraceFile" fx:id="saveGraceButton"/>
+                                    <MenuItem text="XY To Python..." onAction="#savePythonFile" fx:id="savePythonButton"/>
+                                    <MenuItem text="XY To R..." onAction="#saveRFile" fx:id="saveRButton"/>                            
+                                    <MenuItem text="Residue To Python..." onAction="#saveBarToPythonFile"/>
+                                    <MenuItem text="Residue To R..." onAction="#saveBarToRFile"/>                            
+                                </items>
+                            </Menu>
                             <MenuItem text="Connect to NMRFx Server..." onAction="#startServer" fx:id = "serverMenuItem"/>
-                            <MenuItem text="Load Secondary Structure..." onAction="#loadSecondaryStructure" fx:id="loadSSMenuItem"/>
-                            <Menu text="Save">
-                                <items>
-                                    <MenuItem text="Save Analysis..." onAction="#saveParameters" fx:id="savePars"/>
-                                    <MenuItem text="Save Bar Chart..." onAction="#saveBarChart" fx:id="saveBarChartButton"/>
-                                    <MenuItem text="Save XY Chart..." onAction="#saveXYChart" fx:id="saveXYChartButton"/>                       
-                                </items>
-                            </Menu>
-                            <Menu text="Export XY Chart">
-                                <items>
-                                    <MenuItem text="Save Grace File..." onAction="#saveGraceFile" fx:id="saveGraceButton"/>
-                                    <MenuItem text="Save Python File..." onAction="#savePythonFile" fx:id="savePythonButton"/>
-                                    <MenuItem text="Save R File..." onAction="#saveRFile" fx:id="saveRButton"/>                            
-                                </items>
-                            </Menu>
-                            <Menu text="Export Bar Chart">
-                                <items>
-                                    <MenuItem text="Save Python File..." onAction="#saveBarToPythonFile"/>
-                                    <MenuItem text="Save R File..." onAction="#saveBarToRFile"/>                            
-                                </items>
-                            </Menu>
-                            
-                            <MenuItem text="Print XY Chart..." onAction="#printXYChart"/>                       
-                            <MenuItem text="Export SVG XY Chart..." onAction="#exportSVGAction"/>                       
-                            <MenuItem text="Export SVG Bar Chart..." onAction="#exportBarPlotSVGAction"/>                       
-                            <MenuItem text="Load Sample Data..." onAction="#loadSimData"/>
                             <MenuItem text="Preferences..." onAction="#showPreferences"/>
                             <MenuItem text="Show Console" onAction="#showConsole"/>
                             <MenuItem text="Exit" onAction="#exitProgram"/>

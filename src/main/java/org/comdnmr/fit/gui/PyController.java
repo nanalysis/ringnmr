@@ -1818,8 +1818,7 @@ public class PyController implements Initializable {
 
     @FXML
     private void exitProgram() {
-        Platform.exit();
-        System.exit(0);
+        MainApp.checkExit();
     }
 
     @FXML
