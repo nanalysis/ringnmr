@@ -1629,7 +1629,6 @@ public class PyController implements Initializable {
         plotData.setData(allData);
         setBounds();
         plotData.setEquations(equations);
-        System.out.println("did equa");
         updateTable(resDatas);
         if (residues != null) {
             updateTableWithPars(mapName, residues, equationName, state, allStates);
