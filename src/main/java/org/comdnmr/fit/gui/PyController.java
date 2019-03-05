@@ -1024,7 +1024,7 @@ public class PyController implements Initializable {
 //        System.out.println("guesses eqnFitter = " + equationFitter);
 //        System.out.println("guesses resNums = " + resNums);
 //        System.out.println("guesses eqnName = " + equationName);
-                List<ParValueInterface> guesses = equationFitter.guessPars(equationName, absValueModeCheckBox.isSelected());
+                List<ParValueInterface> guesses = equationFitter.guessPars(equationName);
                 simControls.updateSliders(guesses, equationName);
                 simControls.simSliderAction("");
             } catch (NullPointerException npE1) {
@@ -1044,7 +1044,7 @@ public class PyController implements Initializable {
                 String[] resNums = {String.valueOf(currentResInfo.getResNum())};
                 equationFitter.setData(currentResProps, resNums);
                 String equationName = simControls.getEquation();
-                equationFitter.setupFit(equationName, absValueModeCheckBox.isSelected());
+                equationFitter.setupFit(equationName);
                 int[][] map = equationFitter.getFitModel().getMap();
                 double[] sliderGuesses = simControls.sliderGuess(equationName, map);
                 rms = Optional.of(equationFitter.rms(sliderGuesses));
@@ -1069,7 +1069,7 @@ public class PyController implements Initializable {
                 String[] resNums = {String.valueOf(currentResInfo.getResNum())};
                 equationFitter.setData(currentResProps, resNums);
                 String equationName = simControls.getEquation();
-                equationFitter.setupFit(equationName, absValueModeCheckBox.isSelected());
+                equationFitter.setupFit(equationName);
                 int[][] map = equationFitter.getFitModel().getMap();
 //            for (int i=0; i<map.length; i++) {
 //                for (int j=0; j<map[i].length; j++) {
@@ -1084,7 +1084,7 @@ public class PyController implements Initializable {
                 if (sliderGuessCheckBox.isSelected()) {
                     sliderGuesses = simControls.sliderGuess(equationName, map);
                 }
-                fitResult = equationFitter.doFit(equationName, absValueModeCheckBox.isSelected(), nonParBootStrapCheckBox.isSelected(), sliderGuesses);
+                fitResult = equationFitter.doFit(equationName, sliderGuesses);
                 updateAfterFit(fitResult);
             }
         } catch (NullPointerException npE2) {
@@ -1591,7 +1591,7 @@ public class PyController implements Initializable {
         EquationFitter equationFitter = getFitter();
         setSimData(equationFitter);
         String equationName = simControls.getEquation();
-        List<ParValueInterface> guesses = equationFitter.guessPars(equationName, absValueModeCheckBox.isSelected());
+        List<ParValueInterface> guesses = equationFitter.guessPars(equationName);
         simControls.updateSliders(guesses, equationName);
         simControls.simSliderAction("");
     }
@@ -1600,13 +1600,13 @@ public class PyController implements Initializable {
         EquationFitter equationFitter = getFitter();
         setSimData(equationFitter);
         String equationName = simControls.getEquation();
-        equationFitter.setupFit(equationName, absValueModeCheckBox.isSelected());
+        equationFitter.setupFit(equationName);
         int[][] map = equationFitter.getFitModel().getMap();
         double[] sliderGuesses = null;
         if (sliderGuessCheckBox.isSelected()) {
             sliderGuesses = simControls.sliderGuess(equationName, map);
         }
-        fitResult = equationFitter.doFit(equationName, absValueModeCheckBox.isSelected(), nonParBootStrapCheckBox.isSelected(), sliderGuesses);
+        fitResult = equationFitter.doFit(equationName, sliderGuesses);
         updateAfterFit(fitResult);
     }
 
