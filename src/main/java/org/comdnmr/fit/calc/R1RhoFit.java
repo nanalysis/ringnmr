@@ -25,6 +25,7 @@ public class R1RhoFit implements EquationFitter {
     int[] stateCount;
     String[] resNums;
     static List<String> equationNameList = Arrays.asList(R1RhoEquation.getEquationNames());
+    long errTime;
 
     class StateCount {
 
@@ -302,10 +303,15 @@ public class R1RhoFit implements EquationFitter {
             double[] errEstimates;
             double[][] simPars = null;
             if (FitModel.getCalcError()) {
-                if (CoMDPreferences.getNonParametetric()) {
+                long startTime = System.currentTimeMillis();
+                if (CoMDPreferences.getNonParametric()) {
                     errEstimates = calcR1Rho.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
+                    long endTime = System.currentTimeMillis();
+                    errTime = endTime - startTime;
                 } else {
                     errEstimates = calcR1Rho.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma);
+                    long endTime = System.currentTimeMillis();
+                    errTime = endTime - startTime;
 
                 }
                 simPars = calcR1Rho.getSimPars();
@@ -318,7 +324,20 @@ public class R1RhoFit implements EquationFitter {
             for (int j = 1; j < extras.length; j++) {
                 extras[j] = xValues[j].get(0);
             }
-            return getResults(this, eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, true);
+            String refineOpt = CoMDPreferences.getOptimizer();
+            String bootstrapOpt = CoMDPreferences.getBootStrapOptimizer();
+            long fitTime = calcR1Rho.fitTime;
+            long bootTime = errTime;
+            int nSamples = CoMDPreferences.getSampleSize();
+            boolean useAbs = CoMDPreferences.getAbsValueFit();
+            boolean useNonParametric = CoMDPreferences.getNonParametric();
+            double sRadius = CoMDPreferences.getStartingRadius();
+            double fRadius = CoMDPreferences.getFinalRadius();
+            double tol = CoMDPreferences.getTolerance();
+            boolean useWeight = CoMDPreferences.getWeightFit();
+            CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs, 
+                useNonParametric, sRadius, fRadius, tol, useWeight);
+            return getResults(this, eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, true, curveStats);
         } else {
             return null;
         }

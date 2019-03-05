@@ -48,4 +48,73 @@ public class CurveFit {
         return dataValues;
     }
 
+    public static class CurveFitStats {
+
+        final String refineOptimizer;
+        final String bootstrapOptimizer;
+        final long refineTime;
+        final long bootstrapTime;
+        final int nBootstrapSamples;
+        final boolean absMode;
+        final boolean nonParametricMode;
+        final double startRadius;
+        final double finalRadius;
+        final double tolerance;
+        final boolean weight;
+
+        public CurveFitStats(String refineOpt, String bootstrapOpt, long fitTime, long bootTime, int nSamples, boolean useAbs, 
+                boolean useNonParametric, double sRadius, double fRadius, double tol, boolean useWeight) {
+            this.refineOptimizer = refineOpt;
+            this.bootstrapOptimizer = bootstrapOpt;
+            this.refineTime = fitTime;
+            this.bootstrapTime = bootTime;
+            this.nBootstrapSamples = nSamples;
+            this.absMode = useAbs;
+            this.nonParametricMode = useNonParametric;
+            this.startRadius = sRadius;
+            this.finalRadius = fRadius;
+            this.tolerance = tol;
+            this.weight = useWeight;
+        }
+
+        public String getRefineOptimizer() {
+            return refineOptimizer;
+        }
+
+        public String getBootstrapOptimizer() {
+            return bootstrapOptimizer;
+        }
+
+        public long getRefineTime() {
+            return refineTime;
+        }
+
+        public long getBootstrapTime() {
+            return bootstrapTime;
+        }
+
+        public int nSamples() {
+            return nBootstrapSamples;
+        }
+
+        @Override
+        public String toString() {
+            char sep = '\t';
+            StringBuilder sBuilder = new StringBuilder();
+            sBuilder.append(refineOptimizer).append(sep);
+            sBuilder.append(refineTime).append(sep);
+            sBuilder.append(bootstrapOptimizer).append(sep);
+            sBuilder.append(bootstrapTime).append(sep);
+            sBuilder.append(nBootstrapSamples).append(sep);
+            sBuilder.append(absMode).append(sep);
+            sBuilder.append(nonParametricMode).append(sep);
+            sBuilder.append(startRadius).append(sep);
+            sBuilder.append(finalRadius).append(sep);
+            sBuilder.append(tolerance).append(sep);
+            sBuilder.append(weight).append(sep);
+            String statString = sBuilder.toString();
+            return statString;
+        }
+    }
+
 }

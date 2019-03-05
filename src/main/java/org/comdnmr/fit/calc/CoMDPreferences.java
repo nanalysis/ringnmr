@@ -226,7 +226,7 @@ public class CoMDPreferences {
         }
     }
 
-    public static Boolean getNonParametetric() {
+    public static Boolean getNonParametric() {
         if (nonParametricBootstrap == null) {
             String value = getPrefs().get("NONPARAMETRIC", "true");
             nonParametricBootstrap = Boolean.parseBoolean(value);
@@ -234,7 +234,7 @@ public class CoMDPreferences {
         return nonParametricBootstrap;
     }
 
-    public static void setNonParametetric(Boolean value) {
+    public static void setNonParametric(Boolean value) {
         nonParametricBootstrap = value;
         if (value != null) {
             getPrefs().put("NONPARAMETRIC", value.toString());
@@ -259,6 +259,14 @@ public class CoMDPreferences {
             r1rhoEqnMap = stringToMap(eqns);
         }
         return r1rhoEqnMap;
+    }
+    
+    public static void setCESTEqnMap(String eqns) {
+        cestEqnMap = stringToMap(eqns);
+    }
+
+    public static void setR1RhoEqnMap(String eqns) {
+        r1rhoEqnMap = stringToMap(eqns);
     }
 
     static Map<String, Boolean> stringToMap(String s) {

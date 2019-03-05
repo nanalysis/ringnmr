@@ -285,8 +285,22 @@ public enum R1RhoEquation implements R1RhoEquationType {
 
         @Override
         public int[][] makeMap(int[] stateCount, int[][] states, int[] r2Mask) {
-            int[][] map = {{0, 1, 2, 3, 4, 4, 5, 5}};
-
+            int[] map0 = {2, 3, 4, 4, 5, 5};
+            int n = states.length;
+            int[][] map = new int[n][8];
+            int offset = 0;
+            int lastState = 0;
+            for (int i = 0; i < n; i++) {
+                map[i][0] = 0;
+                map[i][1] = 1;
+                if (states[i][0] != lastState) {
+                    offset += 4;
+                }
+                for (int j = 0; j < map0.length; j++) {
+                    map[i][j + 2] = map0[j] + offset;
+                }
+                lastState = states[i][0];
+            }
             return map;
         }
     },

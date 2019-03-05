@@ -29,6 +29,7 @@ public class CPMGFit implements EquationFitter {
     int[][] states;
     int[] stateCount;
     String[] resNums;
+    long errTime;
 
     class StateCount {
 
@@ -97,7 +98,7 @@ public class CPMGFit implements EquationFitter {
         xValues.clear();
         this.resNums = resNums.clone();
         nResidues = resNums.length;
-        
+
         stateCount = resProps.getStateCount(nResidues);
         Collection<ExperimentData> expDataList = resProps.getExperimentData();
         nCurves = resNums.length * expDataList.size();
@@ -264,10 +265,15 @@ public class CPMGFit implements EquationFitter {
         boolean exchangeValid = okRex;
 
         if (FitModel.getCalcError()) {
-            if (CoMDPreferences.getNonParametetric()) {
+            long startTime = System.currentTimeMillis();
+            if (CoMDPreferences.getNonParametric()) {
                 errEstimates = calcR.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
+                long endTime = System.currentTimeMillis();
+                errTime = endTime - startTime;
             } else {
                 errEstimates = calcR.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma);
+                long endTime = System.currentTimeMillis();
+                errTime = endTime - startTime;
 
             }
             simPars = calcR.getSimPars();
@@ -302,7 +308,20 @@ public class CPMGFit implements EquationFitter {
         } else {
             errEstimates = new double[pars.length];
         }
-        return getResults(this, eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, exchangeValid);
+        String refineOpt = CoMDPreferences.getOptimizer();
+        String bootstrapOpt = CoMDPreferences.getBootStrapOptimizer();
+        long fitTime = calcR.fitTime;
+        long bootTime = errTime;
+        int nSamples = CoMDPreferences.getSampleSize();
+        boolean useAbs = CoMDPreferences.getAbsValueFit();
+        boolean useNonParametric = CoMDPreferences.getNonParametric();
+        double sRadius = CoMDPreferences.getStartingRadius();
+        double fRadius = CoMDPreferences.getFinalRadius();
+        double tol = CoMDPreferences.getTolerance();
+        boolean useWeight = CoMDPreferences.getWeightFit();
+        CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs,
+                useNonParametric, sRadius, fRadius, tol, useWeight);
+        return getResults(this, eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, exchangeValid, curveStats);
     }
 
     @Override
