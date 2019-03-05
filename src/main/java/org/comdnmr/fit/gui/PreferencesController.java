@@ -150,8 +150,8 @@ public class PreferencesController implements Initializable {
                 "Weight residuals by error values");
         BooleanOperationItem nonParametricItem = new BooleanOperationItem(
                 (obs, oldV, newV) -> {
-                    CoMDPreferences.setNonParametetric((Boolean) newV);
-                }, CoMDPreferences.getNonParametetric(), "Optimizer", "Non-Parametric",
+                    CoMDPreferences.setNonParametric((Boolean) newV);
+                }, CoMDPreferences.getNonParametric(), "Optimizer", "Non-Parametric",
                 "Bootstrapping with non-parametric method");
         BooleanOperationItem absValueItem = new BooleanOperationItem(
                 (obs, oldV, newV) -> {
