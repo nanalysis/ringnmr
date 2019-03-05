@@ -803,7 +803,8 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
     public static void saveResultsFile(String fileName, ResidueProperties resProp, boolean saveStats) {
         String[] headerFields = {"Residue", "Peak", "GrpSz", "Group", "State", "Equation", "RMS", "AIC", "Best"};
         String[] headerFields2 = {"Residue", "Peak", "GrpSz", "Group", "State", "RefineOpt", "RefineTime", 
-            "BootstrapOpt", "BootstrapTime", "Samples", "Equation", "RMS", "AIC", "Best"};
+            "BootstrapOpt", "BootstrapTime", "Samples", "AbsMode", "NonParametricMode", "StartRadius", "FinalRadius", 
+            "Tolerance", "Weight", "Equation", "RMS", "AIC", "Best"};
         if (saveStats) {
             headerFields = headerFields2;
         }

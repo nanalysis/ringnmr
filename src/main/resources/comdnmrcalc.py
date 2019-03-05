@@ -469,6 +469,12 @@ def parseArgs():
     parser.add_argument("-n", dest="nBootstrapSamples", default=50, type=int, help="Number of Bootstrap samples. Default is 50.")
     parser.add_argument("-S", dest="saveStats", action='store_true', help="Whether to output curve fitting stats.")
     parser.add_argument("-O", dest="outFileName", default="output.txt", help="Output filename. Default is output.txt.")
+    parser.add_argument("-a", dest="absValueMode", action="store_false", help="Whether to use Absolute Value Mode. Default is True.")
+    parser.add_argument("-N", dest="nonParametricMode", action="store_false", help="Whether to use Non-Parametric Mode. Default is True.")
+    parser.add_argument("-R", dest="startRadius", default=20.0, type=float, help="Starting Radius.  Default is 20.0.")
+    parser.add_argument("-t", dest="tolerance", default=-5.0, type=float, help="Tolerance exponent.  Default exponent, tolerance is -5.0, 10^(-5).")
+    parser.add_argument("-f", dest="finalRadius", default=-5.0, type=float, help="Final Radius exponent.  Default exponent, radius is -5.0, 10^(-5).")
+    parser.add_argument("-w", dest="weight", action="store_false", help="Whether to weight the fit. Default is True.")
     parser.add_argument("fileNames",nargs="*")
     args = parser.parse_args()
 
@@ -482,10 +488,22 @@ def parseArgs():
     nBootstrapSamples = args.nBootstrapSamples
     saveStats = args.saveStats
     outFileName = args.outFileName
+    useAbsValueMode = args.absValueMode
+    useNonParametricMode = args.nonParametricMode
+    startRadius = args.startRadius
+    tolerance = args.tolerance
+    finalRadius = args.finalRadius
+    useWeight = args.weight
 
     CoMDPreferences.setOptimizer(refineOpt)
     CoMDPreferences.setBootStrapOptimizer(bootstrapOpt)
     CoMDPreferences.setSampleSize(nBootstrapSamples)
+    CoMDPreferences.setAbsValueFit(useAbsValueMode)
+    CoMDPreferences.setNonParametric(useNonParametricMode)
+    CoMDPreferences.setStartingRadius(startRadius)
+    CoMDPreferences.setTolerance(tolerance)
+    CoMDPreferences.setFinalRadius(finalRadius)
+    CoMDPreferences.setWeightFit(useWeight)
 
     groups = []
     if len(args.groupList) > 0:

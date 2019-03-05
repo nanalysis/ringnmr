@@ -55,13 +55,26 @@ public class CurveFit {
         final long refineTime;
         final long bootstrapTime;
         final int nBootstrapSamples;
+        final boolean absMode;
+        final boolean nonParametricMode;
+        final double startRadius;
+        final double finalRadius;
+        final double tolerance;
+        final boolean weight;
 
-        public CurveFitStats(String refineOpt, String bootstrapOpt, long fitTime, long bootTime, int nSamples) {
+        public CurveFitStats(String refineOpt, String bootstrapOpt, long fitTime, long bootTime, int nSamples, boolean useAbs, 
+                boolean useNonParametric, double sRadius, double fRadius, double tol, boolean useWeight) {
             this.refineOptimizer = refineOpt;
             this.bootstrapOptimizer = bootstrapOpt;
             this.refineTime = fitTime;
             this.bootstrapTime = bootTime;
             this.nBootstrapSamples = nSamples;
+            this.absMode = useAbs;
+            this.nonParametricMode = useNonParametric;
+            this.startRadius = sRadius;
+            this.finalRadius = fRadius;
+            this.tolerance = tol;
+            this.weight = useWeight;
         }
 
         public String getRefineOptimizer() {
@@ -93,6 +106,12 @@ public class CurveFit {
             sBuilder.append(bootstrapOptimizer).append(sep);
             sBuilder.append(bootstrapTime).append(sep);
             sBuilder.append(nBootstrapSamples).append(sep);
+            sBuilder.append(absMode).append(sep);
+            sBuilder.append(nonParametricMode).append(sep);
+            sBuilder.append(startRadius).append(sep);
+            sBuilder.append(finalRadius).append(sep);
+            sBuilder.append(tolerance).append(sep);
+            sBuilder.append(weight).append(sep);
             String statString = sBuilder.toString();
             return statString;
         }

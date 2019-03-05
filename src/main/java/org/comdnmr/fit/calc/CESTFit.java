@@ -301,7 +301,7 @@ public class CESTFit implements EquationFitter {
             double[][] simPars = null;
             if (FitModel.getCalcError()) {
                 long startTime = System.currentTimeMillis();
-                if (CoMDPreferences.getNonParametetric()) {
+                if (CoMDPreferences.getNonParametric()) {
                     errEstimates = calcCEST.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
                     long endTime = System.currentTimeMillis();
                     errTime = endTime - startTime;
@@ -326,7 +326,14 @@ public class CESTFit implements EquationFitter {
             long fitTime = calcCEST.fitTime;
             long bootTime = errTime;
             int nSamples = CoMDPreferences.getSampleSize();
-            CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples);
+            boolean useAbs = CoMDPreferences.getAbsValueFit();
+            boolean useNonParametric = CoMDPreferences.getNonParametric();
+            double sRadius = CoMDPreferences.getStartingRadius();
+            double fRadius = CoMDPreferences.getFinalRadius();
+            double tol = CoMDPreferences.getTolerance();
+            boolean useWeight = CoMDPreferences.getWeightFit();
+            CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs, 
+                useNonParametric, sRadius, fRadius, tol, useWeight);
             return getResults(this, eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, true, curveStats);
         } else {
             return null;
