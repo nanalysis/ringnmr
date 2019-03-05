@@ -156,9 +156,9 @@ public class ResidueProperties {
                 tempMap.put(Math.floor(expData.temperature), tempMap.size());
                 tempList.add(expData.temperature);
             }
-            if (!nucMap.containsKey(expData.nucleus)) {
-                nucMap.put(expData.nucleus, nucMap.size());
-                nucList.add(expData.nucleus);
+            if (!nucMap.containsKey(expData.nucleusName)) {
+                nucMap.put(expData.nucleusName, nucMap.size());
+                nucList.add(expData.nucleusName);
             }
         }
         for (ExperimentData expData : expMaps.values()) {
@@ -175,7 +175,7 @@ public class ResidueProperties {
         state[0] = resIndex;
         state[1] = fieldMap.get(Math.floor(expData.field));
         state[2] = tempMap.get(Math.floor(expData.temperature));
-        state[3] = nucMap.get(expData.nucleus);
+        state[3] = nucMap.get(expData.nucleusName);
 //        System.out.println(resIndex + " " + expData.field + " " + expData.temperature + " " + expData.nucleus);
 //        System.out.println("state index residue:" + state[0] + " field:" + state[1] + " temp:" + state[2] + " nuc:" + state[3]);
 
