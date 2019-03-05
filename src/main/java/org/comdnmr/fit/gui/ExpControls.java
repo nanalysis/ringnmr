@@ -7,8 +7,6 @@ package org.comdnmr.fit.gui;
 
 import java.util.ArrayList;
 import java.util.List;
-import javafx.fxml.FXML;
-import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.layout.HBox;
@@ -28,10 +26,7 @@ import org.comdnmr.fit.calc.CalcExpDecay;
  *
  * @author Bruce Johnson
  */
-public class ExpControls implements EquationControls {
-
-    @FXML
-    ChoiceBox<String> equationSelector;
+public class ExpControls extends EquationControls {
 
     String[] parNames = {"A", "R", "C"};
 
@@ -107,10 +102,9 @@ public class ExpControls implements EquationControls {
 
     public VBox makeControls(PyController controller) {
         this.controller = controller;
-        equationSelector = new ChoiceBox<>();
+        VBox vBox = init();
         equationSelector.getItems().addAll(ExpFit.getEquationNames());
         equationSelector.setValue(ExpFit.getEquationNames().get(0));
-        VBox vBox = new VBox();
         HBox hBox1 = new HBox();
         HBox.setHgrow(hBox1, Priority.ALWAYS);
         hBox1.getChildren().add(equationSelector);

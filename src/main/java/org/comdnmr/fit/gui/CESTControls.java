@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javafx.fxml.FXML;
-import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.layout.HBox;
@@ -18,7 +17,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.comdnmr.fit.calc.CESTEquation;
 import org.comdnmr.fit.calc.CESTFit;
-import org.comdnmr.fit.calc.CPMGFit;
 import org.comdnmr.fit.calc.ExperimentData;
 import org.comdnmr.fit.calc.ParValueInterface;
 import org.comdnmr.fit.calc.PlotEquation;
@@ -35,16 +33,15 @@ import static org.comdnmr.fit.gui.CESTControls.PARS.R2B;
 import static org.comdnmr.fit.gui.CESTControls.PARS.B1FIELD;
 import static org.comdnmr.fit.gui.CESTControls.PARS.TEX;
 import org.comdnmr.fit.calc.CalcCEST;
+import org.comdnmr.fit.calc.CoMDPreferences;
 
 /**
  *
  * @author Martha Beckwith
  */
-public class CESTControls implements EquationControls {
+public class CESTControls extends EquationControls {
 
     @FXML
-    ChoiceBox<String> equationSelector;
-    ChoiceBox<String> stateSelector;
 
     String[] parNames = {"Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B", "B1field", "Tex"};
 
@@ -138,8 +135,12 @@ public class CESTControls implements EquationControls {
     }
 
     public void updateDeltaLimits() {
-        PARS.DELTAA0.updateLimits(DELTA_MIN, DELTA_MAX);
-        PARS.DELTAB0.updateLimits(DELTA_MIN, DELTA_MAX);
+        updateDeltaLimits(DELTA_MIN, DELTA_MAX);
+    }
+
+    public void updateDeltaLimits(double min, double max) {
+        PARS.DELTAA0.updateLimits(min, max);
+        PARS.DELTAB0.updateLimits(min, max);
     }
 
     boolean updatingTable = false;
@@ -148,17 +149,15 @@ public class CESTControls implements EquationControls {
     @Override
     public VBox makeControls(PyController controller) {
         this.controller = controller;
-        equationSelector = new ChoiceBox<>();
+        VBox vBox = init();
         equationSelector.getItems().addAll(CESTEquation.getAllEquationNames());
         equationSelector.setValue(CESTEquation.getAllEquationNames()[0]);
-        stateSelector = new ChoiceBox<>();
         stateSelector.getItems().addAll("0:0:0", "1:0:0");
         stateSelector.setValue("0:0:0");
-        VBox vBox = new VBox();
         HBox hBox1 = new HBox();
         HBox.setHgrow(hBox1, Priority.ALWAYS);
         vBox.setFillWidth(true);
-        hBox1.getChildren().addAll(equationSelector, stateSelector);
+        hBox1.getChildren().addAll(equationSelector, stateSelector, nucleiSelector);
         vBox.getChildren().add(hBox1);
 
         int i = 0;
@@ -698,7 +697,7 @@ public class CESTControls implements EquationControls {
                         List<Double> dataExtras = expData.getExtras();
                         double[] errs = new double[pars.length];
                         double[] extras = new double[3];
-                        extras[0] = expData.getField();
+                        extras[0] = expData.getNucleusField();
                         extras[1] = dataExtras.get(0);
                         extras[2] = dataExtras.get(1);
 //                        System.out.println("resInfo Res Num = " + resInfo.getResNum());
@@ -715,7 +714,7 @@ public class CESTControls implements EquationControls {
                     pars = getPars(equationName)[0];
                     double[] errs = new double[pars.length];
                     double[] extras = new double[1];
-                    extras[0] = CPMGFit.REF_FIELD; // fixme
+                    extras[0] = CoMDPreferences.getRefField() * getNucleus().getRatio(); // fixme
                     PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
                     //equationCopy.setExtra(extras);
                     //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[0] = " + extras[0]);
@@ -728,7 +727,7 @@ public class CESTControls implements EquationControls {
             extras1 = getPars(equationName)[1];
             double[] errs = new double[pars.length];
             double[] extras = new double[3];
-            extras[0] = CPMGFit.REF_FIELD; // fixme
+            extras[0] = CoMDPreferences.getRefField() * getNucleus().getRatio(); // fixme
             extras[1] = extras1[0]; //17.0 * 2 * Math.PI;
             extras[2] = extras1[1]; //0.3;
             //System.out.println("updateEquations got called without resProps; extras length = "+extras.length);

@@ -28,17 +28,14 @@ import static org.comdnmr.fit.gui.CPMGControls.PARS.PA;
 import static org.comdnmr.fit.gui.CPMGControls.PARS.R2;
 import static org.comdnmr.fit.gui.CPMGControls.PARS.REX;
 import org.comdnmr.fit.calc.CalcRDisp;
+import org.comdnmr.fit.calc.CoMDPreferences;
 import static org.comdnmr.fit.gui.CPMGControls.PARS.DPPM;
 
 /**
  *
  * @author Bruce Johnson
  */
-public class CPMGControls implements EquationControls {
-
-    @FXML
-    ChoiceBox<String> equationSelector;
-    ChoiceBox<String> stateSelector;
+public class CPMGControls extends EquationControls {
 
     String[] parNames = {"R2", "Kex", "Rex", "pA", "dPPM", "Field2"};
 
@@ -119,16 +116,14 @@ public class CPMGControls implements EquationControls {
     @Override
     public VBox makeControls(PyController controller) {
         this.controller = controller;
-        equationSelector = new ChoiceBox<>();
+        VBox vBox = init();
         equationSelector.getItems().addAll(CPMGFit.getEquationNames());
         equationSelector.setValue(CPMGFit.getEquationNames().get(0));
-        stateSelector = new ChoiceBox<>();
         stateSelector.getItems().addAll("0:0:0", "1:0:0");
         stateSelector.setValue("0:0:0");
-        VBox vBox = new VBox();
         HBox hBox1 = new HBox();
         HBox.setHgrow(hBox1, Priority.ALWAYS);
-        hBox1.getChildren().addAll(equationSelector, stateSelector);
+        hBox1.getChildren().addAll(equationSelector, stateSelector, nucleiSelector);
         vBox.getChildren().add(hBox1);
 
         int i = 0;
@@ -416,7 +411,7 @@ public class CPMGControls implements EquationControls {
             pars = getPars(equationName);
             double[] errs = new double[pars.length];
             double[] extras = new double[1];
-            extras[0] = CPMGFit.REF_FIELD;
+            extras[0] = CoMDPreferences.getRefField();
             PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
             equations.add(plotEquation);
         } else {
