@@ -84,7 +84,7 @@ public class R1RhoFit implements EquationFitter {
                 ResidueData resData = expData.getResidueData(resNum);
                 if (resData != null) {
                     //  need peakRefs
-                    double field = expData.getField();
+                    double field = expData.getNucleusField();
                     fieldList.add(field);
                     double[][] x = resData.getXValues();
 //                System.out.println("setData x length = " + x.length);

@@ -14,7 +14,6 @@ import org.apache.commons.math3.stat.inference.TTest;
  */
 public class CPMGFit implements EquationFitter {
 
-    public static double REF_FIELD = 500.0;
     public static final double[] SIMX = {25.0, 50.0, 100.0, 150.0, 250.0, 350.0, 500.0, 750.0, 1000.0};
 
     CalcRDisp calcR = new CalcRDisp();
@@ -129,7 +128,7 @@ public class CPMGFit implements EquationFitter {
         usedFields = new double[expDataList.size()];
         int iExp = 0;
         for (ExperimentData expData : expDataList) {
-            usedFields[iExp++] = expData.getField();
+            usedFields[iExp++] = expData.getNucleusField();
         }
     }
 

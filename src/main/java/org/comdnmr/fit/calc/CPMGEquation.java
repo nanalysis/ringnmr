@@ -94,7 +94,7 @@ public enum CPMGEquation implements EquationType {
                 value = R2;
             } else {
                 double tauCP = 1.0 / (2.0 * vu);
-                double fieldAdjust = field / CPMGFit.REF_FIELD;
+                double fieldAdjust = field / CoMDPreferences.getRefField();
                 Rex *= fieldAdjust * fieldAdjust;
                 value = R2 + Rex * (1 - 2.0 * FastMath.tanh(0.5 * kEx * tauCP) / (kEx * tauCP));
             }
@@ -117,7 +117,7 @@ public enum CPMGEquation implements EquationType {
                     rex = 0.0;
                 }
                 guesses[map[id][1]] = r2;
-                guesses[map[id][2]] = rex * Math.pow(CPMGFit.REF_FIELD / field, 2);
+                guesses[map[id][2]] = rex * Math.pow(CoMDPreferences.getRefField() / field, 2);
                 double tauMid = 1.0 / (2.0 * vMid);
                 if (rex >= 0) {
                     kExSum += 1.915 / (0.5 * tauMid); // 1.915 comes from solving equation iteratively at tcp rex 0.5 half max
@@ -303,10 +303,10 @@ public enum CPMGEquation implements EquationType {
         public double getRex(double[] pars, int[] map) {
             double[] x = new double[1];
             x[0] = 10.0;
-            double y0 = calculate(pars, map, x, 0, CPMGFit.REF_FIELD);
+            double y0 = calculate(pars, map, x, 0, CoMDPreferences.getRefField());
             x[0] = 1.0e4;
-            double y1 = calculate(pars, map, x, 0, CPMGFit.REF_FIELD);
-            double rex = y0-y1;
+            double y1 = calculate(pars, map, x, 0, CoMDPreferences.getRefField());
+            double rex = y0 - y1;
 //            if (pars[map[3]] != 0.0) {
 //                rex = pars[map[1]] * (1.0 - pars[map[1]]) * pars[map[0]] / (1.0 + Math.pow(pars[map[0]] / pars[map[3]], 2));
 //            }
@@ -383,7 +383,7 @@ public enum CPMGEquation implements EquationType {
     public int getNGroupPars() {
         return nGroupPars;
     }
-    
+
     @Override
     public double getMinX() {
         return 5.0;
