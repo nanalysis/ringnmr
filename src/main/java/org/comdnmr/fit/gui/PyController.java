@@ -1317,7 +1317,7 @@ public class PyController implements Initializable {
         FileChooser fileChooser = new FileChooser();
         File file = fileChooser.showSaveDialog(MainApp.primaryStage);
         if (file != null) {
-            DataIO.saveResultsFile(file.getAbsolutePath(), currentResProps);
+            DataIO.saveResultsFile(file.getAbsolutePath(), currentResProps, false);
         }
     }
 
@@ -1382,6 +1382,9 @@ public class PyController implements Initializable {
         if (status.isOk()) {
             statusCircle.setFill(Color.GREEN);
         } else {
+            if (status.getThrowable() != null) {
+                status.getThrowable().printStackTrace();
+            }
             statusCircle.setFill(Color.RED);
         }
         statusBar.setProgress(0.0);
