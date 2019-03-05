@@ -77,6 +77,7 @@ import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ToolBar;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
+import org.comdnmr.fit.calc.ExperimentData.Nuclei;
 import org.comdnmr.fit.calc.FitModel;
 import org.comdnmr.fit.calc.R1RhoFit;
 import static org.comdnmr.fit.gui.MainApp.preferencesController;
@@ -135,7 +136,6 @@ public class PyController implements Initializable {
 
     @FXML
     ChoiceBox<String> simChoice;
-
     @FXML
     CheckBox sliderGuessCheckBox;
     @FXML
@@ -309,7 +309,6 @@ public class PyController implements Initializable {
         chartBox.getChildren().add(barPlotCanvas);
         addChart();
         barPlotCanvas.setOnMouseClicked(e -> mouseClickedOnBarCanvas(e));
-
 //        mainController.setOnHidden(e -> Platform.exit());
     }
 
@@ -711,6 +710,9 @@ public class PyController implements Initializable {
         xUpperBoundTextField.setText(Double.toString(bounds[1]));
         yLowerBoundTextField.setText(Double.toString(bounds[2]));
         yUpperBoundTextField.setText(Double.toString(bounds[3]));
+        if (simControls instanceof CESTControls) {
+            ((CESTControls) simControls).updateDeltaLimits(bounds[0], bounds[1]);
+        }
 
     }
 
@@ -1196,7 +1198,7 @@ public class PyController implements Initializable {
                     double[] pars = curveFit.getEquation().getPars(); //pars = getPars(equationName);
                     double[] errs = curveFit.getEquation().getErrs(); //double[] errs = new double[pars.length];
                     double[] extras = new double[3];
-                    extras[0] = expData.getField();
+                    extras[0] = expData.getNucleusField();
                     extras[1] = expData.getExtras().get(0);
                     extras[2] = expData.getExtras().get(1);
 //                    System.out.println("Fit button expData extras size = " + expData.getExtras().size() + " extra[1] = " + extras[1]);
@@ -1615,7 +1617,7 @@ public class PyController implements Initializable {
                 }
                 List<DataSeries> data = ChartUtil.getMapData(mapName, expName, residues);
                 allData.addAll(data);
-                equations.addAll(ChartUtil.getEquations(expData, mapName, residues, equationName, expData.getState(), expData.getField()));
+                equations.addAll(ChartUtil.getEquations(expData, mapName, residues, equationName, expData.getState(), expData.getNucleusField()));
                 int[] states = resProps.getStateIndices(0, expData);
                 allStates.add(states);
             }
