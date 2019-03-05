@@ -75,7 +75,7 @@ public class CalcExpDecay extends FitModel {
             value = equation.calculate(par, map[idNums[i]], ax, idNums[i], fieldValues[i]);
             //System.out.println( "xxxxxxxxxxx " + value + " " + yValues[i] + " " + equation.name());
             double delta = (value - yValues[i]);
-            if (weightByError) {
+            if (weightFit) {
                 delta /= errValues[i];
             }
             //System.out.print(xValues[i] + " " + yValues[i] + " " + value + " " + (delta*delta) + " ");
@@ -113,7 +113,7 @@ public class CalcExpDecay extends FitModel {
         reportFitness = false;
         int nSim = CoMDPreferences.getSampleSize();
         int nPar = start.length;
-        parValues = new double[nPar][nSim];
+        parValues = new double[nPar + 1][nSim];
         double[] yPred = getPredicted(start);
         double[] yValuesOrig = yValues.clone();
         double[][] rexValues = new double[nID][nSim];
@@ -130,6 +130,7 @@ public class CalcExpDecay extends FitModel {
             for (int j = 0; j < nPar; j++) {
                 parValues[j][i] = rPoint[j];
             }
+            parValues[nPar][i] = result.getValue();
         }
         double[] parSDev = new double[nPar];
         for (int i = 0; i < nPar; i++) {
@@ -147,7 +148,7 @@ public class CalcExpDecay extends FitModel {
         reportFitness = false;
         int nPar = start.length;
         int nSim = CoMDPreferences.getSampleSize();
-        parValues = new double[nPar][nSim];
+        parValues = new double[nPar + 1][nSim];
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
         double[] yPred = getPredicted(start);
@@ -157,7 +158,6 @@ public class CalcExpDecay extends FitModel {
 //        IntStream.range(0, nSim).forEach(i -> {
             CalcExpDecay rDisp = new CalcExpDecay(xValues, yPred, errValues, fieldValues, fields, idNums);
             rDisp.setEquation(equation.getName());
-            rDisp.setAbsMode(absMode);
             double[] newY = new double[yValues.length];
             for (int k = 0; k < yValues.length; k++) {
                 newY[k] = yPred[k] + errValues[k] * random.nextGaussian();
@@ -172,6 +172,8 @@ public class CalcExpDecay extends FitModel {
             for (int j = 0; j < nPar; j++) {
                 parValues[j][i] = rPoint[j];
             }
+            parValues[nPar][i] = result.getValue();
+
         });
 
         double[] parSDev = new double[nPar];
@@ -187,7 +189,7 @@ public class CalcExpDecay extends FitModel {
         reportFitness = false;
         int nPar = start.length;
         int nSim = CoMDPreferences.getSampleSize();
-        parValues = new double[nPar][nSim];
+        parValues = new double[nPar + 1][nSim];
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
         String optimizer = CoMDPreferences.getBootStrapOptimizer();
@@ -195,7 +197,6 @@ public class CalcExpDecay extends FitModel {
         IntStream.range(0, nSim).parallel().forEach(i -> {
             CalcExpDecay rDisp = new CalcExpDecay(xValues, yValues, errValues, fieldValues, fields, idNums);
             rDisp.setEquation(equation.getName());
-            rDisp.setAbsMode(absMode);
             double[][] newX = new double[1][yValues.length];
             double[] newY = new double[yValues.length];
             double[] newErr = new double[yValues.length];
@@ -226,6 +227,7 @@ public class CalcExpDecay extends FitModel {
             for (int j = 0; j < nPar; j++) {
                 parValues[j][i] = rPoint[j];
             }
+            parValues[nPar][i] = result.getValue();
         });
 
         double[] parSDev = new double[nPar];

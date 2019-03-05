@@ -157,7 +157,7 @@ public class ExpFit implements EquationFitter {
     }
 
     @Override
-    public void setupFit(String eqn, boolean absMode) {
+    public void setupFit(String eqn) {
         double[][] x = new double[1][yValues.size()];
         double[] y = new double[yValues.size()];
         double[] err = new double[yValues.size()];
@@ -172,8 +172,6 @@ public class ExpFit implements EquationFitter {
             idNums[i] = idValues.get(i);
         }
         expModel.setEquation(eqn);
-        expModel.setAbsMode(absMode);
-
         expModel.setXY(x, y);
         expModel.setIds(idNums);
         expModel.setErr(err);
@@ -183,8 +181,8 @@ public class ExpFit implements EquationFitter {
     }
 
     @Override
-    public List<ParValueInterface> guessPars(String eqn, boolean absMode) {
-        setupFit(eqn, absMode);
+    public List<ParValueInterface> guessPars(String eqn) {
+        setupFit(eqn);
         double[] guesses = expModel.guess();
         String[] parNames = expModel.getParNames();
         int[][] map = expModel.getMap();
@@ -204,8 +202,8 @@ public class ExpFit implements EquationFitter {
     }
 
     @Override
-    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderguesses) {
-        setupFit(eqn, absMode);
+    public CPMGFitResult doFit(String eqn, double[] sliderguesses) {
+        setupFit(eqn);
 
         int[][] map = expModel.getMap();
         double[] guesses;
@@ -217,7 +215,7 @@ public class ExpFit implements EquationFitter {
         }
 //        System.out.println("dofit guesses = " + guesses);
         double[][] boundaries = expModel.boundaries(guesses);
-        double sigma = FitModel.SIGMA_DEFAULT;
+        double sigma = CoMDPreferences.getStartingRadius();
         PointValuePair result = expModel.refine(guesses, boundaries[0], boundaries[1],
                 sigma, CoMDPreferences.getOptimizer());
         double[] pars = result.getPoint();
@@ -248,7 +246,7 @@ public class ExpFit implements EquationFitter {
         double[][] simPars = null;
         if (FitModel.getCalcError()) {
             long startTime = System.currentTimeMillis();
-            if (nonParBootStrap) {
+            if (CoMDPreferences.getNonParametetric()) {
                 errEstimates = expModel.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
                 long endTime = System.currentTimeMillis();
                 errTime = endTime - startTime;

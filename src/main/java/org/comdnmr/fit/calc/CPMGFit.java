@@ -94,18 +94,19 @@ public class CPMGFit implements EquationFitter {
         states = new int[1][4];
     }
 
-    // public void setData(Collection<ExperimentData> expDataList, String[] resNums) {
     @Override
     public void setData(ResidueProperties resProps, String[] resNums) {
+        xValues.clear();
         this.resNums = resNums.clone();
         nResidues = resNums.length;
-        int id = 0;
-        stateCount = resProps.getStateCount(resNums.length);
+        
+        stateCount = resProps.getStateCount(nResidues);
         Collection<ExperimentData> expDataList = resProps.getExperimentData();
         nCurves = resNums.length * expDataList.size();
         states = new int[nCurves][];
         int k = 0;
         int resIndex = 0;
+        int id = 0;
         for (String resNum : resNums) {
             for (ExperimentData expData : expDataList) {
                 states[k++] = resProps.getStateIndices(resIndex, expData);
@@ -123,7 +124,6 @@ public class CPMGFit implements EquationFitter {
                     idValues.add(id);
                 }
                 id++;
-
             }
             resIndex++;
         }
@@ -159,7 +159,7 @@ public class CPMGFit implements EquationFitter {
     }
 
     @Override
-    public void setupFit(String eqn, boolean absMode) {
+    public void setupFit(String eqn) {
         double[][] x = new double[1][yValues.size()];
         double[] y = new double[yValues.size()];
         double[] err = new double[yValues.size()];
@@ -174,7 +174,6 @@ public class CPMGFit implements EquationFitter {
             idNums[i] = idValues.get(i);
         }
         calcR.setEquation(eqn);
-        calcR.setAbsMode(absMode);
 
         calcR.setXY(x, y);
         calcR.setIds(idNums);
@@ -185,8 +184,8 @@ public class CPMGFit implements EquationFitter {
     }
 
     @Override
-    public List<ParValueInterface> guessPars(String eqn, boolean absMode) {
-        setupFit(eqn, absMode);
+    public List<ParValueInterface> guessPars(String eqn) {
+        setupFit(eqn);
         double[] guesses = calcR.guess();
         String[] parNames = calcR.getParNames();
         int[][] map = calcR.getMap();
@@ -206,8 +205,8 @@ public class CPMGFit implements EquationFitter {
     }
 
     @Override
-    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderguesses) {
-        setupFit(eqn, absMode);
+    public CPMGFitResult doFit(String eqn, double[] sliderguesses) {
+        setupFit(eqn);
         int[][] map = calcR.getMap();
         double[] guesses;
         if (sliderguesses != null) {
@@ -218,10 +217,16 @@ public class CPMGFit implements EquationFitter {
         }
 //        System.out.println("dofit guesses = " + guesses);
         double[][] boundaries = calcR.boundaries(guesses);
-        double sigma = FitModel.SIGMA_DEFAULT;
+        double sigma = CoMDPreferences.getStartingRadius();
         PointValuePair result = calcR.refine(guesses, boundaries[0],
                 boundaries[1], sigma, CoMDPreferences.getOptimizer());
         double[] pars = result.getPoint();
+        System.out.print("Fit pars \n");
+        for (int i = 0; i < pars.length; i++) {
+            System.out.printf("%d %.3f %.3f %.3f %.3f\n", i, guesses[i], boundaries[0][i], pars[i], boundaries[1][i]);
+        }
+        System.out.println("");
+
         /*
         for (int i = 0; i < map.length; i++) {
             for (int j = 0; j < map[i].length; j++) {
@@ -241,6 +246,7 @@ public class CPMGFit implements EquationFitter {
         double aic = calcR.getAICc(pars);
         double rms = calcR.getRMS(pars);
         double rChiSq = calcR.getReducedChiSq(pars);
+        System.out.printf("%.3f %.3f %.3f\n", aic, rms, rChiSq);
 //        System.out.println("rms " + rms);
         int nGroupPars = calcR.getNGroupPars();
         sigma /= 2.0;
@@ -261,7 +267,7 @@ public class CPMGFit implements EquationFitter {
 
         if (FitModel.getCalcError()) {
             long startTime = System.currentTimeMillis();
-            if (nonParBootStrap) {
+            if (CoMDPreferences.getNonParametetric()) {
                 errEstimates = calcR.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
                 long endTime = System.currentTimeMillis();
                 errTime = endTime - startTime;

@@ -75,7 +75,7 @@ public class CalcRDisp extends FitModel {
             value = equation.calculate(par, map[idNums[i]], ax, idNums[i], fieldValues[i]);
             //System.out.println( "xxxxxxxxxxx " + value + " " + yValues[i] + " " + equation.name());
             double delta = (value - yValues[i]);
-            if (weightByError) {
+            if (weightFit) {
                 delta /= errValues[i];
             }
             //System.out.print(xValues[i] + " " + yValues[i] + " " + value + " " + (delta*delta) + " ");
@@ -153,7 +153,7 @@ public class CalcRDisp extends FitModel {
         reportFitness = false;
         int nSim = CoMDPreferences.getSampleSize();
         int nPar = start.length;
-        parValues = new double[nPar][nSim];
+        parValues = new double[nPar + 1][nSim];
         double[] yPred = simY(start);
         double[] yValuesOrig = yValues.clone();
         double[][] rexValues = new double[nID][nSim];
@@ -170,6 +170,7 @@ public class CalcRDisp extends FitModel {
             for (int j = 0; j < nPar; j++) {
                 parValues[j][i] = rPoint[j];
             }
+            parValues[nPar][i] = result.getValue();
             if (equation == CPMGEquation.CPMGSLOW) {
                 for (int j = 0; j < map.length; j++) {
                     rexValues[j][i] = equation.getRex(result.getPoint(), map[j]);
@@ -196,11 +197,10 @@ public class CalcRDisp extends FitModel {
     private synchronized CalcRDisp setupParametricBootstrap(double[] yPred) {
         double[] newY = new double[yValues.length];
         for (int k = 0; k < yValues.length; k++) {
-            newY[k] = yPred[k] + errValues[k] * random.nextGaussian();
-        }
+                newY[k] = yPred[k] + errValues[k] * random.nextGaussian();
+            }
         CalcRDisp rDisp = new CalcRDisp(xValues, newY, errValues, fieldValues, fields, idNums);
         rDisp.setEquation(equation.getName());
-        rDisp.setAbsMode(absMode);
         rDisp.setXY(xValues, newY);
         rDisp.setIds(idNums);
         rDisp.setMap(map);
@@ -210,7 +210,6 @@ public class CalcRDisp extends FitModel {
     private CalcRDisp setupNonParametricBootstrap(double[] yPred) {
         CalcRDisp rDisp = new CalcRDisp(xValues, yValues, errValues, fieldValues, fields, idNums);
         rDisp.setEquation(equation.getName());
-        rDisp.setAbsMode(absMode);
         double[][] newX = new double[1][yValues.length];
         double[] newY = new double[yValues.length];
         double[] newErr = new double[yValues.length];
@@ -251,7 +250,7 @@ public class CalcRDisp extends FitModel {
         reportFitness = false;
         int nPar = start.length;
         int nSim = CoMDPreferences.getSampleSize();
-        parValues = new double[nPar][nSim];
+        parValues = new double[nPar + 1][nSim];
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
         double[] yPred = simY(start);
@@ -272,6 +271,8 @@ public class CalcRDisp extends FitModel {
             for (int j = 0; j < nPar; j++) {
                 parValues[j][i] = rPoint[j];
             }
+            parValues[nPar][i] = result.getValue();
+
             if (equation == CPMGEquation.CPMGSLOW) {
                 for (int j = 0; j < map.length; j++) {
                     rexValues[j][i] = equation.getRex(result.getPoint(), map[j]);

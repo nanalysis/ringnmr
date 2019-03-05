@@ -450,11 +450,10 @@ public class CESTEquations {
         return result;
     }
 
-    public static double[][] cestPeakGuess(double[][] xvals, double[] yvals, double field) {
+    public static double[][] cestPeakGuess(double[] xvals, double[] yvals, double field) {
         // Estimates CEST peak positions for initial guesses for before fitting.
 
         List<Peak> peaks = new ArrayList<>();
-        double B1val = xvals[1][0];
 
         double[] syvals = new double[yvals.length];
         double[] baseValues = getBaseline(yvals);
@@ -489,7 +488,7 @@ public class CESTEquations {
         for (int i = nP; i < yvals.length - nP; i++) {
             if (yvals[i] < yMin) {
                 yMin = yvals[i];
-                xAtYMin = xvals[0][i];
+                xAtYMin = xvals[i];
             }
             if (yvals[i] < threshold) {
                 boolean ok = true;
@@ -536,10 +535,10 @@ public class CESTEquations {
                             break;
                         }
                         double delta = dLow + dUp;
-                        halfPos[k] = xvals[0][iLow] * dUp / delta + xvals[0][iUp] * dLow / delta;
+                        halfPos[k] = xvals[iLow] * dUp / delta + xvals[iUp] * dLow / delta;
                     }
                     if (ok) {
-                        double xCenter = xvals[0][iCenter];
+                        double xCenter = xvals[iCenter];
                         double yCenter = yvals[iCenter];
                         double width = Math.abs(halfPos[0] - halfPos[1]) * field;
                         double widthL = Math.abs(halfPos[0] - xCenter) * field;
@@ -550,9 +549,6 @@ public class CESTEquations {
                 }
             }
 
-            if (xvals[1][i] != B1val) {
-                break;
-            }
         }
 
         peaks.sort(Comparator.comparingDouble(Peak::getDepth));
@@ -755,4 +751,65 @@ public class CESTEquations {
 //        }
         return r1;
     }
+
+    public static double[][] getXYValues(double[][] xValues, double[] yValues, int[] idNums, int id) {
+        int n = 0;
+        for (int i = 0; i < idNums.length; i++) {
+            if (idNums[i] == id) {
+                n++;
+            }
+        }
+        double[][] result = new double[2][n];
+        int j = 0;
+        for (int i = 0; i < idNums.length; i++) {
+            if (idNums[i] == id) {
+                result[0][j] = xValues[0][i];
+                result[1][j] = yValues[i];
+                j++;
+            }
+        }
+        return result;
+
+    }
+
+    public static int[] getIndicies(int[] idNums, int id) {
+        int n = 0;
+        for (int i = 0; i < idNums.length; i++) {
+            if (idNums[i] == id) {
+                n++;
+            }
+        }
+        int[] result = new int[n];
+        int j = 0;
+        for (int i = 0; i < idNums.length; i++) {
+            if (idNums[i] == id) {
+                result[j] = i;
+                j++;
+            }
+        }
+        return result;
+
+    }
+
+    public static double[][] getXValues(double[][] xValues, int[] idNums, int id) {
+        int n = 0;
+        for (int i = 0; i < idNums.length; i++) {
+            if (idNums[i] == id) {
+                n++;
+            }
+        }
+        double[][] result = new double[xValues.length][n];
+        int j = 0;
+        for (int i = 0; i < idNums.length; i++) {
+            if (idNums[i] == id) {
+                for (int k = 0; k < xValues.length; k++) {
+                    result[k][j] = xValues[k][i];
+                }
+                j++;
+            }
+        }
+        return result;
+
+    }
+
 }

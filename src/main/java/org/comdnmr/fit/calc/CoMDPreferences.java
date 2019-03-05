@@ -19,6 +19,12 @@ public class CoMDPreferences {
 
     static private Double cpmgMaxFreq = null;
     static private Double rexRatio = null;
+    static private Double startRadius = null;
+    static private Double finalRadius = null;
+    static private Double tolerance = null;
+    static private Boolean weightFit = null;
+    static private Boolean absValueFit = null;
+    static private Boolean nonParametricBootstrap = null;
     static private Integer sampleSize = null;
     static private String optimizer = null;
     static private String bootStrapOptimizer = null;
@@ -114,6 +120,108 @@ public class CoMDPreferences {
             getPrefs().put("REX_RATIO", value.toString());
         } else {
             getPrefs().remove("REX_RATIO");
+        }
+    }
+
+    public static Double getStartingRadius() {
+        if (startRadius == null) {
+            String value = getPrefs().get("START_RADIUS", "20.0");
+            startRadius = Double.parseDouble(value);
+        }
+        return startRadius;
+    }
+
+    public static void setStartingRadius(Double value) {
+        startRadius = value;
+        if (value != null) {
+            getPrefs().put("START_RADIUS", value.toString());
+        } else {
+            getPrefs().remove("START_RADIUS");
+        }
+    }
+
+    public static Double getFinalRadius() {
+        if (finalRadius == null) {
+            String value = getPrefs().get("FINAL_RADIUS", "-5");
+            finalRadius = Double.parseDouble(value);
+        }
+        return finalRadius;
+    }
+
+    public static void setFinalRadius(Double value) {
+        finalRadius = value;
+        if (value != null) {
+            getPrefs().put("FINAL_RADIUS", value.toString());
+        } else {
+            getPrefs().remove("FINAL_RADIUS");
+        }
+    }
+
+    public static Double getTolerance() {
+        if (tolerance == null) {
+            String value = getPrefs().get("TOLERANCE", "-5");
+            tolerance = Double.parseDouble(value);
+        }
+        return tolerance;
+    }
+
+    public static void setTolerance(Double value) {
+        tolerance = value;
+        if (value != null) {
+            getPrefs().put("TOLERANCE", value.toString());
+        } else {
+            getPrefs().remove("TOLERANCE");
+        }
+    }
+
+    public static Boolean getWeightFit() {
+        if (weightFit == null) {
+            String value = getPrefs().get("WEIGHT_FIT", "true");
+            weightFit = Boolean.parseBoolean(value);
+        }
+        return weightFit;
+    }
+
+    public static void setWeightFit(Boolean value) {
+        weightFit = value;
+        if (value != null) {
+            getPrefs().put("WEIGHT_FIT", value.toString());
+        } else {
+            getPrefs().remove("WEIGHT_FIT");
+        }
+    }
+
+    public static Boolean getAbsValueFit() {
+        if (absValueFit == null) {
+            String value = getPrefs().get("ABSVAL_FIT", "true");
+            absValueFit = Boolean.parseBoolean(value);
+        }
+        return absValueFit;
+    }
+
+    public static void setAbsValueFit(Boolean value) {
+        absValueFit = value;
+        if (value != null) {
+            getPrefs().put("ABSVAL_FIT", value.toString());
+        } else {
+            getPrefs().remove("ABSVAL_FIT");
+        }
+    }
+
+    public static Boolean getNonParametetric() {
+        if (nonParametricBootstrap == null) {
+            String value = getPrefs().get("NONPARAMETRIC", "true");
+            nonParametricBootstrap = Boolean.parseBoolean(value);
+        }
+        return nonParametricBootstrap;
+    }
+
+    public static void setNonParametetric(Boolean value) {
+        nonParametricBootstrap = value;
+        if (value != null) {
+            getPrefs().put("NONPARAMETRIC", value.toString());
+        } else {
+            getPrefs().remove("NONPARAMETRIC");
         }
     }
 

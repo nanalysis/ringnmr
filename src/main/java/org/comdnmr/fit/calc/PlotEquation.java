@@ -69,6 +69,16 @@ public class PlotEquation {
         return y;
     }
 
+    public double getMinX() {
+        EquationType equationType = ResidueFitter.getEquationType(name);
+        return equationType.getMinX();
+    }
+
+    public double getMaxX() {
+        EquationType equationType = ResidueFitter.getEquationType(name);
+        return equationType.getMaxX();
+    }
+
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();

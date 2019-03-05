@@ -62,7 +62,6 @@ public class R1RhoFit implements EquationFitter {
         return index;
     }
 
-    // public void setData(Collection<ExperimentData> expDataList, String[] resNums) {
     @Override
     public void setData(ResidueProperties resProps, String[] resNums) {
         xValues = new ArrayList[3];
@@ -71,21 +70,18 @@ public class R1RhoFit implements EquationFitter {
         xValues[2] = new ArrayList<>();
         this.resNums = resNums.clone();
         nResidues = resNums.length;
-        int id = 0;
         resProps.setupMaps();
         stateCount = resProps.getStateCount(resNums.length);
         Collection<ExperimentData> expDataList = resProps.getExperimentData();
         nCurves = resNums.length * expDataList.size();
-
-        // fixme??
-        nCurves = resNums.length;
         states = new int[nCurves][];
         int k = 0;
         int resIndex = 0;
+        int id = 0;
         List<Double> fieldList = new ArrayList<>();
         for (String resNum : resNums) {
             for (ExperimentData expData : expDataList) {
-                states[k] = resProps.getStateIndices(resIndex, expData);
+                states[k++] = resProps.getStateIndices(resIndex, expData);
                 ResidueData resData = expData.getResidueData(resNum);
                 if (resData != null) {
                     //  need peakRefs
@@ -105,9 +101,9 @@ public class R1RhoFit implements EquationFitter {
                         idValues.add(id);
                     }
                     // fixme ?? id++;
+                    id++;
                 }
             }
-            k++;
             resIndex++;
         }
         usedFields = new double[fieldList.size()];
@@ -200,7 +196,7 @@ public class R1RhoFit implements EquationFitter {
     }
 
     @Override
-    public void setupFit(String eqn, boolean absMode) {
+    public void setupFit(String eqn) {
         double[][] x = new double[3][yValues.size()];
         double[] y = new double[yValues.size()];
         double[] err = new double[yValues.size()];
@@ -217,8 +213,6 @@ public class R1RhoFit implements EquationFitter {
             idNums[i] = idValues.get(i);
         }
         calcR1Rho.setEquation(eqn);
-        calcR1Rho.setAbsMode(absMode);
-
         calcR1Rho.setXY(x, y);
         calcR1Rho.setIds(idNums);
         calcR1Rho.setErr(err);
@@ -228,8 +222,8 @@ public class R1RhoFit implements EquationFitter {
     }
 
     @Override
-    public List<ParValueInterface> guessPars(String eqn, boolean absMode) {
-        setupFit(eqn, absMode);
+    public List<ParValueInterface> guessPars(String eqn) {
+        setupFit(eqn);
         double[] guesses = calcR1Rho.guess();
         String[] parNames = calcR1Rho.getParNames();
         List<ParValueInterface> parValues = new ArrayList<>();
@@ -248,9 +242,10 @@ public class R1RhoFit implements EquationFitter {
     }
 
     @Override
-    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderguesses) {
+    public CPMGFitResult doFit(String eqn, double[] sliderguesses) {
         double[][] xvals = new double[xValues.length][xValues[0].size()];
         double[] yvals = new double[yValues.size()];
+        int[] idNums = new int[yValues.size()];
         for (int i = 0; i < xvals.length; i++) {
             for (int j = 0; j < xvals[0].length; j++) {
                 xvals[i][j] = xValues[i].get(j);
@@ -258,10 +253,12 @@ public class R1RhoFit implements EquationFitter {
         }
         for (int i = 0; i < yvals.length; i++) {
             yvals[i] = yValues.get(i);
+            idNums[i] = idValues.get(i);
         }
-        double[][] peaks = R1RhoEquations.r1rhoPeakGuess(xvals, yvals, fieldValues.get(0));
+        double[][] xy = CESTEquations.getXYValues(xvals, yvals, idNums, 0);
+        double[][] peaks = R1RhoEquations.r1rhoPeakGuess(xy[0], xy[1], fieldValues.get(0));
         if (peaks.length >= 1) {
-            setupFit(eqn, absMode);
+            setupFit(eqn);
             int[][] map = calcR1Rho.getMap();
             double[] guesses;
             if (sliderguesses != null) {
@@ -273,9 +270,9 @@ public class R1RhoFit implements EquationFitter {
             //        System.out.println("dofit guesses = " + guesses);
             //        double[] guesses = setupFit(eqn, absMode);
             double[][] boundaries = calcR1Rho.boundaries(guesses);
-            double sigma = FitModel.SIGMA_DEFAULT;
+            double sigma = CoMDPreferences.getStartingRadius();
             for (int i = 0; i < guesses.length; i++) {
-                System.out.println(i + " map " + map[0][i] + " bou0 " + boundaries[0][i] + " bou1 " + boundaries[1][i] + " gue " + guesses[i]);
+                System.out.println(i + " bou0 " + boundaries[0][i] + " bou1 " + boundaries[1][i] + " gue " + guesses[i]);
             }
             PointValuePair result = calcR1Rho.refine(guesses, boundaries[0],
                     boundaries[1], sigma, CoMDPreferences.getOptimizer());
@@ -307,7 +304,7 @@ public class R1RhoFit implements EquationFitter {
             double[][] simPars = null;
             if (FitModel.getCalcError()) {
                 long startTime = System.currentTimeMillis();
-                if (nonParBootStrap) {
+                if (CoMDPreferences.getNonParametetric()) {
                     errEstimates = calcR1Rho.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
                     long endTime = System.currentTimeMillis();
                     errTime = endTime - startTime;

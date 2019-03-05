@@ -71,21 +71,18 @@ public class CESTFit implements EquationFitter {
         xValues[2] = new ArrayList<>();
         this.resNums = resNums.clone();
         nResidues = resNums.length;
-        int id = 0;
         resProps.setupMaps();
         stateCount = resProps.getStateCount(resNums.length);
         Collection<ExperimentData> expDataList = resProps.getExperimentData();
         nCurves = resNums.length * expDataList.size();
-
-        // fixme??
-        nCurves = resNums.length;
         states = new int[nCurves][];
         int k = 0;
         int resIndex = 0;
+        int id = 0;
         List<Double> fieldList = new ArrayList<>();
         for (String resNum : resNums) {
             for (ExperimentData expData : expDataList) {
-                states[k] = resProps.getStateIndices(resIndex, expData);
+                states[k++] = resProps.getStateIndices(resIndex, expData);
                 ResidueData resData = expData.getResidueData(resNum);
                 if (resData != null) {
                     //  need peakRefs
@@ -105,9 +102,9 @@ public class CESTFit implements EquationFitter {
                         idValues.add(id);
                     }
                     // fixme ?? id++;
+                    id++;
                 }
             }
-            k++;
             resIndex++;
         }
         usedFields = new double[fieldList.size()];
@@ -181,12 +178,9 @@ public class CESTFit implements EquationFitter {
     }
 
     public static List<String> getEquationNames() {
-        return equationNameList;
-    }
-
-    public static List<String> setEquationNames(List<String> eqnNames) {
-        equationNameList = eqnNames;
-        return equationNameList;
+        List<String> activeEquations = CoMDPreferences.getActiveCESTEquations();
+        System.out.println(activeEquations.toString());
+        return activeEquations;
     }
 
     @Override
@@ -200,7 +194,7 @@ public class CESTFit implements EquationFitter {
     }
 
     @Override
-    public void setupFit(String eqn, boolean absMode) {
+    public void setupFit(String eqn) {
         double[][] x = new double[3][yValues.size()];
         double[] y = new double[yValues.size()];
         double[] err = new double[yValues.size()];
@@ -217,8 +211,6 @@ public class CESTFit implements EquationFitter {
             idNums[i] = idValues.get(i);
         }
         calcCEST.setEquation(eqn);
-        calcCEST.setAbsMode(absMode);
-
         calcCEST.setXY(x, y);
         calcCEST.setIds(idNums);
         calcCEST.setErr(err);
@@ -228,8 +220,8 @@ public class CESTFit implements EquationFitter {
     }
 
     @Override
-    public List<ParValueInterface> guessPars(String eqn, boolean absMode) {
-        setupFit(eqn, absMode);
+    public List<ParValueInterface> guessPars(String eqn) {
+        setupFit(eqn);
         double[] guesses = calcCEST.guess();
         String[] parNames = calcCEST.getParNames();
         List<ParValueInterface> parValues = new ArrayList<>();
@@ -248,9 +240,10 @@ public class CESTFit implements EquationFitter {
     }
 
     @Override
-    public CPMGFitResult doFit(String eqn, boolean absMode, boolean nonParBootStrap, double[] sliderguesses) {
+    public CPMGFitResult doFit(String eqn, double[] sliderguesses) {
         double[][] xvals = new double[xValues.length][xValues[0].size()];
         double[] yvals = new double[yValues.size()];
+        int[] idNums = new int[yValues.size()];
         for (int i = 0; i < xvals.length; i++) {
             for (int j = 0; j < xvals[0].length; j++) {
                 xvals[i][j] = xValues[i].get(j);
@@ -258,10 +251,13 @@ public class CESTFit implements EquationFitter {
         }
         for (int i = 0; i < yvals.length; i++) {
             yvals[i] = yValues.get(i);
+            idNums[i] = idValues.get(i);
         }
-        double[][] peaks = CESTEquations.cestPeakGuess(xvals, yvals, fieldValues.get(0));
+        double[][] xy = CESTEquations.getXYValues(xvals, yvals, idNums, 0);
+        double[][] peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], fieldValues.get(0));
+
         if (peaks.length >= 1) {
-            setupFit(eqn, absMode);
+            setupFit(eqn);
             int[][] map = calcCEST.getMap();
             double[] guesses;
             if (sliderguesses != null) {
@@ -273,7 +269,7 @@ public class CESTFit implements EquationFitter {
             //        System.out.println("dofit guesses = " + guesses);
             //        double[] guesses = setupFit(eqn, absMode);
             double[][] boundaries = calcCEST.boundaries(guesses);
-            double sigma = FitModel.SIGMA_DEFAULT;
+            double sigma = CoMDPreferences.getStartingRadius();
             PointValuePair result = calcCEST.refine(guesses, boundaries[0],
                     boundaries[1], sigma, CoMDPreferences.getOptimizer());
             double[] pars = result.getPoint();
@@ -305,7 +301,7 @@ public class CESTFit implements EquationFitter {
             double[][] simPars = null;
             if (FitModel.getCalcError()) {
                 long startTime = System.currentTimeMillis();
-                if (nonParBootStrap) {
+                if (CoMDPreferences.getNonParametetric()) {
                     errEstimates = calcCEST.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
                     long endTime = System.currentTimeMillis();
                     errTime = endTime - startTime;
@@ -341,11 +337,13 @@ public class CESTFit implements EquationFitter {
     public double[] getSimX() {
         int nPoints = 100;
         double[] x = new double[nPoints];
-        double firstValue = -5000.0;
+        double firstValue = -8.0;
+        double lastValue = 8.0;
+        double delta = (lastValue - firstValue) / (nPoints + 1);
         double value = firstValue;
         for (int i = 0; i < nPoints; i++) {
             x[i] = value;
-            value += 2.0 * Math.abs(firstValue) / (nPoints - 1);
+            value += delta;
 
         }
         return x;

@@ -66,11 +66,19 @@ public class CalcCEST extends FitModel {
 
         double sumAbs = 0.0;
         double sumSq = 0.0;
-        double[] yCalc = equation.calculate(par, map[0], xValues, 0, fields[0]);
+        double[] yCalc = new double[yValues.length];
+        for (int id = 0; id < map.length; id++) {
+            double[][] x = CESTEquations.getXValues(xValues, idNums, id);
+            double[] yCalc1 = equation.calculate(par, map[id], x, id, fields[0]); // fixme what about field
+            int[] indicies = CESTEquations.getIndicies(idNums, id);
+            for (int i = 0; i < indicies.length; i++) {
+                yCalc[indicies[i]] = yCalc1[i];
+            }
+        }
 
         for (int i = 0; i < yValues.length; i++) {
             double delta = (yCalc[i] - yValues[i]);
-            if (weightByError) {
+            if (weightFit) {
                 delta /= errValues[i];
             }
             sumAbs += FastMath.abs(delta);
@@ -103,7 +111,7 @@ public class CalcCEST extends FitModel {
         reportFitness = false;
         int nPar = start.length;
         int nSim = CoMDPreferences.getSampleSize();
-        parValues = new double[nPar][nSim];
+        parValues = new double[nPar + 1][nSim];
         double[] yPred = getPredicted(start);
         double[] yValuesOrig = yValues.clone();
         double[][] rexValues = new double[nID][nSim];
@@ -119,6 +127,8 @@ public class CalcCEST extends FitModel {
             for (int j = 0; j < nPar; j++) {
                 parValues[j][i] = rPoint[j];
             }
+            parValues[nPar][i] = result.getValue();
+
         }
         double[] parSDev = new double[nPar];
         for (int i = 0; i < nPar; i++) {
@@ -136,7 +146,7 @@ public class CalcCEST extends FitModel {
         reportFitness = false;
         int nPar = start.length;
         int nSim = CoMDPreferences.getSampleSize();
-        parValues = new double[nPar][nSim];
+        parValues = new double[nPar + 1][nSim];
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
         double[] yPred = getPredicted(start);
@@ -146,7 +156,6 @@ public class CalcCEST extends FitModel {
 //        IntStream.range(0, nSim).forEach(i -> {
             CalcCEST rDisp = new CalcCEST(xValues, yPred, errValues, fieldValues, fields, idNums);
             rDisp.setEquation(equation.getName());
-            rDisp.setAbsMode(absMode);
             double[] newY = new double[yValues.length];
             for (int k = 0; k < yValues.length; k++) {
                 newY[k] = yPred[k] + errValues[k] * random.nextGaussian();
@@ -161,6 +170,7 @@ public class CalcCEST extends FitModel {
             for (int j = 0; j < nPar; j++) {
                 parValues[j][i] = rPoint[j];
             }
+            parValues[nPar][i] = result.getValue();
         });
 
         double[] parSDev = new double[nPar];
@@ -176,7 +186,7 @@ public class CalcCEST extends FitModel {
         reportFitness = false;
         int nPar = start.length;
         int nSim = CoMDPreferences.getSampleSize();
-        parValues = new double[nPar][nSim];
+        parValues = new double[nPar + 1][nSim];
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
         String optimizer = CoMDPreferences.getBootStrapOptimizer();
@@ -184,7 +194,6 @@ public class CalcCEST extends FitModel {
         IntStream.range(0, nSim).parallel().forEach(i -> {
             CalcCEST rDisp = new CalcCEST(xValues, yValues, errValues, fieldValues, fields, idNums);
             rDisp.setEquation(equation.getName());
-            rDisp.setAbsMode(absMode);
             double[][] newX = new double[3][yValues.length];
             double[] newY = new double[yValues.length];
             double[] newErr = new double[yValues.length];
@@ -217,6 +226,7 @@ public class CalcCEST extends FitModel {
             for (int j = 0; j < nPar; j++) {
                 parValues[j][i] = rPoint[j];
             }
+            parValues[nPar][i] = result.getValue();
         });
 
         double[] parSDev = new double[nPar];

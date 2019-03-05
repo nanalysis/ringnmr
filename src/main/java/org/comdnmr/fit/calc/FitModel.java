@@ -29,7 +29,6 @@ public abstract class FitModel implements MultivariateFunction {
 
     // fixme is there a thread safe RandomGenerator
     public final RandomGenerator DEFAULT_RANDOMGENERATOR = new MersenneTwister(1);
-    static double SIGMA_DEFAULT = 10.0;
     int reportAt = 10;
 
     EquationType equation;
@@ -45,12 +44,12 @@ public abstract class FitModel implements MultivariateFunction {
     int[][] map;
     int nID = 1;
     boolean reportFitness = false;
-    boolean absMode = false;
-    boolean weightByError = true;
+    final boolean absMode = CoMDPreferences.getAbsValueFit();
     private static boolean calcError = true;
     double[][] parValues;
     double[] lowerBounds;
     double[] upperBounds;
+    final boolean weightFit = CoMDPreferences.getWeightFit();
 
     public class Checker extends SimpleValueChecker {
 
@@ -97,7 +96,8 @@ public abstract class FitModel implements MultivariateFunction {
         int nSteps = 2000;
         double stopFitness = 0.0;
         int diagOnly = 0;
-        double tol = 1.0e-5;
+        double tol = CoMDPreferences.getTolerance();
+        tol = Math.pow(10.0, tol);
         double[] normLower = new double[guess.length];
         double[] normUpper = new double[guess.length];
         double[] sigma = new double[guess.length];
@@ -105,6 +105,8 @@ public abstract class FitModel implements MultivariateFunction {
         Arrays.fill(normUpper, 100.0);
         Arrays.fill(sigma, inputSigma);
         double[] normGuess = normalize(guess);
+        fixGuesses(normGuess);
+
         //new Checker(100 * Precision.EPSILON, 100 * Precision.SAFE_MIN, nSteps));
         CMAESOptimizer optimizer = new CMAESOptimizer(nSteps, stopFitness, true, diagOnly, 0,
                 DEFAULT_RANDOMGENERATOR, true,
@@ -140,18 +142,20 @@ public abstract class FitModel implements MultivariateFunction {
         int nSteps = 2000;
         double stopFitness = 0.0;
         int diagOnly = 0;
-        double tol = 1.0e-5;
         double[] normLower = new double[guess.length];
         double[] normUpper = new double[guess.length];
         Arrays.fill(normLower, 0.0);
         Arrays.fill(normUpper, 100.0);
         double[] normGuess = normalize(guess);
+        fixGuesses(normGuess);
         //new Checker(100 * Precision.EPSILON, 100 * Precision.SAFE_MIN, nSteps));
 
         int n = guess.length;
         int nInterp = 2 * n + 1;
         double initialRadius = inputSigma;
-        double stopRadius = 1.0e-5;
+        double stopRadius = CoMDPreferences.getFinalRadius();
+        stopRadius = Math.pow(10.0, stopRadius);
+
         BOBYQAOptimizer optimizer = new BOBYQAOptimizer(nInterp, initialRadius, stopRadius);
         PointValuePair result = null;
 
@@ -169,6 +173,16 @@ public abstract class FitModel implements MultivariateFunction {
         PointValuePair deNormResult = new PointValuePair(deNormalize(result.getPoint()), result.getValue());
 
         return deNormResult;
+    }
+
+    void fixGuesses(double[] guesses) {
+        for (int i = 0; i < guesses.length; i++) {
+            if (guesses[i] > 98.0) {
+                guesses[i] = 98.0;
+            } else if (guesses[i] < 2) {
+                guesses[i] = 2.0;
+            }
+        }
     }
 
     double[] normalize(double[] pars) {
@@ -318,10 +332,6 @@ public abstract class FitModel implements MultivariateFunction {
         return rss / (yValues.length - par.length);
     }
 
-    public void setAbsMode(boolean value) {
-        this.absMode = value;
-    }
-
     public double[] getPredicted(double[] par) {
         double[] yPred = simY(par);
         return yPred;
@@ -332,8 +342,28 @@ public abstract class FitModel implements MultivariateFunction {
     }
 
     public void setMap(int[] stateCount, int[][] states) {
+        System.out.println("states ");
+        for (int i=0;i<states.length;i++) {
+            for (int j=0;j<states[i].length;j++) {
+                System.out.print(states[i][j] + " ");
+             }
+            System.out.println("");
+        }
+        System.out.println(" stateCount");
+        for (int j=0;j<stateCount.length;j++) {
+            System.out.print(stateCount[j] + " ");
+        }
+        System.out.println(" ");
         this.map = new int[states.length][stateCount.length];
         this.map = equation.makeMap(stateCount, states, getMask());
+        System.out.println("map ");
+        for (int i=0;i<map.length;i++) {
+            for (int j=0;j<map[i].length;j++) {
+                System.out.print(map[i][j] + " ");
+             }
+            System.out.println("");
+         }
+        System.out.println("done ");
     }
 
     public int[][] getMap() {
