@@ -11,9 +11,57 @@ import java.util.List;
  */
 public class ExperimentData {
 
+    public enum Nuclei {
+
+        H1("H", 1, "1/2", 99.98, 1.00000) {
+        },
+        F19("F", 19, "1/2", 100, 0.94077) {
+        },
+        P31("P", 31, "1/2", 100, 0.40481) {
+        },
+        C13("C", 13, "1/2", 1.108, 0.25144) {
+        },
+        N15("N", 15, "1/2", 0.37, 0.10133) {
+        };
+        String name;
+        int num;
+        int spin;
+        double abundance;
+        double freqRatio;
+
+        public double getRatio() {
+            return freqRatio;
+        }
+
+        Nuclei(final String name, final int num, final String spin, final double abundance, final double freqRatio) {
+            this.name = name;
+            this.num = num;
+            this.spin = Integer.parseInt(spin.substring(0, 1));
+            this.abundance = abundance;
+            this.freqRatio = freqRatio;
+        }
+
+        public static Nuclei get(String name) {
+            Nuclei nuc = null;
+            try {
+                nuc = valueOf(name);
+            } catch (IllegalArgumentException iaE) {
+                for (Nuclei testNuc : values()) {
+                    if (testNuc.name.equals(name)) {
+                        nuc = testNuc;
+                        break;
+                    }
+                }
+            }
+            return nuc;
+        }
+
+    }
+
     String name;
     HashMap<String, ResidueData> residueData;
     final double field;
+    final double nucleusField;
     final double temperature;
     final Double tau;
     final double[] xvals;
@@ -22,7 +70,7 @@ public class ExperimentData {
     final double[] delayCalc;
     final Double B1field;
     double errFraction = 0.05;
-    final String nucleus;
+    final String nucleusName;
     List<Double> extras = new ArrayList<>();
     private String state = "";
 
@@ -38,9 +86,15 @@ public class ExperimentData {
         this.delayCalc = delayCalc;
         this.B1field = B1field;
         if (nucleus == null) {
-            nucleus = "H";
+            nucleus = "H1";
         }
-        this.nucleus = nucleus;
+        this.nucleusName = nucleus;
+        double ratio = 1.0;
+        Nuclei nuc = Nuclei.get(nucleusName);
+        if (nuc != null) {
+            ratio = nuc.getRatio();
+        }
+        nucleusField = field * ratio;
         residueData = new HashMap<>();
     }
 
@@ -78,6 +132,10 @@ public class ExperimentData {
 
     public double getField() {
         return field;
+    }
+
+    public double getNucleusField() {
+        return nucleusField;
     }
 
     /**
