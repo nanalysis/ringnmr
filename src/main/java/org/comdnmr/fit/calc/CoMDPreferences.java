@@ -17,6 +17,7 @@ import java.util.prefs.Preferences;
  */
 public class CoMDPreferences {
 
+    static private Double refField = null;
     static private Double cpmgMaxFreq = null;
     static private Double rexRatio = null;
     static private Double startRadius = null;
@@ -53,6 +54,23 @@ public class CoMDPreferences {
         } else {
             getPrefs().remove("CPMG_MAX_FREQ");
         }
+    }
+
+    public static void setRefField(Double value) {
+        refField = value;
+        if (value != null) {
+            getPrefs().put("REF_FIELD", value.toString());
+        } else {
+            getPrefs().remove("REF_FIELD");
+        }
+    }
+
+    public static Double getRefField() {
+        if (refField == null) {
+            String value = getPrefs().get("REF_FIELD", "500.0");
+            refField = Double.parseDouble(value);
+        }
+        return refField;
     }
 
     public static Integer getSampleSize() {
