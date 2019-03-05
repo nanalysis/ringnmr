@@ -21,7 +21,6 @@ public class MainApp extends Application {
     public static InteractiveInterpreter interpreter = new InteractiveInterpreter();
     public static PreferencesController preferencesController;
     public static ConsoleRedirect console;
-    public static ChooseCESTFitEquations CESTEquationChooser;
 
     public static void main(String[] args) throws ScriptException {
         engine = new ScriptEngineManager().getEngineByName("jython");
@@ -63,9 +62,5 @@ public class MainApp extends Application {
 
     public static void setConsoleController(ConsoleRedirect controller) {
         console = controller;
-    }
-
-    public static void setCESTEquationController(ChooseCESTFitEquations controller) {
-        CESTEquationChooser = controller;
     }
 }

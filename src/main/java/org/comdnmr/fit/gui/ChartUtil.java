@@ -2,20 +2,19 @@ package org.comdnmr.fit.gui;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.TreeSet;
 import java.util.stream.Stream;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -39,6 +38,9 @@ import org.comdnmr.fit.calc.PlotEquation;
 import org.comdnmr.fit.calc.ResidueInfo;
 import org.comdnmr.fit.calc.ResidueProperties;
 import org.comdnmr.fit.calc.ResidueData;
+import org.nmrfx.chart.DataSeries;
+import org.nmrfx.chart.XYEValue;
+import org.nmrfx.chart.XYValue;
 
 public class ChartUtil {
 
@@ -223,12 +225,12 @@ public class ChartUtil {
         return data;
     }
 
-    public static List<XYChart.Series<Double, Double>> getMapData(String seriesName, String expName, String[] residues) {
+    public static List<DataSeries> getMapData(String seriesName, String expName, String[] residues) {
         ResidueProperties resProps = residueProperties.get(seriesName);
         ExperimentData expData = resProps.getExperimentData(expName);
-        List<XYChart.Series<Double, Double>> data = new ArrayList<>();
+        List<DataSeries> data = new ArrayList<>();
         for (String resNum : residues) {
-            Series<Double, Double> series = new Series<>();
+            DataSeries series = new DataSeries();
             series.setName(expName + ":" + resNum);
             data.add(series);
             ResidueData resData = expData.getResidueData(resNum);
@@ -240,9 +242,10 @@ public class ChartUtil {
                 for (int i = 0; i < nValues; i++) {
                     double x = xValues[0][i];
                     double y = yValues[i];
-                    XYChart.Data dataPoint = new XYChart.Data(x, y);
+                    double err = errValues[i];
+                    XYValue dataPoint = new XYEValue(x, y, err);
                     dataPoint.setExtraValue(resData.getDataValues().get(i));
-                    series.getData().add(dataPoint);
+                    series.add(dataPoint);
                 }
             }
         }
@@ -312,16 +315,26 @@ public class ChartUtil {
         return resInfo;
     }
 
-    public static ObservableList<XYChart.Series<Double, Double>> getParMapData(String mapName, String eqnName, String state, String parName) {
+    public static ObservableList<DataSeries> getParMapData(String mapName, String eqnName, String state, String parName) {
         ResidueProperties residueProps = residueProperties.get(mapName);
-        ObservableList<XYChart.Series<Double, Double>> data = FXCollections.observableArrayList();
+        ObservableList<DataSeries> data = FXCollections.observableArrayList();
 
-        Series<Double, Double> series = new Series<>();
+        DataSeries series = new DataSeries();
         series.setName(mapName + '|' + eqnName + "|" + state + "|" + parName);
         data.add(series);
         minRes = Integer.MAX_VALUE;
         maxRes = Integer.MIN_VALUE;
+        Collection<ExperimentData> expDataSets = residueProps.getExperimentData();
+        for (ExperimentData expData : expDataSets) {
+            for (String resNumS : expData.getResidues()) {
+                int resNum = Integer.parseInt(resNumS);
+                minRes = Math.min(resNum, minRes);
+                maxRes = Math.max(resNum, maxRes);
+            }
+        }
+
         List<ResidueInfo> resValues = residueProps.getResidueValues();
+
         for (ResidueInfo resInfo : resValues) {
             String useEquName = eqnName;
             if (resInfo == null) {
@@ -332,8 +345,6 @@ public class ChartUtil {
                 useEquName = resInfo.getBestEquationName();
             }
             int resNum = resInfo.getResNum();
-            minRes = Math.min(resNum, minRes);
-            maxRes = Math.max(resNum, maxRes);
             double x = resNum;
             Double errUp = null;
             Double y = resInfo.getParValue(useEquName, state, parName);
@@ -371,14 +382,14 @@ public class ChartUtil {
                 extra = new ErrorExtraValues(25, 0.0, 0.0);
             }
 
-            XYChart.Data dataPoint = new XYChart.Data(x, y, extra);
+            XYEValue dataPoint = new XYEValue(x, y, errUp);
             series.getData().add(dataPoint);
         }
         return data;
     }
 
     public static void loadParameters(String fileName) {
-        XYBarChart reschartNode = PyController.mainController.getActiveChart();
+        ResidueChart reschartNode = PyController.mainController.getActiveChart();
         if (reschartNode == null) {
             reschartNode = PyController.mainController.addChart();
 
@@ -406,7 +417,7 @@ public class ChartUtil {
         if (resProp.getExpMode().equals("exp")) {
             parName = "R";
         }
-        ObservableList<XYChart.Series<Double, Double>> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
+        ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
         PyController.mainController.currentResProps = resProp;
         PyController.mainController.makeAxisMenu();
         PyController.mainController.setYAxisType(resProp.getName(), "best", "0:0:0", parName);

@@ -308,13 +308,6 @@ public class CPMGControls implements EquationControls {
         double field2 = FIELD2.getValue();
         int nPars = CalcRDisp.getNPars(map);
         double[] guesses = new double[nPars];
-        System.out.println(equationName + " nPars " + nPars);
-        for (int i = 0; i < map.length; i++) {
-            for (int j = 0; j < map[i].length; j++) {
-                System.out.print(map[i][j] + " ");
-            }
-            System.out.println(" i " + i);
-        }
         switch (equationName) {
             case "NOEX":
                 for (int id = 0; id < map.length; id++) {
@@ -330,9 +323,6 @@ public class CPMGControls implements EquationControls {
                 break;
             case "CPMGSLOW":
                 for (int id = 0; id < map.length; id++) {
-                    System.out.println("id " + id + " " + map[id].length);
-                    System.out.println(map[id][2]);
-                    System.out.println(map[id][3]);
                     guesses[map[id][2]] = r2;
                     guesses[map[id][3]] = dPPM;
                 }
@@ -340,9 +330,6 @@ public class CPMGControls implements EquationControls {
                 guesses[1] = pA;
                 break;
         }
-//        for(int i=0; i<guesses.length; i++){
-//            System.out.println("slider guess: " + i + " " + guesses[i]);
-//        }
         return guesses;
 
     }

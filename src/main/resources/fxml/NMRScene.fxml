@@ -8,6 +8,8 @@
 <?import javafx.scene.layout.*?>
 <?import org.comdnmr.fit.gui.*?>
 <?import org.controlsfx.control.*?>
+<?import org.nmrfx.chart.XYChartPane?>
+
 
 
 <?language python?>
@@ -23,7 +25,7 @@
                             <MenuItem text="Load Project File..." onAction="#loadParameterFile" fx:id="loadMenuItem"/>
                             <MenuItem text="Input Project Parameters..." onAction="#inputParameters" fx:id="inputMenuItem"/>
                             <MenuItem text="Connect to NMRFx Server..." onAction="#startServer" fx:id = "serverMenuItem"/>
-                            <MenuItem text="Load Secondary Structure..." onAction="loadSecondaryStructure(event)" fx:id="loadSSMenuItem"/>
+                            <MenuItem text="Load Secondary Structure..." onAction="#loadSecondaryStructure" fx:id="loadSSMenuItem"/>
                             <Menu text="Save">
                                 <items>
                                     <MenuItem text="Save Analysis..." onAction="#saveParameters" fx:id="savePars"/>
@@ -44,7 +46,10 @@
                                     <MenuItem text="Save R File..." onAction="#saveBarToRFile"/>                            
                                 </items>
                             </Menu>
+                            
                             <MenuItem text="Print XY Chart..." onAction="#printXYChart"/>                       
+                            <MenuItem text="Export SVG XY Chart..." onAction="#exportSVGAction"/>                       
+                            <MenuItem text="Export SVG Bar Chart..." onAction="#exportBarPlotSVGAction"/>                       
                             <MenuItem text="Load Sample Data..." onAction="#loadSimData"/>
                             <MenuItem text="Preferences..." onAction="#showPreferences"/>
                             <MenuItem text="Show Console" onAction="#showConsole"/>
@@ -78,7 +83,7 @@
             <items>
                 <SplitPane orientation="horizontal" prefHeight="550">
                     <items>
-                        <PlotData fx:id="xychart" HBox.hgrow="ALWAYS" />
+                        <XYPlotDataPane fx:id="chartPane" HBox.hgrow="ALWAYS" />
                         <VBox HBox.hgrow="ALWAYS"  VBox.vgrow="ALWAYS" >
                             <TabPane fx:id="parTabPane"  VBox.vgrow="ALWAYS" >
                                 <Tab text="Parameters" closable="false" > 
@@ -151,12 +156,6 @@
                                             </HBox> 
                                             <HBox>
                                                 <children>
-                                                    <CheckBox text="Absolute Value Mode  " fx:id="absValueModeCheckBox"/>
-                                                    <CheckBox text="Non-Parametric Fit" fx:id="nonParBootStrapCheckBox"/>
-                                                </children>
-                                            </HBox>
-                                            <HBox>
-                                                <children>
                                                     <CheckBox text="Calculate Errors          " fx:id="calcErrorsCheckBox"/>
                                                     <CheckBox text="Slider Guess" fx:id="sliderGuessCheckBox"/>
                                                 </children>
@@ -202,11 +201,8 @@
                         </VBox>
                     </items>
                 </SplitPane>
-                <VBox fx:id="chartBox" VBox.vgrow="ALWAYS">
-                    <children>
-                        <SSRegion fx:id="ssregion" prefHeight="1" />
-                    </children>
-                </VBox>
+                <Pane fx:id="chartBox" VBox.vgrow="ALWAYS">
+                </Pane>
 
             </items>
         </SplitPane>

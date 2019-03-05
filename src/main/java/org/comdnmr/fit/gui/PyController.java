@@ -6,7 +6,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -24,11 +23,8 @@ import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.geometry.Bounds;
-import javafx.geometry.Side;
 import javafx.scene.Node;
 import javafx.scene.SnapshotParameters;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Menu;
@@ -39,7 +35,6 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -67,11 +62,12 @@ import org.controlsfx.control.StatusBar;
 import org.comdnmr.fit.calc.CESTFit;
 import java.text.DecimalFormat;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Optional;
 import javafx.beans.property.SimpleStringProperty;
 import java.util.Random;
 import javafx.print.PrinterJob;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Alert;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.Label;
@@ -79,6 +75,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ToolBar;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
 import org.comdnmr.fit.calc.FitModel;
 import org.comdnmr.fit.calc.R1RhoFit;
 import static org.comdnmr.fit.gui.MainApp.preferencesController;
@@ -86,20 +84,25 @@ import static org.comdnmr.fit.gui.MainApp.console;
 import static org.comdnmr.fit.gui.MainApp.primaryStage;
 import org.comdnmr.utils.NMRFxClient;
 import org.controlsfx.dialog.ExceptionDialog;
+import org.nmrfx.chart.Axis;
+import org.nmrfx.chart.DataSeries;
+import org.nmrfx.chart.XYEValue;
+import org.nmrfx.chart.XYValue;
+import org.nmrfx.graphicsio.GraphicsIOException;
+import org.nmrfx.graphicsio.SVGGraphicsContext;
 
 public class PyController implements Initializable {
 
     public static PyController mainController;
-    XYBarChart activeChart;
-    @FXML
-    XYBarChart xyBarChart0;
+    ResidueChart activeChart;
+    List<ResidueChart> barCharts = new ArrayList<>();
 
-    SSRegion activeSSregion;
+    SSPainter ssPainter = null;
     @FXML
     SSRegion ssregion;
 
     @FXML
-    PlotData xychart;
+    XYPlotDataPane chartPane;
 
     @FXML
     Button nmrFxPeakButton;
@@ -121,14 +124,10 @@ public class PyController implements Initializable {
     Label rChiSqLabel;
 
     @FXML
-    VBox chartBox;
+    Pane chartBox;
     @FXML
     StatusBar statusBar;
     Circle statusCircle;
-    @FXML
-    CheckBox absValueModeCheckBox;
-    @FXML
-    CheckBox nonParBootStrapCheckBox;
     @FXML
     Menu axisMenu;
     @FXML
@@ -177,6 +176,7 @@ public class PyController implements Initializable {
     ResidueFitter residueFitter;
     String currentMapName = "";
     String[] currentResidues;
+    List<String> fittingResidues = new ArrayList<>();
     String currentState = "";
     String currentEquationName;
     List<int[]> currentStates = new ArrayList<>();
@@ -184,11 +184,14 @@ public class PyController implements Initializable {
     boolean simulate = true;
 
     CPMGFitResult fitResult;
+    PlotData xychart;
+    Canvas barPlotCanvas = new Canvas();
 
     @FXML
     ToolBar navigatorToolBar = new ToolBar();
 
     static Random rand = new Random();
+    File initialDir = null;
 
     @FXML
     private void pyAction(ActionEvent event) {
@@ -219,8 +222,6 @@ public class PyController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         mainController = this;
-        activeChart = xyBarChart0;
-        activeSSregion = ssregion;
         //propertySheet.setPropertyEditorFactory(new NvFxPropertyEditorFactory());
 //        propertySheet.setMode(PropertySheet.Mode.NAME);
 //        propertySheet.setModeSwitcherVisible(false);
@@ -229,10 +230,6 @@ public class PyController implements Initializable {
 //        simControls = new CPMGControls();
         if (getFittingMode().equals("cpmg")) {
             simControls = new CPMGControls();
-            equationChoice.getItems().clear();
-            equationChoice.getItems().add("+");
-            equationChoice.getItems().addAll(CPMGFit.getEquationNames());
-            equationChoice.setValue(CPMGFit.getEquationNames().get(0));
             xLowerBoundTextField.setText("0.0");
             xUpperBoundTextField.setText("1100.0");
             yLowerBoundTextField.setText("0.0");
@@ -241,10 +238,6 @@ public class PyController implements Initializable {
             yTickTextField.setText("5.0");
         } else if (getFittingMode().equals("cest")) {
             simControls = new CESTControls();
-            equationChoice.getItems().clear();
-            equationChoice.getItems().add("+");
-            equationChoice.getItems().addAll(CESTFit.getEquationNames());
-            equationChoice.setValue(CESTFit.getEquationNames().get(0));
             xLowerBoundTextField.setText("-20.0");
             xUpperBoundTextField.setText("20.0");
             if (currentResProps.getExperimentData() != null) {
@@ -258,10 +251,6 @@ public class PyController implements Initializable {
             yTickTextField.setText("0.25");
         } else if (getFittingMode().equals("exp")) {
             simControls = new ExpControls();
-            equationChoice.getItems().clear();
-            equationChoice.getItems().add("+");
-            equationChoice.getItems().addAll(ExpFit.getEquationNames());
-            equationChoice.setValue(ExpFit.getEquationNames().get(0));
             xLowerBoundTextField.setText("0.0");
             xUpperBoundTextField.setText("1.25");
             yLowerBoundTextField.setText("0.0");
@@ -270,10 +259,6 @@ public class PyController implements Initializable {
             yTickTextField.setText("10.0");
         } else if (getFittingMode().equals("r1rho")) {
             simControls = new R1RhoControls();
-            equationChoice.getItems().clear();
-            equationChoice.getItems().add("+");
-            equationChoice.getItems().addAll(R1RhoFit.getEquationNames());
-            equationChoice.setValue(R1RhoFit.getEquationNames().get(0));
             xLowerBoundTextField.setText("-20.0");
             xUpperBoundTextField.setText("20.0");
             if (currentResProps.getExperimentData() != null) {
@@ -293,6 +278,7 @@ public class PyController implements Initializable {
         residueFitter = new ResidueFitter(this::updateFitProgress, this::updateStatus);
         statusCircle = new Circle(10);
         statusBar.getLeftItems().add(statusCircle);
+        updateEquationChoices(getFittingMode());
         equationChoice.valueProperty().addListener(e -> {
             equationAction();
         });
@@ -313,15 +299,100 @@ public class PyController implements Initializable {
         initResidueNavigator();
         calcErrorsCheckBox.selectedProperty().addListener(e -> FitModel.setCalcError(calcErrorsCheckBox.isSelected()));
         calcErrorsCheckBox.setSelected(true);
-        XYBarChart reschartNode = PyController.mainController.getActiveChart();
-        if (reschartNode == null) {
-            reschartNode = PyController.mainController.addChart();
-
-        }
         nmrFxPeakButton.setDisable(true);
         nmrFxPeakButton.setOnAction(e -> nmrFxMessage(e));
+        xychart = (PlotData) chartPane.getChart();
+        chartPane.widthProperty().addListener(e -> resizeXYPlotCanvas());
+        chartPane.heightProperty().addListener(e -> resizeXYPlotCanvas());
+        chartBox.widthProperty().addListener(e -> resizeBarPlotCanvas());
+        chartBox.heightProperty().addListener(e -> resizeBarPlotCanvas());
+        chartBox.getChildren().add(barPlotCanvas);
+        addChart();
+        barPlotCanvas.setOnMouseClicked(e -> mouseClickedOnBarCanvas(e));
 
 //        mainController.setOnHidden(e -> Platform.exit());
+    }
+
+    void resizeXYPlotCanvas() {
+        Canvas canvas = xychart.getCanvas();
+        GraphicsContext gC = canvas.getGraphicsContext2D();
+        canvas.setWidth(chartPane.getWidth());
+        canvas.setHeight(chartPane.getHeight());
+        gC.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        xychart.setWidth(canvas.getWidth());
+        xychart.setHeight(canvas.getHeight());
+    }
+
+    void resizeBarPlotCanvas() {
+        double width = chartBox.getWidth();
+        double height = chartBox.getHeight();
+        barPlotCanvas.setWidth(width);
+        barPlotCanvas.setHeight(height);
+        GraphicsContext gC = barPlotCanvas.getGraphicsContext2D();
+        gC.clearRect(0, 0, barPlotCanvas.getWidth(), barPlotCanvas.getHeight());
+        if (ssPainter != null) {
+            height -= ssPainter.getHeight();
+        }
+        double chartHeight = height / barCharts.size();
+        double yPos = 0.0;
+        for (ResidueChart residueChart : barCharts) {
+            residueChart.setWidth(width);
+            residueChart.setHeight(chartHeight);
+            residueChart.setYPos(yPos);
+            residueChart.autoScale(false);
+            residueChart.drawChart();
+            yPos += chartHeight;
+        }
+        refreshResidueCharts();
+    }
+
+    void setResidueChartBorder() {
+        double maxLeftBorder = 0.0;
+        for (ResidueChart residueChart : barCharts) {
+            double[] borders = residueChart.getMinBorders();
+            maxLeftBorder = Math.max(borders[0], maxLeftBorder);
+        }
+        for (ResidueChart residueChart : barCharts) {
+            residueChart.setMinLeftBorder(maxLeftBorder);
+        }
+    }
+
+    void refreshResidueCharts() {
+        setResidueChartBorder();
+        GraphicsContext gC = barPlotCanvas.getGraphicsContext2D();
+        gC.clearRect(0, 0, barPlotCanvas.getWidth(), barPlotCanvas.getHeight());
+        for (ResidueChart residueChart : barCharts) {
+            residueChart.drawChart();
+        }
+        if (ssPainter != null) {
+            double ssHeight = ssPainter.getHeight();
+            Axis axis = activeChart.xAxis;
+            ssPainter.paintSS(axis.getXOrigin(), barPlotCanvas.getHeight() - ssHeight,
+                    axis.getWidth(),
+                    axis.getLowerBound(), axis.getUpperBound());
+        }
+    }
+
+    void mouseClickedOnBarCanvas(MouseEvent e) {
+        double x = e.getX();
+        double y = e.getY();
+        for (ResidueChart residueChart : barCharts) {
+            Axis xAxis = residueChart.xAxis;
+            Axis yAxis = residueChart.yAxis;
+            if (residueChart.mouseClicked(e)) {
+                activeChart = residueChart;
+                break;
+            } else {
+                if ((x > xAxis.getXOrigin()) && (x < xAxis.getXOrigin() + xAxis.getWidth())) {
+                    if ((y < yAxis.getYOrigin()) && (y > xAxis.getYOrigin() - yAxis.getHeight())) {
+                        activeChart = residueChart;
+                        break;
+                    }
+                }
+
+            }
+        }
+        refreshResidueCharts();
     }
 
     public void setControls() {
@@ -329,36 +400,20 @@ public class PyController implements Initializable {
         if (getFittingMode().equals("cpmg") && !(simControls instanceof CPMGControls)) {
             simControls = new CPMGControls();
             update = true;
-            equationChoice.getItems().clear();
-            equationChoice.getItems().add("+");
-            equationChoice.getItems().addAll(CPMGFit.getEquationNames());
-            equationChoice.setValue(CPMGFit.getEquationNames().get(0));
-
         } else if (getFittingMode().equals("exp") && !(simControls instanceof ExpControls)) {
             simControls = new ExpControls();
-            equationChoice.getItems().clear();
-            equationChoice.getItems().add("+");
-            equationChoice.getItems().addAll(ExpFit.getEquationNames());
-            equationChoice.setValue(ExpFit.getEquationNames().get(0));
             update = true;
         } else if (getFittingMode().equals("cest") && !(simControls instanceof CESTControls)) {
             simControls = new CESTControls();
-            equationChoice.getItems().clear();
-            equationChoice.getItems().add("+");
-            equationChoice.getItems().addAll(CESTFit.getEquationNames());
-            equationChoice.setValue(CESTFit.getEquationNames().get(0));
             update = true;
         } else if (getFittingMode().equals("r1rho") && !(simControls instanceof R1RhoControls)) {
             simControls = new R1RhoControls();
-            equationChoice.getItems().clear();
-            equationChoice.getItems().add("+");
-            equationChoice.getItems().addAll(R1RhoFit.getEquationNames());
-            equationChoice.setValue(R1RhoFit.getEquationNames().get(0));
             update = true;
         }
         if (update) {
             VBox vBox = simControls.makeControls(mainController);
             simPane.centerProperty().set(vBox);
+            updateEquationChoices(getFittingMode());
         }
         updateXYChartLabels();
     }
@@ -368,40 +423,39 @@ public class PyController implements Initializable {
         if (getSimMode().equals("cpmg") && !(simControls instanceof CPMGControls)) {
             simControls = new CPMGControls();
             update = true;
-            equationChoice.getItems().clear();
-            equationChoice.getItems().add("+");
-            equationChoice.getItems().addAll(CPMGFit.getEquationNames());
-            equationChoice.setValue(CPMGFit.getEquationNames().get(0));
-
         } else if (getSimMode().equals("exp") && !(simControls instanceof ExpControls)) {
             simControls = new ExpControls();
-            equationChoice.getItems().clear();
-            equationChoice.getItems().add("+");
-            equationChoice.getItems().addAll(ExpFit.getEquationNames());
-            equationChoice.setValue(ExpFit.getEquationNames().get(0));
             update = true;
         } else if (getSimMode().equals("cest") && !(simControls instanceof CESTControls)) {
             simControls = new CESTControls();
             ((CESTControls) simControls).updateDeltaLimits();
-            equationChoice.getItems().clear();
-            equationChoice.getItems().add("+");
-            equationChoice.getItems().addAll(CESTFit.getEquationNames());
-            equationChoice.setValue(CESTFit.getEquationNames().get(0));
             update = true;
         } else if (getFittingMode().equals("r1rho") && !(simControls instanceof R1RhoControls)) {
             simControls = new R1RhoControls();
             ((R1RhoControls) simControls).updateDeltaLimits();
-            equationChoice.getItems().clear();
-            equationChoice.getItems().add("+");
-            equationChoice.getItems().addAll(R1RhoFit.getEquationNames());
-            equationChoice.setValue(R1RhoFit.getEquationNames().get(0));
             update = true;
         }
         if (update) {
+            updateEquationChoices(getSimMode());
             VBox vBox = simControls.makeControls(mainController);
             simPane.centerProperty().set(vBox);
         }
+    }
 
+    void updateEquationChoices() {
+        updateEquationChoices(getFittingMode());
+    }
+
+    void updateEquationChoices(String mode) {
+        if (mode.equals("cpmg")) {
+            simControls.updateEquations(equationChoice, CPMGFit.getEquationNames());
+        } else if (mode.equals("exp")) {
+            simControls.updateEquations(equationChoice, ExpFit.getEquationNames());
+        } else if (mode.equals("cest")) {
+            simControls.updateEquations(equationChoice, CESTFit.getEquationNames());
+        } else if (mode.equals("r1rho")) {
+            simControls.updateEquations(equationChoice, R1RhoFit.getEquationNames());
+        }
     }
 
     void initResidueNavigator() {
@@ -441,7 +495,7 @@ public class PyController implements Initializable {
                 resIndex = 0;
             }
             int res = (int) resNums.get(resIndex);
-            XYBarChart chart = getActiveChart();
+            ResidueChart chart = getActiveChart();
             chart.showInfo(chart.currentSeriesName, 0, res, false);
         }
     }
@@ -449,7 +503,7 @@ public class PyController implements Initializable {
     public void firstResidue(ActionEvent event) {
         if (currentResidues != null) {
             int res = ChartUtil.minRes;
-            XYBarChart chart = getActiveChart();
+            ResidueChart chart = getActiveChart();
             chart.showInfo(chart.currentSeriesName, 0, res, false);
         }
     }
@@ -468,7 +522,7 @@ public class PyController implements Initializable {
                 resIndex = resNums.size() - 1;
             }
             int res = (int) resNums.get(resIndex);
-            XYBarChart chart = getActiveChart();
+            ResidueChart chart = getActiveChart();
             chart.showInfo(chart.currentSeriesName, 0, res, false);
         }
     }
@@ -476,7 +530,7 @@ public class PyController implements Initializable {
     public void lastResidue(ActionEvent event) {
         if (currentResidues != null) {
             int res = ChartUtil.maxRes;
-            XYBarChart chart = getActiveChart();
+            ResidueChart chart = getActiveChart();
             chart.showInfo(chart.currentSeriesName, 0, res, false);
         }
     }
@@ -495,6 +549,15 @@ public class PyController implements Initializable {
             }
             ChartUtil.loadParameters(file.toString());
         }
+    }
+
+    @FXML
+    public void loadSecondaryStructure() {
+        List<SecondaryStructure> ssValues = SecondaryStructure.loadFromFile();
+        if (!ssValues.isEmpty()) {
+            ssPainter = new SSPainter(barPlotCanvas, ssValues);
+        }
+        resizeBarPlotCanvas();
     }
 
     @FXML
@@ -643,7 +706,11 @@ public class PyController implements Initializable {
     }
 
     public void autoscaleBounds(ActionEvent event) {
-        xychart.autoscaleBounds();
+        double[] bounds = xychart.autoScale(true);
+        xLowerBoundTextField.setText(Double.toString(bounds[0]));
+        xUpperBoundTextField.setText(Double.toString(bounds[1]));
+        yLowerBoundTextField.setText(Double.toString(bounds[2]));
+        yUpperBoundTextField.setText(Double.toString(bounds[3]));
 
     }
 
@@ -660,29 +727,27 @@ public class PyController implements Initializable {
 
     public void showEquations(List<PlotEquation> equations) {
         xychart.setEquations(equations);
-        xychart.layoutPlotChildren();
 //        Optional<Double> rms = rms();
 
     }
 
-    public XYBarChart getActiveChart() {
+    public ResidueChart getActiveChart() {
         return activeChart;
     }
 
-    public XYBarChart addChart() {
-        XYBarChart newChart = new XYBarChart();
-        int nChildren = chartBox.getChildren().size();
-        chartBox.getChildren().add(0, newChart);
-        VBox.setVgrow(newChart, Priority.ALWAYS);
+    public ResidueChart addChart() {
+        ResidueChart newChart = ResidueChart.buildChart(barPlotCanvas);
+        barCharts.add(newChart);
         activeChart = newChart;
-        return newChart;
-
+        resizeBarPlotCanvas();
+        return activeChart;
     }
 
     public void removeChart(Event e) {
-        if ((activeChart != null) && (chartBox.getChildren().size() > 2)) {
-            chartBox.getChildren().remove(activeChart);
-            activeChart = (XYBarChart) chartBox.getChildren().get(0);
+        if ((activeChart != null) && (barCharts.size() > 1)) {
+            barCharts.remove(activeChart);
+            activeChart = barCharts.get(0);
+            resizeBarPlotCanvas();
         }
     }
 
@@ -918,41 +983,48 @@ public class PyController implements Initializable {
     }
 
     public void setYAxisType(String setName, String eqnName, String state, String typeName) {
-        ObservableList<XYChart.Series<Double, Double>> data = ChartUtil.getParMapData(setName, eqnName, state, typeName);
-        XYBarChart chart = activeChart;
+        ObservableList<DataSeries> data = ChartUtil.getParMapData(setName, eqnName, state, typeName);
+        ResidueChart chart = activeChart;
 
-        ((XYChart) chart).getData().addAll(data);
+        chart.getData().addAll(data);
+        int i = 0;
+        for (DataSeries series : chart.getData()) {
+            series.setFill(PlotData.colors[i++ % PlotData.colors.length]);
+        }
         if (chart.currentSeriesName.equals("")) {
             chart.currentSeriesName = data.get(0).getName();
         }
-        NumberAxis xAxis = (NumberAxis) chart.getXAxis();
-        NumberAxis yAxis = (NumberAxis) chart.getYAxis();
+        Axis xAxis = chart.xAxis;
+        Axis yAxis = chart.yAxis;
         xAxis.setAutoRanging(false);
+        yAxis.setAutoRanging(true);
+        chart.autoScale(false);
         double xMin = Math.floor((ChartUtil.minRes - 2) / 5.0) * 5.0;
         double xMax = Math.ceil((ChartUtil.maxRes + 2) / 5.0) * 5.0;
         xAxis.setLowerBound(xMin);
         xAxis.setUpperBound(xMax);
-        xAxis.setTickUnit(10);
-        xAxis.setMinorTickCount(5);
-        yAxis.setMinWidth(75.0);
-        yAxis.setPrefWidth(75.0);
+//        xAxis.setTickUnit(10);
+//        xAxis.setMinorTickCount(5);
+//        yAxis.setMinWidth(75.0);
+//        yAxis.setPrefWidth(75.0);
 
         if (typeName.equals("Kex")) {
-            chart.getYAxis().setLabel("Kex");
-            chart.setUnifyYAxes(true);
+            chart.yAxis.setLabel("Kex");
+//            chart.setUnifyYAxes(true); // fixme
         } else {
-            chart.getYAxis().setLabel(typeName);
-            chart.setUnifyYAxes(false);
+            chart.yAxis.setLabel(typeName);
+//            chart.setUnifyYAxes(false); // fixme
         }
         chart.setTitle(setName);
         if (chart.getData().size() > 1) {
-            chart.setLegendVisible(true);
-            chart.setLegendSide(Side.TOP);
+//            chart.setLegendVisible(true); // fixme
+//            chart.setLegendSide(Side.TOP);
         } else {
-            chart.setLegendVisible(false);
+            // chart.setLegendVisible(false); //fixme
         }
         currentResProps = ChartUtil.residueProperties.get(setName);
         chart.setResProps(currentResProps);
+        refreshResidueCharts();
     }
 
     void makeAxisMenu() {
@@ -1129,12 +1201,12 @@ public class PyController implements Initializable {
                     extras[2] = expData.getExtras().get(1);
 //                    System.out.println("Fit button expData extras size = " + expData.getExtras().size() + " extra[1] = " + extras[1]);
                     PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
-                    for (int i = 0; i < extras.length; i++) {
-                        System.out.println(iCurve + " " + i + " extra " + extras[i]);
-                    }
-                    for (int i = 0; i < pars.length; i++) {
-                        System.out.println(iCurve + " " + i + " pars " + pars[i]);
-                    }
+//                    for (int i = 0; i < extras.length; i++) {
+//                        System.out.println(iCurve + " " + i + " extra " + extras[i]);
+//                    }
+//                    for (int i = 0; i < pars.length; i++) {
+//                        System.out.println(iCurve + " " + i + " pars " + pars[i]);
+//                    }
                     //equationCopy.setExtra(extras);
 
                     equations.add(plotEquation);
@@ -1167,18 +1239,18 @@ public class PyController implements Initializable {
 //                extras[0] = CPMGFit.REF_FIELD;
 //System.out.println("extras " + extras[0]);
                 for (int i = 0; i < simExtras.length; i++) {
-                    System.out.println("simextras " + i + " " + simExtras[i]);
+//                    System.out.println("simextras " + i + " " + simExtras[i]);
 //                    extras[i + 1] = simExtras[i];
                 }
-                for (int i = 0; i < extras.length; i++) {
-                    System.out.println(iCurve + " " + i + " extra " + extras[i]);
-                }
-                for (int i = 0; i < simExtras.length; i++) {
-                    System.out.println(iCurve + " " + i + " simExtras " + simExtras[i]);
-                }
-                for (int i = 0; i < pars.length; i++) {
-                    System.out.println(iCurve + " " + i + " pars " + pars[i]);
-                }
+                //for (int i = 0; i < extras.length; i++) {
+                //System.out.println(iCurve + " " + i + " extra " + extras[i]);
+                //}
+                //for (int i = 0; i < simExtras.length; i++) {
+                //System.out.println(iCurve + " " + i + " simExtras " + simExtras[i]);
+                //}
+                //for (int i = 0; i < pars.length; i++) {
+                //System.out.println(iCurve + " " + i + " pars " + pars[i]);
+                //}
                 PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
 
                 //equationCopy.setExtra(extras);
@@ -1215,23 +1287,21 @@ public class PyController implements Initializable {
         fitResult = null;
         List<List<String>> allResidues = new ArrayList<>();
         List<String> groupResidues = new ArrayList<>();
-        XYBarChart chart = getActiveChart();
-        groupResidues.addAll(chart.selectedResidues);
+        fittingResidues.clear();
+        fittingResidues.addAll(ResidueChart.selectedResidues);
+        groupResidues.addAll(ResidueChart.selectedResidues);
         if (!groupResidues.isEmpty()) {
             allResidues.add(groupResidues);
-            currentResProps.setAbsValueMode(absValueModeCheckBox.isSelected());
-            if (nonParBootStrapCheckBox.isSelected()) {
-                currentResProps.setBootStrapMode("nonparametric");
-            } else {
-                currentResProps.setBootStrapMode("parametric");
-            }
             residueFitter.fitResidues(currentResProps, allResidues);
         }
 //        }
     }
 
     public void refreshFit() {
-        XYBarChart chart = getActiveChart();
+        ResidueChart chart = getActiveChart();
+        ResidueChart.selectedResidues.clear();
+        ResidueChart.selectedResidues.addAll(fittingResidues);
+        refreshResidueCharts();
         chart.showInfo();
         makeAxisMenu();
     }
@@ -1252,7 +1322,7 @@ public class PyController implements Initializable {
     }
 
     public Double updateFitProgress(Double f) {
-        XYBarChart chart = getActiveChart();
+        ResidueChart chart = getActiveChart();
         String seriesName = chart.currentSeriesName;
         String[] sParts;
         if (seriesName.length() == 0) {
@@ -1335,7 +1405,7 @@ public class PyController implements Initializable {
         chooser.setInitialFileName("cpmgchart.png");
         File file = chooser.showSaveDialog(MainApp.primaryStage);
         if (file != null) {
-            snapit(xychart, file);
+            snapit(chartPane, file);
         }
     }
 
@@ -1356,12 +1426,12 @@ public class PyController implements Initializable {
                 ObservableList<Node> barNodes = chartBox.getChildren();
                 barChartData = new ArrayList<>(barNodes.size());
                 barNodes.forEach(node -> {
-                    if (node instanceof XYBarChart) {
-                        XYBarChart barChart = (XYBarChart) node;
-                        String barChartName = barChart.toString();
-                        HashMap<String, Object> chartData = barChart.getChartData();
-                        barChartData.add(chartData);
-                    }
+//                    if (node instanceof XYBarChart) {
+//                        XYBarChart barChart = (XYBarChart) node;
+//                        String barChartName = barChart.toString();
+//                        HashMap<String, Object> chartData = barChart.getChartData();
+//                        barChartData.add(chartData);
+//                    }
                 });
             } else {
                 barChartData = new ArrayList<>(0);
@@ -1512,9 +1582,9 @@ public class PyController implements Initializable {
         currentResInfo = null;
         currentResProps = null;
         fitResult = null;
-        xychart.clear();
+        // fixme xychart.clear();
         chartBox.getChildren().remove(activeChart);
-        activeChart = xyBarChart0;
+        activeChart = barCharts.get(0);
         getSimMode();
         setSimControls();
         updateXYChartLabels();
@@ -1529,7 +1599,7 @@ public class PyController implements Initializable {
 
     void showInfo(ResidueProperties resProps, String equationName, String mapName, String state, String[] residues, PlotData plotData) {
         ArrayList<PlotEquation> equations = new ArrayList<>();
-        ObservableList<XYChart.Series<Double, Double>> allData = FXCollections.observableArrayList();
+        ObservableList<DataSeries> allData = FXCollections.observableArrayList();
         List<ResidueData> resDatas = new ArrayList<>();
         List<int[]> allStates = new ArrayList<>();
         if (resProps != null) {
@@ -1546,17 +1616,23 @@ public class PyController implements Initializable {
                 if (!ResidueProperties.matchStateString(state, expData.getState())) {
                     continue;
                 }
-                List<XYChart.Series<Double, Double>> data = ChartUtil.getMapData(mapName, expName, residues);
+                List<DataSeries> data = ChartUtil.getMapData(mapName, expName, residues);
                 allData.addAll(data);
                 equations.addAll(ChartUtil.getEquations(expData, mapName, residues, equationName, expData.getState(), expData.getField()));
                 int[] states = resProps.getStateIndices(0, expData);
                 allStates.add(states);
             }
         }
+        int i = 0;
+        for (DataSeries series : allData) {
+            series.setStroke(PlotData.colors[i % 8]);
+            series.setFill(PlotData.colors[i % 8]);
+            i++;
+        }
         plotData.setData(allData);
         setBounds();
         plotData.setEquations(equations);
-        plotData.layoutPlotChildren();
+        System.out.println("did equa");
         updateTable(resDatas);
         if (residues != null) {
             updateTableWithPars(mapName, residues, equationName, state, allStates);
@@ -1611,10 +1687,10 @@ public class PyController implements Initializable {
     }
 
     ArrayList<Double> getSimXData() {
-        ObservableList<XYChart.Series<Double, Double>> allData = xychart.getData();
+        ObservableList<DataSeries> allData = xychart.getData();
         ArrayList<Double> xValues = new ArrayList<>();
-        for (XYChart.Series<Double, Double> series : allData) {
-            for (XYChart.Data<Double, Double> dataPoint : series.getData()) {
+        for (DataSeries series : allData) {
+            for (XYValue dataPoint : series.getData()) {
                 double x = dataPoint.getXValue();
                 xValues.add(x);
             }
@@ -1623,10 +1699,10 @@ public class PyController implements Initializable {
     }
 
     ArrayList<Double> getSimYData() {
-        ObservableList<XYChart.Series<Double, Double>> allData = xychart.getData();
+        ObservableList<DataSeries> allData = xychart.getData();
         ArrayList<Double> yValues = new ArrayList<>();
-        for (XYChart.Series<Double, Double> series : allData) {
-            for (XYChart.Data<Double, Double> dataPoint : series.getData()) {
+        for (DataSeries series : allData) {
+            for (XYValue dataPoint : series.getData()) {
                 double y = dataPoint.getYValue();
                 yValues.add(y);
             }
@@ -1636,7 +1712,7 @@ public class PyController implements Initializable {
 
     @FXML
     void showSimData(ActionEvent e) {
-        ObservableList<XYChart.Series<Double, Double>> allData = FXCollections.observableArrayList();
+        ObservableList<DataSeries> allData = FXCollections.observableArrayList();
         String equationName = simControls.getEquation();
         EquationType eType = ResidueFitter.getEquationType(equationName);
         int[][] map = eType.makeMap(1);
@@ -1650,8 +1726,8 @@ public class PyController implements Initializable {
         double fieldRef = 1.0;
         int iLine = 0;
 
-        List<XYChart.Series<Double, Double>> data = new ArrayList<>();
-        XYChart.Series<Double, Double> series = new XYChart.Series<>();
+        List<DataSeries> data = new ArrayList<>();
+        DataSeries series = new DataSeries();
         series.setName("sim" + ":" + "0");
         data.add(series);
         for (PlotEquation eqn : xychart.plotEquations) {
@@ -1670,31 +1746,36 @@ public class PyController implements Initializable {
                 ax[0] = xValue;
                 double yValue = eqn.calculate(sliderGuesses, ax, eqn.getExtra(0));
                 yValue += sdev * rand.nextGaussian();
-                XYChart.Data dataPoint = new XYChart.Data(xValue, yValue);
+                XYValue dataPoint = new XYValue(xValue, yValue);
                 dataPoint.setExtraValue(new Double(sdev));
                 series.getData().add(dataPoint);
             }
         }
         allData.addAll(data);
         xychart.setData(allData);
+//    
     }
 
     @FXML
     public void loadSimData(ActionEvent e) {
-        ObservableList<XYChart.Series<Double, Double>> allData = FXCollections.observableArrayList();
+        ObservableList<DataSeries> allData = FXCollections.observableArrayList();
         FileChooser fileChooser = new FileChooser();
         File file = fileChooser.showOpenDialog(null);
         if (file != null) {
             try {
                 List<Double>[] dataValues = DataIO.loadSimDataFile(file);
-                List<XYChart.Series<Double, Double>> data = new ArrayList<>();
-                XYChart.Series<Double, Double> series = new XYChart.Series<>();
+                List<DataSeries> data = new ArrayList<>();
+                DataSeries series = new DataSeries();
                 series.setName("sim" + ":" + "0");
                 data.add(series);
                 for (int i = 0; i < dataValues[0].size(); i++) {
-                    XYChart.Data dataPoint = new XYChart.Data(dataValues[0].get(i), dataValues[1].get(i));
+                    XYValue dataPoint;
                     if (!dataValues[2].isEmpty()) {
-                        dataPoint.setExtraValue(new Double(dataValues[2].get(i)));
+                        dataPoint = new XYEValue(dataValues[0].get(i),
+                                dataValues[1].get(i), dataValues[2].get(i));
+                    } else {
+                        dataPoint = new XYValue(dataValues[0].get(i), dataValues[1].get(i));
+
                     }
                     series.getData().add(dataPoint);
                 }
@@ -1747,9 +1828,9 @@ public class PyController implements Initializable {
 
     @FXML
     private void printXYChart() {
-        printChart(xychart);
+        printChart(chartPane);
     }
-    
+
     @FXML
     private void printBarChart() {
         printChart(chartBox);
@@ -1768,6 +1849,67 @@ public class PyController implements Initializable {
                     }
                 }
             }
+        }
+    }
+
+    public File getInitialDirectory() {
+        if (initialDir == null) {
+            String homeDirName = System.getProperty("user.home");
+            initialDir = new File(homeDirName);
+        }
+        return initialDir;
+    }
+
+    @FXML
+    void exportSVGAction(ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Export to SVG");
+        fileChooser.setInitialDirectory(getInitialDirectory());
+        File selectedFile = fileChooser.showSaveDialog(null);
+        if (selectedFile != null) {
+            SVGGraphicsContext svgGC = new SVGGraphicsContext();
+            try {
+                Canvas canvas = xychart.getCanvas();
+                svgGC.create(true, canvas.getWidth(), canvas.getHeight(), selectedFile.toString());
+                xychart.exportVectorGraphics(svgGC);
+                svgGC.saveFile();
+            } catch (GraphicsIOException ex) {
+                ExceptionDialog eDialog = new ExceptionDialog(ex);
+                eDialog.showAndWait();
+            }
+        }
+    }
+
+    @FXML
+    void exportBarPlotSVGAction(ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Export to SVG");
+        fileChooser.setInitialDirectory(getInitialDirectory());
+        File selectedFile = fileChooser.showSaveDialog(null);
+        if (selectedFile != null) {
+            SVGGraphicsContext svgGC = new SVGGraphicsContext();
+            try {
+                svgGC.create(true, barPlotCanvas.getWidth(), barPlotCanvas.getHeight(), selectedFile.toString());
+                exportBarPlotSVGAction(svgGC);
+                svgGC.saveFile();
+            } catch (GraphicsIOException ex) {
+                ExceptionDialog eDialog = new ExceptionDialog(ex);
+                eDialog.showAndWait();
+            }
+        }
+    }
+
+    protected void exportBarPlotSVGAction(SVGGraphicsContext svgGC) throws GraphicsIOException {
+        svgGC.beginPath();
+        for (ResidueChart resChart : barCharts) {
+            resChart.drawChart(svgGC);
+        }
+        if (ssPainter != null) {
+            double ssHeight = ssPainter.getHeight();
+            Axis axis = activeChart.xAxis;
+            ssPainter.paintSS(svgGC, axis.getXOrigin(), barPlotCanvas.getHeight() - ssHeight,
+                    axis.getWidth(),
+                    axis.getLowerBound(), axis.getUpperBound());
         }
     }
 
