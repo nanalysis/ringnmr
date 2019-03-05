@@ -33,18 +33,30 @@ public class DataIO {
         },
         TAU2() {
             @Override
-            double convert(double value, double[] pars) {
+            double convert(double value, double[] pars, ExperimentData expData) {
                 return 1000.0 / (2.0 * value);
+            }
+        },
+        PPMTOHZ() {
+            @Override
+            double convert(double value, double[] pars, ExperimentData expData) {
+                return value * expData.getNucleusField();
+            }
+        },
+        HZTOPPM() {
+            @Override
+            double convert(double value, double[] pars, ExperimentData expData) {
+                return value / expData.getNucleusField();
             }
         },
         CALC() {
             @Override
-            double convert(double value, double[] pars) {
+            double convert(double value, double[] pars, ExperimentData expData) {
                 return pars[0] + pars[2] * (value + pars[1]);
             }
         };
 
-        double convert(double value, double[] pars) {
+        double convert(double value, double[] pars, ExperimentData expData) {
             return value;
         }
     }
@@ -195,7 +207,7 @@ public class DataIO {
                         if (xVals == null) {
                             try {
                                 double x = Double.parseDouble(sfields[i].trim());
-                                xValues[j] = xConv.convert(x, delayCalc);
+                                xValues[j] = xConv.convert(x, delayCalc, expData);
 
                             } catch (NumberFormatException nFE) {
                             }
@@ -285,11 +297,9 @@ public class DataIO {
     public static void processCESTData(ExperimentData expData, String residueNum,
             List<Double> xValueList, List<Double> yValueList, List<Double> errValueList, int peakNum) {
         Double B1field = expData.getB1Field();
-        Double B0field = expData.field;
         List<Double> B1fieldList = new ArrayList<>();
         for (int i = 0; i < xValueList.size(); i++) {
             B1fieldList.add(B1field);
-            xValueList.set(i, xValueList.get(i) / (B0field));  // fixme  need check as to whether this should be done
         }
         double tau = expData.getTau();
         List<Double> tauList = new ArrayList<>();
@@ -315,7 +325,8 @@ public class DataIO {
     public static void loadResidueDataFile(String fileName, ExperimentData expData,
             String residueNum, ResidueProperties resProp, String nucleus,
             double temperature, double field,
-            HashMap<String, Object> errorPars) throws IOException, IllegalArgumentException {
+            HashMap<String, Object> errorPars, XCONV xConv, YCONV yConv)
+            throws IOException, IllegalArgumentException {
         boolean gotHeader = false;
         int nValues = 0;
         List<Double> xValueList = new ArrayList<>();
@@ -353,6 +364,7 @@ public class DataIO {
                         if (nValues > 2) {
                             error = Double.parseDouble(sfields[2].trim());
                         }
+                        offsetFreq = xConv.convert(offsetFreq, null, expData);
                         xValueList.add(offsetFreq);
                         yValueList.add(intensity);
                         errValueList.add(error);
@@ -409,7 +421,7 @@ public class DataIO {
                     peakRefs = new String[nValues];
                     for (int i = 1; i < sfields.length - 1; i += 2) {
                         double xValue = Double.parseDouble(sfields[i].trim());
-                        xValues[0][j] = xConv.convert(xValue, null);
+                        xValues[0][j] = xConv.convert(xValue, null, expData);
                         peakRefs[j] = String.valueOf(j);
                         j++;
                     }
@@ -740,7 +752,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     String fileTail = dataFileName.substring(0, dataFileName.indexOf('.'));
                     String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
                     loadResidueDataFile(textFileName, expData, residueNum, resProp, nucleus,
-                            temperature, B0field, errorPars);
+                            temperature, B0field, errorPars, xConv, yConv);
                 }
             } else if (vcpmgList == null) {
                 String dataFileName = (String) dataMap3.get("file");
