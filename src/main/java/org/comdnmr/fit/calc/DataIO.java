@@ -800,8 +800,14 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
 
     }
 
-    public static void saveResultsFile(String fileName, ResidueProperties resProp) {
+    public static void saveResultsFile(String fileName, ResidueProperties resProp, boolean saveStats) {
         String[] headerFields = {"Residue", "Peak", "GrpSz", "Group", "State", "Equation", "RMS", "AIC", "Best"};
+        String[] headerFields2 = {"Residue", "Peak", "GrpSz", "Group", "State", "RefineOpt", "RefineTime", 
+            "BootstrapOpt", "BootstrapTime", "Samples", "AbsMode", "NonParametricMode", "StartRadius", "FinalRadius", 
+            "Tolerance", "Weight", "Equation", "RMS", "AIC", "Best"};
+        if (saveStats) {
+            headerFields = headerFields2;
+        }
         StringBuilder headerBuilder = new StringBuilder();
         String[] cpmgFields = {"R2", "Rex", "Kex", "pA", "dPPM"};
         String[] expFields = {"A", "R"};
@@ -809,7 +815,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         String[] parFields;
         if (resProp.getExpMode().equals("cpmg")) {
             parFields = cpmgFields;
-        } else if (resProp.getExpMode().equals("cest")) {
+        } else if (resProp.getExpMode().equals("cest") || resProp.getExpMode().equals("r1rho")) {
             parFields = cestFields;
         } else {
             parFields = expFields;
@@ -830,7 +836,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             resProp.getResidueValues().stream().
                     sorted((a, b) -> Integer.compare(a.getResNum(), b.getResNum())).
                     forEach(resInfo -> {
-                        String outputLine = resInfo.toOutputString(parFields);
+                        String outputLine = resInfo.toOutputString(parFields, saveStats);
                         try {
                             writer.write(outputLine);
                         } catch (IOException ex) {
