@@ -226,30 +226,34 @@ public class ChartUtil {
     }
 
     public static List<DataSeries> getMapData(String seriesName, String expName, String[] residues) {
-        ResidueProperties resProps = residueProperties.get(seriesName);
-        ExperimentData expData = resProps.getExperimentData(expName);
         List<DataSeries> data = new ArrayList<>();
         for (String resNum : residues) {
-            DataSeries series = new DataSeries();
-            series.setName(expName + ":" + resNum);
-            data.add(series);
-            ResidueData resData = expData.getResidueData(resNum);
-            if (resData != null) {
-                double[][] xValues = resData.getXValues();
-                double[] yValues = resData.getYValues();
-                int nValues = yValues.length;
-                double[] errValues = resData.getErrValues();
-                for (int i = 0; i < nValues; i++) {
-                    double x = xValues[0][i];
-                    double y = yValues[i];
-                    double err = errValues[i];
-                    XYValue dataPoint = new XYEValue(x, y, err);
-                    dataPoint.setExtraValue(resData.getDataValues().get(i));
-                    series.add(dataPoint);
-                }
-            }
+            data.add(getMapData(seriesName, expName, resNum));
         }
         return data;
+    }
+
+    public static DataSeries getMapData(String seriesName, String expName, String resNum) {
+        ResidueProperties resProps = residueProperties.get(seriesName);
+        ExperimentData expData = resProps.getExperimentData(expName);
+        DataSeries series = new DataSeries();
+        series.setName(expName + ":" + resNum);
+        ResidueData resData = expData.getResidueData(resNum);
+        if (resData != null) {
+            double[][] xValues = resData.getXValues();
+            double[] yValues = resData.getYValues();
+            int nValues = yValues.length;
+            double[] errValues = resData.getErrValues();
+            for (int i = 0; i < nValues; i++) {
+                double x = xValues[0][i];
+                double y = yValues[i];
+                double err = errValues[i];
+                XYValue dataPoint = new XYEValue(x, y, err);
+                dataPoint.setExtraValue(resData.getDataValues().get(i));
+                series.add(dataPoint);
+            }
+        }
+        return series;
     }
 
     public static ArrayList<PlotEquation> getEquations(ExperimentData expData, String seriesName, String[] residues, String equationName, String state, double field) {

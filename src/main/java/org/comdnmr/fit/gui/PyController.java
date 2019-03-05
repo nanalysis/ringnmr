@@ -1615,8 +1615,10 @@ public class PyController implements Initializable {
                 if (!ResidueProperties.matchStateString(state, expData.getState())) {
                     continue;
                 }
-                List<DataSeries> data = ChartUtil.getMapData(mapName, expName, residues);
-                allData.addAll(data);
+                for (String residue : residues) {
+                    DataSeries series = ChartUtil.getMapData(mapName, expName, residue);
+                    allData.add(series);
+                }
                 equations.addAll(ChartUtil.getEquations(expData, mapName, residues, equationName, expData.getState(), expData.getNucleusField()));
                 int[] states = resProps.getStateIndices(0, expData);
                 allStates.add(states);
