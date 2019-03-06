@@ -224,6 +224,7 @@ public class ResidueInfo {
             for (CurveFit curveFit : fitMap.values()) {
                 if (curveFit.parMap != null) {
                     sBuilder.append('\n');
+                    sBuilder.append(" eqn " + curveFit.plotEquation.getName() + " " + curveFit.getState());
                     sBuilder.append(curveFit.parMap.toString());
                 }
             }
