@@ -264,7 +264,7 @@ public class ExpControls extends EquationControls {
     void updateEquations() {
         ResidueInfo resInfo = controller.currentResInfo;
         ResidueProperties resProps = controller.currentResProps;
-        List<PlotEquation> equations = new ArrayList<>();
+        List<GUIPlotEquation> equations = new ArrayList<>();
         double[] pars;
         String equationName = getEquation(); //equationSelector.getValue();
         if (resProps == null) {
@@ -272,14 +272,14 @@ public class ExpControls extends EquationControls {
             double[] errs = new double[pars.length];
             double[] extras = new double[1];
             extras[0] = 1.0;
-            PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
+            GUIPlotEquation plotEquation = new GUIPlotEquation(equationName, pars, errs, extras);
             equations.add(plotEquation);
         } else {
             pars = getPars(equationName);
             double[] errs = new double[pars.length];
             double[] extras = new double[1];
             extras[0] = 1.0;
-            PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
+            GUIPlotEquation plotEquation = new GUIPlotEquation(equationName, pars, errs, extras);
             equations.add(plotEquation);
         }
         controller.showEquations(equations);

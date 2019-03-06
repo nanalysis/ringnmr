@@ -717,17 +717,17 @@ public class PyController implements Initializable {
     }
 
     public void updateChartEquations(String equationName, double[] pars, double[] errs, double[] fields) {
-        List<PlotEquation> equations = new ArrayList<>();
+        List<GUIPlotEquation> equations = new ArrayList<>();
         for (int i = 0; i < fields.length; i++) {
             double[] extras = {fields[i] / fields[0]};
             //System.out.println("updateChartEquations got called with extras length = "+extras.length);
-            PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
+            GUIPlotEquation plotEquation = new GUIPlotEquation(equationName, pars, errs, extras);
             equations.add(plotEquation);
         }
         showEquations(equations);
     }
 
-    public void showEquations(List<PlotEquation> equations) {
+    public void showEquations(List<GUIPlotEquation> equations) {
         xychart.setEquations(equations);
 //        Optional<Double> rms = rms();
 
@@ -1171,7 +1171,7 @@ public class PyController implements Initializable {
     }
 
     public void updateAfterFit(CPMGFitResult fitResult) {
-        List<PlotEquation> equations = new ArrayList<>();
+        List<GUIPlotEquation> equations = new ArrayList<>();
         int nCurves = fitResult.getNCurves();
         for (int iCurve = 0; iCurve < nCurves; iCurve++) {
             CurveFit curveFit = fitResult.getCurveFit(iCurve);
@@ -1202,7 +1202,7 @@ public class PyController implements Initializable {
                     extras[1] = expData.getExtras().get(0);
                     extras[2] = expData.getExtras().get(1);
 //                    System.out.println("Fit button expData extras size = " + expData.getExtras().size() + " extra[1] = " + extras[1]);
-                    PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
+                    GUIPlotEquation plotEquation = new GUIPlotEquation(equationName, pars, errs, extras);
 //                    for (int i = 0; i < extras.length; i++) {
 //                        System.out.println(iCurve + " " + i + " extra " + extras[i]);
 //                    }
@@ -1253,11 +1253,11 @@ public class PyController implements Initializable {
                 //for (int i = 0; i < pars.length; i++) {
                 //System.out.println(iCurve + " " + i + " pars " + pars[i]);
                 //}
-                PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
+                GUIPlotEquation plotEquation = new GUIPlotEquation(equationName, pars, errs, extras);
 
                 //equationCopy.setExtra(extras);
                 //System.out.println("Fit button expData extras size = " + expData.getExtras().size() + " extra[0] = " + extras[0]);
-                equations.add(curveFit.getEquation());
+                equations.add(plotEquation);
 
             }
 //            double[] pars = curveFit.getEquation().getPars();
@@ -1600,12 +1600,14 @@ public class PyController implements Initializable {
     }
 
     void showInfo(ResidueProperties resProps, String equationName, String mapName, String state, String[] residues, PlotData plotData) {
-        ArrayList<PlotEquation> equations = new ArrayList<>();
+        ArrayList<GUIPlotEquation> equations = new ArrayList<>();
         ObservableList<DataSeries> allData = FXCollections.observableArrayList();
         List<ResidueData> resDatas = new ArrayList<>();
         List<int[]> allStates = new ArrayList<>();
         if ((resProps != null) && (residues != null)) {
-            int i = 0;
+            double maxY = getMaxY(resProps, equationName, mapName, state, residues);
+            System.out.println("max Y " + maxY);
+            int iSeries = 0;
             for (ExperimentData expData : resProps.getExperimentData()) {
                 if (!ResidueProperties.matchStateString(state, expData.getState())) {
                     continue;
@@ -1614,19 +1616,21 @@ public class PyController implements Initializable {
                 for (String resNum : residues) {
                     resDatas.add(expData.getResidueData(resNum));
                     DataSeries series = ChartUtil.getMapData(mapName, expName, resNum);
-                    series.setStroke(PlotData.colors[i % 8]);
-                    series.setFill(PlotData.colors[i % 8]);
-                    i++;
+                    series.setStroke(PlotData.colors[iSeries % 8]);
+                    series.setFill(PlotData.colors[iSeries % 8]);
 
                     allData.add(series);
-                    PlotEquation equation = ChartUtil.getEquation(expData,
+                    GUIPlotEquation equation = ChartUtil.getEquation(expData,
                             mapName, resNum, equationName, expData.getState(),
                             expData.getNucleusField());
+                    equation.setScaleValue(maxY);
+                    equation.setColor(PlotData.colors[iSeries % 8]);
                     if (equation != null) {
                         equations.add(equation);
                     } else {
                         System.out.println("null eq");
                     }
+                    iSeries++;
                 }
 
                 int[] states = resProps.getStateIndices(0, expData);
@@ -1641,6 +1645,40 @@ public class PyController implements Initializable {
         plotData.setData(allData);
         setBounds();
         plotData.setEquations(equations);
+    }
+
+    public double getMaxY(ResidueProperties resProps, String equationName, String mapName, String state, String[] residues) {
+        double maxValue = Double.NEGATIVE_INFINITY;
+        if ((resProps != null) && (residues != null)) {
+            for (ExperimentData expData : resProps.getExperimentData()) {
+                if (!ResidueProperties.matchStateString(state, expData.getState())) {
+                    continue;
+                }
+                String expName = expData.getName();
+                for (String resNum : residues) {
+
+                    GUIPlotEquation equation = ChartUtil.getEquation(expData,
+                            mapName, resNum, equationName, expData.getState(),
+                            expData.getNucleusField());
+                    if (equation != null) {
+                        double minX = equation.getMinX();
+                        double valueY = equation.calculate(minX);
+                        System.out.println(minX + " " + valueY);
+                        if (valueY > maxValue) {
+                            maxValue = valueY;
+                        }
+                    } else {
+//                        DataSeries series = ChartUtil.getMapData(mapName, expName, resNum);
+//                        double valueY = series.getValues().stream().max(XYValue::getYValue).get();
+//                        if (valueY > maxValue) {
+//                            maxValue = valueY;
+//                        }
+
+                    }
+                }
+            }
+        }
+        return maxValue;
     }
 
     public void setSimData(EquationFitter equationFitter) {

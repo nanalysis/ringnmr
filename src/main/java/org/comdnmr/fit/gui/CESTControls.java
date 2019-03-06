@@ -683,7 +683,7 @@ public class CESTControls extends EquationControls {
 //        System.out.println("CEST Controls updateEqns called.");
         ResidueInfo resInfo = controller.currentResInfo;
         ResidueProperties resProps = controller.currentResProps;
-        List<PlotEquation> equations = new ArrayList<>();
+        List<GUIPlotEquation> equations = new ArrayList<>();
         double[] pars;
         double[] extras1;
         String equationName = equationSelector.getValue();
@@ -705,7 +705,7 @@ public class CESTControls extends EquationControls {
                         //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[1] = " + extras[1]);
 //                        System.out.println("extras[1] = " + extras[1]);
 //                        System.out.println("extras[2] = " + extras[2]);
-                        PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
+                        GUIPlotEquation plotEquation = new GUIPlotEquation(equationName, pars, errs, extras);
                         //equationCopy.setExtra(extras);
 
                         equations.add(plotEquation);
@@ -715,7 +715,7 @@ public class CESTControls extends EquationControls {
                     double[] errs = new double[pars.length];
                     double[] extras = new double[1];
                     extras[0] = CoMDPreferences.getRefField() * getNucleus().getRatio(); // fixme
-                    PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
+                    GUIPlotEquation plotEquation = new GUIPlotEquation(equationName, pars, errs, extras);
                     //equationCopy.setExtra(extras);
                     //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[0] = " + extras[0]);
                     equations.add(plotEquation);
@@ -731,7 +731,7 @@ public class CESTControls extends EquationControls {
             extras[1] = extras1[0]; //17.0 * 2 * Math.PI;
             extras[2] = extras1[1]; //0.3;
             //System.out.println("updateEquations got called without resProps; extras length = "+extras.length);
-            PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
+            GUIPlotEquation plotEquation = new GUIPlotEquation(equationName, pars, errs, extras);
             equations.add(plotEquation);
         }
 

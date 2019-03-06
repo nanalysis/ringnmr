@@ -38,7 +38,7 @@ public class PlotData extends XYCanvasChart {
 
     ObservableList<DataSeries> simData = FXCollections.observableArrayList();
     String fileName;
-    ObservableList<PlotEquation> plotEquations = FXCollections.observableArrayList();
+    ObservableList<GUIPlotEquation> plotEquations = FXCollections.observableArrayList();
 
     public static final Color[] colors = {
         Color.web("#1b9e77"),
@@ -125,7 +125,7 @@ public class PlotData extends XYCanvasChart {
         return numEquations;
     }
 
-    public void setEquations(List<PlotEquation> plotEquations) {
+    public void setEquations(List<GUIPlotEquation> plotEquations) {
         this.plotEquations.clear();
         this.plotEquations.addAll(plotEquations);
         drawChart();
@@ -184,7 +184,7 @@ public class PlotData extends XYCanvasChart {
         int nIncr = 256;
         double[] xValues = new double[nIncr];
         double[] yValues = new double[nIncr];
-        for (PlotEquation plotEquation : plotEquations) {
+        for (GUIPlotEquation plotEquation : plotEquations) {
             if (plotEquation == null) {
                 continue;
             }
@@ -202,11 +202,12 @@ public class PlotData extends XYCanvasChart {
                     ax[j] = extras[j];
                 }
                 double yValue = plotEquation.calculate(ax, plotEquation.getExtra(0));
+               // yValue /= plotEquation.getScaleValue() / 100.0;
                 double y = yAxis.getDisplayPosition(yValue);
                 xValues[i] = x;
                 yValues[i] = y;
             }
-            gC.setStroke(Color.BLACK);
+            gC.setStroke(plotEquation.getColor());
             gC.strokePolyline(xValues, yValues, nIncr);
         }
     }

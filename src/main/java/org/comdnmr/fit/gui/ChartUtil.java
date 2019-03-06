@@ -256,11 +256,11 @@ public class ChartUtil {
         return series;
     }
 
-    public static ArrayList<PlotEquation> getEquations(ExperimentData expData, String seriesName, String[] residues, String equationName, String state, double field) {
+    public static ArrayList<GUIPlotEquation> getEquations(ExperimentData expData, String seriesName, String[] residues, String equationName, String state, double field) {
         //System.out.println(" series name is " + seriesName);
-        ArrayList<PlotEquation> equations = new ArrayList<>();
+        ArrayList<GUIPlotEquation> equations = new ArrayList<>();
         for (String resNum : residues) {
-            PlotEquation equation = getEquation(expData, seriesName, resNum, equationName, state, field);
+            GUIPlotEquation equation = getEquation(expData, seriesName, resNum, equationName, state, field);
             if (equation != null) {
                 equations.add(equation);
             }
@@ -268,10 +268,10 @@ public class ChartUtil {
         return equations;
     }
 
-    public static PlotEquation getEquation(ExperimentData expData, String seriesName, String resNum, String equationName, String state, double field) {
+    public static GUIPlotEquation getEquation(ExperimentData expData, String seriesName, String resNum, String equationName, String state, double field) {
         ResidueProperties residueProps = residueProperties.get(seriesName);
         ResidueInfo resInfo = residueProps.getResidueInfo(resNum);
-        PlotEquation equationCopy = null;
+        GUIPlotEquation equationCopy = null;
 //            ExperimentData expData = residueProps.getExperimentData("cest"); // fixme
         Optional<ExperimentData> optionalData = Optional.empty();
         optionalData = residueProps.getExperimentData().stream().findFirst();
@@ -282,7 +282,7 @@ public class ChartUtil {
             } else {
                 useEquationName = equationName;
             }
-            
+
             CurveFit curveSet = resInfo.getCurveSet(useEquationName, state); // fixme
             if (curveSet != null) {
                 PlotEquation equation = curveSet.getEquation();
@@ -300,11 +300,11 @@ public class ChartUtil {
                     extras[0] = field;
                     extras[1] = expData.getExtras().get(0);
                     extras[2] = expData.getExtras().get(1);
-                    equationCopy = new PlotEquation(useEquationName, pars, errs, extras);
+                    equationCopy = new GUIPlotEquation(useEquationName, pars, errs, extras);
                 } else {
                     double[] extras = new double[1];
                     extras[0] = expData.getField();
-                    equationCopy = equation.clone();
+                    equationCopy = new GUIPlotEquation(equation);
                     equationCopy.setExtra(extras);
                     //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[0] = " + extras[0]);
 

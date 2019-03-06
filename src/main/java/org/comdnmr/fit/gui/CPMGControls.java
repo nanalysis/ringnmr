@@ -404,7 +404,7 @@ public class CPMGControls extends EquationControls {
     void updateEquations() {
         ResidueInfo resInfo = controller.currentResInfo;
         ResidueProperties resProps = controller.currentResProps;
-        List<PlotEquation> equations = new ArrayList<>();
+        List<GUIPlotEquation> equations = new ArrayList<>();
         double[] pars;
         String equationName = equationSelector.getValue();
         if (resProps == null) {
@@ -412,7 +412,7 @@ public class CPMGControls extends EquationControls {
             double[] errs = new double[pars.length];
             double[] extras = new double[1];
             extras[0] = CoMDPreferences.getRefField();
-            PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
+            GUIPlotEquation plotEquation = new GUIPlotEquation(equationName, pars, errs, extras);
             equations.add(plotEquation);
         } else {
             double[] fields = resProps.getFields();
@@ -442,7 +442,7 @@ public class CPMGControls extends EquationControls {
                         extras[0] = fields[iField];
                     }
                     double[] errs = new double[pars.length];
-                    PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
+                    GUIPlotEquation plotEquation = new GUIPlotEquation(equationName, pars, errs, extras);
                     equations.add(plotEquation);
                 }
             }
