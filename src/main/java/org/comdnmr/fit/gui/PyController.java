@@ -1585,7 +1585,7 @@ public class PyController implements Initializable {
         currentResProps = null;
         fitResult = null;
         // fixme xychart.clear();
-        chartBox.getChildren().remove(activeChart);
+        barCharts.remove(activeChart);
         activeChart = barCharts.get(0);
         getSimMode();
         setSimControls();
@@ -1604,44 +1604,43 @@ public class PyController implements Initializable {
         ObservableList<DataSeries> allData = FXCollections.observableArrayList();
         List<ResidueData> resDatas = new ArrayList<>();
         List<int[]> allStates = new ArrayList<>();
-        if (resProps != null) {
+        if ((resProps != null) && (residues != null)) {
+            int i = 0;
             for (ExperimentData expData : resProps.getExperimentData()) {
-                if (residues == null) {
-                    break;
-                }
-                for (String residue : residues) {
-//                    System.out.println("get resd " + residue + " " + expData.getResidueData(residue));
-
-                    resDatas.add(expData.getResidueData(residue));
-                }
-                String expName = expData.getName();
                 if (!ResidueProperties.matchStateString(state, expData.getState())) {
                     continue;
                 }
-                for (String residue : residues) {
-                    DataSeries series = ChartUtil.getMapData(mapName, expName, residue);
+                String expName = expData.getName();
+                for (String resNum : residues) {
+                    resDatas.add(expData.getResidueData(resNum));
+                    DataSeries series = ChartUtil.getMapData(mapName, expName, resNum);
+                    series.setStroke(PlotData.colors[i % 8]);
+                    series.setFill(PlotData.colors[i % 8]);
+                    i++;
+
                     allData.add(series);
+                    PlotEquation equation = ChartUtil.getEquation(expData,
+                            mapName, resNum, equationName, expData.getState(),
+                            expData.getNucleusField());
+                    if (equation != null) {
+                        equations.add(equation);
+                    } else {
+                        System.out.println("null eq");
+                    }
                 }
-                equations.addAll(ChartUtil.getEquations(expData, mapName, residues, equationName, expData.getState(), expData.getNucleusField()));
+
                 int[] states = resProps.getStateIndices(0, expData);
                 allStates.add(states);
             }
         }
-        int i = 0;
-        for (DataSeries series : allData) {
-            series.setStroke(PlotData.colors[i % 8]);
-            series.setFill(PlotData.colors[i % 8]);
-            i++;
-        }
-        plotData.setData(allData);
-        setBounds();
-        plotData.setEquations(equations);
         updateTable(resDatas);
         if (residues != null) {
             updateTableWithPars(mapName, residues, equationName, state, allStates);
             updateEquation(mapName, residues, equationName);
         }
-
+        plotData.setData(allData);
+        setBounds();
+        plotData.setEquations(equations);
     }
 
     public void setSimData(EquationFitter equationFitter) {

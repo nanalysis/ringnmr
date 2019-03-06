@@ -257,60 +257,63 @@ public class ChartUtil {
     }
 
     public static ArrayList<PlotEquation> getEquations(ExperimentData expData, String seriesName, String[] residues, String equationName, String state, double field) {
-        ResidueProperties residueProps = residueProperties.get(seriesName);
         //System.out.println(" series name is " + seriesName);
         ArrayList<PlotEquation> equations = new ArrayList<>();
         for (String resNum : residues) {
-            Series<Double, Double> series = new Series<>();
-            series.setName(resNum);
-            ResidueInfo resInfo = residueProps.getResidueInfo(resNum);
-//            ExperimentData expData = residueProps.getExperimentData("cest"); // fixme
-            Optional<ExperimentData> optionalData = Optional.empty();
-            if (residueProps != null) {
-                optionalData = residueProps.getExperimentData().stream().findFirst();
+            PlotEquation equation = getEquation(expData, seriesName, resNum, equationName, state, field);
+            if (equation != null) {
+                equations.add(equation);
             }
-            if (resInfo != null) {
-                final String useEquationName;
-                if (equationName.equals("best")) {
-                    useEquationName = resInfo.getBestEquationName();
-                } else {
-                    useEquationName = equationName;
-                }
-                //   for (CurveFit curveFit: resInfo.)
-                CurveFit curveSet = resInfo.getCurveSet(useEquationName, state); // fixme
-                if (curveSet != null) {
-                    PlotEquation equation = curveSet.getEquation();
-                    if (optionalData.isPresent() && optionalData.get().getExtras().size() > 0) {
+        }
+        return equations;
+    }
+
+    public static PlotEquation getEquation(ExperimentData expData, String seriesName, String resNum, String equationName, String state, double field) {
+        ResidueProperties residueProps = residueProperties.get(seriesName);
+        ResidueInfo resInfo = residueProps.getResidueInfo(resNum);
+        PlotEquation equationCopy = null;
+//            ExperimentData expData = residueProps.getExperimentData("cest"); // fixme
+        Optional<ExperimentData> optionalData = Optional.empty();
+        optionalData = residueProps.getExperimentData().stream().findFirst();
+        if (resInfo != null) {
+            final String useEquationName;
+            if (equationName.equals("best")) {
+                useEquationName = resInfo.getBestEquationName();
+            } else {
+                useEquationName = equationName;
+            }
+            
+            CurveFit curveSet = resInfo.getCurveSet(useEquationName, state); // fixme
+            if (curveSet != null) {
+                PlotEquation equation = curveSet.getEquation();
+                if (optionalData.isPresent() && optionalData.get().getExtras().size() > 0) {
 //                        ExperimentData expData = optionalData.get();
-                        double[] pars = curveSet.getEquation().getPars(); //pars = getPars(equationName);
-                        double[] errs = curveSet.getEquation().getErrs(); //double[] errs = new double[pars.length];
-                        double[] extras = new double[3];
+                    double[] pars = curveSet.getEquation().getPars(); //pars = getPars(equationName);
+                    double[] errs = curveSet.getEquation().getErrs(); //double[] errs = new double[pars.length];
+                    double[] extras = new double[3];
 //                        for (int j = 0; j < expData.getExtras().size() / 2; j++) {
 //                        extras[0] = field;
 //                        extras[1] = expData.getExtras().get(j);
 //                        //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[1] = " + extras[1]);
 //                        PlotEquation equationCopy = equation.clone();
 //                        equationCopy.setExtra(extras);
-                        extras[0] = field;
-                        extras[1] = expData.getExtras().get(0);
-                        extras[2] = expData.getExtras().get(1);
-                        PlotEquation equationCopy = new PlotEquation(useEquationName, pars, errs, extras);
-
-                        equations.add(equationCopy);
-                    } else {
-                        double[] extras = new double[1];
-                        extras[0] = field;
-                        PlotEquation equationCopy = equation.clone();
-                        equationCopy.setExtra(extras);
-                        //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[0] = " + extras[0]);
-                        equations.add(equationCopy);
-
-                    }
+                    extras[0] = field;
+                    extras[1] = expData.getExtras().get(0);
+                    extras[2] = expData.getExtras().get(1);
+                    equationCopy = new PlotEquation(useEquationName, pars, errs, extras);
+                } else {
+                    double[] extras = new double[1];
+                    extras[0] = expData.getField();
+                    equationCopy = equation.clone();
+                    equationCopy.setExtra(extras);
+                    //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[0] = " + extras[0]);
 
                 }
+
             }
         }
-        return equations;
+
+        return equationCopy;
     }
 
     public static ResidueInfo getResInfo(String seriesName, String residue) {
