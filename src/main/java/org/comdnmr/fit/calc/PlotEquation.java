@@ -69,6 +69,18 @@ public class PlotEquation {
         return y;
     }
 
+    public double calculate(double xValue) {
+        EquationType equationType = ResidueFitter.getEquationType(name);
+        int[][] map = equationType.makeMap(1);
+        double[] ax = new double[extras.length];
+        ax[0] = xValue;
+        for (int j = 1; j < extras.length; j++) {
+            ax[j] = extras[j];
+        }
+        double y = calculate(ax, getExtra(0));
+        return y;
+    }
+
     public double getMinX() {
         EquationType equationType = ResidueFitter.getEquationType(name);
         return equationType.getMinX();
