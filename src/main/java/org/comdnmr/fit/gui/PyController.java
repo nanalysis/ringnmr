@@ -62,6 +62,7 @@ import org.controlsfx.control.StatusBar;
 import org.comdnmr.fit.calc.CESTFit;
 import java.text.DecimalFormat;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Optional;
 import javafx.beans.property.SimpleStringProperty;
 import java.util.Random;
@@ -77,7 +78,6 @@ import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ToolBar;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
-import org.comdnmr.fit.calc.ExperimentData.Nuclei;
 import org.comdnmr.fit.calc.FitModel;
 import org.comdnmr.fit.calc.R1RhoFit;
 import static org.comdnmr.fit.gui.MainApp.preferencesController;
@@ -155,6 +155,8 @@ public class PyController implements Initializable {
     TextField yUpperBoundTextField;
     @FXML
     TextField yTickTextField;
+    @FXML
+    CheckBox scalePlot;
 
     @FXML
     Button setBoundsButton;
@@ -1604,9 +1606,10 @@ public class PyController implements Initializable {
         ObservableList<DataSeries> allData = FXCollections.observableArrayList();
         List<ResidueData> resDatas = new ArrayList<>();
         List<int[]> allStates = new ArrayList<>();
+        boolean calcScale = scalePlot.isSelected();
         if ((resProps != null) && (residues != null)) {
-            double maxY = getMaxY(resProps, equationName, mapName, state, residues);
-            System.out.println("max Y " + maxY);
+            //double maxY = getMaxY(resProps, equationName, mapName, state, residues) / 100.0;
+            //System.out.println("max Y " + maxY);
             int iSeries = 0;
             for (ExperimentData expData : resProps.getExperimentData()) {
                 if (!ResidueProperties.matchStateString(state, expData.getState())) {
@@ -1618,18 +1621,25 @@ public class PyController implements Initializable {
                     DataSeries series = ChartUtil.getMapData(mapName, expName, resNum);
                     series.setStroke(PlotData.colors[iSeries % 8]);
                     series.setFill(PlotData.colors[iSeries % 8]);
-
                     allData.add(series);
                     GUIPlotEquation equation = ChartUtil.getEquation(expData,
                             mapName, resNum, equationName, expData.getState(),
                             expData.getNucleusField());
-                    equation.setScaleValue(maxY);
-                    equation.setColor(PlotData.colors[iSeries % 8]);
+                    double maxY = 1.0;
                     if (equation != null) {
+                        equation.setColor(PlotData.colors[iSeries % 8]);
+                        if (calcScale) {
+                            maxY = equation.calculate(equation.getMinX()) / 100.0;
+                        }
+                        equation.setScaleValue(maxY);
                         equations.add(equation);
                     } else {
+                        if (calcScale) {
+                            maxY = series.getValues().stream().mapToDouble(XYValue::getYValue).max().getAsDouble() / 100.0;
+                        }
                         System.out.println("null eq");
                     }
+                    series.setScale(maxY);
                     iSeries++;
                 }
 
@@ -1644,6 +1654,7 @@ public class PyController implements Initializable {
         }
         plotData.setData(allData);
         setBounds();
+        plotData.autoScale(false);
         plotData.setEquations(equations);
     }
 
@@ -1668,11 +1679,11 @@ public class PyController implements Initializable {
                             maxValue = valueY;
                         }
                     } else {
-//                        DataSeries series = ChartUtil.getMapData(mapName, expName, resNum);
-//                        double valueY = series.getValues().stream().max(XYValue::getYValue).get();
-//                        if (valueY > maxValue) {
-//                            maxValue = valueY;
-//                        }
+                        DataSeries series = ChartUtil.getMapData(mapName, expName, resNum);
+                        double valueY = series.getValues().stream().mapToDouble(XYValue::getYValue).max().getAsDouble();
+                        if (valueY > maxValue) {
+                            maxValue = valueY;
+                        }
 
                     }
                 }

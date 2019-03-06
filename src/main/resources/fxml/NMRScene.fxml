@@ -191,6 +191,7 @@
                                             </HBox>
                                             <Button text="Set Bounds" onAction="#setBounds" fx:id="setBoundsButton"/>
                                             <Button text="Autoscale Bounds" onAction="#autoscaleBounds" fx:id="autoscaleBoundsButton"/>
+                                            <CheckBox text="Scale Data" fx:id="scalePlot"/>
                                         </children>
 
                                     </VBox>

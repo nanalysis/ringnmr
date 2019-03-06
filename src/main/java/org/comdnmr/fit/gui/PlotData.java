@@ -202,7 +202,7 @@ public class PlotData extends XYCanvasChart {
                     ax[j] = extras[j];
                 }
                 double yValue = plotEquation.calculate(ax, plotEquation.getExtra(0));
-               // yValue /= plotEquation.getScaleValue() / 100.0;
+                yValue /= plotEquation.getScaleValue();
                 double y = yAxis.getDisplayPosition(yValue);
                 xValues[i] = x;
                 yValues[i] = y;
