@@ -142,4 +142,8 @@ public enum ExpEquation implements EquationType {
         return equationNames;
     }
 
+    public double getMinX() {
+        return 0.0;
+    }
+
 }
