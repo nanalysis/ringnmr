@@ -51,6 +51,7 @@
                             <MenuItem text="Connect to NMRFx Server..." onAction="#startServer" fx:id = "serverMenuItem"/>
                             <MenuItem text="Preferences..." onAction="#showPreferences"/>
                             <MenuItem text="Show Console" onAction="#showConsole"/>
+                            <MenuItem text="Clear Project" onAction="#clearProject"/>
                             <MenuItem text="Exit" onAction="#exitProgram"/>
 
                         </items>
@@ -192,6 +193,8 @@
                                             <Button text="Set Bounds" onAction="#setBounds" fx:id="setBoundsButton"/>
                                             <Button text="Autoscale Bounds" onAction="#autoscaleBounds" fx:id="autoscaleBoundsButton"/>
                                             <CheckBox text="Scale Data" fx:id="scalePlot"/>
+                                            <CheckBox text="Autoscale X" fx:id="autoscaleXCheckBox"/>
+                                            <CheckBox text="Autoscale Y" fx:id="autoscaleYCheckBox"/>
                                         </children>
 
                                     </VBox>
