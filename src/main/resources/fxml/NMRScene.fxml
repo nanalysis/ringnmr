@@ -51,6 +51,7 @@
                             <MenuItem text="Connect to NMRFx Server..." onAction="#startServer" fx:id = "serverMenuItem"/>
                             <MenuItem text="Preferences..." onAction="#showPreferences"/>
                             <MenuItem text="Show Console" onAction="#showConsole"/>
+                            <MenuItem text="Clear Project" onAction="#clearProject"/>
                             <MenuItem text="Exit" onAction="#exitProgram"/>
 
                         </items>
