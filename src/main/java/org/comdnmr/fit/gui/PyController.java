@@ -1637,7 +1637,6 @@ public class PyController implements Initializable {
                         if (calcScale) {
                             maxY = series.getValues().stream().mapToDouble(XYValue::getYValue).max().getAsDouble() / 100.0;
                         }
-                        System.out.println("null eq");
                     }
                     series.setScale(maxY);
                     iSeries++;
@@ -1674,7 +1673,6 @@ public class PyController implements Initializable {
                     if (equation != null) {
                         double minX = equation.getMinX();
                         double valueY = equation.calculate(minX);
-                        System.out.println(minX + " " + valueY);
                         if (valueY > maxValue) {
                             maxValue = valueY;
                         }
