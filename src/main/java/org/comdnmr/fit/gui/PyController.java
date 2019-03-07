@@ -63,6 +63,7 @@ import org.comdnmr.fit.calc.CESTFit;
 import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Optional;
 import javafx.beans.property.SimpleStringProperty;
 import java.util.Random;
@@ -1582,17 +1583,31 @@ public class PyController implements Initializable {
     }
 
     void simAction() {
-        currentResidues = null;
-        currentResInfo = null;
-        currentResProps = null;
-        fitResult = null;
-        // fixme xychart.clear();
-        barCharts.remove(activeChart);
-        activeChart = barCharts.get(0);
+        clearProject(false);
         getSimMode();
         setSimControls();
         updateXYChartLabels();
         simControls.simSliderAction("");
+    }
+    
+    @FXML
+    void clearProject(ActionEvent event) {
+        clearProject(true);
+    }       
+    
+    void clearProject(boolean clearXY) {
+        currentResidues = null;
+        currentResInfo = null;
+        currentResProps = null;
+        fitResult = null;
+        ChartUtil.residueProperties = new HashMap<>();
+        if (clearXY) {
+            xychart.clear();
+        }
+        barCharts.remove(activeChart);
+        chartBox.getChildren().remove(0, chartBox.getChildren().size());
+        chartBox.getChildren().add(barPlotCanvas);
+        addChart();
     }
 
     void showInfo(String equationName) {
