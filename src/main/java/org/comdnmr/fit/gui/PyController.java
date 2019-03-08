@@ -642,7 +642,7 @@ public class PyController implements Initializable {
             yTickTextField.setText("5.0");
         } else if ((simControls instanceof ExpControls)) {
             xychart.setNames("Exp", "Time (s)", "Intensity", "0");
-            xychart.setBounds(0.0, 1.25, 0.0, 1.25, 0.25, 0.25);
+            xychart.setBounds(0.0, 1.25, 0.0, 100, 0.25, 10.0);
             xLowerBoundTextField.setText("0.0");
             xUpperBoundTextField.setText("1.25");
             yLowerBoundTextField.setText("0.0");
