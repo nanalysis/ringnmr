@@ -393,14 +393,11 @@ public class PyController implements Initializable {
             if (residueChart.mouseClicked(e)) {
                 activeChart = residueChart;
                 break;
-            } else {
-                if ((x > xAxis.getXOrigin()) && (x < xAxis.getXOrigin() + xAxis.getWidth())) {
-                    if ((y < yAxis.getYOrigin()) && (y > xAxis.getYOrigin() - yAxis.getHeight())) {
-                        activeChart = residueChart;
-                        break;
-                    }
+            } else if ((x > xAxis.getXOrigin()) && (x < xAxis.getXOrigin() + xAxis.getWidth())) {
+                if ((y < yAxis.getYOrigin()) && (y > xAxis.getYOrigin() - yAxis.getHeight())) {
+                    activeChart = residueChart;
+                    break;
                 }
-
             }
         }
         refreshResidueCharts();
@@ -683,7 +680,7 @@ public class PyController implements Initializable {
             yUpperBoundTextField.setText("50.0");
             xTickTextField.setText("2.0");
             yTickTextField.setText("5.0");
-        } 
+        }
     }
 
     public void setBounds(ActionEvent event) {
@@ -718,16 +715,18 @@ public class PyController implements Initializable {
 
     public void autoscaleBounds(ActionEvent event) {
         double[] bounds = xychart.autoScale(true);
-        xLowerBoundTextField.setText(Double.toString(bounds[0]));
-        xUpperBoundTextField.setText(Double.toString(bounds[1]));
-        yLowerBoundTextField.setText(Double.toString(bounds[2]));
-        yUpperBoundTextField.setText(Double.toString(bounds[3]));
-        if (simControls instanceof CESTControls) {
-            ((CESTControls) simControls).updateDeltaLimits(bounds[0], bounds[1]);
+        if (bounds != null) {
+            xLowerBoundTextField.setText(Double.toString(bounds[0]));
+            xUpperBoundTextField.setText(Double.toString(bounds[1]));
+            yLowerBoundTextField.setText(Double.toString(bounds[2]));
+            yUpperBoundTextField.setText(Double.toString(bounds[3]));
+            if (simControls instanceof CESTControls) {
+                ((CESTControls) simControls).updateDeltaLimits(bounds[0], bounds[1]);
+            }
         }
 
     }
-    
+
     public void autoscaleX(boolean autoX) {
         xychart.xAxis.setAutoRanging(autoX);
     }
@@ -735,7 +734,7 @@ public class PyController implements Initializable {
     public void autoscaleY(boolean autoY) {
         xychart.yAxis.setAutoRanging(autoY);
     }
-    
+
     public void updateChartEquations(String equationName, double[] pars, double[] errs, double[] fields) {
         List<GUIPlotEquation> equations = new ArrayList<>();
         for (int i = 0; i < fields.length; i++) {
@@ -1606,12 +1605,12 @@ public class PyController implements Initializable {
         updateXYChartLabels();
         simControls.simSliderAction("");
     }
-    
+
     @FXML
     void clearProject(ActionEvent event) {
         clearProject(true);
-    }       
-    
+    }
+
     void clearProject(boolean clearXY) {
         currentResidues = null;
         currentResInfo = null;
@@ -1665,10 +1664,8 @@ public class PyController implements Initializable {
                         }
                         equation.setScaleValue(maxY);
                         equations.add(equation);
-                    } else {
-                        if (calcScale) {
-                            maxY = series.getValues().stream().mapToDouble(XYValue::getYValue).max().getAsDouble() / 100.0;
-                        }
+                    } else if (calcScale) {
+                        maxY = series.getValues().stream().mapToDouble(XYValue::getYValue).max().getAsDouble() / 100.0;
                     }
                     series.setScale(maxY);
                     iSeries++;
