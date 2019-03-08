@@ -668,7 +668,7 @@ public class PyController implements Initializable {
             yTickTextField.setText("0.25");
         } else if ((simControls instanceof R1RhoControls)) {
             xychart.setNames("R1Rho", "Offset (PPM)", "R1Rho", "20");
-            xychart.setBounds(-20, 20, 0.0, 1.0, 2.0, 0.25);
+            xychart.setBounds(-20, 20, 0.0, 50.0, 2.0, 5.0);
             xLowerBoundTextField.setText("-20.0");
             xUpperBoundTextField.setText("20.0");
             if (currentResProps != null) {
@@ -683,7 +683,7 @@ public class PyController implements Initializable {
             yUpperBoundTextField.setText("50.0");
             xTickTextField.setText("2.0");
             yTickTextField.setText("5.0");
-        }
+        } 
     }
 
     public void setBounds(ActionEvent event) {
