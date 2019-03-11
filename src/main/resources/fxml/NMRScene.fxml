@@ -145,9 +145,11 @@
                                                             <Button text="Fit" onAction="#fitEquation" fx:id="FitEquation"/>
                                                         </children>
                                                     </HBox>
+                                                    <Label text="Generated Data: " fx:id="genDataLabel"/>
                                                     <HBox>
                                                         <children>
-                                                            <Label text="Generated Data: " fx:id="genDataLabel"/>
+                                                            <Label text="St. Dev.: " fx:id="genDataSDevLabel"/>
+                                                            <TextField fx:id="genDataSDevTextField" prefWidth="80"/>
                                                             <Label text="No. Pts: " fx:id="genDataNPtsLabel"/>
                                                             <TextField fx:id="genDataNPtsTextField" prefWidth="80"/>
                                                             <Label text="X LB: " fx:id="genDataNPtsLabel"/>
