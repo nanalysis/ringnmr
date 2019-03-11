@@ -168,6 +168,9 @@ public class PyController implements Initializable {
     CheckBox autoscaleYCheckBox;
 
     EquationControls simControls;
+    
+    @FXML
+    TextField genDataNPtsTextField;
 
     @FXML
     SplitPane splitPane;
@@ -244,6 +247,7 @@ public class PyController implements Initializable {
             yUpperBoundTextField.setText("65.0");
             xTickTextField.setText("100.0");
             yTickTextField.setText("5.0");
+            genDataNPtsTextField.setDisable(true);
         } else if (getFittingMode().equals("cest")) {
             simControls = new CESTControls();
             xLowerBoundTextField.setText("-20.0");
@@ -257,6 +261,8 @@ public class PyController implements Initializable {
             yUpperBoundTextField.setText("1.0");
             xTickTextField.setText("1.0");
             yTickTextField.setText("0.25");
+            genDataNPtsTextField.setDisable(false);
+            genDataNPtsTextField.setText("100");
         } else if (getFittingMode().equals("exp")) {
             simControls = new ExpControls();
             xLowerBoundTextField.setText("0.0");
@@ -265,6 +271,7 @@ public class PyController implements Initializable {
             yUpperBoundTextField.setText("100.0");
             xTickTextField.setText("0.25");
             yTickTextField.setText("10.0");
+            genDataNPtsTextField.setDisable(true);
         } else if (getFittingMode().equals("r1rho")) {
             simControls = new R1RhoControls();
             xLowerBoundTextField.setText("-20.0");
@@ -278,6 +285,8 @@ public class PyController implements Initializable {
             yUpperBoundTextField.setText("50.0");
             xTickTextField.setText("1.0");
             yTickTextField.setText("0.25");
+            genDataNPtsTextField.setDisable(false);
+            genDataNPtsTextField.setText("100");
         } else {
             System.out.println("Error: no fitting mode selected.");
         }
@@ -431,17 +440,25 @@ public class PyController implements Initializable {
         if (getSimMode().equals("cpmg") && !(simControls instanceof CPMGControls)) {
             simControls = new CPMGControls();
             update = true;
+            genDataNPtsTextField.setDisable(true);
+            genDataNPtsTextField.setText("0");
         } else if (getSimMode().equals("exp") && !(simControls instanceof ExpControls)) {
             simControls = new ExpControls();
             update = true;
+            genDataNPtsTextField.setDisable(true);
+            genDataNPtsTextField.setText("0");
         } else if (getSimMode().equals("cest") && !(simControls instanceof CESTControls)) {
             simControls = new CESTControls();
             ((CESTControls) simControls).updateDeltaLimits();
             update = true;
+            genDataNPtsTextField.setDisable(false);
+            genDataNPtsTextField.setText("100");
         } else if (getFittingMode().equals("r1rho") && !(simControls instanceof R1RhoControls)) {
             simControls = new R1RhoControls();
             ((R1RhoControls) simControls).updateDeltaLimits();
             update = true;
+            genDataNPtsTextField.setDisable(false);
+            genDataNPtsTextField.setText("100");
         }
         if (update) {
             updateEquationChoices(getSimMode());
@@ -1800,7 +1817,11 @@ public class PyController implements Initializable {
         double[] xBounds = xychart.getXBounds();
         double[] yBounds = xychart.getYBounds();
         double sdev = Math.abs(yBounds[1] - yBounds[0]) * 0.02;
-        double[] xValues = equationFitter.getSimX();
+        double[] xValues = equationFitter.getSimX(0);
+        if (getSimMode().equals("cest") || getSimMode().equals("r1rho")) {
+            int nPts = Integer.parseInt(genDataNPtsTextField.getText());
+            xValues = equationFitter.getSimX(nPts);
+        }
         double fieldRef = 1.0;
         int iLine = 0;
 
