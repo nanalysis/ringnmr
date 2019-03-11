@@ -23,10 +23,12 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -53,11 +55,11 @@ public class InputDataInterface {
     TextField chosenFileLabel = new TextField();
     TextField chosenXPK2FileLabel = new TextField();
     TextField chosenParamFileLabel = TextFields.createClearableTextField();
-    TextField fieldTextField = new TextField();
+    ComboBox B0fieldChoice = new ComboBox();
     TextField tempTextField = new TextField();
-    TextField nucTextField = new TextField();
+    ChoiceBox<String> nucChoice = new ChoiceBox<>();
     TextField pTextField = new TextField();
-    TextField modeTextField = new TextField();
+    ChoiceBox<String> modeChoice = new ChoiceBox<>();
     TextField tauTextField = new TextField();
     TextArea xValTextArea = new TextArea();
     ChoiceBox<String> fitModeChoice = new ChoiceBox<>();
@@ -76,6 +78,11 @@ public class InputDataInterface {
     Button yamlButton = new Button();
     Button loadButton = new Button();
     Path dirPath = null;
+    ChoiceBox<String> xConvChoice = new ChoiceBox<>();
+    ChoiceBox<String> yConvChoice = new ChoiceBox<>();
+    TextField delayC0TextField = new TextField();
+    TextField delayDeltaTextField = new TextField();
+    TextField delayDelta0TextField = new TextField();
 
     public InputDataInterface(PyController controller) {
         pyController = controller;
@@ -94,15 +101,17 @@ public class InputDataInterface {
         Label pLabel = new Label("  Pressure:  ");
         Label modeLabel = new Label("  Mode:  ");
         Label tauLabel = new Label("  Tau:  ");
-        Label xValLabel = new Label("  X Values:  ");
+        Label xValLabel = new Label("  X Values Conversion:  ");
+        Label yValLabel = new Label("  Y Values Conversion:  ");
+        Label delayLabel = new Label("  Delays:  ");
         Label fitModeLabel = new Label("  Experiment Type:  ");
         Label B1FieldLabel = new Label("  B1 Field:  ");
         Label yamlLabel = new Label("  YAML File:  ");
         Label errModeLabel = new Label("  Error Mode:  ");
         Label errPercentLabel = new Label("  Error Value:  ");
 
-        Label[] labels = {fitModeLabel, dirLabel, fileLabel, xpk2FileLabel, fitFileLabel, fieldLabel, tempLabel, nucLabel, pLabel, modeLabel,
-            tauLabel, B1FieldLabel, errModeLabel, errPercentLabel, xValLabel, yamlLabel};
+        Label[] labels = {fitModeLabel, dirLabel, fileLabel, xpk2FileLabel, fitFileLabel, fieldLabel, tempLabel, pLabel,
+            tauLabel, B1FieldLabel, modeLabel, nucLabel, errModeLabel, errPercentLabel, xValLabel, delayLabel, yValLabel, yamlLabel};
 
         dirChoiceButton.setText("Browse");
         dirChoiceButton.setOnAction(e -> chooseDirectory(e));
@@ -128,11 +137,8 @@ public class InputDataInterface {
         double textFieldWidth = 100;
         double xValAreaWidth = 150; //240;
 
-        fieldTextField.setText("");
         tempTextField.setText("25.0");
-        nucTextField.setText("");
         pTextField.setText("20.0");
-        modeTextField.setText("mpk2");
         tauTextField.setText("0.04");
         B1TextField.setText("20.0");
         errPercentTextField.setText("5");
@@ -142,7 +148,7 @@ public class InputDataInterface {
         xValTextArea.setWrapText(true);
         yamlTextField.setText("");
 
-        TextField[] texts = {fieldTextField, tempTextField, nucTextField, pTextField, modeTextField, tauTextField, B1TextField};
+        TextField[] texts = {tempTextField, pTextField, tauTextField, B1TextField};
 
         inputInfoDisplay.getChildren().clear();
 
@@ -150,7 +156,7 @@ public class InputDataInterface {
             inputInfoDisplay.add(labels[i], 0, i);
         }
         for (int i = 0; i < texts.length; i++) {
-            inputInfoDisplay.add(texts[i], 1, i + 5);
+            inputInfoDisplay.add(texts[i], 1, i + 6);
             texts[i].setMaxWidth(textFieldWidth);
         }
 
@@ -159,6 +165,31 @@ public class InputDataInterface {
         fitModeChoice.setValue("Select");
 
         fitModeChoice.valueProperty().addListener(x -> {
+            updateInfoInterface();
+        });
+        
+        modeChoice.getItems().clear();
+        modeChoice.getItems().addAll(Arrays.asList("mpk2", "ires", "txt"));
+        modeChoice.setValue("mpk2");
+
+        modeChoice.valueProperty().addListener(x -> {
+            updateInfoInterface();
+        });
+        
+        nucChoice.getItems().clear();
+        nucChoice.getItems().addAll(Arrays.asList("H1", "F19", "P31", "C13", "N15"));
+        nucChoice.setValue("mpk2");
+
+        nucChoice.valueProperty().addListener(x -> {
+            updateInfoInterface();
+        });
+        
+        B0fieldChoice.getItems().clear();
+        B0fieldChoice.getItems().addAll(Arrays.asList("400", "500", "600", "700", "750", "800", "900", "950", "1000", "1200"));
+        B0fieldChoice.setValue("400");
+        B0fieldChoice.setEditable(true);
+
+        B0fieldChoice.valueProperty().addListener(x -> {
             updateInfoInterface();
         });
 
@@ -171,14 +202,14 @@ public class InputDataInterface {
                 if ((fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST") || fitModeChoice.getSelectionModel().getSelectedItem().equals("R1RHO")) 
                         && ppmBox.isSelected()) {
                     for (int i = 0; i < xvals.length; i++) {
-                        fxvals.add(Double.parseDouble(xvals[i]) * Double.parseDouble(fieldTextField.getText()));
+                        fxvals.add(Double.parseDouble(xvals[i]) * Double.parseDouble(B0fieldChoice.getSelectionModel().getSelectedItem().toString()));
                         xString += fxvals.get(i).toString() + "\t";
                     }
                     xValTextArea.setText(xString);
                 } else if ((fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST") || fitModeChoice.getSelectionModel().getSelectedItem().equals("R1RHO"))
                         && !ppmBox.isSelected()) {
                     for (int i = 0; i < xvals.length; i++) {
-                        fxvals.add(Double.parseDouble(xvals[i]) / Double.parseDouble(fieldTextField.getText()));
+                        fxvals.add(Double.parseDouble(xvals[i]) / Double.parseDouble(B0fieldChoice.getSelectionModel().getSelectedItem().toString()));
                         xString += fxvals.get(i).toString() + "\t";
                     }
                     xValTextArea.setText(xString);
@@ -190,11 +221,27 @@ public class InputDataInterface {
         // set event to checkbox 
         ppmBox.setOnAction(boxevent);
 
-        errModeChoice.getItems().add("percent");
-        errModeChoice.getItems().add("replicates");
-        errModeChoice.getItems().add("noise");
+        errModeChoice.getItems().addAll(Arrays.asList("percent", "replicates", "noise"));
         errModeChoice.setValue("percent");
+        
+        xConvChoice.getItems().addAll(Arrays.asList("identity", "tau2", "ppmtohz", "hztoppm", "calc"));
+        xConvChoice.setValue("identity");
+        
+        xConvChoice.valueProperty().addListener(x -> {
+            updateDelays();
+        });
+        
+        yConvChoice.getItems().addAll(Arrays.asList("identity", "rate", "normalize"));
+        yConvChoice.setValue("identity");
+       
+        
+        HBox delayBox = new HBox();
+        delayBox.getChildren().addAll(new Label("C0:  "), delayC0TextField, new Label("  Delta:  "), delayDeltaTextField, new Label("  Delta0:  "), delayDelta0TextField);
 
+        delayC0TextField.setMaxWidth(textFieldWidth-20);
+        delayDeltaTextField.setMaxWidth(textFieldWidth-20);
+        delayDelta0TextField.setMaxWidth(textFieldWidth-20);
+        
         inputInfoDisplay.add(fitModeChoice, 1, 0);
         inputInfoDisplay.add(dirChoiceButton, 2, 1);
         inputInfoDisplay.add(chosenDirLabel, 1, 1);
@@ -204,10 +251,16 @@ public class InputDataInterface {
         inputInfoDisplay.add(chosenXPK2FileLabel, 1, 3);
         inputInfoDisplay.add(paramFileChoiceButton, 2, 4);
         inputInfoDisplay.add(chosenParamFileLabel, 1, 4);
-        inputInfoDisplay.add(errModeChoice, 1, labels.length - 4);
-        inputInfoDisplay.add(errPercentTextField, 1, labels.length - 3);
-        inputInfoDisplay.add(xValTextArea, 1, labels.length - 2, 1, 1);
-        inputInfoDisplay.add(ppmBox, 2, labels.length - 2);
+        inputInfoDisplay.add(B0fieldChoice, 1, 5);
+        inputInfoDisplay.add(modeChoice, 1, labels.length - 8);
+        inputInfoDisplay.add(nucChoice, 1, labels.length - 7);
+        inputInfoDisplay.add(errModeChoice, 1, labels.length - 6);
+        inputInfoDisplay.add(errPercentTextField, 1, labels.length - 5);
+//        inputInfoDisplay.add(xValTextArea, 1, labels.length - 2, 1, 1);
+//        inputInfoDisplay.add(ppmBox, 2, labels.length - 2);
+        inputInfoDisplay.add(xConvChoice, 1, labels.length - 4);
+        inputInfoDisplay.add(delayBox, 1, labels.length - 3, 2, 1);
+        inputInfoDisplay.add(yConvChoice, 1, labels.length - 2);
         inputInfoDisplay.add(yamlTextField, 1, labels.length - 1);
 
         chosenFileLabel.setMaxWidth(200);
@@ -245,7 +298,7 @@ public class InputDataInterface {
     public void updateInfoInterface() {
         if (fitModeChoice.getSelectionModel().getSelectedItem() != null) {
             if (fitModeChoice.getSelectionModel().getSelectedItem().equals("Select")) {
-                TextField[] textFields = {B1TextField, tauTextField, fieldTextField, tempTextField, nucTextField, pTextField, modeTextField,
+                TextField[] textFields = {B1TextField, tauTextField, tempTextField, pTextField,
                     errPercentTextField, yamlTextField, chosenFileLabel, chosenXPK2FileLabel, chosenParamFileLabel};
                 Button[] buttons = {fileChoiceButton, xpk2ChoiceButton, paramFileChoiceButton, addButton, clearButton, loadButton};
                 for (TextField textField : textFields) {
@@ -257,8 +310,16 @@ public class InputDataInterface {
                 ppmBox.setDisable(true);
                 xValTextArea.setDisable(true);
                 errModeChoice.setDisable(true);
+                xConvChoice.setDisable(true);
+                yConvChoice.setDisable(true);
+                modeChoice.setDisable(true);
+                nucChoice.setDisable(true);
+                B0fieldChoice.setDisable(true);
+                delayC0TextField.setDisable(true);
+                delayDeltaTextField.setDisable(true);
+                delayDelta0TextField.setDisable(true);
             } else if (!fitModeChoice.getSelectionModel().getSelectedItem().equals("Select")) {
-                TextField[] textFields = {fieldTextField, tempTextField, nucTextField, pTextField, modeTextField,
+                TextField[] textFields = {tempTextField, pTextField,
                     errPercentTextField, yamlTextField, chosenFileLabel, chosenXPK2FileLabel, chosenParamFileLabel};
                 Button[] buttons = {fileChoiceButton, xpk2ChoiceButton, paramFileChoiceButton, addButton, clearButton, loadButton};
                 for (TextField textField : textFields) {
@@ -269,22 +330,61 @@ public class InputDataInterface {
                 }
                 xValTextArea.setDisable(false);
                 errModeChoice.setDisable(false);
+                xConvChoice.setDisable(false);
+                yConvChoice.setDisable(false);
+                modeChoice.setDisable(false);
+                nucChoice.setDisable(false);
+                B0fieldChoice.setDisable(false);
                 if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CPMG")) {
                     B1TextField.setDisable(true);
                     tauTextField.setDisable(false);
                     ppmBox.setDisable(true);
+                    xConvChoice.getItems().clear();
+                    xConvChoice.getItems().addAll(Arrays.asList("identity", "tau2"));
+                    yConvChoice.getItems().clear();
+                    yConvChoice.getItems().addAll(Arrays.asList("identity", "rate"));
+                    xConvChoice.setValue("identity");
+                    yConvChoice.setValue("rate");
                 } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("EXP")) {
                     B1TextField.setDisable(true);
                     tauTextField.setDisable(true);
                     ppmBox.setDisable(true);
+                    xConvChoice.getItems().clear();
+                    xConvChoice.getItems().addAll(Arrays.asList("identity", "calc"));
+                    yConvChoice.getItems().clear();
+                    yConvChoice.getItems().addAll(Arrays.asList("identity", "normalize"));
+                    xConvChoice.setValue("identity");
+                    yConvChoice.setValue("identity");
                 } else if ((fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST") || fitModeChoice.getSelectionModel().getSelectedItem().equals("R1RHO"))) {
                     B1TextField.setDisable(false);
                     tauTextField.setDisable(false);
                     ppmBox.setDisable(false);
+                    xConvChoice.getItems().clear();
+                    xConvChoice.getItems().addAll(Arrays.asList("identity", "ppmtohz", "hztoppm"));
+                    yConvChoice.getItems().clear();
+                    yConvChoice.getItems().addAll(Arrays.asList("identity", "normalize"));
+                    xConvChoice.setValue("identity");
+                    yConvChoice.setValue("identity");
+                    if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST")) {
+                        yConvChoice.setValue("normalize");
+                    }
                 }
             }
         }
 
+    }
+    
+    public void updateDelays() {
+        if (!fitModeChoice.getSelectionModel().getSelectedItem().equals("Select") && 
+        (xConvChoice.getSelectionModel().getSelectedItem() != null) && xConvChoice.getSelectionModel().getSelectedItem().equals("calc")) {
+            delayC0TextField.setDisable(false);
+            delayDeltaTextField.setDisable(false);
+            delayDelta0TextField.setDisable(false);
+        } else {
+            delayC0TextField.setDisable(true);
+            delayDeltaTextField.setDisable(true);
+            delayDelta0TextField.setDisable(true);
+        }
     }
 
     public void chooseDirectory(ActionEvent event) {
@@ -349,9 +449,10 @@ public class InputDataInterface {
             int codeInd = Arrays.asList(head.get(2)).indexOf("code");
             String field = Arrays.asList(head.get(3)).get(sfInd);
             String nuc = Arrays.asList(head.get(4)).get(codeInd);
-            nuc = nuc.replaceAll("[^a-zA-Z]", "");
-            nucTextField.setText(nuc);
-            fieldTextField.setText(field);
+            String nuc1 = nuc.replaceAll("[^a-zA-Z]", "");
+            String nuc2 = nuc.replaceAll("[a-zA-Z]", "");
+            nucChoice.setValue(nuc1 + nuc2);
+            B0fieldChoice.getSelectionModel().select(field);
         }
     }
 
@@ -383,18 +484,25 @@ public class InputDataInterface {
         hm.put("file", chosenFileLabel.getText());
         hm.put("paramFile", chosenParamFileLabel.getText());
         hm.put("temperature", Double.parseDouble(tempTextField.getText()));
-        hm.put("B0", Double.parseDouble(fieldTextField.getText()));
-        hm.put("nucleus", nucTextField.getText());
+        hm.put("xconv", xConvChoice.getSelectionModel().getSelectedItem());
+        hm.put("yconv", yConvChoice.getSelectionModel().getSelectedItem());
+        hm.put("B0", Double.parseDouble(B0fieldChoice.getSelectionModel().getSelectedItem().toString()));
+        hm.put("nucleus", nucChoice.getSelectionModel().getSelectedItem().replaceAll("[^a-zA-Z]", ""));
         hm.put("tau", Double.parseDouble(tauTextField.getText()));
         hm.put("pressure", Double.parseDouble(pTextField.getText()));
-        hm.put("mode", modeTextField.getText());
+        hm.put("mode", modeChoice.getSelectionModel().getSelectedItem());
         hm.put("fitmode", fitModeChoice.getSelectionModel().getSelectedItem().toLowerCase());
         hm.put("B1", Double.parseDouble(B1TextField.getText()));
         HashMap hmde = new HashMap();
         hmde.put("mode", errModeChoice.getSelectionModel().getSelectedItem());
         hmde.put("value", Double.parseDouble(errPercentTextField.getText()));
+        HashMap hmdd = new HashMap();
+        hmdd.put("c0", Double.parseDouble(delayC0TextField.getText()));
+        hmdd.put("delta0", Double.parseDouble(delayDelta0TextField.getText()));
+        hmdd.put("delta", Double.parseDouble(delayDeltaTextField.getText()));
 
         hm.put("error", hmde);
+        hm.put("delays", hmdd);
 
         String[] xvals = xValTextArea.getText().trim().split("\t");
         if (xvals.length > 0) {
@@ -446,6 +554,9 @@ public class InputDataInterface {
             }
             if ((hmd.get("vcpmg") == null) || (hmd.get("vcpmg").toString().equals(""))) {
                 keySet.remove("vcpmg");
+            }
+            if (!hmd.get("xconv").equals("calc")) {
+                keySet.remove("delays");
             }
             keySet.remove("fitmode");
             keySet.remove("paramFile");
