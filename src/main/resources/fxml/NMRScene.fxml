@@ -27,6 +27,7 @@
                                     <MenuItem text="Project File..." onAction="#loadParameterFile" fx:id="loadMenuItem"/>
                                     <MenuItem text="Setup Parameters..." onAction="#inputParameters" fx:id="inputMenuItem"/>
                                     <MenuItem text="Load Secondary Structure..." onAction="#loadSecondaryStructure" fx:id="loadSSMenuItem"/>
+                                    <MenuItem text="Clear Secondary Structure..." onAction="#clearSecondaryStructure" fx:id="clearSSMenuItem"/>
                                     <MenuItem text="Chart  Data..." onAction="#loadSimData"/>
                                 </items>
                             </Menu>
