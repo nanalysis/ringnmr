@@ -276,8 +276,12 @@ public class ExpFit implements EquationFitter {
     }
 
     @Override
-    public double[] getSimX() {
-        return SIMX;
+    public double[] getSimX(int nPts) {
+        double[] simX = new double[SIMX.length];
+        if (nPts == 0) {
+           simX = SIMX; 
+        }
+        return simX;
     }
 
 }
