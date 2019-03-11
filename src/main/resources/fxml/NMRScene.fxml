@@ -213,6 +213,8 @@
                                             <CheckBox text="Scale Data" fx:id="scalePlot"/>
                                             <CheckBox text="Autoscale X" fx:id="autoscaleXCheckBox"/>
                                             <CheckBox text="Autoscale Y" fx:id="autoscaleYCheckBox"/>
+                                            <CheckBox text="Start X at 0" fx:id="zeroXCheckBox"/>
+                                            <CheckBox text="Start Y at 0" fx:id="zeroYCheckBox"/>
                                         </children>
 
                                     </VBox>
