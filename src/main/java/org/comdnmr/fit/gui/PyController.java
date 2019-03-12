@@ -602,6 +602,7 @@ public class PyController implements Initializable {
             }
             ChartUtil.loadParameters(file.toString());
         }
+            clearSecondaryStructure();
     }
 
     @FXML
@@ -611,6 +612,15 @@ public class PyController implements Initializable {
             ssPainter = new SSPainter(barPlotCanvas, ssValues);
         }
         resizeBarPlotCanvas();
+    }
+    
+    @FXML
+    public void clearSecondaryStructure() {
+        if (ssPainter != null) {
+            ssPainter.secondaryStructures.clear();
+            ssPainter = null;
+            resizeBarPlotCanvas();
+        }
     }
 
     @FXML
@@ -1666,6 +1676,7 @@ public class PyController implements Initializable {
         if (clearXY) {
             xychart.clear();
         }
+        clearSecondaryStructure();
         barCharts.remove(activeChart);
         chartBox.getChildren().remove(0, chartBox.getChildren().size());
         chartBox.getChildren().add(barPlotCanvas);
