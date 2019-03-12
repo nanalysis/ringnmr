@@ -179,6 +179,13 @@ public class ExpControls extends EquationControls {
                     guesses[map[id][1]] = r;
                 }
                 break;
+            case "EXPABC":
+                for (int id = 0; id < map.length; id++) {
+                    guesses[map[id][0]] = a;
+                    guesses[map[id][1]] = r;
+                    guesses[map[id][2]] = c;
+                }
+                break;
         }
 //        for(int i=0; i<guesses.length; i++){
 //            System.out.println("slider guess: " + i + " " + guesses[i]);
@@ -251,7 +258,7 @@ public class ExpControls extends EquationControls {
                 pars = new double[3];
                 pars[0] = a;
                 pars[1] = r;
-                pars[2] = r;
+                pars[2] = c;
 
                 break;
             default:

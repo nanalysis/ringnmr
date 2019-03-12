@@ -166,8 +166,21 @@ public class PyController implements Initializable {
     CheckBox autoscaleXCheckBox;
     @FXML
     CheckBox autoscaleYCheckBox;
+    @FXML
+    CheckBox zeroXCheckBox;
+    @FXML
+    CheckBox zeroYCheckBox;
 
     EquationControls simControls;
+    
+    @FXML
+    TextField genDataNPtsTextField;
+    @FXML
+    TextField genDataXLBTextField;
+    @FXML
+    TextField genDataXUBTextField;
+    @FXML
+    TextField genDataSDevTextField;
 
     @FXML
     SplitPane splitPane;
@@ -244,6 +257,9 @@ public class PyController implements Initializable {
             yUpperBoundTextField.setText("65.0");
             xTickTextField.setText("100.0");
             yTickTextField.setText("5.0");
+            genDataNPtsTextField.setDisable(true);
+            genDataXLBTextField.setDisable(true);
+            genDataXUBTextField.setDisable(true);
         } else if (getFittingMode().equals("cest")) {
             simControls = new CESTControls();
             xLowerBoundTextField.setText("-20.0");
@@ -257,6 +273,12 @@ public class PyController implements Initializable {
             yUpperBoundTextField.setText("1.0");
             xTickTextField.setText("1.0");
             yTickTextField.setText("0.25");
+            genDataNPtsTextField.setDisable(false);
+            genDataNPtsTextField.setText("100");
+            genDataXLBTextField.setDisable(false);
+            genDataXLBTextField.setText("-8.0");
+            genDataXUBTextField.setDisable(false);
+            genDataXUBTextField.setText("8.0");
         } else if (getFittingMode().equals("exp")) {
             simControls = new ExpControls();
             xLowerBoundTextField.setText("0.0");
@@ -265,6 +287,9 @@ public class PyController implements Initializable {
             yUpperBoundTextField.setText("100.0");
             xTickTextField.setText("0.25");
             yTickTextField.setText("10.0");
+            genDataNPtsTextField.setDisable(true);
+            genDataXLBTextField.setDisable(true);
+            genDataXUBTextField.setDisable(true);
         } else if (getFittingMode().equals("r1rho")) {
             simControls = new R1RhoControls();
             xLowerBoundTextField.setText("-20.0");
@@ -278,6 +303,12 @@ public class PyController implements Initializable {
             yUpperBoundTextField.setText("50.0");
             xTickTextField.setText("1.0");
             yTickTextField.setText("0.25");
+            genDataNPtsTextField.setDisable(false);
+            genDataNPtsTextField.setText("100");
+            genDataXLBTextField.setDisable(false);
+            genDataXLBTextField.setText("-8.0");
+            genDataXUBTextField.setDisable(false);
+            genDataXUBTextField.setText("8.0");
         } else {
             System.out.println("Error: no fitting mode selected.");
         }
@@ -311,6 +342,10 @@ public class PyController implements Initializable {
         autoscaleXCheckBox.setSelected(false);
         autoscaleYCheckBox.selectedProperty().addListener(e -> autoscaleY(autoscaleYCheckBox.isSelected()));
         autoscaleYCheckBox.setSelected(false);
+        zeroXCheckBox.selectedProperty().addListener(e -> includeXZero(zeroXCheckBox.isSelected()));
+        zeroXCheckBox.setSelected(false);
+        zeroYCheckBox.selectedProperty().addListener(e -> includeYZero(zeroYCheckBox.isSelected()));
+        zeroYCheckBox.setSelected(false);
         nmrFxPeakButton.setDisable(true);
         nmrFxPeakButton.setOnAction(e -> nmrFxMessage(e));
         xychart = (PlotData) chartPane.getChart();
@@ -393,14 +428,11 @@ public class PyController implements Initializable {
             if (residueChart.mouseClicked(e)) {
                 activeChart = residueChart;
                 break;
-            } else {
-                if ((x > xAxis.getXOrigin()) && (x < xAxis.getXOrigin() + xAxis.getWidth())) {
-                    if ((y < yAxis.getYOrigin()) && (y > xAxis.getYOrigin() - yAxis.getHeight())) {
-                        activeChart = residueChart;
-                        break;
-                    }
+            } else if ((x > xAxis.getXOrigin()) && (x < xAxis.getXOrigin() + xAxis.getWidth())) {
+                if ((y < yAxis.getYOrigin()) && (y > xAxis.getYOrigin() - yAxis.getHeight())) {
+                    activeChart = residueChart;
+                    break;
                 }
-
             }
         }
         refreshResidueCharts();
@@ -434,17 +466,35 @@ public class PyController implements Initializable {
         if (getSimMode().equals("cpmg") && !(simControls instanceof CPMGControls)) {
             simControls = new CPMGControls();
             update = true;
+            genDataNPtsTextField.setDisable(true);
+            genDataXLBTextField.setDisable(true);
+            genDataXUBTextField.setDisable(true);
         } else if (getSimMode().equals("exp") && !(simControls instanceof ExpControls)) {
             simControls = new ExpControls();
             update = true;
+            genDataNPtsTextField.setDisable(true);
+            genDataXLBTextField.setDisable(true);
+            genDataXUBTextField.setDisable(true);
         } else if (getSimMode().equals("cest") && !(simControls instanceof CESTControls)) {
             simControls = new CESTControls();
             ((CESTControls) simControls).updateDeltaLimits();
             update = true;
+            genDataNPtsTextField.setDisable(false);
+            genDataNPtsTextField.setText("100");
+            genDataXLBTextField.setDisable(false);
+            genDataXLBTextField.setText("-8.0");
+            genDataXUBTextField.setDisable(false);
+            genDataXUBTextField.setText("8.0");
         } else if (getFittingMode().equals("r1rho") && !(simControls instanceof R1RhoControls)) {
             simControls = new R1RhoControls();
             ((R1RhoControls) simControls).updateDeltaLimits();
             update = true;
+            genDataNPtsTextField.setDisable(false);
+            genDataNPtsTextField.setText("100");
+            genDataXLBTextField.setDisable(false);
+            genDataXLBTextField.setText("-8.0");
+            genDataXUBTextField.setDisable(false);
+            genDataXUBTextField.setText("8.0");
         }
         if (update) {
             updateEquationChoices(getSimMode());
@@ -560,6 +610,7 @@ public class PyController implements Initializable {
             }
             ChartUtil.loadParameters(file.toString());
         }
+            clearSecondaryStructure();
     }
 
     @FXML
@@ -569,6 +620,15 @@ public class PyController implements Initializable {
             ssPainter = new SSPainter(barPlotCanvas, ssValues);
         }
         resizeBarPlotCanvas();
+    }
+    
+    @FXML
+    public void clearSecondaryStructure() {
+        if (ssPainter != null) {
+            ssPainter.secondaryStructures.clear();
+            ssPainter = null;
+            resizeBarPlotCanvas();
+        }
     }
 
     @FXML
@@ -642,7 +702,7 @@ public class PyController implements Initializable {
             yTickTextField.setText("5.0");
         } else if ((simControls instanceof ExpControls)) {
             xychart.setNames("Exp", "Time (s)", "Intensity", "0");
-            xychart.setBounds(0.0, 1.25, 0.0, 1.25, 0.25, 0.25);
+            xychart.setBounds(0.0, 1.25, 0.0, 100, 0.25, 10.0);
             xLowerBoundTextField.setText("0.0");
             xUpperBoundTextField.setText("1.25");
             yLowerBoundTextField.setText("0.0");
@@ -668,7 +728,7 @@ public class PyController implements Initializable {
             yTickTextField.setText("0.25");
         } else if ((simControls instanceof R1RhoControls)) {
             xychart.setNames("R1Rho", "Offset (PPM)", "R1Rho", "20");
-            xychart.setBounds(-20, 20, 0.0, 1.0, 2.0, 0.25);
+            xychart.setBounds(-20, 20, 0.0, 50.0, 2.0, 5.0);
             xLowerBoundTextField.setText("-20.0");
             xUpperBoundTextField.setText("20.0");
             if (currentResProps != null) {
@@ -718,16 +778,18 @@ public class PyController implements Initializable {
 
     public void autoscaleBounds(ActionEvent event) {
         double[] bounds = xychart.autoScale(true);
-        xLowerBoundTextField.setText(Double.toString(bounds[0]));
-        xUpperBoundTextField.setText(Double.toString(bounds[1]));
-        yLowerBoundTextField.setText(Double.toString(bounds[2]));
-        yUpperBoundTextField.setText(Double.toString(bounds[3]));
-        if (simControls instanceof CESTControls) {
-            ((CESTControls) simControls).updateDeltaLimits(bounds[0], bounds[1]);
+        if (bounds != null) {
+            xLowerBoundTextField.setText(Double.toString(bounds[0]));
+            xUpperBoundTextField.setText(Double.toString(bounds[1]));
+            yLowerBoundTextField.setText(Double.toString(bounds[2]));
+            yUpperBoundTextField.setText(Double.toString(bounds[3]));
+            if (simControls instanceof CESTControls) {
+                ((CESTControls) simControls).updateDeltaLimits(bounds[0], bounds[1]);
+            }
         }
 
     }
-    
+
     public void autoscaleX(boolean autoX) {
         xychart.xAxis.setAutoRanging(autoX);
     }
@@ -736,6 +798,14 @@ public class PyController implements Initializable {
         xychart.yAxis.setAutoRanging(autoY);
     }
     
+    public void includeXZero(boolean xZero) {
+        xychart.xAxis.setZeroIncluded(xZero);
+    }
+    
+    public void includeYZero(boolean yZero) {
+        xychart.yAxis.setZeroIncluded(yZero);
+    }
+
     public void updateChartEquations(String equationName, double[] pars, double[] errs, double[] fields) {
         List<GUIPlotEquation> equations = new ArrayList<>();
         for (int i = 0; i < fields.length; i++) {
@@ -1604,14 +1674,15 @@ public class PyController implements Initializable {
         getSimMode();
         setSimControls();
         updateXYChartLabels();
+        genDataSDevTextField.setText("");
         simControls.simSliderAction("");
     }
-    
+
     @FXML
     void clearProject(ActionEvent event) {
         clearProject(true);
-    }       
-    
+    }
+
     void clearProject(boolean clearXY) {
         currentResidues = null;
         currentResInfo = null;
@@ -1621,6 +1692,7 @@ public class PyController implements Initializable {
         if (clearXY) {
             xychart.clear();
         }
+        clearSecondaryStructure();
         barCharts.remove(activeChart);
         chartBox.getChildren().remove(0, chartBox.getChildren().size());
         chartBox.getChildren().add(barPlotCanvas);
@@ -1665,10 +1737,8 @@ public class PyController implements Initializable {
                         }
                         equation.setScaleValue(maxY);
                         equations.add(equation);
-                    } else {
-                        if (calcScale) {
-                            maxY = series.getValues().stream().mapToDouble(XYValue::getYValue).max().getAsDouble() / 100.0;
-                        }
+                    } else if (calcScale) {
+                        maxY = series.getValues().stream().mapToDouble(XYValue::getYValue).max().getAsDouble() / 100.0;
                     }
                     series.setScale(maxY);
                     iSeries++;
@@ -1803,7 +1873,17 @@ public class PyController implements Initializable {
         double[] xBounds = xychart.getXBounds();
         double[] yBounds = xychart.getYBounds();
         double sdev = Math.abs(yBounds[1] - yBounds[0]) * 0.02;
-        double[] xValues = equationFitter.getSimX();
+        if (genDataSDevTextField.getText().equals("")) {
+            genDataSDevTextField.setText(String.valueOf(sdev));
+        }
+        double[] xValues = equationFitter.getSimX(0, 0, 0);
+        String simMode = getSimMode();
+        if (simMode.equals("cest") || simMode.equals("r1rho")) {
+            int nPts = Integer.parseInt(genDataNPtsTextField.getText());
+            double xLB = Double.parseDouble(genDataXLBTextField.getText());
+            double xUB = Double.parseDouble(genDataXUBTextField.getText());
+            xValues = equationFitter.getSimX(nPts, xLB, xUB);
+        }
         double fieldRef = 1.0;
         int iLine = 0;
 
@@ -1826,7 +1906,7 @@ public class PyController implements Initializable {
                 double xValue = xValues[i];
                 ax[0] = xValue;
                 double yValue = eqn.calculate(sliderGuesses, ax, eqn.getExtra(0));
-                yValue += sdev * rand.nextGaussian();
+                yValue += Double.parseDouble(genDataSDevTextField.getText()) * rand.nextGaussian(); //sdev * rand.nextGaussian();
                 XYValue dataPoint = new XYValue(xValue, yValue);
                 dataPoint.setExtraValue(new Double(sdev));
                 series.getData().add(dataPoint);

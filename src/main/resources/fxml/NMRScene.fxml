@@ -27,6 +27,7 @@
                                     <MenuItem text="Project File..." onAction="#loadParameterFile" fx:id="loadMenuItem"/>
                                     <MenuItem text="Setup Parameters..." onAction="#inputParameters" fx:id="inputMenuItem"/>
                                     <MenuItem text="Load Secondary Structure..." onAction="#loadSecondaryStructure" fx:id="loadSSMenuItem"/>
+                                    <MenuItem text="Clear Secondary Structure..." onAction="#clearSecondaryStructure" fx:id="clearSSMenuItem"/>
                                     <MenuItem text="Chart  Data..." onAction="#loadSimData"/>
                                 </items>
                             </Menu>
@@ -133,16 +134,33 @@
                                             <Insets top="5" right="5" left="5" bottom="5"/>                 
                                         </padding>
                                         <top>
-                                            <HBox>
+                                            <VBox HBox.hgrow="ALWAYS">
                                                 <children>
-                                                    <ChoiceBox fx:id="simChoice">
-                                                    </ChoiceBox>
-                                                    <Button text="Display" onAction="#displayEquation" fx:id="DisplayEquation"/>
-                                                    <Button text="Gen" onAction="#showSimData" fx:id="Gen"/>
-                                                    <Button text="Guess" onAction="#guesses" fx:id="Guesses"/>
-                                                    <Button text="Fit" onAction="#fitEquation" fx:id="FitEquation"/>
+                                                    <HBox>
+                                                        <children>
+                                                            <ChoiceBox fx:id="simChoice">
+                                                            </ChoiceBox>
+                                                            <Button text="Display" onAction="#displayEquation" fx:id="DisplayEquation"/>
+                                                            <Button text="Gen" onAction="#showSimData" fx:id="Gen"/>
+                                                            <Button text="Guess" onAction="#guesses" fx:id="Guesses"/>
+                                                            <Button text="Fit" onAction="#fitEquation" fx:id="FitEquation"/>
+                                                        </children>
+                                                    </HBox>
+                                                    <Label text="Generated Data: " fx:id="genDataLabel"/>
+                                                    <HBox>
+                                                        <children>
+                                                            <Label text="St. Dev.: " fx:id="genDataSDevLabel"/>
+                                                            <TextField fx:id="genDataSDevTextField" prefWidth="80"/>
+                                                            <Label text="No. Pts: " fx:id="genDataNPtsLabel"/>
+                                                            <TextField fx:id="genDataNPtsTextField" prefWidth="80"/>
+                                                            <Label text="X LB: " fx:id="genDataNPtsLabel"/>
+                                                            <TextField fx:id="genDataXLBTextField" prefWidth="80"/>
+                                                            <Label text="X UB: " fx:id="genDataNPtsLabel"/>
+                                                            <TextField fx:id="genDataXUBTextField" prefWidth="80"/>
+                                                        </children>
+                                                    </HBox>
                                                 </children>
-                                            </HBox>
+                                            </VBox>
                                         </top>
                                     </BorderPane>
                                 </Tab>
@@ -195,6 +213,8 @@
                                             <CheckBox text="Scale Data" fx:id="scalePlot"/>
                                             <CheckBox text="Autoscale X" fx:id="autoscaleXCheckBox"/>
                                             <CheckBox text="Autoscale Y" fx:id="autoscaleYCheckBox"/>
+                                            <CheckBox text="Start X at 0" fx:id="zeroXCheckBox"/>
+                                            <CheckBox text="Start Y at 0" fx:id="zeroYCheckBox"/>
                                         </children>
 
                                     </VBox>
