@@ -325,12 +325,8 @@ public class CPMGFit implements EquationFitter {
     }
 
     @Override
-    public double[] getSimX(int nPts) {
-        double[] simX = new double[SIMX.length];
-        if (nPts == 0) {
-           simX = SIMX; 
-        }
-        return simX;
+    public double[] getSimX(int nPts, double xLB, double xUB) {
+        return SIMX;
     }
 
 }
