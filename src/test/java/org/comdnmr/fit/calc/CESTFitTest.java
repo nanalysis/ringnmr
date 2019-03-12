@@ -2,6 +2,7 @@ package org.comdnmr.fit.calc;
 
 import org.comdnmr.fit.calc.CPMGFitResult;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Arrays;
 import org.comdnmr.fit.calc.CESTFit;
 import org.junit.Assert;
@@ -152,10 +153,18 @@ public class CESTFitTest {
         System.out.printf("Fit RMS %10.3f Valid RMS %10.3f\n", fitRMS, validRMS);
     }
 
+    private List<Double> fixOffset(List<Double> values) {
+        List<Double> newValues = new ArrayList<>();
+        for (double value:values) {
+             newValues.add(value/(2.0*Math.PI));
+        }
+        return newValues;
+    }
+
     @Test
     public void testcestR1rhoPerturbation() {
         CESTFit fitting = new CESTFit();
-        fitting.setData(offset, omega, Texarray, intenarray, errarray);
+        fitting.setData(fixOffset(offset), fixOffset(omega), Texarray, intenarray, errarray);
 
         CPMGFitResult fit = fitting.doFit("cestr1rhoperturbation", null);
 
@@ -186,7 +195,7 @@ public class CESTFitTest {
     @Test
     public void testcestR1rhoSD() {
         CESTFit fitting = new CESTFit();
-        fitting.setData(offset, omega, Texarray, intenarray, errarray);
+        fitting.setData(fixOffset(offset), fixOffset(omega), Texarray, intenarray, errarray);
 
         CPMGFitResult fit = fitting.doFit("cestr1rhosd", null);
 
@@ -214,7 +223,7 @@ public class CESTFitTest {
     @Test
     public void testcestR1rhoBaldwinKay() {
         CESTFit fitting = new CESTFit();
-        fitting.setData(offset, omega, Texarray, intenarray, errarray);
+        fitting.setData(fixOffset(offset), fixOffset(omega), Texarray, intenarray, errarray);
 
         CPMGFitResult fit = fitting.doFit("cestr1rhobaldwinkay", null);
 
@@ -243,7 +252,7 @@ public class CESTFitTest {
     @Test
     public void testcestR1rhoN() {
         CESTFit fitting = new CESTFit();
-        fitting.setData(offset, omega, Texarray, intenarray, errarray);
+        fitting.setData(fixOffset(offset), fixOffset(omega), Texarray, intenarray, errarray);
 
         CPMGFitResult fit = fitting.doFit("cestr1rhon", null);
 
