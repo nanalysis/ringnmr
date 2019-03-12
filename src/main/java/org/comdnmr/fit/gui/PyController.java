@@ -166,6 +166,10 @@ public class PyController implements Initializable {
     CheckBox autoscaleXCheckBox;
     @FXML
     CheckBox autoscaleYCheckBox;
+    @FXML
+    CheckBox zeroXCheckBox;
+    @FXML
+    CheckBox zeroYCheckBox;
 
     EquationControls simControls;
     
@@ -338,6 +342,10 @@ public class PyController implements Initializable {
         autoscaleXCheckBox.setSelected(false);
         autoscaleYCheckBox.selectedProperty().addListener(e -> autoscaleY(autoscaleYCheckBox.isSelected()));
         autoscaleYCheckBox.setSelected(false);
+        zeroXCheckBox.selectedProperty().addListener(e -> includeXZero(zeroXCheckBox.isSelected()));
+        zeroXCheckBox.setSelected(false);
+        zeroYCheckBox.selectedProperty().addListener(e -> includeYZero(zeroYCheckBox.isSelected()));
+        zeroYCheckBox.setSelected(false);
         nmrFxPeakButton.setDisable(true);
         nmrFxPeakButton.setOnAction(e -> nmrFxMessage(e));
         xychart = (PlotData) chartPane.getChart();
@@ -788,6 +796,14 @@ public class PyController implements Initializable {
 
     public void autoscaleY(boolean autoY) {
         xychart.yAxis.setAutoRanging(autoY);
+    }
+    
+    public void includeXZero(boolean xZero) {
+        xychart.xAxis.setZeroIncluded(xZero);
+    }
+    
+    public void includeYZero(boolean yZero) {
+        xychart.yAxis.setZeroIncluded(yZero);
     }
 
     public void updateChartEquations(String equationName, double[] pars, double[] errs, double[] fields) {
