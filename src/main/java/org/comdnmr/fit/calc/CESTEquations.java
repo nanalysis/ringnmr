@@ -222,8 +222,8 @@ public class CESTEquations {
 
         for (int i = 0; i < omegarf.length; i++) {
             omegaB1[i] = b1Field[i] * 2.0 * Math.PI;
-            double deltaA = (deltaA0 - omegarf[i]) * 2.0 * Math.PI;
-            double deltaB = (deltaB0 - omegarf[i]) * 2.0 * Math.PI;
+            double deltaA = (deltaA0 - omegarf[i]) * field * 2.0 * Math.PI;
+            double deltaB = (deltaB0 - omegarf[i]) * field * 2.0 * Math.PI;
             double omegaBar = (1 - pb) * deltaA + pb * deltaB;
             double we = Math.sqrt(omegaB1[i] * omegaB1[i] + omegaBar * omegaBar);
 
