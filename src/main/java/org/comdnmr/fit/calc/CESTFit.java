@@ -341,11 +341,11 @@ public class CESTFit implements EquationFitter {
     }
 
     @Override
-    public double[] getSimX() {
-        int nPoints = 100;
+    public double[] getSimX(int nPts, double xLB, double xUB) {
+        int nPoints = nPts;
         double[] x = new double[nPoints];
-        double firstValue = -8.0;
-        double lastValue = 8.0;
+        double firstValue = xLB;
+        double lastValue = xUB;
         double delta = (lastValue - firstValue) / (nPoints + 1);
         double value = firstValue;
         for (int i = 0; i < nPoints; i++) {

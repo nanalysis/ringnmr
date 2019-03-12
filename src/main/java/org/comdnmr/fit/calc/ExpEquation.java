@@ -102,6 +102,106 @@ public enum ExpEquation implements EquationType {
             }
             return map;
         }
+    }, EXPABC("ExpABC", 0, "A", "R", "C") {
+        @Override
+        public double calculate(double[] par, int[] map, double[] x, int idNum, double field) {
+            double A = par[map[0]];
+            double R = par[map[1]];
+            double C = par[map[2]];
+            double delay = x[0];
+            double value = A * Math.exp(-R * delay) + C;
+            return value;
+        }
+
+        @Override
+        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+            int nPars = CalcExpDecay.getNPars(map);
+            double[] guesses = new double[nPars];
+            for (int id = 0; id < map.length; id++) {
+                double maxY = DataUtil.getMaxValue(yValues, idNums, id);
+                double vMid = DataUtil.getMidValueZero(yValues, xValues[0], idNums, id);
+                double minY = DataUtil.getMinValue(yValues, idNums, id);
+                guesses[map[id][0]] = maxY;
+                guesses[map[id][1]] = -Math.log(0.5) / vMid;
+                guesses[map[id][2]] = minY;
+            }
+            return guesses;
+        }
+
+        @Override
+        public double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+            double[][] boundaries = new double[3][guesses.length];
+            for (int[] map1 : map) {
+                int iPar = map1[0];
+                boundaries[0][iPar] = 0.0;
+                boundaries[1][iPar] = guesses[iPar] * 4;
+                iPar = map1[1];
+                boundaries[0][iPar] = 0.0;
+                boundaries[1][iPar] = guesses[iPar] * 4;
+                iPar = map1[2];
+                boundaries[0][iPar] = 0.0;
+                boundaries[1][iPar] = guesses[iPar] * 4;
+            }
+            return boundaries;
+        }
+
+        @Override
+        public double getRex(double[] pars, int[] map) {
+            return pars[map[2]];
+        }
+
+        @Override
+        public double getKex(double[] pars) {
+            return pars[0];
+        }
+
+        @Override
+        public double getKex(double[] pars, int id) {
+            return pars[0];
+        }
+
+        @Override
+        public int[][] makeMap(int n) {
+            int[][] map = new int[n][3];
+            for (int i = 0; i < n; i++) {
+                map[i][0] = 2 * i + 0;
+                map[i][1] = 2 * i + 1;
+                map[i][2] = 2 * i + 2;
+            }
+            return map;
+        }
+
+        @Override
+        public int[][] makeMap(int n, int m) {
+            int[][] map = new int[n][4];
+            for (int i = 0; i < n; i++) {
+                map[i][0] = 2 * i + 0;
+                map[i][1] = 2 * i + 1;
+                map[i][2] = 2 * i + 2;
+            }
+            return map;
+        }
+
+        @Override
+        public int[][] makeMap(int[] stateCount, int[][] states, int[] r2Mask) {
+            int n = states.length;
+            int[][] map = new int[n][3];
+            int lastCount = 0;
+            for (int i = 0; i < n; i++) {
+                map[i][0] = 0;
+            }
+            lastCount++;
+            int maxIndex = 0;
+            for (int i = 0; i < n; i++) {
+                map[i][1] = ExpFit.getMapIndex(states[i], stateCount, r2Mask) + lastCount;
+                maxIndex = Math.max(map[i][1], maxIndex);
+            }
+            lastCount = maxIndex + 1;
+            for (int i = 0; i < n; i++) {
+                map[i][2] = ExpFit.getMapIndex(states[i], stateCount, 0, 2) + lastCount;
+            }
+            return map;
+        }
     };
     final String equationName;
     final int nGroupPars;
@@ -138,7 +238,7 @@ public enum ExpEquation implements EquationType {
     }
 
     public static String[] getEquationNames() {
-        String[] equationNames = {"EXPAB"};
+        String[] equationNames = {"EXPAB", "EXPABC"};
         return equationNames;
     }
 

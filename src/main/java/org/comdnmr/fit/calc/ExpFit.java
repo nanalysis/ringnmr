@@ -276,7 +276,7 @@ public class ExpFit implements EquationFitter {
     }
 
     @Override
-    public double[] getSimX() {
+    public double[] getSimX(int nPts, double xLB, double xUB) {
         return SIMX;
     }
 
