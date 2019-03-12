@@ -175,6 +175,8 @@ public class PyController implements Initializable {
     TextField genDataXLBTextField;
     @FXML
     TextField genDataXUBTextField;
+    @FXML
+    TextField genDataSDevTextField;
 
     @FXML
     SplitPane splitPane;
@@ -1646,6 +1648,7 @@ public class PyController implements Initializable {
         getSimMode();
         setSimControls();
         updateXYChartLabels();
+        genDataSDevTextField.setText("");
         simControls.simSliderAction("");
     }
 
@@ -1843,8 +1846,12 @@ public class PyController implements Initializable {
         double[] xBounds = xychart.getXBounds();
         double[] yBounds = xychart.getYBounds();
         double sdev = Math.abs(yBounds[1] - yBounds[0]) * 0.02;
+        if (genDataSDevTextField.getText().equals("")) {
+            genDataSDevTextField.setText(String.valueOf(sdev));
+        }
         double[] xValues = equationFitter.getSimX(0, 0, 0);
-        if (getSimMode().equals("cest") || getSimMode().equals("r1rho")) {
+        String simMode = getSimMode();
+        if (simMode.equals("cest") || simMode.equals("r1rho")) {
             int nPts = Integer.parseInt(genDataNPtsTextField.getText());
             double xLB = Double.parseDouble(genDataXLBTextField.getText());
             double xUB = Double.parseDouble(genDataXUBTextField.getText());
@@ -1872,7 +1879,7 @@ public class PyController implements Initializable {
                 double xValue = xValues[i];
                 ax[0] = xValue;
                 double yValue = eqn.calculate(sliderGuesses, ax, eqn.getExtra(0));
-                yValue += sdev * rand.nextGaussian();
+                yValue += Double.parseDouble(genDataSDevTextField.getText()) * rand.nextGaussian(); //sdev * rand.nextGaussian();
                 XYValue dataPoint = new XYValue(xValue, yValue);
                 dataPoint.setExtraValue(new Double(sdev));
                 series.getData().add(dataPoint);
