@@ -133,16 +133,27 @@
                                             <Insets top="5" right="5" left="5" bottom="5"/>                 
                                         </padding>
                                         <top>
-                                            <HBox>
+                                            <VBox HBox.hgrow="ALWAYS">
                                                 <children>
-                                                    <ChoiceBox fx:id="simChoice">
-                                                    </ChoiceBox>
-                                                    <Button text="Display" onAction="#displayEquation" fx:id="DisplayEquation"/>
-                                                    <Button text="Gen" onAction="#showSimData" fx:id="Gen"/>
-                                                    <Button text="Guess" onAction="#guesses" fx:id="Guesses"/>
-                                                    <Button text="Fit" onAction="#fitEquation" fx:id="FitEquation"/>
+                                                    <HBox>
+                                                        <children>
+                                                            <ChoiceBox fx:id="simChoice">
+                                                            </ChoiceBox>
+                                                            <Button text="Display" onAction="#displayEquation" fx:id="DisplayEquation"/>
+                                                            <Button text="Gen" onAction="#showSimData" fx:id="Gen"/>
+                                                            <Button text="Guess" onAction="#guesses" fx:id="Guesses"/>
+                                                            <Button text="Fit" onAction="#fitEquation" fx:id="FitEquation"/>
+                                                        </children>
+                                                    </HBox>
+                                                    <HBox>
+                                                        <children>
+                                                            <Label text="Generated Data: " fx:id="genDataLabel"/>
+                                                            <Label text="No. Pts: " fx:id="genDataNPtsLabel"/>
+                                                            <TextField fx:id="genDataNPtsTextField" prefWidth="100"/>
+                                                        </children>
+                                                    </HBox>
                                                 </children>
-                                            </HBox>
+                                            </VBox>
                                         </top>
                                     </BorderPane>
                                 </Tab>
