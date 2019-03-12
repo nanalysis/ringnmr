@@ -171,6 +171,10 @@ public class PyController implements Initializable {
     
     @FXML
     TextField genDataNPtsTextField;
+    @FXML
+    TextField genDataXLBTextField;
+    @FXML
+    TextField genDataXUBTextField;
 
     @FXML
     SplitPane splitPane;
@@ -248,6 +252,8 @@ public class PyController implements Initializable {
             xTickTextField.setText("100.0");
             yTickTextField.setText("5.0");
             genDataNPtsTextField.setDisable(true);
+            genDataXLBTextField.setDisable(true);
+            genDataXUBTextField.setDisable(true);
         } else if (getFittingMode().equals("cest")) {
             simControls = new CESTControls();
             xLowerBoundTextField.setText("-20.0");
@@ -263,6 +269,10 @@ public class PyController implements Initializable {
             yTickTextField.setText("0.25");
             genDataNPtsTextField.setDisable(false);
             genDataNPtsTextField.setText("100");
+            genDataXLBTextField.setDisable(false);
+            genDataXLBTextField.setText("-8.0");
+            genDataXUBTextField.setDisable(false);
+            genDataXUBTextField.setText("8.0");
         } else if (getFittingMode().equals("exp")) {
             simControls = new ExpControls();
             xLowerBoundTextField.setText("0.0");
@@ -272,6 +282,8 @@ public class PyController implements Initializable {
             xTickTextField.setText("0.25");
             yTickTextField.setText("10.0");
             genDataNPtsTextField.setDisable(true);
+            genDataXLBTextField.setDisable(true);
+            genDataXUBTextField.setDisable(true);
         } else if (getFittingMode().equals("r1rho")) {
             simControls = new R1RhoControls();
             xLowerBoundTextField.setText("-20.0");
@@ -287,6 +299,10 @@ public class PyController implements Initializable {
             yTickTextField.setText("0.25");
             genDataNPtsTextField.setDisable(false);
             genDataNPtsTextField.setText("100");
+            genDataXLBTextField.setDisable(false);
+            genDataXLBTextField.setText("-8.0");
+            genDataXUBTextField.setDisable(false);
+            genDataXUBTextField.setText("8.0");
         } else {
             System.out.println("Error: no fitting mode selected.");
         }
@@ -441,24 +457,34 @@ public class PyController implements Initializable {
             simControls = new CPMGControls();
             update = true;
             genDataNPtsTextField.setDisable(true);
-            genDataNPtsTextField.setText("0");
+            genDataXLBTextField.setDisable(true);
+            genDataXUBTextField.setDisable(true);
         } else if (getSimMode().equals("exp") && !(simControls instanceof ExpControls)) {
             simControls = new ExpControls();
             update = true;
             genDataNPtsTextField.setDisable(true);
-            genDataNPtsTextField.setText("0");
+            genDataXLBTextField.setDisable(true);
+            genDataXUBTextField.setDisable(true);
         } else if (getSimMode().equals("cest") && !(simControls instanceof CESTControls)) {
             simControls = new CESTControls();
             ((CESTControls) simControls).updateDeltaLimits();
             update = true;
             genDataNPtsTextField.setDisable(false);
             genDataNPtsTextField.setText("100");
+            genDataXLBTextField.setDisable(false);
+            genDataXLBTextField.setText("-8.0");
+            genDataXUBTextField.setDisable(false);
+            genDataXUBTextField.setText("8.0");
         } else if (getFittingMode().equals("r1rho") && !(simControls instanceof R1RhoControls)) {
             simControls = new R1RhoControls();
             ((R1RhoControls) simControls).updateDeltaLimits();
             update = true;
             genDataNPtsTextField.setDisable(false);
             genDataNPtsTextField.setText("100");
+            genDataXLBTextField.setDisable(false);
+            genDataXLBTextField.setText("-8.0");
+            genDataXUBTextField.setDisable(false);
+            genDataXUBTextField.setText("8.0");
         }
         if (update) {
             updateEquationChoices(getSimMode());
@@ -1817,10 +1843,12 @@ public class PyController implements Initializable {
         double[] xBounds = xychart.getXBounds();
         double[] yBounds = xychart.getYBounds();
         double sdev = Math.abs(yBounds[1] - yBounds[0]) * 0.02;
-        double[] xValues = equationFitter.getSimX(0);
+        double[] xValues = equationFitter.getSimX(0, 0, 0);
         if (getSimMode().equals("cest") || getSimMode().equals("r1rho")) {
             int nPts = Integer.parseInt(genDataNPtsTextField.getText());
-            xValues = equationFitter.getSimX(nPts);
+            double xLB = Double.parseDouble(genDataXLBTextField.getText());
+            double xUB = Double.parseDouble(genDataXUBTextField.getText());
+            xValues = equationFitter.getSimX(nPts, xLB, xUB);
         }
         double fieldRef = 1.0;
         int iLine = 0;

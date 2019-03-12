@@ -149,7 +149,11 @@
                                                         <children>
                                                             <Label text="Generated Data: " fx:id="genDataLabel"/>
                                                             <Label text="No. Pts: " fx:id="genDataNPtsLabel"/>
-                                                            <TextField fx:id="genDataNPtsTextField" prefWidth="100"/>
+                                                            <TextField fx:id="genDataNPtsTextField" prefWidth="80"/>
+                                                            <Label text="X LB: " fx:id="genDataNPtsLabel"/>
+                                                            <TextField fx:id="genDataXLBTextField" prefWidth="80"/>
+                                                            <Label text="X UB: " fx:id="genDataNPtsLabel"/>
+                                                            <TextField fx:id="genDataXUBTextField" prefWidth="80"/>
                                                         </children>
                                                     </HBox>
                                                 </children>
