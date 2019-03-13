@@ -175,7 +175,7 @@ public class InputDataInterface {
         
         nucChoice.getItems().clear();
         nucChoice.getItems().addAll(Arrays.asList("H1", "F19", "P31", "C13", "N15"));
-        nucChoice.setValue("mpk2");
+        nucChoice.setValue("H1");
 
         
         B0fieldChoice.getItems().clear();
