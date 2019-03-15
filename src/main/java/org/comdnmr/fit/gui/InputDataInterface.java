@@ -172,26 +172,17 @@ public class InputDataInterface {
         modeChoice.getItems().addAll(Arrays.asList("mpk2", "ires", "txt"));
         modeChoice.setValue("mpk2");
 
-        modeChoice.valueProperty().addListener(x -> {
-            updateInfoInterface();
-        });
         
         nucChoice.getItems().clear();
         nucChoice.getItems().addAll(Arrays.asList("H1", "F19", "P31", "C13", "N15"));
-        nucChoice.setValue("mpk2");
+        nucChoice.setValue("H1");
 
-        nucChoice.valueProperty().addListener(x -> {
-            updateInfoInterface();
-        });
         
         B0fieldChoice.getItems().clear();
         B0fieldChoice.getItems().addAll(Arrays.asList("400", "500", "600", "700", "750", "800", "900", "950", "1000", "1200"));
         B0fieldChoice.setValue("400");
         B0fieldChoice.setEditable(true);
 
-        B0fieldChoice.valueProperty().addListener(x -> {
-            updateInfoInterface();
-        });
 
         EventHandler<ActionEvent> boxevent = new EventHandler<ActionEvent>() {
 
@@ -497,12 +488,16 @@ public class InputDataInterface {
         hmde.put("mode", errModeChoice.getSelectionModel().getSelectedItem());
         hmde.put("value", Double.parseDouble(errPercentTextField.getText()));
         HashMap hmdd = new HashMap();
-        hmdd.put("c0", Double.parseDouble(delayC0TextField.getText()));
-        hmdd.put("delta0", Double.parseDouble(delayDelta0TextField.getText()));
-        hmdd.put("delta", Double.parseDouble(delayDeltaTextField.getText()));
+        if (!delayC0TextField.getText().equals("") && !delayDeltaTextField.getText().equals("") && !delayDelta0TextField.getText().equals("")) {
+            hmdd.put("c0", Double.parseDouble(delayC0TextField.getText()));
+            hmdd.put("delta0", Double.parseDouble(delayDelta0TextField.getText()));
+            hmdd.put("delta", Double.parseDouble(delayDeltaTextField.getText()));
+        }
 
         hm.put("error", hmde);
-        hm.put("delays", hmdd);
+        if (hm.get("xconv").equals("calc")) {
+            hm.put("delays", hmdd);
+        }
 
         String[] xvals = xValTextArea.getText().trim().split("\t");
         if (xvals.length > 0) {
