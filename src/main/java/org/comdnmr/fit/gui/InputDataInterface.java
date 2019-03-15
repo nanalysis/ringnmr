@@ -497,12 +497,16 @@ public class InputDataInterface {
         hmde.put("mode", errModeChoice.getSelectionModel().getSelectedItem());
         hmde.put("value", Double.parseDouble(errPercentTextField.getText()));
         HashMap hmdd = new HashMap();
-        hmdd.put("c0", Double.parseDouble(delayC0TextField.getText()));
-        hmdd.put("delta0", Double.parseDouble(delayDelta0TextField.getText()));
-        hmdd.put("delta", Double.parseDouble(delayDeltaTextField.getText()));
+        if (!delayC0TextField.getText().equals("") && !delayDeltaTextField.getText().equals("") && !delayDelta0TextField.getText().equals("")) {
+            hmdd.put("c0", Double.parseDouble(delayC0TextField.getText()));
+            hmdd.put("delta0", Double.parseDouble(delayDelta0TextField.getText()));
+            hmdd.put("delta", Double.parseDouble(delayDeltaTextField.getText()));
+        }
 
         hm.put("error", hmde);
-        hm.put("delays", hmdd);
+        if (hm.get("xconv").equals("calc")) {
+            hm.put("delays", hmdd);
+        }
 
         String[] xvals = xValTextArea.getText().trim().split("\t");
         if (xvals.length > 0) {
