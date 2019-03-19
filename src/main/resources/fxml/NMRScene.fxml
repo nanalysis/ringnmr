@@ -146,16 +146,32 @@
                                                             <Button text="Fit" onAction="#fitEquation" fx:id="FitEquation"/>
                                                         </children>
                                                     </HBox>
-                                                    <Label text="Generated Data: " fx:id="genDataLabel"/>
+                                                </children>
+                                            </VBox>
+                                        </top>
+                                    </BorderPane>
+                                </Tab>
+                                <Tab text="Gen. Pars" closable="false" > 
+                                    <BorderPane fx:id="simParsPane" HBox.hgrow="ALWAYS">
+                                        <padding>
+                                            <Insets top="5" right="5" left="5" bottom="5"/>                 
+                                        </padding>
+                                        <top>
+                                            <VBox HBox.hgrow="ALWAYS">
+                                                <children>
                                                     <HBox>
                                                         <children>
-                                                            <Label text="St. Dev.: " fx:id="genDataSDevLabel"/>
+                                                            <Label text="St. Dev.: " prefWidth="80"/>
                                                             <TextField fx:id="genDataSDevTextField" prefWidth="80"/>
-                                                            <Label text="No. Pts: " fx:id="genDataNPtsLabel"/>
+                                                            <Label text="No. Pts: " fx:id="genDataNPtsLabel" prefWidth="80"/>
                                                             <TextField fx:id="genDataNPtsTextField" prefWidth="80"/>
-                                                            <Label text="X LB: " fx:id="genDataNPtsLabel"/>
+                                                        </children>
+                                                    </HBox>
+                                                    <HBox>
+                                                        <children>
+                                                            <Label text="X Min: " prefWidth="80"/>
                                                             <TextField fx:id="genDataXLBTextField" prefWidth="80"/>
-                                                            <Label text="X UB: " fx:id="genDataNPtsLabel"/>
+                                                            <Label text="X Max: " prefWidth="80"/>
                                                             <TextField fx:id="genDataXUBTextField" prefWidth="80"/>
                                                         </children>
                                                     </HBox>
@@ -181,7 +197,7 @@
 
                                     </VBox>
                                 </Tab>
-                                <Tab text="Chart Bounds" closable="false" > 
+                                <Tab text="Bounds" closable="false" > 
                                     <VBox HBox.hgrow="ALWAYS">
                                         <children>
                                             <HBox>
