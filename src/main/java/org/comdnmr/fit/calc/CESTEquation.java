@@ -419,7 +419,7 @@ public enum CESTEquation implements CESTEquationType {
                 dBbound = dAbound;
             }
             boundaries[0][map[id][0]] = 1.0; //kex LB
-            boundaries[1][map[id][0]] = guesses[map[id][0]] * 4; //kex UB
+            boundaries[1][map[id][0]] = guesses[map[id][0]] * 6; //kex UB
             boundaries[0][map[id][1]] = 0.01; //pb LB
             boundaries[1][map[id][1]] = 0.25; //pb UB //guesses[1] * 4;
             boundaries[0][map[id][2]] = guesses[map[id][2]] - dAbound; //deltaA LB
@@ -427,13 +427,13 @@ public enum CESTEquation implements CESTEquationType {
             boundaries[0][map[id][3]] = guesses[map[id][3]] - dBbound; //deltaB LB
             boundaries[1][map[id][3]] = guesses[map[id][3]] + dBbound; //deltaB UB
             boundaries[0][map[id][4]] = 0.1; //R1A LB
-            boundaries[1][map[id][4]] = guesses[map[id][4]] * 4; //R1A UB
+            boundaries[1][map[id][4]] = guesses[map[id][4]] * 6; //R1A UB
             boundaries[0][map[id][5]] = 0.1; //R1B LB
-            boundaries[1][map[id][5]] = guesses[map[id][5]] * 4; //R1B UB
+            boundaries[1][map[id][5]] = guesses[map[id][5]] * 6; //R1B UB
             boundaries[0][map[id][6]] = 0.1; //R2A LB
-            boundaries[1][map[id][6]] = guesses[map[id][6]] * 4; //R2A UB
+            boundaries[1][map[id][6]] = guesses[map[id][6]] * 6; //R2A UB
             boundaries[0][map[id][7]] = 0.1; //R2B LB
-            boundaries[1][map[id][7]] = guesses[map[id][7]] * 4; //R2B UB
+            boundaries[1][map[id][7]] = guesses[map[id][7]] * 6; //R2B UB
             return boundaries;
         }
 
