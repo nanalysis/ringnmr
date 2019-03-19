@@ -14,7 +14,10 @@
 
 <?language python?>
 
-<BorderPane fx:id="mainBox"  styleClass="mainFxmlClass" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.comdnmr.fit.gui.PyController">
+<BorderPane fx:id="mainBox"  styleClass="mainFxmlClass"
+            xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
+            prefWidth="850" prefHeight="700"
+            fx:controller="org.comdnmr.fit.gui.PyController">
     <fx:script source="actions.py"/>
     <top>
         <HBox>
@@ -151,38 +154,28 @@
                                         </top>
                                     </BorderPane>
                                 </Tab>
-                                <Tab text="Gen. Pars" closable="false" > 
-                                    <BorderPane fx:id="simParsPane" HBox.hgrow="ALWAYS">
-                                        <padding>
-                                            <Insets top="5" right="5" left="5" bottom="5"/>                 
-                                        </padding>
-                                        <top>
-                                            <VBox HBox.hgrow="ALWAYS">
-                                                <children>
-                                                    <HBox>
-                                                        <children>
-                                                            <Label text="St. Dev.: " prefWidth="80"/>
-                                                            <TextField fx:id="genDataSDevTextField" prefWidth="80"/>
-                                                            <Label text="No. Pts: " fx:id="genDataNPtsLabel" prefWidth="80"/>
-                                                            <TextField fx:id="genDataNPtsTextField" prefWidth="80"/>
-                                                        </children>
-                                                    </HBox>
-                                                    <HBox>
-                                                        <children>
-                                                            <Label text="X Min: " prefWidth="80"/>
-                                                            <TextField fx:id="genDataXLBTextField" prefWidth="80"/>
-                                                            <Label text="X Max: " prefWidth="80"/>
-                                                            <TextField fx:id="genDataXUBTextField" prefWidth="80"/>
-                                                        </children>
-                                                    </HBox>
-                                                </children>
-                                            </VBox>
-                                        </top>
-                                    </BorderPane>
-                                </Tab>
-                                <Tab text="Fitter" closable="false" > 
+                                <Tab text="Options" closable="false" > 
                                     <VBox HBox.hgrow="ALWAYS">
                                         <children>
+                                            <Label text="Simulated Data Generation"/>
+                                            <HBox>
+                                                <children>
+                                                    <Label text="St. Dev.: " prefWidth="80"/>
+                                                    <TextField fx:id="genDataSDevTextField" prefWidth="80"/>
+                                                    <Label text="No. Pts: " fx:id="genDataNPtsLabel" prefWidth="80"/>
+                                                    <TextField fx:id="genDataNPtsTextField" prefWidth="80"/>
+                                                </children>
+                                            </HBox>
+                                            <HBox>
+                                                <children>
+                                                    <Label text="X Min: " prefWidth="80"/>
+                                                    <TextField fx:id="genDataXLBTextField" prefWidth="80"/>
+                                                    <Label text="X Max: " prefWidth="80"/>
+                                                    <TextField fx:id="genDataXUBTextField" prefWidth="80"/>
+                                                </children>
+                                            </HBox>
+                                            <Label text="Fitting"/>
+
                                             <HBox>
                                                 <children>
                                                 </children>
