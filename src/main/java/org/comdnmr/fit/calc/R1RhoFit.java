@@ -129,11 +129,11 @@ public class R1RhoFit implements EquationFitter {
         this.yValues.addAll(yValues);
         this.errValues.addAll(errValues);
         for (Double yValue : yValues) {
-            fieldValues.add(1.0);
+            fieldValues.add(FitModel.getFieldValues()[0]);
             idValues.add(0);
         }
         usedFields = new double[1];
-        usedFields[0] = 1.0;
+        usedFields[0] = fieldValues.get(0);
         resNums = new String[1];
         resNums[0] = "0";
         //states = new int[1][];

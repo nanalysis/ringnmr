@@ -304,7 +304,7 @@ public class R1RhoEquations {
         }
         List<CESTEquations.Peak> peaks2 = peaks;
         if (peaks.size() >= 2) {
-            peaks2 = peaks.subList(0, 2);
+            peaks2 = peaks.subList(peaks.size()-2, peaks.size());
         } else if (peaks.size() == 1) {
             // If there is only one peak found add another peak on the side
             // with the largest width

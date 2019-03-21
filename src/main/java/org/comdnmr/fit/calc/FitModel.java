@@ -36,7 +36,7 @@ public abstract class FitModel implements MultivariateFunction {
     long endTime = 0;
     long fitTime = 0;
     double[][] xValues;
-    double[] fieldValues;
+    static double[] fieldValues;
     double[] yValues;
     double[] errValues;
     double[] fields;
@@ -237,6 +237,10 @@ public abstract class FitModel implements MultivariateFunction {
 
     public void setFieldValues(double[] fieldValues) {
         this.fieldValues = fieldValues;
+    }
+    
+    public static double[] getFieldValues() {
+        return fieldValues;
     }
 
     final boolean setNID() {
