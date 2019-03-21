@@ -80,6 +80,7 @@ import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ToolBar;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
+import org.comdnmr.fit.calc.CoMDPreferences;
 import org.comdnmr.fit.calc.FitModel;
 import org.comdnmr.fit.calc.R1RhoFit;
 import static org.comdnmr.fit.gui.MainApp.preferencesController;
@@ -1330,9 +1331,13 @@ public class PyController implements Initializable {
                 double[] simExtras = simControls.getExtras();
 //                extras[0] = CPMGFit.REF_FIELD;
 //System.out.println("extras " + extras[0]);
-                for (int i = 0; i < simExtras.length; i++) {
-//                    System.out.println("simextras " + i + " " + simExtras[i]);
-//                    extras[i + 1] = simExtras[i];
+                if (simExtras.length > 1) {
+                    extras = new double[simExtras.length + 1];
+                    extras[0] = FitModel.getFieldValues()[0];
+                    for (int i = 0; i < simExtras.length; i++) {
+    //                    System.out.println("simextras " + i + " " + simExtras[i]);
+                        extras[i + 1] = simExtras[i];
+                    }
                 }
                 //for (int i = 0; i < extras.length; i++) {
                 //System.out.println(iCurve + " " + i + " extra " + extras[i]);
@@ -1346,7 +1351,7 @@ public class PyController implements Initializable {
                 GUIPlotEquation plotEquation = new GUIPlotEquation(equationName, pars, errs, extras);
 
                 //equationCopy.setExtra(extras);
-                //System.out.println("Fit button expData extras size = " + expData.getExtras().size() + " extra[0] = " + extras[0]);
+                //System.out.println("Fit button extras size = " + extras.length + " extra[0] = " + extras[0]);
                 equations.add(plotEquation);
 
             }
@@ -1796,11 +1801,13 @@ public class PyController implements Initializable {
         ArrayList<Double> xValues = getSimXData();
         ArrayList<Double> yValues = getSimYData();
         double[] extras = simControls.getExtras();
+        double[] fieldVals = new double[yValues.size()];
         ArrayList[] allXValues = new ArrayList[extras.length + 1];
         allXValues[0] = xValues;
         ArrayList<Double> errValues = new ArrayList<>();
         for (int i = 0; i < yValues.size(); i++) {
             errValues.add(yValues.get(i) * 0.05);
+            fieldVals[i] = CoMDPreferences.getRefField() * simControls.getNucleus().getRatio();
         }
         System.out.println("xval len " + xValues.size());
         for (int j = 0; j < extras.length; j++) {
@@ -1811,6 +1818,7 @@ public class PyController implements Initializable {
             }
             allXValues[1 + j] = xValuesEx;
         }
+        equationFitter.getFitModel().setFieldValues(fieldVals);
         equationFitter.setData(allXValues, yValues, errValues);
     }
 
@@ -1905,7 +1913,7 @@ public class PyController implements Initializable {
             for (int i = 0; i < xValues.length; i++) {
                 double xValue = xValues[i];
                 ax[0] = xValue;
-                double yValue = eqn.calculate(sliderGuesses, ax, eqn.getExtra(0));
+                double yValue = eqn.calculate(sliderGuesses, ax, fieldRef);
                 yValue += Double.parseDouble(genDataSDevTextField.getText()) * rand.nextGaussian(); //sdev * rand.nextGaussian();
                 XYValue dataPoint = new XYValue(xValue, yValue);
                 dataPoint.setExtraValue(new Double(sdev));
