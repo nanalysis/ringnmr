@@ -59,7 +59,7 @@ public class InputDataInterface {
     TextField tempTextField = new TextField();
     ChoiceBox<String> nucChoice = new ChoiceBox<>();
     TextField pTextField = new TextField();
-    ChoiceBox<String> modeChoice = new ChoiceBox<>();
+    ChoiceBox<String> formatChoice = new ChoiceBox<>();
     TextField tauTextField = new TextField();
     TextArea xValTextArea = new TextArea();
     ChoiceBox<String> fitModeChoice = new ChoiceBox<>();
@@ -99,7 +99,7 @@ public class InputDataInterface {
         Label tempLabel = new Label("  Temperature:  ");
         Label nucLabel = new Label("  Nucleus:  ");
         Label pLabel = new Label("  Pressure:  ");
-        Label modeLabel = new Label("  Mode:  ");
+        Label formatLabel = new Label("  Format:  ");
         Label tauLabel = new Label("  Tau:  ");
         Label xValLabel = new Label("  X Values Conversion:  ");
         Label yValLabel = new Label("  Y Values Conversion:  ");
@@ -111,7 +111,7 @@ public class InputDataInterface {
         Label errPercentLabel = new Label("  Error Value:  ");
 
         Label[] labels = {fitModeLabel, dirLabel, fileLabel, xpk2FileLabel, fitFileLabel, fieldLabel, tempLabel, pLabel,
-            tauLabel, B1FieldLabel, modeLabel, nucLabel, errModeLabel, errPercentLabel, xValLabel, delayLabel, yValLabel, yamlLabel};
+            tauLabel, B1FieldLabel, formatLabel, nucLabel, errModeLabel, errPercentLabel, xValLabel, delayLabel, yValLabel, yamlLabel};
 
         dirChoiceButton.setText("Browse");
         dirChoiceButton.setOnAction(e -> chooseDirectory(e));
@@ -168,9 +168,9 @@ public class InputDataInterface {
             updateInfoInterface();
         });
         
-        modeChoice.getItems().clear();
-        modeChoice.getItems().addAll(Arrays.asList("mpk2", "ires", "txt"));
-        modeChoice.setValue("mpk2");
+        formatChoice.getItems().clear();
+        formatChoice.getItems().addAll(Arrays.asList("mpk2", "ires", "txt"));
+        formatChoice.setValue("mpk2");
 
         
         nucChoice.getItems().clear();
@@ -243,7 +243,7 @@ public class InputDataInterface {
         inputInfoDisplay.add(paramFileChoiceButton, 2, 4);
         inputInfoDisplay.add(chosenParamFileLabel, 1, 4);
         inputInfoDisplay.add(B0fieldChoice, 1, 5);
-        inputInfoDisplay.add(modeChoice, 1, labels.length - 8);
+        inputInfoDisplay.add(formatChoice, 1, labels.length - 8);
         inputInfoDisplay.add(nucChoice, 1, labels.length - 7);
         inputInfoDisplay.add(errModeChoice, 1, labels.length - 6);
         inputInfoDisplay.add(errPercentTextField, 1, labels.length - 5);
@@ -303,7 +303,7 @@ public class InputDataInterface {
                 errModeChoice.setDisable(true);
                 xConvChoice.setDisable(true);
                 yConvChoice.setDisable(true);
-                modeChoice.setDisable(true);
+                formatChoice.setDisable(true);
                 nucChoice.setDisable(true);
                 B0fieldChoice.setDisable(true);
                 delayC0TextField.setDisable(true);
@@ -323,7 +323,7 @@ public class InputDataInterface {
                 errModeChoice.setDisable(false);
                 xConvChoice.setDisable(false);
                 yConvChoice.setDisable(false);
-                modeChoice.setDisable(false);
+                formatChoice.setDisable(false);
                 nucChoice.setDisable(false);
                 B0fieldChoice.setDisable(false);
                 if (fitModeChoice.getSelectionModel().getSelectedItem().equals("CPMG")) {
@@ -481,7 +481,7 @@ public class InputDataInterface {
         hm.put("nucleus", nucChoice.getSelectionModel().getSelectedItem().replaceAll("[^a-zA-Z]", ""));
         hm.put("tau", Double.parseDouble(tauTextField.getText()));
         hm.put("pressure", Double.parseDouble(pTextField.getText()));
-        hm.put("mode", modeChoice.getSelectionModel().getSelectedItem());
+        hm.put("format", formatChoice.getSelectionModel().getSelectedItem());
         hm.put("fitmode", fitModeChoice.getSelectionModel().getSelectedItem().toLowerCase());
         hm.put("B1", Double.parseDouble(B1TextField.getText()));
         HashMap hmde = new HashMap();
