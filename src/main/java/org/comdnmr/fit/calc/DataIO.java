@@ -685,7 +685,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             tau = tau == null ? 1.0 : tau;  // fixme throw error if  ratemode and no tau
             Double B1field = (Double) dataMap3.get("B1");
 
-            String fileMode = (String) dataMap3.get("mode");
+            String fileFormat = (String) dataMap3.get("format");
 
 //            String dataFileName = (String) dataMap3.get("file");
 //            File file = new File(dataFileName).getAbsoluteFile();
@@ -704,7 +704,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             }
             System.out.println("err " + errorPars);
 
-            if ((fileMode != null) && fileMode.equals("mpk2")) {
+            if ((fileFormat != null) && fileFormat.equals("mpk2")) {
 
                 String dataFileName = (String) dataMap3.get("file");
                 File dataFile = new File(dataFileName);
@@ -738,7 +738,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     loadPeakFile(dataFileName, expData, resProp, xConv, yConv);
                 }
 
-            } else if ((fileMode != null) && fileMode.equals("ires")) {
+            } else if ((fileFormat != null) && fileFormat.equals("ires")) {
                 List<Map<String, Object>> filesMaps = (List<Map<String, Object>>) dataMap3.get("files");
                 String expName = (String) dataMap3.get("name").toString();
                 ExperimentData expData = new ExperimentData(expName,
