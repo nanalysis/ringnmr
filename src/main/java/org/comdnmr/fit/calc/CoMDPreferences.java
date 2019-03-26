@@ -33,6 +33,7 @@ public class CoMDPreferences {
     private static Map<String, Boolean> r1rhoEqnMap = null;
     private static final String DEFAULT_CEST_EQNS = "CESTR1RHOPERTURBATIONNOEX;true\nCESTR1RHOPERTURBATION;true";
     private static final String DEFAULT_R1RHO_EQNS = "R1RHOPERTURBATIONNOEX;true\nR1RHOPERTURBATION;true";
+    private static Double deltaABdiff = null;
 
     static Preferences getPrefs() {
         Preferences prefs = Preferences.userNodeForPackage(CoMDPreferences.class);
@@ -138,6 +139,23 @@ public class CoMDPreferences {
             getPrefs().put("REX_RATIO", value.toString());
         } else {
             getPrefs().remove("REX_RATIO");
+        }
+    }
+    
+    public static Double getDeltaABDiff() {
+        if (deltaABdiff == null) {
+            String value = getPrefs().get("DELTAAB_DIFF", "0.1");
+            deltaABdiff = Double.parseDouble(value);
+        }
+        return deltaABdiff;
+    }
+
+    public static void setDeltaABDiff(Double value) {
+        deltaABdiff = value;
+        if (value != null) {
+            getPrefs().put("DELTAAB_DIFF", value.toString());
+        } else {
+            getPrefs().remove("DELTAAB_DIFF");
         }
     }
 
