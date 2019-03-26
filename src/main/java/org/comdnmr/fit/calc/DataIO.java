@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -86,6 +88,8 @@ public class DataIO {
             return value;
         }
     }
+
+    static Pattern resPatter = Pattern.compile("[^0-9]*([0-9]+)[^0-9]*");
 
     public static void loadPeakFile(String fileName, ExperimentData expData,
             ResidueProperties resProp, XCONV xConv, YCONV yConv)
@@ -203,7 +207,8 @@ public class DataIO {
                     System.out.println("off " + offset + " " + nfields);
                     for (int i = offset; i < nfields; i++) {
                         int j = i - offset;
-                        // fixme assumes first vcpmg is the 0 ref 
+                        // fixme assumes first vcpmg is the 0 ref   
+                        // fixme. need to explicitly account for alternating x-value, errorHeader fields
                         if (xVals == null) {
                             try {
                                 double x = Double.parseDouble(sfields[i].trim());
@@ -233,6 +238,18 @@ public class DataIO {
                     } else if (residueNum.indexOf('.') != -1) {
                         int dotIndex = residueNum.indexOf('.');
                         residueNum = residueNum.substring(0, dotIndex);
+                    }
+                    int residueNumInt = 0;
+                    if (residueNum.length() > 1) {
+                        try {
+                            residueNumInt = Integer.parseInt(residueNum);
+                        } catch (NumberFormatException nfE) {
+                            Matcher matcher = resPatter.matcher(residueNum);
+                            if (matcher.matches()) {
+                                residueNum = matcher.group(1);
+                                residueNumInt = Integer.parseInt(residueNum);
+                            }
+                        }
                     }
                     double refIntensity = 1.0;
                     if (expMode.equals("cest") || expMode.equals("cpmg")) {
@@ -281,7 +298,7 @@ public class DataIO {
                     }
                     ResidueInfo residueInfo = resProp.getResidueInfo(residueNum);
                     if (residueInfo == null) {
-                        residueInfo = new ResidueInfo(resProp, Integer.parseInt(residueNum), 0, 0, 0);
+                        residueInfo = new ResidueInfo(resProp, residueNumInt, 0, 0, 0);
                         resProp.addResidueInfo(residueNum, residueInfo);
                     }
                     fakeRes++;
@@ -814,8 +831,8 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
 
     public static void saveResultsFile(String fileName, ResidueProperties resProp, boolean saveStats) {
         String[] headerFields = {"Residue", "Peak", "GrpSz", "Group", "State", "Equation", "RMS", "AIC", "Best"};
-        String[] headerFields2 = {"Residue", "Peak", "GrpSz", "Group", "State", "RefineOpt", "RefineTime", 
-            "BootstrapOpt", "BootstrapTime", "Samples", "AbsMode", "NonParametricMode", "StartRadius", "FinalRadius", 
+        String[] headerFields2 = {"Residue", "Peak", "GrpSz", "Group", "State", "RefineOpt", "RefineTime",
+            "BootstrapOpt", "BootstrapTime", "Samples", "AbsMode", "NonParametricMode", "StartRadius", "FinalRadius",
             "Tolerance", "Weight", "Equation", "RMS", "AIC", "Best"};
         if (saveStats) {
             headerFields = headerFields2;
