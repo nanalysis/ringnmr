@@ -106,13 +106,16 @@ public class PreferencesController implements Initializable {
         optimizers.add("BOBYQA");
         maxFreqItem = new DoubleRangeOperationItem((obs, oldV, newV) -> {
             CoMDPreferences.setCPMGMaxFreq((Double) newV);
-        }, 2000.0, 100.0, 5000.0, "CPMG", "Max Freq", "Max Frequency");
+        }, 2000.0, 100.0, 5000.0, "Limits", "CPMG Max Freq", "Max Frequency");
         DoubleRangeOperationItem rexRatioItem = new DoubleRangeOperationItem((obs, oldV, newV) -> {
             CoMDPreferences.setRexRatio((Double) newV);
-        }, 3.0, 0.0, 10.0, "CPMG", "Rex Ratio", "Rex must be this many times rmsd");
+        }, 3.0, 0.0, 10.0, "Limits", "CPMG Rex Ratio", "Rex must be this many times rmsd");
+        DoubleRangeOperationItem deltaABdiffItem = new DoubleRangeOperationItem((obs, oldV, newV) -> {
+            CoMDPreferences.setDeltaABDiff((Double) newV);
+        }, 0.1, 0.0, 2.0, "Limits", "CEST/R1Rho DeltaAB Min Diff", "DeltaAB difference magnitude must be larger than this number for valid exchange");
         DoubleRangeOperationItem refFieldItem = new DoubleRangeOperationItem((obs, oldV, newV) -> {
             CoMDPreferences.setRefField((Double) newV);
-        }, CoMDPreferences.getRefField(), 100.0, 1200.0, "CPMG", "Reference Field", "Rex value reported at this H1 field");
+        }, CoMDPreferences.getRefField(), 100.0, 1200.0, "Limits", "Reference Field", "Rex value reported at this H1 field");
         IntRangeOperationItem nSamplesItem = new IntRangeOperationItem((obs, oldV, newV) -> {
             CoMDPreferences.setSampleSize((Integer) newV);
         }, CoMDPreferences.getSampleSize(), 10, 500, "Optimizer", "Bootstrap Samples", "Number of bootstrap samples");
@@ -159,7 +162,7 @@ public class PreferencesController implements Initializable {
                 }, CoMDPreferences.getAbsValueFit(), "Optimizer", "Absolute Value",
                 "Fit absolute value of deviations (not squared)");
 
-        prefSheet.getItems().addAll(nProcessesItem, refFieldItem, maxFreqItem, rexRatioItem, 
+        prefSheet.getItems().addAll(nProcessesItem, refFieldItem, maxFreqItem, rexRatioItem, deltaABdiffItem,
                 absValueItem, nonParametricItem, nSamplesItem, optimizerChoiceItem, bootStrapOptimizerrChoiceItem,
                 startingRadiusItem, toleranceItem, finalRadiusItem, weightFitItem);
         for (String eqn : cestEqnChoices) {
