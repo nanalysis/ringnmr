@@ -299,6 +299,8 @@ public class CESTFit implements EquationFitter {
             String[] parNames = calcCEST.getParNames();
             double[] errEstimates;
             double[][] simPars = null;
+            boolean exchangeValid = true;
+            double deltaABdiff = CoMDPreferences.getDeltaABDiff();
             if (FitModel.getCalcError()) {
                 long startTime = System.currentTimeMillis();
                 if (CoMDPreferences.getNonParametric()) {
@@ -312,6 +314,15 @@ public class CESTFit implements EquationFitter {
 
                 }
                 simPars = calcCEST.getSimPars();
+                for (String parName : parNames) {
+                    if (parName.equals("deltaB0")) {
+                        int parIndex = 3;
+                        int deltaAIndex = parIndex - 1;
+                        if (Math.abs(pars[parIndex] - pars[deltaAIndex]) < deltaABdiff) {
+                            exchangeValid = false;
+                        }
+                    }
+                }
             } else {
                 errEstimates = new double[pars.length];
             }
@@ -334,7 +345,7 @@ public class CESTFit implements EquationFitter {
             boolean useWeight = CoMDPreferences.getWeightFit();
             CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs, 
                 useNonParametric, sRadius, fRadius, tol, useWeight);
-            return getResults(this, eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, true, curveStats);
+            return getResults(this, eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, exchangeValid, curveStats);
         } else {
             return null;
         }
