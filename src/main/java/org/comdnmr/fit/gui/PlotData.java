@@ -417,12 +417,16 @@ public class PlotData extends XYCanvasChart {
         int nIncr = 100;
         double delta = (max - min) / nIncr;
         ArrayList<ArrayList<Double>> equationData = new ArrayList<>(nIncr - 1);
-        double[] ax = new double[1];
+        double[] extras = plotEquation.getExtras();
+        double[] ax = new double[extras.length];
         for (int i = 1; i < nIncr - 1; i++) {
             ArrayList<Double> pointData = new ArrayList<>(3);
             double xValue = min + i * delta;
             ax[0] = xValue;
-            double yValue = plotEquation.calculate(ax, plotEquation.getExtra(0) / fieldRef);
+            for (int j = 1; j < extras.length; j++) {
+                ax[j] = extras[j];
+            }
+            double yValue = plotEquation.calculate(ax, plotEquation.getExtra(0));// / fieldRef);
             pointData.add(xValue);
             pointData.add(yValue);
             equationData.add(pointData);
