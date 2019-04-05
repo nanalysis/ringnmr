@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import org.apache.commons.math3.optim.PointValuePair;
+import static org.comdnmr.fit.calc.CPMGFit.SIMX;
 
 /**
  *
@@ -276,8 +277,12 @@ public class ExpFit implements EquationFitter {
     }
 
     @Override
-    public double[] getSimX(int nPts, double xLB, double xUB) {
-        return SIMX;
+    public double[] getSimX(int nPts, double xLB, double xUB, double[] xVals) {
+        if (xVals != null) {
+            return xVals;
+        } else {
+            return SIMX;
+        }
     }
 
 }

@@ -358,7 +358,7 @@ public class R1RhoFit implements EquationFitter {
     }
 
     @Override
-    public double[] getSimX(int nPts, double xLB, double xUB) {
+    public double[] getSimX(int nPts, double xLB, double xUB, double[] xVals) {
         int nPoints = nPts;
         double[] x = new double[nPoints];
         double firstValue = xLB;
