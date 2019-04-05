@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -37,7 +38,7 @@ public class ExpControls extends EquationControls {
         String name;
         Slider slider;
         Label label;
-        Label valueText;
+        TextField valueText;
 
         PARS(String name, double min, double max, double major, double value) {
             this.name = name;
@@ -47,7 +48,7 @@ public class ExpControls extends EquationControls {
             slider.setMajorTickUnit(major);
             label = new Label(name);
             label.setPrefWidth(50.0);
-            valueText = new Label();
+            valueText = new TextField();
             valueText.setPrefWidth(50);
         }
 
@@ -65,6 +66,11 @@ public class ExpControls extends EquationControls {
         @Override
         public Slider getSlider() {
             return slider;
+        }
+
+        @Override
+        public TextField getTextField() {
+            return valueText;
         }
 
         @Override
@@ -119,6 +125,12 @@ public class ExpControls extends EquationControls {
             control.getSlider().valueProperty().addListener(e -> {
                 simSliderAction(control.getName());
             });
+             
+            control.getTextField().textProperty().addListener(e -> {
+                double value = Double.parseDouble(control.getTextField().textProperty().get());
+                control.getSlider().setValue(value);
+            });
+            
             vBox.getChildren().add(hBox);
         }
 
