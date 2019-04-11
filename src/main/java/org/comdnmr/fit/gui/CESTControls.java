@@ -108,18 +108,22 @@ public class CESTControls extends EquationControls {
         @Override
         public void setValue(double value) {
             slider.setValue(value);
-            valueText.setText(String.format("%.1f", value));
+//            valueText.setText(String.format("%.1f", value));
             if (name.equals("Pb")) {
                 valueText.setText(String.format("%.2f", value));
+            } else {
+                valueText.setText(String.format("%.1f", value));
             }
         }
 
         @Override
         public void setText() {
             double value = slider.getValue();
-            valueText.setText(String.format("%.1f", value));
+//            valueText.setText(String.format("%.1f", value));
             if (name.equals("Pb")) {
                 valueText.setText(String.format("%.2f", value));
+            } else {
+                valueText.setText(String.format("%.1f", value));
             }
         }
 
