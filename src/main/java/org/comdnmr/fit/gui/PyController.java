@@ -1960,7 +1960,8 @@ public class PyController implements Initializable {
                 ax[0] = xValue;
                 double yValue = eqn.calculate(sliderGuesses, ax, fieldRef);
                 yValue += Double.parseDouble(genDataSDevTextField.getText()) * rand.nextGaussian(); //sdev * rand.nextGaussian();
-                XYValue dataPoint = new XYValue(xValue, yValue);
+//                XYValue dataPoint = new XYValue(xValue, yValue);
+                XYValue dataPoint = new XYEValue(xValue, yValue, Double.parseDouble(genDataSDevTextField.getText()));
                 dataPoint.setExtraValue(new Double(sdev));
                 series.getData().add(dataPoint);
             }
