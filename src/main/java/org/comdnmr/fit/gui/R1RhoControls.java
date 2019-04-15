@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import javafx.animation.PauseTransition;
 import javafx.fxml.FXML;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
@@ -17,6 +18,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
 import org.comdnmr.fit.calc.CPMGFit;
 import org.comdnmr.fit.calc.R1RhoEquation;
 import org.comdnmr.fit.calc.ExperimentData;
@@ -159,6 +161,7 @@ public class R1RhoControls extends EquationControls {
 
         int i = 0;
 
+        PauseTransition pause = new PauseTransition(Duration.seconds(1));
         for (ParControls control : PARS.values()) {
             HBox hBox = new HBox();
             HBox.setHgrow(hBox, Priority.ALWAYS);
@@ -168,9 +171,12 @@ public class R1RhoControls extends EquationControls {
                 simSliderAction(control.getName());
             });
              
-            control.getTextField().textProperty().addListener(e -> {
-                double value = Double.parseDouble(control.getTextField().textProperty().get());
-                control.getSlider().setValue(value);
+            control.getTextField().textProperty().addListener((observable, oldValue, newValue) -> {
+                pause.setOnFinished(e -> {
+                    double value = Double.parseDouble(control.getTextField().textProperty().get());
+                    control.getSlider().setValue(value);
+                });
+                pause.playFromStart();
             });
             
             vBox.getChildren().add(hBox);
