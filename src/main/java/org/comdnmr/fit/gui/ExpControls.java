@@ -131,8 +131,15 @@ public class ExpControls extends EquationControls {
              
             control.getTextField().textProperty().addListener((observable, oldValue, newValue) -> {
                 pause.setOnFinished(e -> {
-                    double value = Double.parseDouble(control.getTextField().textProperty().get());
-                    control.getSlider().setValue(value);
+                    String text = control.getTextField().textProperty().get();
+                    if (!text.equals("")) {
+                        try {
+                            double value = Double.parseDouble(text);
+                            control.getSlider().setValue(value);
+                        } catch (NumberFormatException nfe) {
+                            
+                        }
+                    }
                 });
                 pause.playFromStart();
             });
