@@ -31,7 +31,7 @@ public interface EquationFitter {
 
     public void setData(ResidueProperties resProps, String[] resNums);
 
-    public void setData(List<Double>[] allXValues, List<Double> yValues, List<Double> errValues);
+    public void setData(List<Double>[] allXValues, List<Double> yValues, List<Double> errValues, List<Double> fieldValues);
 
     public int[] getStateCount();
 
