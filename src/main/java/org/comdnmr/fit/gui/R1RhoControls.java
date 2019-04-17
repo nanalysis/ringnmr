@@ -161,7 +161,7 @@ public class R1RhoControls extends EquationControls {
 
         int i = 0;
 
-        PauseTransition pause = new PauseTransition(Duration.seconds(1));
+        PauseTransition pause = new PauseTransition(Duration.seconds(5));
         for (ParControls control : PARS.values()) {
             HBox hBox = new HBox();
             HBox.setHgrow(hBox, Priority.ALWAYS);
