@@ -40,6 +40,8 @@ public interface EquationFitter {
 //    public double[] getSimX();
     
     public double[] getSimX(int nPts, double xLB, double xUB);
+    
+    public double[] getSimXDefaults();
 
     public default CPMGFitResult getResults(EquationFitter fitter, String eqn, String[] parNames, String[] resNums, int[][] map, int[][] states, 
             double[] usedFields, int nGroupPars, double[] pars, double[] errEstimates, double aic, double rms, double rChiSq, double[][] simPars, 

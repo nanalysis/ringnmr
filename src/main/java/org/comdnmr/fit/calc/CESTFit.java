@@ -366,5 +366,10 @@ public class CESTFit implements EquationFitter {
         }
         return x;
     }
+    
+    @Override
+    public double[] getSimXDefaults() {
+        return getSimX(100, -8, 8);
+    }
 
 }
