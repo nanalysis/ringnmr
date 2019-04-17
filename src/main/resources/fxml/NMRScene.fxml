@@ -174,6 +174,12 @@
                                                     <TextField fx:id="genDataXUBTextField" prefWidth="80"/>
                                                 </children>
                                             </HBox>
+                                            <HBox>
+                                                <children>
+                                                    <Label text="X Values: " prefWidth="80"/>
+                                                    <TextField fx:id="genDataXValTextField" prefWidth="400"/>
+                                                </children>
+                                            </HBox>
                                             <Label text="Fitting"/>
 
                                             <HBox>

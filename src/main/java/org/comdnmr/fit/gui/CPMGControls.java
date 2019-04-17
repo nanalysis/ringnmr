@@ -9,14 +9,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javafx.animation.PauseTransition;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
 import org.comdnmr.fit.calc.CPMGFit;
 import org.comdnmr.fit.calc.ParValueInterface;
 import org.comdnmr.fit.calc.PlotEquation;
@@ -50,7 +53,7 @@ public class CPMGControls extends EquationControls {
         String name;
         Slider slider;
         Label label;
-        Label valueText;
+        TextField valueText;
 
         PARS(String name, double min, double max, double major, double value) {
             this.name = name;
@@ -60,8 +63,9 @@ public class CPMGControls extends EquationControls {
             slider.setMajorTickUnit(major);
             label = new Label(name);
             label.setPrefWidth(50.0);
-            valueText = new Label();
+            valueText = new TextField();
             valueText.setPrefWidth(50);
+            valueText.setText(String.valueOf(value));
         }
 
         @Override
@@ -78,6 +82,11 @@ public class CPMGControls extends EquationControls {
         @Override
         public Slider getSlider() {
             return slider;
+        }
+        
+        @Override
+        public TextField getTextField() {
+            return valueText;
         }
 
         @Override
@@ -128,6 +137,7 @@ public class CPMGControls extends EquationControls {
 
         int i = 0;
 
+        PauseTransition pause = new PauseTransition(Duration.seconds(1));
         for (ParControls control : PARS.values()) {
             HBox hBox = new HBox();
             HBox.setHgrow(hBox, Priority.ALWAYS);
@@ -136,6 +146,22 @@ public class CPMGControls extends EquationControls {
             control.getSlider().valueProperty().addListener(e -> {
                 simSliderAction(control.getName());
             });
+            
+            control.getTextField().textProperty().addListener((observable, oldValue, newValue) -> {
+                pause.setOnFinished(e -> {
+                    String text = control.getTextField().textProperty().get();
+                    if (!text.equals("")) {
+                        try {
+                            double value = Double.parseDouble(text);
+                            control.getSlider().setValue(value);
+                        } catch (NumberFormatException nfe) {
+                            
+                        }
+                    }
+                });
+                pause.playFromStart();
+            });
+            
             vBox.getChildren().add(hBox);
         }
 
@@ -226,7 +252,7 @@ public class CPMGControls extends EquationControls {
         FIELD2.setText();
         updateEquations();
     }
-
+    
     public double[] getExtras() {
         double B1field = FIELD2.getValue();
         double[] extras = {B1field};

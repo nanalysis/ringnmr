@@ -182,7 +182,9 @@ public class PyController implements Initializable {
     TextField genDataXUBTextField;
     @FXML
     TextField genDataSDevTextField;
-
+    @FXML
+    TextField genDataXValTextField;
+    
     @FXML
     SplitPane splitPane;
 
@@ -261,6 +263,13 @@ public class PyController implements Initializable {
             genDataNPtsTextField.setDisable(true);
             genDataXLBTextField.setDisable(true);
             genDataXUBTextField.setDisable(true);
+            genDataXValTextField.setDisable(false);
+            StringBuilder sBuilder = new StringBuilder();
+            for (double xval : getFitter().getSimXDefaults()) {
+                sBuilder.append(String.valueOf(xval));
+                sBuilder.append(" ");
+            }
+            genDataXValTextField.setText(sBuilder.toString());
         } else if (getFittingMode().equals("cest")) {
             simControls = new CESTControls();
             xLowerBoundTextField.setText("-20.0");
@@ -280,6 +289,8 @@ public class PyController implements Initializable {
             genDataXLBTextField.setText("-8.0");
             genDataXUBTextField.setDisable(false);
             genDataXUBTextField.setText("8.0");
+            genDataXValTextField.setDisable(true);
+            genDataXValTextField.setText("");
         } else if (getFittingMode().equals("exp")) {
             simControls = new ExpControls();
             xLowerBoundTextField.setText("0.0");
@@ -291,6 +302,13 @@ public class PyController implements Initializable {
             genDataNPtsTextField.setDisable(true);
             genDataXLBTextField.setDisable(true);
             genDataXUBTextField.setDisable(true);
+            genDataXValTextField.setDisable(false);
+            StringBuilder sBuilder = new StringBuilder();
+            for (double xval : getFitter().getSimXDefaults()) {
+                sBuilder.append(String.valueOf(xval));
+                sBuilder.append(" ");
+            }
+            genDataXValTextField.setText(sBuilder.toString());
         } else if (getFittingMode().equals("r1rho")) {
             simControls = new R1RhoControls();
             xLowerBoundTextField.setText("-20.0");
@@ -310,6 +328,8 @@ public class PyController implements Initializable {
             genDataXLBTextField.setText("-8.0");
             genDataXUBTextField.setDisable(false);
             genDataXUBTextField.setText("8.0");
+            genDataXValTextField.setDisable(true);
+            genDataXValTextField.setText("");
         } else {
             System.out.println("Error: no fitting mode selected.");
         }
@@ -470,12 +490,26 @@ public class PyController implements Initializable {
             genDataNPtsTextField.setDisable(true);
             genDataXLBTextField.setDisable(true);
             genDataXUBTextField.setDisable(true);
+            genDataXValTextField.setDisable(false);
+            StringBuilder sBuilder = new StringBuilder();
+            for (double xval : getFitter().getSimXDefaults()) {
+                sBuilder.append(String.valueOf(xval));
+                sBuilder.append(" ");
+            }
+            genDataXValTextField.setText(sBuilder.toString());
         } else if (getSimMode().equals("exp") && !(simControls instanceof ExpControls)) {
             simControls = new ExpControls();
             update = true;
             genDataNPtsTextField.setDisable(true);
             genDataXLBTextField.setDisable(true);
             genDataXUBTextField.setDisable(true);
+            genDataXValTextField.setDisable(false);
+            StringBuilder sBuilder = new StringBuilder();
+            for (double xval : getFitter().getSimXDefaults()) {
+                sBuilder.append(String.valueOf(xval));
+                sBuilder.append(" ");
+            }
+            genDataXValTextField.setText(sBuilder.toString());
         } else if (getSimMode().equals("cest") && !(simControls instanceof CESTControls)) {
             simControls = new CESTControls();
             ((CESTControls) simControls).updateDeltaLimits();
@@ -486,6 +520,8 @@ public class PyController implements Initializable {
             genDataXLBTextField.setText("-8.0");
             genDataXUBTextField.setDisable(false);
             genDataXUBTextField.setText("8.0");
+            genDataXValTextField.setDisable(true);
+            genDataXValTextField.setText("");
         } else if (getFittingMode().equals("r1rho") && !(simControls instanceof R1RhoControls)) {
             simControls = new R1RhoControls();
             ((R1RhoControls) simControls).updateDeltaLimits();
@@ -496,6 +532,8 @@ public class PyController implements Initializable {
             genDataXLBTextField.setText("-8.0");
             genDataXUBTextField.setDisable(false);
             genDataXUBTextField.setText("8.0");
+            genDataXValTextField.setDisable(true);
+            genDataXValTextField.setText("");
         }
         if (update) {
             updateEquationChoices(getSimMode());
@@ -1884,13 +1922,20 @@ public class PyController implements Initializable {
         if (genDataSDevTextField.getText().equals("")) {
             genDataSDevTextField.setText(String.valueOf(sdev));
         }
-        double[] xValues = equationFitter.getSimX(0, 0, 0);
+        double[] xValues = equationFitter.getSimXDefaults();
         String simMode = getSimMode();
         if (simMode.equals("cest") || simMode.equals("r1rho")) {
             int nPts = Integer.parseInt(genDataNPtsTextField.getText());
             double xLB = Double.parseDouble(genDataXLBTextField.getText());
             double xUB = Double.parseDouble(genDataXUBTextField.getText());
             xValues = equationFitter.getSimX(nPts, xLB, xUB);
+        } else {
+            String[] xvals = genDataXValTextField.getText().split(" ");
+            double[] xVals = new double[xvals.length];
+            for (int i=0; i<xvals.length; i++) {
+                xVals[i] = Double.parseDouble(xvals[i]);
+            }
+            xValues = xVals;
         }
         double fieldRef = 1.0;
         int iLine = 0;
@@ -1915,7 +1960,8 @@ public class PyController implements Initializable {
                 ax[0] = xValue;
                 double yValue = eqn.calculate(sliderGuesses, ax, fieldRef);
                 yValue += Double.parseDouble(genDataSDevTextField.getText()) * rand.nextGaussian(); //sdev * rand.nextGaussian();
-                XYValue dataPoint = new XYValue(xValue, yValue);
+//                XYValue dataPoint = new XYValue(xValue, yValue);
+                XYValue dataPoint = new XYEValue(xValue, yValue, Double.parseDouble(genDataSDevTextField.getText()));
                 dataPoint.setExtraValue(new Double(sdev));
                 series.getData().add(dataPoint);
             }
