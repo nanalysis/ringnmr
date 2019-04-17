@@ -305,6 +305,8 @@ public class R1RhoFit implements EquationFitter {
             String[] parNames = calcR1Rho.getParNames();
             double[] errEstimates;
             double[][] simPars = null;
+            boolean exchangeValid = true;
+            double deltaABdiff = CoMDPreferences.getDeltaABDiff();
             if (FitModel.getCalcError()) {
                 long startTime = System.currentTimeMillis();
                 if (CoMDPreferences.getNonParametric()) {
@@ -318,6 +320,15 @@ public class R1RhoFit implements EquationFitter {
 
                 }
                 simPars = calcR1Rho.getSimPars();
+                for (String parName : parNames) {
+                    if (parName.equals("deltaB0")) {
+                        int parIndex = 3;
+                        int deltaAIndex = parIndex - 1;
+                        if (Math.abs(pars[parIndex] - pars[deltaAIndex]) < deltaABdiff) {
+                            exchangeValid = false;
+                        }
+                    }
+                }
             } else {
                 errEstimates = new double[pars.length];
             }
@@ -340,7 +351,7 @@ public class R1RhoFit implements EquationFitter {
             boolean useWeight = CoMDPreferences.getWeightFit();
             CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs, 
                 useNonParametric, sRadius, fRadius, tol, useWeight);
-            return getResults(this, eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, true, curveStats);
+            return getResults(this, eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, exchangeValid, curveStats);
         } else {
             return null;
         }
@@ -360,6 +371,11 @@ public class R1RhoFit implements EquationFitter {
 
         }
         return x;
+    }
+    
+    @Override
+    public double[] getSimXDefaults() {
+        return getSimX(100, -8, 8);
     }
 
 }

@@ -326,7 +326,22 @@ public class CPMGFit implements EquationFitter {
 
     @Override
     public double[] getSimX(int nPts, double xLB, double xUB) {
-        return SIMX;
+        int nPoints = nPts;
+        double[] x = new double[nPoints];
+        double firstValue = xLB;
+        double lastValue = xUB;
+        double delta = (lastValue - firstValue) / (nPoints + 1);
+        double value = firstValue;
+        for (int i = 0; i < nPoints; i++) {
+            x[i] = value;
+            value += delta;
+
+        }
+        return x;
     }
 
+    @Override
+    public double[] getSimXDefaults() {
+        return SIMX;
+    }
 }

@@ -142,7 +142,7 @@ public class CalcR1Rho extends FitModel {
         reportFitness = false;
         int nPar = start.length;
         int nSim = CoMDPreferences.getSampleSize();
-        parValues = new double[nPar][nSim];
+        parValues = new double[nPar + 1][nSim];
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
         double[] yPred = getPredicted(start);
