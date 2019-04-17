@@ -265,7 +265,7 @@ public class PyController implements Initializable {
             genDataXUBTextField.setDisable(true);
             genDataXValTextField.setDisable(false);
             StringBuilder sBuilder = new StringBuilder();
-            for (double xval : getFitter().getSimX(0, 0, 0, null)) {
+            for (double xval : getFitter().getSimXDefaults()) {
                 sBuilder.append(String.valueOf(xval));
                 sBuilder.append(" ");
             }
@@ -304,7 +304,7 @@ public class PyController implements Initializable {
             genDataXUBTextField.setDisable(true);
             genDataXValTextField.setDisable(false);
             StringBuilder sBuilder = new StringBuilder();
-            for (double xval : getFitter().getSimX(0, 0, 0, null)) {
+            for (double xval : getFitter().getSimXDefaults()) {
                 sBuilder.append(String.valueOf(xval));
                 sBuilder.append(" ");
             }
@@ -492,7 +492,7 @@ public class PyController implements Initializable {
             genDataXUBTextField.setDisable(true);
             genDataXValTextField.setDisable(false);
             StringBuilder sBuilder = new StringBuilder();
-            for (double xval : getFitter().getSimX(0, 0, 0, null)) {
+            for (double xval : getFitter().getSimXDefaults()) {
                 sBuilder.append(String.valueOf(xval));
                 sBuilder.append(" ");
             }
@@ -505,7 +505,7 @@ public class PyController implements Initializable {
             genDataXUBTextField.setDisable(true);
             genDataXValTextField.setDisable(false);
             StringBuilder sBuilder = new StringBuilder();
-            for (double xval : getFitter().getSimX(0, 0, 0, null)) {
+            for (double xval : getFitter().getSimXDefaults()) {
                 sBuilder.append(String.valueOf(xval));
                 sBuilder.append(" ");
             }
@@ -1922,20 +1922,20 @@ public class PyController implements Initializable {
         if (genDataSDevTextField.getText().equals("")) {
             genDataSDevTextField.setText(String.valueOf(sdev));
         }
-        double[] xValues = equationFitter.getSimX(0, 0, 0, null);
+        double[] xValues = equationFitter.getSimXDefaults();
         String simMode = getSimMode();
         if (simMode.equals("cest") || simMode.equals("r1rho")) {
             int nPts = Integer.parseInt(genDataNPtsTextField.getText());
             double xLB = Double.parseDouble(genDataXLBTextField.getText());
             double xUB = Double.parseDouble(genDataXUBTextField.getText());
-            xValues = equationFitter.getSimX(nPts, xLB, xUB, null);
+            xValues = equationFitter.getSimX(nPts, xLB, xUB);
         } else {
             String[] xvals = genDataXValTextField.getText().split(" ");
             double[] xVals = new double[xvals.length];
             for (int i=0; i<xvals.length; i++) {
                 xVals[i] = Double.parseDouble(xvals[i]);
             }
-            xValues = equationFitter.getSimX(0, 0, 0, xVals);
+            xValues = xVals;
         }
         double fieldRef = 1.0;
         int iLine = 0;
