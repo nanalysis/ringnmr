@@ -33,7 +33,7 @@ do
 
     mkdir jre
     cd jre
-    tar xzf ~/.install4j7/jres/$jreFileName
+    tar xzf ~/.install4j6/jres/$jreFileName
     cd ..
     cd ..
     pwd
@@ -47,10 +47,10 @@ do
     fname=`echo $sdir | tr '.' '_'`
     if [[ $os == "linux-amd64" ]]
     then
-        tar czvf ${fname}_${os}.tar.gz $sdir
+        tar czf ${fname}_${os}.tar.gz $sdir
     elif [[ $os == "macosx-amd64" ]]
     then
-        tar czvf ${fname}_${os}.tar.gz $sdir
+        tar czf ${fname}_${os}.tar.gz $sdir
     else
         zip -r ${fname}_${os}.zip $sdir
     fi
