@@ -6,6 +6,7 @@
 package org.comdnmr.fit.gui;
 
 import javafx.scene.control.Slider;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 
 /**
@@ -19,6 +20,8 @@ public interface ParControls {
     void addTo(HBox hBox);
 
     Slider getSlider();
+    
+    TextField getTextField();
 
     void disabled(boolean state);
 
