@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javafx.animation.PauseTransition;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ChoiceBox;
@@ -18,6 +19,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
 import org.comdnmr.fit.calc.CPMGFit;
 import org.comdnmr.fit.calc.ParValueInterface;
 import org.comdnmr.fit.calc.PlotEquation;
@@ -135,6 +137,7 @@ public class CPMGControls extends EquationControls {
 
         int i = 0;
 
+        PauseTransition pause = new PauseTransition(Duration.seconds(1));
         for (ParControls control : PARS.values()) {
             HBox hBox = new HBox();
             HBox.setHgrow(hBox, Priority.ALWAYS);
@@ -144,9 +147,19 @@ public class CPMGControls extends EquationControls {
                 simSliderAction(control.getName());
             });
             
-            control.getTextField().textProperty().addListener(e -> {
-                double value = Double.parseDouble(control.getTextField().textProperty().get());
-                control.getSlider().setValue(value);
+            control.getTextField().textProperty().addListener((observable, oldValue, newValue) -> {
+                pause.setOnFinished(e -> {
+                    String text = control.getTextField().textProperty().get();
+                    if (!text.equals("")) {
+                        try {
+                            double value = Double.parseDouble(text);
+                            control.getSlider().setValue(value);
+                        } catch (NumberFormatException nfe) {
+                            
+                        }
+                    }
+                });
+                pause.playFromStart();
             });
             
             vBox.getChildren().add(hBox);

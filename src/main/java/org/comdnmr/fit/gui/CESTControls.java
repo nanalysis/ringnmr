@@ -35,6 +35,8 @@ import static org.comdnmr.fit.gui.CESTControls.PARS.B1FIELD;
 import static org.comdnmr.fit.gui.CESTControls.PARS.TEX;
 import org.comdnmr.fit.calc.CalcCEST;
 import org.comdnmr.fit.calc.CoMDPreferences;
+import javafx.animation.PauseTransition;
+import javafx.util.Duration;
 
 /**
  *
@@ -108,18 +110,22 @@ public class CESTControls extends EquationControls {
         @Override
         public void setValue(double value) {
             slider.setValue(value);
-            valueText.setText(String.format("%.1f", value));
+//            valueText.setText(String.format("%.1f", value));
             if (name.equals("Pb")) {
                 valueText.setText(String.format("%.2f", value));
+            } else {
+                valueText.setText(String.format("%.1f", value));
             }
         }
 
         @Override
         public void setText() {
             double value = slider.getValue();
-            valueText.setText(String.format("%.1f", value));
+//            valueText.setText(String.format("%.1f", value));
             if (name.equals("Pb")) {
                 valueText.setText(String.format("%.2f", value));
+            } else {
+                valueText.setText(String.format("%.1f", value));
             }
         }
 
@@ -167,7 +173,8 @@ public class CESTControls extends EquationControls {
         vBox.getChildren().add(hBox1);
 
         int i = 0;
-
+        
+        PauseTransition pause = new PauseTransition(Duration.seconds(1));
         for (ParControls control : PARS.values()) {
             HBox hBox = new HBox();
             HBox.setHgrow(hBox, Priority.ALWAYS);
@@ -177,9 +184,19 @@ public class CESTControls extends EquationControls {
                 simSliderAction(control.getName());
             });
              
-            control.getTextField().textProperty().addListener(e -> {
-                double value = Double.parseDouble(control.getTextField().textProperty().get());
-                control.getSlider().setValue(value);
+            control.getTextField().textProperty().addListener((observable, oldValue, newValue) -> {
+                pause.setOnFinished(e -> {
+                    String text = control.getTextField().textProperty().get();
+                    if (!text.equals("")) {
+                        try {
+                            double value = Double.parseDouble(text);
+                            control.getSlider().setValue(value);
+                        } catch (NumberFormatException nfe) {
+                            
+                        }
+                    }
+                });
+                pause.playFromStart();
             });
             
             vBox.getChildren().add(hBox);
