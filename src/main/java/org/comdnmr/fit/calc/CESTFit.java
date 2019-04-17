@@ -352,7 +352,7 @@ public class CESTFit implements EquationFitter {
     }
 
     @Override
-    public double[] getSimX(int nPts, double xLB, double xUB, double[] xVals) {
+    public double[] getSimX(int nPts, double xLB, double xUB) {
         int nPoints = nPts;
         double[] x = new double[nPoints];
         double firstValue = xLB;
@@ -365,6 +365,11 @@ public class CESTFit implements EquationFitter {
 
         }
         return x;
+    }
+    
+    @Override
+    public double[] getSimXDefaults() {
+        return getSimX(100, -8, 8);
     }
 
 }
