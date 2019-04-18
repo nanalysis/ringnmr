@@ -477,6 +477,8 @@ public class PyController implements Initializable {
             simPane.centerProperty().set(vBox);
             updateEquationChoices(getFittingMode());
         }
+        String nucleus = currentResProps.getExperimentData().stream().findFirst().get().getNucleusName();
+        simControls.setNucleus(nucleus);
         updateXYChartLabels();
     }
 
