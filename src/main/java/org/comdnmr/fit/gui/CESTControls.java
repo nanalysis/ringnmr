@@ -282,22 +282,27 @@ public class CESTControls extends EquationControls {
                 DELTAB0.disabled(false);
                 R1A.disabled(false);
                 R1B.disabled(false);
-                R1B.valueText.setDisable(true); 
+                R1B.valueText.setDisable(false); 
                 R2A.disabled(false);
                 R2B.disabled(true);
+                R2B.valueText.setDisable(true);
                 B1FIELD.disabled(false);
                 TEX.disabled(false);
                 break;
             case "CESTR1RHOPERTURBATIONNOEX":
                 KEX.disabled(true);
+                KEX.valueText.setDisable(true);
                 PB.disabled(true);
+                PB.valueText.setDisable(true);
                 DELTAA0.disabled(false);
                 DELTAB0.disabled(true);
+                DELTAB0.valueText.setDisable(true);
                 R1A.disabled(false);
                 R1B.disabled(true);
                 R1B.valueText.setDisable(true); 
                 R2A.disabled(false);
                 R2B.disabled(true);
+                R2B.valueText.setDisable(true);
                 B1FIELD.disabled(false);
                 TEX.disabled(false);
                 break;

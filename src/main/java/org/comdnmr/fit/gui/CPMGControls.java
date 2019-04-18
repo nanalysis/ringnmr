@@ -24,10 +24,10 @@ import static org.comdnmr.fit.gui.CPMGControls.PARS.FIELD2;
 import static org.comdnmr.fit.gui.CPMGControls.PARS.KEX;
 import static org.comdnmr.fit.gui.CPMGControls.PARS.PA;
 import static org.comdnmr.fit.gui.CPMGControls.PARS.R2;
-import static org.comdnmr.fit.gui.CPMGControls.PARS.REX;
 import org.comdnmr.fit.calc.CalcRDisp;
 import org.comdnmr.fit.calc.CoMDPreferences;
 import static org.comdnmr.fit.gui.CPMGControls.PARS.DPPM;
+import static org.comdnmr.fit.gui.CPMGControls.PARS.DPPMMIN;
 
 /**
  *
@@ -35,12 +35,12 @@ import static org.comdnmr.fit.gui.CPMGControls.PARS.DPPM;
  */
 public class CPMGControls extends EquationControls {
 
-    String[] parNames = {"R2", "Kex", "Rex", "pA", "dPPM", "Field2"};
+    String[] parNames = {"R2", "Kex", "dPPMmin", "pA", "dPPM", "Field2"};
 
     enum PARS implements ParControls {
         R2("R2", 0.0, 50.0, 10.0, 10.0),
         KEX("Kex", 0.0, 4000.0, 500.0, 500.0),
-        REX("Rex", 0.0, 50.0, 10.0, 8.0),
+        DPPMMIN("dPPMmin", 0.0, 0.2, 0.05, 0.05),
         PA("pA", 0.5, 0.99, 0.1, 0.9),
         DPPM("dPPM", 0.0, 2.0, 0.2, 0.2),
         FIELD2("Field2", 500.0, 1200.0, 100.0, 600.0);
@@ -190,21 +190,21 @@ public class CPMGControls extends EquationControls {
         switch (equationName) {
             case "NOEX":
                 R2.disabled(false);
-                REX.disabled(true);
+                DPPMMIN.disabled(true);
                 KEX.disabled(true);
                 PA.disabled(true);
                 DPPM.disabled(true);
                 break;
             case "CPMGFAST":
                 R2.disabled(false);
-                REX.disabled(false);
+                DPPMMIN.disabled(false);
                 KEX.disabled(false);
                 PA.disabled(true);
                 DPPM.disabled(true);
                 break;
             case "CPMGSLOW":
                 R2.disabled(false);
-                REX.disabled(true);
+                DPPMMIN.disabled(true);
                 KEX.disabled(false);
                 PA.disabled(false);
                 DPPM.disabled(false);
@@ -235,7 +235,7 @@ public class CPMGControls extends EquationControls {
             return;
         }
         String equationName = equationSelector.getValue().toString();
-        if (equationName.equals("CPMGSLOW") && label.equals("Rex")) {
+        if (equationName.equals("CPMGSLOW") && label.equals("dPPMmin")) {
             return;
         }
         updateEquations();
@@ -250,7 +250,7 @@ public class CPMGControls extends EquationControls {
     double[] getPars(String equationName) {
         double r2 = R2.getValue();
         double kEx = KEX.getValue();
-        double rEx = REX.getValue();
+        double dPPMmin = DPPMMIN.getValue();
         double pA = PA.getValue();
         double dPPM = DPPM.getValue();
         double field2 = FIELD2.getValue();
@@ -265,7 +265,7 @@ public class CPMGControls extends EquationControls {
                 pars = new double[3];
                 pars[0] = kEx;
                 pars[1] = r2;
-                pars[2] = rEx;
+                pars[2] = dPPMmin;
                 break;
             case "CPMGSLOW":
                 pars = new double[4];
@@ -292,7 +292,7 @@ public class CPMGControls extends EquationControls {
                 pars = new double[3];
                 pars[0] = parValues.get("Kex").getValue();
                 pars[1] = parValues.get("R2").getValue();
-                pars[2] = parValues.get("Rex").getValue();
+                pars[2] = parValues.get("dPPMmin").getValue();
                 break;
             case "CPMGSLOW":
                 pars = new double[4];
@@ -311,7 +311,7 @@ public class CPMGControls extends EquationControls {
     public double[] sliderGuess(String equationName, int[][] map) {
         double r2 = R2.getValue();
         double kEx = KEX.getValue();
-        double rEx = REX.getValue();
+        double dPPMmin = DPPMMIN.getValue();
         double pA = PA.getValue();
         double dPPM = DPPM.getValue();
         double field2 = FIELD2.getValue();
@@ -326,7 +326,7 @@ public class CPMGControls extends EquationControls {
             case "CPMGFAST":
                 for (int id = 0; id < map.length; id++) {
                     guesses[map[id][1]] = r2;
-                    guesses[map[id][2]] = rEx;
+                    guesses[map[id][2]] = dPPMmin;
                 }
                 guesses[0] = kEx;
                 break;
@@ -401,7 +401,7 @@ public class CPMGControls extends EquationControls {
             case "CPMGFAST":
                 parNames1.add("Kex");
                 parNames1.add("R2");
-                parNames1.add("Rex");
+                parNames1.add("dPPMmin");
                 parNames1.add("Field2");
                 break;
             case "CPMGSLOW":

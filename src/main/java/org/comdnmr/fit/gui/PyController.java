@@ -192,8 +192,6 @@ public class PyController implements Initializable {
     InputDataInterface inputDataInterface = null;
     NMRFxClient cl;
 
-    //final ContextMenu axisMenu = new ContextMenu();
-    static double defaultField = 500.0;
 
     ResidueInfo currentResInfo = null;
     ResidueProperties currentResProps = null;
@@ -1058,7 +1056,7 @@ public class PyController implements Initializable {
             // remove redundant parameters 
             if ((state != null) && (parName != null)) {
                 if (!state.equals("0:0:0") && (parName.equals("Kex") || parName.equals("dPPM")
-                        || parName.equals("pA") || parName.equals("Rex"))) {
+                        || parName.equals("pA") || parName.equals("dPPMmin"))) {
                     ok = false;
                 }
             }
@@ -1659,7 +1657,7 @@ public class PyController implements Initializable {
     }
 
     public String[] getParTypes() {
-        String[] cpmgTypes = {"R2", "Rex", "Kex", "pA", "dW", "RMS", "AIC", "Equation"};
+        String[] cpmgTypes = {"R2", "dPPMmin", "Kex", "pA", "dPPM", "RMS", "AIC", "Equation"};
         String[] expTypes = {"A", "R", "C", "RMS", "AIC", "Equation"};
         String[] cestTypes = {"kex", "pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B", "RMS", "AIC", "Equation"};
         String[] r1rhoTypes = {"kex", "pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B", "RMS", "AIC", "Equation"};
@@ -1847,9 +1845,11 @@ public class PyController implements Initializable {
         ArrayList[] allXValues = new ArrayList[extras.length + 1];
         allXValues[0] = xValues;
         ArrayList<Double> errValues = new ArrayList<>();
+        ArrayList<Double> fieldValues = new ArrayList<>();
         for (int i = 0; i < yValues.size(); i++) {
             errValues.add(yValues.get(i) * 0.05);
-            fieldVals[i] = CoMDPreferences.getRefField() * simControls.getNucleus().getRatio();
+            fieldVals[i] = CoMDPreferences.getRefField();
+            fieldValues.add(fieldVals[i]);
         }
         System.out.println("xval len " + xValues.size());
         for (int j = 0; j < extras.length; j++) {
@@ -1861,7 +1861,7 @@ public class PyController implements Initializable {
             allXValues[1 + j] = xValuesEx;
         }
         equationFitter.getFitModel().setFieldValues(fieldVals);
-        equationFitter.setData(allXValues, yValues, errValues);
+        equationFitter.setData(allXValues, yValues, errValues, fieldValues);
     }
 
     public void guessSimData() {
