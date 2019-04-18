@@ -9,14 +9,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javafx.animation.PauseTransition;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.util.Duration;
 import org.comdnmr.fit.calc.CPMGFit;
 import org.comdnmr.fit.calc.ParValueInterface;
 import org.comdnmr.fit.calc.ResidueInfo;
@@ -133,7 +132,6 @@ public class CPMGControls extends EquationControls {
 
         int i = 0;
 
-        PauseTransition pause = new PauseTransition(Duration.seconds(5));
         for (ParControls control : PARS.values()) {
             HBox hBox = new HBox();
             HBox.setHgrow(hBox, Priority.ALWAYS);
@@ -141,21 +139,21 @@ public class CPMGControls extends EquationControls {
 
             control.getSlider().valueProperty().addListener(e -> {
                 simSliderAction(control.getName());
+                control.setText();
             });
             
-            control.getTextField().textProperty().addListener((observable, oldValue, newValue) -> {
-                pause.setOnFinished(e -> {
+            control.getTextField().setOnKeyReleased(event -> {
+                if (event.getCode() == KeyCode.ENTER){
                     String text = control.getTextField().textProperty().get();
                     if (!text.equals("")) {
                         try {
                             double value = Double.parseDouble(text);
                             control.getSlider().setValue(value);
                         } catch (NumberFormatException nfe) {
-                            
+
                         }
                     }
-                });
-                pause.playFromStart();
+                }
             });
             
             vBox.getChildren().add(hBox);
@@ -240,12 +238,6 @@ public class CPMGControls extends EquationControls {
         if (equationName.equals("CPMGSLOW") && label.equals("dPPMmin")) {
             return;
         }
-        R2.setText();
-        KEX.setText();
-        DPPMMIN.setText();
-        PA.setText();
-        DPPM.setText();
-        FIELD2.setText();
         updateEquations();
     }
     
