@@ -219,38 +219,53 @@ public class R1RhoControls extends EquationControls {
             case "R1RHOPERTURBATION":
             case "R1RHOBALDWINKAY":
                 KEX.disabled(false);
+                KEX.valueText.setDisable(false);
                 PB.disabled(false);
+                PB.valueText.setDisable(false);
                 DELTAA0.disabled(false);
                 DELTAB0.disabled(false);
+                DELTAB0.valueText.setDisable(false);
                 R1A.disabled(false);
                 R1B.disabled(true);
+                R1B.valueText.setDisable(true);
                 R2A.disabled(false);
                 R2B.disabled(false);
+                R2B.valueText.setDisable(false);
                 B1FIELD.disabled(false);
                 TEX.disabled(false);
                 break;
             case "R1RHOLAGUERRE":
                 KEX.disabled(false);
+                KEX.valueText.setDisable(false);
                 PB.disabled(false);
+                PB.valueText.setDisable(false);
                 DELTAA0.disabled(false);
                 DELTAB0.disabled(false);
+                DELTAB0.valueText.setDisable(false);
                 R1A.disabled(false);
                 R1B.disabled(true);
+                R1B.valueText.setDisable(true);
                 R2A.disabled(false);
                 R2B.disabled(true);
+                R2B.valueText.setDisable(true);
                 R2B.valueText.setDisable(true);
                 B1FIELD.disabled(false);
                 TEX.disabled(false);
                 break;
             case "R1RHOEXACT":
                 KEX.disabled(false);
+                KEX.valueText.setDisable(false);
                 PB.disabled(false);
+                PB.valueText.setDisable(false);
                 DELTAA0.disabled(false);
                 DELTAB0.disabled(false);
+                DELTAB0.valueText.setDisable(false);
                 R1A.disabled(false);
                 R1B.disabled(false);
+                R1B.valueText.setDisable(false);
                 R2A.disabled(false);
                 R2B.disabled(false);
+                R2B.valueText.setDisable(false);
                 B1FIELD.disabled(false);
                 TEX.disabled(false);
                 break;
@@ -264,6 +279,7 @@ public class R1RhoControls extends EquationControls {
                 DELTAB0.valueText.setDisable(true);
                 R1A.disabled(false);
                 R1B.disabled(true);
+                R1B.valueText.setDisable(true);
                 R2A.disabled(false);
                 R2B.disabled(true);
                 R2B.valueText.setDisable(true);

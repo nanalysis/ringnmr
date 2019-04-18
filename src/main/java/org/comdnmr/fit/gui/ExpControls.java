@@ -167,6 +167,7 @@ public class ExpControls extends EquationControls {
                 A.disabled(false);
                 R.disabled(false);
                 C.disabled(false);
+                C.valueText.setDisable(false);
                 break;
             default:
                 return;

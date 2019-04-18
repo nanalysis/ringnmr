@@ -237,22 +237,29 @@ public class CESTControls extends EquationControls {
             case "CESTR1RHOEXACT1":
             case "CESTEXACT1":
                 KEX.disabled(false);
+                KEX.valueText.setDisable(false);
                 PB.disabled(false);
+                PB.valueText.setDisable(false);
                 DELTAA0.disabled(false);
                 DELTAB0.disabled(false);
+                DELTAB0.valueText.setDisable(false);
                 R1A.disabled(false);
                 R1B.disabled(true);
                 R1B.valueText.setDisable(true);                
                 R2A.disabled(false);
                 R2B.disabled(false);
+                R2B.valueText.setDisable(false);
                 B1FIELD.disabled(false);
                 TEX.disabled(false);
                 break;
             case "CESTR1RHON":
                 KEX.disabled(false);
+                KEX.valueText.setDisable(false);
                 PB.disabled(false);
+                PB.valueText.setDisable(false);
                 DELTAA0.disabled(false);
                 DELTAB0.disabled(false);
+                DELTAB0.valueText.setDisable(false);
                 R1A.disabled(false);
                 R1B.disabled(true);
                 R1B.valueText.setDisable(true); 
@@ -264,22 +271,29 @@ public class CESTControls extends EquationControls {
                 break;
             case "CESTEXACT0":
                 KEX.disabled(false);
+                KEX.valueText.setDisable(false);
                 PB.disabled(false);
+                PB.valueText.setDisable(false);
                 DELTAA0.disabled(false);
                 DELTAB0.disabled(false);
+                DELTAB0.valueText.setDisable(false);
                 R1A.disabled(false);
                 R1B.disabled(false);
                 R1B.valueText.setDisable(false); 
                 R2A.disabled(false);
                 R2B.disabled(false);
+                R2B.valueText.setDisable(false);
                 B1FIELD.disabled(false);
                 TEX.disabled(false);
                 break;
             case "CESTEXACT2":
                 KEX.disabled(false);
+                KEX.valueText.setDisable(false);
                 PB.disabled(false);
+                PB.valueText.setDisable(false);
                 DELTAA0.disabled(false);
                 DELTAB0.disabled(false);
+                DELTAB0.valueText.setDisable(false);
                 R1A.disabled(false);
                 R1B.disabled(false);
                 R1B.valueText.setDisable(false); 
