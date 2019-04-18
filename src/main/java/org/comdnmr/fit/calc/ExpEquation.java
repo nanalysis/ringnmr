@@ -52,13 +52,13 @@ public enum ExpEquation implements EquationType {
         }
 
         @Override
-        public double getRex(double[] pars, int[] map) {
-            return pars[map[2]];
+        public double getRex(double[] pars, int[] map, double field) {
+            return 0.0;
         }
 
         @Override
         public double getKex(double[] pars) {
-            return pars[0];
+            return 0.0;
         }
 
         @Override
@@ -146,13 +146,13 @@ public enum ExpEquation implements EquationType {
         }
 
         @Override
-        public double getRex(double[] pars, int[] map) {
-            return pars[map[2]];
+        public double getRex(double[] pars, int[] map, double field) {
+            return 0.0;
         }
 
         @Override
         public double getKex(double[] pars) {
-            return pars[0];
+            return 0.0;
         }
 
         @Override

@@ -114,11 +114,11 @@ public class R1RhoFit implements EquationFitter {
     }
 
     @Override
-    public void setData(List<Double>[] allXValues, List<Double> yValues, List<Double> errValues) {
-        setData(allXValues[0], allXValues[1], allXValues[2], yValues, errValues);
+    public void setData(List<Double>[] allXValues, List<Double> yValues, List<Double> errValues, List<Double> fieldValues) {
+        setData(allXValues[0], allXValues[1], allXValues[2], yValues, errValues, fieldValues);
     }
 
-    public void setData(List<Double> xValues0, List<Double> xValues1, List<Double> xValues2, List<Double> yValues, List<Double> errValues) {
+    public void setData(List<Double> xValues0, List<Double> xValues1, List<Double> xValues2, List<Double> yValues, List<Double> errValues, List<Double> fieldValues) {
         xValues = new ArrayList[3];
         xValues[0] = new ArrayList<>();
         xValues[0].addAll(xValues0);
@@ -128,8 +128,9 @@ public class R1RhoFit implements EquationFitter {
         xValues[2].addAll(xValues2);
         this.yValues.addAll(yValues);
         this.errValues.addAll(errValues);
+        this.fieldValues.clear();
+        this.fieldValues.addAll(fieldValues);
         for (Double yValue : yValues) {
-            fieldValues.add(FitModel.getFieldValues()[0]);
             idValues.add(0);
         }
         usedFields = new double[1];
@@ -349,8 +350,8 @@ public class R1RhoFit implements EquationFitter {
             double fRadius = CoMDPreferences.getFinalRadius();
             double tol = CoMDPreferences.getTolerance();
             boolean useWeight = CoMDPreferences.getWeightFit();
-            CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs, 
-                useNonParametric, sRadius, fRadius, tol, useWeight);
+            CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs,
+                    useNonParametric, sRadius, fRadius, tol, useWeight);
             return getResults(this, eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, exchangeValid, curveStats);
         } else {
             return null;
@@ -372,7 +373,7 @@ public class R1RhoFit implements EquationFitter {
         }
         return x;
     }
-    
+
     @Override
     public double[] getSimXDefaults() {
         return getSimX(100, -8, 8);

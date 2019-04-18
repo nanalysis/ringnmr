@@ -66,7 +66,7 @@ public class ExpFit implements EquationFitter {
     }
 
     @Override
-    public void setData(List<Double>[] allXValues, List<Double> yValues, List<Double> errValues) {
+    public void setData(List<Double>[] allXValues, List<Double> yValues, List<Double> errValues, List<Double> fieldValues) {
         xValues.clear();
         xValues.addAll(allXValues[0]);
         this.yValues.clear();
@@ -74,15 +74,15 @@ public class ExpFit implements EquationFitter {
         this.errValues.clear();
         this.errValues.addAll(errValues);
         this.fieldValues.clear();
+        this.fieldValues.addAll(fieldValues);
         this.idValues.clear();
         for (Double yValue : yValues) {
-            this.fieldValues.add(500.0);
             this.idValues.add(0);
         }
         resNums = new String[1];
         resNums[0] = "0";
         usedFields = new double[1];
-        usedFields[0] = 500.0;
+        usedFields[0] = fieldValues.get(0);
         nCurves = 1;
         stateCount = new int[4];
         stateCount[0] = nResidues;
@@ -291,7 +291,7 @@ public class ExpFit implements EquationFitter {
         }
         return x;
     }
-    
+
     @Override
     public double[] getSimXDefaults() {
         return SIMX;
