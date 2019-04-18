@@ -45,6 +45,10 @@ public abstract class EquationControls {
     public Nuclei getNucleus() {
         return nucleiSelector.getSelectionModel().getSelectedItem();
     }
+    
+    public void setNucleus(String nucName) {
+        nucleiSelector.getSelectionModel().select(ExperimentData.Nuclei.get(nucName));
+    }
 
     abstract public VBox makeControls(PyController controller);
 
