@@ -9,21 +9,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import javafx.animation.PauseTransition;
-import javafx.fxml.FXML;
-import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.util.Duration;
-import org.comdnmr.fit.calc.CPMGFit;
 import org.comdnmr.fit.calc.R1RhoEquation;
 import org.comdnmr.fit.calc.ExperimentData;
 import org.comdnmr.fit.calc.ParValueInterface;
-import org.comdnmr.fit.calc.PlotEquation;
 import org.comdnmr.fit.calc.ResidueInfo;
 import org.comdnmr.fit.calc.ResidueProperties;
 import static org.comdnmr.fit.gui.R1RhoControls.PARS.KEX;
@@ -88,6 +83,9 @@ public class R1RhoControls extends EquationControls {
         @Override
         public void addTo(HBox hBox) {
             hBox.getChildren().addAll(label, slider, valueText);
+            if (name.equals("R1B")) {
+                valueText.setDisable(true);
+            }
             HBox.setHgrow(slider, Priority.ALWAYS);
         }
 
@@ -161,7 +159,6 @@ public class R1RhoControls extends EquationControls {
 
         int i = 0;
 
-        PauseTransition pause = new PauseTransition(Duration.seconds(5));
         for (ParControls control : PARS.values()) {
             HBox hBox = new HBox();
             HBox.setHgrow(hBox, Priority.ALWAYS);
@@ -169,21 +166,21 @@ public class R1RhoControls extends EquationControls {
 
             control.getSlider().valueProperty().addListener(e -> {
                 simSliderAction(control.getName());
+                control.setText();
             });
-             
-            control.getTextField().textProperty().addListener((observable, oldValue, newValue) -> {
-                pause.setOnFinished(e -> {
+            
+            control.getTextField().setOnKeyReleased(event -> {
+                if (event.getCode() == KeyCode.ENTER){
                     String text = control.getTextField().textProperty().get();
                     if (!text.equals("")) {
                         try {
                             double value = Double.parseDouble(text);
                             control.getSlider().setValue(value);
                         } catch (NumberFormatException nfe) {
-                            
+
                         }
                     }
-                });
-                pause.playFromStart();
+                }
             });
             
             vBox.getChildren().add(hBox);
@@ -241,6 +238,7 @@ public class R1RhoControls extends EquationControls {
                 R1B.disabled(true);
                 R2A.disabled(false);
                 R2B.disabled(true);
+                R2B.valueText.setDisable(true);
                 B1FIELD.disabled(false);
                 TEX.disabled(false);
                 break;
@@ -258,13 +256,17 @@ public class R1RhoControls extends EquationControls {
                 break;
             case "R1RHOPERTURBATIONNOEX":
                 KEX.disabled(true);
+                KEX.valueText.setDisable(true);
                 PB.disabled(true);
+                PB.valueText.setDisable(true);
                 DELTAA0.disabled(false);
                 DELTAB0.disabled(true);
+                DELTAB0.valueText.setDisable(true);
                 R1A.disabled(false);
                 R1B.disabled(true);
                 R2A.disabled(false);
                 R2B.disabled(true);
+                R2B.valueText.setDisable(true);
                 B1FIELD.disabled(false);
                 TEX.disabled(false);
                 break;
@@ -308,16 +310,6 @@ public class R1RhoControls extends EquationControls {
         double R2b = R2B.getValue();
         double B1field = B1FIELD.getValue();
         double Tex = TEX.getValue();
-        KEX.setText();
-        PB.setText();
-        DELTAA0.setText();
-        DELTAB0.setText();
-        R1A.setText();
-        R1B.setText();
-        R2A.setText();
-        R2B.setText();
-        B1FIELD.setText();
-        TEX.setText();
         double[][] pars;
         switch (equationName) {
             case "R1RHOPERTURBATION":

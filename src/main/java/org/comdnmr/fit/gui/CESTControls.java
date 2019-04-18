@@ -6,9 +6,11 @@
 package org.comdnmr.fit.gui;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
@@ -20,7 +22,6 @@ import org.comdnmr.fit.calc.CESTEquation;
 import org.comdnmr.fit.calc.CESTFit;
 import org.comdnmr.fit.calc.ExperimentData;
 import org.comdnmr.fit.calc.ParValueInterface;
-import org.comdnmr.fit.calc.PlotEquation;
 import org.comdnmr.fit.calc.ResidueInfo;
 import org.comdnmr.fit.calc.ResidueProperties;
 import static org.comdnmr.fit.gui.CESTControls.PARS.KEX;
@@ -35,8 +36,7 @@ import static org.comdnmr.fit.gui.CESTControls.PARS.B1FIELD;
 import static org.comdnmr.fit.gui.CESTControls.PARS.TEX;
 import org.comdnmr.fit.calc.CalcCEST;
 import org.comdnmr.fit.calc.CoMDPreferences;
-import javafx.animation.PauseTransition;
-import javafx.util.Duration;
+import javafx.scene.input.KeyCode;
 
 /**
  *
@@ -174,7 +174,6 @@ public class CESTControls extends EquationControls {
 
         int i = 0;
         
-        PauseTransition pause = new PauseTransition(Duration.seconds(5));
         for (ParControls control : PARS.values()) {
             HBox hBox = new HBox();
             HBox.setHgrow(hBox, Priority.ALWAYS);
@@ -182,23 +181,23 @@ public class CESTControls extends EquationControls {
 
             control.getSlider().valueProperty().addListener(e -> {
                 simSliderAction(control.getName());
+                control.setText();
             });
-             
-            control.getTextField().textProperty().addListener((observable, oldValue, newValue) -> {
-                pause.setOnFinished(e -> {
+            
+            control.getTextField().setOnKeyReleased(event -> {
+                if (event.getCode() == KeyCode.ENTER){
                     String text = control.getTextField().textProperty().get();
                     if (!text.equals("")) {
                         try {
                             double value = Double.parseDouble(text);
                             control.getSlider().setValue(value);
                         } catch (NumberFormatException nfe) {
-                            
+
                         }
                     }
-                });
-                pause.playFromStart();
+                }
             });
-            
+                        
             vBox.getChildren().add(hBox);
         }
 
@@ -243,6 +242,7 @@ public class CESTControls extends EquationControls {
                 DELTAB0.disabled(false);
                 R1A.disabled(false);
                 R1B.disabled(true);
+                R1B.valueText.setDisable(true);                
                 R2A.disabled(false);
                 R2B.disabled(false);
                 B1FIELD.disabled(false);
@@ -255,8 +255,10 @@ public class CESTControls extends EquationControls {
                 DELTAB0.disabled(false);
                 R1A.disabled(false);
                 R1B.disabled(true);
+                R1B.valueText.setDisable(true); 
                 R2A.disabled(false);
                 R2B.disabled(true);
+                R2B.valueText.setDisable(true);
                 B1FIELD.disabled(false);
                 TEX.disabled(false);
                 break;
@@ -267,6 +269,7 @@ public class CESTControls extends EquationControls {
                 DELTAB0.disabled(false);
                 R1A.disabled(false);
                 R1B.disabled(false);
+                R1B.valueText.setDisable(false); 
                 R2A.disabled(false);
                 R2B.disabled(false);
                 B1FIELD.disabled(false);
@@ -279,6 +282,7 @@ public class CESTControls extends EquationControls {
                 DELTAB0.disabled(false);
                 R1A.disabled(false);
                 R1B.disabled(false);
+                R1B.valueText.setDisable(true); 
                 R2A.disabled(false);
                 R2B.disabled(true);
                 B1FIELD.disabled(false);
@@ -291,6 +295,7 @@ public class CESTControls extends EquationControls {
                 DELTAB0.disabled(true);
                 R1A.disabled(false);
                 R1B.disabled(true);
+                R1B.valueText.setDisable(true); 
                 R2A.disabled(false);
                 R2B.disabled(true);
                 B1FIELD.disabled(false);
@@ -336,16 +341,6 @@ public class CESTControls extends EquationControls {
         double R2b = R2B.getValue();
         double B1field = B1FIELD.getValue();
         double Tex = TEX.getValue();
-        KEX.setText();
-        PB.setText();
-        DELTAA0.setText();
-        DELTAB0.setText();
-        R1A.setText();
-        R1B.setText();
-        R2A.setText();
-        R2B.setText();
-        B1FIELD.setText();
-        TEX.setText();
         double[][] pars;
         switch (equationName) {
             case "CESTR1RHOPERTURBATION":
