@@ -1732,6 +1732,8 @@ public class PyController implements Initializable {
         ChartUtil.residueProperties = new HashMap<>();
         if (clearXY) {
             xychart.clear();
+        } else {
+            xychart.getData().clear();
         }
         clearSecondaryStructure();
         barCharts.remove(activeChart);
