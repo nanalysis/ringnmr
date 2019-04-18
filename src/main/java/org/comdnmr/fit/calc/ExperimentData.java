@@ -137,6 +137,10 @@ public class ExperimentData {
     public double getNucleusField() {
         return nucleusField;
     }
+    
+    public String getNucleusName() {
+        return nucleusName;
+    }
 
     /**
      * @return the state
