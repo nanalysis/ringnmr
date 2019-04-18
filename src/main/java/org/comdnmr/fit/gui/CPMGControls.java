@@ -191,23 +191,35 @@ public class CPMGControls extends EquationControls {
             case "NOEX":
                 R2.disabled(false);
                 DPPMMIN.disabled(true);
+                DPPMMIN.valueText.setDisable(true);
                 KEX.disabled(true);
+                KEX.valueText.setDisable(true);
                 PA.disabled(true);
+                PA.valueText.setDisable(true);
                 DPPM.disabled(true);
+                DPPM.valueText.setDisable(true);
                 break;
             case "CPMGFAST":
                 R2.disabled(false);
                 DPPMMIN.disabled(false);
+                DPPMMIN.valueText.setDisable(false);
                 KEX.disabled(false);
+                KEX.valueText.setDisable(false);
+                DPPMMIN.valueText.setDisable(false);
                 PA.disabled(true);
+                PA.valueText.setDisable(true);
                 DPPM.disabled(true);
+                DPPM.valueText.setDisable(true);
                 break;
             case "CPMGSLOW":
                 R2.disabled(false);
                 DPPMMIN.disabled(true);
+                DPPMMIN.valueText.setDisable(true);
                 KEX.disabled(false);
                 PA.disabled(false);
+                PA.valueText.setDisable(false);
                 DPPM.disabled(false);
+                DPPM.valueText.setDisable(false);
                 break;
             default:
                 return;
