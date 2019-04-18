@@ -53,23 +53,24 @@ public class CESTControls extends EquationControls {
     static final double DELTA_MAX = 20.0;
 
     enum PARS implements ParControls {
-        KEX("Kex", 0.0, 1000.0, 100.0, 150.0),
-        PB("Pb", 0.0, 1.0, 0.1, 0.1),
-        DELTAA0("deltaA0", DELTA_MIN, DELTA_MAX, 5.0, 3.0),
-        DELTAB0("deltaB0", DELTA_MIN, DELTA_MAX, 5.0, -2.0),
-        R1A("R1A", 0.0, 10.0, 1.0, 2.5),
-        R1B("R1B", 0.0, 10.0, 1.0, 2.5),
-        R2A("R2A", 0.0, 200.0, 50.0, 15.0),
-        R2B("R2B", 0.0, 200.0, 50.0, 120.0),
-        B1FIELD("B1field", 0.0, 100.0, 20.0, 20.0),
-        TEX("Tex", 0.0, 1.0, 0.1, 0.3);
+        KEX("Kex", 0.0, 1000.0, 100.0, 150.0, 1),
+        PB("Pb", 0.0, 1.0, 0.1, 0.1, 3),
+        DELTAA0("deltaA0", DELTA_MIN, DELTA_MAX, 5.0, 3.0, 3),
+        DELTAB0("deltaB0", DELTA_MIN, DELTA_MAX, 5.0, -2.0, 3),
+        R1A("R1A", 0.0, 10.0, 1.0, 2.5, 2),
+        R1B("R1B", 0.0, 10.0, 1.0, 2.5, 2),
+        R2A("R2A", 0.0, 200.0, 50.0, 15.0, 2),
+        R2B("R2B", 0.0, 200.0, 50.0, 120.0, 2),
+        B1FIELD("B1field", 0.0, 100.0, 20.0, 20.0, 2),
+        TEX("Tex", 0.0, 1.0, 0.1, 0.3, 2);
 
         String name;
         Slider slider;
         Label label;
         TextField valueText;
+        final String format;
 
-        PARS(String name, double min, double max, double major, double value) {
+        PARS(String name, double min, double max, double major, double value, int digits) {
             this.name = name;
             slider = new Slider(min, max, value);
             slider.setShowTickLabels(true);
@@ -79,6 +80,8 @@ public class CESTControls extends EquationControls {
             label.setPrefWidth(60.0);
             valueText = new TextField();
             valueText.setPrefWidth(60);
+            format = "%." + digits + "f";
+
         }
 
         @Override
@@ -96,7 +99,7 @@ public class CESTControls extends EquationControls {
         public Slider getSlider() {
             return slider;
         }
-        
+
         @Override
         public TextField getTextField() {
             return valueText;
@@ -110,23 +113,13 @@ public class CESTControls extends EquationControls {
         @Override
         public void setValue(double value) {
             slider.setValue(value);
-//            valueText.setText(String.format("%.1f", value));
-            if (name.equals("Pb")) {
-                valueText.setText(String.format("%.2f", value));
-            } else {
-                valueText.setText(String.format("%.1f", value));
-            }
+            setText();
         }
 
         @Override
         public void setText() {
             double value = slider.getValue();
-//            valueText.setText(String.format("%.1f", value));
-            if (name.equals("Pb")) {
-                valueText.setText(String.format("%.2f", value));
-            } else {
-                valueText.setText(String.format("%.1f", value));
-            }
+            valueText.setText(String.format(format, value));
         }
 
         @Override
@@ -173,7 +166,7 @@ public class CESTControls extends EquationControls {
         vBox.getChildren().add(hBox1);
 
         int i = 0;
-        
+
         for (ParControls control : PARS.values()) {
             HBox hBox = new HBox();
             HBox.setHgrow(hBox, Priority.ALWAYS);
@@ -183,9 +176,9 @@ public class CESTControls extends EquationControls {
                 simSliderAction(control.getName());
                 control.setText();
             });
-            
+
             control.getTextField().setOnKeyReleased(event -> {
-                if (event.getCode() == KeyCode.ENTER){
+                if (event.getCode() == KeyCode.ENTER) {
                     String text = control.getTextField().textProperty().get();
                     if (!text.equals("")) {
                         try {
@@ -197,7 +190,7 @@ public class CESTControls extends EquationControls {
                     }
                 }
             });
-                        
+
             vBox.getChildren().add(hBox);
         }
 
@@ -245,7 +238,7 @@ public class CESTControls extends EquationControls {
                 DELTAB0.valueText.setDisable(false);
                 R1A.disabled(false);
                 R1B.disabled(true);
-                R1B.valueText.setDisable(true);                
+                R1B.valueText.setDisable(true);
                 R2A.disabled(false);
                 R2B.disabled(false);
                 R2B.valueText.setDisable(false);
@@ -262,7 +255,7 @@ public class CESTControls extends EquationControls {
                 DELTAB0.valueText.setDisable(false);
                 R1A.disabled(false);
                 R1B.disabled(true);
-                R1B.valueText.setDisable(true); 
+                R1B.valueText.setDisable(true);
                 R2A.disabled(false);
                 R2B.disabled(true);
                 R2B.valueText.setDisable(true);
@@ -279,7 +272,7 @@ public class CESTControls extends EquationControls {
                 DELTAB0.valueText.setDisable(false);
                 R1A.disabled(false);
                 R1B.disabled(false);
-                R1B.valueText.setDisable(false); 
+                R1B.valueText.setDisable(false);
                 R2A.disabled(false);
                 R2B.disabled(false);
                 R2B.valueText.setDisable(false);
@@ -296,7 +289,7 @@ public class CESTControls extends EquationControls {
                 DELTAB0.valueText.setDisable(false);
                 R1A.disabled(false);
                 R1B.disabled(false);
-                R1B.valueText.setDisable(false); 
+                R1B.valueText.setDisable(false);
                 R2A.disabled(false);
                 R2B.disabled(true);
                 R2B.valueText.setDisable(true);
@@ -313,7 +306,7 @@ public class CESTControls extends EquationControls {
                 DELTAB0.valueText.setDisable(true);
                 R1A.disabled(false);
                 R1B.disabled(true);
-                R1B.valueText.setDisable(true); 
+                R1B.valueText.setDisable(true);
                 R2A.disabled(false);
                 R2B.disabled(true);
                 R2B.valueText.setDisable(true);

@@ -32,15 +32,16 @@ public class ExpControls extends EquationControls {
     String[] parNames = {"A", "R", "C"};
 
     enum PARS implements ParControls {
-        A("A", 0.0, 500.0, 100.0, 100.0),
-        R("R", 0.0, 10.0, 2.0, 2.0),
-        C("C", 0.0, 100.0, 20.0, 10.0),;
+        A("A", 0.0, 500.0, 100.0, 100.0, 2),
+        R("R", 0.0, 10.0, 2.0, 2.0, 2),
+        C("C", 0.0, 100.0, 20.0, 10.0, 2),;
         String name;
         Slider slider;
         Label label;
         TextField valueText;
+        String format;
 
-        PARS(String name, double min, double max, double major, double value) {
+        PARS(String name, double min, double max, double major, double value, int digits) {
             this.name = name;
             slider = new Slider(min, max, value);
             slider.setShowTickLabels(true);
@@ -50,6 +51,8 @@ public class ExpControls extends EquationControls {
             label.setPrefWidth(50.0);
             valueText = new TextField();
             valueText.setPrefWidth(50);
+            format = "%." + digits + "f";
+
         }
 
         @Override
@@ -81,20 +84,20 @@ public class ExpControls extends EquationControls {
         @Override
         public void setValue(double value) {
             slider.setValue(value);
-            valueText.setText(String.format("%.1f", value));
+            setText();
         }
 
         @Override
         public void setText() {
             double value = slider.getValue();
-            valueText.setText(String.format("%.1f", value));
+            valueText.setText(String.format(format, value));
         }
 
         @Override
         public double getValue() {
             return slider.getValue();
         }
-        
+
         @Override
         public void updateLimits(double min, double max) {
             slider.setMin(min);
@@ -126,9 +129,9 @@ public class ExpControls extends EquationControls {
                 simSliderAction(control.getName());
                 control.setText();
             });
-            
+
             control.getTextField().setOnKeyReleased(event -> {
-                if (event.getCode() == KeyCode.ENTER){
+                if (event.getCode() == KeyCode.ENTER) {
                     String text = control.getTextField().textProperty().get();
                     if (!text.equals("")) {
                         try {
@@ -140,7 +143,7 @@ public class ExpControls extends EquationControls {
                     }
                 }
             });
-            
+
             vBox.getChildren().add(hBox);
         }
 

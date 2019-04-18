@@ -38,19 +38,20 @@ public class CPMGControls extends EquationControls {
     String[] parNames = {"R2", "Kex", "dPPMmin", "pA", "dPPM", "Field2"};
 
     enum PARS implements ParControls {
-        R2("R2", 0.0, 50.0, 10.0, 10.0),
-        KEX("Kex", 0.0, 4000.0, 500.0, 500.0),
-        DPPMMIN("dPPMmin", 0.0, 0.2, 0.05, 0.05),
-        PA("pA", 0.5, 0.99, 0.1, 0.9),
-        DPPM("dPPM", 0.0, 2.0, 0.2, 0.2),
-        FIELD2("Field2", 500.0, 1200.0, 100.0, 600.0);
+        R2("R2", 0.0, 50.0, 10.0, 10.0, 2),
+        KEX("Kex", 0.0, 4000.0, 500.0, 500.0, 1),
+        DPPMMIN("dPPMmin", 0.0, 0.2, 0.05, 0.05, 3),
+        PA("pA", 0.5, 0.99, 0.1, 0.9, 3),
+        DPPM("dPPM", 0.0, 2.0, 0.2, 0.2, 3),
+        FIELD2("Field2", 500.0, 1200.0, 100.0, 600.0, 1);
 
         String name;
         Slider slider;
         Label label;
         TextField valueText;
+        final String format;
 
-        PARS(String name, double min, double max, double major, double value) {
+        PARS(String name, double min, double max, double major, double value, int digits) {
             this.name = name;
             slider = new Slider(min, max, value);
             slider.setShowTickLabels(true);
@@ -59,8 +60,9 @@ public class CPMGControls extends EquationControls {
             label = new Label(name);
             label.setPrefWidth(50.0);
             valueText = new TextField();
-            valueText.setPrefWidth(50);
+            valueText.setPrefWidth(70);
             valueText.setText(String.valueOf(value));
+            format = "%." + digits + "f";
         }
 
         @Override
@@ -78,7 +80,7 @@ public class CPMGControls extends EquationControls {
         public Slider getSlider() {
             return slider;
         }
-        
+
         @Override
         public TextField getTextField() {
             return valueText;
@@ -92,20 +94,20 @@ public class CPMGControls extends EquationControls {
         @Override
         public void setValue(double value) {
             slider.setValue(value);
-            valueText.setText(String.format("%.1f", value));
+            setText();
         }
 
         @Override
         public void setText() {
             double value = slider.getValue();
-            valueText.setText(String.format("%.1f", value));
+            valueText.setText(String.format(format, value));
         }
 
         @Override
         public double getValue() {
             return slider.getValue();
         }
-        
+
         @Override
         public void updateLimits(double min, double max) {
             slider.setMin(min);
@@ -141,9 +143,9 @@ public class CPMGControls extends EquationControls {
                 simSliderAction(control.getName());
                 control.setText();
             });
-            
+
             control.getTextField().setOnKeyReleased(event -> {
-                if (event.getCode() == KeyCode.ENTER){
+                if (event.getCode() == KeyCode.ENTER) {
                     String text = control.getTextField().textProperty().get();
                     if (!text.equals("")) {
                         try {
@@ -155,7 +157,7 @@ public class CPMGControls extends EquationControls {
                     }
                 }
             });
-            
+
             vBox.getChildren().add(hBox);
         }
 
@@ -252,7 +254,7 @@ public class CPMGControls extends EquationControls {
         }
         updateEquations();
     }
-    
+
     public double[] getExtras() {
         double B1field = FIELD2.getValue();
         double[] extras = {B1field};
