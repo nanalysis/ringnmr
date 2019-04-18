@@ -286,7 +286,7 @@ public class CPMGFit implements EquationFitter {
                         exchangeValid = false;
                     }
                 }
-                if (parName.equals("Rex")) {
+                if (parName.equals("dPPMmin")) {
                     parIndex = 2;
                 }
                 if (parIndex != -1) {

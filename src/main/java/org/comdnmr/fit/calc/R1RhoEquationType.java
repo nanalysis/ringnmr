@@ -97,7 +97,7 @@ public interface R1RhoEquationType extends EquationType {
     }
 
     @Override
-    public default double getRex(double[] pars, int[] map) {
+    public default double getRex(double[] pars, int[] map, double field) {
         return 0.0;
     }
 

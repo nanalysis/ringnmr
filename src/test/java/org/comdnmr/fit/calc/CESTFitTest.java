@@ -4,6 +4,7 @@ import org.comdnmr.fit.calc.CPMGFitResult;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import org.comdnmr.fit.calc.CESTFit;
 import org.junit.Assert;
 import org.junit.Test;
@@ -164,7 +165,8 @@ public class CESTFitTest {
     @Test
     public void testcestR1rhoPerturbation() {
         CESTFit fitting = new CESTFit();
-        fitting.setData(fixOffset(offset), fixOffset(omega), Texarray, intenarray, errarray);
+        List<Double> fieldArray = Collections.nCopies(errarray.size(), CoMDPreferences.getRefField());
+        fitting.setData(fixOffset(offset), fixOffset(omega), Texarray, intenarray, errarray, fieldArray);
 
         CPMGFitResult fit = fitting.doFit("cestr1rhoperturbation", null);
 
@@ -195,7 +197,8 @@ public class CESTFitTest {
     @Test
     public void testcestR1rhoSD() {
         CESTFit fitting = new CESTFit();
-        fitting.setData(fixOffset(offset), fixOffset(omega), Texarray, intenarray, errarray);
+        List<Double> fieldArray = Collections.nCopies(errarray.size(), CoMDPreferences.getRefField());
+        fitting.setData(fixOffset(offset), fixOffset(omega), Texarray, intenarray, errarray, fieldArray);
 
         CPMGFitResult fit = fitting.doFit("cestr1rhosd", null);
 
@@ -223,7 +226,8 @@ public class CESTFitTest {
     @Test
     public void testcestR1rhoBaldwinKay() {
         CESTFit fitting = new CESTFit();
-        fitting.setData(fixOffset(offset), fixOffset(omega), Texarray, intenarray, errarray);
+        List<Double> fieldArray = Collections.nCopies(errarray.size(), CoMDPreferences.getRefField());
+        fitting.setData(fixOffset(offset), fixOffset(omega), Texarray, intenarray, errarray, fieldArray);
 
         CPMGFitResult fit = fitting.doFit("cestr1rhobaldwinkay", null);
 
@@ -252,7 +256,8 @@ public class CESTFitTest {
     @Test
     public void testcestR1rhoN() {
         CESTFit fitting = new CESTFit();
-        fitting.setData(fixOffset(offset), fixOffset(omega), Texarray, intenarray, errarray);
+        List<Double> fieldArray = Collections.nCopies(errarray.size(), CoMDPreferences.getRefField());
+        fitting.setData(fixOffset(offset), fixOffset(omega), Texarray, intenarray, errarray, fieldArray);
 
         CPMGFitResult fit = fitting.doFit("cestr1rhon", null);
 

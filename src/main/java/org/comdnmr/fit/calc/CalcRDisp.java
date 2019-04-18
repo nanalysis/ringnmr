@@ -131,13 +131,13 @@ public class CalcRDisp extends FitModel {
     public double[] getRex(double[] pars) {
         double[] result = new double[nID];
         for (int i = 0; i < map.length; i++) {
-            result[i] = equation.getRex(pars, map[i]);
+            result[i] = equation.getRex(pars, map[i], fieldValues[0]);
         }
         return result;
     }
 
     public double getRex(double[] pars, int id) {
-        return equation.getRex(pars, map[id]);
+        return equation.getRex(pars, map[id], fieldValues[0]);
     }
 
     public double[] getRexError() {
@@ -173,7 +173,7 @@ public class CalcRDisp extends FitModel {
             parValues[nPar][i] = result.getValue();
             if (equation == CPMGEquation.CPMGSLOW) {
                 for (int j = 0; j < map.length; j++) {
-                    rexValues[j][i] = equation.getRex(result.getPoint(), map[j]);
+                    rexValues[j][i] = equation.getRex(result.getPoint(), map[j], fieldValues[0]);
                 }
             }
         }
@@ -275,7 +275,7 @@ public class CalcRDisp extends FitModel {
 
             if (equation == CPMGEquation.CPMGSLOW) {
                 for (int j = 0; j < map.length; j++) {
-                    rexValues[j][i] = equation.getRex(result.getPoint(), map[j]);
+                    rexValues[j][i] = equation.getRex(result.getPoint(), map[j], fieldValues[0]);
                 }
             }
         });

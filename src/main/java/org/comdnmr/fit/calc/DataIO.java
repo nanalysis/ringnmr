@@ -838,7 +838,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             headerFields = headerFields2;
         }
         StringBuilder headerBuilder = new StringBuilder();
-        String[] cpmgFields = {"R2", "Rex", "Kex", "pA", "dPPM"};
+        String[] cpmgFields = {"R2", "dPPMmin", "Kex", "pA", "dPPM"};
         String[] expFields = {"A", "R"};
         String[] cestFields = {"Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B"};
         String[] parFields;
