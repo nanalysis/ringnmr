@@ -41,32 +41,6 @@ public enum R1RhoEquation implements R1RhoEquationType {
         }
 
         @Override
-        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
-            int nPars = CalcR1Rho.getNPars(map);
-            double[] guesses = new double[nPars];
-            for (int id = 0; id < map.length; id++) {
-                int[] map1 = map[id];
-                double[][] xy = CESTEquations.getXYValues(xValues, yValues, idNums, id);
-                double[][] peaks = R1RhoEquations.r1rhoPeakGuess(xy[0], xy[1], field);
-                double tex = xValues[2][0];
-                double[] r1 = R1RhoEquations.r1rhoR1Guess(xy[1], tex);
-                double[][] r2 = R1RhoEquations.r1rhoR2Guess(peaks, xy[1]);
-                guesses[map1[0]] = R1RhoEquations.r1rhoKexGuess(peaks); //112.0; //kex
-                guesses[map1[1]] = R1RhoEquations.r1rhoPbGuess(peaks, xy[1]); //0.1; //pb
-                guesses[map1[2]] = peaks[peaks.length - 1][0]; //-250 * 2.0 * Math.PI; //deltaA
-                guesses[map1[3]] = peaks[0][0]; //400 * 2.0 * Math.PI; //deltaB
-                guesses[map1[4]] = r1[0]; //2.4; //R1A
-                guesses[map1[5]] = r1[1]; //2.4; //R1B
-//                guesses[map[id][6]] = r2[0][0]; //20.0; //R2A
-//                guesses[map[id][7]] = r2[1][0]; //100.0; //R2B
-                guesses[map1[6]] = 30.0; //20.0; //R2A
-                guesses[map1[7]] = 150.0; //100.0; //R2B
-            }
-            return guesses;
-
-        }
-
-        @Override
         public int[][] makeMap(int[] stateCount, int[][] states, int[] r2Mask) {
             int[] map0 = {2, 3, 4, 4, 5, 6};
             int n = states.length;
@@ -122,7 +96,7 @@ public enum R1RhoEquation implements R1RhoEquationType {
                 double[][] r2 = R1RhoEquations.r1rhoR2Guess(peaks, yValues);
                 guesses[map1[0]] = peaks[peaks.length - 1][0]; //400 * 2.0 * Math.PI; //deltaA
                 guesses[map1[1]] = r1[0]; //2.4; //R1A
-                guesses[map1[2]] = r2[0][0] / 2; //20.0; //R2A
+                guesses[map1[2]] = 20.0; //20.0; //R2A
             }
             return guesses;
 
@@ -146,7 +120,7 @@ public enum R1RhoEquation implements R1RhoEquationType {
             boundaries[0][map[id][1]] = r1BouA[0]; //R1A LB
             boundaries[1][map[id][1]] = r1BouA[1]; //R1A UB
             boundaries[0][map[id][2]] = 0.1; //R2A LB
-            boundaries[1][map[id][2]] = guesses[map[id][2]] * 4; //R2A UB
+            boundaries[1][map[id][2]] = 250.0; //R2A UB
             return boundaries;
         }
 
@@ -189,29 +163,6 @@ public enum R1RhoEquation implements R1RhoEquationType {
             return yCalc;
         }
 
-        @Override
-        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
-            int nPars = CalcR1Rho.getNPars(map);
-            double[] guesses = new double[nPars];
-            for (int id = 0; id < map.length; id++) {
-                int[] map1 = map[id];
-                double[][] xy = CESTEquations.getXYValues(xValues, yValues, idNums, id);
-                double[][] peaks = R1RhoEquations.r1rhoPeakGuess(xy[0], xy[1], field);
-                double tex = xValues[2][0];
-                double[] r1 = R1RhoEquations.r1rhoR1Guess(yValues, tex);
-                double[][] r2 = R1RhoEquations.r1rhoR2Guess(peaks, yValues);
-                guesses[map1[0]] = R1RhoEquations.r1rhoKexGuess(peaks); //112.0; //kex
-                guesses[map1[1]] = R1RhoEquations.r1rhoPbGuess(peaks, yValues); //0.1; //pb
-                guesses[map1[2]] = peaks[peaks.length - 1][0]; //-250 * 2.0 * Math.PI; //deltaA
-                guesses[map1[3]] = peaks[0][0]; //400 * 2.0 * Math.PI; //deltaB
-                guesses[map1[4]] = r1[0]; //2.4; //R1A
-                guesses[map1[5]] = r1[1]; //2.4; //R1B
-                guesses[map1[6]] = r2[0][0]; //r2[1][r2[0].length-1]/4; //20.0; //R2A
-                guesses[map1[7]] = r2[1][0]; //100.0; //R2B
-            }
-
-            return guesses;
-        }
 
         @Override
         public int[][] makeMap(int[] stateCount, int[][] states, int[] r2Mask) {
@@ -261,29 +212,6 @@ public enum R1RhoEquation implements R1RhoEquationType {
         }
 
         @Override
-        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
-            int nPars = CalcR1Rho.getNPars(map);
-            double[] guesses = new double[nPars];
-            for (int id = 0; id < map.length; id++) {
-                int[] map1 = map[id];
-                double[][] xy = CESTEquations.getXYValues(xValues, yValues, idNums, id);
-                double[][] peaks = R1RhoEquations.r1rhoPeakGuess(xy[0], xy[1], field);
-                double tex = xValues[2][0];
-                double[] r1 = R1RhoEquations.r1rhoR1Guess(yValues, tex);
-                double[][] r2 = R1RhoEquations.r1rhoR2Guess(peaks, yValues);
-                guesses[map1[0]] = R1RhoEquations.r1rhoKexGuess(peaks); //112.0; //kex
-                guesses[map1[1]] = R1RhoEquations.r1rhoPbGuess(peaks, yValues); //0.1; //pb
-                guesses[map1[2]] = peaks[peaks.length - 1][0]; //-250 * 2.0 * Math.PI; //deltaA
-                guesses[map1[3]] = peaks[0][0]; //400 * 2.0 * Math.PI; //deltaB
-                guesses[map1[4]] = r1[0]; //2.4; //R1A
-                guesses[map1[5]] = r1[1]; //2.4; //R1B
-                guesses[map1[6]] = r2[0][0]; //r2[1][r2[0].length-1]/4; //20.0; //R2A
-                guesses[map1[7]] = r2[0][0]; //100.0; //R2B
-            }
-            return guesses;
-        }
-
-        @Override
         public int[][] makeMap(int[] stateCount, int[][] states, int[] r2Mask) {
             int[] map0 = {2, 3, 4, 4, 5, 5};
             int n = states.length;
@@ -326,28 +254,6 @@ public enum R1RhoEquation implements R1RhoEquationType {
             return yCalc;
         }
 
-        @Override
-        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
-            int nPars = CalcR1Rho.getNPars(map);
-            double[] guesses = new double[nPars];
-            for (int id = 0; id < map.length; id++) {
-                int[] map1 = map[id];
-                double[][] xy = CESTEquations.getXYValues(xValues, yValues, idNums, id);
-                double[][] peaks = R1RhoEquations.r1rhoPeakGuess(xy[0], xy[1], field);
-                double tex = xValues[2][0];
-                double[] r1 = R1RhoEquations.r1rhoR1Guess(yValues, tex);
-                double[][] r2 = R1RhoEquations.r1rhoR2Guess(peaks, yValues);
-                guesses[map[id][0]] = R1RhoEquations.r1rhoKexGuess(peaks); //112.0; //kex
-                guesses[map[id][1]] = R1RhoEquations.r1rhoPbGuess(peaks, yValues); //0.1; //pb
-                guesses[map[id][2]] = peaks[peaks.length - 1][0]; //-250 * 2.0 * Math.PI; //deltaA
-                guesses[map[id][3]] = peaks[0][0]; //400 * 2.0 * Math.PI; //deltaB
-                guesses[map[id][4]] = r1[0]; //2.4; //R1A
-                guesses[map[id][5]] = r1[1]; //2.4; //R1B
-                guesses[map[id][6]] = r2[0][0]; //r2[1][r2[0].length-1]/4; //20.0; //R2A
-                guesses[map[id][7]] = r2[1][0]; //100.0; //R2B
-            }
-            return guesses;
-        }
 
         @Override
         public int[][] makeMap(int[] stateCount, int[][] states, int[] r2Mask) {
