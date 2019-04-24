@@ -163,7 +163,6 @@ public enum R1RhoEquation implements R1RhoEquationType {
             return yCalc;
         }
 
-
         @Override
         public int[][] makeMap(int[] stateCount, int[][] states, int[] r2Mask) {
             int[] map0 = {2, 3, 4, 4, 5, 6};
@@ -254,6 +253,51 @@ public enum R1RhoEquation implements R1RhoEquationType {
             return yCalc;
         }
 
+        @Override
+        public int[][] makeMap(int[] stateCount, int[][] states, int[] r2Mask) {
+            int[] map0 = {2, 3, 4, 4, 5, 6};
+            int n = states.length;
+            int[][] map = new int[n][8];
+            int offset = 0;
+            int lastState = 0;
+            for (int i = 0; i < n; i++) {
+                map[i][0] = 0;
+                map[i][1] = 1;
+                if (states[i][0] != lastState) {
+                    offset += 5;
+                }
+                for (int j = 0; j < map0.length; j++) {
+                    map[i][j + 2] = map0[j] + offset;
+                }
+                lastState = states[i][0];
+            }
+            return map;
+        }
+
+    },
+    R1RHOEXACT0("R1rhoExact0", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
+
+        @Override
+        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double field) {
+            double kex = par[map[0]];
+            double pb = par[map[1]];
+            double deltaA0 = par[map[2]];
+            double deltaB0 = par[map[3]];
+            double R1A = par[map[4]];
+            double R1B = par[map[5]];
+            double R2A = par[map[6]];
+            double R2B = par[map[7]];
+            double[] yCalc = new double[X[1].length];
+            double delay = X[2][0];
+            for (int i = 0; i < yCalc.length; i++) {
+                double omegaB1 = X[1][i] * 2.0 * Math.PI;
+                double deltaA = (deltaA0 - X[0][i]) * field * 2.0 * Math.PI;
+                double deltaB = (deltaB0 - X[0][i]) * field * 2.0 * Math.PI;
+                double r1rho = R1RhoEquations.r1rhoExact0(delay, omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
+                yCalc[i] = r1rho;
+            }
+            return yCalc;
+        }
 
         @Override
         public int[][] makeMap(int[] stateCount, int[][] states, int[] r2Mask) {
@@ -312,7 +356,7 @@ public enum R1RhoEquation implements R1RhoEquationType {
     }
 
     public static String[] getAllEquationNames() {
-        String[] equationNames = {"R1RHOPERTURBATIONNOEX", "R1RHOPERTURBATION", "R1RHOBALDWINKAY", "R1RHOLAGUERRE", "R1RHOEXACT"};
+        String[] equationNames = {"R1RHOPERTURBATIONNOEX", "R1RHOPERTURBATION", "R1RHOBALDWINKAY", "R1RHOLAGUERRE", "R1RHOEXACT","R1RHOEXACT0"};
         return equationNames;
     }
 
