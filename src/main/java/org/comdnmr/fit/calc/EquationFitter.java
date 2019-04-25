@@ -42,6 +42,18 @@ public interface EquationFitter {
     public double[] getSimX(int nPts, double xLB, double xUB);
     
     public double[] getSimXDefaults();
+    
+    default double[] getFields(List<Double> fieldValues, List<Integer> idNums) {
+        Map<Integer, Double> fieldMap = new HashMap<>();
+        for (int i=0;i<fieldValues.size();i++) {
+            fieldMap.put(idNums.get(i), fieldValues.get(i));
+        }
+        double[] fields = new double[fieldMap.size()];
+        for (int i=0;i<fields.length;i++) {
+            fields[i] = fieldMap.get(i);
+        }
+        return fields;        
+    }
 
     public default CPMGFitResult getResults(EquationFitter fitter, String eqn, String[] parNames, String[] resNums, int[][] map, int[][] states, 
             double[] usedFields, int nGroupPars, double[] pars, double[] errEstimates, double aic, double rms, double rChiSq, double[][] simPars, 
@@ -95,7 +107,7 @@ public interface EquationFitter {
             // fixme
             double[] extras = new double[1];
             extras[0] = usedFields[states[iCurve][1]];
-            //System.out.println("getResults got called with extras length = " + extras.length);
+            System.out.println("getResults got called with extras length = " + extras.length);
             PlotEquation plotEquation = new PlotEquation(eqn, parArray, errArray, extras);
             CurveFit curveFit = new CurveFit(stateString, resNums[states[iCurve][0]], parMap, plotEquation);
             curveFits.add(curveFit);

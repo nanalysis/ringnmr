@@ -17,7 +17,7 @@ public enum R1RhoEquation implements R1RhoEquationType {
     R1RHOPERTURBATION("R1rhoPerturbation", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
 
         @Override
-        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double field) {
+        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double[] fields) {
             double kex = par[map[0]];
             double pb = par[map[1]];
             double deltaA0 = par[map[2]];
@@ -32,8 +32,8 @@ public enum R1RhoEquation implements R1RhoEquationType {
             double[] deltaB = new double[omegarf.length];
             double[] omegaB1 = new double[omegarf.length];
             for (int i = 0; i < omegarf.length; i++) {
-                deltaA[i] = (deltaA0 - omegarf[i]) * field * 2.0 * Math.PI;
-                deltaB[i] = (deltaB0 - omegarf[i]) * field * 2.0 * Math.PI;
+                deltaA[i] = (deltaA0 - omegarf[i]) * fields[i] * 2.0 * Math.PI;
+                deltaB[i] = (deltaB0 - omegarf[i]) * fields[i] * 2.0 * Math.PI;
                 omegaB1[i] = b1Field[i] * 2.0 * Math.PI;
             }
             double[] yCalc = R1RhoEquations.r1rhoPerturbation(omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
@@ -65,7 +65,7 @@ public enum R1RhoEquation implements R1RhoEquationType {
     R1RHOPERTURBATIONNOEX("R1rhoPerturbationNoEx", 0, "deltaA0", "R1A", "R2A") {
 
         @Override
-        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double field) {
+        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double[] fields) {
             double deltaA0 = par[map[0]];
             double R1A = par[map[1]];
             double R2A = par[map[2]];
@@ -75,7 +75,7 @@ public enum R1RhoEquation implements R1RhoEquationType {
             double[] omegaB1 = new double[omegarf.length];
 
             for (int i = 0; i < omegarf.length; i++) {
-                deltaA[i] = (deltaA0 - omegarf[i]) * field * 2.0 * Math.PI;
+                deltaA[i] = (deltaA0 - omegarf[i]) * fields[i] * 2.0 * Math.PI;
                 omegaB1[i] = b1Field[i] * 2.0 * Math.PI;
 
             }
@@ -140,7 +140,7 @@ public enum R1RhoEquation implements R1RhoEquationType {
     R1RHOBALDWINKAY("R1rhoBaldwinKay", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
 
         @Override
-        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double field) {
+        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double[] fields) {
             double kex = par[map[0]];
             double pb = par[map[1]];
             double deltaA0 = par[map[2]];
@@ -155,8 +155,8 @@ public enum R1RhoEquation implements R1RhoEquationType {
             double[] deltaB = new double[omegarf.length];
             double[] omegaB1 = new double[omegarf.length];
             for (int i = 0; i < omegarf.length; i++) {
-                deltaA[i] = (deltaA0 - omegarf[i]) * field * 2.0 * Math.PI;
-                deltaB[i] = (deltaB0 - omegarf[i]) * field * 2.0 * Math.PI;
+                deltaA[i] = (deltaA0 - omegarf[i]) * fields[i] * 2.0 * Math.PI;
+                deltaB[i] = (deltaB0 - omegarf[i]) * fields[i] * 2.0 * Math.PI;
                 omegaB1[i] = b1Field[i] * 2.0 * Math.PI;
             }
             double[] yCalc = R1RhoEquations.r1rhoBaldwinKay(omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
@@ -187,7 +187,7 @@ public enum R1RhoEquation implements R1RhoEquationType {
     R1RHOLAGUERRE("R1rhoLaguerre", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
 
         @Override
-        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double field) {
+        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double[] fields) {
             double kex = par[map[0]];
             double pb = par[map[1]];
             double deltaA0 = par[map[2]];
@@ -202,8 +202,8 @@ public enum R1RhoEquation implements R1RhoEquationType {
             double[] deltaB = new double[omegarf.length];
             double[] omegaB1 = new double[omegarf.length];
             for (int i = 0; i < omegarf.length; i++) {
-                deltaA[i] = (deltaA0 - omegarf[i]) * field * 2.0 * Math.PI;
-                deltaB[i] = (deltaB0 - omegarf[i]) * field * 2.0 * Math.PI;
+                deltaA[i] = (deltaA0 - omegarf[i]) * fields[i] * 2.0 * Math.PI;
+                deltaB[i] = (deltaB0 - omegarf[i]) * fields[i] * 2.0 * Math.PI;
                 omegaB1[i] = b1Field[i] * 2.0 * Math.PI;
             }
             double[] yCalc = R1RhoEquations.r1rhoLaguerre(omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
@@ -234,7 +234,7 @@ public enum R1RhoEquation implements R1RhoEquationType {
     R1RHOEXACT("R1rhoExact", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
 
         @Override
-        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double field) {
+        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double[] fields) {
             double kex = par[map[0]];
             double pb = par[map[1]];
             double deltaA0 = par[map[2]];
@@ -246,8 +246,8 @@ public enum R1RhoEquation implements R1RhoEquationType {
             double[] yCalc = new double[X[1].length];
             for (int i = 0; i < yCalc.length; i++) {
                 double omegaB1 = X[1][i] * 2.0 * Math.PI;
-                double deltaA = (deltaA0 - X[0][i]) * field * 2.0 * Math.PI;
-                double deltaB = (deltaB0 - X[0][i]) * field * 2.0 * Math.PI;
+                double deltaA = (deltaA0 - X[0][i]) * fields[i] * 2.0 * Math.PI;
+                double deltaB = (deltaB0 - X[0][i]) * fields[i] * 2.0 * Math.PI;
                 yCalc[i] = R1RhoEquations.r1rhoExact(omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
             }
             return yCalc;
@@ -278,7 +278,7 @@ public enum R1RhoEquation implements R1RhoEquationType {
     R1RHOEXACT0("R1rhoExact0", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
 
         @Override
-        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double field) {
+        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double[] fields) {
             double kex = par[map[0]];
             double pb = par[map[1]];
             double deltaA0 = par[map[2]];
@@ -291,8 +291,8 @@ public enum R1RhoEquation implements R1RhoEquationType {
             double delay = X[2][0];
             for (int i = 0; i < yCalc.length; i++) {
                 double omegaB1 = X[1][i] * 2.0 * Math.PI;
-                double deltaA = (deltaA0 - X[0][i]) * field * 2.0 * Math.PI;
-                double deltaB = (deltaB0 - X[0][i]) * field * 2.0 * Math.PI;
+                double deltaA = (deltaA0 - X[0][i]) * fields[i] * 2.0 * Math.PI;
+                double deltaB = (deltaB0 - X[0][i]) * fields[i] * 2.0 * Math.PI;
                 double r1rho = R1RhoEquations.r1rhoExact0(delay, omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
                 yCalc[i] = r1rho;
             }
@@ -319,6 +319,25 @@ public enum R1RhoEquation implements R1RhoEquationType {
             }
             return map;
         }
+
+//        public double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+//            double[][] bounds = super.boundaries(guesses, xValues, yValues, map, idNums, nID, field);
+//            for (int id = 0; id < map.length; id++) {
+//                int[] map1 = map[id];
+//                bounds[0][map1[4]] = 1.0; //R1A UB
+//                bounds[1][map1[4]] = 2.5; //R1A UB
+//            }
+//            return bounds;
+//        }
+//
+//        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+//            double[] guesses = super.guess(xValues, yValues, map, idNums, nID, field);
+//            for (int id = 0; id < map.length; id++) {
+//                int[] map1 = map[id];
+//                guesses[map1[4]] = 2.0; //R1A UB
+//            }
+//            return guesses;
+//        }
 
     };
     final String equationName;
@@ -356,7 +375,7 @@ public enum R1RhoEquation implements R1RhoEquationType {
     }
 
     public static String[] getAllEquationNames() {
-        String[] equationNames = {"R1RHOPERTURBATIONNOEX", "R1RHOPERTURBATION", "R1RHOBALDWINKAY", "R1RHOLAGUERRE", "R1RHOEXACT","R1RHOEXACT0"};
+        String[] equationNames = {"R1RHOPERTURBATIONNOEX", "R1RHOPERTURBATION", "R1RHOBALDWINKAY", "R1RHOLAGUERRE", "R1RHOEXACT", "R1RHOEXACT0"};
         return equationNames;
     }
 

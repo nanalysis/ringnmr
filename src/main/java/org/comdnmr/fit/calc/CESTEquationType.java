@@ -18,7 +18,8 @@ public interface CESTEquationType extends EquationType {
         x[0][0] = X[0];
         x[1][0] = X[1];
         x[2][0] = X[2];
-        double[] y = calculate(par, map, x, idNum, field);
+        double[] fields = {field};
+        double[] y = calculate(par, map, x, idNum, fields);
         return y[0];
     }
 

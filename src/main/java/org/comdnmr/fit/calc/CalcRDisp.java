@@ -24,17 +24,16 @@ public class CalcRDisp extends FitModel {
         equation = CPMGEquation.valueOf(eqName.toUpperCase());
     }
 
-    public CalcRDisp(double[][] x, double[] y, double[] err, double[] fieldValues, double[] fields) throws IllegalArgumentException {
-        this(x, y, err, fieldValues, fields, new int[x.length]);
+    public CalcRDisp(double[][] x, double[] y, double[] err, double[] fieldValues) throws IllegalArgumentException {
+        this(x, y, err, fieldValues, new int[x.length]);
     }
 
-    public CalcRDisp(double[][] x, double[] y, double[] err, double[] fieldValues, double[] fields, int[] idNums) throws IllegalArgumentException {
+    public CalcRDisp(double[][] x, double[] y, double[] err, double[] fieldValues, int[] idNums) throws IllegalArgumentException {
         this.xValues = new double[1][];
         this.xValues[0] = x[0].clone();
         this.yValues = y.clone();
         this.errValues = err.clone();
         this.fieldValues = fieldValues.clone();
-        this.fields = fields.clone();
         this.idNums = idNums.clone();
         this.idNums = new int[yValues.length];
         this.equation = CPMGEquation.CPMGFAST;
@@ -199,7 +198,7 @@ public class CalcRDisp extends FitModel {
         for (int k = 0; k < yValues.length; k++) {
                 newY[k] = yPred[k] + errValues[k] * random.nextGaussian();
             }
-        CalcRDisp rDisp = new CalcRDisp(xValues, newY, errValues, fieldValues, fields, idNums);
+        CalcRDisp rDisp = new CalcRDisp(xValues, newY, errValues, fieldValues, idNums);
         rDisp.setEquation(equation.getName());
         rDisp.setXY(xValues, newY);
         rDisp.setIds(idNums);
@@ -208,7 +207,7 @@ public class CalcRDisp extends FitModel {
     }
 
     private CalcRDisp setupNonParametricBootstrap(double[] yPred) {
-        CalcRDisp rDisp = new CalcRDisp(xValues, yValues, errValues, fieldValues, fields, idNums);
+        CalcRDisp rDisp = new CalcRDisp(xValues, yValues, errValues, fieldValues, idNums);
         rDisp.setEquation(equation.getName());
         double[][] newX = new double[1][yValues.length];
         double[] newY = new double[yValues.length];

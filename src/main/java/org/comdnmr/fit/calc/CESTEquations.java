@@ -65,7 +65,7 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
  */
 public class CESTEquations {
 
-    public static double[] cestR1rhoPerturbationNoEx(double[][] X, double field, double deltaA0, double R1A, double R2A) {
+    public static double[] cestR1rhoPerturbationNoEx(double[][] X, double[] fields, double deltaA0, double R1A, double R2A) {
         double[] omegarf = X[0];
         double[] b1Field = X[1];
         double[] Tex = X[2];
@@ -78,7 +78,7 @@ public class CESTEquations {
         double[] omegaB1 = new double[size];
         for (int i = 0; i < size; i++) {
             omegaB1[i] = b1Field[i] * 2.0 * Math.PI;
-            deltaA[i] = (deltaA0 - omegarf[i]) * field * 2.0 * Math.PI;
+            deltaA[i] = (deltaA0 - omegarf[i]) * fields[i] * 2.0 * Math.PI;
             double omegaBar = deltaA[i];
             double we = Math.sqrt(omegaB1[i] * omegaB1[i] + omegaBar * omegaBar);
             cos2t[i] = (omegaBar / we) * (omegaBar / we);
@@ -94,7 +94,7 @@ public class CESTEquations {
         return cest;
     }
 
-    public static double[] cestExact0(double[][] X, double field, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A, double R2B) {
+    public static double[] cestExact0(double[][] X, double[] fields, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A, double R2B) {
         // Performs an exact numerical calculation and returns CEST intensity ratio.
         //
         // X: array containing two arrays:
@@ -134,8 +134,8 @@ public class CESTEquations {
 
         for (int i = 0; i < omegarf.length; i++) {
             omegaB1[i] = b1Field[i] * 2.0 * Math.PI;
-            double deltaA = (deltaA0 - omegarf[i]) * field * 2.0 * Math.PI;
-            double deltaB = (deltaB0 - omegarf[i]) * field * 2.0 * Math.PI;
+            double deltaA = (deltaA0 - omegarf[i]) * fields[i] * 2.0 * Math.PI;
+            double deltaB = (deltaB0 - omegarf[i]) * fields[i] * 2.0 * Math.PI;
             double omegaBar = (1 - pb) * deltaA + pb * deltaB;
             double we = Math.sqrt(omegaB1[i] * omegaB1[i] + omegaBar * omegaBar);
 
@@ -184,7 +184,7 @@ public class CESTEquations {
         return cest;
     }
 
-    public static double[] cestR1rhoExact1(double[][] X, double field, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A, double R2B) {
+    public static double[] cestR1rhoExact1(double[][] X, double[] fields, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A, double R2B) {
         // Performs an exact numerical calculation and returns CEST intensity ratio.
         // Assumes R1A = R1B.
         //
@@ -222,8 +222,8 @@ public class CESTEquations {
 
         for (int i = 0; i < omegarf.length; i++) {
             omegaB1[i] = b1Field[i] * 2.0 * Math.PI;
-            double deltaA = (deltaA0 - omegarf[i]) * field * 2.0 * Math.PI;
-            double deltaB = (deltaB0 - omegarf[i]) * field * 2.0 * Math.PI;
+            double deltaA = (deltaA0 - omegarf[i]) * fields[i] * 2.0 * Math.PI;
+            double deltaB = (deltaB0 - omegarf[i]) * fields[i] * 2.0 * Math.PI;
             double omegaBar = (1 - pb) * deltaA + pb * deltaB;
             double we = Math.sqrt(omegaB1[i] * omegaB1[i] + omegaBar * omegaBar);
 
@@ -272,7 +272,7 @@ public class CESTEquations {
         return cest;
     }
 
-    public static double[] cestR1rhoApprox(String approx, double[][] X, double field, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A, double R2B) {
+    public static double[] cestR1rhoApprox(String approx, double[][] X, double[] fields, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A, double R2B) {
 
         // X: array containing two arrays:
         //  omegarf: CEST irradiation frequency (ppm)
@@ -298,8 +298,8 @@ public class CESTEquations {
         double[] omegaB1 = new double[omegarf.length];
         for (int i = 0; i < omegarf.length; i++) {
             omegaB1[i] = b1Field[i] * 2.0 * Math.PI;
-            deltaA[i] = (deltaA0 - omegarf[i]) * field * 2.0 * Math.PI;
-            deltaB[i] = (deltaB0 - omegarf[i]) * field * 2.0 * Math.PI;
+            deltaA[i] = (deltaA0 - omegarf[i]) * fields[i] * 2.0 * Math.PI;
+            deltaB[i] = (deltaB0 - omegarf[i]) * fields[i] * 2.0 * Math.PI;
             omegaBar[i] = pa * deltaA[i] + pb * deltaB[i];
         }
 

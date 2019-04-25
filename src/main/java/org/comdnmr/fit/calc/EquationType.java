@@ -13,14 +13,14 @@ public interface EquationType {
 
     double calculate(double[] par, int[] map, double[] x, int idNum, double field);
 
-    default double[] calculate(double[] par, int[] map, double[][] x, int idNum, double field) {
+    default double[] calculate(double[] par, int[] map, double[][] x, int idNum, double[] fields) {
         double[] yValues = new double[x[0].length];
         double[] ax = new double[x.length];
         for (int i = 0; i < x[0].length; i++) {
             for (int j = 0; j < ax.length; j++) {
                 ax[j] = x[j][i];
             }
-            yValues[i] = calculate(par, map, ax, idNum, field);
+            yValues[i] = calculate(par, map, ax, idNum, fields[i]);
         }
         return yValues;
     }
