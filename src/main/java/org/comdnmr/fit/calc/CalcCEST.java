@@ -24,11 +24,11 @@ public class CalcCEST extends FitModel {
         equation = CESTEquation.valueOf(eqName.toUpperCase());
     }
 
-    public CalcCEST(double[][] x, double[] y, double[] err, double[] fieldValues, double[] fields) throws IllegalArgumentException {
-        this(x, y, err, fieldValues, fields, new int[x.length]);
+    public CalcCEST(double[][] x, double[] y, double[] err, double[] fieldValues) throws IllegalArgumentException {
+        this(x, y, err, fieldValues, new int[x.length]);
     }
 
-    public CalcCEST(double[][] x, double[] y, double[] err, double[] fieldValues, double[] fields, int[] idNums) throws IllegalArgumentException {
+    public CalcCEST(double[][] x, double[] y, double[] err, double[] fieldValues, int[] idNums) throws IllegalArgumentException {
         this.xValues = new double[x.length][];
         this.xValues[0] = x[0].clone();
         this.xValues[1] = x[1].clone();
@@ -36,7 +36,6 @@ public class CalcCEST extends FitModel {
         this.yValues = y.clone();
         this.errValues = err.clone();
         this.fieldValues = fieldValues.clone();
-        this.fields = fields.clone();
         this.idNums = idNums.clone();
         this.idNums = new int[yValues.length];
         this.equation = CESTEquation.CESTR1RHOPERTURBATION;
@@ -69,7 +68,8 @@ public class CalcCEST extends FitModel {
         double[] yCalc = new double[yValues.length];
         for (int id = 0; id < map.length; id++) {
             double[][] x = CESTEquations.getXValues(xValues, idNums, id);
-            double[] yCalc1 = equation.calculate(par, map[id], x, id, fields[0]); // fixme what about field
+            double[] fields = CESTEquations.getValues(fieldValues, idNums, id);
+            double[] yCalc1 = equation.calculate(par, map[id], x, id, fields);
             int[] indicies = CESTEquations.getIndicies(idNums, id);
             for (int i = 0; i < indicies.length; i++) {
                 yCalc[indicies[i]] = yCalc1[i];
@@ -154,7 +154,7 @@ public class CalcCEST extends FitModel {
 
         IntStream.range(0, nSim).parallel().forEach(i -> {
 //        IntStream.range(0, nSim).forEach(i -> {
-            CalcCEST rDisp = new CalcCEST(xValues, yPred, errValues, fieldValues, fields, idNums);
+            CalcCEST rDisp = new CalcCEST(xValues, yPred, errValues, fieldValues, idNums);
             rDisp.setEquation(equation.getName());
             double[] newY = new double[yValues.length];
             for (int k = 0; k < yValues.length; k++) {
@@ -192,7 +192,7 @@ public class CalcCEST extends FitModel {
         String optimizer = CoMDPreferences.getBootStrapOptimizer();
 
         IntStream.range(0, nSim).parallel().forEach(i -> {
-            CalcCEST rDisp = new CalcCEST(xValues, yValues, errValues, fieldValues, fields, idNums);
+            CalcCEST rDisp = new CalcCEST(xValues, yValues, errValues, fieldValues, idNums);
             rDisp.setEquation(equation.getName());
             double[][] newX = new double[3][yValues.length];
             double[] newY = new double[yValues.length];

@@ -98,6 +98,89 @@ public class R1RhoEquations {
         return r1rho;
     }
 
+    public static double r1rhoExact0(double tdelay, double omega, double pB, double kex, double deltaA, double deltaB, double R1A, double R1B, double R2A, double R2B) {
+        // Performs an exact numerical calculation and returns CEST intensity ratio.
+        //
+        // X: array containing two arrays:
+        //  omegarf: CEST irradiation frequency (ppm)
+        //  omega1: B1 field strength (1/s)
+        // 
+        // pb: population of minor state
+        // kex: k12+k21 (1/s)
+        // deltaA: offset of A state (angular units, 1/s)
+        // deltaB: offset of B state (angular units, 1/s)
+        // R1A, R1B: R10 relaxation rate constants of A and B states
+        // R2A, R2B: R20 relaxation rate constants of A and B states
+
+        // time delay is hard-coded below
+        double pA = 1.0 - pB;
+        double kAB = pB * kex;
+        double kBA = pA * kex;
+
+        double theta = Math.atan2(omega, deltaA);
+        double cosA = Math.cos(theta);
+        double sinA = Math.sin(theta);
+
+        double[] m0 = {pA * sinA, 0.0, pA * cosA, 0.0, 0.0, 0.0};
+        double[] m1 = {sinA, 0.0, cosA, 0.0, 0.0, 0.0};
+
+        double[][] K = {
+            {-kAB, 0, 0, kBA, 0, 0},
+            {0, -kAB, 0, 0, kBA, 0},
+            {0, 0, -kAB, 0, 0, kBA},
+            {kAB, 0, 0, -kBA, 0, 0},
+            {0, kAB, 0, 0, -kBA, 0},
+            {0, 0, kAB, 0, 0, -kBA}};
+
+        double[][] La = {
+            {-R2A, -deltaA, 0, 0, 0, 0},
+            {deltaA, -R2A, -omega, 0, 0, 0},
+            {0, omega, -R1A, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0}};
+
+        double[][] Lb = {
+            {0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0},
+            {0, 0, 0, -R2B, -deltaB, 0},
+            {0, 0, 0, deltaB, -R2B, -omega},
+            {0, 0, 0, 0, omega, -R1B}};
+
+        double[][] Z = new double[La.length][La[0].length];
+        for (int k = 0; k < La.length; k++) {
+            for (int j = 0; j < La[k].length; j++) {
+                Z[k][j] = La[k][j] + Lb[k][j] + K[k][j];
+            }
+        }
+
+        double[][] at = new double[Z.length][Z[0].length];
+        for (int k = 0; k < Z.length; k++) {
+            for (int j = 0; j < Z[k].length; j++) {
+                at[k][j] = tdelay * Z[k][j];
+            }
+        }
+
+        at = MtxExp.matrixExp(at);
+        Array2DRowRealMatrix aM = new Array2DRowRealMatrix(at);
+        double[] v = aM.operate(m0);
+        double magA = 0.0;
+        double magA0 = 0.0;
+        for (int i = 0; i < v.length; i++) {
+            magA += m1[i] * v[i];
+            magA0 += m1[i] * m0[i];
+        }
+
+//        double magA0 = m0[2] * m1[2] + m0[5] * m1[5];
+//        double magA = at[2][2] * m0[2] * m1[2] + at[2][5] * m0[5] * m1[5];
+//        magA = Math.abs(magA);
+        double r1rho = -Math.log(magA / magA0) / tdelay;
+//        System.out.println(omega + " " + at[2][2] + " " + at[2][5] + " " + magA0 + " " + magA + " " + r1rho);
+
+        return r1rho;
+    }
+
     public static double r1rhoExact(double omega, double pb, double kex, double deltaA, double deltaB, double R1A, double R1B, double R2A, double R2B) {
         // Performs an exact numerical calculation of the eigenvalue and returns R1rho.
         //
@@ -304,7 +387,7 @@ public class R1RhoEquations {
         }
         List<CESTEquations.Peak> peaks2 = peaks;
         if (peaks.size() >= 2) {
-            peaks2 = peaks.subList(peaks.size()-2, peaks.size());
+            peaks2 = peaks.subList(peaks.size() - 2, peaks.size());
         } else if (peaks.size() == 1) {
             // If there is only one peak found add another peak on the side
             // with the largest width

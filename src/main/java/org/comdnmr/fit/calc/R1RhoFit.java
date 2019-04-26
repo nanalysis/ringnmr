@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import org.apache.commons.math3.optim.PointValuePair;
 
 /**
@@ -18,7 +19,6 @@ public class R1RhoFit implements EquationFitter {
     List<Double> errValues = new ArrayList<>();
     List<Double> fieldValues = new ArrayList<>();
     List<Integer> idValues = new ArrayList<>();
-    double[] usedFields = null;
     int nCurves = 1;
     int nResidues = 1;
     int[][] states;
@@ -26,6 +26,7 @@ public class R1RhoFit implements EquationFitter {
     String[] resNums;
     static List<String> equationNameList = Arrays.asList(R1RhoEquation.getEquationNames());
     long errTime;
+    Map<String, List<Double>>[] constraints;
 
     class StateCount {
 
@@ -79,8 +80,10 @@ public class R1RhoFit implements EquationFitter {
         int resIndex = 0;
         int id = 0;
         List<Double> fieldList = new ArrayList<>();
+        constraints = new Map[nCurves];
         for (String resNum : resNums) {
             for (ExperimentData expData : expDataList) {
+                constraints[id] = expData.getConstraints();
                 states[k++] = resProps.getStateIndices(resIndex, expData);
                 ResidueData resData = expData.getResidueData(resNum);
                 if (resData != null) {
@@ -106,11 +109,6 @@ public class R1RhoFit implements EquationFitter {
             }
             resIndex++;
         }
-        usedFields = new double[fieldList.size()];
-        int iExp = 0;
-        for (Double field : fieldList) {
-            usedFields[iExp++] = field;
-        }
     }
 
     @Override
@@ -133,8 +131,6 @@ public class R1RhoFit implements EquationFitter {
         for (Double yValue : yValues) {
             idValues.add(0);
         }
-        usedFields = new double[1];
-        usedFields[0] = fieldValues.get(0);
         resNums = new String[1];
         resNums[0] = "0";
         //states = new int[1][];
@@ -221,7 +217,6 @@ public class R1RhoFit implements EquationFitter {
         calcR1Rho.setIds(idNums);
         calcR1Rho.setErr(err);
         calcR1Rho.setFieldValues(fields);
-        calcR1Rho.setFields(usedFields);
         calcR1Rho.setMap(stateCount, states);
     }
 
@@ -275,6 +270,19 @@ public class R1RhoFit implements EquationFitter {
             //        double[] guesses = setupFit(eqn, absMode);
             double[][] boundaries = calcR1Rho.boundaries(guesses);
             double sigma = CoMDPreferences.getStartingRadius();
+            if (constraints != null) {
+                for (int id = 0; id < map.length; id++) {
+                    if (constraints[id] != null) {
+                        List<Double> cValues = constraints[id].get("R1A");
+                        if (cValues != null) {
+                            double[] cArray = {cValues.get(0), cValues.get(1)};
+                            calcR1Rho.equation.constrain("R1A", guesses, boundaries, map, id, cArray[0], cArray[1]);
+                            calcR1Rho.equation.constrain("R1B", guesses, boundaries, map, id, cArray[0], cArray[1]);
+                        }
+                    }
+                }
+            }
+
             for (int i = 0; i < guesses.length; i++) {
                 System.out.println(i + " bou0 " + boundaries[0][i] + " bou1 " + boundaries[1][i] + " gue " + guesses[i]);
             }
@@ -335,6 +343,7 @@ public class R1RhoFit implements EquationFitter {
             }
             // fixme
             double[] extras = new double[xValues.length];
+            double[] usedFields = getFields(fieldValues, idValues);
             extras[0] = usedFields[0];
             for (int j = 1; j < extras.length; j++) {
                 extras[j] = xValues[j].get(0);

@@ -11,7 +11,7 @@ public enum CESTEquation implements CESTEquationType {
     CESTR1RHOPERTURBATION("cestR1rhoPerturbation", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
 
         @Override
-        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double field) {
+        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double[] fields) {
             double kex = par[map[0]];
             double pb = par[map[1]];
             double deltaA0 = par[map[2]];
@@ -20,7 +20,7 @@ public enum CESTEquation implements CESTEquationType {
             double R1B = par[map[5]];
             double R2A = par[map[6]];
             double R2B = par[map[7]];
-            double[] yCalc = CESTEquations.cestR1rhoApprox("trott", X, field, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
+            double[] yCalc = CESTEquations.cestR1rhoApprox("trott", X, fields, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
             return yCalc;
         }
 
@@ -48,11 +48,11 @@ public enum CESTEquation implements CESTEquationType {
     CESTR1RHOPERTURBATIONNOEX("cestR1rhoPerturbationNoEx", 0, "deltaA0", "R1A", "R2A") {
 
         @Override
-        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double field) {
+        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double[] fields) {
             double deltaA0 = par[map[0]];
             double R1A = par[map[1]];
             double R2A = par[map[2]];
-            double[] yCalc = CESTEquations.cestR1rhoPerturbationNoEx(X, field, deltaA0, R1A, R2A);
+            double[] yCalc = CESTEquations.cestR1rhoPerturbationNoEx(X, fields, deltaA0, R1A, R2A);
             return yCalc;
         }
 
@@ -116,7 +116,7 @@ public enum CESTEquation implements CESTEquationType {
     CESTR1RHOSD("cestR1rhoSD", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
 
         @Override
-        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double field) {
+        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double[] fields) {
             double kex = par[map[0]];
             double pb = par[map[1]];
             double deltaA0 = par[map[2]];
@@ -125,7 +125,7 @@ public enum CESTEquation implements CESTEquationType {
             double R1B = par[map[5]];
             double R2A = par[map[6]];
             double R2B = par[map[7]];
-            double[] yCalc = CESTEquations.cestR1rhoApprox("sd", X, field, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
+            double[] yCalc = CESTEquations.cestR1rhoApprox("sd", X, fields, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
             return yCalc;
         }
 
@@ -153,7 +153,7 @@ public enum CESTEquation implements CESTEquationType {
     CESTR1RHOBALDWINKAY("cestR1rhoBaldwinKay", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
 
         @Override
-        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double field) {
+        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double[] field) {
             double kex = par[map[0]];
             double pb = par[map[1]];
             double deltaA0 = par[map[2]];
@@ -190,7 +190,7 @@ public enum CESTEquation implements CESTEquationType {
     CESTR1RHON("cestR1rhoN", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
 
         @Override
-        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double field) {
+        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double[] field) {
             double kex = par[map[0]];
             double pb = par[map[1]];
             double deltaA0 = par[map[2]];
@@ -227,7 +227,7 @@ public enum CESTEquation implements CESTEquationType {
     CESTR1RHOEXACT1("cestR1rhoExact1", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
 
         @Override
-        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double field) {
+        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double[] field) {
             double kex = par[map[0]];
             double pb = par[map[1]];
             double deltaA0 = par[map[2]];
@@ -265,7 +265,7 @@ public enum CESTEquation implements CESTEquationType {
     CESTEXACT0("cestExact0", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
 
         @Override
-        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double field) {
+        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double field[]) {
             double kex = par[map[0]];
             double pb = par[map[1]];
             double deltaA0 = par[map[2]];
@@ -304,7 +304,7 @@ public enum CESTEquation implements CESTEquationType {
     CESTEXACT1("cestExact1", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
 
         @Override
-        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double field) {
+        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double[] field) {
             double kex = par[map[0]];
             double pb = par[map[1]];
             double deltaA0 = par[map[2]];
@@ -342,7 +342,7 @@ public enum CESTEquation implements CESTEquationType {
     CESTEXACT2("cestExact2", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
 
         @Override
-        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double field) {
+        public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double[] field) {
             double kex = par[map[0]];
             double pb = par[map[1]];
             double deltaA0 = par[map[2]];

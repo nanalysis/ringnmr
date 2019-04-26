@@ -657,6 +657,20 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         DataIO.processYAMLDataSections(resProp, dirPath, expMode, dataList);
     }
 
+    static Map<String, List<Double>> getConstraints(Map... maps) {
+
+        Map<String, List<Double>> constraintMap = null;
+        for (Map map : maps) {
+            if (map.containsKey("constraints")) {
+                constraintMap = (Map<String, List<Double>>) map.get("constraints");
+                if (constraintMap != null) {
+                    System.out.println(constraintMap.toString());
+                }
+            }
+        }
+        return constraintMap;
+    }
+
     public static void processYAMLDataSections(ResidueProperties resProp, Path dirPath, String expMode, ArrayList<HashMap<String, Object>> dataList) throws IOException {
         for (HashMap<String, Object> dataMap3 : dataList) {
             Double temperature = (Double) dataMap3.get("temperature");
@@ -762,6 +776,8 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                         nucleus, B0field, temperature, tau, null, expMode,
                         errorPars, delayCalc, B1field);
                 for (Map<String, Object> filesMap : filesMaps) {
+                    Map<String, List<Double>> constraintMap = getConstraints(dataMap3, filesMap);
+                    expData.setConstraints(constraintMap);
                     String residueNum = filesMap.get("residue").toString();
                     String dataFileName = (String) filesMap.get("file");
                     File file = new File(dataFileName).getAbsoluteFile();

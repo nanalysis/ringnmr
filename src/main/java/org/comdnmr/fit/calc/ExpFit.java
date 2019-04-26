@@ -21,7 +21,6 @@ public class ExpFit implements EquationFitter {
     List<Double> errValues = new ArrayList<>();
     List<Double> fieldValues = new ArrayList<>();
     List<Integer> idValues = new ArrayList<>();
-    double[] usedFields = null;
     int nCurves = 1;
     int nResidues = 1;
     int[][] states;
@@ -81,8 +80,6 @@ public class ExpFit implements EquationFitter {
         }
         resNums = new String[1];
         resNums[0] = "0";
-        usedFields = new double[1];
-        usedFields[0] = fieldValues.get(0);
         nCurves = 1;
         stateCount = new int[4];
         stateCount[0] = nResidues;
@@ -125,11 +122,6 @@ public class ExpFit implements EquationFitter {
 
             }
             resIndex++;
-        }
-        usedFields = new double[expDataList.size()];
-        int iExp = 0;
-        for (ExperimentData expData : expDataList) {
-            usedFields[iExp++] = expData.getField();
         }
     }
 
@@ -177,7 +169,6 @@ public class ExpFit implements EquationFitter {
         expModel.setIds(idNums);
         expModel.setErr(err);
         expModel.setFieldValues(fields);
-        expModel.setFields(usedFields);
         expModel.setMap(stateCount, states);
     }
 
@@ -273,6 +264,7 @@ public class ExpFit implements EquationFitter {
         boolean useWeight = CoMDPreferences.getWeightFit();
         CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs,
                 useNonParametric, sRadius, fRadius, tol, useWeight);
+        double[] usedFields = getFields(fieldValues, idValues);
         return getResults(this, eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, true, curveStats);
     }
 

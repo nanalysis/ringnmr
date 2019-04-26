@@ -23,7 +23,6 @@ public class CPMGFit implements EquationFitter {
     List<Double> errValues = new ArrayList<>();
     List<Double> fieldValues = new ArrayList<>();
     List<Integer> idValues = new ArrayList<>();
-    double[] usedFields = null;
     int nCurves = 1;
     int nResidues = 1;
     int[][] states;
@@ -82,8 +81,6 @@ public class CPMGFit implements EquationFitter {
         }
         resNums = new String[1];
         resNums[0] = "0";
-        usedFields = new double[1];
-        usedFields[0] = fieldValues.get(0);
         nCurves = 1;
         stateCount = new int[4];
         stateCount[0] = nResidues;
@@ -108,6 +105,7 @@ public class CPMGFit implements EquationFitter {
         int id = 0;
         for (String resNum : resNums) {
             for (ExperimentData expData : expDataList) {
+
                 states[k++] = resProps.getStateIndices(resIndex, expData);
                 ResidueData resData = expData.getResidueData(resNum);
                 //  need peakRefs
@@ -115,6 +113,7 @@ public class CPMGFit implements EquationFitter {
                 double[][] x = resData.getXValues();
                 double[] y = resData.getYValues();
                 double[] err = resData.getErrValues();
+
                 for (int i = 0; i < y.length; i++) {
                     xValues.add(x[0][i]);
                     yValues.add(y[i]);
@@ -125,11 +124,6 @@ public class CPMGFit implements EquationFitter {
                 id++;
             }
             resIndex++;
-        }
-        usedFields = new double[expDataList.size()];
-        int iExp = 0;
-        for (ExperimentData expData : expDataList) {
-            usedFields[iExp++] = expData.getNucleusField();
         }
     }
 
@@ -178,7 +172,6 @@ public class CPMGFit implements EquationFitter {
         calcR.setIds(idNums);
         calcR.setErr(err);
         calcR.setFieldValues(fields);
-        calcR.setFields(usedFields);
         calcR.setMap(stateCount, states);
     }
 
@@ -225,6 +218,7 @@ public class CPMGFit implements EquationFitter {
             System.out.printf("%d %.3f %.3f %.3f %.3f\n", i, guesses[i], boundaries[0][i], pars[i], boundaries[1][i]);
         }
         System.out.println("");
+        int nCurves = states.length;
 
         /*
         for (int i = 0; i < map.length; i++) {
@@ -321,6 +315,7 @@ public class CPMGFit implements EquationFitter {
         boolean useWeight = CoMDPreferences.getWeightFit();
         CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs,
                 useNonParametric, sRadius, fRadius, tol, useWeight);
+        double[] usedFields = getFields(fieldValues, idValues);
         return getResults(this, eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, exchangeValid, curveStats);
     }
 

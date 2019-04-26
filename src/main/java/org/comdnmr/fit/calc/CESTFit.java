@@ -216,7 +216,6 @@ public class CESTFit implements EquationFitter {
         calcCEST.setIds(idNums);
         calcCEST.setErr(err);
         calcCEST.setFieldValues(fields);
-        calcCEST.setFields(usedFields);
         calcCEST.setMap(stateCount, states);
     }
 
@@ -329,6 +328,7 @@ public class CESTFit implements EquationFitter {
             }
             // fixme
             double[] extras = new double[xValues.length];
+            double[] usedFields = getFields(fieldValues, idValues);
             extras[0] = usedFields[0];
             for (int j = 1; j < extras.length; j++) {
                 extras[j] = xValues[j].get(0);
@@ -344,8 +344,8 @@ public class CESTFit implements EquationFitter {
             double fRadius = CoMDPreferences.getFinalRadius();
             double tol = CoMDPreferences.getTolerance();
             boolean useWeight = CoMDPreferences.getWeightFit();
-            CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs, 
-                useNonParametric, sRadius, fRadius, tol, useWeight);
+            CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs,
+                    useNonParametric, sRadius, fRadius, tol, useWeight);
             return getResults(this, eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, exchangeValid, curveStats);
         } else {
             return null;
@@ -367,7 +367,7 @@ public class CESTFit implements EquationFitter {
         }
         return x;
     }
-    
+
     @Override
     public double[] getSimXDefaults() {
         return getSimX(100, -8, 8);
