@@ -816,4 +816,23 @@ public class CESTEquations {
 
     }
 
+    public static double[] getValues(double[] values, int[] idNums, int id) {
+        int n = 0;
+        for (int i = 0; i < idNums.length; i++) {
+            if (idNums[i] == id) {
+                n++;
+            }
+        }
+        double[] result = new double[n];
+        int j = 0;
+        for (int i = 0; i < idNums.length; i++) {
+            if (idNums[i] == id) {
+                result[j] = values[i];
+                j++;
+            }
+        }
+        return result;
+
+    }
+
 }

@@ -68,7 +68,8 @@ public class CalcCEST extends FitModel {
         double[] yCalc = new double[yValues.length];
         for (int id = 0; id < map.length; id++) {
             double[][] x = CESTEquations.getXValues(xValues, idNums, id);
-            double[] yCalc1 = equation.calculate(par, map[id], x, id, fieldValues); // fixme what about field
+            double[] fields = CESTEquations.getValues(fieldValues, idNums, id);
+            double[] yCalc1 = equation.calculate(par, map[id], x, id, fields);
             int[] indicies = CESTEquations.getIndicies(idNums, id);
             for (int i = 0; i < indicies.length; i++) {
                 yCalc[indicies[i]] = yCalc1[i];

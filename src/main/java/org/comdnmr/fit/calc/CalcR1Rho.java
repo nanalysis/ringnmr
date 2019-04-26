@@ -25,7 +25,7 @@ public class CalcR1Rho extends FitModel {
     }
 
     public CalcR1Rho(double[][] x, double[] y, double[] err, double[] fieldValues) throws IllegalArgumentException {
-        this(x, y, err, fieldValues,  new int[x.length]);
+        this(x, y, err, fieldValues, new int[x.length]);
     }
 
     public CalcR1Rho(double[][] x, double[] y, double[] err, double[] fieldValues, int[] idNums) throws IllegalArgumentException {
@@ -68,7 +68,8 @@ public class CalcR1Rho extends FitModel {
         double[] yCalc = new double[yValues.length];
         for (int id = 0; id < map.length; id++) {
             double[][] x = CESTEquations.getXValues(xValues, idNums, id);
-            double[] yCalc1 = equation.calculate(par, map[id], x, id, fieldValues); 
+            double[] fields = CESTEquations.getValues(fieldValues, idNums, id);
+            double[] yCalc1 = equation.calculate(par, map[id], x, id, fields);
             int[] indicies = CESTEquations.getIndicies(idNums, id);
             for (int i = 0; i < indicies.length; i++) {
                 yCalc[indicies[i]] = yCalc1[i];
