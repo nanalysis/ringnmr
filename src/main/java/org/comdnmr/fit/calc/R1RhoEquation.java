@@ -338,7 +338,6 @@ public enum R1RhoEquation implements R1RhoEquationType {
 //            }
 //            return guesses;
 //        }
-
     };
     final String equationName;
     final int nGroupPars;
