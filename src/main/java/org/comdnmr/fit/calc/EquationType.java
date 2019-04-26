@@ -25,6 +25,23 @@ public interface EquationType {
         return yValues;
     }
 
+    public default void constrain(String parName, double[] guesses, double[][] boundaries, int[][] map, int id, double lower, double upper) {
+        String[] parNames = getParNames();
+        int index = -1;
+        for (int i = 0; i < parNames.length; i++) {
+            if (parNames[i].equals(parName)) {
+                index = i;
+                break;
+            }
+        }
+        if (index != -1) {
+            int j = map[id][index];
+            boundaries[0][j] = lower;
+            boundaries[1][j] = upper;
+            guesses[j] = (lower + upper) / 2;
+        }
+    }
+
     double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field);
 
     double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field);
