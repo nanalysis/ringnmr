@@ -250,6 +250,7 @@ public class R1RhoControls extends EquationControls {
                 TEX.disabled(false);
                 break;
             case "R1RHOEXACT":
+            case "R1RHOEXACT0":
                 KEX.disabled(false);
                 KEX.valueText.setDisable(false);
                 PB.disabled(false);
@@ -329,6 +330,7 @@ public class R1RhoControls extends EquationControls {
             case "R1RHOLAGUERRE":
             case "R1RHOBALDWINKAY":
             case "R1RHOEXACT":
+            case "R1RHOEXACT0":
                 pars = new double[2][8];
                 pars[0][0] = kex;
                 pars[0][1] = pb;
@@ -399,6 +401,7 @@ public class R1RhoControls extends EquationControls {
             case "R1RHOLAGUERRE":
             case "R1RHOBALDWINKAY":
             case "R1RHOEXACT":
+            case "R1RHOEXACT0":
                 pars = new double[2][8];
                 pars[0][0] = kex;
                 pars[0][1] = pb;
@@ -438,6 +441,7 @@ public class R1RhoControls extends EquationControls {
             case "R1RHOLAGUERRE":
             case "R1RHOBALDWINKAY":
             case "R1RHOEXACT":
+            case "R1RHOEXACT0":
                 pars = new double[2][8];
                 pars[0][0] = parValues.get("kex").getValue();
                 pars[0][1] = parValues.get("pb").getValue();
@@ -498,6 +502,18 @@ public class R1RhoControls extends EquationControls {
                 }
                 break;
             case "R1RHOEXACT":
+                for (int id = 0; id < map.length; id++) {
+                    guesses[map[id][0]] = kex; //kex
+                    guesses[map[id][1]] = pb; //pb
+                    guesses[map[id][2]] = deltaA0; //deltaA
+                    guesses[map[id][3]] = deltaB0; //deltaB
+                    guesses[map[id][4]] = R1a; //R1A
+                    guesses[map[id][5]] = R1b; //R1B
+                    guesses[map[id][6]] = R2a; //R2A
+                    guesses[map[id][7]] = R2b; //R2B
+                }
+                break;
+            case "R1RHOEXACT0":
                 for (int id = 0; id < map.length; id++) {
                     guesses[map[id][0]] = kex; //kex
                     guesses[map[id][1]] = pb; //pb
@@ -618,6 +634,7 @@ public class R1RhoControls extends EquationControls {
                 parNames1.add("R2B");
                 break;
             case "R1RHOEXACT":
+            case "R1RHOEXACT0":
                 parNames1.add("Kex");
                 parNames1.add("Pb");
                 parNames1.add("deltaA0");

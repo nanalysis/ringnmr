@@ -133,7 +133,7 @@ public class PreferencesController implements Initializable {
         cestEqnChoices.addAll(Arrays.asList("CESTR1RHOPERTURBATIONNOEX", "CESTR1RHOPERTURBATION", "CESTR1RHOBALDWINKAY", "CESTR1RHOSD", "CESTR1RHON", "CESTR1RHOEXACT1",
                 "CESTEXACT0", "CESTEXACT1", "CESTEXACT2"));
         ArrayList<String> r1rhoEqnChoices = new ArrayList<>();
-        r1rhoEqnChoices.addAll(Arrays.asList("R1RHOPERTURBATIONNOEX", "R1RHOPERTURBATION", "R1RHOBALDWINKAY", "R1RHOLAGUERRE", "R1RHOEXACT"));
+        r1rhoEqnChoices.addAll(Arrays.asList("R1RHOPERTURBATIONNOEX", "R1RHOPERTURBATION", "R1RHOBALDWINKAY", "R1RHOLAGUERRE", "R1RHOEXACT","R1RHOEXACT0"));
 //        prefSheet.getItems().addAll(locationTypeItem, locationFileItem, nProcessesItem, maxFreqItem, rexRatioItem, nSamplesItem);
 
         DoubleRangeOperationItem startingRadiusItem = new DoubleRangeOperationItem((obs, oldV, newV) -> {
