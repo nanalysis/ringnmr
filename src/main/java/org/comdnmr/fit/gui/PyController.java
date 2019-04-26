@@ -1848,7 +1848,7 @@ public class PyController implements Initializable {
         ArrayList<Double> fieldValues = new ArrayList<>();
         for (int i = 0; i < yValues.size(); i++) {
             errValues.add(yValues.get(i) * 0.05);
-            fieldVals[i] = CoMDPreferences.getRefField();
+            fieldVals[i] = CoMDPreferences.getRefField() * simControls.getNucleus().getRatio();
             fieldValues.add(fieldVals[i]);
         }
         System.out.println("xval len " + xValues.size());
