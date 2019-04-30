@@ -173,7 +173,7 @@ public class PyController implements Initializable {
     CheckBox zeroYCheckBox;
 
     EquationControls simControls;
-    
+
     @FXML
     TextField genDataNPtsTextField;
     @FXML
@@ -184,14 +184,13 @@ public class PyController implements Initializable {
     TextField genDataSDevTextField;
     @FXML
     TextField genDataXValTextField;
-    
+
     @FXML
     SplitPane splitPane;
 
     BootstrapSamplePlots bootstrapSamplePlots = null;
     InputDataInterface inputDataInterface = null;
     NMRFxClient cl;
-
 
     ResidueInfo currentResInfo = null;
     ResidueProperties currentResProps = null;
@@ -649,7 +648,7 @@ public class PyController implements Initializable {
             }
             ChartUtil.loadParameters(file.toString());
         }
-            clearSecondaryStructure();
+        clearSecondaryStructure();
     }
 
     @FXML
@@ -660,7 +659,7 @@ public class PyController implements Initializable {
         }
         resizeBarPlotCanvas();
     }
-    
+
     @FXML
     public void clearSecondaryStructure() {
         if (ssPainter != null) {
@@ -836,11 +835,11 @@ public class PyController implements Initializable {
     public void autoscaleY(boolean autoY) {
         xychart.yAxis.setAutoRanging(autoY);
     }
-    
+
     public void includeXZero(boolean xZero) {
         xychart.xAxis.setZeroIncluded(xZero);
     }
-    
+
     public void includeYZero(boolean yZero) {
         xychart.yAxis.setZeroIncluded(yZero);
     }
@@ -1373,7 +1372,7 @@ public class PyController implements Initializable {
                     extras = new double[simExtras.length + 1];
                     extras[0] = FitModel.getFieldValues()[0];
                     for (int i = 0; i < simExtras.length; i++) {
-    //                    System.out.println("simextras " + i + " " + simExtras[i]);
+                        //                    System.out.println("simextras " + i + " " + simExtras[i]);
                         extras[i + 1] = simExtras[i];
                     }
                 }
@@ -1766,27 +1765,29 @@ public class PyController implements Initializable {
                 }
                 String expName = expData.getName();
                 for (String resNum : residues) {
-                    resDatas.add(expData.getResidueData(resNum));
-                    DataSeries series = ChartUtil.getMapData(mapName, expName, resNum);
-                    series.setStroke(PlotData.colors[iSeries % 8]);
-                    series.setFill(PlotData.colors[iSeries % 8]);
-                    allData.add(series);
-                    GUIPlotEquation equation = ChartUtil.getEquation(expData,
-                            mapName, resNum, equationName, expData.getState(),
-                            expData.getNucleusField());
-                    double maxY = 1.0;
-                    if (equation != null) {
-                        equation.setColor(PlotData.colors[iSeries % 8]);
-                        if (calcScale) {
-                            maxY = equation.calculate(equation.getMinX()) / 100.0;
+                    if (expData.getResidueData(resNum) != null) {
+                        resDatas.add(expData.getResidueData(resNum));
+                        DataSeries series = ChartUtil.getMapData(mapName, expName, resNum);
+                        series.setStroke(PlotData.colors[iSeries % 8]);
+                        series.setFill(PlotData.colors[iSeries % 8]);
+                        allData.add(series);
+                        GUIPlotEquation equation = ChartUtil.getEquation(expData,
+                                mapName, resNum, equationName, expData.getState(),
+                                expData.getNucleusField());
+                        double maxY = 1.0;
+                        if (equation != null) {
+                            equation.setColor(PlotData.colors[iSeries % 8]);
+                            if (calcScale) {
+                                maxY = equation.calculate(equation.getMinX()) / 100.0;
+                            }
+                            equation.setScaleValue(maxY);
+                            equations.add(equation);
+                        } else if (calcScale) {
+                            maxY = series.getValues().stream().mapToDouble(XYValue::getYValue).max().getAsDouble() / 100.0;
                         }
-                        equation.setScaleValue(maxY);
-                        equations.add(equation);
-                    } else if (calcScale) {
-                        maxY = series.getValues().stream().mapToDouble(XYValue::getYValue).max().getAsDouble() / 100.0;
+                        series.setScale(maxY);
+                        iSeries++;
                     }
-                    series.setScale(maxY);
-                    iSeries++;
                 }
 
                 int[] states = resProps.getStateIndices(0, expData);
@@ -1936,7 +1937,7 @@ public class PyController implements Initializable {
         } else {
             String[] xvals = genDataXValTextField.getText().split(" ");
             double[] xVals = new double[xvals.length];
-            for (int i=0; i<xvals.length; i++) {
+            for (int i = 0; i < xvals.length; i++) {
                 xVals[i] = Double.parseDouble(xvals[i]);
             }
             xValues = xVals;
