@@ -74,7 +74,7 @@ public class R1RhoFit implements EquationFitter {
         resProps.setupMaps();
         stateCount = resProps.getStateCount(resNums.length);
         Collection<ExperimentData> expDataList = resProps.getExperimentData();
-        nCurves = resNums.length * expDataList.size();
+        nCurves = resProps.getDataCount(resNums);
         states = new int[nCurves][];
         int k = 0;
         int resIndex = 0;
@@ -83,10 +83,10 @@ public class R1RhoFit implements EquationFitter {
         constraints = new Map[nCurves];
         for (String resNum : resNums) {
             for (ExperimentData expData : expDataList) {
-                constraints[id] = expData.getConstraints();
-                states[k++] = resProps.getStateIndices(resIndex, expData);
                 ResidueData resData = expData.getResidueData(resNum);
                 if (resData != null) {
+                    constraints[id] = expData.getConstraints();
+                    states[k++] = resProps.getStateIndices(resIndex, expData);
                     //  need peakRefs
                     double field = expData.getNucleusField();
                     fieldList.add(field);

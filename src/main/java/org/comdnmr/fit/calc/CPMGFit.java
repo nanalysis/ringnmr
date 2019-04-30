@@ -105,23 +105,25 @@ public class CPMGFit implements EquationFitter {
         int id = 0;
         for (String resNum : resNums) {
             for (ExperimentData expData : expDataList) {
-
-                states[k++] = resProps.getStateIndices(resIndex, expData);
                 ResidueData resData = expData.getResidueData(resNum);
-                //  need peakRefs
-                double field = expData.getField();
-                double[][] x = resData.getXValues();
-                double[] y = resData.getYValues();
-                double[] err = resData.getErrValues();
+                if (resData != null) {
 
-                for (int i = 0; i < y.length; i++) {
-                    xValues.add(x[0][i]);
-                    yValues.add(y[i]);
-                    errValues.add(err[i]);
-                    fieldValues.add(field);
-                    idValues.add(id);
+                    states[k++] = resProps.getStateIndices(resIndex, expData);
+                    //  need peakRefs
+                    double field = expData.getField();
+                    double[][] x = resData.getXValues();
+                    double[] y = resData.getYValues();
+                    double[] err = resData.getErrValues();
+
+                    for (int i = 0; i < y.length; i++) {
+                        xValues.add(x[0][i]);
+                        yValues.add(y[i]);
+                        errValues.add(err[i]);
+                        fieldValues.add(field);
+                        idValues.add(id);
+                    }
+                    id++;
                 }
-                id++;
             }
             resIndex++;
         }
