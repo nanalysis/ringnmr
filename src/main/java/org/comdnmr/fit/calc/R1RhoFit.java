@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.math3.optim.PointValuePair;
+import org.comdnmr.fit.calc.CESTEquations.Peak;
 
 /**
  *
@@ -255,8 +256,8 @@ public class R1RhoFit implements EquationFitter {
             idNums[i] = idValues.get(i);
         }
         double[][] xy = CESTEquations.getXYValues(xvals, yvals, idNums, 0);
-        double[][] peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], fieldValues.get(0), "r1rho");
-        if (peaks.length >= 1) {
+        List<Peak> peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], fieldValues.get(0), "r1rho");
+        if (peaks.size() >= 1) {
             setupFit(eqn);
             int[][] map = calcR1Rho.getMap();
             double[] guesses;
