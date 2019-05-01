@@ -90,10 +90,10 @@ public enum R1RhoEquation implements R1RhoEquationType {
             for (int id = 0; id < map.length; id++) {
                 int[] map1 = map[id];
                 double[][] xy = CESTEquations.getXYValues(xValues, yValues, idNums, id);
-                double[][] peaks = R1RhoEquations.r1rhoPeakGuess(xy[0], xy[1], field);
+                double[][] peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], field);
                 double tex = xValues[2][0];
-                double[] r1 = R1RhoEquations.r1rhoR1Guess(yValues, tex);
-                double[][] r2 = R1RhoEquations.r1rhoR2Guess(peaks, yValues);
+                double[] r1 = CESTEquations.cestR1Guess(yValues, tex);
+                double[][] r2 = CESTEquations.cestR2Guess(peaks, yValues);
                 guesses[map1[0]] = peaks[peaks.length - 1][0]; //400 * 2.0 * Math.PI; //deltaA
                 guesses[map1[1]] = r1[0]; //2.4; //R1A
                 guesses[map1[2]] = 20.0; //20.0; //R2A
@@ -108,12 +108,12 @@ public enum R1RhoEquation implements R1RhoEquationType {
             int id = 0;
             int[] map1 = map[id];
             double[][] xy = CESTEquations.getXYValues(xValues, yValues, idNums, id);
-            double[][] peaks = R1RhoEquations.r1rhoPeakGuess(xy[0], xy[1], field);
+            double[][] peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], field);
 
             double dAbound = peaks[peaks.length - 1][2] / 2;
             double tex = xValues[2][0];
             double r1A = guesses[map[id][1]];
-            double[] r1BouA = R1RhoEquations.r1Boundaries(r1A, tex, 0.1);
+            double[] r1BouA = CESTEquations.r1Boundaries(r1A, tex, 0.1);
 
             boundaries[0][map[id][0]] = guesses[map[id][0]] - dAbound; //deltaA LB
             boundaries[1][map[id][0]] = guesses[map[id][0]] + dAbound; //deltaA UB

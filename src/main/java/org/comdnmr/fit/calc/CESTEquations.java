@@ -64,7 +64,7 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
  * calculate CEST Assumes R1A=R1B
  */
 public class CESTEquations {
-
+    
     public static double[] cestR1rhoPerturbationNoEx(double[][] X, double[] fields, double deltaA0, double R1A, double R2A) {
         double[] omegarf = X[0];
         double[] b1Field = X[1];
@@ -434,13 +434,17 @@ public class CESTEquations {
     static double[] getBaseline(double[] vec) {
         int winSize = 8;
         double maxValue = Double.NEGATIVE_INFINITY;
+        String fitMode = ResidueProperties.getExpMode();
+        if (fitMode.equals("r1rho")) {
+            maxValue = Double.POSITIVE_INFINITY;
+        }
         double sDev = 0.0;
         DescriptiveStatistics stat = new DescriptiveStatistics(winSize);
         for (int i = 0; i < vec.length; i++) {
             stat.addValue(vec[i]);
             if (i >= (winSize - 1)) {
                 double mean = stat.getMean();
-                if (mean > maxValue) {
+                if ((fitMode.equals("cest") && mean > maxValue) || (fitMode.equals("r1rho") && mean < maxValue)) {
                     maxValue = mean;
                     sDev = stat.getStandardDeviation();
                 }
@@ -471,7 +475,8 @@ public class CESTEquations {
             smoothSize = 11;
         }
 
-        if (smoothSize != 0) {
+        String fitMode = ResidueProperties.getExpMode();
+        if (fitMode.equals("cest") && smoothSize != 0) {
             yvals = smoothCEST(yvals, 0, yvals.length, 3, smoothSize, syvals);
         }
 
@@ -479,21 +484,27 @@ public class CESTEquations {
         // side of the point in order to be a peak.
         int nP = 2;
         double baseRatio = 3.0;
+        if (fitMode.equals("r1rho")) {
+            baseRatio = 1.5;
+        }
 
         // A threshold to use when deciding if a point is deep enough
         // calculated as baseline - a multiple of the standard deviation estimate
         double threshold = baseline - baseValues[1] * baseRatio;
         double yMin = Double.MAX_VALUE;
+        if (fitMode.equals("r1rho")) {
+            yMin = Double.MIN_VALUE;
+        }
         double xAtYMin = 0.0;
         for (int i = nP; i < yvals.length - nP; i++) {
-            if (yvals[i] < yMin) {
+            if ((fitMode.equals("cest") && yvals[i] < yMin) || (fitMode.equals("r1rho") && yvals[i] > yMin)) {
                 yMin = yvals[i];
                 xAtYMin = xvals[i];
             }
-            if (yvals[i] < threshold) {
+            if ((fitMode.equals("cest") && yvals[i] < threshold) || (fitMode.equals("r1rho") && yvals[i] > threshold)) {
                 boolean ok = true;
                 for (int j = i - nP; j <= (i + nP); j++) {
-                    if (yvals[i] > yvals[j]) {
+                    if ((fitMode.equals("cest") && yvals[i] > yvals[j]) || (fitMode.equals("r1rho") && yvals[i] < yvals[j])) {
                         ok = false;
                         break;
                     }
@@ -501,6 +512,9 @@ public class CESTEquations {
                 int iCenter = i;
                 if (ok) {
                     double halfinten = (baseline - yvals[iCenter]) / 2 + yvals[iCenter];
+                    if (fitMode.equals("r1rho")) {
+                        halfinten = (yvals[iCenter] - baseline) / 8 + baseline;
+                    }
                     double[] halfPos = new double[2];
 
                     // search from peak center in both directions to find
@@ -512,17 +526,21 @@ public class CESTEquations {
                         int j = iCenter + iDir;
                         double dUp = Double.MAX_VALUE;
                         double dLow = Double.MAX_VALUE;
+                        if (fitMode.equals("r1rho")) {
+                            dUp = Double.MIN_VALUE;
+                            dLow = Double.MIN_VALUE;
+                        }
                         int iUp = 0;
                         int iLow = 0;
                         while ((j >= 0) && (j < yvals.length)) {
                             double delta = yvals[j] - halfinten;
-                            if (delta < 0.0) {
-                                if (Math.abs(delta) < dUp) {
+                            if ((fitMode.equals("cest") && delta < 0.0) || (fitMode.equals("r1rho") && delta > 0.0)) {
+                                if ((fitMode.equals("cest") && Math.abs(delta) < dUp) || (fitMode.equals("r1rho") && Math.abs(delta) > dUp)) {
                                     dUp = Math.abs(delta);
                                     iUp = j;
                                 }
                             } else {
-                                if (Math.abs(delta) < dLow) {
+                                if ((fitMode.equals("cest") && Math.abs(delta) < dLow) || (fitMode.equals("r1rho") && Math.abs(delta) > dLow)) {
                                     dLow = Math.abs(delta);
                                     iLow = j;
                                 }
@@ -530,7 +548,7 @@ public class CESTEquations {
                             }
                             j += iDir;
                         }
-                        if ((dLow == Double.MAX_VALUE) || (dUp == Double.MAX_VALUE)) {
+                        if ((fitMode.equals("cest") && ((dLow == Double.MAX_VALUE) || (dUp == Double.MAX_VALUE))) || (fitMode.equals("r1rho") && ((dLow == Double.MIN_VALUE) || (dUp == Double.MIN_VALUE)))) {
                             ok = false;
                             break;
                         }
@@ -541,8 +559,14 @@ public class CESTEquations {
                         double xCenter = xvals[iCenter];
                         double yCenter = yvals[iCenter];
                         double width = Math.abs(halfPos[0] - halfPos[1]) * field;
-                        double widthL = Math.abs(halfPos[0] - xCenter) * field;
-                        double widthR = Math.abs(halfPos[1] - xCenter) * field;
+                        double widthLeft = halfPos[0] - xCenter;
+                        double widthRight = halfPos[1] - xCenter;
+                        if (halfPos[1] < xCenter) {
+                            widthLeft = halfPos[1] - xCenter;
+                            widthRight = halfPos[0] - xCenter;
+                        }
+                        double widthL = Math.abs(widthLeft) * field;
+                        double widthR = Math.abs(widthRight) * field;
                         Peak peak = new Peak(xCenter, yCenter, width, widthL, widthR, iCenter);
                         peaks.add(peak);
                     }
@@ -561,6 +585,9 @@ public class CESTEquations {
         List<Peak> peaks2 = peaks;
         if (peaks.size() >= 2) {
             peaks2 = peaks.subList(0, 2);
+            if (fitMode.equals("r1rho")) {
+                peaks2 = peaks.subList(peaks.size() - 2, peaks.size());
+            }
         } else if (peaks.size() == 1) {
             // If there is only one peak found add another peak on the side
             // with the largest width
@@ -626,15 +653,20 @@ public class CESTEquations {
         if (peaks.length > 1) {
             double[] pb = new double[peaks.length / 2];
 
+            String fitMode = ResidueProperties.getExpMode();
+            double factor = 4;
+            if (fitMode.equals("r1rho")) {
+                factor = 40;
+            }
             if (peaks.length == 2) {
                 if (peaks[0][1] > peaks[1][1]) {
-                    pb[0] = ((baseline - peaks[0][1]) / (baseline - peaks[1][1])) / 4;
+                    pb[0] = (Math.abs(baseline - peaks[0][1]) / Math.abs(baseline - peaks[1][1])) / factor;
                 } else {
-                    pb[0] = ((baseline - peaks[1][1]) / (baseline - peaks[0][1])) / 4;
+                    pb[0] = (Math.abs(baseline - peaks[1][1]) / Math.abs(baseline - peaks[0][1])) / factor;
                 }
             } else {
                 for (int i = 0; i < pb.length; i++) {
-                    pb[i] = (baseline - peaks[2 * i][1]) / (baseline - peaks[2 * i + 1][1]) / 4;
+                    pb[i] = Math.abs(baseline - peaks[2 * i][1]) / Math.abs(baseline - peaks[2 * i + 1][1]) / factor;
                 }
             }
 //            System.out.println("pb guess = " + pb[0]);
@@ -659,6 +691,13 @@ public class CESTEquations {
             double awidth;
             double bwidth;
 
+            String fitMode = ResidueProperties.getExpMode();
+            double afactor = 1;
+            double bfactor = 1;
+            if (fitMode.equals("r1rho")) {
+                afactor = 12;
+                bfactor = 6;
+            }
             if (peaks.length == 2) {
                 if (peaks[0][1] > peaks[1][1]) {
                     awidth = peaks[1][2] / (2 * Math.PI);
@@ -670,8 +709,8 @@ public class CESTEquations {
                 double kex = (awidth + bwidth) / 2;
                 double kb = pb * kex;
                 double ka = (1 - pb) * kex;
-                r2[0][0] = Math.abs(awidth - ka); //R2A
-                r2[1][0] = Math.abs(bwidth - kb); //R2B
+                r2[0][0] = Math.abs(awidth - ka) / afactor; //R2A
+                r2[1][0] = Math.abs(bwidth - kb) / bfactor; //R2B
             } else {
                 for (int i = 0; i < r2[0].length; i++) {
                     awidth = peaks[2 * i + 1][2] / (2 * Math.PI);
@@ -679,8 +718,8 @@ public class CESTEquations {
                     double kex = (awidth + bwidth) / 2;
                     double kb = pb * kex;
                     double ka = (1 - pb) * kex;
-                    r2[0][i] = Math.abs(awidth - ka); //R2A
-                    r2[1][i] = Math.abs(bwidth - kb); //R2B
+                    r2[0][i] = Math.abs(awidth - ka) / afactor; //R2A
+                    r2[1][i] = Math.abs(bwidth - kb) / bfactor; //R2B
                 }
             }
 //            for (int i = 0; i < r2.length; i++) {
@@ -705,6 +744,11 @@ public class CESTEquations {
         // Estimates CEST kex values from peak widths for initial guesses for before fitting.
         // Uses the output from cestPeakGuess as the input.
 
+        String fitMode = ResidueProperties.getExpMode();
+        double factor = 1;
+        if (fitMode.equals("r1rho")) {
+            factor = 3;
+        }
         if (peaks.length > 1) {
             double[] kex = new double[peaks.length / 2];
 
@@ -716,9 +760,9 @@ public class CESTEquations {
 //            for (int i=0; i<kex.length; i++) {
 //                System.out.println("Kex guess " + i + " " + kex[i]);
 //            }
-            return kex[0];
+            return kex[0] / factor;
         } else {
-            return peaks[0][2] / (2 * Math.PI); //Kex;
+            return peaks[0][2] / (2 * Math.PI) / factor; //Kex;
         }
 
     }
@@ -739,15 +783,21 @@ public class CESTEquations {
         // Estimates CEST R1 values from data baseline intensity and Tex for initial guesses for before fitting.
         // Reference: Palmer, A. G. "Chemical exchange in biomacromolecules: Past, present, and future." J. Mag. Res. 241 (2014) 3-17.
 
+        String fitMode = ResidueProperties.getExpMode();
         double[] baseValues = getBaseline(yvals);
         double baseline = baseValues[0];
         double[] r1 = {-Math.log(baseline) / 0.3, -Math.log(baseline) / 0.3}; //{R1A, R1B}
-        if (Tex != null) {
-            r1[0] = -Math.log(baseline) / Tex; //R1A
-            r1[1] = -Math.log(baseline) / Tex; //R1B
-            if (Tex.equals(0.0)) {
-                r1[0] = 0.0;
-                r1[1] = 0.0;
+        if (fitMode.equals("r1rho")) {
+            r1[0] = baseline; //R1A
+            r1[1] = baseline; //R1B
+        } else if (fitMode.equals("cest")) {
+            if (Tex != null) {
+                r1[0] = -Math.log(baseline) / Tex; //R1A
+                r1[1] = -Math.log(baseline) / Tex; //R1B
+                if (Tex.equals(0.0)) {
+                    r1[0] = 0.0;
+                    r1[1] = 0.0;
+                }
             }
         }
 //        for (int i=0; i<r1.length; i++) {
