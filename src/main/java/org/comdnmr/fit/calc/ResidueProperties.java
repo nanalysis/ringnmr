@@ -28,7 +28,7 @@ public class ResidueProperties {
     List<String> nucList = new ArrayList<>();
     private boolean absValueMode = false;
     private String bootStrapMode = "parametric";
-    private static String expMode = "cpmg";
+    private String expMode = "cpmg";
 
     public ResidueProperties(String name, String fileName) {
         this.name = name;
@@ -77,7 +77,7 @@ public class ResidueProperties {
     /**
      * @return the expMode
      */
-    public static String getExpMode() {
+    public String getExpMode() {
         return expMode;
     }
 

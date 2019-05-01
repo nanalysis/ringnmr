@@ -254,7 +254,7 @@ public class CESTFit implements EquationFitter {
             idNums[i] = idValues.get(i);
         }
         double[][] xy = CESTEquations.getXYValues(xvals, yvals, idNums, 0);
-        double[][] peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], fieldValues.get(0));
+        double[][] peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], fieldValues.get(0), "cest");
 
         if (peaks.length >= 1) {
             setupFit(eqn);

@@ -431,10 +431,9 @@ public class CESTEquations {
         }
     }
 
-    static double[] getBaseline(double[] vec) {
+    static double[] getBaseline(double[] vec, String fitMode) {
         int winSize = 8;
         double maxValue = Double.NEGATIVE_INFINITY;
-        String fitMode = ResidueProperties.getExpMode();
         if (fitMode.equals("r1rho")) {
             maxValue = Double.POSITIVE_INFINITY;
         }
@@ -454,13 +453,13 @@ public class CESTEquations {
         return result;
     }
 
-    public static double[][] cestPeakGuess(double[] xvals, double[] yvals, double field) {
+    public static double[][] cestPeakGuess(double[] xvals, double[] yvals, double field, String fitMode) {
         // Estimates CEST peak positions for initial guesses for before fitting.
 
         List<Peak> peaks = new ArrayList<>();
 
         double[] syvals = new double[yvals.length];
-        double[] baseValues = getBaseline(yvals);
+        double[] baseValues = getBaseline(yvals, fitMode);
         double baseline = baseValues[0];
         int smoothSize;
         if (yvals.length < 20) {
@@ -475,7 +474,6 @@ public class CESTEquations {
             smoothSize = 11;
         }
 
-        String fitMode = ResidueProperties.getExpMode();
         if (fitMode.equals("cest") && smoothSize != 0) {
             yvals = smoothCEST(yvals, 0, yvals.length, 3, smoothSize, syvals);
         }
@@ -637,7 +635,7 @@ public class CESTEquations {
         }
     }
 
-    public static double cestPbGuess(double[][] peaks, double[] yvals) {
+    public static double cestPbGuess(double[][] peaks, double[] yvals, String fitMode) {
         // Estimates CEST pb values from peak intensities for initial guesses for before fitting.
         // Uses the output from cestPeakGuess as the input.
 
@@ -647,13 +645,12 @@ public class CESTEquations {
 //                System.out.println(i + " " + j + " " + peaks[i][j]);
 //            }
 //        }
-        double[] baseValues = getBaseline(yvals);
+        double[] baseValues = getBaseline(yvals, fitMode);
         double baseline = baseValues[0];
 
         if (peaks.length > 1) {
             double[] pb = new double[peaks.length / 2];
 
-            String fitMode = ResidueProperties.getExpMode();
             double factor = 4;
             if (fitMode.equals("r1rho")) {
                 factor = 40;
@@ -680,18 +677,17 @@ public class CESTEquations {
 
     }
 
-    public static double[][] cestR2Guess(double[][] peaks, double[] yvals) {
+    public static double[][] cestR2Guess(double[][] peaks, double[] yvals, String fitMode) {
         // Estimates CEST R2A and R2B values from peak widths for initial guesses for before fitting.
         // Uses the output from cestPeakGuess as the input.
 
-        double pb = cestPbGuess(peaks, yvals);
+        double pb = cestPbGuess(peaks, yvals, fitMode);
 
         if (peaks.length > 1) {
             double[][] r2 = new double[2][peaks.length / 2];
             double awidth;
             double bwidth;
 
-            String fitMode = ResidueProperties.getExpMode();
             double afactor = 1;
             double bfactor = 1;
             if (fitMode.equals("r1rho")) {
@@ -740,11 +736,10 @@ public class CESTEquations {
         }
     }
 
-    public static double cestKexGuess(double[][] peaks) {
+    public static double cestKexGuess(double[][] peaks, String fitMode) {
         // Estimates CEST kex values from peak widths for initial guesses for before fitting.
         // Uses the output from cestPeakGuess as the input.
 
-        String fitMode = ResidueProperties.getExpMode();
         double factor = 1;
         if (fitMode.equals("r1rho")) {
             factor = 3;
@@ -779,12 +774,11 @@ public class CESTEquations {
         return result;
     }
 
-    public static double[] cestR1Guess(double[] yvals, Double Tex) {
+    public static double[] cestR1Guess(double[] yvals, Double Tex, String fitMode) {
         // Estimates CEST R1 values from data baseline intensity and Tex for initial guesses for before fitting.
         // Reference: Palmer, A. G. "Chemical exchange in biomacromolecules: Past, present, and future." J. Mag. Res. 241 (2014) 3-17.
 
-        String fitMode = ResidueProperties.getExpMode();
-        double[] baseValues = getBaseline(yvals);
+        double[] baseValues = getBaseline(yvals, fitMode);
         double baseline = baseValues[0];
         double[] r1 = {-Math.log(baseline) / 0.3, -Math.log(baseline) / 0.3}; //{R1A, R1B}
         if (fitMode.equals("r1rho")) {
