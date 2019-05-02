@@ -444,7 +444,7 @@ public class CESTEquations {
     }
 
 
-    static double[] getBaseline(double[] vec, String fitMode) {
+    public static double[] getBaseline(double[] vec, String fitMode) {
         int winSize = 8;
         double maxValue = Double.NEGATIVE_INFINITY;
         if (fitMode.equals("r1rho")) {
