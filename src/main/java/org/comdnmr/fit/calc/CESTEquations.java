@@ -431,7 +431,7 @@ public class CESTEquations {
         }
     }
 
-    static double[] getBaseline(double[] vec) {
+    public static double[] getBaseline(double[] vec) {
         int winSize = 8;
         double maxValue = Double.NEGATIVE_INFINITY;
         double sDev = 0.0;
