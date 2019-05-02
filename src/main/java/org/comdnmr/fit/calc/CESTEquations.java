@@ -399,6 +399,12 @@ public class CESTEquations {
         final double width;
         final double widthLB;
         final double widthUB;
+        final double width2;
+        final double widthLB2;
+        final double widthUB2;
+        final double width3;
+        final double widthLB3;
+        final double widthUB3;
         final int pkInd;
 
         Double getDepth() {
@@ -409,12 +415,18 @@ public class CESTEquations {
             return depth;
         }
 
-        Peak(double position, double depth, double width, double widthLB, double widthUB, int pkInd) {
+        Peak(double position, double depth, double width, double widthLB, double widthUB, double width2, double widthLB2, double widthUB2, double width3, double widthLB3, double widthUB3, int pkInd) {
             this.position = position;
             this.depth = depth;
             this.width = width;
             this.widthLB = widthLB;
             this.widthUB = widthUB;
+            this.width2 = width2;
+            this.widthLB2 = widthLB2;
+            this.widthUB2 = widthUB2;
+            this.width3 = width3;
+            this.widthLB3 = widthLB3;
+            this.widthUB3 = widthUB3;
             this.pkInd = pkInd;
         }
     }
@@ -510,49 +522,60 @@ public class CESTEquations {
                 int iCenter = i;
                 if (ok) {
                     double halfinten = (baseline - yvals[iCenter]) / 2 + yvals[iCenter];
+                    double quarterinten = (baseline - yvals[iCenter]) / 4 + yvals[iCenter];
+                    double threequarterinten = 3*((baseline - yvals[iCenter]) / 4) + yvals[iCenter];
                     if (fitMode.equals("r1rho")) {
                         halfinten = (yvals[iCenter] - baseline) / 8 + baseline;
+                        quarterinten = (yvals[iCenter] - baseline) / 16 + baseline;
+                        threequarterinten = 3*((yvals[iCenter] - baseline) / 16) + baseline;
                     }
-                    double[] halfPos = new double[2];
+                    
+                    double[] widthinten = {halfinten, quarterinten, threequarterinten};
+                    double[][] widthpos = new double[widthinten.length][2];
 
                     // search from peak center in both directions to find
                     // the peak width.  Find a value above and below the 
                     // half-height and interpolate to get the width on each
                     // side.
-                    for (int k = 0; k < 2; k++) {
-                        int iDir = k * 2 - 1; // make iDir -1, 1
-                        int j = iCenter + iDir;
-                        double dUp = Double.MAX_VALUE;
-                        double dLow = Double.MAX_VALUE;
-                        if (fitMode.equals("r1rho")) {
-                            dUp = Double.MIN_VALUE;
-                            dLow = Double.MIN_VALUE;
-                        }
-                        int iUp = 0;
-                        int iLow = 0;
-                        while ((j >= 0) && (j < yvals.length)) {
-                            double delta = yvals[j] - halfinten;
-                            if ((fitMode.equals("cest") && delta < 0.0) || (fitMode.equals("r1rho") && delta > 0.0)) {
-                                if ((fitMode.equals("cest") && Math.abs(delta) < dUp) || (fitMode.equals("r1rho") && Math.abs(delta) > dUp)) {
-                                    dUp = Math.abs(delta);
-                                    iUp = j;
+                    for (int w=0; w<widthinten.length; w++) {
+                        for (int k = 0; k < 2; k++) {
+                            int iDir = k * 2 - 1; // make iDir -1, 1
+                            int j = iCenter + iDir;
+                            double dUp = Double.MAX_VALUE;
+                            double dLow = Double.MAX_VALUE;
+                            if (fitMode.equals("r1rho")) {
+                                dUp = Double.MIN_VALUE;
+                                dLow = Double.MIN_VALUE;
+                            }
+                            int iUp = 0;
+                            int iLow = 0;
+                            while ((j >= 0) && (j < yvals.length)) {
+                                double delta = yvals[j] - widthinten[w];
+                                if ((fitMode.equals("cest") && delta < 0.0) || (fitMode.equals("r1rho") && delta > 0.0)) {
+                                    if ((fitMode.equals("cest") && Math.abs(delta) < dUp) || (fitMode.equals("r1rho") && Math.abs(delta) > dUp)) {
+                                        dUp = Math.abs(delta);
+                                        iUp = j;
+                                    }
+                                } else {
+                                    if ((fitMode.equals("cest") && Math.abs(delta) < dLow) || (fitMode.equals("r1rho") && Math.abs(delta) > dLow)) {
+                                        dLow = Math.abs(delta);
+                                        iLow = j;
+                                    }
+                                    break;
                                 }
-                            } else {
-                                if ((fitMode.equals("cest") && Math.abs(delta) < dLow) || (fitMode.equals("r1rho") && Math.abs(delta) > dLow)) {
-                                    dLow = Math.abs(delta);
-                                    iLow = j;
-                                }
+                                j += iDir;
+                            }
+                            if ((fitMode.equals("cest") && ((dLow == Double.MAX_VALUE) || (dUp == Double.MAX_VALUE))) || (fitMode.equals("r1rho") && ((dLow == Double.MIN_VALUE) || (dUp == Double.MIN_VALUE)))) {
+                                ok = false;
                                 break;
                             }
-                            j += iDir;
+                            double delta = dLow + dUp;
+                            widthpos[w][k] = xvals[iLow] * dUp / delta + xvals[iUp] * dLow / delta;
                         }
-                        if ((fitMode.equals("cest") && ((dLow == Double.MAX_VALUE) || (dUp == Double.MAX_VALUE))) || (fitMode.equals("r1rho") && ((dLow == Double.MIN_VALUE) || (dUp == Double.MIN_VALUE)))) {
-                            ok = false;
-                            break;
-                        }
-                        double delta = dLow + dUp;
-                        halfPos[k] = xvals[iLow] * dUp / delta + xvals[iUp] * dLow / delta;
                     }
+                    double[] halfPos = widthpos[0];
+                    double[] quarterPos = widthpos[1];
+                    double[] threeQuarterPos = widthpos[2];
                     if (ok) {
                         double xCenter = xvals[iCenter];
                         double yCenter = yvals[iCenter];
@@ -565,7 +588,25 @@ public class CESTEquations {
                         }
                         double widthL = Math.abs(widthLeft) * field;
                         double widthR = Math.abs(widthRight) * field;
-                        Peak peak = new Peak(xCenter, yCenter, width, widthL, widthR, iCenter);
+                        double width2 = Math.abs(quarterPos[0] - quarterPos[1]) * field;
+                        double widthLeft2 = quarterPos[0] - xCenter;
+                        double widthRight2 = quarterPos[1] - xCenter;
+                        if (quarterPos[1] < xCenter) {
+                            widthLeft2 = quarterPos[1] - xCenter;
+                            widthRight2 = quarterPos[0] - xCenter;
+                        }
+                        double widthL2 = Math.abs(widthLeft2) * field;
+                        double widthR2 = Math.abs(widthRight2) * field;
+                        double width3 = Math.abs(threeQuarterPos[0] - threeQuarterPos[1]) * field;
+                        double widthLeft3 = threeQuarterPos[0] - xCenter;
+                        double widthRight3 = threeQuarterPos[1] - xCenter;
+                        if (threeQuarterPos[1] < xCenter) {
+                            widthLeft3 = threeQuarterPos[1] - xCenter;
+                            widthRight3 = threeQuarterPos[0] - xCenter;
+                        }
+                        double widthL3 = Math.abs(widthLeft3) * field;
+                        double widthR3 = Math.abs(widthRight3) * field;
+                        Peak peak = new Peak(xCenter, yCenter, width, widthL, widthR, width2, widthL2, widthR2, width3, widthL3, widthR3, iCenter);
                         peaks.add(peak);
                     }
                 }
@@ -598,7 +639,7 @@ public class CESTEquations {
                 newCenter = peak.position + peak.widthUB / field / 2.0;
             }
             double newDepth = (baseline + peak.depth) / 2.0;
-            Peak newPeak = new Peak(newCenter, newDepth, peak.width, peak.widthLB, peak.widthUB, peak.pkInd);
+            Peak newPeak = new Peak(newCenter, newDepth, peak.width, peak.widthLB, peak.widthUB, peak.width2, peak.widthLB2, peak.widthUB2, peak.width3, peak.widthLB3, peak.widthUB3, peak.pkInd);
             peaks2.add(newPeak);
         }
 
