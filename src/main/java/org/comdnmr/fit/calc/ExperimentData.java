@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Set;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -73,6 +74,7 @@ public class ExperimentData {
     final String nucleusName;
     List<Double> extras = new ArrayList<>();
     private String state = "";
+    Map<String, List<Double>> constraints = null;
 
     public ExperimentData(String name, String nucleus, double field, double temperature, Double tau, double[] xvals,
             String expMode, HashMap<String, Object> errorPars, double[] delayCalc, Double B1field) {
@@ -136,6 +138,32 @@ public class ExperimentData {
 
     public double getNucleusField() {
         return nucleusField;
+    }
+
+    public String getNucleusName() {
+        return nucleusName;
+    }
+
+    public void setConstraints(Map<String, List<Double>> constraints) {
+        this.constraints = constraints;
+    }
+    
+    public Map<String, List<Double>> getConstraints() {
+        return constraints;
+    }
+
+    public double[] getConstraint(String key) {
+        double[] result = null;
+        if (constraints != null) {
+            List<Double> values = constraints.get(key);
+            if (values != null) {
+                result = new double[2];
+                result[0] = values.get(0);
+                result[1] = values.get(1);
+            }
+        }
+        return result;
+
     }
 
     /**

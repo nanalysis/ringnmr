@@ -47,7 +47,7 @@ public enum CPMGEquation implements EquationType {
         }
 
         @Override
-        public double getRex(double[] pars, int[] map) {
+        public double getRex(double[] pars, int[] map, double field) {
             return 0.0;
         }
 
@@ -82,20 +82,20 @@ public enum CPMGEquation implements EquationType {
             }
             return map;
         }
-    }, CPMGFAST("cpmgfast", 1, "Kex", "R2", "Rex") {
+    }, CPMGFAST("cpmgfast", 1, "Kex", "R2", "dPPMmin") {
         @Override
         public double calculate(double[] par, int[] map, double[] x, int idNum, double field) {
             double kEx = par[map[0]];
             double R2 = par[map[1]];
-            double Rex = par[map[2]];
+            double dPPMmin = par[map[2]];
             double vu = x[0];
             double value;
             if (kEx <= 0.0) {
                 value = R2;
             } else {
                 double tauCP = 1.0 / (2.0 * vu);
-                double fieldAdjust = field / CoMDPreferences.getRefField();
-                Rex *= fieldAdjust * fieldAdjust;
+                double dPPMMinRad = 2.0 * Math.PI * dPPMmin * field;
+                double Rex = dPPMMinRad * dPPMMinRad / 4.0 / kEx;
                 value = R2 + Rex * (1 - 2.0 * FastMath.tanh(0.5 * kEx * tauCP) / (kEx * tauCP));
             }
             return value;
@@ -117,10 +117,13 @@ public enum CPMGEquation implements EquationType {
                     rex = 0.0;
                 }
                 guesses[map[id][1]] = r2;
-                guesses[map[id][2]] = rex * Math.pow(CoMDPreferences.getRefField() / field, 2);
                 double tauMid = 1.0 / (2.0 * vMid);
+                double kEx = 1.915 / (0.5 * tauMid);
+                double dPPMMinRad = Math.sqrt(4.0 * rex / (field * field) * kEx);
+                double dPPMMin = dPPMMinRad / (2.0 * Math.PI);
+                guesses[map[id][2]] = dPPMMin;
                 if (rex >= 0) {
-                    kExSum += 1.915 / (0.5 * tauMid); // 1.915 comes from solving equation iteratively at tcp rex 0.5 half max
+                    kExSum += kEx; // 1.915 comes from solving equation iteratively at tcp rex 0.5 half max
                 }
             }
             guesses[0] = kExSum /= nID;
@@ -149,8 +152,13 @@ public enum CPMGEquation implements EquationType {
         }
 
         @Override
-        public double getRex(double[] pars, int[] map) {
-            return pars[map[2]];
+        public double getRex(double[] pars, int[] map, double field) {
+            double dPPMmin = pars[map[2]];
+
+            double kEx = pars[0];
+            double dPPMMinRad = 2.0 * Math.PI * dPPMmin * field;
+            double Rex = dPPMMinRad * dPPMMinRad / 4.0 / kEx;
+            return Rex;
         }
 
         @Override
@@ -300,12 +308,12 @@ public enum CPMGEquation implements EquationType {
         //        CPMGSLOW("cpmgslow", 2, "Kex", "pA", "R2", "dW") {
 
         @Override
-        public double getRex(double[] pars, int[] map) {
+        public double getRex(double[] pars, int[] map, double field) {
             double[] x = new double[1];
             x[0] = 10.0;
-            double y0 = calculate(pars, map, x, 0, CoMDPreferences.getRefField());
+            double y0 = calculate(pars, map, x, 0, field);
             x[0] = 1.0e4;
-            double y1 = calculate(pars, map, x, 0, CoMDPreferences.getRefField());
+            double y1 = calculate(pars, map, x, 0, field);
             double rex = y0 - y1;
 //            if (pars[map[3]] != 0.0) {
 //                rex = pars[map[1]] * (1.0 - pars[map[1]]) * pars[map[0]] / (1.0 + Math.pow(pars[map[0]] / pars[map[3]], 2));

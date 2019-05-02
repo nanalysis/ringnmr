@@ -24,17 +24,16 @@ public class CalcRDisp extends FitModel {
         equation = CPMGEquation.valueOf(eqName.toUpperCase());
     }
 
-    public CalcRDisp(double[][] x, double[] y, double[] err, double[] fieldValues, double[] fields) throws IllegalArgumentException {
-        this(x, y, err, fieldValues, fields, new int[x.length]);
+    public CalcRDisp(double[][] x, double[] y, double[] err, double[] fieldValues) throws IllegalArgumentException {
+        this(x, y, err, fieldValues, new int[x.length]);
     }
 
-    public CalcRDisp(double[][] x, double[] y, double[] err, double[] fieldValues, double[] fields, int[] idNums) throws IllegalArgumentException {
+    public CalcRDisp(double[][] x, double[] y, double[] err, double[] fieldValues, int[] idNums) throws IllegalArgumentException {
         this.xValues = new double[1][];
         this.xValues[0] = x[0].clone();
         this.yValues = y.clone();
         this.errValues = err.clone();
         this.fieldValues = fieldValues.clone();
-        this.fields = fields.clone();
         this.idNums = idNums.clone();
         this.idNums = new int[yValues.length];
         this.equation = CPMGEquation.CPMGFAST;
@@ -131,13 +130,13 @@ public class CalcRDisp extends FitModel {
     public double[] getRex(double[] pars) {
         double[] result = new double[nID];
         for (int i = 0; i < map.length; i++) {
-            result[i] = equation.getRex(pars, map[i]);
+            result[i] = equation.getRex(pars, map[i], fieldValues[0]);
         }
         return result;
     }
 
     public double getRex(double[] pars, int id) {
-        return equation.getRex(pars, map[id]);
+        return equation.getRex(pars, map[id], fieldValues[0]);
     }
 
     public double[] getRexError() {
@@ -173,7 +172,7 @@ public class CalcRDisp extends FitModel {
             parValues[nPar][i] = result.getValue();
             if (equation == CPMGEquation.CPMGSLOW) {
                 for (int j = 0; j < map.length; j++) {
-                    rexValues[j][i] = equation.getRex(result.getPoint(), map[j]);
+                    rexValues[j][i] = equation.getRex(result.getPoint(), map[j], fieldValues[0]);
                 }
             }
         }
@@ -199,7 +198,7 @@ public class CalcRDisp extends FitModel {
         for (int k = 0; k < yValues.length; k++) {
                 newY[k] = yPred[k] + errValues[k] * random.nextGaussian();
             }
-        CalcRDisp rDisp = new CalcRDisp(xValues, newY, errValues, fieldValues, fields, idNums);
+        CalcRDisp rDisp = new CalcRDisp(xValues, newY, errValues, fieldValues, idNums);
         rDisp.setEquation(equation.getName());
         rDisp.setXY(xValues, newY);
         rDisp.setIds(idNums);
@@ -208,7 +207,7 @@ public class CalcRDisp extends FitModel {
     }
 
     private CalcRDisp setupNonParametricBootstrap(double[] yPred) {
-        CalcRDisp rDisp = new CalcRDisp(xValues, yValues, errValues, fieldValues, fields, idNums);
+        CalcRDisp rDisp = new CalcRDisp(xValues, yValues, errValues, fieldValues, idNums);
         rDisp.setEquation(equation.getName());
         double[][] newX = new double[1][yValues.length];
         double[] newY = new double[yValues.length];
@@ -275,7 +274,7 @@ public class CalcRDisp extends FitModel {
 
             if (equation == CPMGEquation.CPMGSLOW) {
                 for (int j = 0; j < map.length; j++) {
-                    rexValues[j][i] = equation.getRex(result.getPoint(), map[j]);
+                    rexValues[j][i] = equation.getRex(result.getPoint(), map[j], fieldValues[0]);
                 }
             }
         });

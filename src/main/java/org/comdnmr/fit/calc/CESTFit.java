@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import org.apache.commons.math3.optim.PointValuePair;
+import org.comdnmr.fit.calc.CESTEquations.Peak;
 
 /**
  *
@@ -74,7 +75,7 @@ public class CESTFit implements EquationFitter {
         resProps.setupMaps();
         stateCount = resProps.getStateCount(resNums.length);
         Collection<ExperimentData> expDataList = resProps.getExperimentData();
-        nCurves = resNums.length * expDataList.size();
+        nCurves = resProps.getDataCount(resNums);
         states = new int[nCurves][];
         int k = 0;
         int resIndex = 0;
@@ -82,9 +83,9 @@ public class CESTFit implements EquationFitter {
         List<Double> fieldList = new ArrayList<>();
         for (String resNum : resNums) {
             for (ExperimentData expData : expDataList) {
-                states[k++] = resProps.getStateIndices(resIndex, expData);
                 ResidueData resData = expData.getResidueData(resNum);
                 if (resData != null) {
+                    states[k++] = resProps.getStateIndices(resIndex, expData);
                     //  need peakRefs
                     double field = expData.getNucleusField();
                     fieldList.add(field);
@@ -115,11 +116,11 @@ public class CESTFit implements EquationFitter {
     }
 
     @Override
-    public void setData(List<Double>[] allXValues, List<Double> yValues, List<Double> errValues) {
-        setData(allXValues[0], allXValues[1], allXValues[2], yValues, errValues);
+    public void setData(List<Double>[] allXValues, List<Double> yValues, List<Double> errValues, List<Double> fieldValues) {
+        setData(allXValues[0], allXValues[1], allXValues[2], yValues, errValues, fieldValues);
     }
 
-    public void setData(List<Double> xValues0, List<Double> xValues1, List<Double> xValues2, List<Double> yValues, List<Double> errValues) {
+    public void setData(List<Double> xValues0, List<Double> xValues1, List<Double> xValues2, List<Double> yValues, List<Double> errValues, List<Double> fieldValues) {
         xValues = new ArrayList[3];
         xValues[0] = new ArrayList<>();
         xValues[0].addAll(xValues0);
@@ -129,8 +130,9 @@ public class CESTFit implements EquationFitter {
         xValues[2].addAll(xValues2);
         this.yValues.addAll(yValues);
         this.errValues.addAll(errValues);
+        this.fieldValues.clear();
+        this.fieldValues.addAll(fieldValues);
         for (Double yValue : yValues) {
-            fieldValues.add(FitModel.getFieldValues()[0]);
             idValues.add(0);
         }
         usedFields = new double[1];
@@ -215,7 +217,6 @@ public class CESTFit implements EquationFitter {
         calcCEST.setIds(idNums);
         calcCEST.setErr(err);
         calcCEST.setFieldValues(fields);
-        calcCEST.setFields(usedFields);
         calcCEST.setMap(stateCount, states);
     }
 
@@ -254,9 +255,9 @@ public class CESTFit implements EquationFitter {
             idNums[i] = idValues.get(i);
         }
         double[][] xy = CESTEquations.getXYValues(xvals, yvals, idNums, 0);
-        double[][] peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], fieldValues.get(0));
+        List<Peak> peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], fieldValues.get(0), "cest");
 
-        if (peaks.length >= 1) {
+        if (peaks.size() >= 1) {
             setupFit(eqn);
             int[][] map = calcCEST.getMap();
             double[] guesses;
@@ -328,6 +329,7 @@ public class CESTFit implements EquationFitter {
             }
             // fixme
             double[] extras = new double[xValues.length];
+            double[] usedFields = getFields(fieldValues, idValues);
             extras[0] = usedFields[0];
             for (int j = 1; j < extras.length; j++) {
                 extras[j] = xValues[j].get(0);
@@ -343,8 +345,8 @@ public class CESTFit implements EquationFitter {
             double fRadius = CoMDPreferences.getFinalRadius();
             double tol = CoMDPreferences.getTolerance();
             boolean useWeight = CoMDPreferences.getWeightFit();
-            CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs, 
-                useNonParametric, sRadius, fRadius, tol, useWeight);
+            CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs,
+                    useNonParametric, sRadius, fRadius, tol, useWeight);
             return getResults(this, eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, exchangeValid, curveStats);
         } else {
             return null;
@@ -366,7 +368,7 @@ public class CESTFit implements EquationFitter {
         }
         return x;
     }
-    
+
     @Override
     public double[] getSimXDefaults() {
         return getSimX(100, -8, 8);

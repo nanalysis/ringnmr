@@ -213,6 +213,19 @@ public class ResidueProperties {
         return residueMap.get(resNum);
     }
 
+    public int getDataCount(String[] resNums) {
+        int n = 0;
+        for (String resNum : resNums) {
+            for (ExperimentData expData : expMaps.values()) {
+                ResidueData resData = expData.getResidueData(resNum);
+                if (resData != null) {
+                    n++;
+                }
+            }
+        }
+        return n;
+    }
+
     public double[] getFields() {
         double[] fields = new double[fieldList.size()];
         int i = 0;
