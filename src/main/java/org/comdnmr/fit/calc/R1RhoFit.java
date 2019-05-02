@@ -255,7 +255,7 @@ public class R1RhoFit implements EquationFitter {
             idNums[i] = idValues.get(i);
         }
         double[][] xy = CESTEquations.getXYValues(xvals, yvals, idNums, 0);
-        double[][] peaks = R1RhoEquations.r1rhoPeakGuess(xy[0], xy[1], fieldValues.get(0));
+        double[][] peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], fieldValues.get(0), "r1rho");
         if (peaks.length >= 1) {
             setupFit(eqn);
             int[][] map = calcR1Rho.getMap();

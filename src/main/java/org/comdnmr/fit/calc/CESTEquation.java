@@ -63,10 +63,10 @@ public enum CESTEquation implements CESTEquationType {
             for (int id = 0; id < map.length; id++) {
                 int[] map1 = map[id];
                 double[][] xy = CESTEquations.getXYValues(xValues, yValues, idNums, id);
-                double[][] peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], field);
+                double[][] peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], field, "cest");
                 double tex = xValues[2][0];
-                double[] r1 = CESTEquations.cestR1Guess(yValues, tex);
-                double[][] r2 = CESTEquations.cestR2Guess(peaks, yValues);
+                double[] r1 = CESTEquations.cestR1Guess(yValues, tex, "cest");
+                double[][] r2 = CESTEquations.cestR2Guess(peaks, yValues, "cest");
                 guesses[map1[0]] = peaks[0][0]; //400 * 2.0 * Math.PI; //deltaA
                 guesses[map1[1]] = r1[0]; //2.4; //R1A
                 guesses[map1[2]] = r2[0][0] / 2; //20.0; //R2A
@@ -81,7 +81,7 @@ public enum CESTEquation implements CESTEquationType {
             int id = 0;
             int[] map1 = map[id];
             double[][] xy = CESTEquations.getXYValues(xValues, yValues, idNums, id);
-            double[][] peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], field);
+            double[][] peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], field, "cest");
 
             double dAbound = (peaks[0][2] / field) / 2;
             double tex = xValues[2][0];
