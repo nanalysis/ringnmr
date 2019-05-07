@@ -93,12 +93,16 @@ public enum R1RhoEquation implements R1RhoEquationType {
                 int[] map1 = map[id];
                 double[][] xy = CESTEquations.getXYValues(xValues, yValues, idNums, id);
                 List<Peak> peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], field, "r1rho");
-                double tex = xValues[2][0];
-                double[] r1 = CESTEquations.cestR1Guess(yValues, tex, "r1rho");
-                double[][] r2 = CESTEquations.cestR2Guess(peaks, yValues, "r1rho");
-                guesses[map1[0]] = peaks.get(peaks.size() - 1).position; //400 * 2.0 * Math.PI; //deltaA
-                guesses[map1[1]] = r1[0]; //2.4; //R1A
-                guesses[map1[2]] = 20.0; //20.0; //R2A
+                if (peaks.size() > 0) {
+                    double tex = xValues[2][0];
+                    double[] r1 = CESTEquations.cestR1Guess(yValues, tex, "r1rho");
+                    double[][] r2 = CESTEquations.cestR2Guess(peaks, yValues, "r1rho");
+                    guesses[map1[0]] = peaks.get(peaks.size() - 1).position; //400 * 2.0 * Math.PI; //deltaA
+                    guesses[map1[1]] = r1[0]; //2.4; //R1A
+                    guesses[map1[2]] = r2[0][0] / 2; //20.0; //R2A
+                } else {
+                    guesses = null;
+                }
             }
             return guesses;
 
