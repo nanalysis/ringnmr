@@ -1227,8 +1227,10 @@ public class PyController implements Initializable {
 //        System.out.println("guesses resNums = " + resNums);
 //        System.out.println("guesses eqnName = " + equationName);
                 List<ParValueInterface> guesses = equationFitter.guessPars(equationName);
-                simControls.updateSliders(guesses, equationName);
-                simControls.simSliderAction("");
+                if (guesses != null) {
+                    simControls.updateSliders(guesses, equationName);
+                    simControls.simSliderAction("");
+                }
             } catch (NullPointerException npE1) {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setContentText("Error: Residue must be selected");
@@ -1870,8 +1872,10 @@ public class PyController implements Initializable {
         setSimData(equationFitter);
         String equationName = simControls.getEquation();
         List<ParValueInterface> guesses = equationFitter.guessPars(equationName);
-        simControls.updateSliders(guesses, equationName);
-        simControls.simSliderAction("");
+        if (guesses != null) {
+            simControls.updateSliders(guesses, equationName);
+            simControls.simSliderAction("");
+        }
     }
 
     public void fitSimData() {
