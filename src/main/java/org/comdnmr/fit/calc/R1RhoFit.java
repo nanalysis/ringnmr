@@ -225,14 +225,18 @@ public class R1RhoFit implements EquationFitter {
     public List<ParValueInterface> guessPars(String eqn) {
         setupFit(eqn);
         double[] guesses = calcR1Rho.guess();
-        String[] parNames = calcR1Rho.getParNames();
-        List<ParValueInterface> parValues = new ArrayList<>();
-        int[][] map = calcR1Rho.getMap();
-        for (int i = 0; i < parNames.length; i++) {
-            ParValueInterface parValue = new ParValue(parNames[i], guesses[map[0][i]]);
-            parValues.add(parValue);
+        if (guesses != null) {
+            String[] parNames = calcR1Rho.getParNames();
+            List<ParValueInterface> parValues = new ArrayList<>();
+            int[][] map = calcR1Rho.getMap();
+            for (int i = 0; i < parNames.length; i++) {
+                ParValueInterface parValue = new ParValue(parNames[i], guesses[map[0][i]]);
+                parValues.add(parValue);
+            }
+            return parValues;
+        } else {
+            return null;
         }
-        return parValues;
     }
 
     @Override
@@ -269,100 +273,104 @@ public class R1RhoFit implements EquationFitter {
             }
             //        System.out.println("dofit guesses = " + guesses);
             //        double[] guesses = setupFit(eqn, absMode);
-            double[][] boundaries = calcR1Rho.boundaries(guesses);
-            double sigma = CoMDPreferences.getStartingRadius();
-            if (constraints != null) {
-                for (int id = 0; id < map.length; id++) {
-                    if (constraints[id] != null) {
-                        List<Double> cValues = constraints[id].get("R1A");
-                        if (cValues != null) {
-                            double[] cArray = {cValues.get(0), cValues.get(1)};
-                            calcR1Rho.equation.constrain("R1A", guesses, boundaries, map, id, cArray[0], cArray[1]);
-                            calcR1Rho.equation.constrain("R1B", guesses, boundaries, map, id, cArray[0], cArray[1]);
+            if (guesses != null) {
+                double[][] boundaries = calcR1Rho.boundaries(guesses);
+                double sigma = CoMDPreferences.getStartingRadius();
+                if (constraints != null) {
+                    for (int id = 0; id < map.length; id++) {
+                        if (constraints[id] != null) {
+                            List<Double> cValues = constraints[id].get("R1A");
+                            if (cValues != null) {
+                                double[] cArray = {cValues.get(0), cValues.get(1)};
+                                calcR1Rho.equation.constrain("R1A", guesses, boundaries, map, id, cArray[0], cArray[1]);
+                                calcR1Rho.equation.constrain("R1B", guesses, boundaries, map, id, cArray[0], cArray[1]);
+                            }
                         }
                     }
                 }
-            }
 
-            for (int i = 0; i < guesses.length; i++) {
-                System.out.println(i + " bou0 " + boundaries[0][i] + " bou1 " + boundaries[1][i] + " gue " + guesses[i]);
-            }
-            PointValuePair result = calcR1Rho.refine(guesses, boundaries[0],
-                    boundaries[1], sigma, CoMDPreferences.getOptimizer());
-            double[] pars = result.getPoint();
-            System.out.println(eqn);
+                for (int i = 0; i < guesses.length; i++) {
+                    System.out.println(i + " bou0 " + boundaries[0][i] + " bou1 " + boundaries[1][i] + " gue " + guesses[i]);
+                }
+                PointValuePair result = calcR1Rho.refine(guesses, boundaries[0],
+                        boundaries[1], sigma, CoMDPreferences.getOptimizer());
+                double[] pars = result.getPoint();
+                System.out.println(eqn);
 
-            for (int[] map1 : map) {
-                for (int j = 0; j < map1.length; j++) {
-                    System.out.printf(" %3d", map1[j]);
+                for (int[] map1 : map) {
+                    for (int j = 0; j < map1.length; j++) {
+                        System.out.printf(" %3d", map1[j]);
+                    }
+                    System.out.println("");
+                }
+
+                System.out.print("Fit pars ");
+                for (int i = 0; i < pars.length; i++) {
+                    System.out.printf(" %.3f", pars[i]);
                 }
                 System.out.println("");
-            }
 
-            System.out.print("Fit pars ");
-            for (int i = 0; i < pars.length; i++) {
-                System.out.printf(" %.3f", pars[i]);
-            }
-            System.out.println("");
+                double aic = calcR1Rho.getAICc(pars);
+                double rms = calcR1Rho.getRMS(pars);
+                double rChiSq = calcR1Rho.getReducedChiSq(pars);
+                System.out.println("rms " + rms);
+                int nGroupPars = calcR1Rho.getNGroupPars();
+                sigma /= 2.0;
 
-            double aic = calcR1Rho.getAICc(pars);
-            double rms = calcR1Rho.getRMS(pars);
-            double rChiSq = calcR1Rho.getReducedChiSq(pars);
-            System.out.println("rms " + rms);
-            int nGroupPars = calcR1Rho.getNGroupPars();
-            sigma /= 2.0;
+                String[] parNames = calcR1Rho.getParNames();
+                double[] errEstimates;
+                double[][] simPars = null;
+                boolean exchangeValid = true;
+                double deltaABdiff = CoMDPreferences.getDeltaABDiff();
+                if (FitModel.getCalcError()) {
+                    long startTime = System.currentTimeMillis();
+                    if (CoMDPreferences.getNonParametric()) {
+                        errEstimates = calcR1Rho.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
+                        long endTime = System.currentTimeMillis();
+                        errTime = endTime - startTime;
+                    } else {
+                        errEstimates = calcR1Rho.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma);
+                        long endTime = System.currentTimeMillis();
+                        errTime = endTime - startTime;
 
-            String[] parNames = calcR1Rho.getParNames();
-            double[] errEstimates;
-            double[][] simPars = null;
-            boolean exchangeValid = true;
-            double deltaABdiff = CoMDPreferences.getDeltaABDiff();
-            if (FitModel.getCalcError()) {
-                long startTime = System.currentTimeMillis();
-                if (CoMDPreferences.getNonParametric()) {
-                    errEstimates = calcR1Rho.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
-                    long endTime = System.currentTimeMillis();
-                    errTime = endTime - startTime;
-                } else {
-                    errEstimates = calcR1Rho.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma);
-                    long endTime = System.currentTimeMillis();
-                    errTime = endTime - startTime;
-
-                }
-                simPars = calcR1Rho.getSimPars();
-                for (String parName : parNames) {
-                    if (parName.equals("deltaB0")) {
-                        int parIndex = 3;
-                        int deltaAIndex = parIndex - 1;
-                        if (Math.abs(pars[parIndex] - pars[deltaAIndex]) < deltaABdiff) {
-                            exchangeValid = false;
+                    }
+                    simPars = calcR1Rho.getSimPars();
+                    for (String parName : parNames) {
+                        if (parName.equals("deltaB0")) {
+                            int parIndex = 3;
+                            int deltaAIndex = parIndex - 1;
+                            if (Math.abs(pars[parIndex] - pars[deltaAIndex]) < deltaABdiff) {
+                                exchangeValid = false;
+                            }
                         }
                     }
+                } else {
+                    errEstimates = new double[pars.length];
                 }
+                // fixme
+                double[] extras = new double[xValues.length];
+                double[] usedFields = getFields(fieldValues, idValues);
+                extras[0] = usedFields[0];
+                for (int j = 1; j < extras.length; j++) {
+                    extras[j] = xValues[j].get(0);
+                }
+                String refineOpt = CoMDPreferences.getOptimizer();
+                String bootstrapOpt = CoMDPreferences.getBootStrapOptimizer();
+                long fitTime = calcR1Rho.fitTime;
+                long bootTime = errTime;
+                int nSamples = CoMDPreferences.getSampleSize();
+                boolean useAbs = CoMDPreferences.getAbsValueFit();
+                boolean useNonParametric = CoMDPreferences.getNonParametric();
+                double sRadius = CoMDPreferences.getStartingRadius();
+                double fRadius = CoMDPreferences.getFinalRadius();
+                double tol = CoMDPreferences.getTolerance();
+                boolean useWeight = CoMDPreferences.getWeightFit();
+                CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs,
+                        useNonParametric, sRadius, fRadius, tol, useWeight);
+                return getResults(this, eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, exchangeValid, curveStats);
             } else {
-                errEstimates = new double[pars.length];
+                return null;
             }
-            // fixme
-            double[] extras = new double[xValues.length];
-            double[] usedFields = getFields(fieldValues, idValues);
-            extras[0] = usedFields[0];
-            for (int j = 1; j < extras.length; j++) {
-                extras[j] = xValues[j].get(0);
-            }
-            String refineOpt = CoMDPreferences.getOptimizer();
-            String bootstrapOpt = CoMDPreferences.getBootStrapOptimizer();
-            long fitTime = calcR1Rho.fitTime;
-            long bootTime = errTime;
-            int nSamples = CoMDPreferences.getSampleSize();
-            boolean useAbs = CoMDPreferences.getAbsValueFit();
-            boolean useNonParametric = CoMDPreferences.getNonParametric();
-            double sRadius = CoMDPreferences.getStartingRadius();
-            double fRadius = CoMDPreferences.getFinalRadius();
-            double tol = CoMDPreferences.getTolerance();
-            boolean useWeight = CoMDPreferences.getWeightFit();
-            CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs,
-                    useNonParametric, sRadius, fRadius, tol, useWeight);
-            return getResults(this, eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, exchangeValid, curveStats);
         } else {
             return null;
         }

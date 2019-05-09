@@ -34,17 +34,21 @@ public interface CESTEquationType extends EquationType {
                 int[] map1 = map[id];
                 double[][] xy = CESTEquations.getXYValues(xValues, yValues, idNums, id);
                 List<Peak> peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], field, "cest");
-                double tex = xValues[2][0];
-                double[] r1 = CESTEquations.cestR1Guess(xy[1], tex, "cest");
-                double[][] r2 = CESTEquations.cestR2Guess(peaks, xy[1], "cest");
-                guesses[map1[0]] = CESTEquations.cestKexGuess(peaks, "cest"); //112.0; //kex
-                guesses[map1[1]] = CESTEquations.cestPbGuess(peaks, xy[1], "cest"); //0.1; //pb
-                guesses[map1[2]] = peaks.get(0).position; //-250 * 2.0 * Math.PI; //deltaB
-                guesses[map1[3]] = peaks.get(peaks.size() - 1).position; //400 * 2.0 * Math.PI; //deltaA
-                guesses[map1[4]] = r1[0]; //2.4; //R1A
-                guesses[map1[5]] = r1[1]; //2.4; //R1B
-                guesses[map1[6]] = r2[0][0]; //20.0; //R2A
-                guesses[map1[7]] = r2[1][0]; //100.0; //R2B
+                if (peaks.size() > 0) {
+                    double tex = xValues[2][0];
+                    double[] r1 = CESTEquations.cestR1Guess(xy[1], tex, "cest");
+                    double[][] r2 = CESTEquations.cestR2Guess(peaks, xy[1], "cest");
+                    guesses[map1[0]] = CESTEquations.cestKexGuess(peaks, "cest"); //112.0; //kex
+                    guesses[map1[1]] = CESTEquations.cestPbGuess(peaks, xy[1], "cest"); //0.1; //pb
+                    guesses[map1[2]] = peaks.get(0).position; //-250 * 2.0 * Math.PI; //deltaB
+                    guesses[map1[3]] = peaks.get(peaks.size() - 1).position; //400 * 2.0 * Math.PI; //deltaA
+                    guesses[map1[4]] = r1[0]; //2.4; //R1A
+                    guesses[map1[5]] = r1[1]; //2.4; //R1B
+                    guesses[map1[6]] = r2[0][0]; //20.0; //R2A
+                    guesses[map1[7]] = r2[1][0]; //100.0; //R2B
+                } else {
+                    guesses = null;
+                }
             }
             return guesses;
 

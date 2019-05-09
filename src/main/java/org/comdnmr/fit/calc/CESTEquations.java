@@ -635,26 +635,28 @@ public class CESTEquations {
 //            System.out.println("peaks guess " + i + " fwhm = " + peaks2.get(i).width);
 //        }
 
-        double peak1diff = Math.abs(peaks2.get(0).depth - baseline);
-        double peak2diff = peak1diff;
-        if (peaks2.size() == 2) {
-            peak2diff = Math.abs(peaks2.get(1).depth - baseline);
-        }
-        if (peak1diff < 0.05 || peak2diff < 0.05) {
-            List<Peak> peaks1 = new ArrayList<>();
-            int index = 0;
-            if (peaks2.get(0).depth > peaks2.get(1).depth && peaks2.get(1).depth != 0) {
-                index = 1;
+        List<Peak> peaks1 = new ArrayList<>();
+        if (peaks2.size() >= 1) {
+            double peak1diff = Math.abs(peaks2.get(0).depth - baseline);
+            double peak2diff = peak1diff;
+            if (peaks2.size() == 2) {
+                peak2diff = Math.abs(peaks2.get(1).depth - baseline);
             }
-            peaks1.add(peaks2.get(index));
-            return peaks1;
+            if (peak1diff < 0.05 || peak2diff < 0.05) {
+                int index = 0;
+                if (peaks2.get(0).depth > peaks2.get(1).depth && peaks2.get(1).depth != 0) {
+                    index = 1;
+                }
+                peaks1.add(peaks2.get(index));
+            } else {
+                for (int i = 0; i < peaks2.size(); i++) {
+                    peaks1.add(peaks2.get(i));
+                }
+            }
         } else {
-            List<Peak> peaks1 = new ArrayList<>();
-            for (int i = 0; i < peaks2.size(); i++) {
-                peaks1.add(peaks2.get(i));
-            }
-            return peaks1;
+            System.out.println("No peaks found by peak guesser.");
         }
+        return peaks1;
     }
 
     public static double cestPbGuess(List<Peak> peaks, double[] yvals, String fitMode) {
