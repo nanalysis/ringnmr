@@ -106,13 +106,13 @@ public class PreferencesController implements Initializable {
         optimizers.add("BOBYQA");
         maxFreqItem = new DoubleRangeOperationItem((obs, oldV, newV) -> {
             CoMDPreferences.setCPMGMaxFreq((Double) newV);
-        }, 2000.0, 100.0, 5000.0, "Limits", "CPMG Max Freq", "Max Frequency");
+        }, CoMDPreferences.getCPMGMaxFreq(), 100.0, 5000.0, "Limits", "CPMG Max Freq", "Max Frequency");
         DoubleRangeOperationItem rexRatioItem = new DoubleRangeOperationItem((obs, oldV, newV) -> {
             CoMDPreferences.setRexRatio((Double) newV);
-        }, 3.0, 0.0, 10.0, "Limits", "CPMG Rex Ratio", "Rex must be this many times rmsd");
+        }, CoMDPreferences.getRexRatio(), 0.0, 10.0, "Limits", "CPMG Rex Ratio", "Rex must be this many times rmsd");
         DoubleRangeOperationItem deltaABdiffItem = new DoubleRangeOperationItem((obs, oldV, newV) -> {
             CoMDPreferences.setDeltaABDiff((Double) newV);
-        }, 0.1, 0.0, 2.0, "Limits", "CEST/R1Rho DeltaAB Min Diff", "DeltaAB difference magnitude must be larger than this number for valid exchange");
+        }, CoMDPreferences.getDeltaABDiff(), 0.0, 2.0, "Limits", "CEST/R1Rho DeltaAB Min Diff", "DeltaAB difference magnitude must be larger than this number for valid exchange");
         DoubleRangeOperationItem refFieldItem = new DoubleRangeOperationItem((obs, oldV, newV) -> {
             CoMDPreferences.setRefField((Double) newV);
         }, CoMDPreferences.getRefField(), 100.0, 1200.0, "Limits", "Reference Field", "Rex value reported at this H1 field");
