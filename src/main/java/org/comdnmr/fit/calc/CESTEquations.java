@@ -573,40 +573,25 @@ public class CESTEquations {
                             widthpos[w][k] = xvals[iLow] * dUp / delta + xvals[iUp] * dLow / delta;
                         }
                     }
-                    double[] halfPos = widthpos[0];
-                    double[] quarterPos = widthpos[1];
-                    double[] threeQuarterPos = widthpos[2];
+                    double[][] widthtab = new double[widthpos.length][3];
                     if (ok) {
                         double xCenter = xvals[iCenter];
                         double yCenter = yvals[iCenter];
-                        double width = Math.abs(halfPos[0] - halfPos[1]) * field;
-                        double widthLeft = halfPos[0] - xCenter;
-                        double widthRight = halfPos[1] - xCenter;
-                        if (halfPos[1] < xCenter) {
-                            widthLeft = halfPos[1] - xCenter;
-                            widthRight = halfPos[0] - xCenter;
+                        for (int w=0; w<widthpos.length; w++) {
+                            double width = Math.abs(widthpos[w][0] - widthpos[w][1]) * field;
+                            double widthLeft = widthpos[w][0] - xCenter;
+                            double widthRight = widthpos[w][1] - xCenter;
+                            if (widthpos[w][1] < xCenter) {
+                                widthLeft = widthpos[w][1] - xCenter;
+                                widthRight = widthpos[w][0] - xCenter;
+                            }
+                            double widthL = Math.abs(widthLeft) * field;
+                            double widthR = Math.abs(widthRight) * field;
+                            widthtab[w][0] = width;
+                            widthtab[w][1] = widthL;
+                            widthtab[w][2] = widthR;
                         }
-                        double widthL = Math.abs(widthLeft) * field;
-                        double widthR = Math.abs(widthRight) * field;
-                        double width2 = Math.abs(quarterPos[0] - quarterPos[1]) * field;
-                        double widthLeft2 = quarterPos[0] - xCenter;
-                        double widthRight2 = quarterPos[1] - xCenter;
-                        if (quarterPos[1] < xCenter) {
-                            widthLeft2 = quarterPos[1] - xCenter;
-                            widthRight2 = quarterPos[0] - xCenter;
-                        }
-                        double widthL2 = Math.abs(widthLeft2) * field;
-                        double widthR2 = Math.abs(widthRight2) * field;
-                        double width3 = Math.abs(threeQuarterPos[0] - threeQuarterPos[1]) * field;
-                        double widthLeft3 = threeQuarterPos[0] - xCenter;
-                        double widthRight3 = threeQuarterPos[1] - xCenter;
-                        if (threeQuarterPos[1] < xCenter) {
-                            widthLeft3 = threeQuarterPos[1] - xCenter;
-                            widthRight3 = threeQuarterPos[0] - xCenter;
-                        }
-                        double widthL3 = Math.abs(widthLeft3) * field;
-                        double widthR3 = Math.abs(widthRight3) * field;
-                        Peak peak = new Peak(xCenter, yCenter, width, widthL, widthR, width2, widthL2, widthR2, width3, widthL3, widthR3, iCenter);
+                        Peak peak = new Peak(xCenter, yCenter, widthtab[0][0], widthtab[0][1], widthtab[0][2], widthtab[1][0], widthtab[1][1], widthtab[1][2], widthtab[2][0], widthtab[2][1], widthtab[2][2], iCenter);
                         peaks.add(peak);
                     }
                 }
