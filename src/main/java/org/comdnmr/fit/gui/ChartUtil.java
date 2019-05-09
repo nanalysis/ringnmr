@@ -303,7 +303,7 @@ public class ChartUtil {
                     equationCopy = new GUIPlotEquation(useEquationName, pars, errs, extras);
                 } else {
                     double[] extras = new double[1];
-                    extras[0] = expData.getField();
+                    extras[0] = expData.getNucleusField();
                     equationCopy = new GUIPlotEquation(equation);
                     equationCopy.setExtra(extras);
                     //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[0] = " + extras[0]);
