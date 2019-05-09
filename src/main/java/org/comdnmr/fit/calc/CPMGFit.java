@@ -110,7 +110,7 @@ public class CPMGFit implements EquationFitter {
 
                     states[k++] = resProps.getStateIndices(resIndex, expData);
                     //  need peakRefs
-                    double field = expData.getField();
+                    double field = expData.getNucleusField();
                     double[][] x = resData.getXValues();
                     double[] y = resData.getYValues();
                     double[] err = resData.getErrValues();
