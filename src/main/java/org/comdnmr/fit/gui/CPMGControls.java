@@ -439,7 +439,7 @@ public class CPMGControls extends EquationControls {
             pars = getPars(equationName);
             double[] errs = new double[pars.length];
             double[] extras = new double[1];
-            extras[0] = CoMDPreferences.getRefField();
+            extras[0] = CoMDPreferences.getRefField() * getNucleus().getRatio();
             GUIPlotEquation plotEquation = new GUIPlotEquation(equationName, pars, errs, extras);
             equations.add(plotEquation);
         } else {
