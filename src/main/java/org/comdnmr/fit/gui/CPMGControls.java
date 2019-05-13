@@ -207,7 +207,6 @@ public class CPMGControls extends EquationControls {
                 DPPMMIN.valueText.setDisable(false);
                 KEX.disabled(false);
                 KEX.valueText.setDisable(false);
-                DPPMMIN.valueText.setDisable(false);
                 PA.disabled(true);
                 PA.valueText.setDisable(true);
                 DPPM.disabled(true);
@@ -218,6 +217,7 @@ public class CPMGControls extends EquationControls {
                 DPPMMIN.disabled(true);
                 DPPMMIN.valueText.setDisable(true);
                 KEX.disabled(false);
+                KEX.valueText.setDisable(false);
                 PA.disabled(false);
                 PA.valueText.setDisable(false);
                 DPPM.disabled(false);
