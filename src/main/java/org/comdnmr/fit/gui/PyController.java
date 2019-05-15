@@ -992,15 +992,18 @@ public class PyController implements Initializable {
         for (String resNum : residues) {
             final String useEquationName;
             ResidueInfo resInfo = ChartUtil.getResInfo(mapName, resNum);
-            if (equationName.equals("best")) {
-                useEquationName = resInfo.getBestEquationName();
-            } else {
-                useEquationName = equationName;
-            }
-            if (setEquation.equals("")) {
-                setEquation = useEquationName;
-            } else if (!setEquation.equals(useEquationName)) {
-                setEquation = "+";
+            if (resInfo != null) {
+                if (equationName.equals("best")) {
+                    useEquationName = resInfo.getBestEquationName();
+                } else {
+                    useEquationName = equationName;
+                }
+
+                if (setEquation.equals("")) {
+                    setEquation = useEquationName;
+                } else if (!setEquation.equals(useEquationName)) {
+                    setEquation = "+";
+                }
             }
         }
         equationChoice.setUserData("disabled");
@@ -1372,7 +1375,8 @@ public class PyController implements Initializable {
 //System.out.println("extras " + extras[0]);
                 if (simExtras.length > 1) {
                     extras = new double[simExtras.length + 1];
-                    extras[0] = FitModel.getFieldValues()[0];
+                    extras[0] = CoMDPreferences.getRefField() * simControls.getNucleus().getRatio();
+
                     for (int i = 0; i < simExtras.length; i++) {
                         //                    System.out.println("simextras " + i + " " + simExtras[i]);
                         extras[i + 1] = simExtras[i];
@@ -1843,14 +1847,13 @@ public class PyController implements Initializable {
     public void setSimData(EquationFitter equationFitter) {
         ArrayList<Double> xValues = getSimXData();
         ArrayList<Double> yValues = getSimYData();
+        ArrayList<Double> errValues = getSimErrData();
         double[] extras = simControls.getExtras();
         double[] fieldVals = new double[yValues.size()];
         ArrayList[] allXValues = new ArrayList[extras.length + 1];
         allXValues[0] = xValues;
-        ArrayList<Double> errValues = new ArrayList<>();
         ArrayList<Double> fieldValues = new ArrayList<>();
         for (int i = 0; i < yValues.size(); i++) {
-            errValues.add(yValues.get(i) * 0.05);
             fieldVals[i] = CoMDPreferences.getRefField() * simControls.getNucleus().getRatio();
             fieldValues.add(fieldVals[i]);
         }
@@ -1914,6 +1917,22 @@ public class PyController implements Initializable {
             }
         }
         return yValues;
+    }
+
+    ArrayList<Double> getSimErrData() {
+        ObservableList<DataSeries> allData = xychart.getData();
+        ArrayList<Double> errValues = new ArrayList<>();
+        for (DataSeries series : allData) {
+            for (XYValue dataPoint : series.getData()) {
+                double errValue = 0.0;
+                if (dataPoint instanceof XYEValue) {
+                    XYEValue xyeValue = (XYEValue) dataPoint;
+                    errValue = xyeValue.getError();
+                }
+                errValues.add(errValue);
+            }
+        }
+        return errValues;
     }
 
     @FXML
