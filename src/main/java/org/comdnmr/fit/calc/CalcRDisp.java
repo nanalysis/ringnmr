@@ -87,7 +87,8 @@ public class CalcRDisp extends FitModel {
             for (double p : par) {
                 System.out.printf("%7.3f ", p);
             }
-            System.out.printf("%7.3f %7.3f %7.3f\n", sumSq, sumAbs, rms);
+            System.out.printf("%7.3f %7.3f %7.3f\n",
+                    sumSq / (yValues.length - par.length), sumAbs / (yValues.length - par.length), rms);
         }
 
         if (absMode) {
@@ -196,8 +197,8 @@ public class CalcRDisp extends FitModel {
     private synchronized CalcRDisp setupParametricBootstrap(double[] yPred) {
         double[] newY = new double[yValues.length];
         for (int k = 0; k < yValues.length; k++) {
-                newY[k] = yPred[k] + errValues[k] * random.nextGaussian();
-            }
+            newY[k] = yPred[k] + errValues[k] * random.nextGaussian();
+        }
         CalcRDisp rDisp = new CalcRDisp(xValues, newY, errValues, fieldValues, idNums);
         rDisp.setEquation(equation.getName());
         rDisp.setXY(xValues, newY);
@@ -235,16 +236,6 @@ public class CalcRDisp extends FitModel {
         return rDisp;
     }
 
-    @Override
-    public double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) {
-        return simBoundsStream(start, lowerBounds, upperBounds, inputSigma, true);
-    }
-
-    @Override
-    public double[] simBoundsBootstrapStream(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) {
-        return simBoundsStream(start, lowerBounds, upperBounds, inputSigma, false);
-    }
-
     public double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma, boolean nonParametric) {
         reportFitness = false;
         int nPar = start.length;
@@ -254,7 +245,6 @@ public class CalcRDisp extends FitModel {
         rexErrors = new double[nID];
         double[] yPred = simY(start);
         String optimizer = CoMDPreferences.getBootStrapOptimizer();
-
         IntStream.range(0, nSim).parallel().forEach(i -> {
 //        IntStream.range(0, nSim).forEach(i -> {
             CalcRDisp rDisp;

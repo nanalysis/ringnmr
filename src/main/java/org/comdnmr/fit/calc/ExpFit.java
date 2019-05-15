@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import org.apache.commons.math3.optim.PointValuePair;
-import static org.comdnmr.fit.calc.CPMGFit.SIMX;
 
 /**
  *
@@ -238,15 +237,10 @@ public class ExpFit implements EquationFitter {
         double[][] simPars = null;
         if (FitModel.getCalcError()) {
             long startTime = System.currentTimeMillis();
-            if (CoMDPreferences.getNonParametric()) {
-                errEstimates = expModel.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
-                long endTime = System.currentTimeMillis();
-                errTime = endTime - startTime;
-            } else {
-                errEstimates = expModel.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma);
-                long endTime = System.currentTimeMillis();
-                errTime = endTime - startTime;
-            }
+            errEstimates = expModel.simBoundsStream(pars.clone(),
+                    boundaries[0], boundaries[1], sigma, CoMDPreferences.getNonParametric());
+            long endTime = System.currentTimeMillis();
+            errTime = endTime - startTime;
             simPars = expModel.getSimPars();
         } else {
             errEstimates = new double[pars.length];

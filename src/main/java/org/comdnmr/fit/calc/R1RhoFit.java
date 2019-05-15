@@ -324,16 +324,11 @@ public class R1RhoFit implements EquationFitter {
                 double deltaABdiff = CoMDPreferences.getDeltaABDiff();
                 if (FitModel.getCalcError()) {
                     long startTime = System.currentTimeMillis();
-                    if (CoMDPreferences.getNonParametric()) {
-                        errEstimates = calcR1Rho.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
-                        long endTime = System.currentTimeMillis();
-                        errTime = endTime - startTime;
-                    } else {
-                        errEstimates = calcR1Rho.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma);
-                        long endTime = System.currentTimeMillis();
-                        errTime = endTime - startTime;
+                    errEstimates = calcR1Rho.simBoundsStream(pars.clone(),
+                            boundaries[0], boundaries[1], sigma, CoMDPreferences.getNonParametric());
+                    long endTime = System.currentTimeMillis();
+                    errTime = endTime - startTime;
 
-                    }
                     simPars = calcR1Rho.getSimPars();
                     for (String parName : parNames) {
                         if (parName.equals("deltaB0")) {

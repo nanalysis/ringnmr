@@ -36,7 +36,7 @@ public abstract class FitModel implements MultivariateFunction {
     long endTime = 0;
     long fitTime = 0;
     double[][] xValues;
-    static double[] fieldValues;
+    double[] fieldValues;
     double[] yValues;
     double[] errValues;
     int[] idNums;
@@ -218,9 +218,9 @@ public abstract class FitModel implements MultivariateFunction {
 
     public abstract double[] simBounds(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma);
 
-    public abstract double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma);
+    public abstract double[] simBoundsStream(double[] start,
+            double[] lowerBounds, double[] upperBounds, double inputSigma, boolean nonParametric);
 
-    public abstract double[] simBoundsBootstrapStream(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma);
 
     public abstract double[][] getSimPars();
 
@@ -238,7 +238,7 @@ public abstract class FitModel implements MultivariateFunction {
         this.fieldValues = fieldValues;
     }
 
-    public static double[] getFieldValues() {
+    public double[] getFieldValues() {
         return fieldValues;
     }
 
@@ -422,6 +422,12 @@ public abstract class FitModel implements MultivariateFunction {
             ax[0] = x;
             double y = equation.calculate(par, map[idNums[i]], ax, idNums[i], fieldValues[i]);
             System.out.printf("%8.5f %8.5f\n", x, y);
+        }
+    }
+    
+    void dumpValues() {
+        for (int i=0;i<yValues.length;i++) {
+            System.out.printf("%3d %8.3f %8.3f %8.3f %8.3f %3d\n",i, xValues[0][i], yValues[i],errValues[i], fieldValues[i], idNums[i]);
         }
     }
 }
