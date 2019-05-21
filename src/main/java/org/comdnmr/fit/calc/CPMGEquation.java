@@ -106,6 +106,7 @@ public enum CPMGEquation implements EquationType {
             int nPars = CalcRDisp.getNPars(map);
             double[] guesses = new double[nPars];
             double kExSum = 0.0;
+            int nKex = 0;
             for (int id = 0; id < map.length; id++) {
                 double minY = DataUtil.getMinValue(yValues, idNums, id);
                 double maxY = DataUtil.getMaxValue(yValues, idNums, id);
@@ -124,9 +125,10 @@ public enum CPMGEquation implements EquationType {
                 guesses[map[id][2]] = dPPMMin;
                 if (rex >= 0) {
                     kExSum += kEx; // 1.915 comes from solving equation iteratively at tcp rex 0.5 half max
+                    nKex++;
                 }
             }
-            guesses[0] = kExSum /= nID;
+            guesses[0] = kExSum / nKex;
             if (guesses[0] > CoMDPreferences.getCPMGMaxFreq()) {
                 guesses[0] = CoMDPreferences.getCPMGMaxFreq() * 0.9;
             }

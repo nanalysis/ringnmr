@@ -142,7 +142,17 @@ public class CalcCEST extends FitModel {
     }
 
     @Override
-    public double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) {
+    public double[] simBoundsStream(double[] start, double[] lowerBounds,
+            double[] upperBounds, double inputSigma, boolean nonParametric) {
+        if (nonParametric) {
+            return simBoundsStreamNonParametric(start, lowerBounds, upperBounds, inputSigma);
+        } else {
+            return simBoundsStreamParametric(start, lowerBounds, upperBounds, inputSigma);
+        }
+
+    }
+
+    public double[] simBoundsStreamParametric(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) {
         reportFitness = false;
         int nPar = start.length;
         int nSim = CoMDPreferences.getSampleSize();
@@ -181,8 +191,8 @@ public class CalcCEST extends FitModel {
         return parSDev;
     }
 
-    @Override
-    public double[] simBoundsBootstrapStream(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) {
+    public double[] simBoundsStreamNonParametric(double[] start,
+            double[] lowerBounds, double[] upperBounds, double inputSigma) {
         reportFitness = false;
         int nPar = start.length;
         int nSim = CoMDPreferences.getSampleSize();

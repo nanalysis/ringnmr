@@ -110,7 +110,7 @@ public class CPMGFit implements EquationFitter {
 
                     states[k++] = resProps.getStateIndices(resIndex, expData);
                     //  need peakRefs
-                    double field = expData.getField();
+                    double field = expData.getNucleusField();
                     double[][] x = resData.getXValues();
                     double[] y = resData.getYValues();
                     double[] err = resData.getErrValues();
@@ -262,16 +262,10 @@ public class CPMGFit implements EquationFitter {
 
         if (FitModel.getCalcError()) {
             long startTime = System.currentTimeMillis();
-            if (CoMDPreferences.getNonParametric()) {
-                errEstimates = calcR.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
-                long endTime = System.currentTimeMillis();
-                errTime = endTime - startTime;
-            } else {
-                errEstimates = calcR.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma);
-                long endTime = System.currentTimeMillis();
-                errTime = endTime - startTime;
-
-            }
+            errEstimates = calcR.simBoundsStream(pars.clone(),
+                    boundaries[0], boundaries[1], sigma, CoMDPreferences.getNonParametric());
+            long endTime = System.currentTimeMillis();
+            errTime = endTime - startTime;
             simPars = calcR.getSimPars();
             TTest tTest = new TTest();
             for (String parName : parNames) {

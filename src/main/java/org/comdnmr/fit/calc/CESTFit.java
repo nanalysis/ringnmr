@@ -224,14 +224,18 @@ public class CESTFit implements EquationFitter {
     public List<ParValueInterface> guessPars(String eqn) {
         setupFit(eqn);
         double[] guesses = calcCEST.guess();
-        String[] parNames = calcCEST.getParNames();
-        List<ParValueInterface> parValues = new ArrayList<>();
-        int[][] map = calcCEST.getMap();
-        for (int i = 0; i < parNames.length; i++) {
-            ParValueInterface parValue = new ParValue(parNames[i], guesses[map[0][i]]);
-            parValues.add(parValue);
+        if (guesses != null) {
+            String[] parNames = calcCEST.getParNames();
+            List<ParValueInterface> parValues = new ArrayList<>();
+            int[][] map = calcCEST.getMap();
+            for (int i = 0; i < parNames.length; i++) {
+                ParValueInterface parValue = new ParValue(parNames[i], guesses[map[0][i]]);
+                parValues.add(parValue);
+            }
+            return parValues;
+        } else {
+            return null;
         }
-        return parValues;
     }
 
     @Override
@@ -269,85 +273,83 @@ public class CESTFit implements EquationFitter {
             }
             //        System.out.println("dofit guesses = " + guesses);
             //        double[] guesses = setupFit(eqn, absMode);
-            double[][] boundaries = calcCEST.boundaries(guesses);
-            double sigma = CoMDPreferences.getStartingRadius();
-            PointValuePair result = calcCEST.refine(guesses, boundaries[0],
-                    boundaries[1], sigma, CoMDPreferences.getOptimizer());
-            double[] pars = result.getPoint();
-            System.out.println(eqn);
+            if (guesses != null) {
+                double[][] boundaries = calcCEST.boundaries(guesses);
+                double sigma = CoMDPreferences.getStartingRadius();
+                PointValuePair result = calcCEST.refine(guesses, boundaries[0],
+                        boundaries[1], sigma, CoMDPreferences.getOptimizer());
+                double[] pars = result.getPoint();
+                System.out.println(eqn);
 
-            for (int[] map1 : map) {
-                for (int j = 0; j < map1.length; j++) {
-                    System.out.printf(" %3d", map1[j]);
+                for (int[] map1 : map) {
+                    for (int j = 0; j < map1.length; j++) {
+                        System.out.printf(" %3d", map1[j]);
+                    }
+                    System.out.println("");
+                }
+
+                System.out.print("Fit pars \n");
+                for (int i = 0; i < pars.length; i++) {
+                    System.out.printf("%d %.3f %.3f %.3f %.3f\n", i, guesses[i], boundaries[0][i], pars[i], boundaries[1][i]);
                 }
                 System.out.println("");
-            }
 
-            System.out.print("Fit pars \n");
-            for (int i = 0; i < pars.length; i++) {
-                System.out.printf("%d %.3f %.3f %.3f %.3f\n", i, guesses[i], boundaries[0][i], pars[i], boundaries[1][i]);
-            }
-            System.out.println("");
+                double aic = calcCEST.getAICc(pars);
+                double rms = calcCEST.getRMS(pars);
+                double rChiSq = calcCEST.getReducedChiSq(pars);
 
-            double aic = calcCEST.getAICc(pars);
-            double rms = calcCEST.getRMS(pars);
-            double rChiSq = calcCEST.getReducedChiSq(pars);
+                System.out.println("rms " + rms);
+                int nGroupPars = calcCEST.getNGroupPars();
+                sigma /= 2.0;
 
-            System.out.println("rms " + rms);
-            int nGroupPars = calcCEST.getNGroupPars();
-            sigma /= 2.0;
-
-            String[] parNames = calcCEST.getParNames();
-            double[] errEstimates;
-            double[][] simPars = null;
-            boolean exchangeValid = true;
-            double deltaABdiff = CoMDPreferences.getDeltaABDiff();
-            if (FitModel.getCalcError()) {
-                long startTime = System.currentTimeMillis();
-                if (CoMDPreferences.getNonParametric()) {
-                    errEstimates = calcCEST.simBoundsBootstrapStream(pars.clone(), boundaries[0], boundaries[1], sigma);
+                String[] parNames = calcCEST.getParNames();
+                double[] errEstimates;
+                double[][] simPars = null;
+                boolean exchangeValid = true;
+                double deltaABdiff = CoMDPreferences.getDeltaABDiff();
+                if (FitModel.getCalcError()) {
+                    long startTime = System.currentTimeMillis();
+                    errEstimates = calcCEST.simBoundsStream(pars.clone(),
+                            boundaries[0], boundaries[1], sigma, CoMDPreferences.getNonParametric());
                     long endTime = System.currentTimeMillis();
                     errTime = endTime - startTime;
-                } else {
-                    errEstimates = calcCEST.simBoundsStream(pars.clone(), boundaries[0], boundaries[1], sigma);
-                    long endTime = System.currentTimeMillis();
-                    errTime = endTime - startTime;
-
-                }
-                simPars = calcCEST.getSimPars();
-                for (String parName : parNames) {
-                    if (parName.equals("deltaB0")) {
-                        int parIndex = 3;
-                        int deltaAIndex = parIndex - 1;
-                        if (Math.abs(pars[parIndex] - pars[deltaAIndex]) < deltaABdiff) {
-                            exchangeValid = false;
+                    simPars = calcCEST.getSimPars();
+                    for (String parName : parNames) {
+                        if (parName.equals("deltaB0")) {
+                            int parIndex = 3;
+                            int deltaAIndex = parIndex - 1;
+                            if (Math.abs(pars[parIndex] - pars[deltaAIndex]) < deltaABdiff) {
+                                exchangeValid = false;
+                            }
                         }
                     }
+                } else {
+                    errEstimates = new double[pars.length];
                 }
+                // fixme
+                double[] extras = new double[xValues.length];
+                double[] usedFields = getFields(fieldValues, idValues);
+                extras[0] = usedFields[0];
+                for (int j = 1; j < extras.length; j++) {
+                    extras[j] = xValues[j].get(0);
+                }
+                String refineOpt = CoMDPreferences.getOptimizer();
+                String bootstrapOpt = CoMDPreferences.getBootStrapOptimizer();
+                long fitTime = calcCEST.fitTime;
+                long bootTime = errTime;
+                int nSamples = CoMDPreferences.getSampleSize();
+                boolean useAbs = CoMDPreferences.getAbsValueFit();
+                boolean useNonParametric = CoMDPreferences.getNonParametric();
+                double sRadius = CoMDPreferences.getStartingRadius();
+                double fRadius = CoMDPreferences.getFinalRadius();
+                double tol = CoMDPreferences.getTolerance();
+                boolean useWeight = CoMDPreferences.getWeightFit();
+                CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs,
+                        useNonParametric, sRadius, fRadius, tol, useWeight);
+                return getResults(this, eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, exchangeValid, curveStats);
             } else {
-                errEstimates = new double[pars.length];
+                return null;
             }
-            // fixme
-            double[] extras = new double[xValues.length];
-            double[] usedFields = getFields(fieldValues, idValues);
-            extras[0] = usedFields[0];
-            for (int j = 1; j < extras.length; j++) {
-                extras[j] = xValues[j].get(0);
-            }
-            String refineOpt = CoMDPreferences.getOptimizer();
-            String bootstrapOpt = CoMDPreferences.getBootStrapOptimizer();
-            long fitTime = calcCEST.fitTime;
-            long bootTime = errTime;
-            int nSamples = CoMDPreferences.getSampleSize();
-            boolean useAbs = CoMDPreferences.getAbsValueFit();
-            boolean useNonParametric = CoMDPreferences.getNonParametric();
-            double sRadius = CoMDPreferences.getStartingRadius();
-            double fRadius = CoMDPreferences.getFinalRadius();
-            double tol = CoMDPreferences.getTolerance();
-            boolean useWeight = CoMDPreferences.getWeightFit();
-            CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs,
-                    useNonParametric, sRadius, fRadius, tol, useWeight);
-            return getResults(this, eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, exchangeValid, curveStats);
         } else {
             return null;
         }

@@ -593,6 +593,9 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 } else if (fitMode.equals("cest")) {
                     equationType = CESTEquation.valueOf(equationName);
                     equationNames = CESTFit.getEquationNames();
+                } else if (fitMode.equals("r1rho")) {
+                    equationType = R1RhoEquation.valueOf(equationName);
+                    equationNames = R1RhoFit.getEquationNames();
                 } else {
                     equationType = CPMGEquation.valueOf(equationName);
                     equationNames = CPMGFit.getEquationNames();
