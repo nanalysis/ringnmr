@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import org.apache.commons.math3.optim.PointValuePair;
-import org.comdnmr.fit.calc.CESTEquations.Peak;
 
 /**
  *
@@ -259,7 +258,7 @@ public class CESTFit implements EquationFitter {
             idNums[i] = idValues.get(i);
         }
         double[][] xy = CESTEquations.getXYValues(xvals, yvals, idNums, 0);
-        List<Peak> peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], fieldValues.get(0), "cest");
+        List<CESTPeak> peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], fieldValues.get(0), "cest");
 
         if (peaks.size() >= 1) {
             setupFit(eqn);

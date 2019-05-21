@@ -52,6 +52,11 @@
     <artifactId>snakeyaml</artifactId>
     <version>1.18</version>
 </dependency>
+        <dependency>
+            <groupId>org.ojalgo</groupId>
+            <artifactId>ojalgo</artifactId>
+            <version>47.0.1-SNAPSHOT</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

@@ -2,7 +2,6 @@ package org.comdnmr.fit.calc;
 
 import java.util.Arrays;
 import java.util.List;
-import org.comdnmr.fit.calc.CESTEquations.Peak;
 
 /**
  *
@@ -25,7 +24,7 @@ public enum CESTEquation implements CESTEquationType {
             double[] yCalc = CESTEquations.cestR1rhoApprox("trott", X, fields, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
             return yCalc;
         }
-
+       
         @Override
         public int[][] makeMap(int[] stateCount, int[][] states, int[] r2Mask) {
             int[] map0 = {2, 3, 4, 4, 5, 6};
@@ -65,7 +64,7 @@ public enum CESTEquation implements CESTEquationType {
             for (int id = 0; id < map.length; id++) {
                 int[] map1 = map[id];
                 double[][] xy = CESTEquations.getXYValues(xValues, yValues, idNums, id);
-                List<Peak> peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], field, "cest");
+                List<CESTPeak> peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], field, "cest");
                 if (peaks.size() > 0) {
                     double tex = xValues[2][0];
                     double[] r1 = CESTEquations.cestR1Guess(yValues, tex, "cest");
@@ -87,9 +86,9 @@ public enum CESTEquation implements CESTEquationType {
             int id = 0;
             int[] map1 = map[id];
             double[][] xy = CESTEquations.getXYValues(xValues, yValues, idNums, id);
-            List<Peak> peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], field, "cest");
+            List<CESTPeak> peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], field, "cest");
 
-            double dAbound = (peaks.get(0).width / field) / 2;
+            double dAbound = (peaks.get(0).getWidths()[1] / field) / 2;
             double tex = xValues[2][0];
             double r1A = guesses[map[id][1]];
             double[] r1BouA = CESTEquations.r1Boundaries(r1A, tex, 0.1);
