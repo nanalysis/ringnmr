@@ -6,7 +6,7 @@
 package org.comdnmr.fit.calc;
 
 import java.util.List;
-import org.comdnmr.fit.calc.CESTEquations.Peak;
+import org.comdnmr.fit.calc.CESTPeak;
 
 /**
  *
@@ -33,7 +33,7 @@ public interface R1RhoEquationType extends EquationType {
         for (int id = 0; id < map.length; id++) {
             int[] map1 = map[id];
             double[][] xy = CESTEquations.getXYValues(xValues, yValues, idNums, id);
-            List<Peak> peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], field, "r1rho");
+            List<CESTPeak> peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], field, "r1rho");
             if (peaks.size() > 0) {
                 double tex = xValues[2][0];
                 double[] r1 = CESTEquations.cestR1Guess(xy[1], tex, "r1rho");
@@ -60,14 +60,14 @@ public interface R1RhoEquationType extends EquationType {
         for (int id = 0; id < map.length; id++) {
             int[] map1 = map[id];
             double[][] xy = CESTEquations.getXYValues(xValues, yValues, idNums, id);
-            List<Peak> peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], field, "r1rho");
+            List<CESTPeak> peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], field, "r1rho");
             double dAbound = 0;
             double dBbound = 0;
             if (peaks.size() > 1) {
-                dAbound = (peaks.get(0).width / field) / 2.0;
-                dBbound = (peaks.get(1).width / field) / 2.0;
+                dAbound = (peaks.get(0).getWidths()[1] / field) / 2.0;
+                dBbound = (peaks.get(1).getWidths()[1] / field) / 2.0;
             } else if (peaks.size() == 1) {
-                dAbound = (peaks.get(0).width / field) / 2.0;
+                dAbound = (peaks.get(0).getWidths()[1] / field) / 2.0;
                 dBbound = dAbound;
             }
             double tex = xValues[2][0];
