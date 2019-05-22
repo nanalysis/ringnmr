@@ -26,6 +26,7 @@ public class CoMDPreferences {
     static private Boolean weightFit = null;
     static private Boolean absValueFit = null;
     static private Boolean nonParametricBootstrap = null;
+    static private Boolean neuralNetworkGuess = null;
     static private Integer sampleSize = null;
     static private String optimizer = null;
     static private String bootStrapOptimizer = null;
@@ -258,6 +259,23 @@ public class CoMDPreferences {
             getPrefs().put("NONPARAMETRIC", value.toString());
         } else {
             getPrefs().remove("NONPARAMETRIC");
+        }
+    }
+    
+    public static Boolean getNeuralNetworkGuess() {
+        if (neuralNetworkGuess == null) {
+            String value = getPrefs().get("NEURALNETWORKGUESS", "true");
+            neuralNetworkGuess = Boolean.parseBoolean(value);
+        }
+        return neuralNetworkGuess;
+    }
+
+    public static void setNeuralNetworkGuess(Boolean value) {
+        neuralNetworkGuess = value;
+        if (value != null) {
+            getPrefs().put("NEURALNETWORKGUESS", value.toString());
+        } else {
+            getPrefs().remove("NEURALNETWORKGUESS");
         }
     }
 
