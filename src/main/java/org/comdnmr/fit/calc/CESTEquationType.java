@@ -59,7 +59,7 @@ public interface CESTEquationType extends EquationType {
             } catch (Exception ex) {
                 Logger.getLogger(CESTEquation.class.getName()).log(Level.SEVERE, null, ex);
             }
-            for (int j = 0; j <= nPars; j++) {
+            for (int j = 0; j < map1.length; j++) {
                 guesses[map1[j]] = annGuess[j];
             }
         }
