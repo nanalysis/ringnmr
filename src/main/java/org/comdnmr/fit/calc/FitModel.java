@@ -261,7 +261,7 @@ public abstract class FitModel implements MultivariateFunction {
     }
 
     public double[] guess() {
-        double[] guess = equation.guess(xValues, yValues, map, idNums, nID, fieldValues[0]);
+        double[] guess = equation.guess(xValues, yValues, map, idNums, nID, fieldValues[0], CoMDPreferences.getNeuralNetworkGuess());
         return guess;
     }
 

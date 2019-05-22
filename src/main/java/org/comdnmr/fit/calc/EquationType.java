@@ -42,8 +42,8 @@ public interface EquationType {
         }
     }
 
-    double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field);
-
+    double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field, boolean neuralNetworkGuess);
+    
     double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field);
 
     double getRex(double[] pars, int[] map, double field);
