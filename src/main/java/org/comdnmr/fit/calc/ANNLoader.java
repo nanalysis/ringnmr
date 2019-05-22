@@ -107,11 +107,11 @@ public class ANNLoader {
                 String[] scaleValsString = line.substring((line.indexOf("=") + 1), (line.length() - 1)).replaceAll("\\s+", "").split(":");
                 for (String scaleVals : scaleValsString) {
                     String[] tempKeyVal = scaleVals.split(";");
-                    System.out.println("[ANNLoader.reBuildNeuralNetwork] >>> KeyVal: " + Arrays.toString(tempKeyVal));
+//                    System.out.println("[ANNLoader.reBuildNeuralNetwork] >>> KeyVal: " + Arrays.toString(tempKeyVal));
                     try {
                         String[] tempValArr = tempKeyVal[tempKeyVal.length - 1].split(",");
                         double[] tempDoubleArr = Arrays.stream(tempValArr).mapToDouble(Double::parseDouble).toArray();
-                        System.out.println("[ANNLoader.reBuildNeuralNetwork] >>> dArr: " + Arrays.toString(tempDoubleArr));
+//                        System.out.println("[ANNLoader.reBuildNeuralNetwork] >>> dArr: " + Arrays.toString(tempDoubleArr));
                         scaleValues.put(tempKeyVal[0], tempDoubleArr);
                     } catch (Exception e) {
                         throw new Exception("Problem retrieving scale values string. (" + e + ")");
