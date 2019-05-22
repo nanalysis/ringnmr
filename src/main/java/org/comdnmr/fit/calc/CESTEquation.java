@@ -58,7 +58,7 @@ public enum CESTEquation implements CESTEquationType {
         }
 
         @Override
-        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field, boolean neuralNetworkGuess) {
+        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
             int nPars = CalcCEST.getNPars(map);
             double[] guesses = new double[nPars];
             for (int id = 0; id < map.length; id++) {

@@ -29,10 +29,10 @@ public interface CESTEquationType extends EquationType {
     }
 
     @Override
-    public default double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field, boolean neuralNetworkGuess) {
+    public default double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
         int nPars = CalcCEST.getNPars(map);
         double[] guesses = new double[nPars];
-        if (neuralNetworkGuess) {
+        if (CoMDPreferences.getNeuralNetworkGuess()) {
             guesses = ANNguess(xValues, yValues, map, idNums, nID, field);
         } else {
             guesses = oldGuess(xValues, yValues, map, idNums, nID, field);

@@ -27,7 +27,7 @@ public interface R1RhoEquationType extends EquationType {
     }
 
     @Override
-    public default double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field, boolean neuralNetworkGuess) {
+    public default double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
         int nPars = CalcR1Rho.getNPars(map);
         double[] guesses = new double[nPars];
         for (int id = 0; id < map.length; id++) {
