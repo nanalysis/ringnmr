@@ -161,10 +161,15 @@ public class PreferencesController implements Initializable {
                     CoMDPreferences.setAbsValueFit((Boolean) newV);
                 }, CoMDPreferences.getAbsValueFit(), "Optimizer", "Absolute Value",
                 "Fit absolute value of deviations (not squared)");
+        BooleanOperationItem neuralNetworkGuessItem = new BooleanOperationItem(
+                (obs, oldV, newV) -> {
+                    CoMDPreferences.setNeuralNetworkGuess((Boolean) newV);
+                }, CoMDPreferences.getNeuralNetworkGuess(), "Optimizer", "Neural Network Guess",
+                "Use Neural Network for guesses");
 
         prefSheet.getItems().addAll(nProcessesItem, refFieldItem, maxFreqItem, rexRatioItem, deltaABdiffItem,
                 absValueItem, nonParametricItem, nSamplesItem, optimizerChoiceItem, bootStrapOptimizerrChoiceItem,
-                startingRadiusItem, toleranceItem, finalRadiusItem, weightFitItem);
+                startingRadiusItem, toleranceItem, finalRadiusItem, weightFitItem, neuralNetworkGuessItem);
         for (String eqn : cestEqnChoices) {
             boolean defaultState = CoMDPreferences.getCESTEquationState(eqn);
             BooleanOperationItem cestEqnListItem = new BooleanOperationItem(cestEqnListener, defaultState, "CEST Equations", eqn, "List of equations to use during CEST Fitting");
