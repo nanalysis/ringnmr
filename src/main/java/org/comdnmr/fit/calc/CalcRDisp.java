@@ -236,6 +236,7 @@ public class CalcRDisp extends FitModel {
         return rDisp;
     }
 
+    @Override
     public double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma, boolean nonParametric) {
         reportFitness = false;
         int nPar = start.length;
