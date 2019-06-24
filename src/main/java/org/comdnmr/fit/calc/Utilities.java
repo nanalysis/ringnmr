@@ -1,7 +1,5 @@
 package org.comdnmr.fit.calc;
 
-import java.util.Arrays;
-
 /**
  *
  * @author brucejohnson
