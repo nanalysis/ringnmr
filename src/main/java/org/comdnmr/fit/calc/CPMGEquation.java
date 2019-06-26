@@ -21,7 +21,7 @@ public enum CPMGEquation implements EquationType {
         }
 
         @Override
-        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
             int nPars = CalcRDisp.getNPars(map);
             double[] guesses = new double[nPars];
             for (int id = 0; id < map.length; id++) {
@@ -102,7 +102,7 @@ public enum CPMGEquation implements EquationType {
         }
 
         @Override
-        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
             int nPars = CalcRDisp.getNPars(map);
             double[] guesses = new double[nPars];
             double kExSum = 0.0;
@@ -117,6 +117,7 @@ public enum CPMGEquation implements EquationType {
                 if (rex < 0.0) {
                     rex = 0.0;
                 }
+                double field = fields[id];
                 guesses[map[id][1]] = r2;
                 double tauMid = 1.0 / (2.0 * vMid);
                 double kEx = 1.915 / (0.5 * tauMid);
@@ -260,7 +261,7 @@ public enum CPMGEquation implements EquationType {
         }
 
         @Override
-        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
             int nPars = CalcRDisp.getNPars(map);
             double[] guesses = new double[nPars];
             double kExSum = 0.0;
@@ -277,6 +278,7 @@ public enum CPMGEquation implements EquationType {
                 if (kex > CoMDPreferences.getCPMGMaxFreq()) {
                     kex = CoMDPreferences.getCPMGMaxFreq() * 0.9;
                 }
+                double field = fields[id];
                 double dw2 = rex / (pa * (1.0 - pa)) * kex;
                 double dPPM = Math.sqrt(dw2) / (2.0 * Math.PI) / field;
                 guesses[map[id][2]] = r2;

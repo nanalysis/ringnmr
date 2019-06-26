@@ -42,7 +42,7 @@ public interface EquationType {
         }
     }
 
-    double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field);
+    double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields);
     
     double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field);
 

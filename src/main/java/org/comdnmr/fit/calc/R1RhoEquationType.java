@@ -27,12 +27,13 @@ public interface R1RhoEquationType extends EquationType {
     }
 
     @Override
-    public default double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+    public default double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
         int nPars = CalcR1Rho.getNPars(map);
         double[] guesses = new double[nPars];
         for (int id = 0; id < map.length; id++) {
             int[] map1 = map[id];
             double[][] xy = CESTEquations.getXYValues(xValues, yValues, idNums, id);
+            double field = fields[id];
             List<CESTPeak> peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], field, "r1rho");
             if (peaks.size() > 0) {
                 double tex = xValues[2][0];

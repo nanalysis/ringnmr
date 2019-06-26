@@ -29,18 +29,18 @@ public interface CESTEquationType extends EquationType {
     }
 
     @Override
-    public default double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+    public default double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
         int nPars = CalcCEST.getNPars(map);
         double[] guesses = new double[nPars];
         if (CoMDPreferences.getNeuralNetworkGuess()) {
-            guesses = ANNguess(xValues, yValues, map, idNums, nID, field);
+            guesses = ANNguess(xValues, yValues, map, idNums, nID, fields);
         } else {
-            guesses = oldGuess(xValues, yValues, map, idNums, nID, field);
+            guesses = oldGuess(xValues, yValues, map, idNums, nID, fields);
         }
         return guesses;
     }
     
-    public default double[] ANNguess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+    public default double[] ANNguess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
         int nPars = CalcCEST.getNPars(map);
         double[] guesses = new double[nPars];
         double[] annGuess = new double[map[0].length];
@@ -51,6 +51,7 @@ public interface CESTEquationType extends EquationType {
             double[][] xy = CESTEquations.getXYValues(xValues, yValues, idNums, id);
             double b1Field = xValues[1][0];
             double tEx = xValues[2][0];
+            double field = fields[id];
             List<CESTPeak> peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], field, "cest");
             try {
                 annGuess = CESTEquations.cestANNGuess(xy, peaks, tEx, b1Field);
@@ -66,13 +67,14 @@ public interface CESTEquationType extends EquationType {
         return guesses;
     }
     
-    public default double[] oldGuess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+    public default double[] oldGuess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
         int nPars = CalcCEST.getNPars(map);
         double[] guesses = new double[nPars];
         
         for (int id = 0; id < map.length; id++) {
             int[] map1 = map[id];
             double[][] xy = CESTEquations.getXYValues(xValues, yValues, idNums, id);
+            double field = fields[id];
 
             List<CESTPeak> peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], field, "cest");
             if (peaks.size() > 0) {
