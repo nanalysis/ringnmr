@@ -106,7 +106,15 @@ public enum CPMGEquation implements EquationType {
             int nPars = CalcRDisp.getNPars(map);
             double[] guesses = new double[nPars];
             double kExSum = 0.0;
-            int nKex = 0;
+
+//            double[] annGuess = DataUtil.annCpmgGuess("FAST", nPars, xValues[0], yValues, field);
+//            for (int id = 0; id < map.length; id++) {
+//                int[] map1 = map[id];
+//                for (int k = 0; k < map1.length; k++) {
+//                    guesses[map1[k]] = annGuess[k];
+//                }
+//            }
+
             for (int id = 0; id < map.length; id++) {
                 double minY = DataUtil.getMinValue(yValues, idNums, id);
                 double maxY = DataUtil.getMaxValue(yValues, idNums, id);
@@ -125,10 +133,9 @@ public enum CPMGEquation implements EquationType {
                 guesses[map[id][2]] = dPPMMin;
                 if (rex >= 0) {
                     kExSum += kEx; // 1.915 comes from solving equation iteratively at tcp rex 0.5 half max
-                    nKex++;
                 }
             }
-            guesses[0] = kExSum / nKex;
+            guesses[0] = kExSum / map.length;
             if (guesses[0] > CoMDPreferences.getCPMGMaxFreq()) {
                 guesses[0] = CoMDPreferences.getCPMGMaxFreq() * 0.9;
             }
@@ -265,6 +272,14 @@ public enum CPMGEquation implements EquationType {
             double[] guesses = new double[nPars];
             double kExSum = 0.0;
             double pa = 0.95;
+
+//            double[] annGuess = DataUtil.annCpmgGuess("SLOW", nPars, xValues[0], yValues, field);
+//            for (int id = 0; id < map.length; id++) {
+//                int[] map1 = map[id];
+//                for (int k = 0; k < map1.length; k++) {
+//                    guesses[map1[k]] = annGuess[k];
+//                }
+//            }
             for (int id = 0; id < map.length; id++) {
                 double minY = DataUtil.getMinValue(yValues, idNums, id);
                 double maxY = DataUtil.getMaxValue(yValues, idNums, id);
@@ -283,7 +298,7 @@ public enum CPMGEquation implements EquationType {
                 guesses[map[id][3]] = dPPM;
                 kExSum += kex;
             }
-            guesses[0] = kExSum /= nID;
+            guesses[0] = kExSum / map.length;
             guesses[1] = pa;
             return guesses;
         }

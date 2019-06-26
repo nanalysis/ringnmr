@@ -41,20 +41,15 @@ public class CESTPeak {
         this.baseline = peakInfo[11];
     }
 
-//    CESTPeak(double position, double depth, double width, double widthLB, double widthUB, double width2, double widthLB2, double widthUB2, double width3, double widthLB3, double widthUB3, int pkInd) {
-//        this.position = position;
-//        this.depth = depth;
-//        this.width50 = width;
-//        this.width50LB = widthLB;
-//        this.width50UB = widthUB;
-//        this.width25 = width2;
-//        this.width25LB = widthLB2;
-//        this.width25UB = widthUB2;
-//        this.width75 = width3;
-//        this.width75LB = widthLB3;
-//        this.width75UB = widthUB3;
-//        this.pkInd = pkInd;
-//    }
+    public double[] getHalfWidths() {
+        double[] halfWidths = new double[3];
+        halfWidths[0] = (width25LB > width25UB) ? width25UB : width25LB;
+        halfWidths[1] = (width50LB > width50UB) ? width50UB : width50LB;
+        halfWidths[2] = (width75LB > width75UB) ? width75UB : width75LB;
+        
+        return halfWidths;
+    }
+            
     public double getDepth() {
         return depth;
     }
