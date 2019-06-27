@@ -442,4 +442,4 @@ Biases:
 3   3          0.471328
 
 Activators: [RECTIFIER, RECTIFIER, RECTIFIER, IDENTITY]
-Scale values = kex;600.0,0.0:pa;0.99,0.8:r2;30.0,5.0:dppm;0.95,0.0:r2eff;150,0:fields;950,500
+Scale values = kex;600.0,0.0:pa;0.99,0.8:r2;30.0,5.0:dppm;0.95,0.0:r2eff;150.0,0.0:fields;950.0,500.0
