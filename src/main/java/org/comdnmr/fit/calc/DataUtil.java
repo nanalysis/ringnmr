@@ -2,13 +2,10 @@ package org.comdnmr.fit.calc;
 
 import java.util.Arrays;
 import java.util.DoubleSummaryStatistics;
-import java.util.HashMap;
 import java.util.stream.IntStream;
-import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
-import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
-import org.ojalgo.ann.ArtificialNeuralNetwork;
-import org.ojalgo.matrix.store.MatrixStore;
-import org.ojalgo.structure.Access1D;
+import smile.interpolation.KrigingInterpolation;
+import smile.interpolation.variogram.PowerVariogram;
+import smile.interpolation.variogram.Variogram;
 
 public class DataUtil {
 
@@ -222,30 +219,27 @@ public class DataUtil {
     public static double[] getInterpolation(double[] fixedXValues, double[] xDataPoints, double[] yDataPoints) {
         int lenOfFixedX = fixedXValues.length;
         int lenOfXDP = xDataPoints.length;
-
         if ((lenOfFixedX > 3) && (lenOfXDP > 3)) {
+
+            double[][] xValues = new double[xDataPoints.length][1];
+            double[] weightValues = new double[xDataPoints.length];
+            double yMax = Double.NEGATIVE_INFINITY;
+            for (int i = 0; i < lenOfXDP; i++) {
+                xValues[i][0] = xDataPoints[i];
+                if (yDataPoints[i] > yMax) {
+                    yMax = yDataPoints[i];
+                }
+            }
+            for (int i = 0; i < lenOfXDP; i++) {
+                weightValues[i] = yMax * 0.05;
+            }
+            Variogram vGram = new PowerVariogram(xValues, yDataPoints);
+            KrigingInterpolation krig = new KrigingInterpolation(xValues, yDataPoints, vGram, weightValues);
+
             double[] newArray = new double[lenOfFixedX];
-            SplineInterpolator interpolatorObj = new SplineInterpolator();
-            PolynomialSplineFunction splineFunc = interpolatorObj.interpolate(xDataPoints, yDataPoints);
 
-            //edge case: boundaries
-            // if (fixedXValues[0] < xDataPoints[0]) || (fixedXValues[fixedXValues.length -1] > xDataPoints[fixedXValues - 1])
-            if (fixedXValues[0] < xDataPoints[0]) {
-                fixedXValues[0] = xDataPoints[0];
-            }
-            if (fixedXValues[lenOfFixedX - 1] > xDataPoints[lenOfXDP - 1]) {
-                fixedXValues[lenOfFixedX - 1] = xDataPoints[lenOfXDP - 1];
-            }
-
-            for (int i = 0, nextI = 1; i < lenOfFixedX; i++, nextI++) {
-                if (fixedXValues[i] > fixedXValues[lenOfFixedX - 1]) {
-                    fixedXValues[i] = fixedXValues[lenOfFixedX - 1];
-                }
-                if ((nextI < lenOfFixedX) && (fixedXValues[i] > fixedXValues[nextI])) {
-                    fixedXValues[nextI] = fixedXValues[i];
-                }
-                double tempValue = splineFunc.value(fixedXValues[i]);
-                newArray[i] = tempValue;
+            for (int i = 0; i < lenOfFixedX; i++) {
+                newArray[i] = krig.interpolate(fixedXValues[i]);
             }
             return newArray;
         } else {

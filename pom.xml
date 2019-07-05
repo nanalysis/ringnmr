@@ -57,6 +57,16 @@
             <artifactId>ojalgo</artifactId>
             <version>47.2.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.haifengl</groupId>
+            <artifactId>smile-core</artifactId>
+            <version>1.5.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.haifengl</groupId>
+            <artifactId>smile-interpolation</artifactId>
+            <version>1.5.3</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
