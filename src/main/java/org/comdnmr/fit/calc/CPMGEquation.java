@@ -5,6 +5,7 @@
  */
 package org.comdnmr.fit.calc;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -112,8 +113,7 @@ public enum CPMGEquation implements EquationType {
         public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
             int nPars = CalcRDisp.getNPars(map);
             double[] guesses = new double[nPars];
-
-            if (false && CoMDPreferences.getNeuralNetworkGuess()) {
+            if (CoMDPreferences.getNeuralNetworkGuess()) {
                 for (int id = 0; id < map.length; id++) {
                     double[] annGuess = new double[map[id].length];
                     try {
@@ -284,13 +284,13 @@ public enum CPMGEquation implements EquationType {
         public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
             int nPars = CalcRDisp.getNPars(map);
             double[] guesses = new double[nPars];
-
             if (CoMDPreferences.getNeuralNetworkGuess()) {
                 for (int id = 0; id < map.length; id++) {
                     double[] annGuess = new double[map[id].length];
                     double[][] xy = getXYValues(xValues, yValues, idNums, id);
                     double[] fields2 = {fields[id]};
                     try {
+                        
                         annGuess = annCPMGGuesser("SLOW", xy[0], xy[1], fields2);
                     } catch (Exception ex) {
                         Logger.getLogger(CPMGEquation.class.getName()).log(Level.SEVERE, null, ex);
@@ -451,6 +451,7 @@ public enum CPMGEquation implements EquationType {
     }
 
     public static double[] annCPMGGuesser(String exchangeType, double[] xValues, double[] yValues, double[] fields) throws Exception {
+        System.out.println("Using Neural Network!");
         double[] trainingX = {10.0, 20.0, 50.0, 100.0, 200.0, 400.0, 600.0, 800.0, 1000.0, 1100.0};
         double[] yANNInput = DataUtil.getInterpolation(trainingX, xValues, yValues);
         if (yANNInput != null) {
