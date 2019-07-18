@@ -8,10 +8,9 @@ from org.comdnmr.fit.calc import CPMGEquation
 import random as rd
 import sys
 sys.path.append("./train_utilities")
-sys.path.append("./train_utilities/java_ann_files/NeuralNet.jar")
 #sys.path.append("/Users/teddycolon/NetBeansProjects/NeuralNet/dist/NeuralNet.jar")
 #sys.path.append("/Users/teddycolon/NetBeansProjects/NeuralNet/dist/lib/ojalgo-47.2.0.jar")
-from ANN import NeuralNetworkUtils as netutils
+from org.comdnmr.fit.train import NeuralNetworkUtils as netutils
 import ann_utils
 import os
 import subprocess as sp
