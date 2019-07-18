@@ -116,8 +116,11 @@ public enum CPMGEquation implements EquationType {
             if (CoMDPreferences.getNeuralNetworkGuess()) {
                 for (int id = 0; id < map.length; id++) {
                     double[] annGuess = new double[map[id].length];
+                    double[][] xy = getXYValues(xValues, yValues, idNums, id);
+                    double[] fields2 = {fields[id]};
                     try {
-                        annGuess = annCPMGGuesser("FAST", xValues[0], yValues, fields);
+                        
+                        annGuess = annCPMGGuesser("FAST", xy[0], xy[1], fields2);
                     } catch (Exception ex) {
                         Logger.getLogger(CPMGEquation.class.getName()).log(Level.SEVERE, null, ex);
                     }
