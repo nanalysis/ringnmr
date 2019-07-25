@@ -253,4 +253,28 @@ public class ResidueProperties {
         return nuclei;
     }
 
+    public Map<Integer, Double> getParMapData(String eqnName, String state, String parName) {
+
+        List<ResidueInfo> resValues = getResidueValues();
+        Map<Integer, Double> resultMap = new HashMap<>();
+
+        for (ResidueInfo resInfo : resValues) {
+            if (resInfo == null) {
+                continue;
+            }
+
+            String useEquName = eqnName;
+            if (eqnName.equals("best")) {
+                useEquName = resInfo.getBestEquationName();
+            }
+            int resNum = resInfo.getResNum();
+            Double y = resInfo.getParValue(useEquName, state, parName);
+            if (y == null) {
+                continue;
+            }
+            resultMap.put(resNum, y);
+        }
+        return resultMap;
+    }
+
 }
