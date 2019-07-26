@@ -489,7 +489,7 @@ public class PyController implements Initializable {
         } else if (getFittingMode().equals("exp") && !(simControls instanceof ExpControls)) {
             simControls = new ExpControls();
             update = true;
-        } else if (getFittingMode().equals("noe") && !(simControls instanceof ExpControls)) {
+        } else if (getFittingMode().equals("noe") && !(simControls instanceof NOEControls)) {
             simControls = new NOEControls();
             update = true;
         } else if (getFittingMode().equals("cest") && !(simControls instanceof CESTControls)) {
@@ -537,7 +537,7 @@ public class PyController implements Initializable {
                 sBuilder.append(" ");
             }
             genDataXValTextField.setText(sBuilder.toString());
-        } else if (getSimMode().equals("noe") && !(simControls instanceof ExpControls)) {
+        } else if (getSimMode().equals("noe") && !(simControls instanceof NOEControls)) {
             simControls = new NOEControls();
             update = true;
             genDataNPtsTextField.setDisable(true);
@@ -781,6 +781,15 @@ public class PyController implements Initializable {
             yUpperBoundTextField.setText("65.0");
             xTickTextField.setText("100.0");
             yTickTextField.setText("5.0");
+        } else if ((simControls instanceof ExpControls)) {
+            xychart.setNames("Exp", "Time (s)", "Intensity", "0");
+            xychart.setBounds(0.0, 1.25, 0.0, 100, 0.25, 10.0);
+            xLowerBoundTextField.setText("0.0");
+            xUpperBoundTextField.setText("1.25");
+            yLowerBoundTextField.setText("0.0");
+            yUpperBoundTextField.setText("100.0");
+            xTickTextField.setText("0.25");
+            yTickTextField.setText("10.0");
         } else if ((simControls instanceof NOEControls)) {
             xychart.setNames("NOE", "On/Off", "Intensity", "0");
             xychart.setBounds(-0.25, 1.25, 0.0, 1.25, 0.25, 10.0);

@@ -423,6 +423,8 @@ public class ChartUtil {
         String parName = "Kex";
         if (resProp.getExpMode().equals("exp")) {
             parName = "R";
+        } else if (resProp.getExpMode().equals("noe")) {
+            parName = "NOE";
         }
         ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
         PyController.mainController.currentResProps = resProp;
