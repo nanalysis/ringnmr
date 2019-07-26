@@ -22,6 +22,7 @@ import static org.comdnmr.fit.gui.ExpControls.PARS.A;
 import static org.comdnmr.fit.gui.ExpControls.PARS.C;
 import static org.comdnmr.fit.gui.ExpControls.PARS.R;
 import org.comdnmr.fit.calc.CalcExpDecay;
+import org.comdnmr.fit.calc.ExpEquation;
 
 /**
  *
@@ -112,8 +113,9 @@ public class ExpControls extends EquationControls {
     public VBox makeControls(PyController controller) {
         this.controller = controller;
         VBox vBox = init();
-        equationSelector.getItems().addAll(ExpFit.getEquationNames());
-        equationSelector.setValue(ExpFit.getEquationNames().get(0));
+        equationSelector.getItems().addAll(ExpEquation.getAllEquationNames());
+        equationSelector.setValue(ExpEquation.getAllEquationNames()[0]);
+
         HBox hBox1 = new HBox();
         HBox.setHgrow(hBox1, Priority.ALWAYS);
         hBox1.getChildren().add(equationSelector);

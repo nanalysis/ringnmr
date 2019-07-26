@@ -63,6 +63,7 @@ public class PreferencesController implements Initializable {
     ChangeListener<Integer> nprocessListener;
     ChangeListener<Boolean> cestEqnListener;
     ChangeListener<Boolean> r1rhoEqnListener;
+    ChangeListener<Boolean> expEqnListener;
     Stage stage;
 
     static File nestaNMR = null;
@@ -101,6 +102,11 @@ public class PreferencesController implements Initializable {
             CoMDPreferences.setR1RhoEquationState(item.getName(), r1rho2);
             PyController.mainController.updateEquationChoices();
         };
+        expEqnListener = (ObservableValue<? extends Boolean> observableValue, Boolean exp1, Boolean exp2) -> {
+            BooleanOperationItem item = (BooleanOperationItem) observableValue;
+            CoMDPreferences.setExpEquationState(item.getName(), exp2);
+            PyController.mainController.updateEquationChoices();
+        };
         ArrayList<String> optimizers = new ArrayList<>();
         optimizers.add("CMA-ES");
         optimizers.add("BOBYQA");
@@ -132,8 +138,12 @@ public class PreferencesController implements Initializable {
         ArrayList<String> cestEqnChoices = new ArrayList<>();
         cestEqnChoices.addAll(Arrays.asList("CESTR1RHOPERTURBATIONNOEX", "CESTR1RHOPERTURBATION", "CESTR1RHOBALDWINKAY", "CESTR1RHOSD", "CESTR1RHON", "CESTR1RHOEXACT1",
                 "CESTEXACT0", "CESTEXACT1", "CESTEXACT2"));
+
         ArrayList<String> r1rhoEqnChoices = new ArrayList<>();
-        r1rhoEqnChoices.addAll(Arrays.asList("R1RHOPERTURBATIONNOEX", "R1RHOPERTURBATION", "R1RHOBALDWINKAY", "R1RHOLAGUERRE", "R1RHOEXACT","R1RHOEXACT0"));
+        r1rhoEqnChoices.addAll(Arrays.asList("R1RHOPERTURBATIONNOEX", "R1RHOPERTURBATION", "R1RHOBALDWINKAY", "R1RHOLAGUERRE", "R1RHOEXACT", "R1RHOEXACT0"));
+
+        ArrayList<String> expEqnChoices = new ArrayList<>();
+        expEqnChoices.addAll(Arrays.asList("EXPAB", "EXPABC"));
 //        prefSheet.getItems().addAll(locationTypeItem, locationFileItem, nProcessesItem, maxFreqItem, rexRatioItem, nSamplesItem);
 
         DoubleRangeOperationItem startingRadiusItem = new DoubleRangeOperationItem((obs, oldV, newV) -> {
@@ -179,6 +189,12 @@ public class PreferencesController implements Initializable {
             boolean defaultState = CoMDPreferences.getR1RhoEquationState(eqn1);
             BooleanOperationItem r1rhoEqnListItem = new BooleanOperationItem(r1rhoEqnListener, defaultState, "R1Rho Equations", eqn1, "List of equations to use during R1Rho Fitting");
             prefSheet.getItems().add(r1rhoEqnListItem);
+        }
+
+        for (String eqn1 : expEqnChoices) {
+            boolean defaultState = CoMDPreferences.getExpEquationState(eqn1);
+            BooleanOperationItem expEqnListItem = new BooleanOperationItem(expEqnListener, defaultState, "Exp Equations", eqn1, "List of equations to use during Exp Fitting");
+            prefSheet.getItems().add(expEqnListItem);
         }
 
     }
