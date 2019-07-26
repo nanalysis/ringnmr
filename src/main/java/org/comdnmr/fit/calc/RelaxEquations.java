@@ -43,7 +43,7 @@ public class RelaxEquations {
         gammaI = GAMMA_MAP.get(elem1);
         gammaS = GAMMA_MAP.get(elem2);
         wI = sf * 2.0 * Math.PI;
-        wS =wI * gammaS / gammaI;
+        wS = wI * gammaS / gammaI;
         r = R_MAP.get(elem1 + elem2);
         d = MU0 * (gammaI * gammaS * PLANCK) / (4.0 * Math.PI * r * r * r);
         d2 = d * d;
@@ -65,6 +65,11 @@ public class RelaxEquations {
         return value;
     }
 
+    public double J(double w, double tau, double S2) {
+        double value = 0.4 * S2 * tau / (1.0 + w * w * tau * tau);
+        return value;
+    }
+
     public double r2r1Ratio(double tau) {
         double num = 4.0 * J(0, tau) + J(wS - wI, tau) + 3.0 * J(wS, tau)
                 + 6.0 * J(wI, tau) + 6.0 * J(wS + wI, tau)
@@ -78,7 +83,6 @@ public class RelaxEquations {
         double dipolarContrib = d2 / 4.0 * (J(wI - wS, tau) + 3.0 * J(wS, tau) + 6.0 * J(wI + wS, tau));
         double csaContrib = c2 * J(wS, tau);
         return dipolarContrib + csaContrib;
-
     }
 
     public double R2(double tau) {
@@ -86,6 +90,11 @@ public class RelaxEquations {
                 + 6.0 * J(wI, tau) + 6.0 * J(wI + wS, tau));
         double csaContrib = c2 / 6 * (4.0 * J(0.0, tau) + 3.0 * J(wS, tau));
         return dipolarContrib + csaContrib;
+    }
+
+    public double NOE(double tau) {
+        double R1 = R1(tau);
+        return 1.0 + (d2 / (4.0 * R1)) * (gammaS / gammaI) * (6.0 * J(wI + wS, tau) - J(wI - wS, tau));
     }
 
 }
