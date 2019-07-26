@@ -135,7 +135,8 @@ public class ExpFit implements EquationFitter {
     }
 
     public static List<String> getEquationNames() {
-        return equationNameList;
+        List<String> activeEquations = CoMDPreferences.getActiveExpEquations();
+        return activeEquations;
     }
 
     @Override

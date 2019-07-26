@@ -237,8 +237,16 @@ public enum ExpEquation implements EquationType {
         this.nGroupPars = nGroupPars;
     }
 
-    public static String[] getEquationNames() {
+    public static String[] getAllEquationNames() {
         String[] equationNames = {"EXPAB", "EXPABC"};
+        return equationNames;
+    }
+
+    public static String[] getEquationNames() {
+        String[] equationNames = new String[CoMDPreferences.getActiveExpEquations().size()];
+        for (int i = 0; i < equationNames.length; i++) {
+            equationNames[i] = CoMDPreferences.getActiveExpEquations().get(i);
+        }
         return equationNames;
     }
 

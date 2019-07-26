@@ -32,8 +32,10 @@ public class CoMDPreferences {
     static private String bootStrapOptimizer = null;
     private static Map<String, Boolean> cestEqnMap = null;
     private static Map<String, Boolean> r1rhoEqnMap = null;
+    private static Map<String, Boolean> expEqnMap = null;
     private static final String DEFAULT_CEST_EQNS = "CESTR1RHOPERTURBATIONNOEX;true\nCESTR1RHOPERTURBATION;true";
     private static final String DEFAULT_R1RHO_EQNS = "R1RHOPERTURBATIONNOEX;true\nR1RHOPERTURBATION;true";
+    private static final String DEFAULT_EXP_EQNS = "EXPAB;true";
     private static Double deltaABdiff = null;
 
     static Preferences getPrefs() {
@@ -142,7 +144,7 @@ public class CoMDPreferences {
             getPrefs().remove("REX_RATIO");
         }
     }
-    
+
     public static Double getDeltaABDiff() {
         if (deltaABdiff == null) {
             String value = getPrefs().get("DELTAAB_DIFF", "0.1");
@@ -261,7 +263,7 @@ public class CoMDPreferences {
             getPrefs().remove("NONPARAMETRIC");
         }
     }
-    
+
     public static Boolean getNeuralNetworkGuess() {
         if (neuralNetworkGuess == null) {
             String value = getPrefs().get("NEURALNETWORKGUESS", "true");
@@ -296,13 +298,26 @@ public class CoMDPreferences {
         }
         return r1rhoEqnMap;
     }
-    
+
+    static Map<String, Boolean> getExpEqnMap() {
+        if (expEqnMap == null) {
+            Preferences prefs = Preferences.userNodeForPackage(ExperimentData.class);
+            String eqns = prefs.get("EXP_EQNS", DEFAULT_EXP_EQNS);
+            expEqnMap = stringToMap(eqns);
+        }
+        return expEqnMap;
+    }
+
     public static void setCESTEqnMap(String eqns) {
         cestEqnMap = stringToMap(eqns);
     }
 
     public static void setR1RhoEqnMap(String eqns) {
         r1rhoEqnMap = stringToMap(eqns);
+    }
+
+    public static void setExpEqnMap(String eqns) {
+        expEqnMap = stringToMap(eqns);
     }
 
     static Map<String, Boolean> stringToMap(String s) {
@@ -348,6 +363,15 @@ public class CoMDPreferences {
         prefs.put("R1RHO_EQNS", eqnString);
     }
 
+    public static void saveExpEqnPrefs() {
+        Preferences prefs = Preferences.userNodeForPackage(ExperimentData.class);
+        String eqnString = DEFAULT_EXP_EQNS;
+        if (expEqnMap != null) {
+            eqnString = mapToString(getExpEqnMap());
+        }
+        prefs.put("EXP_EQNS", eqnString);
+    }
+
     public static List<String> getActiveCESTEquations() {
         Map<String, Boolean> map = getCESTEqnMap();
         List<String> cestEqnList = new ArrayList<>();
@@ -368,6 +392,17 @@ public class CoMDPreferences {
             }
         }
         return r1rhoEqnList;
+    }
+
+    public static List<String> getActiveExpEquations() {
+        Map<String, Boolean> map = getExpEqnMap();
+        List<String> expEqnList = new ArrayList<>();
+        for (String eqn : map.keySet()) {
+            if (map.get(eqn)) {
+                expEqnList.add(eqn);
+            }
+        }
+        return expEqnList;
     }
 
     public static void setCESTEquationState(String equation, boolean state) {
@@ -393,6 +428,21 @@ public class CoMDPreferences {
 
     public static boolean getR1RhoEquationState(String equation) {
         Map<String, Boolean> map = getR1RhoEqnMap();
+        boolean state = false;
+        if (map.containsKey(equation) && map.get(equation)) {
+            state = true;
+        }
+        return state;
+    }
+
+    public static void setExpEquationState(String equation, boolean state) {
+        Map<String, Boolean> map = getExpEqnMap();
+        map.put(equation, state);
+        saveExpEqnPrefs();
+    }
+
+    public static boolean getExpEquationState(String equation) {
+        Map<String, Boolean> map = getExpEqnMap();
         boolean state = false;
         if (map.containsKey(equation) && map.get(equation)) {
             state = true;
