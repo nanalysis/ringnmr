@@ -302,10 +302,8 @@ public class DataIO {
                         resProp.addResidueInfo(residueNum, residueInfo);
                     }
                     if (expMode.equals("noe")) {
-                        if (yValueList.get(0) > 0.0) {
-                            residueInfo.value = yValueList.get(0);
-                            residueInfo.err = errValueList.get(0);
-                        }
+                        residueInfo.value = yValueList.get(0);
+                        residueInfo.err = errValueList.get(0);
                     }
 
                     fakeRes++;
