@@ -195,6 +195,19 @@ public class ResidueFitter {
         return fitter;
     }
 
+    public List<ResidueInfo> doNOE(ResidueProperties resProps, String[] resNums, int groupId, String useEquation) {
+        List<ResidueInfo> resInfoList = new ArrayList<>();
+        Map<String, ResidueInfo> resMap = new HashMap<>();
+        for (String residueNumber : resNums) {
+            ResidueInfo residueInfo = new ResidueInfo(resProps, Integer.parseInt(residueNumber), groupId, resNums.length);
+            resInfoList.add(residueInfo);
+            resMap.put(residueNumber, residueInfo);
+            residueInfo.addFitResult(null);
+        }
+        return resInfoList;
+
+    }
+
     public List<ResidueInfo> fitResidues(ResidueProperties resProps, String[] resNums, int groupId, String useEquation) {
         this.resProps = resProps;
         resProps.setupMaps();
@@ -218,6 +231,8 @@ public class ResidueFitter {
                 equationNames = R1RhoFit.getEquationNames();
                 bestEquation = "R1RHOPERTURBATIONNOEX";
                 break;
+            case "noe":
+                return doNOE(resProps, resNums, groupId, useEquation);
             default:
                 throw new IllegalArgumentException("Invalid mode " + resProps.getExpMode());
         }

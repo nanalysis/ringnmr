@@ -29,6 +29,8 @@ public class ResidueInfo {
     int groupSize = 1;
     int groupId = 0;
     int peakNum = 0;
+    Double value = null;
+    Double err = null;
 
     public class ParValue implements ParValueInterface {
 
@@ -103,7 +105,9 @@ public class ResidueInfo {
     }
 
     public void addFitResult(CPMGFitResult fitResult) {
-        fitResults.put(fitResult.getEquationName(), fitResult);
+        if (fitResult != null) {
+            fitResults.put(fitResult.getEquationName(), fitResult);
+        }
     }
 
     public CPMGFitResult getFitResult(String equationName) {
@@ -163,7 +167,11 @@ public class ResidueInfo {
     public Double getParValue(String equationName, String state, String parName) {
         Map<String, CurveFit> curveFits = curveSets.get(equationName);
         if (curveFits == null) {
-            return null;
+            if (parName.endsWith(".sd")) {
+                return err;
+            } else {
+                return value;
+            }
         }
         CurveFit curveFit = curveFits.get(state);
         if (curveFit == null) {
@@ -200,6 +208,9 @@ public class ResidueInfo {
     public String toString() {
         StringBuilder sBuilder = new StringBuilder();
         PlotEquation plotEquation = bestEquation;
+        if (plotEquation == null) {
+            return sBuilder.toString();
+        }
         sBuilder.append(plotEquation.name);
         sBuilder.append(" ");
         sBuilder.append(resNum);

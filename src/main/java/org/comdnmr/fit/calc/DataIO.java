@@ -197,7 +197,7 @@ public class DataIO {
                             }
                         }
                     }
-                    if (expMode.equals("cest") || expMode.equals("cpmg")) {
+                    if (expMode.equals("cest") || expMode.equals("cpmg") || expMode.equals("noe")) {
                         offset++;
                     }
 
@@ -240,7 +240,7 @@ public class DataIO {
                         residueNum = residueNum.substring(0, dotIndex);
                     }
                     int residueNumInt = 0;
-                    if (residueNum.length() > 1) {
+                    if (residueNum.length() > 0) {
                         try {
                             residueNumInt = Integer.parseInt(residueNum);
                         } catch (NumberFormatException nfE) {
@@ -252,7 +252,7 @@ public class DataIO {
                         }
                     }
                     double refIntensity = 1.0;
-                    if (expMode.equals("cest") || expMode.equals("cpmg")) {
+                    if (expMode.equals("cest") || expMode.equals("cpmg") || expMode.equals("noe")) {
                         refIntensity = Double.parseDouble(sfields[offset - 1].trim());
                     }
                     List<Double> xValueList = new ArrayList<>();
@@ -301,6 +301,13 @@ public class DataIO {
                         residueInfo = new ResidueInfo(resProp, residueNumInt, 0, 0, 0);
                         resProp.addResidueInfo(residueNum, residueInfo);
                     }
+                    if (expMode.equals("noe")) {
+                        if (yValueList.get(0) > 0.0) {
+                            residueInfo.value = yValueList.get(0);
+                            residueInfo.err = errValueList.get(0);
+                        }
+                    }
+
                     fakeRes++;
                 }
             }
