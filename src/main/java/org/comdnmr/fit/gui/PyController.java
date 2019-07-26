@@ -81,6 +81,7 @@ import javafx.scene.control.ToolBar;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import org.comdnmr.fit.calc.CoMDPreferences;
+import org.comdnmr.fit.calc.CorrelationTime;
 import org.comdnmr.fit.calc.FitModel;
 import org.comdnmr.fit.calc.R1RhoFit;
 import static org.comdnmr.fit.gui.MainApp.preferencesController;
@@ -187,6 +188,12 @@ public class PyController implements Initializable {
 
     @FXML
     SplitPane splitPane;
+    @FXML
+    ChoiceBox t1Choice;
+    @FXML
+    ChoiceBox t2Choice;
+    @FXML
+    TextField tauCalcField;
 
     BootstrapSamplePlots bootstrapSamplePlots = null;
     InputDataInterface inputDataInterface = null;
@@ -296,6 +303,24 @@ public class PyController implements Initializable {
             yUpperBoundTextField.setText("100.0");
             xTickTextField.setText("0.25");
             yTickTextField.setText("10.0");
+            genDataNPtsTextField.setDisable(true);
+            genDataXLBTextField.setDisable(true);
+            genDataXUBTextField.setDisable(true);
+            genDataXValTextField.setDisable(false);
+            StringBuilder sBuilder = new StringBuilder();
+            for (double xval : getFitter().getSimXDefaults()) {
+                sBuilder.append(String.valueOf(xval));
+                sBuilder.append(" ");
+            }
+            genDataXValTextField.setText(sBuilder.toString());
+        } else if (getFittingMode().equals("noe")) {
+            simControls = new NOEControls();
+            xLowerBoundTextField.setText("-0.5");
+            xUpperBoundTextField.setText("1.5");
+            yLowerBoundTextField.setText("0.0");
+            yUpperBoundTextField.setText("1.25");
+            xTickTextField.setText("0.25");
+            yTickTextField.setText("0.25");
             genDataNPtsTextField.setDisable(true);
             genDataXLBTextField.setDisable(true);
             genDataXUBTextField.setDisable(true);
@@ -464,6 +489,9 @@ public class PyController implements Initializable {
         } else if (getFittingMode().equals("exp") && !(simControls instanceof ExpControls)) {
             simControls = new ExpControls();
             update = true;
+        } else if (getFittingMode().equals("noe") && !(simControls instanceof ExpControls)) {
+            simControls = new NOEControls();
+            update = true;
         } else if (getFittingMode().equals("cest") && !(simControls instanceof CESTControls)) {
             simControls = new CESTControls();
             update = true;
@@ -498,6 +526,19 @@ public class PyController implements Initializable {
             genDataXValTextField.setText(sBuilder.toString());
         } else if (getSimMode().equals("exp") && !(simControls instanceof ExpControls)) {
             simControls = new ExpControls();
+            update = true;
+            genDataNPtsTextField.setDisable(true);
+            genDataXLBTextField.setDisable(true);
+            genDataXUBTextField.setDisable(true);
+            genDataXValTextField.setDisable(false);
+            StringBuilder sBuilder = new StringBuilder();
+            for (double xval : getFitter().getSimXDefaults()) {
+                sBuilder.append(String.valueOf(xval));
+                sBuilder.append(" ");
+            }
+            genDataXValTextField.setText(sBuilder.toString());
+        } else if (getSimMode().equals("noe") && !(simControls instanceof ExpControls)) {
+            simControls = new NOEControls();
             update = true;
             genDataNPtsTextField.setDisable(true);
             genDataXLBTextField.setDisable(true);
@@ -549,6 +590,8 @@ public class PyController implements Initializable {
         if (mode.equals("cpmg")) {
             simControls.updateEquations(equationChoice, CPMGFit.getEquationNames());
         } else if (mode.equals("exp")) {
+            simControls.updateEquations(equationChoice, ExpFit.getEquationNames());
+        } else if (mode.equals("noe")) {
             simControls.updateEquations(equationChoice, ExpFit.getEquationNames());
         } else if (mode.equals("cest")) {
             simControls.updateEquations(equationChoice, CESTFit.getEquationNames());
@@ -738,15 +781,15 @@ public class PyController implements Initializable {
             yUpperBoundTextField.setText("65.0");
             xTickTextField.setText("100.0");
             yTickTextField.setText("5.0");
-        } else if ((simControls instanceof ExpControls)) {
-            xychart.setNames("Exp", "Time (s)", "Intensity", "0");
-            xychart.setBounds(0.0, 1.25, 0.0, 100, 0.25, 10.0);
-            xLowerBoundTextField.setText("0.0");
+        } else if ((simControls instanceof NOEControls)) {
+            xychart.setNames("NOE", "On/Off", "Intensity", "0");
+            xychart.setBounds(-0.25, 1.25, 0.0, 1.25, 0.25, 10.0);
+            xLowerBoundTextField.setText("00.25");
             xUpperBoundTextField.setText("1.25");
             yLowerBoundTextField.setText("0.0");
-            yUpperBoundTextField.setText("100.0");
+            yUpperBoundTextField.setText("1.25");
             xTickTextField.setText("0.25");
-            yTickTextField.setText("10.0");
+            yTickTextField.setText("0.25");
         } else if ((simControls instanceof CESTControls)) {
             xychart.setNames("CEST", "Offset (PPM)", "I(t)/I(0)", "20");
             xychart.setBounds(-20, 20, 0.0, 1.0, 2.0, 0.25);
@@ -859,6 +902,11 @@ public class PyController implements Initializable {
         xychart.setEquations(equations);
 //        Optional<Double> rms = rms();
 
+    }
+
+    public void estimateCorrelationTime() {
+        double tau = CorrelationTime.estimateTau(ChartUtil.residueProperties);
+        tauCalcField.setText(String.format("%.1f ns", tau * 1.0e9));
     }
 
     public ResidueChart getActiveChart() {
@@ -1160,7 +1208,19 @@ public class PyController implements Initializable {
         refreshResidueCharts();
     }
 
+    void makeT1T2Menu() {
+        t1Choice.getItems().clear();
+        t2Choice.getItems().clear();
+        Map<String, ResidueProperties> residueProps = ChartUtil.residueProperties;
+        for (ResidueProperties residueProp : residueProps.values()) {
+            String setName = residueProp.getName();
+            t1Choice.getItems().add(setName);
+            t2Choice.getItems().add(setName);
+        }
+    }
+
     void makeAxisMenu() {
+        makeT1T2Menu();
         axisMenu.getItems().clear();
         //Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 Rex.sd	    Kex	 Kex.sd	     pA	  pA.sd	     dW	  dW.sd
 
@@ -1667,6 +1727,7 @@ public class PyController implements Initializable {
         String[] cestTypes = {"kex", "pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B", "RMS", "AIC", "Equation"};
         String[] r1rhoTypes = {"kex", "pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B", "RMS", "AIC", "Equation"};
         String[] nullTypes = {"RMS", "AIC", "Equation"};
+        String[] noeTypes = {"NOE"};
         if (getFittingMode().equals("exp")) {
             return expTypes;
         } else if (getFittingMode().equals("cpmg")) {
@@ -1675,6 +1736,8 @@ public class PyController implements Initializable {
             return cestTypes;
         } else if (getFittingMode().equals("r1rho")) {
             return r1rhoTypes;
+        } else if (getFittingMode().equals("noe")) {
+            return noeTypes;
         }
         return nullTypes;
     }
