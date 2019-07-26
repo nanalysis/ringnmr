@@ -967,6 +967,15 @@ public class PyController implements Initializable {
 
             resInfoTable.getColumns().clear();
             resInfoTable.getColumns().addAll(nameColumn, resColumn, xColumn, yColumn, errColumn, peakColumn);
+        } else if (getFittingMode().equals("exp")) {
+            TableColumn<ResidueData.DataValue, Double> xColumn = new TableColumn<>("Delay");
+            TableColumn<ResidueData.DataValue, Double> yColumn = new TableColumn<>("Intensity");
+
+            xColumn.setCellValueFactory(new PropertyValueFactory<>("X0"));
+            yColumn.setCellValueFactory(new PropertyValueFactory<>("Y"));
+
+            resInfoTable.getColumns().clear();
+            resInfoTable.getColumns().addAll(nameColumn, resColumn, xColumn, yColumn, errColumn, peakColumn);
         } else if (getFittingMode().equals("cest")) {
             TableColumn<ResidueData.DataValue, Double> x0Column = new TableColumn<>("Offset");
             TableColumn<ResidueData.DataValue, Double> x1Column = new TableColumn<>("B1 Field");
