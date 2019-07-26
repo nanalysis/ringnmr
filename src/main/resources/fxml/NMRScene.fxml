@@ -234,6 +234,28 @@
 
                                     </VBox>
                                 </Tab>
+                                <Tab text="Correlation" closable="false" > 
+                                    <VBox HBox.hgrow="ALWAYS">
+                                        <children>
+                                            <HBox>
+                                                <children>
+                                                    <Label text="R1:"/>
+                                                    <ChoiceBox  fx:id="t1Choice" prefWidth="150"/>
+                                                    <Label text="R2:"/>
+                                                    <ChoiceBox  fx:id="t2Choice" prefWidth="150"/>
+                                                </children>
+                                            </HBox>
+                                            <HBox>
+                                                <children>
+
+                                                    <Button text="Estimate" onAction="#estimateCorrelationTime" fx:id="calcDiffusionButton"/>
+                                                    <TextField fx:id="tauCalcField" prefWidth="80"/>
+
+                                                </children>
+                                            </HBox>
+                                        </children>
+                                    </VBox>
+                                </Tab>
                             </TabPane>
                         </VBox>
                     </items>
