@@ -189,9 +189,11 @@ public class PyController implements Initializable {
     @FXML
     SplitPane splitPane;
     @FXML
-    ChoiceBox t1Choice;
+    ChoiceBox<String> t1Choice;
     @FXML
-    ChoiceBox t2Choice;
+    ChoiceBox<String> t2Choice;
+    @FXML
+    ChoiceBox<String> noeChoice;
     @FXML
     TextField tauCalcField;
 
@@ -914,8 +916,20 @@ public class PyController implements Initializable {
     }
 
     public void estimateCorrelationTime() {
-        double tau = CorrelationTime.estimateTau(ChartUtil.residueProperties);
+        String r1SetName = t1Choice.getValue();
+        String r2SetName = t2Choice.getValue();
+        String noeSetName = noeChoice.getValue();
+        double tau = CorrelationTime.estimateTau(ChartUtil.residueProperties,
+                r1SetName, r2SetName, noeSetName);
         tauCalcField.setText(String.format("%.1f ns", tau * 1.0e9));
+    }
+
+    public void model1Order() {
+        String r1SetName = t1Choice.getValue();
+        String r2SetName = t2Choice.getValue();
+        String noeSetName = noeChoice.getValue();
+        CorrelationTime.fitS(ChartUtil.residueProperties,
+                r1SetName, r2SetName, noeSetName);
     }
 
     public ResidueChart getActiveChart() {
@@ -1229,11 +1243,17 @@ public class PyController implements Initializable {
     void makeT1T2Menu() {
         t1Choice.getItems().clear();
         t2Choice.getItems().clear();
+        noeChoice.getItems().clear();
+        t1Choice.getItems().add("");
+        t2Choice.getItems().add("");
+        noeChoice.getItems().add("");
+
         Map<String, ResidueProperties> residueProps = ChartUtil.residueProperties;
         for (ResidueProperties residueProp : residueProps.values()) {
             String setName = residueProp.getName();
             t1Choice.getItems().add(setName);
             t2Choice.getItems().add(setName);
+            noeChoice.getItems().add(setName);
         }
     }
 
@@ -1242,17 +1262,17 @@ public class PyController implements Initializable {
         axisMenu.getItems().clear();
         //Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 Rex.sd	    Kex	 Kex.sd	     pA	  pA.sd	     dW	  dW.sd
 
-        String[] parTypes = getParTypes();
         Map<String, ResidueProperties> residueProps = ChartUtil.residueProperties;
         // MenuItem clearItem = new MenuItem("Clear");
         // clearItem.setOnAction(e -> clearChart());
         // axisMenu.getItems().add(clearItem);
-        for (String parType : parTypes) {
-            Menu cascade = new Menu(parType);
+        for (ResidueProperties residueProp : residueProps.values()) {
+            String setName = residueProp.getName();
+            Menu cascade = new Menu(setName);
             axisMenu.getItems().add(cascade);
-            for (ResidueProperties residueProp : residueProps.values()) {
-                String setName = residueProp.getName();
-                Menu cascade2 = new Menu(setName);
+            String[] parTypes = getParTypes(residueProp.getExpMode());
+            for (String parType : parTypes) {
+                Menu cascade2 = new Menu(parType);
                 cascade.getItems().add(cascade2);
                 ArrayList<String> equationNames = new ArrayList<>();
                 equationNames.add("best");
@@ -1739,22 +1759,22 @@ public class PyController implements Initializable {
         return type.getParNames();
     }
 
-    public String[] getParTypes() {
+    public String[] getParTypes(String mode) {
         String[] cpmgTypes = {"R2", "dPPMmin", "Kex", "pA", "dPPM", "RMS", "AIC", "Equation"};
         String[] expTypes = {"A", "R", "C", "RMS", "AIC", "Equation"};
         String[] cestTypes = {"kex", "pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B", "RMS", "AIC", "Equation"};
         String[] r1rhoTypes = {"kex", "pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B", "RMS", "AIC", "Equation"};
         String[] nullTypes = {"RMS", "AIC", "Equation"};
         String[] noeTypes = {"NOE"};
-        if (getFittingMode().equals("exp")) {
+        if (mode.equals("exp")) {
             return expTypes;
-        } else if (getFittingMode().equals("cpmg")) {
+        } else if (mode.equals("cpmg")) {
             return cpmgTypes;
-        } else if (getFittingMode().equals("cest")) {
+        } else if (mode.equals("cest")) {
             return cestTypes;
-        } else if (getFittingMode().equals("r1rho")) {
+        } else if (mode.equals("r1rho")) {
             return r1rhoTypes;
-        } else if (getFittingMode().equals("noe")) {
+        } else if (mode.equals("noe")) {
             return noeTypes;
         }
         return nullTypes;

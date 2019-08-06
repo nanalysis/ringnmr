@@ -241,16 +241,24 @@
                                                 <children>
                                                     <Label text="R1:"/>
                                                     <ChoiceBox  fx:id="t1Choice" prefWidth="150"/>
+                                                </children>
+                                            </HBox>
+                                            <HBox>
+                                                <children>
                                                     <Label text="R2:"/>
                                                     <ChoiceBox  fx:id="t2Choice" prefWidth="150"/>
                                                 </children>
                                             </HBox>
                                             <HBox>
                                                 <children>
-
+                                                    <Label text="NOE:"/>
+                                                    <ChoiceBox  fx:id="noeChoice" prefWidth="150"/>
+                                                </children>
+                                            </HBox>
+                                            <HBox>
+                                                <children>
                                                     <Button text="Estimate" onAction="#estimateCorrelationTime" fx:id="calcDiffusionButton"/>
                                                     <TextField fx:id="tauCalcField" prefWidth="80"/>
-
                                                 </children>
                                             </HBox>
                                         </children>
