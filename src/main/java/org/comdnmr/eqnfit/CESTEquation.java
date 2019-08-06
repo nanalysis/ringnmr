@@ -60,7 +60,7 @@ public enum CESTEquation implements CESTEquationType {
 
         @Override
         public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
-            int nPars = CalcCEST.getNPars(map);
+            int nPars = CESTFitFunction.getNPars(map);
             double[] guesses = new double[nPars];
             for (int id = 0; id < map.length; id++) {
                 int[] map1 = map[id];

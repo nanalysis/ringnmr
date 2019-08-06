@@ -19,9 +19,9 @@ public interface EquationFitter {
 
     public List<String> getEquationNameList();
 
-    public FitModel getFitModel();
+    public FitFunction getFitModel();
 
-    public CPMGFitResult doFit(String eqn, double[] sliderGuesses);
+    public FitResult doFit(String eqn, double[] sliderGuesses);
 
     public void setupFit(String eqn);
 
@@ -55,7 +55,7 @@ public interface EquationFitter {
         return fields;        
     }
 
-    public default CPMGFitResult getResults(EquationFitter fitter, String eqn, String[] parNames, String[] resNums, int[][] map, int[][] states, 
+    public default FitResult getResults(EquationFitter fitter, String eqn, String[] parNames, String[] resNums, int[][] map, int[][] states, 
             double[] usedFields, int nGroupPars, double[] pars, double[] errEstimates, double aic, double rms, double rChiSq, double[][] simPars, 
             boolean hasExchange, CurveFit.CurveFitStats curveStats) {
         int nNonGroup = parNames.length - nGroupPars;
@@ -101,7 +101,7 @@ public interface EquationFitter {
             parMap.put("AIC", aic);
             parMap.put("RMS", rms);
             parMap.put("rChiSq", rChiSq);
-            FitModel model = getFitModel();
+            FitFunction model = getFitModel();
 
             parMap.put("Equation", 1.0 + fitter.getEquationNameList().indexOf(eqn));
             // fixme
@@ -112,7 +112,7 @@ public interface EquationFitter {
             CurveFit curveFit = new CurveFit(stateString, resNums[states[iCurve][0]], parMap, plotEquation);
             curveFits.add(curveFit);
         }
-        CPMGFitResult fitResult = new CPMGFitResult(parNames, curveFits, eqn, nGroupPars, aic, rms, rChiSq, simsMap, hasExchange, curveStats);
+        FitResult fitResult = new FitResult(parNames, curveFits, eqn, nGroupPars, aic, rms, rChiSq, simsMap, hasExchange, curveStats);
         return fitResult;
     }
 }

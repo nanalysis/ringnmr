@@ -8,7 +8,7 @@ import java.util.Map;
  *
  * @author Bruce Johnson
  */
-public class CPMGFitResult {
+public class FitResult {
 
     /**
      * @return the nGroupPars
@@ -98,7 +98,7 @@ public class CPMGFitResult {
     private final boolean hasExchange;
     private final CurveFit.CurveFitStats curveFitStats;
 
-    public CPMGFitResult(String[] fitParNames, List<CurveFit> curveFits, String equationName, int nGroupPars, double aicc, double rms, double rChiSq, 
+    public FitResult(String[] fitParNames, List<CurveFit> curveFits, String equationName, int nGroupPars, double aicc, double rms, double rChiSq, 
             Map<String, double[]> simsMap, boolean hasExchange, CurveFit.CurveFitStats curveStats) {
         this.curveFits.addAll(curveFits);
         this.fitParNames = fitParNames.clone();

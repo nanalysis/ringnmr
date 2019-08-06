@@ -8,28 +8,30 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import org.apache.commons.math3.optim.PointValuePair;
+import org.comdnmr.eqnfit.CESTPeak;
 
 /**
  *
  * @author Bruce Johnson
  */
-public class CESTFit implements EquationFitter {
+public class R1RhoFitter implements EquationFitter {
 
-    FitModel calcCEST = new CalcCEST();
+    FitFunction calcR1Rho = new R1RhoFitFunction();
     List<Double>[] xValues;
     List<Double> yValues = new ArrayList<>();
     List<Double> errValues = new ArrayList<>();
     List<Double> fieldValues = new ArrayList<>();
     List<Integer> idValues = new ArrayList<>();
-    double[] usedFields = null;
     int nCurves = 1;
     int nResidues = 1;
     int[][] states;
     int[] stateCount;
     String[] resNums;
-    static List<String> equationNameList = Arrays.asList(CESTEquation.getEquationNames());
+    static List<String> equationNameList = Arrays.asList(R1RhoEquation.getEquationNames());
     long errTime;
+    Map<String, List<Double>>[] constraints;
 
     class StateCount {
 
@@ -66,7 +68,6 @@ public class CESTFit implements EquationFitter {
         return index;
     }
 
-    // public void setData(Collection<ExperimentData> expDataList, String[] resNums) {
     @Override
     public void setData(ResidueProperties resProps, String[] resNums) {
         xValues = new ArrayList[3];
@@ -84,10 +85,12 @@ public class CESTFit implements EquationFitter {
         int resIndex = 0;
         int id = 0;
         List<Double> fieldList = new ArrayList<>();
+        constraints = new Map[nCurves];
         for (String resNum : resNums) {
             for (ExperimentData expData : expDataList) {
                 ResidueData resData = expData.getResidueData(resNum);
                 if (resData != null) {
+                    constraints[id] = expData.getConstraints();
                     states[k++] = resProps.getStateIndices(resIndex, expData);
                     //  need peakRefs
                     double field = expData.getNucleusField();
@@ -111,11 +114,6 @@ public class CESTFit implements EquationFitter {
             }
             resIndex++;
         }
-        usedFields = new double[fieldList.size()];
-        int iExp = 0;
-        for (Double field : fieldList) {
-            usedFields[iExp++] = field;
-        }
     }
 
     @Override
@@ -138,8 +136,6 @@ public class CESTFit implements EquationFitter {
         for (Double yValue : yValues) {
             idValues.add(0);
         }
-        usedFields = new double[1];
-        usedFields[0] = fieldValues.get(0);
         resNums = new String[1];
         resNums[0] = "0";
         //states = new int[1][];
@@ -173,8 +169,8 @@ public class CESTFit implements EquationFitter {
     }
 
     @Override
-    public FitModel getFitModel() {
-        return calcCEST;
+    public FitFunction getFitModel() {
+        return calcR1Rho;
     }
 
     @Override
@@ -183,9 +179,15 @@ public class CESTFit implements EquationFitter {
     }
 
     public static List<String> getEquationNames() {
-        List<String> activeEquations = CoMDPreferences.getActiveCESTEquations();
+        List<String> activeEquations = CoMDPreferences.getActiveR1RhoEquations();
         System.out.println(activeEquations.toString());
         return activeEquations;
+
+    }
+
+    public static List<String> setEquationNames(List<String> eqnNames) {
+        equationNameList = eqnNames;
+        return equationNameList;
     }
 
     @Override
@@ -215,22 +217,22 @@ public class CESTFit implements EquationFitter {
             fields[i] = fieldValues.get(i);
             idNums[i] = idValues.get(i);
         }
-        calcCEST.setEquation(eqn);
-        calcCEST.setXY(x, y);
-        calcCEST.setIds(idNums);
-        calcCEST.setErr(err);
-        calcCEST.setFieldValues(fields);
-        calcCEST.setMap(stateCount, states);
+        calcR1Rho.setEquation(eqn);
+        calcR1Rho.setXY(x, y);
+        calcR1Rho.setIds(idNums);
+        calcR1Rho.setErr(err);
+        calcR1Rho.setFieldValues(fields);
+        calcR1Rho.setMap(stateCount, states);
     }
 
     @Override
     public List<ParValueInterface> guessPars(String eqn) {
         setupFit(eqn);
-        double[] guesses = calcCEST.guess();
+        double[] guesses = calcR1Rho.guess();
         if (guesses != null) {
-            String[] parNames = calcCEST.getParNames();
+            String[] parNames = calcR1Rho.getParNames();
             List<ParValueInterface> parValues = new ArrayList<>();
-            int[][] map = calcCEST.getMap();
+            int[][] map = calcR1Rho.getMap();
             for (int i = 0; i < parNames.length; i++) {
                 ParValueInterface parValue = new ParValue(parNames[i], guesses[map[0][i]]);
                 parValues.add(parValue);
@@ -243,12 +245,12 @@ public class CESTFit implements EquationFitter {
 
     @Override
     public double rms(double[] pars) {
-        double rms = calcCEST.getRMS(pars);
+        double rms = calcR1Rho.getRMS(pars);
         return rms;
     }
 
     @Override
-    public CPMGFitResult doFit(String eqn, double[] sliderguesses) {
+    public FitResult doFit(String eqn, double[] sliderguesses) {
         double[][] xvals = new double[xValues.length][xValues[0].size()];
         double[] yvals = new double[yValues.size()];
         int[] idNums = new int[yValues.size()];
@@ -262,24 +264,39 @@ public class CESTFit implements EquationFitter {
             idNums[i] = idValues.get(i);
         }
         double[][] xy = CESTEquations.getXYValues(xvals, yvals, idNums, 0);
-        List<CESTPeak> peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], fieldValues.get(0), "cest");
-
+        List<CESTPeak> peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], fieldValues.get(0), "r1rho");
         if (peaks.size() >= 1) {
             setupFit(eqn);
-            int[][] map = calcCEST.getMap();
+            int[][] map = calcR1Rho.getMap();
             double[] guesses;
             if (sliderguesses != null) {
                 //fixme
                 guesses = sliderguesses;
             } else {
-                guesses = calcCEST.guess();
+                guesses = calcR1Rho.guess();
             }
             //        System.out.println("dofit guesses = " + guesses);
             //        double[] guesses = setupFit(eqn, absMode);
             if (guesses != null) {
-                double[][] boundaries = calcCEST.boundaries(guesses);
+                double[][] boundaries = calcR1Rho.boundaries(guesses);
                 double sigma = CoMDPreferences.getStartingRadius();
-                PointValuePair result = calcCEST.refine(guesses, boundaries[0],
+                if (constraints != null) {
+                    for (int id = 0; id < map.length; id++) {
+                        if (constraints[id] != null) {
+                            List<Double> cValues = constraints[id].get("R1A");
+                            if (cValues != null) {
+                                double[] cArray = {cValues.get(0), cValues.get(1)};
+                                calcR1Rho.equation.constrain("R1A", guesses, boundaries, map, id, cArray[0], cArray[1]);
+                                calcR1Rho.equation.constrain("R1B", guesses, boundaries, map, id, cArray[0], cArray[1]);
+                            }
+                        }
+                    }
+                }
+
+                for (int i = 0; i < guesses.length; i++) {
+                    System.out.println(i + " bou0 " + boundaries[0][i] + " bou1 " + boundaries[1][i] + " gue " + guesses[i]);
+                }
+                PointValuePair result = calcR1Rho.refine(guesses, boundaries[0],
                         boundaries[1], sigma, CoMDPreferences.getOptimizer());
                 double[] pars = result.getPoint();
                 System.out.println(eqn);
@@ -291,32 +308,32 @@ public class CESTFit implements EquationFitter {
                     System.out.println("");
                 }
 
-                System.out.print("Fit pars \n");
+                System.out.print("Fit pars ");
                 for (int i = 0; i < pars.length; i++) {
-                    System.out.printf("%d %.3f %.3f %.3f %.3f\n", i, guesses[i], boundaries[0][i], pars[i], boundaries[1][i]);
+                    System.out.printf(" %.3f", pars[i]);
                 }
                 System.out.println("");
 
-                double aic = calcCEST.getAICc(pars);
-                double rms = calcCEST.getRMS(pars);
-                double rChiSq = calcCEST.getReducedChiSq(pars);
-
+                double aic = calcR1Rho.getAICc(pars);
+                double rms = calcR1Rho.getRMS(pars);
+                double rChiSq = calcR1Rho.getReducedChiSq(pars);
                 System.out.println("rms " + rms);
-                int nGroupPars = calcCEST.getNGroupPars();
+                int nGroupPars = calcR1Rho.getNGroupPars();
                 sigma /= 2.0;
 
-                String[] parNames = calcCEST.getParNames();
+                String[] parNames = calcR1Rho.getParNames();
                 double[] errEstimates;
                 double[][] simPars = null;
                 boolean exchangeValid = true;
                 double deltaABdiff = CoMDPreferences.getDeltaABDiff();
-                if (FitModel.getCalcError()) {
+                if (FitFunction.getCalcError()) {
                     long startTime = System.currentTimeMillis();
-                    errEstimates = calcCEST.simBoundsStream(pars.clone(),
+                    errEstimates = calcR1Rho.simBoundsStream(pars.clone(),
                             boundaries[0], boundaries[1], sigma, CoMDPreferences.getNonParametric());
                     long endTime = System.currentTimeMillis();
                     errTime = endTime - startTime;
-                    simPars = calcCEST.getSimPars();
+
+                    simPars = calcR1Rho.getSimPars();
                     for (String parName : parNames) {
                         if (parName.equals("deltaB0")) {
                             int parIndex = 3;
@@ -338,7 +355,7 @@ public class CESTFit implements EquationFitter {
                 }
                 String refineOpt = CoMDPreferences.getOptimizer();
                 String bootstrapOpt = CoMDPreferences.getBootStrapOptimizer();
-                long fitTime = calcCEST.fitTime;
+                long fitTime = calcR1Rho.fitTime;
                 long bootTime = errTime;
                 int nSamples = CoMDPreferences.getSampleSize();
                 boolean useAbs = CoMDPreferences.getAbsValueFit();

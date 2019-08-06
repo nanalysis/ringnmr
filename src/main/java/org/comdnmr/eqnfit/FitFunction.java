@@ -26,7 +26,7 @@ import org.apache.commons.math3.util.FastMath;
  *
  * @author Bruce Johnson
  */
-public abstract class FitModel implements MultivariateFunction {
+public abstract class FitFunction implements MultivariateFunction {
 
     // fixme is there a thread safe RandomGenerator
     public final RandomGenerator DEFAULT_RANDOMGENERATOR = new MersenneTwister(1);
@@ -110,7 +110,7 @@ public abstract class FitModel implements MultivariateFunction {
         //new Checker(100 * Precision.EPSILON, 100 * Precision.SAFE_MIN, nSteps));
         CMAESOptimizer optimizer = new CMAESOptimizer(nSteps, stopFitness, true, diagOnly, 0,
                 DEFAULT_RANDOMGENERATOR, true,
-                new CalcRDisp.Checker(tol, tol, nSteps));
+                new CPMGFitFunction.Checker(tol, tol, nSteps));
         PointValuePair result = null;
 
         try {

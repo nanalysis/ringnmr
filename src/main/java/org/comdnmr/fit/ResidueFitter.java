@@ -1,16 +1,16 @@
 package org.comdnmr.fit;
 
-import org.comdnmr.eqnfit.R1RhoFit;
+import org.comdnmr.eqnfit.R1RhoFitter;
 import org.comdnmr.eqnfit.CESTEquation;
 import org.comdnmr.eqnfit.ExpEquation;
 import org.comdnmr.eqnfit.EquationType;
-import org.comdnmr.eqnfit.CPMGFitResult;
+import org.comdnmr.eqnfit.FitResult;
 import org.comdnmr.eqnfit.R1RhoEquation;
-import org.comdnmr.eqnfit.CESTFit;
+import org.comdnmr.eqnfit.CESTFitter;
 import org.comdnmr.eqnfit.CurveFit;
-import org.comdnmr.eqnfit.ExpFit;
+import org.comdnmr.eqnfit.ExpFitter;
 import org.comdnmr.eqnfit.EquationFitter;
-import org.comdnmr.eqnfit.CPMGFit;
+import org.comdnmr.eqnfit.CPMGFitter;
 import org.comdnmr.eqnfit.CPMGEquation;
 import org.comdnmr.util.ProcessingStatus;
 import org.comdnmr.data.ResidueProperties;
@@ -41,7 +41,7 @@ public class ResidueFitter {
     Function<Double, Double> updaterFunction;
     Function<ProcessingStatus, Double> statusFunction;
     List<List<String>> residueFitGroups = null;
-    CPMGFitResult fitResult;
+    FitResult fitResult;
 
     public ResidueFitter() {
     }
@@ -194,16 +194,16 @@ public class ResidueFitter {
         EquationFitter fitter;
         switch (resProps.getExpMode()) {
             case "cpmg":
-                fitter = new CPMGFit();
+                fitter = new CPMGFitter();
                 break;
             case "exp":
-                fitter = new ExpFit();
+                fitter = new ExpFitter();
                 break;
             case "cest":
-                fitter = new CESTFit();
+                fitter = new CESTFitter();
                 break;
             case "r1rho":
-                fitter = new R1RhoFit();
+                fitter = new R1RhoFitter();
                 break;
             default:
                 throw new IllegalArgumentException("Invalid mode " + resProps.getExpMode());
@@ -227,24 +227,24 @@ public class ResidueFitter {
     public List<ResidueInfo> fitResidues(ResidueProperties resProps, String[] resNums, int groupId, String useEquation) {
         this.resProps = resProps;
         resProps.setupMaps();
-        Map<String, CPMGFitResult> fitResults = new HashMap<>();
+        Map<String, FitResult> fitResults = new HashMap<>();
         double aicMin = Double.MAX_VALUE;
         String bestEquation = "NOEX";
         List<String> equationNames;
         switch (resProps.getExpMode()) {
             case "cpmg":
-                equationNames = CPMGFit.getEquationNames();
+                equationNames = CPMGFitter.getEquationNames();
                 break;
             case "exp":
-                equationNames = ExpFit.getEquationNames();
+                equationNames = ExpFitter.getEquationNames();
                 bestEquation = "EXPAB";
                 break;
             case "cest":
-                equationNames = CESTFit.getEquationNames();
+                equationNames = CESTFitter.getEquationNames();
                 bestEquation = "CESTR1RHOPERTURBATIONNOEX";
                 break;
             case "r1rho":
-                equationNames = R1RhoFit.getEquationNames();
+                equationNames = R1RhoFitter.getEquationNames();
                 bestEquation = "R1RHOPERTURBATIONNOEX";
                 break;
             case "noe":
@@ -297,7 +297,7 @@ public class ResidueFitter {
         return resInfoList;
     }
 
-    public CPMGFitResult getFitResult() {
+    public FitResult getFitResult() {
         return fitResult;
     }
 

@@ -23,16 +23,16 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.comdnmr.eqnfit.CESTEquation;
-import org.comdnmr.eqnfit.CESTFit;
+import org.comdnmr.eqnfit.CESTFitter;
 import org.comdnmr.eqnfit.CPMGEquation;
-import org.comdnmr.eqnfit.CPMGFit;
+import org.comdnmr.eqnfit.CPMGFitter;
 import org.comdnmr.eqnfit.CurveFit;
 import org.comdnmr.eqnfit.EquationType;
 import org.comdnmr.eqnfit.ExpEquation;
-import org.comdnmr.eqnfit.ExpFit;
+import org.comdnmr.eqnfit.ExpFitter;
 import org.comdnmr.eqnfit.PlotEquation;
 import org.comdnmr.eqnfit.R1RhoEquation;
-import org.comdnmr.eqnfit.R1RhoFit;
+import org.comdnmr.eqnfit.R1RhoFitter;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -605,16 +605,16 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 List<String> equationNames;
                 if (fitMode.equals("exp")) {
                     equationType = ExpEquation.valueOf(equationName);
-                    equationNames = ExpFit.getEquationNames();
+                    equationNames = ExpFitter.getEquationNames();
                 } else if (fitMode.equals("cest")) {
                     equationType = CESTEquation.valueOf(equationName);
-                    equationNames = CESTFit.getEquationNames();
+                    equationNames = CESTFitter.getEquationNames();
                 } else if (fitMode.equals("r1rho")) {
                     equationType = R1RhoEquation.valueOf(equationName);
-                    equationNames = R1RhoFit.getEquationNames();
+                    equationNames = R1RhoFitter.getEquationNames();
                 } else {
                     equationType = CPMGEquation.valueOf(equationName);
-                    equationNames = CPMGFit.getEquationNames();
+                    equationNames = CPMGFitter.getEquationNames();
                 }
                 String[] eqnParNames = equationType.getParNames();
                 int nPar = eqnParNames.length;

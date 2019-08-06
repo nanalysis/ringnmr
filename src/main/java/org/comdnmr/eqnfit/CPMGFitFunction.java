@@ -10,13 +10,13 @@ import org.apache.commons.math3.random.Well19937c;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.util.FastMath;
 
-public class CalcRDisp extends FitModel {
+public class CPMGFitFunction extends FitFunction {
 
     static RandomGenerator random = new SynchronizedRandomGenerator(new Well19937c());
     int[] r2Mask = {0, 1, 3};
     double[] rexErrors = new double[nID];
 
-    public CalcRDisp() {
+    public CPMGFitFunction() {
         this.equation = CPMGEquation.CPMGFAST;
     }
 
@@ -25,11 +25,11 @@ public class CalcRDisp extends FitModel {
         equation = CPMGEquation.valueOf(eqName.toUpperCase());
     }
 
-    public CalcRDisp(double[][] x, double[] y, double[] err, double[] fieldValues) throws IllegalArgumentException {
+    public CPMGFitFunction(double[][] x, double[] y, double[] err, double[] fieldValues) throws IllegalArgumentException {
         this(x, y, err, fieldValues, new int[x.length]);
     }
 
-    public CalcRDisp(double[][] x, double[] y, double[] err, double[] fieldValues, int[] idNums) throws IllegalArgumentException {
+    public CPMGFitFunction(double[][] x, double[] y, double[] err, double[] fieldValues, int[] idNums) throws IllegalArgumentException {
         this.xValues = new double[1][];
         this.xValues[0] = x[0].clone();
         this.yValues = y.clone();
@@ -195,12 +195,12 @@ public class CalcRDisp extends FitModel {
         return parSDev;
     }
 
-    private synchronized CalcRDisp setupParametricBootstrap(double[] yPred) {
+    private synchronized CPMGFitFunction setupParametricBootstrap(double[] yPred) {
         double[] newY = new double[yValues.length];
         for (int k = 0; k < yValues.length; k++) {
             newY[k] = yPred[k] + errValues[k] * random.nextGaussian();
         }
-        CalcRDisp rDisp = new CalcRDisp(xValues, newY, errValues, fieldValues, idNums);
+        CPMGFitFunction rDisp = new CPMGFitFunction(xValues, newY, errValues, fieldValues, idNums);
         rDisp.setEquation(equation.getName());
         rDisp.setXY(xValues, newY);
         rDisp.setIds(idNums);
@@ -208,8 +208,8 @@ public class CalcRDisp extends FitModel {
         return rDisp;
     }
 
-    private CalcRDisp setupNonParametricBootstrap(double[] yPred) {
-        CalcRDisp rDisp = new CalcRDisp(xValues, yValues, errValues, fieldValues, idNums);
+    private CPMGFitFunction setupNonParametricBootstrap(double[] yPred) {
+        CPMGFitFunction rDisp = new CPMGFitFunction(xValues, yValues, errValues, fieldValues, idNums);
         rDisp.setEquation(equation.getName());
         double[][] newX = new double[1][yValues.length];
         double[] newY = new double[yValues.length];
@@ -249,7 +249,7 @@ public class CalcRDisp extends FitModel {
         String optimizer = CoMDPreferences.getBootStrapOptimizer();
         IntStream.range(0, nSim).parallel().forEach(i -> {
 //        IntStream.range(0, nSim).forEach(i -> {
-            CalcRDisp rDisp;
+            CPMGFitFunction rDisp;
             if (nonParametric) {
                 rDisp = setupNonParametricBootstrap(yPred);
             } else {

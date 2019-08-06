@@ -1,12 +1,12 @@
 package org.comdnmr.fit.calc;
 
 import org.comdnmr.util.CoMDPreferences;
-import org.comdnmr.eqnfit.CPMGFitResult;
+import org.comdnmr.eqnfit.FitResult;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import org.comdnmr.eqnfit.CESTFit;
+import org.comdnmr.eqnfit.CESTFitter;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -165,11 +165,11 @@ public class CESTFitTest {
 
     @Test
     public void testcestR1rhoPerturbation() {
-        CESTFit fitting = new CESTFit();
+        CESTFitter fitting = new CESTFitter();
         List<Double> fieldArray = Collections.nCopies(errarray.size(), CoMDPreferences.getRefField());
         fitting.setData(fixOffset(offset), fixOffset(omega), Texarray, intenarray, errarray, fieldArray);
 
-        CPMGFitResult fit = fitting.doFit("cestr1rhoperturbation", null);
+        FitResult fit = fitting.doFit("cestr1rhoperturbation", null);
 
         double[] fitpars = fit.getPars(0);
         double[] validpars = new double[]{159.40549413953838, 0.07848868547481112, 2705.7656176771607, -1244.26540485914, 2.3834525779746167,
@@ -197,11 +197,11 @@ public class CESTFitTest {
 
     @Test
     public void testcestR1rhoSD() {
-        CESTFit fitting = new CESTFit();
+        CESTFitter fitting = new CESTFitter();
         List<Double> fieldArray = Collections.nCopies(errarray.size(), CoMDPreferences.getRefField());
         fitting.setData(fixOffset(offset), fixOffset(omega), Texarray, intenarray, errarray, fieldArray);
 
-        CPMGFitResult fit = fitting.doFit("cestr1rhosd", null);
+        FitResult fit = fitting.doFit("cestr1rhosd", null);
 
         double[] fitpars = fit.getPars(0);
         double[] validpars = new double[]{164.31219540872297, 0.08000559530543723, 2710.5848956396685, -1247.6238696374273, 2.3747806394904574,
@@ -226,11 +226,11 @@ public class CESTFitTest {
 
     @Test
     public void testcestR1rhoBaldwinKay() {
-        CESTFit fitting = new CESTFit();
+        CESTFitter fitting = new CESTFitter();
         List<Double> fieldArray = Collections.nCopies(errarray.size(), CoMDPreferences.getRefField());
         fitting.setData(fixOffset(offset), fixOffset(omega), Texarray, intenarray, errarray, fieldArray);
 
-        CPMGFitResult fit = fitting.doFit("cestr1rhobaldwinkay", null);
+        FitResult fit = fitting.doFit("cestr1rhobaldwinkay", null);
 
         double[] fitpars = fit.getPars(0);
         double[] validpars = new double[]{168.45940742687503, 0.07848006386286228, 2705.4283684664874, -1244.1504931304519, 2.3839104552778836,
@@ -256,11 +256,11 @@ public class CESTFitTest {
 
     @Test
     public void testcestR1rhoN() {
-        CESTFit fitting = new CESTFit();
+        CESTFitter fitting = new CESTFitter();
         List<Double> fieldArray = Collections.nCopies(errarray.size(), CoMDPreferences.getRefField());
         fitting.setData(fixOffset(offset), fixOffset(omega), Texarray, intenarray, errarray, fieldArray);
 
-        CPMGFitResult fit = fitting.doFit("cestr1rhon", null);
+        FitResult fit = fitting.doFit("cestr1rhon", null);
 
         double[] fitpars = fit.getPars(0);
         double[] validpars = new double[]{288.937925578066, 0.07087265844081425, 2771.0529601396183, -1285.1744405197783, 2.4246256495623104,

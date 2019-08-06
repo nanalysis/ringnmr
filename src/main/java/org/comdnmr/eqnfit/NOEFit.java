@@ -6,9 +6,9 @@
 package org.comdnmr.eqnfit;
 
 import org.comdnmr.eqnfit.ParValueInterface;
-import org.comdnmr.eqnfit.CPMGFitResult;
+import org.comdnmr.eqnfit.FitResult;
 import org.comdnmr.eqnfit.EquationFitter;
-import org.comdnmr.eqnfit.FitModel;
+import org.comdnmr.eqnfit.FitFunction;
 import org.comdnmr.data.ResidueProperties;
 import java.util.List;
 
@@ -24,12 +24,12 @@ public class NOEFit implements EquationFitter {
     }
 
     @Override
-    public FitModel getFitModel() {
+    public FitFunction getFitModel() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public CPMGFitResult doFit(String eqn, double[] sliderGuesses) {
+    public FitResult doFit(String eqn, double[] sliderGuesses) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

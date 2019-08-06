@@ -9,27 +9,27 @@ import org.apache.commons.math3.random.Well19937c;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.util.FastMath;
 
-public class CalcR1Rho extends FitModel {
+public class CESTFitFunction extends FitFunction {
 
     static RandomGenerator random = new SynchronizedRandomGenerator(new Well19937c());
     int[] r2Mask = {0, 1, 3};
     double[] rexErrors = new double[nID];
-    R1RhoEquations r1rhoEq = new R1RhoEquations();
+    CESTEquations cestEq = new CESTEquations();
 
-    public CalcR1Rho() {
-        this.equation = R1RhoEquation.R1RHOPERTURBATION;
+    public CESTFitFunction() {
+        this.equation = CESTEquation.CESTR1RHOPERTURBATION;
     }
 
     @Override
     public void setEquation(String eqName) {
-        equation = R1RhoEquation.valueOf(eqName.toUpperCase());
+        equation = CESTEquation.valueOf(eqName.toUpperCase());
     }
 
-    public CalcR1Rho(double[][] x, double[] y, double[] err, double[] fieldValues) throws IllegalArgumentException {
+    public CESTFitFunction(double[][] x, double[] y, double[] err, double[] fieldValues) throws IllegalArgumentException {
         this(x, y, err, fieldValues, new int[x.length]);
     }
 
-    public CalcR1Rho(double[][] x, double[] y, double[] err, double[] fieldValues, int[] idNums) throws IllegalArgumentException {
+    public CESTFitFunction(double[][] x, double[] y, double[] err, double[] fieldValues, int[] idNums) throws IllegalArgumentException {
         this.xValues = new double[x.length][];
         this.xValues[0] = x[0].clone();
         this.xValues[1] = x[1].clone();
@@ -39,7 +39,7 @@ public class CalcR1Rho extends FitModel {
         this.fieldValues = fieldValues.clone();
         this.idNums = idNums.clone();
         this.idNums = new int[yValues.length];
-        this.equation = R1RhoEquation.R1RHOPERTURBATION;
+        this.equation = CESTEquation.CESTR1RHOPERTURBATION;
         if (setNID()) {
             throw new IllegalArgumentException("Invalid idNums, some values not used");
         }
@@ -85,6 +85,10 @@ public class CalcR1Rho extends FitModel {
             sumAbs += FastMath.abs(delta);
             sumSq += delta * delta;
         }
+//        for (double p:par) {
+//            System.out.print(p + " ");
+//        }
+//        System.out.println(Math.sqrt(sumSq/yValues.length));
         if (absMode) {
             return sumAbs / (yValues.length - par.length);
         } else {
@@ -114,7 +118,6 @@ public class CalcR1Rho extends FitModel {
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
         String optimizer = CoMDPreferences.getBootStrapOptimizer();
-
         for (int i = 0; i < nSim; i++) {
             for (int k = 0; k < yValues.length; k++) {
                 yValues[k] = yPred[k] + errValues[k] * random.nextGaussian();
@@ -126,6 +129,7 @@ public class CalcR1Rho extends FitModel {
                 parValues[j][i] = rPoint[j];
             }
             parValues[nPar][i] = result.getValue();
+
         }
         double[] parSDev = new double[nPar];
         for (int i = 0; i < nPar; i++) {
@@ -161,7 +165,7 @@ public class CalcR1Rho extends FitModel {
 
         IntStream.range(0, nSim).parallel().forEach(i -> {
 //        IntStream.range(0, nSim).forEach(i -> {
-            CalcR1Rho rDisp = new CalcR1Rho(xValues, yPred, errValues, fieldValues, idNums);
+            CESTFitFunction rDisp = new CESTFitFunction(xValues, yPred, errValues, fieldValues, idNums);
             rDisp.setEquation(equation.getName());
             double[] newY = new double[yValues.length];
             for (int k = 0; k < yValues.length; k++) {
@@ -188,7 +192,8 @@ public class CalcR1Rho extends FitModel {
         return parSDev;
     }
 
-    public double[] simBoundsStreamNonParametric(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) {
+    public double[] simBoundsStreamNonParametric(double[] start,
+            double[] lowerBounds, double[] upperBounds, double inputSigma) {
         reportFitness = false;
         int nPar = start.length;
         int nSim = CoMDPreferences.getSampleSize();
@@ -198,7 +203,7 @@ public class CalcR1Rho extends FitModel {
         String optimizer = CoMDPreferences.getBootStrapOptimizer();
 
         IntStream.range(0, nSim).parallel().forEach(i -> {
-            CalcR1Rho rDisp = new CalcR1Rho(xValues, yValues, errValues, fieldValues, idNums);
+            CESTFitFunction rDisp = new CESTFitFunction(xValues, yValues, errValues, fieldValues, idNums);
             rDisp.setEquation(equation.getName());
             double[][] newX = new double[3][yValues.length];
             double[] newY = new double[yValues.length];
@@ -233,7 +238,6 @@ public class CalcR1Rho extends FitModel {
                 parValues[j][i] = rPoint[j];
             }
             parValues[nPar][i] = result.getValue();
-
         });
 
         double[] parSDev = new double[nPar];

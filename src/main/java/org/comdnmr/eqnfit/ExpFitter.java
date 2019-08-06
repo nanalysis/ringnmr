@@ -9,19 +9,16 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import org.apache.commons.math3.optim.PointValuePair;
-import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
-import org.apache.commons.math3.stat.inference.TTest;
 
 /**
  *
  * @author Bruce Johnson
  */
-public class CPMGFit implements EquationFitter {
+public class ExpFitter implements EquationFitter {
 
-    public static final double[] SIMX = {25.0, 50.0, 100.0, 150.0, 250.0, 350.0, 500.0, 750.0, 1000.0};
+    public static final double[] SIMX = {0.0, 0.025, 0.05, 0.1, 0.15, 0.25, 0.35, 0.5, 0.75, 1.0};
 
-    CalcRDisp calcR = new CalcRDisp();
-    static List<String> equationNameList = Arrays.asList(CPMGEquation.getEquationNames());
+    FitFunction expModel = new ExpFitFunction();
     List<Double> xValues = new ArrayList<>();
     List<Double> yValues = new ArrayList<>();
     List<Double> errValues = new ArrayList<>();
@@ -32,6 +29,7 @@ public class CPMGFit implements EquationFitter {
     int[][] states;
     int[] stateCount;
     String[] resNums;
+    static List<String> equationNameList = Arrays.asList(ExpEquation.getEquationNames());
     long errTime;
 
     class StateCount {
@@ -78,8 +76,8 @@ public class CPMGFit implements EquationFitter {
         this.errValues.clear();
         this.errValues.addAll(errValues);
         this.fieldValues.clear();
-        this.idValues.clear();
         this.fieldValues.addAll(fieldValues);
+        this.idValues.clear();
         for (Double yValue : yValues) {
             this.idValues.add(0);
         }
@@ -94,48 +92,45 @@ public class CPMGFit implements EquationFitter {
         states = new int[1][4];
     }
 
+    // public void setData(Collection<ExperimentData> expDataList, String[] resNums) {
     @Override
     public void setData(ResidueProperties resProps, String[] resNums) {
-        xValues.clear();
         this.resNums = resNums.clone();
         nResidues = resNums.length;
-
-        stateCount = resProps.getStateCount(nResidues);
+        int id = 0;
+        resProps.setupMaps();
+        stateCount = resProps.getStateCount(resNums.length);
         Collection<ExperimentData> expDataList = resProps.getExperimentData();
         nCurves = resNums.length * expDataList.size();
         states = new int[nCurves][];
         int k = 0;
         int resIndex = 0;
-        int id = 0;
         for (String resNum : resNums) {
             for (ExperimentData expData : expDataList) {
+                states[k++] = resProps.getStateIndices(resIndex, expData);
                 ResidueData resData = expData.getResidueData(resNum);
-                if (resData != null) {
-
-                    states[k++] = resProps.getStateIndices(resIndex, expData);
-                    //  need peakRefs
-                    double field = expData.getNucleusField();
-                    double[][] x = resData.getXValues();
-                    double[] y = resData.getYValues();
-                    double[] err = resData.getErrValues();
-
-                    for (int i = 0; i < y.length; i++) {
-                        xValues.add(x[0][i]);
-                        yValues.add(y[i]);
-                        errValues.add(err[i]);
-                        fieldValues.add(field);
-                        idValues.add(id);
-                    }
-                    id++;
+                //  need peakRefs
+                double field = expData.getNucleusField();
+                double[][] x = resData.getXValues();
+                double[] y = resData.getYValues();
+                double[] err = resData.getErrValues();
+                for (int i = 0; i < y.length; i++) {
+                    xValues.add(x[0][i]);
+                    yValues.add(y[i]);
+                    errValues.add(err[i]);
+                    fieldValues.add(field);
+                    idValues.add(id);
                 }
+                id++;
+
             }
             resIndex++;
         }
     }
 
     @Override
-    public FitModel getFitModel() {
-        return calcR;
+    public FitFunction getFitModel() {
+        return expModel;
     }
 
     @Override
@@ -144,7 +139,8 @@ public class CPMGFit implements EquationFitter {
     }
 
     public static List<String> getEquationNames() {
-        return equationNameList;
+        List<String> activeEquations = CoMDPreferences.getActiveExpEquations();
+        return activeEquations;
     }
 
     @Override
@@ -172,21 +168,20 @@ public class CPMGFit implements EquationFitter {
             fields[i] = fieldValues.get(i);
             idNums[i] = idValues.get(i);
         }
-        calcR.setEquation(eqn);
-
-        calcR.setXY(x, y);
-        calcR.setIds(idNums);
-        calcR.setErr(err);
-        calcR.setFieldValues(fields);
-        calcR.setMap(stateCount, states);
+        expModel.setEquation(eqn);
+        expModel.setXY(x, y);
+        expModel.setIds(idNums);
+        expModel.setErr(err);
+        expModel.setFieldValues(fields);
+        expModel.setMap(stateCount, states);
     }
 
     @Override
     public List<ParValueInterface> guessPars(String eqn) {
         setupFit(eqn);
-        double[] guesses = calcR.guess();
-        String[] parNames = calcR.getParNames();
-        int[][] map = calcR.getMap();
+        double[] guesses = expModel.guess();
+        String[] parNames = expModel.getParNames();
+        int[][] map = expModel.getMap();
         List<ParValueInterface> parValues = new ArrayList<>();
         for (int i = 0; i < parNames.length; i++) {
             double guess = guesses[map[0][i]];
@@ -198,34 +193,28 @@ public class CPMGFit implements EquationFitter {
 
     @Override
     public double rms(double[] pars) {
-        double rms = calcR.getRMS(pars);
+        double rms = expModel.getRMS(pars);
         return rms;
     }
 
     @Override
-    public CPMGFitResult doFit(String eqn, double[] sliderguesses) {
+    public FitResult doFit(String eqn, double[] sliderguesses) {
         setupFit(eqn);
-        int[][] map = calcR.getMap();
+
+        int[][] map = expModel.getMap();
         double[] guesses;
         if (sliderguesses != null) {
             //fixme
             guesses = sliderguesses;
         } else {
-            guesses = calcR.guess();
+            guesses = expModel.guess();
         }
 //        System.out.println("dofit guesses = " + guesses);
-        double[][] boundaries = calcR.boundaries(guesses);
+        double[][] boundaries = expModel.boundaries(guesses);
         double sigma = CoMDPreferences.getStartingRadius();
-        PointValuePair result = calcR.refine(guesses, boundaries[0],
-                boundaries[1], sigma, CoMDPreferences.getOptimizer());
+        PointValuePair result = expModel.refine(guesses, boundaries[0], boundaries[1],
+                sigma, CoMDPreferences.getOptimizer());
         double[] pars = result.getPoint();
-        System.out.print("Fit pars \n");
-        for (int i = 0; i < pars.length; i++) {
-            System.out.printf("%d %.3f %.3f %.3f %.3f\n", i, guesses[i], boundaries[0][i], pars[i], boundaries[1][i]);
-        }
-        System.out.println("");
-        int nCurves = states.length;
-
         /*
         for (int i = 0; i < map.length; i++) {
             for (int j = 0; j < map[i].length; j++) {
@@ -234,77 +223,36 @@ public class CPMGFit implements EquationFitter {
             System.out.println("");
         }
 
-      
-        System.out.print("Fit " + x.length + " points");
-        System.out.print("Fit pars");
+        System.out.print("Fit pars ");
         for (int i = 0; i < pars.length; i++) {
             System.out.printf(" %.3f", pars[i]);
         }
         System.out.println("");
          */
-        double aic = calcR.getAICc(pars);
-        double rms = calcR.getRMS(pars);
-        double rChiSq = calcR.getReducedChiSq(pars);
-        System.out.printf("%.3f %.3f %.3f\n", aic, rms, rChiSq);
+        double aic = expModel.getAICc(pars);
+        double rms = expModel.getRMS(pars);
+        double rChiSq = expModel.getReducedChiSq(pars);
+
 //        System.out.println("rms " + rms);
-        int nGroupPars = calcR.getNGroupPars();
+        int nGroupPars = expModel.getNGroupPars();
         sigma /= 2.0;
 
-        String[] parNames = calcR.getParNames();
+        String[] parNames = expModel.getParNames();
         double[] errEstimates;
         double[][] simPars = null;
-        double[] rexValues = calcR.getRex(pars);
-        boolean okRex = false;
-        double rexRatio = CoMDPreferences.getRexRatio();
-        for (double rexValue : rexValues) {
-            if (rexValue > rexRatio * rms) {
-                okRex = true;
-                break;
-            }
-        }
-        boolean exchangeValid = okRex;
-
-        if (FitModel.getCalcError()) {
+        if (FitFunction.getCalcError()) {
             long startTime = System.currentTimeMillis();
-            errEstimates = calcR.simBoundsStream(pars.clone(),
+            errEstimates = expModel.simBoundsStream(pars.clone(),
                     boundaries[0], boundaries[1], sigma, CoMDPreferences.getNonParametric());
             long endTime = System.currentTimeMillis();
             errTime = endTime - startTime;
-            simPars = calcR.getSimPars();
-            TTest tTest = new TTest();
-            for (String parName : parNames) {
-                int parIndex = -1;
-                if (parName.equals("Kex")) {
-                    parIndex = 0;
-                    if (pars[parIndex] < errEstimates[parIndex]) {
-                        exchangeValid = false;
-                    }
-                }
-                if (parName.equals("dPPMmin")) {
-                    parIndex = 2;
-                }
-                if (parIndex != -1) {
-                    boolean valid = tTest.tTest(0.0, simPars[map[0][parIndex]], 0.02);
-                    SummaryStatistics sStat = new SummaryStatistics();
-                    for (double v : simPars[map[0][parIndex]]) {
-                        sStat.addValue(v);
-                    }
-                    // System.out.println(sStat.toString());
-                    double alpha = tTest.tTest(0.0, simPars[map[0][parIndex]]);
-                    double mean = sStat.getMean();
-                    double sdev = sStat.getStandardDeviation();
-                    if (!valid) {
-                        exchangeValid = false;
-                    }
-//                    System.out.println(parName + " " + parIndex + " " + valid + " " + alpha + " " + mean + " " + sdev);
-                }
-            }
+            simPars = expModel.getSimPars();
         } else {
             errEstimates = new double[pars.length];
         }
         String refineOpt = CoMDPreferences.getOptimizer();
         String bootstrapOpt = CoMDPreferences.getBootStrapOptimizer();
-        long fitTime = calcR.fitTime;
+        long fitTime = expModel.fitTime;
         long bootTime = errTime;
         int nSamples = CoMDPreferences.getSampleSize();
         boolean useAbs = CoMDPreferences.getAbsValueFit();
@@ -316,7 +264,7 @@ public class CPMGFit implements EquationFitter {
         CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs,
                 useNonParametric, sRadius, fRadius, tol, useWeight);
         double[] usedFields = getFields(fieldValues, idValues);
-        return getResults(this, eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, exchangeValid, curveStats);
+        return getResults(this, eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, true, curveStats);
     }
 
     @Override
@@ -339,4 +287,5 @@ public class CPMGFit implements EquationFitter {
     public double[] getSimXDefaults() {
         return SIMX;
     }
+
 }

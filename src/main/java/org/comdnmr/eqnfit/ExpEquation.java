@@ -27,7 +27,7 @@ public enum ExpEquation implements EquationType {
 
         @Override
         public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
-            int nPars = CalcExpDecay.getNPars(map);
+            int nPars = ExpFitFunction.getNPars(map);
             double[] guesses = new double[nPars];
             for (int id = 0; id < map.length; id++) {
                 double maxY = DataUtil.getMaxValue(yValues, idNums, id);
@@ -99,7 +99,7 @@ public enum ExpEquation implements EquationType {
             lastCount++;
             int maxIndex = 0;
             for (int i = 0; i < n; i++) {
-                map[i][1] = ExpFit.getMapIndex(states[i], stateCount, r2Mask) + lastCount;
+                map[i][1] = ExpFitter.getMapIndex(states[i], stateCount, r2Mask) + lastCount;
                 maxIndex = Math.max(map[i][1], maxIndex);
             }
             return map;
@@ -117,7 +117,7 @@ public enum ExpEquation implements EquationType {
 
         @Override
         public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
-            int nPars = CalcExpDecay.getNPars(map);
+            int nPars = ExpFitFunction.getNPars(map);
             double[] guesses = new double[nPars];
             for (int id = 0; id < map.length; id++) {
                 double maxY = DataUtil.getMaxValue(yValues, idNums, id);
@@ -195,12 +195,12 @@ public enum ExpEquation implements EquationType {
             lastCount++;
             int maxIndex = 0;
             for (int i = 0; i < n; i++) {
-                map[i][1] = ExpFit.getMapIndex(states[i], stateCount, r2Mask) + lastCount;
+                map[i][1] = ExpFitter.getMapIndex(states[i], stateCount, r2Mask) + lastCount;
                 maxIndex = Math.max(map[i][1], maxIndex);
             }
             lastCount = maxIndex + 1;
             for (int i = 0; i < n; i++) {
-                map[i][2] = ExpFit.getMapIndex(states[i], stateCount, 0, 2) + lastCount;
+                map[i][2] = ExpFitter.getMapIndex(states[i], stateCount, 0, 2) + lastCount;
             }
             return map;
         }

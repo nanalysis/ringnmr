@@ -31,7 +31,7 @@ public interface CESTEquationType extends EquationType {
 
     @Override
     public default double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
-        int nPars = CalcCEST.getNPars(map);
+        int nPars = CESTFitFunction.getNPars(map);
         double[] guesses = new double[nPars];
         if (CoMDPreferences.getNeuralNetworkGuess()) {
             guesses = ANNguess(xValues, yValues, map, idNums, nID, fields);
@@ -42,7 +42,7 @@ public interface CESTEquationType extends EquationType {
     }
     
     public default double[] ANNguess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
-        int nPars = CalcCEST.getNPars(map);
+        int nPars = CESTFitFunction.getNPars(map);
         double[] guesses = new double[nPars];
         double[] annGuess = new double[map[0].length];
         
@@ -69,7 +69,7 @@ public interface CESTEquationType extends EquationType {
     }
     
     public default double[] oldGuess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
-        int nPars = CalcCEST.getNPars(map);
+        int nPars = CESTFitFunction.getNPars(map);
         double[] guesses = new double[nPars];
         
         for (int id = 0; id < map.length; id++) {

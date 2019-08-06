@@ -34,7 +34,7 @@ public enum CPMGEquation implements EquationType {
 
         @Override
         public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
-            int nPars = CalcRDisp.getNPars(map);
+            int nPars = CPMGFitFunction.getNPars(map);
             double[] guesses = new double[nPars];
             for (int id = 0; id < map.length; id++) {
                 double mean = DataUtil.getMeanValue(yValues, idNums, id);
@@ -90,7 +90,7 @@ public enum CPMGEquation implements EquationType {
             int n = states.length;
             int[][] map = new int[n][1];
             for (int i = 0; i < n; i++) {
-                map[i][0] = CPMGFit.getMapIndex(states[i], stateCount, r2Mask);
+                map[i][0] = CPMGFitter.getMapIndex(states[i], stateCount, r2Mask);
             }
             return map;
         }
@@ -115,7 +115,7 @@ public enum CPMGEquation implements EquationType {
 
         @Override
         public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
-            int nPars = CalcRDisp.getNPars(map);
+            int nPars = CPMGFitFunction.getNPars(map);
             double[] guesses = new double[nPars];
             if (CoMDPreferences.getNeuralNetworkGuess()) {
                 for (int id = 0; id < map.length; id++) {
@@ -233,12 +233,12 @@ public enum CPMGEquation implements EquationType {
             lastCount++;
             int maxIndex = 0;
             for (int i = 0; i < n; i++) {
-                map[i][1] = CPMGFit.getMapIndex(states[i], stateCount, r2Mask) + lastCount;
+                map[i][1] = CPMGFitter.getMapIndex(states[i], stateCount, r2Mask) + lastCount;
                 maxIndex = Math.max(map[i][1], maxIndex);
             }
             lastCount = maxIndex + 1;
             for (int i = 0; i < n; i++) {
-                map[i][2] = CPMGFit.getMapIndex(states[i], stateCount, 0, 3) + lastCount;
+                map[i][2] = CPMGFitter.getMapIndex(states[i], stateCount, 0, 3) + lastCount;
             }
             return map;
         }
@@ -289,7 +289,7 @@ public enum CPMGEquation implements EquationType {
 
         @Override
         public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
-            int nPars = CalcRDisp.getNPars(map);
+            int nPars = CPMGFitFunction.getNPars(map);
             double[] guesses = new double[nPars];
             if (CoMDPreferences.getNeuralNetworkGuess()) {
                 for (int id = 0; id < map.length; id++) {
@@ -415,12 +415,12 @@ public enum CPMGEquation implements EquationType {
             int maxIndex = 0;
             lastCount = 2;
             for (int i = 0; i < n; i++) {
-                map[i][2] = CPMGFit.getMapIndex(states[i], stateCount, r2Mask) + lastCount;
+                map[i][2] = CPMGFitter.getMapIndex(states[i], stateCount, r2Mask) + lastCount;
                 maxIndex = Math.max(map[i][2], maxIndex);
             }
             lastCount = maxIndex + 1;
             for (int i = 0; i < n; i++) {
-                map[i][3] = CPMGFit.getMapIndex(states[i], stateCount, 0, 3) + lastCount;
+                map[i][3] = CPMGFitter.getMapIndex(states[i], stateCount, 0, 3) + lastCount;
             }
             return map;
         }

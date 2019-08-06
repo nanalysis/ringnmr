@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import org.comdnmr.eqnfit.CPMGFitResult;
+import org.comdnmr.eqnfit.FitResult;
 import org.comdnmr.eqnfit.CurveFit;
 import org.comdnmr.eqnfit.ParValueInterface;
 import org.comdnmr.eqnfit.PlotEquation;
@@ -26,7 +26,7 @@ public class ResidueInfo {
 
     int resNum;
     Map<String, Map<String, CurveFit>> curveSets = new LinkedHashMap<>();
-    Map<String, CPMGFitResult> fitResults = new LinkedHashMap<>();
+    Map<String, FitResult> fitResults = new LinkedHashMap<>();
     PlotEquation bestEquation = null;
     double[] extraValues;
     String[] peakRefs;
@@ -108,13 +108,13 @@ public class ResidueInfo {
         this.peakNum = peakNum;
     }
 
-    public void addFitResult(CPMGFitResult fitResult) {
+    public void addFitResult(FitResult fitResult) {
         if (fitResult != null) {
             fitResults.put(fitResult.getEquationName(), fitResult);
         }
     }
 
-    public CPMGFitResult getFitResult(String equationName) {
+    public FitResult getFitResult(String equationName) {
         String useEquationName;
         if (equationName.startsWith("best")) {
             useEquationName = bestEquation.getName();
