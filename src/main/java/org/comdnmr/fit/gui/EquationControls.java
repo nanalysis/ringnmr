@@ -8,9 +8,9 @@ package org.comdnmr.fit.gui;
 import java.util.List;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.layout.VBox;
-import org.comdnmr.fit.calc.ExperimentData;
-import org.comdnmr.fit.calc.ExperimentData.Nuclei;
-import org.comdnmr.fit.calc.ParValueInterface;
+import org.comdnmr.data.ExperimentData;
+import org.comdnmr.data.ExperimentData.Nuclei;
+import org.comdnmr.eqnfit.ParValueInterface;
 
 /**
  *

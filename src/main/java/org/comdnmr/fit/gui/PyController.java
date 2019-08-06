@@ -42,24 +42,24 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javax.imageio.ImageIO;
 import javax.script.ScriptException;
-import org.comdnmr.fit.calc.CPMGFit;
-import org.comdnmr.fit.calc.CPMGFitResult;
-import org.comdnmr.fit.calc.CurveFit;
-import org.comdnmr.fit.calc.DataIO;
-import org.comdnmr.fit.calc.EquationFitter;
-import org.comdnmr.fit.calc.EquationType;
-import org.comdnmr.fit.calc.ExpFit;
-import org.comdnmr.fit.calc.ExperimentData;
-import org.comdnmr.fit.calc.ResidueData;
+import org.comdnmr.eqnfit.CPMGFitter;
+import org.comdnmr.eqnfit.FitResult;
+import org.comdnmr.eqnfit.CurveFit;
+import org.comdnmr.data.DataIO;
+import org.comdnmr.eqnfit.EquationFitter;
+import org.comdnmr.eqnfit.EquationType;
+import org.comdnmr.eqnfit.ExpFitter;
+import org.comdnmr.data.ExperimentData;
+import org.comdnmr.data.ResidueData;
 import org.controlsfx.control.PropertySheet;
-import org.comdnmr.fit.calc.ParValueInterface;
-import org.comdnmr.fit.calc.PlotEquation;
-import org.comdnmr.fit.calc.ProcessingStatus;
-import org.comdnmr.fit.calc.ResidueFitter;
-import org.comdnmr.fit.calc.ResidueInfo;
-import org.comdnmr.fit.calc.ResidueProperties;
+import org.comdnmr.eqnfit.ParValueInterface;
+import org.comdnmr.eqnfit.PlotEquation;
+import org.comdnmr.util.ProcessingStatus;
+import org.comdnmr.fit.ResidueFitter;
+import org.comdnmr.data.ResidueInfo;
+import org.comdnmr.data.ResidueProperties;
 import org.controlsfx.control.StatusBar;
-import org.comdnmr.fit.calc.CESTFit;
+import org.comdnmr.eqnfit.CESTFitter;
 import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.Comparator;
@@ -80,10 +80,10 @@ import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ToolBar;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
-import org.comdnmr.fit.calc.CoMDPreferences;
-import org.comdnmr.fit.calc.CorrelationTime;
-import org.comdnmr.fit.calc.FitModel;
-import org.comdnmr.fit.calc.R1RhoFit;
+import org.comdnmr.util.CoMDPreferences;
+import org.comdnmr.modelfree.CorrelationTime;
+import org.comdnmr.eqnfit.FitFunction;
+import org.comdnmr.eqnfit.R1RhoFitter;
 import static org.comdnmr.fit.gui.MainApp.preferencesController;
 import static org.comdnmr.fit.gui.MainApp.console;
 import static org.comdnmr.fit.gui.MainApp.primaryStage;
@@ -213,7 +213,7 @@ public class PyController implements Initializable {
 
     boolean simulate = true;
 
-    CPMGFitResult fitResult;
+    FitResult fitResult;
     PlotData xychart;
     Canvas barPlotCanvas = new Canvas();
 
@@ -381,7 +381,7 @@ public class PyController implements Initializable {
         setBoundsButton.setOnAction(this::setBounds);
 
         initResidueNavigator();
-        calcErrorsCheckBox.selectedProperty().addListener(e -> FitModel.setCalcError(calcErrorsCheckBox.isSelected()));
+        calcErrorsCheckBox.selectedProperty().addListener(e -> FitFunction.setCalcError(calcErrorsCheckBox.isSelected()));
         calcErrorsCheckBox.setSelected(true);
         autoscaleXCheckBox.selectedProperty().addListener(e -> autoscaleX(autoscaleXCheckBox.isSelected()));
         autoscaleXCheckBox.setSelected(false);
@@ -590,15 +590,15 @@ public class PyController implements Initializable {
 
     void updateEquationChoices(String mode) {
         if (mode.equals("cpmg")) {
-            simControls.updateEquations(equationChoice, CPMGFit.getEquationNames());
+            simControls.updateEquations(equationChoice, CPMGFitter.getEquationNames());
         } else if (mode.equals("exp")) {
-            simControls.updateEquations(equationChoice, ExpFit.getEquationNames());
+            simControls.updateEquations(equationChoice, ExpFitter.getEquationNames());
         } else if (mode.equals("noe")) {
-            simControls.updateEquations(equationChoice, ExpFit.getEquationNames());
+            simControls.updateEquations(equationChoice, ExpFitter.getEquationNames());
         } else if (mode.equals("cest")) {
-            simControls.updateEquations(equationChoice, CESTFit.getEquationNames());
+            simControls.updateEquations(equationChoice, CESTFitter.getEquationNames());
         } else if (mode.equals("r1rho")) {
-            simControls.updateEquations(equationChoice, R1RhoFit.getEquationNames());
+            simControls.updateEquations(equationChoice, R1RhoFitter.getEquationNames());
         }
     }
 
@@ -1401,7 +1401,7 @@ public class PyController implements Initializable {
         }
     }
 
-    public void updateAfterFit(CPMGFitResult fitResult) {
+    public void updateAfterFit(FitResult fitResult) {
         List<GUIPlotEquation> equations = new ArrayList<>();
         int nCurves = fitResult.getNCurves();
         for (int iCurve = 0; iCurve < nCurves; iCurve++) {
@@ -1716,7 +1716,7 @@ public class PyController implements Initializable {
 
     }
 
-    public CPMGFitResult getFitResult() {
+    public FitResult getFitResult() {
         return fitResult;
     }
 
@@ -1743,13 +1743,13 @@ public class PyController implements Initializable {
 
     public EquationFitter getFitter() {
         if (getFittingMode().equals("exp")) {
-            return new ExpFit();
+            return new ExpFitter();
         } else if (getFittingMode().equals("cpmg")) {
-            return new CPMGFit();
+            return new CPMGFitter();
         } else if (getFittingMode().equals("cest")) {
-            return new CESTFit();
+            return new CESTFitter();
         } else if (getFittingMode().equals("r1rho")) {
-            return new R1RhoFit();
+            return new R1RhoFitter();
         }
         return null;
     }

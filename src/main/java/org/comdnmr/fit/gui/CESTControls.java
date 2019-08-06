@@ -18,12 +18,12 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import org.comdnmr.fit.calc.CESTEquation;
-import org.comdnmr.fit.calc.CESTFit;
-import org.comdnmr.fit.calc.ExperimentData;
-import org.comdnmr.fit.calc.ParValueInterface;
-import org.comdnmr.fit.calc.ResidueInfo;
-import org.comdnmr.fit.calc.ResidueProperties;
+import org.comdnmr.eqnfit.CESTEquation;
+import org.comdnmr.eqnfit.CESTFitter;
+import org.comdnmr.data.ExperimentData;
+import org.comdnmr.eqnfit.ParValueInterface;
+import org.comdnmr.data.ResidueInfo;
+import org.comdnmr.data.ResidueProperties;
 import static org.comdnmr.fit.gui.CESTControls.PARS.KEX;
 import static org.comdnmr.fit.gui.CESTControls.PARS.PB;
 import static org.comdnmr.fit.gui.CESTControls.PARS.DELTAA0;
@@ -34,8 +34,8 @@ import static org.comdnmr.fit.gui.CESTControls.PARS.R2A;
 import static org.comdnmr.fit.gui.CESTControls.PARS.R2B;
 import static org.comdnmr.fit.gui.CESTControls.PARS.B1FIELD;
 import static org.comdnmr.fit.gui.CESTControls.PARS.TEX;
-import org.comdnmr.fit.calc.CalcCEST;
-import org.comdnmr.fit.calc.CoMDPreferences;
+import org.comdnmr.eqnfit.CESTFitFunction;
+import org.comdnmr.util.CoMDPreferences;
 import javafx.scene.input.KeyCode;
 
 /**
@@ -136,7 +136,7 @@ public class CESTControls extends EquationControls {
     }
 
     public List<String> getEquationNameList() {
-        return CESTFit.getEquationNames();
+        return CESTFitter.getEquationNames();
     }
 
     public void updateDeltaLimits() {
@@ -523,7 +523,7 @@ public class CESTControls extends EquationControls {
         double R2b = R2B.getValue();
         double B1field = B1FIELD.getValue();
         double Tex = TEX.getValue();
-        int nPars = CalcCEST.getNPars(map);
+        int nPars = CESTFitFunction.getNPars(map);
         double[] guesses = new double[nPars];
         switch (equationName) {
             case "CESTR1RHOPERTURBATION":

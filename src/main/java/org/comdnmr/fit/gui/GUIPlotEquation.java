@@ -6,7 +6,7 @@
 package org.comdnmr.fit.gui;
 
 import javafx.scene.paint.Color;
-import org.comdnmr.fit.calc.PlotEquation;
+import org.comdnmr.eqnfit.PlotEquation;
 
 /**
  *

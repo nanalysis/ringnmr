@@ -16,11 +16,11 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import org.comdnmr.fit.calc.R1RhoEquation;
-import org.comdnmr.fit.calc.ExperimentData;
-import org.comdnmr.fit.calc.ParValueInterface;
-import org.comdnmr.fit.calc.ResidueInfo;
-import org.comdnmr.fit.calc.ResidueProperties;
+import org.comdnmr.eqnfit.R1RhoEquation;
+import org.comdnmr.data.ExperimentData;
+import org.comdnmr.eqnfit.ParValueInterface;
+import org.comdnmr.data.ResidueInfo;
+import org.comdnmr.data.ResidueProperties;
 import static org.comdnmr.fit.gui.R1RhoControls.PARS.KEX;
 import static org.comdnmr.fit.gui.R1RhoControls.PARS.PB;
 import static org.comdnmr.fit.gui.R1RhoControls.PARS.DELTAA0;
@@ -31,8 +31,8 @@ import static org.comdnmr.fit.gui.R1RhoControls.PARS.R2A;
 import static org.comdnmr.fit.gui.R1RhoControls.PARS.R2B;
 import static org.comdnmr.fit.gui.R1RhoControls.PARS.B1FIELD;
 import static org.comdnmr.fit.gui.R1RhoControls.PARS.TEX;
-import org.comdnmr.fit.calc.CalcR1Rho;
-import org.comdnmr.fit.calc.CoMDPreferences;
+import org.comdnmr.eqnfit.R1RhoFitFunction;
+import org.comdnmr.util.CoMDPreferences;
 
 /**
  *
@@ -485,7 +485,7 @@ public class R1RhoControls extends EquationControls {
         double R2b = R2B.getValue();
         double B1field = B1FIELD.getValue();
         double Tex = TEX.getValue();
-        int nPars = CalcR1Rho.getNPars(map);
+        int nPars = R1RhoFitFunction.getNPars(map);
         double[] guesses = new double[nPars];
         switch (equationName) {
             case "R1RHOPERTURBATION":

@@ -19,10 +19,10 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.MouseEvent;
 
 import javafx.scene.paint.Color;
-import org.comdnmr.fit.calc.ExperimentData;
-import org.comdnmr.fit.calc.PlotEquation;
-import org.comdnmr.fit.calc.ResidueData;
-import org.comdnmr.fit.calc.ResidueProperties;
+import org.comdnmr.data.ExperimentData;
+import org.comdnmr.eqnfit.PlotEquation;
+import org.comdnmr.data.ResidueData;
+import org.comdnmr.data.ResidueProperties;
 import static org.comdnmr.fit.gui.ChartUtil.residueProperties;
 import org.nmrfx.chart.Axis;
 import org.nmrfx.chart.DataSeries;

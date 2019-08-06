@@ -14,12 +14,12 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import org.comdnmr.fit.calc.ExpFit;
-import org.comdnmr.fit.calc.ParValueInterface;
-import org.comdnmr.fit.calc.ResidueInfo;
-import org.comdnmr.fit.calc.ResidueProperties;
+import org.comdnmr.eqnfit.ExpFitter;
+import org.comdnmr.eqnfit.ParValueInterface;
+import org.comdnmr.data.ResidueInfo;
+import org.comdnmr.data.ResidueProperties;
 import static org.comdnmr.fit.gui.NOEControls.PARS.NOE;
-import org.comdnmr.fit.calc.CalcExpDecay;
+import org.comdnmr.eqnfit.ExpFitFunction;
 
 /**
  *
@@ -108,8 +108,8 @@ public class NOEControls extends EquationControls {
     public VBox makeControls(PyController controller) {
         this.controller = controller;
         VBox vBox = init();
-        equationSelector.getItems().addAll(ExpFit.getEquationNames());
-        equationSelector.setValue(ExpFit.getEquationNames().get(0));
+        equationSelector.getItems().addAll(ExpFitter.getEquationNames());
+        equationSelector.setValue(ExpFitter.getEquationNames().get(0));
         HBox hBox1 = new HBox();
         HBox.setHgrow(hBox1, Priority.ALWAYS);
         hBox1.getChildren().add(equationSelector);

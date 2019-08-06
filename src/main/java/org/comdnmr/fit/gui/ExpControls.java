@@ -14,15 +14,15 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import org.comdnmr.fit.calc.ExpFit;
-import org.comdnmr.fit.calc.ParValueInterface;
-import org.comdnmr.fit.calc.ResidueInfo;
-import org.comdnmr.fit.calc.ResidueProperties;
+import org.comdnmr.eqnfit.ExpFitter;
+import org.comdnmr.eqnfit.ParValueInterface;
+import org.comdnmr.data.ResidueInfo;
+import org.comdnmr.data.ResidueProperties;
 import static org.comdnmr.fit.gui.ExpControls.PARS.A;
 import static org.comdnmr.fit.gui.ExpControls.PARS.C;
 import static org.comdnmr.fit.gui.ExpControls.PARS.R;
-import org.comdnmr.fit.calc.CalcExpDecay;
-import org.comdnmr.fit.calc.ExpEquation;
+import org.comdnmr.eqnfit.ExpFitFunction;
+import org.comdnmr.eqnfit.ExpEquation;
 
 /**
  *
@@ -196,7 +196,7 @@ public class ExpControls extends EquationControls {
         double a = A.getValue();
         double r = R.getValue();
         double c = C.getValue();
-        int nPars = CalcExpDecay.getNPars(map);
+        int nPars = ExpFitFunction.getNPars(map);
         double[] guesses = new double[nPars];
         switch (equationName) {
             case "EXPAB":

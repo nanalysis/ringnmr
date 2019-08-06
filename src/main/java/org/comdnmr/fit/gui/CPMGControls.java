@@ -16,16 +16,16 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import org.comdnmr.fit.calc.CPMGFit;
-import org.comdnmr.fit.calc.ParValueInterface;
-import org.comdnmr.fit.calc.ResidueInfo;
-import org.comdnmr.fit.calc.ResidueProperties;
+import org.comdnmr.eqnfit.CPMGFitter;
+import org.comdnmr.eqnfit.ParValueInterface;
+import org.comdnmr.data.ResidueInfo;
+import org.comdnmr.data.ResidueProperties;
 import static org.comdnmr.fit.gui.CPMGControls.PARS.FIELD2;
 import static org.comdnmr.fit.gui.CPMGControls.PARS.KEX;
 import static org.comdnmr.fit.gui.CPMGControls.PARS.PA;
 import static org.comdnmr.fit.gui.CPMGControls.PARS.R2;
-import org.comdnmr.fit.calc.CalcRDisp;
-import org.comdnmr.fit.calc.CoMDPreferences;
+import org.comdnmr.eqnfit.CPMGFitFunction;
+import org.comdnmr.util.CoMDPreferences;
 import static org.comdnmr.fit.gui.CPMGControls.PARS.DPPM;
 import static org.comdnmr.fit.gui.CPMGControls.PARS.DPPMMIN;
 
@@ -123,8 +123,8 @@ public class CPMGControls extends EquationControls {
     public VBox makeControls(PyController controller) {
         this.controller = controller;
         VBox vBox = init();
-        equationSelector.getItems().addAll(CPMGFit.getEquationNames());
-        equationSelector.setValue(CPMGFit.getEquationNames().get(0));
+        equationSelector.getItems().addAll(CPMGFitter.getEquationNames());
+        equationSelector.setValue(CPMGFitter.getEquationNames().get(0));
         stateSelector.getItems().addAll("0:0:0", "1:0:0");
         stateSelector.setValue("0:0:0");
         HBox hBox1 = new HBox();
@@ -329,7 +329,7 @@ public class CPMGControls extends EquationControls {
         double pA = PA.getValue();
         double dPPM = DPPM.getValue();
         double field2 = FIELD2.getValue();
-        int nPars = CalcRDisp.getNPars(map);
+        int nPars = CPMGFitFunction.getNPars(map);
         double[] guesses = new double[nPars];
         switch (equationName) {
             case "NOEX":

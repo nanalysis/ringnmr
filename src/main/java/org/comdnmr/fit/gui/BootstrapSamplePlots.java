@@ -18,8 +18,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import org.comdnmr.fit.calc.CPMGFitResult;
-import org.comdnmr.fit.calc.ResidueInfo;
+import org.comdnmr.eqnfit.FitResult;
+import org.comdnmr.data.ResidueInfo;
 import org.controlsfx.dialog.ExceptionDialog;
 import org.nmrfx.chart.Axis;
 import org.nmrfx.chart.DataSeries;
@@ -135,7 +135,7 @@ public class BootstrapSamplePlots {
 
     Map<String, double[]> getMCSimsMap() {
         Map<String, double[]> simsMap = null;
-        CPMGFitResult showFitResult = null;
+        FitResult showFitResult = null;
         ResidueInfo currentResInfo = pyController.getResidueInfo();
         String currentEquationName = "";
         if (currentResInfo != null) {
