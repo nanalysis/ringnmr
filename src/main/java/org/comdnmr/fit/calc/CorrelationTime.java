@@ -5,8 +5,6 @@
  */
 package org.comdnmr.fit.calc;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import org.apache.commons.math3.analysis.UnivariateFunction;
 import org.apache.commons.math3.optim.MaxEval;
@@ -23,9 +21,11 @@ import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
  */
 public class CorrelationTime {
 
-    public static double estimateTau(Map<String, ResidueProperties> residueProps) {
-        ResidueProperties resPropsR1 = residueProps.get("t1_output");
-        ResidueProperties resPropsR2 = residueProps.get("t2_output");
+    public static double estimateTau(Map<String, ResidueProperties> residueProps,
+            String r1SetName, String r2SetName, String noeSetName) {
+        ResidueProperties resPropsR1 = residueProps.get(r1SetName);
+        ResidueProperties resPropsR2 = residueProps.get(r2SetName);
+        ResidueProperties resPropsNOE = residueProps.get(noeSetName);
         double tau = 0.0;
         if ((resPropsR1 != null) && (resPropsR2 != null)) {
             Map<Integer, Double> r1Map = resPropsR1.getParMapData(
@@ -33,8 +33,6 @@ public class CorrelationTime {
             Map<Integer, Double> r2Map = resPropsR2.getParMapData(
                     "best", "0:0:0", "R");
 
-            List<Double> t1List = new ArrayList<>();
-            List<Double> t2List = new ArrayList<>();
             SummaryStatistics stats = new SummaryStatistics();
             r2Map.values().stream().forEach(v -> stats.addValue(v));
             double mean = stats.getMean();
@@ -76,6 +74,43 @@ public class CorrelationTime {
         }
     }
 
+    static class R1R2NOEDelta implements UnivariateFunction {
+
+        double tau;
+        double[] targets;
+        double[] sigmas;
+        RelaxEquations r;
+        double[] calcVals;
+
+        R1R2NOEDelta(double sf, double tau, double[] targets, double[] sigmas) {
+            this.tau = tau;
+            r = new RelaxEquations(sf, "H", "N");
+            calcVals = new double[targets.length];
+            this.targets = targets;
+            this.sigmas = sigmas;
+        }
+
+        @Override
+        public double value(double S2) {
+            double[] jVals = r.getJ(tau, S2);
+
+            double r1 = r.R1(jVals);
+            double r2 = r.R2(jVals, 0.0);
+            double noe = r.NOE(jVals);
+            calcVals[0] = r1;
+            calcVals[1] = r2;
+            calcVals[2] = noe;
+
+            double sumsq = 0.0;
+            for (int i = 0; i < calcVals.length; i++) {
+                double delta = (calcVals[i] - targets[i]) / sigmas[i];
+                sumsq += delta * delta;
+            }
+
+            return sumsq;
+        }
+    }
+
     public static double fit(double sf, double ratio) {
         double tolAbs = 1E-12;
         double min = 1.0e-9;
@@ -91,6 +126,67 @@ public class CorrelationTime {
 
         best = optValue.getPoint();
         return best;
+    }
+
+    public static double fitS(double sf, double tau, double[] targets, double[] sigmas) {
+        double tolAbs = 1E-12;
+        double min = 0.1;
+        double max = 1.0;
+        R1R2NOEDelta f = new R1R2NOEDelta(sf, tau, targets, sigmas);
+        UnivariateObjectiveFunction fOpt = new UnivariateObjectiveFunction(f);
+        SearchInterval searchInterval = new SearchInterval(min, max);
+        MaxEval maxEval = new MaxEval(100);
+        double best;
+
+        BrentOptimizer brentOptimizer = new BrentOptimizer(tolAbs * 10.0, tolAbs);
+        UnivariatePointValuePair optValue = brentOptimizer.optimize(fOpt, GoalType.MINIMIZE, searchInterval, maxEval);
+
+        best = optValue.getPoint();
+        return best;
+    }
+
+    public static double fitS(Map<String, ResidueProperties> residueProps,
+            String r1SetName, String r2SetName, String noeSetName) {
+        ResidueProperties resPropsR1 = residueProps.get(r1SetName);
+        ResidueProperties resPropsR2 = residueProps.get(r2SetName);
+        ResidueProperties resPropsNOE = residueProps.get(noeSetName);
+        System.out.println("fit S " + resPropsR1 + " " +resPropsR2 + " " + 
+                resPropsNOE);
+        double tau = 0.0;
+        if ((resPropsR1 != null) && (resPropsR2 != null)) {
+            Map<Integer, Double> r1Map = resPropsR1.getParMapData(
+                    "best", "0:0:0", "R");
+            Map<Integer, Double> r2Map = resPropsR2.getParMapData(
+                    "best", "0:0:0", "R");
+            Map<Integer, Double> noeMap = resPropsNOE.getParMapData(
+                    "best", "0:0:0", "NOE");
+            Map<Integer, Double> r1ErrMap = resPropsR1.getParMapData(
+                    "best", "0:0:0", "R.sd");
+            Map<Integer, Double> r2ErrMap = resPropsR2.getParMapData(
+                    "best", "0:0:0", "R.sd");
+            Map<Integer, Double> noeErrMap = resPropsNOE.getParMapData(
+                    "best", "0:0:0", "NOE.sd");
+
+            double sf = 700.0e6;
+            double tauc = 4.4e-9;
+            for (Integer res : r1Map.keySet()) {
+                Double r1 = r1Map.get(res);
+                Double r2 = r2Map.get(res);
+                Double noe = noeMap.get(res);
+                    System.out.print("res " + res + " " + r1  + " " + r2 + " " + noe);
+                Double r1Err = r1ErrMap.get(res);
+                Double r2Err = r2ErrMap.get(res);
+                Double noeErr = noeErrMap.get(res);
+                    System.out.println(" " + r1Err  + " " + r2Err + " " + noeErr);
+                double[] targets = {r1, r2, noe};
+                double[] sigmas = {r1Err, r2Err, noeErr};
+                if ((r1 != null) && (r2 != null) && (noe != null)) {
+                    double S2 = fitS(sf, tauc, targets, sigmas);
+                    System.out.println("res " + res + " " + S2);
+                }
+            }
+        }
+        return tau;
     }
 
 }
