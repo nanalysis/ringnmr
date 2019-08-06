@@ -1,6 +1,6 @@
 /*
- * NMRFx Processor : A Program for Processing NMR Data 
- * Copyright (C) 2004-2017 One Moon Scientific, Inc., Westfield, N.J., USA
+ * CoMD/NMR Software : A Program for Analyzing NMR Dynamics Data
+ * Copyright (C) 2018-2019 Bruce A Johnson
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 package org.comdnmr.fit.gui;
 
 import org.nmrfx.utils.properties.DirectoryOperationItem;
