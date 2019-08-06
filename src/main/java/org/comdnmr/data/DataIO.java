@@ -1,4 +1,4 @@
-package org.comdnmr.fit.calc;
+package org.comdnmr.data;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -22,6 +22,17 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.comdnmr.fit.calc.CESTEquation;
+import org.comdnmr.fit.calc.CESTFit;
+import org.comdnmr.fit.calc.CPMGEquation;
+import org.comdnmr.fit.calc.CPMGFit;
+import org.comdnmr.fit.calc.CurveFit;
+import org.comdnmr.fit.calc.EquationType;
+import org.comdnmr.fit.calc.ExpEquation;
+import org.comdnmr.fit.calc.ExpFit;
+import org.comdnmr.fit.calc.PlotEquation;
+import org.comdnmr.fit.calc.R1RhoEquation;
+import org.comdnmr.fit.calc.R1RhoFit;
 import org.yaml.snakeyaml.Yaml;
 
 /**

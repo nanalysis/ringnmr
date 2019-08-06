@@ -5,6 +5,7 @@
  */
 package org.comdnmr.fit.calc;
 
+import org.comdnmr.data.ResidueProperties;
 import java.util.List;
 
 /**

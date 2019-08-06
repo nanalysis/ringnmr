@@ -1,4 +1,4 @@
-package org.comdnmr.fit.calc;
+package org.comdnmr.data;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -100,6 +100,10 @@ public class ResidueProperties {
         return expMaps.values();
     }
 
+    public Map<String, ExperimentData> getExperimentMap() {
+        return expMaps;
+    }
+
     public List<String> getEquationNames() {
         Set<String> equationSet = new HashSet<>();
         residueMap.values().stream().forEach(rInfo -> {
@@ -182,7 +186,7 @@ public class ResidueProperties {
         return state;
     }
 
-    int[] getStateCount(int nResidues) {
+    public int[] getStateCount(int nResidues) {
         if (fieldMap.isEmpty()) {
             setupMaps();
         }

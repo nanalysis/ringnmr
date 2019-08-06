@@ -5,6 +5,7 @@
  */
 package org.comdnmr.fit.calc;
 
+import org.comdnmr.data.ExperimentData;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

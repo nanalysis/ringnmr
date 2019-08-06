@@ -1,5 +1,8 @@
 package org.comdnmr.fit.calc;
 
+import org.comdnmr.data.ResidueProperties;
+import org.comdnmr.data.ExperimentData;
+import org.comdnmr.data.ResidueInfo;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -108,7 +111,7 @@ public class ResidueFitter {
             resGroup.toArray(resNumGroup);
             List<ResidueInfo> resInfoList = fitResidues(resProps, resNumGroup, nFit, null);
             for (ResidueInfo resInfo : resInfoList) {
-                int fitResNum = resInfo.resNum;
+                int fitResNum = resInfo.getResNum();
                 resProps.addResidueInfo(String.valueOf(fitResNum), resInfo);
             }
             nFit++;
@@ -117,7 +120,7 @@ public class ResidueFitter {
     }
 
     public List<List<String>> getAllResidues() {
-        Map<String, ExperimentData> expDataSets = resProps.expMaps;
+        Map<String, ExperimentData> expDataSets = resProps.getExperimentMap();
         Set<Integer> resNums = new TreeSet<>();
         for (ExperimentData expData : expDataSets.values()) {
             for (String resNumS : expData.getResidues()) {
@@ -164,7 +167,7 @@ public class ResidueFitter {
             resList.toArray(resNumGroup);
             List<ResidueInfo> resInfoList = fitResidues(resProps, resNumGroup, nFit, null);
             for (ResidueInfo resInfo : resInfoList) {
-                int fitResNum = resInfo.resNum;
+                int fitResNum = resInfo.getResNum();
                 resProps.addResidueInfo(String.valueOf(fitResNum), resInfo);
             }
             nFit++;

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.comdnmr.fit.calc;
+package org.comdnmr.data;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,6 +11,10 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.comdnmr.fit.calc.CPMGFitResult;
+import org.comdnmr.fit.calc.CurveFit;
+import org.comdnmr.fit.calc.ParValueInterface;
+import org.comdnmr.fit.calc.PlotEquation;
 
 /**
  *
@@ -53,7 +57,7 @@ public class ResidueInfo {
         }
 
         public double getValue(String equationName, String state) {
-            Double value = resInfo.curveSets.get(equationName).get(state).parMap.get(parName);
+            Double value = resInfo.curveSets.get(equationName).get(state).getParMap().get(parName);
             if (value == null) {
                 return 0.0;
             } else {
@@ -63,12 +67,12 @@ public class ResidueInfo {
 
         @Override
         public double getValue() {
-            Double value = resInfo.curveSets.get(equationName).get(state).parMap.get(parName);
+            Double value = resInfo.curveSets.get(equationName).get(state).getParMap().get(parName);
             return value;
         }
 
         public double getError(String key) {
-            Double value = resInfo.curveSets.get(equationName).get(state).parMap.get(parName + ".sd");
+            Double value = resInfo.curveSets.get(equationName).get(state).getParMap().get(parName + ".sd");
             if (value == null) {
                 return 0.0;
             } else {
@@ -113,7 +117,7 @@ public class ResidueInfo {
     public CPMGFitResult getFitResult(String equationName) {
         String useEquationName;
         if (equationName.startsWith("best")) {
-            useEquationName = bestEquation.name;
+            useEquationName = bestEquation.getName();
         } else {
             useEquationName = equationName;
         }
@@ -125,14 +129,14 @@ public class ResidueInfo {
     }
 
     public void addCurveSet(CurveFit curveSet, boolean best) {
-        Map<String, CurveFit> fitMap = curveSets.get(curveSet.plotEquation.getName());
+        Map<String, CurveFit> fitMap = curveSets.get(curveSet.getEquation().getName());
         if (fitMap == null) {
             fitMap = new HashMap<>();
-            curveSets.put(curveSet.plotEquation.getName(), fitMap);
+            curveSets.put(curveSet.getEquation().getName(), fitMap);
         }
-        fitMap.put(curveSet.state, curveSet);
+        fitMap.put(curveSet.getState(), curveSet);
         if (best) {
-            bestEquation = curveSet.plotEquation;
+            bestEquation = curveSet.getEquation();
         }
     }
 
@@ -148,14 +152,14 @@ public class ResidueInfo {
     }
 
     public String getBestEquationName() {
-        return bestEquation == null ? "" : bestEquation.name;
+        return bestEquation == null ? "" : bestEquation.getName();
     }
 
     public void setBestEquationName(String equationName) {
         Map<String, CurveFit> curveFits = curveSets.get(equationName);
         for (CurveFit curveFit : curveFits.values()) {
-            if (curveFit.plotEquation.getName().equals(equationName)) {
-                bestEquation = curveFit.plotEquation;
+            if (curveFit.getEquation().getName().equals(equationName)) {
+                bestEquation = curveFit.getEquation();
             }
         }
     }
@@ -177,14 +181,14 @@ public class ResidueInfo {
         if (curveFit == null) {
             return null;
         } else {
-            return curveFit.parMap.get(parName);
+            return curveFit.getParMap().get(parName);
         }
     }
 
     public List<ParValueInterface> getParValues(String equationName, String state) {
         final String useEquationName;
         if (equationName.startsWith("best")) {
-            useEquationName = bestEquation.name;
+            useEquationName = bestEquation.getName();
         } else {
             useEquationName = equationName;
         }
@@ -211,7 +215,7 @@ public class ResidueInfo {
         if (plotEquation == null) {
             return sBuilder.toString();
         }
-        sBuilder.append(plotEquation.name);
+        sBuilder.append(plotEquation.getName());
         sBuilder.append(" ");
         sBuilder.append(resNum);
         sBuilder.append('\n');
@@ -233,10 +237,10 @@ public class ResidueInfo {
         }
         for (Map<String, CurveFit> fitMap : curveSets.values()) {
             for (CurveFit curveFit : fitMap.values()) {
-                if (curveFit.parMap != null) {
+                if (curveFit.getParMap() != null) {
                     sBuilder.append('\n');
-                    sBuilder.append(" eqn " + curveFit.plotEquation.getName() + " " + curveFit.getState());
-                    sBuilder.append(curveFit.parMap.toString());
+                    sBuilder.append(" eqn " + curveFit.getEquation().getName() + " " + curveFit.getState());
+                    sBuilder.append(curveFit.getParMap().toString());
                 }
             }
         }
@@ -259,14 +263,14 @@ public class ResidueInfo {
                 sBuilder.setLength(0);
                 sBuilder.append('\n');
                 sBuilder.append(commonString);
-                PlotEquation plotEquation = curveFit.plotEquation;
+                PlotEquation plotEquation = curveFit.getEquation();
                 if (saveStats) {
-                    CurveFit.CurveFitStats curveStats = getFitResult(plotEquation.name).getCurveFitStats();
+                    CurveFit.CurveFitStats curveStats = getFitResult(plotEquation.getName()).getCurveFitStats();
                     String statString = curveStats.toString();
                     sBuilder.append(statString);
                 }
-                sBuilder.append(curveFit.state).append(sep);// fixme
-                sBuilder.append(plotEquation.name).append(sep);
+                sBuilder.append(curveFit.getState()).append(sep);// fixme
+                sBuilder.append(plotEquation.getName()).append(sep);
                 Map<String, Double> parMap = curveFit.getParMap();
                 parValue = parMap.get("RMS");
                 sBuilder.append(String.format("%.2f", parValue)).append(sep);

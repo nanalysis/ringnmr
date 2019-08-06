@@ -1,7 +1,8 @@
-package org.comdnmr.fit.calc;
+package org.comdnmr.data;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.comdnmr.fit.calc.DataUtil;
 
 /**
  *

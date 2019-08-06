@@ -5,6 +5,7 @@
  */
 package org.comdnmr.fit.calc;
 
+import org.comdnmr.data.ResidueProperties;
 import java.util.Map;
 import org.apache.commons.math3.analysis.UnivariateFunction;
 import org.apache.commons.math3.optim.MaxEval;
