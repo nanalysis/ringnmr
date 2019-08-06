@@ -1,5 +1,6 @@
 package org.comdnmr.fit.calc;
 
+import org.comdnmr.util.CoMDPreferences;
 import org.comdnmr.fit.calc.CPMGFitResult;
 import java.util.List;
 import java.util.ArrayList;

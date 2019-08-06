@@ -1,5 +1,6 @@
 package org.comdnmr.fit.calc;
 
+import org.comdnmr.util.CoMDPreferences;
 import java.util.ArrayList;
 import java.util.stream.IntStream;
 import org.apache.commons.math3.optim.PointValuePair;

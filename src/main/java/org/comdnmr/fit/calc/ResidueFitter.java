@@ -1,5 +1,6 @@
 package org.comdnmr.fit.calc;
 
+import org.comdnmr.util.ProcessingStatus;
 import org.comdnmr.data.ResidueProperties;
 import org.comdnmr.data.ExperimentData;
 import org.comdnmr.data.ResidueInfo;

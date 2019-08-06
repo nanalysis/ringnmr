@@ -5,6 +5,8 @@
  */
 package org.comdnmr.fit.calc;
 
+import org.comdnmr.util.CoMDPreferences;
+import org.comdnmr.util.DataUtil;
 import java.util.Arrays;
 
 /**

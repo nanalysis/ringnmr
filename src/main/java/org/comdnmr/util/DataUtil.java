@@ -1,4 +1,4 @@
-package org.comdnmr.fit.calc;
+package org.comdnmr.util;
 
 import java.util.Arrays;
 import java.util.DoubleSummaryStatistics;

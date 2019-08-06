@@ -5,6 +5,8 @@
  */
 package org.comdnmr.fit.calc;
 
+import org.comdnmr.util.SavitzkyGolay;
+import org.comdnmr.util.Utilities;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;

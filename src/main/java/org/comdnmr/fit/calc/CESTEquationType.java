@@ -5,6 +5,7 @@
  */
 package org.comdnmr.fit.calc;
 
+import org.comdnmr.util.CoMDPreferences;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;

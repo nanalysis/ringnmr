@@ -2,7 +2,7 @@ package org.comdnmr.data;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.comdnmr.fit.calc.DataUtil;
+import org.comdnmr.util.DataUtil;
 
 /**
  *
