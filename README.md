@@ -1,4 +1,4 @@
-# CPMGFig2 
+# CoMD/NMR Software 
 
 
 
