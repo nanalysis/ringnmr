@@ -5,6 +5,7 @@
  */
 package org.comdnmr.fit.calc;
 
+import org.comdnmr.util.ANNLoader;
 import org.comdnmr.util.CoMDPreferences;
 import org.comdnmr.util.DataUtil;
 import org.comdnmr.util.Utilities;

@@ -1,5 +1,6 @@
 package org.comdnmr.fit.calc;
 
+import org.comdnmr.util.MtxExp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;

@@ -1,6 +1,6 @@
 package org.comdnmr.fit.calc;
 
-import org.comdnmr.fit.calc.MtxExp;
+import org.comdnmr.util.MtxExp;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrixFormat;
 import org.apache.commons.math3.linear.RealMatrix;
