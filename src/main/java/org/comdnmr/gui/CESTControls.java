@@ -15,42 +15,48 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.comdnmr.fit.gui;
+package org.comdnmr.gui;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
-import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import org.comdnmr.eqnfit.R1RhoEquation;
+import org.comdnmr.eqnfit.CESTEquation;
+import org.comdnmr.eqnfit.CESTFitter;
 import org.comdnmr.data.ExperimentData;
 import org.comdnmr.eqnfit.ParValueInterface;
 import org.comdnmr.data.ResidueInfo;
 import org.comdnmr.data.ResidueProperties;
-import static org.comdnmr.fit.gui.R1RhoControls.PARS.KEX;
-import static org.comdnmr.fit.gui.R1RhoControls.PARS.PB;
-import static org.comdnmr.fit.gui.R1RhoControls.PARS.DELTAA0;
-import static org.comdnmr.fit.gui.R1RhoControls.PARS.DELTAB0;
-import static org.comdnmr.fit.gui.R1RhoControls.PARS.R1A;
-import static org.comdnmr.fit.gui.R1RhoControls.PARS.R1B;
-import static org.comdnmr.fit.gui.R1RhoControls.PARS.R2A;
-import static org.comdnmr.fit.gui.R1RhoControls.PARS.R2B;
-import static org.comdnmr.fit.gui.R1RhoControls.PARS.B1FIELD;
-import static org.comdnmr.fit.gui.R1RhoControls.PARS.TEX;
-import org.comdnmr.eqnfit.R1RhoFitFunction;
+import static org.comdnmr.gui.CESTControls.PARS.KEX;
+import static org.comdnmr.gui.CESTControls.PARS.PB;
+import static org.comdnmr.gui.CESTControls.PARS.DELTAA0;
+import static org.comdnmr.gui.CESTControls.PARS.DELTAB0;
+import static org.comdnmr.gui.CESTControls.PARS.R1A;
+import static org.comdnmr.gui.CESTControls.PARS.R1B;
+import static org.comdnmr.gui.CESTControls.PARS.R2A;
+import static org.comdnmr.gui.CESTControls.PARS.R2B;
+import static org.comdnmr.gui.CESTControls.PARS.B1FIELD;
+import static org.comdnmr.gui.CESTControls.PARS.TEX;
+import org.comdnmr.eqnfit.CESTFitFunction;
 import org.comdnmr.util.CoMDPreferences;
+import javafx.scene.input.KeyCode;
 
 /**
  *
  * @author Martha Beckwith
  */
-public class R1RhoControls extends EquationControls {
+public class CESTControls extends EquationControls {
+
+    @FXML
 
     String[] parNames = {"Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B", "B1field", "Tex"};
 
@@ -98,9 +104,6 @@ public class R1RhoControls extends EquationControls {
         @Override
         public void addTo(HBox hBox) {
             hBox.getChildren().addAll(label, slider, valueText);
-            if (name.equals("R1B")) {
-                valueText.setDisable(true);
-            }
             HBox.setHgrow(slider, Priority.ALWAYS);
         }
 
@@ -144,9 +147,17 @@ public class R1RhoControls extends EquationControls {
 
     }
 
+    public List<String> getEquationNameList() {
+        return CESTFitter.getEquationNames();
+    }
+
     public void updateDeltaLimits() {
-        PARS.DELTAA0.updateLimits(DELTA_MIN, DELTA_MAX);
-        PARS.DELTAB0.updateLimits(DELTA_MIN, DELTA_MAX);
+        updateDeltaLimits(DELTA_MIN, DELTA_MAX);
+    }
+
+    public void updateDeltaLimits(double min, double max) {
+        PARS.DELTAA0.updateLimits(min, max);
+        PARS.DELTAB0.updateLimits(min, max);
     }
 
     boolean updatingTable = false;
@@ -156,8 +167,8 @@ public class R1RhoControls extends EquationControls {
     public VBox makeControls(PyController controller) {
         this.controller = controller;
         VBox vBox = init();
-        equationSelector.getItems().addAll(R1RhoEquation.getAllEquationNames());
-        equationSelector.setValue(R1RhoEquation.getAllEquationNames()[0]);
+        equationSelector.getItems().addAll(CESTEquation.getAllEquationNames());
+        equationSelector.setValue(CESTEquation.getAllEquationNames()[0]);
         stateSelector.getItems().addAll("0:0:0", "1:0:0");
         stateSelector.setValue("0:0:0");
         HBox hBox1 = new HBox();
@@ -225,8 +236,11 @@ public class R1RhoControls extends EquationControls {
             updatingTable = false;
         }
         switch (equationName) {
-            case "R1RHOPERTURBATION":
-            case "R1RHOBALDWINKAY":
+            case "CESTR1RHOPERTURBATION":
+            case "CESTR1RHOBALDWINKAY":
+            case "CESTR1RHOSD":
+            case "CESTR1RHOEXACT1":
+            case "CESTEXACT1":
                 KEX.disabled(false);
                 KEX.valueText.setDisable(false);
                 PB.disabled(false);
@@ -243,7 +257,7 @@ public class R1RhoControls extends EquationControls {
                 B1FIELD.disabled(false);
                 TEX.disabled(false);
                 break;
-            case "R1RHOLAGUERRE":
+            case "CESTR1RHON":
                 KEX.disabled(false);
                 KEX.valueText.setDisable(false);
                 PB.disabled(false);
@@ -257,12 +271,10 @@ public class R1RhoControls extends EquationControls {
                 R2A.disabled(false);
                 R2B.disabled(true);
                 R2B.valueText.setDisable(true);
-                R2B.valueText.setDisable(true);
                 B1FIELD.disabled(false);
                 TEX.disabled(false);
                 break;
-            case "R1RHOEXACT":
-            case "R1RHOEXACT0":
+            case "CESTEXACT0":
                 KEX.disabled(false);
                 KEX.valueText.setDisable(false);
                 PB.disabled(false);
@@ -279,7 +291,24 @@ public class R1RhoControls extends EquationControls {
                 B1FIELD.disabled(false);
                 TEX.disabled(false);
                 break;
-            case "R1RHOPERTURBATIONNOEX":
+            case "CESTEXACT2":
+                KEX.disabled(false);
+                KEX.valueText.setDisable(false);
+                PB.disabled(false);
+                PB.valueText.setDisable(false);
+                DELTAA0.disabled(false);
+                DELTAB0.disabled(false);
+                DELTAB0.valueText.setDisable(false);
+                R1A.disabled(false);
+                R1B.disabled(false);
+                R1B.valueText.setDisable(false);
+                R2A.disabled(false);
+                R2B.disabled(true);
+                R2B.valueText.setDisable(true);
+                B1FIELD.disabled(false);
+                TEX.disabled(false);
+                break;
+            case "CESTR1RHOPERTURBATIONNOEX":
                 KEX.disabled(true);
                 KEX.valueText.setDisable(true);
                 PB.disabled(true);
@@ -338,11 +367,14 @@ public class R1RhoControls extends EquationControls {
         double Tex = TEX.getValue();
         double[][] pars;
         switch (equationName) {
-            case "R1RHOPERTURBATION":
-            case "R1RHOLAGUERRE":
-            case "R1RHOBALDWINKAY":
-            case "R1RHOEXACT":
-            case "R1RHOEXACT0":
+            case "CESTR1RHOPERTURBATION":
+            case "CESTR1RHON":
+            case "CESTR1RHOSD":
+            case "CESTR1RHOBALDWINKAY":
+            case "CESTR1RHOEXACT1":
+            case "CESTEXACT0":
+            case "CESTEXACT1":
+            case "CESTEXACT2":
                 pars = new double[2][8];
                 pars[0][0] = kex;
                 pars[0][1] = pb;
@@ -355,7 +387,7 @@ public class R1RhoControls extends EquationControls {
                 pars[1][0] = B1field;
                 pars[1][1] = Tex;
                 break;
-            case "R1RHOPERTURBATIONNOEX":
+            case "CESTR1RHOPERTURBATIONNOEX":
                 pars = new double[2][8];
 //                pars[0][0] = kex;
 //                pars[0][1] = pb;
@@ -409,11 +441,14 @@ public class R1RhoControls extends EquationControls {
         double Tex = TEX.getValue();
         double[][] pars;
         switch (equationName) {
-            case "R1RHOPERTURBATION":
-            case "R1RHOLAGUERRE":
-            case "R1RHOBALDWINKAY":
-            case "R1RHOEXACT":
-            case "R1RHOEXACT0":
+            case "CESTR1RHOPERTURBATION":
+            case "CESTR1RHON":
+            case "CESTR1RHOSD":
+            case "CESTR1RHOBALDWINKAY":
+            case "CESTR1RHOEXACT1":
+            case "CESTEXACT0":
+            case "CESTEXACT1":
+            case "CESTEXACT2":
                 pars = new double[2][8];
                 pars[0][0] = kex;
                 pars[0][1] = pb;
@@ -426,7 +461,7 @@ public class R1RhoControls extends EquationControls {
                 pars[1][0] = B1field;
                 pars[1][1] = Tex;
                 break;
-            case "R1RHOPERTURBATIONNOEX":
+            case "CESTR1RHOPERTURBATIONNOEX":
                 pars = new double[2][8];
 //                pars[0][0] = kex;
 //                pars[0][1] = pb;
@@ -449,11 +484,14 @@ public class R1RhoControls extends EquationControls {
     double[][] getPars(String equationName, Map<String, ParValueInterface> parValues) {
         double[][] pars;
         switch (equationName) {
-            case "R1RHOPERTURBATION":
-            case "R1RHOLAGUERRE":
-            case "R1RHOBALDWINKAY":
-            case "R1RHOEXACT":
-            case "R1RHOEXACT0":
+            case "CESTR1RHOPERTURBATION":
+            case "CESTR1RHON":
+            case "CESTR1RHOBALDWINKAY":
+            case "CESTR1RHOSD":
+            case "CESTR1RHOEXACT1":
+            case "CESTEXACT0":
+            case "CESTEXACT1":
+            case "CESTEXACT2":
                 pars = new double[2][8];
                 pars[0][0] = parValues.get("kex").getValue();
                 pars[0][1] = parValues.get("pb").getValue();
@@ -466,7 +504,7 @@ public class R1RhoControls extends EquationControls {
                 pars[1][0] = parValues.get("B1field").getValue();
                 pars[1][1] = parValues.get("Tex").getValue();
                 break;
-            case "R1RHOPERTURBATIONNOEX":
+            case "CESTR1RHOPERTURBATIONNOEX":
                 pars = new double[2][8];
 //                pars[0][0] = parValues.get("kex").getValue();
 //                pars[0][1] = parValues.get("pb").getValue();
@@ -497,11 +535,14 @@ public class R1RhoControls extends EquationControls {
         double R2b = R2B.getValue();
         double B1field = B1FIELD.getValue();
         double Tex = TEX.getValue();
-        int nPars = R1RhoFitFunction.getNPars(map);
+        int nPars = CESTFitFunction.getNPars(map);
         double[] guesses = new double[nPars];
         switch (equationName) {
-            case "R1RHOPERTURBATION":
-            case "R1RHOBALDWINKAY":
+            case "CESTR1RHOPERTURBATION":
+            case "CESTR1RHOSD":
+            case "CESTR1RHOBALDWINKAY":
+            case "CESTR1RHOEXACT1":
+            case "CESTEXACT1":
                 for (int id = 0; id < map.length; id++) {
                     guesses[map[id][0]] = kex; //kex
                     guesses[map[id][1]] = pb; //pb
@@ -513,7 +554,7 @@ public class R1RhoControls extends EquationControls {
                     guesses[map[id][7]] = R2b; //R2B
                 }
                 break;
-            case "R1RHOEXACT":
+            case "CESTEXACT0":
                 for (int id = 0; id < map.length; id++) {
                     guesses[map[id][0]] = kex; //kex
                     guesses[map[id][1]] = pb; //pb
@@ -525,7 +566,7 @@ public class R1RhoControls extends EquationControls {
                     guesses[map[id][7]] = R2b; //R2B
                 }
                 break;
-            case "R1RHOEXACT0":
+            case "CESTEXACT2":
                 for (int id = 0; id < map.length; id++) {
                     guesses[map[id][0]] = kex; //kex
                     guesses[map[id][1]] = pb; //pb
@@ -534,10 +575,10 @@ public class R1RhoControls extends EquationControls {
                     guesses[map[id][4]] = R1a; //R1A
                     guesses[map[id][5]] = R1b; //R1B
                     guesses[map[id][6]] = R2a; //R2A
-                    guesses[map[id][7]] = R2b; //R2B
+                    guesses[map[id][7]] = R2a; //R2B
                 }
                 break;
-            case "R1RHOLAGUERRE":
+            case "CESTR1RHON":
                 for (int id = 0; id < map.length; id++) {
                     guesses[map[id][0]] = kex; //kex
                     guesses[map[id][1]] = pb; //pb
@@ -549,7 +590,7 @@ public class R1RhoControls extends EquationControls {
                     guesses[map[id][7]] = R2a; //R2B
                 }
                 break;
-            case "R1RHOPERTURBATIONNOEX":
+            case "CESTR1RHOPERTURBATIONNOEX":
                 for (int id = 0; id < map.length; id++) {
 //                    guesses[map[id][0]] = kex; //kex
 //                    guesses[map[id][1]] = pb; //pb
@@ -601,12 +642,12 @@ public class R1RhoControls extends EquationControls {
                 if (control.getName().equals("deltaA0") || control.getName().equals("deltaB0")) {
                     if (controller.currentResProps != null) {
                         if (controller.currentResProps.getExperimentData() != null) {
-                            double[] xVals = controller.currentResProps.getExperimentData().stream().findFirst().get().getXVals();
-//                            String resNum = String.valueOf(controller.currentResProps.getResidueValues().get(0).getResNum());
-//                            double[] xVals = controller.currentResProps.getExperimentData().stream().findFirst().get().getResidueData(resNum).getXValues()[0];
+//                            double[] xVals = controller.currentResProps.getExperimentData().stream().findFirst().get().getXVals();
+                            String resNum = String.valueOf(controller.currentResProps.getResidueValues().get(0).getResNum());
+                            double[] xVals = controller.currentResProps.getExperimentData().stream().findFirst().get().getResidueData(resNum).getXValues()[0];
                             if (xVals != null) {
-                                double min = Math.round(xVals[1] / 2.0) * 2.0;
-                                double max = Math.round(xVals[xVals.length - 1] / 2.0) * 2.0;
+                                double min = Math.floor(xVals[1] / 2) * 2;
+                                double max = Math.ceil(xVals[xVals.length - 1] / 2) * 2;
                                 control.updateLimits(min, max);
                             }
                         }
@@ -635,8 +676,11 @@ public class R1RhoControls extends EquationControls {
         String equationName = equationSelector.getValue().toString();
         List<String> parNames1 = new ArrayList<>();
         switch (equationName) {
-            case "R1RHOPERTURBATION":
-            case "R1RHOBALDWINKAY":
+            case "CESTR1RHOPERTURBATION":
+            case "CESTR1RHOBALDWINKAY":
+            case "CESTR1RHOSD":
+            case "CESTR1RHOEXACT1":
+            case "CESTEXACT1":
                 parNames1.add("Kex");
                 parNames1.add("Pb");
                 parNames1.add("deltaA0");
@@ -645,8 +689,7 @@ public class R1RhoControls extends EquationControls {
                 parNames1.add("R2A");
                 parNames1.add("R2B");
                 break;
-            case "R1RHOEXACT":
-            case "R1RHOEXACT0":
+            case "CESTEXACT0":
                 parNames1.add("Kex");
                 parNames1.add("Pb");
                 parNames1.add("deltaA0");
@@ -656,7 +699,16 @@ public class R1RhoControls extends EquationControls {
                 parNames1.add("R2A");
                 parNames1.add("R2B");
                 break;
-            case "R1RhoR1RHOLAGUERRE":
+            case "CESTEXACT2":
+                parNames1.add("Kex");
+                parNames1.add("Pb");
+                parNames1.add("deltaA0");
+                parNames1.add("deltaB0");
+                parNames1.add("R1A");
+                parNames1.add("R1B");
+                parNames1.add("R2A");
+                break;
+            case "CESTR1RHON":
                 parNames1.add("Kex");
                 parNames1.add("Pb");
                 parNames1.add("deltaA0");
@@ -664,7 +716,7 @@ public class R1RhoControls extends EquationControls {
                 parNames1.add("R1A");
                 parNames1.add("R2A");
                 break;
-            case "R1RhoR1RHOPERTURBATIONNOEX":
+            case "CESTR1RHOPERTURBATIONNOEX":
 //                parNames1.add("Kex");
 //                parNames1.add("Pb");
                 parNames1.add("deltaA0");
@@ -676,7 +728,7 @@ public class R1RhoControls extends EquationControls {
     }
 
     void updateEquations() {
-//        System.out.println("R1Rho Controls updateEqns called.");
+//        System.out.println("CEST Controls updateEqns called.");
         ResidueInfo resInfo = controller.currentResInfo;
         ResidueProperties resProps = controller.currentResProps;
         List<GUIPlotEquation> equations = new ArrayList<>();

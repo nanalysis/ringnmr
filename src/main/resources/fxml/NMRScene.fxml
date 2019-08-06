@@ -6,7 +6,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.layout.*?>
-<?import org.comdnmr.fit.gui.*?>
+<?import org.comdnmr.gui.*?>
 <?import org.controlsfx.control.*?>
 <?import org.nmrfx.chart.XYChartPane?>
 
@@ -17,7 +17,7 @@
 <BorderPane fx:id="mainBox"  styleClass="mainFxmlClass"
             xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
             prefWidth="850" prefHeight="700"
-            fx:controller="org.comdnmr.fit.gui.PyController">
+            fx:controller="org.comdnmr.gui.PyController">
     <fx:script source="actions.py"/>
     <top>
         <HBox>

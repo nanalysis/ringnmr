@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.comdnmr.fit.gui;
+package org.comdnmr.gui;
 
 import javafx.scene.canvas.Canvas;
 import javafx.scene.layout.Pane;
@@ -25,23 +25,27 @@ import org.nmrfx.chart.XYCanvasChart;
  *
  * @author brucejohnson
  */
-public class XYBarPlotDataPane extends Pane {
+public class XYPlotDataPane extends Pane {
 
     Canvas canvas;
+    PlotData chart;
 
-    public XYBarPlotDataPane() {
+    public XYPlotDataPane() {
         canvas = new Canvas();
+        PlotData chart = PlotData.buildChart(canvas);
         getChildren().add(canvas);
-        widthProperty().addListener(e -> updateCanvasSize());
-        heightProperty().addListener(e -> updateCanvasSize());
+        this.chart = chart;
+        widthProperty().addListener(e -> updateChart());
+        heightProperty().addListener(e -> updateChart());
     }
 
-    public Canvas getCanvas() {
-        return canvas;
+    public XYCanvasChart getChart() {
+        return chart;
     }
 
-    void updateCanvasSize() {
+    void updateChart() {
         canvas.setWidth(getWidth());
         canvas.setHeight(getHeight());
+        chart.drawChart();
     }
 }

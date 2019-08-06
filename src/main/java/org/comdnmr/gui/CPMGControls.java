@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.comdnmr.fit.gui;
+package org.comdnmr.gui;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,14 +32,14 @@ import org.comdnmr.eqnfit.CPMGFitter;
 import org.comdnmr.eqnfit.ParValueInterface;
 import org.comdnmr.data.ResidueInfo;
 import org.comdnmr.data.ResidueProperties;
-import static org.comdnmr.fit.gui.CPMGControls.PARS.FIELD2;
-import static org.comdnmr.fit.gui.CPMGControls.PARS.KEX;
-import static org.comdnmr.fit.gui.CPMGControls.PARS.PA;
-import static org.comdnmr.fit.gui.CPMGControls.PARS.R2;
+import static org.comdnmr.gui.CPMGControls.PARS.FIELD2;
+import static org.comdnmr.gui.CPMGControls.PARS.KEX;
+import static org.comdnmr.gui.CPMGControls.PARS.PA;
+import static org.comdnmr.gui.CPMGControls.PARS.R2;
 import org.comdnmr.eqnfit.CPMGFitFunction;
 import org.comdnmr.util.CoMDPreferences;
-import static org.comdnmr.fit.gui.CPMGControls.PARS.DPPM;
-import static org.comdnmr.fit.gui.CPMGControls.PARS.DPPMMIN;
+import static org.comdnmr.gui.CPMGControls.PARS.DPPM;
+import static org.comdnmr.gui.CPMGControls.PARS.DPPMMIN;
 
 /**
  *

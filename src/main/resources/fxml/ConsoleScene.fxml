@@ -6,12 +6,12 @@
 <?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import org.comdnmr.fit.gui.*?>
+<?import org.comdnmr.gui.*?>
 <?import org.fxmisc.richtext.InlineCssTextArea?>
 <?import org.controlsfx.control.*?>
 
 
-<BorderPane id="AnchorPane" prefHeight="200.0" prefWidth="600.0" styleClass="mainFxmlClass" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.comdnmr.fit.gui.ConsoleRedirect">
+<BorderPane id="AnchorPane" prefHeight="200.0" prefWidth="600.0" styleClass="mainFxmlClass" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.comdnmr.gui.ConsoleRedirect">
     
     <top>
         <HBox>

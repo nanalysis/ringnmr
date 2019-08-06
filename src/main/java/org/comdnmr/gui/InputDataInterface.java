@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.comdnmr.fit.gui;
+package org.comdnmr.gui;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -51,7 +51,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.comdnmr.data.DataIO;
 import org.comdnmr.data.ResidueProperties;
-import static org.comdnmr.fit.gui.ChartUtil.residueProperties;
+import static org.comdnmr.gui.ChartUtil.residueProperties;
 import org.controlsfx.control.textfield.TextFields;
 import org.controlsfx.dialog.ExceptionDialog;
 import org.nmrfx.chart.DataSeries;

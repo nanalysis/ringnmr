@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.comdnmr.fit.gui;
+package org.comdnmr.gui;
 
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
@@ -101,9 +101,9 @@ import org.comdnmr.util.CoMDPreferences;
 import org.comdnmr.modelfree.CorrelationTime;
 import org.comdnmr.eqnfit.FitFunction;
 import org.comdnmr.eqnfit.R1RhoFitter;
-import static org.comdnmr.fit.gui.MainApp.preferencesController;
-import static org.comdnmr.fit.gui.MainApp.console;
-import static org.comdnmr.fit.gui.MainApp.primaryStage;
+import static org.comdnmr.gui.MainApp.preferencesController;
+import static org.comdnmr.gui.MainApp.console;
+import static org.comdnmr.gui.MainApp.primaryStage;
 import org.comdnmr.utils.NMRFxClient;
 import org.controlsfx.dialog.ExceptionDialog;
 import org.nmrfx.chart.Axis;

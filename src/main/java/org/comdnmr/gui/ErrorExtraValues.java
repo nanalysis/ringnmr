@@ -15,37 +15,37 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.comdnmr.fit.gui;
-
-import javafx.scene.canvas.Canvas;
-import javafx.scene.layout.Pane;
-import org.nmrfx.chart.XYCanvasChart;
+package org.comdnmr.gui;
 
 /**
- *
- * @author brucejohnson
+ * Data extra values for storing value, lowPercentile and highPercentile.
  */
-public class XYPlotDataPane extends Pane {
+public class ErrorExtraValues {
 
-    Canvas canvas;
-    PlotData chart;
+    private double value;
+    private double lowPercentile;
+    private double highPercentile;
 
-    public XYPlotDataPane() {
-        canvas = new Canvas();
-        PlotData chart = PlotData.buildChart(canvas);
-        getChildren().add(canvas);
-        this.chart = chart;
-        widthProperty().addListener(e -> updateChart());
-        heightProperty().addListener(e -> updateChart());
+    public ErrorExtraValues(double value, double lowPercentile, double highPercentile) {
+        this.value = value;
+        this.lowPercentile = lowPercentile;
+        this.highPercentile = highPercentile;
     }
 
-    public XYCanvasChart getChart() {
-        return chart;
+    public double getValue() {
+        return value;
     }
 
-    void updateChart() {
-        canvas.setWidth(getWidth());
-        canvas.setHeight(getHeight());
-        chart.drawChart();
+    public double getLowPercentile() {
+        return lowPercentile;
+    }
+
+    public double getHighPercentile() {
+        return highPercentile;
+    }
+
+    @Override
+    public String toString() {
+        return value + " " + lowPercentile + " " + highPercentile;
     }
 }

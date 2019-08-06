@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.comdnmr.fit.gui;
+package org.comdnmr.gui;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,9 +30,9 @@ import org.comdnmr.eqnfit.ExpFitter;
 import org.comdnmr.eqnfit.ParValueInterface;
 import org.comdnmr.data.ResidueInfo;
 import org.comdnmr.data.ResidueProperties;
-import static org.comdnmr.fit.gui.ExpControls.PARS.A;
-import static org.comdnmr.fit.gui.ExpControls.PARS.C;
-import static org.comdnmr.fit.gui.ExpControls.PARS.R;
+import static org.comdnmr.gui.ExpControls.PARS.A;
+import static org.comdnmr.gui.ExpControls.PARS.C;
+import static org.comdnmr.gui.ExpControls.PARS.R;
 import org.comdnmr.eqnfit.ExpFitFunction;
 import org.comdnmr.eqnfit.ExpEquation;
 
