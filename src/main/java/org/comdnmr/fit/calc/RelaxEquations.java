@@ -9,6 +9,11 @@ import java.util.Map;
  */
 public class RelaxEquations {
 
+    static final int S = 1;
+    static final int ImS = 2;
+    static final int I = 3;
+    static final int IpS = 4;
+
     public final static double MU0 = 4.0e-7 * Math.PI;
     public final static double GAMMA_N = -2.71e7;
     public final static double GAMMA_H = 2.68e8;
@@ -94,7 +99,47 @@ public class RelaxEquations {
 
     public double NOE(double tau) {
         double R1 = R1(tau);
-        return 1.0 + (d2 / (4.0 * R1)) * (gammaS / gammaI) * (6.0 * J(wI + wS, tau) - J(wI - wS, tau));
+        return 1.0 + (d2 / (4.0 * R1)) * (gammaS / gammaI)
+                * (6.0 * J(wI + wS, tau) - J(wI - wS, tau));
+    }
+
+    public double R1(double[] J) {
+        double dipolarContrib = d2 / 4.0 * (J[ImS]) + 3.0 * J[S]
+                + 6.0 * J[IpS];
+        double csaContrib = c2 * J[S];
+        return dipolarContrib + csaContrib;
+    }
+
+    public double R2(double[] J, double Rex) {
+        double dipolarContrib = d2 / 8.0 * (4.0 * J[0] + J[ImS]
+                + 3.0 * J[S]
+                + 6.0 * J[I] + 6.0 * J[IpS]);
+        double csaContrib = c2 / 6 * (4.0 * J[0] + 3.0 * J[S]);
+        return dipolarContrib + csaContrib + Rex;
+    }
+
+    public double NOE(double[] J) {
+        double R1 = R1(J);
+        return 1.0 + (d2 / (4.0 * R1)) * (gammaS / gammaI)
+                * (6.0 * J[IpS] - J[ImS]);
+    }
+
+    public double[] getJ(double tau) {
+        double J0 = J(0.0, tau); // R2
+        double JIplusS = J(wI + wS, tau); //R1, R2, NOE
+        double JIminusS = J(wI - wS, tau); // R1, R2, NOE
+        double JI = J(wI, tau); // R2
+        double JS = J(wS, tau); //R1, R2
+        double[] result = {J0, JS, JIminusS, JI, JIplusS};
+        return result;
+    }
+
+    public double[] getJ(double tau, double S) {
+        double[] result = getJ(tau);
+        for (int i = 0; i < result.length; i++) {
+            result[i] *= S;
+        }
+        return result;
     }
 
 }
