@@ -1,6 +1,7 @@
-package org.comdnmr.fit.calc;
+package org.comdnmr.eqnfit;
 
 import org.comdnmr.util.CoMDPreferences;
+import java.util.ArrayList;
 import java.util.stream.IntStream;
 import org.apache.commons.math3.optim.PointValuePair;
 import org.apache.commons.math3.random.RandomGenerator;
@@ -9,37 +10,34 @@ import org.apache.commons.math3.random.Well19937c;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.util.FastMath;
 
-public class CalcR1Rho extends FitModel {
+public class CalcExpDecay extends FitModel {
 
     static RandomGenerator random = new SynchronizedRandomGenerator(new Well19937c());
     int[] r2Mask = {0, 1, 3};
     double[] rexErrors = new double[nID];
-    R1RhoEquations r1rhoEq = new R1RhoEquations();
 
-    public CalcR1Rho() {
-        this.equation = R1RhoEquation.R1RHOPERTURBATION;
+    public CalcExpDecay() {
+        this.equation = ExpEquation.EXPAB;
     }
 
     @Override
     public void setEquation(String eqName) {
-        equation = R1RhoEquation.valueOf(eqName.toUpperCase());
+        equation = ExpEquation.valueOf(eqName.toUpperCase());
     }
 
-    public CalcR1Rho(double[][] x, double[] y, double[] err, double[] fieldValues) throws IllegalArgumentException {
+    public CalcExpDecay(double[][] x, double[] y, double[] err, double[] fieldValues) throws IllegalArgumentException {
         this(x, y, err, fieldValues, new int[x.length]);
     }
 
-    public CalcR1Rho(double[][] x, double[] y, double[] err, double[] fieldValues, int[] idNums) throws IllegalArgumentException {
-        this.xValues = new double[x.length][];
+    public CalcExpDecay(double[][] x, double[] y, double[] err, double[] fieldValues, int[] idNums) throws IllegalArgumentException {
+        this.xValues = new double[1][];
         this.xValues[0] = x[0].clone();
-        this.xValues[1] = x[1].clone();
-        this.xValues[2] = x[2].clone();
         this.yValues = y.clone();
         this.errValues = err.clone();
         this.fieldValues = fieldValues.clone();
         this.idNums = idNums.clone();
         this.idNums = new int[yValues.length];
-        this.equation = R1RhoEquation.R1RHOPERTURBATION;
+        this.equation = ExpEquation.EXPAB;
         if (setNID()) {
             throw new IllegalArgumentException("Invalid idNums, some values not used");
         }
@@ -61,30 +59,37 @@ public class CalcR1Rho extends FitModel {
     }
 
     @Override
+    public double[][] getSimPars() {
+        return parValues;
+    }
+
+    @Override
     public double value(double[] normPar) {
         double[] par = deNormalize(normPar);
-
         double sumAbs = 0.0;
         double sumSq = 0.0;
-        double[] yCalc = new double[yValues.length];
-        for (int id = 0; id < map.length; id++) {
-            double[][] x = CESTEquations.getXValues(xValues, idNums, id);
-            double[] fields = CESTEquations.getValues(fieldValues, idNums, id);
-            double[] yCalc1 = equation.calculate(par, map[id], x, id, fields);
-            int[] indicies = CESTEquations.getIndicies(idNums, id);
-            for (int i = 0; i < indicies.length; i++) {
-                yCalc[indicies[i]] = yCalc1[i];
-            }
-        }
-
+        double[] ax = new double[1];
         for (int i = 0; i < yValues.length; i++) {
-            double delta = (yCalc[i] - yValues[i]);
+            final double value;
+            ax[0] = xValues[0][i];
+            value = equation.calculate(par, map[idNums[i]], ax, idNums[i], fieldValues[i]);
+            //System.out.println( "xxxxxxxxxxx " + value + " " + yValues[i] + " " + equation.name());
+            double delta = (value - yValues[i]);
             if (weightFit) {
                 delta /= errValues[i];
             }
+            //System.out.print(xValues[i] + " " + yValues[i] + " " + value + " " + (delta*delta) + " ");
+            //double delta = (value - yValues[i]) / errValues[i];
             sumAbs += FastMath.abs(delta);
             sumSq += delta * delta;
         }
+//        if (reportFitness) {
+//        double rms = Math.sqrt(sumSq / xValues.length);
+//        for (double p : par) {
+//            System.out.print(p + " ");
+//        }
+//        System.out.println(" " + sumSq + " " + sumAbs + " " + rms);
+        //  }
         if (absMode) {
             return sumAbs / (yValues.length - par.length);
         } else {
@@ -92,22 +97,22 @@ public class CalcR1Rho extends FitModel {
         }
     }
 
-    @Override
-    public double[] getPredicted(double[] par) {
-        double[] yPred = simY(par);
-        return yPred;
-    }
-
-    @Override
-    public double[][] getSimPars() {
-        return parValues;
+    public ArrayList<Double> simY(double[] par, double[][] xValues, double field) {
+        ArrayList<Double> result = new ArrayList<>();
+        double[] x = new double[1];
+        for (int i = 0; i < xValues[0].length; i++) {
+            x[0] = xValues[0][i];
+            double yCalc = equation.calculate(par, map[idNums[i]], x, idNums[i], field);
+            result.add(yCalc);
+        }
+        return result;
     }
 
     @Override
     public double[] simBounds(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) {
         reportFitness = false;
-        int nPar = start.length;
         int nSim = CoMDPreferences.getSampleSize();
+        int nPar = start.length;
         parValues = new double[nPar + 1][nSim];
         double[] yPred = getPredicted(start);
         double[] yValuesOrig = yValues.clone();
@@ -146,10 +151,10 @@ public class CalcR1Rho extends FitModel {
         } else {
             return simBoundsStreamParametric(start, lowerBounds, upperBounds, inputSigma);
         }
-
     }
 
-    public double[] simBoundsStreamParametric(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) {
+    public double[] simBoundsStreamParametric(double[] start,
+            double[] lowerBounds, double[] upperBounds, double inputSigma) {
         reportFitness = false;
         int nPar = start.length;
         int nSim = CoMDPreferences.getSampleSize();
@@ -161,7 +166,7 @@ public class CalcR1Rho extends FitModel {
 
         IntStream.range(0, nSim).parallel().forEach(i -> {
 //        IntStream.range(0, nSim).forEach(i -> {
-            CalcR1Rho rDisp = new CalcR1Rho(xValues, yPred, errValues, fieldValues, idNums);
+            CalcExpDecay rDisp = new CalcExpDecay(xValues, yPred, errValues, fieldValues, idNums);
             rDisp.setEquation(equation.getName());
             double[] newY = new double[yValues.length];
             for (int k = 0; k < yValues.length; k++) {
@@ -178,6 +183,7 @@ public class CalcR1Rho extends FitModel {
                 parValues[j][i] = rPoint[j];
             }
             parValues[nPar][i] = result.getValue();
+
         });
 
         double[] parSDev = new double[nPar];
@@ -198,9 +204,9 @@ public class CalcR1Rho extends FitModel {
         String optimizer = CoMDPreferences.getBootStrapOptimizer();
 
         IntStream.range(0, nSim).parallel().forEach(i -> {
-            CalcR1Rho rDisp = new CalcR1Rho(xValues, yValues, errValues, fieldValues, idNums);
+            CalcExpDecay rDisp = new CalcExpDecay(xValues, yValues, errValues, fieldValues, idNums);
             rDisp.setEquation(equation.getName());
-            double[][] newX = new double[3][yValues.length];
+            double[][] newX = new double[1][yValues.length];
             double[] newY = new double[yValues.length];
             double[] newErr = new double[yValues.length];
             double[] newFieldValues = new double[yValues.length];
@@ -210,8 +216,6 @@ public class CalcR1Rho extends FitModel {
                 for (int k = 0; k < yValues.length; k++) {
                     int rI = random.nextInt(yValues.length);
                     newX[0][k] = xValues[0][rI];
-                    newX[1][k] = xValues[1][rI];
-                    newX[2][k] = xValues[2][rI];
                     newY[k] = yValues[rI];
                     newErr[k] = errValues[rI];
                     newFieldValues[k] = fieldValues[rI];
@@ -233,7 +237,6 @@ public class CalcR1Rho extends FitModel {
                 parValues[j][i] = rPoint[j];
             }
             parValues[nPar][i] = result.getValue();
-
         });
 
         double[] parSDev = new double[nPar];

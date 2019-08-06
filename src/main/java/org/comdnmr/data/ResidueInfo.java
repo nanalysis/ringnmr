@@ -11,10 +11,10 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import org.comdnmr.fit.calc.CPMGFitResult;
-import org.comdnmr.fit.calc.CurveFit;
-import org.comdnmr.fit.calc.ParValueInterface;
-import org.comdnmr.fit.calc.PlotEquation;
+import org.comdnmr.eqnfit.CPMGFitResult;
+import org.comdnmr.eqnfit.CurveFit;
+import org.comdnmr.eqnfit.ParValueInterface;
+import org.comdnmr.eqnfit.PlotEquation;
 
 /**
  *

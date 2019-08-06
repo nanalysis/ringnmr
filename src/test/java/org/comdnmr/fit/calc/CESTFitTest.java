@@ -1,12 +1,12 @@
 package org.comdnmr.fit.calc;
 
 import org.comdnmr.util.CoMDPreferences;
-import org.comdnmr.fit.calc.CPMGFitResult;
+import org.comdnmr.eqnfit.CPMGFitResult;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import org.comdnmr.fit.calc.CESTFit;
+import org.comdnmr.eqnfit.CESTFit;
 import org.junit.Assert;
 import org.junit.Test;
 

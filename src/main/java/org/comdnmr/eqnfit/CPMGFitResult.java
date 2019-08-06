@@ -1,4 +1,4 @@
-package org.comdnmr.fit.calc;
+package org.comdnmr.eqnfit;
 
 import java.util.ArrayList;
 import java.util.List;

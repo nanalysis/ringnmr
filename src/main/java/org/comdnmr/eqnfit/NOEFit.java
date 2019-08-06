@@ -3,8 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.comdnmr.fit.calc;
+package org.comdnmr.eqnfit;
 
+import org.comdnmr.eqnfit.ParValueInterface;
+import org.comdnmr.eqnfit.CPMGFitResult;
+import org.comdnmr.eqnfit.EquationFitter;
+import org.comdnmr.eqnfit.FitModel;
 import org.comdnmr.data.ResidueProperties;
 import java.util.List;
 

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.comdnmr.fit.calc;
+package org.comdnmr.eqnfit;
 
 import org.comdnmr.util.MtxExp;
 import org.comdnmr.util.ANNLoader;

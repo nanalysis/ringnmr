@@ -1,5 +1,17 @@
-package org.comdnmr.fit.calc;
+package org.comdnmr.fit;
 
+import org.comdnmr.eqnfit.R1RhoFit;
+import org.comdnmr.eqnfit.CESTEquation;
+import org.comdnmr.eqnfit.ExpEquation;
+import org.comdnmr.eqnfit.EquationType;
+import org.comdnmr.eqnfit.CPMGFitResult;
+import org.comdnmr.eqnfit.R1RhoEquation;
+import org.comdnmr.eqnfit.CESTFit;
+import org.comdnmr.eqnfit.CurveFit;
+import org.comdnmr.eqnfit.ExpFit;
+import org.comdnmr.eqnfit.EquationFitter;
+import org.comdnmr.eqnfit.CPMGFit;
+import org.comdnmr.eqnfit.CPMGEquation;
 import org.comdnmr.util.ProcessingStatus;
 import org.comdnmr.data.ResidueProperties;
 import org.comdnmr.data.ExperimentData;

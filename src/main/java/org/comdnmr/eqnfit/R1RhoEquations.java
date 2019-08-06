@@ -1,4 +1,4 @@
-package org.comdnmr.fit.calc;
+package org.comdnmr.eqnfit;
 
 import org.comdnmr.util.MtxExp;
 import java.util.ArrayList;

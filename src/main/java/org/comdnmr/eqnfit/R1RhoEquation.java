@@ -3,12 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.comdnmr.fit.calc;
+package org.comdnmr.eqnfit;
 
 import org.comdnmr.util.CoMDPreferences;
 import java.util.Arrays;
 import java.util.List;
-import org.comdnmr.fit.calc.CESTPeak;
+import org.comdnmr.eqnfit.CESTPeak;
 
 /**
  *

@@ -22,17 +22,17 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.comdnmr.fit.calc.CESTEquation;
-import org.comdnmr.fit.calc.CESTFit;
-import org.comdnmr.fit.calc.CPMGEquation;
-import org.comdnmr.fit.calc.CPMGFit;
-import org.comdnmr.fit.calc.CurveFit;
-import org.comdnmr.fit.calc.EquationType;
-import org.comdnmr.fit.calc.ExpEquation;
-import org.comdnmr.fit.calc.ExpFit;
-import org.comdnmr.fit.calc.PlotEquation;
-import org.comdnmr.fit.calc.R1RhoEquation;
-import org.comdnmr.fit.calc.R1RhoFit;
+import org.comdnmr.eqnfit.CESTEquation;
+import org.comdnmr.eqnfit.CESTFit;
+import org.comdnmr.eqnfit.CPMGEquation;
+import org.comdnmr.eqnfit.CPMGFit;
+import org.comdnmr.eqnfit.CurveFit;
+import org.comdnmr.eqnfit.EquationType;
+import org.comdnmr.eqnfit.ExpEquation;
+import org.comdnmr.eqnfit.ExpFit;
+import org.comdnmr.eqnfit.PlotEquation;
+import org.comdnmr.eqnfit.R1RhoEquation;
+import org.comdnmr.eqnfit.R1RhoFit;
 import org.yaml.snakeyaml.Yaml;
 
 /**
