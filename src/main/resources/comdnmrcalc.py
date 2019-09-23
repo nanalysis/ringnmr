@@ -1,17 +1,17 @@
-import org.comdnmr.fit.calc.CalcRDisp as CalcRDisp
-import org.comdnmr.fit.calc.DataIO as DataIO
-import org.comdnmr.fit.calc.ResidueFitter as ResidueFitter
+import org.comdnmr.eqnfit.CPMGFitFunction as CPMGFitFunction
+import org.comdnmr.data.DataIO as DataIO
+import org.comdnmr.fit.ResidueFitter as ResidueFitter
 import math
 import sys
 import os.path
 import runpy
 #from optparse import OptionParser
 import argparse
-import org.comdnmr.fit.calc.CoMDPreferences as CoMDPreferences
-import org.comdnmr.fit.calc.CESTEquation as CESTEquation
-import org.comdnmr.fit.calc.R1RhoEquation as R1RhoEquation
+import org.comdnmr.util.CoMDPreferences as CoMDPreferences
+import org.comdnmr.eqnfit.CESTEquation as CESTEquation
+import org.comdnmr.eqnfit.R1RhoEquation as R1RhoEquation
 
-calcR = CalcRDisp()
+calcR = CPMGFitFunction()
 
 def findDuplicates(vcpmgs):
     dupDict = {}
