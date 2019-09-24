@@ -58,9 +58,7 @@ public class RelaxEquations {
     private final double wI;
     private final double wS;
 
-    // don't use this yet.  Various inconsistencies with various different presentations of equations
     //   consider using scaled versions (smaller exponents)
-    // add csa
     public RelaxEquations(double sf, String elem1, String elem2) {
         gammaI = GAMMA_MAP.get(elem1);
         gammaS = GAMMA_MAP.get(elem2);
@@ -75,10 +73,29 @@ public class RelaxEquations {
         this.sf = sf;
     }
 
+    // Note: taui = tm in Art Palmer's code, and taui in Relax. 
+    // tau = ts in Art Palmer's code (taue in the paper: Phys Chem Chem Phys, 2016, 18, 5839-5849), and taue in Relax.
     public double JModelFree(double w, double tau, double taui, double s2) {
         double value1 = s2 / (1.0 + w * w * taui * taui);
         double value2 = ((1.0 - s2) * (tau + taui) * tau) / ((tau + taui) * (tau + taui) + w * w * taui * taui * tau * tau);
         double value = 0.4 * taui * (value1 + value2);
+        return value;
+    }
+    
+    // Note: taui = tm in Art Palmer's code. tau = ts in Art Palmer's code.
+    public double JModelFree(double w, double tau, double taui, double s2, double sf2) {
+        double value1 = s2 / (1.0 + w * w * taui * taui);
+        double value2 = ((sf2 - s2) * (tau + taui) * tau) / ((tau + taui) * (tau + taui) + w * w * taui * taui * tau * tau);
+        double value = 0.4 * taui * (value1 + value2);
+        return value;
+    }
+    
+    // Note: taui = tm in Art Palmer's code. tau = tf in Art Palmer's code. tauj = ts in Art Palmer's code.
+    public double JModelFree(double w, double tau, double taui, double tauj, double s2, double sf2) {
+        double value1 = s2 / (1.0 + w * w * taui * taui);
+        double value2 = ((1 - sf2) * (tau + taui) * tau) / ((tau + taui) * (tau + taui) + w * w * taui * taui * tau * tau);
+        double value3 = ((sf2 - s2) * (tauj + taui) * tauj) / ((tauj + taui) * (tauj + taui) + w * w * taui * taui * tauj * tauj);
+        double value = 0.4 * taui * (value1 + value2 + value3);
         return value;
     }
 
@@ -116,13 +133,13 @@ public class RelaxEquations {
 
     public double NOE(double tau) {
         double R1 = R1(tau);
-        return 1.0 + (d2 / (4.0 * R1)) * (gammaS / gammaI)
+        return 1.0 + (d2 / (4.0 * R1)) * (gammaI / gammaS)
                 * (6.0 * J(wI + wS, tau) - J(wI - wS, tau));
     }
 
     public double R1(double[] J) {
-        double dipolarContrib = d2 / 4.0 * (J[ImS]) + 3.0 * J[S]
-                + 6.0 * J[IpS];
+        double dipolarContrib = d2 / 4.0 * (J[ImS] + 3.0 * J[S]
+                + 6.0 * J[IpS]);
         double csaContrib = c2 * J[S];
         return dipolarContrib + csaContrib;
     }
@@ -137,16 +154,62 @@ public class RelaxEquations {
 
     public double NOE(double[] J) {
         double R1 = R1(J);
-        return 1.0 + (d2 / (4.0 * R1)) * (gammaS / gammaI)
+        return 1.0 + (d2 / (4.0 * R1)) * (gammaI / gammaS)
                 * (6.0 * J[IpS] - J[ImS]);
     }
-
+    
+    public double sigmaSI(double[] J) {
+        double R1 = R1(J);
+        double NOE = NOE(J);
+        return R1*(NOE - 1)*(gammaS / gammaI);
+    }
+    
+    public double gamma(double[] J, double Rex) {
+        double R1 = R1(J);
+        double R2 = R2(J, Rex);
+        double sigmaSI = sigmaSI(J);
+        return R2 - 0.5*R1 - 0.454*sigmaSI;
+    }
+    
     public double[] getJ(double tau) {
         double J0 = J(0.0, tau); // R2
         double JIplusS = J(wI + wS, tau); //R1, R2, NOE
         double JIminusS = J(wI - wS, tau); // R1, R2, NOE
         double JI = J(wI, tau); // R2
         double JS = J(wS, tau); //R1, R2
+        double[] result = {J0, JS, JIminusS, JI, JIplusS};
+        return result;
+    }
+    
+    // Note: taui = tm in Art Palmer's code, and taui in Relax. tau = ts in Art Palmer's code (taue in the paper), and taue in Relax.
+    public double[] getJModelFree(double tau, double taui, double s2) {
+        double J0 = JModelFree(0.0, tau, taui, s2);
+        double JIplusS = JModelFree(wI + wS, tau, taui, s2); //R1, R2, NOE
+        double JIminusS = JModelFree(wI - wS, tau, taui, s2); // R1, R2, NOE
+        double JI = JModelFree(wI, tau, taui, s2); // R2
+        double JS = JModelFree(wS, tau, taui, s2); //R1, R2
+        double[] result = {J0, JS, JIminusS, JI, JIplusS};
+        return result;
+    }
+    
+    // Note: taui = tm in Art Palmer's code. tau = ts in Art Palmer's code.
+    public double[] getJModelFree(double tau, double taui, double s2, double sf2) {
+        double J0 = JModelFree(0.0, tau, taui, s2, sf2);
+        double JIplusS = JModelFree(wI + wS, tau, taui, s2, sf2); //R1, R2, NOE
+        double JIminusS = JModelFree(wI - wS, tau, taui, s2, sf2); // R1, R2, NOE
+        double JI = JModelFree(wI, tau, taui, s2, sf2); // R2
+        double JS = JModelFree(wS, tau, taui, s2, sf2); //R1, R2
+        double[] result = {J0, JS, JIminusS, JI, JIplusS};
+        return result;
+    }
+    
+    // Note: taui = tm in Art Palmer's code. tau = tf in Art Palmer's code. tauj = ts in Art Palmer's code.
+    public double[] getJModelFree(double tau, double taui, double tauj, double s2, double sf2) {
+        double J0 = JModelFree(0.0, tau, taui, tauj, s2, sf2);
+        double JIplusS = JModelFree(wI + wS, tau, taui, tauj, s2, sf2); //R1, R2, NOE
+        double JIminusS = JModelFree(wI - wS, tau, taui, tauj, s2, sf2); // R1, R2, NOE
+        double JI = JModelFree(wI, tau, taui, tauj, s2, sf2); // R2
+        double JS = JModelFree(wS, tau, taui, tauj, s2, sf2); //R1, R2
         double[] result = {J0, JS, JIminusS, JI, JIplusS};
         return result;
     }
