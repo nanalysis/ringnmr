@@ -17,6 +17,7 @@
 */
 package org.comdnmr.modelfree;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,8 +36,8 @@ public class RelaxEquations {
     public final static double GAMMA_N = -2.71e7;
     public final static double GAMMA_H = 2.68e8;
     public final static double PLANCK = 1.054e-34;
-    public final static double R_HN = 1.01e-10;
-    public final static double SIGMA = 165.0e-6;
+    public final static double R_HN = 1.02e-10;
+    public final static double SIGMA = 160.0e-6;
     public final static Map<String, Double> GAMMA_MAP = new HashMap<>();
     public final static Map<String, Double> R_MAP = new HashMap<>();
 
@@ -79,6 +80,22 @@ public class RelaxEquations {
 
         this.sf = sf;
     }
+    
+    // Note: tauM = tm in Art Palmer's code, and taui in Relax. 
+
+    /**
+     * Model Free spectral density function, J(omega), calculation using Model 1.
+     * @param w double. The frequency, omega.
+     * @param tauM double. The overall correlation time.
+     * @param s2 double. The order parameter S^2.
+     * @return J(w) value.
+     */
+    public double JModelFree(double w, double tauM, double s2) {
+        double value1 = s2 / (1.0 + w * w * tauM * tauM);
+        double value = 0.4 * tauM * (value1);
+        return value;
+    }
+    
 
     // Note: tauM = tm in Art Palmer's code, and taui in Relax. 
     // tau = ts in Art Palmer's code (taue in the paper: Phys Chem Chem Phys, 2016, 18, 5839-5849), and taue in Relax.
@@ -132,6 +149,24 @@ public class RelaxEquations {
         double value3 = ((sf2 - s2) * (tauS + tauM) * tauS) / ((tauS + tauM) * (tauS + tauM) + w * w * tauM * tauM * tauS * tauS);
         double value = 0.4 * tauM * (value1 + value2 + value3);
         return value;
+    }
+    
+    // Note: tauM = tm in Art Palmer's code, and taui in Relax. 
+
+    /**
+     * Model Free spectral density function, J(omega), calculations using Model 1.
+     * @param tauM double. The overall correlation time.
+     * @param s2 double. The order parameter S^2.
+     * @return double[]. Array of J(w) values.
+     */
+    public double[] getJModelFree(double tauM, double s2) {
+        double J0 = JModelFree(0.0, tauM, s2);
+        double JIplusS = JModelFree(wI + wS, tauM, s2); //R1, R2, NOE
+        double JIminusS = JModelFree(wI - wS, tauM, s2); // R1, R2, NOE
+        double JI = JModelFree(wI, tauM, s2); // R2
+        double JS = JModelFree(wS, tauM, s2); //R1, R2
+        double[] result = {J0, JS, JIminusS, JI, JIplusS};
+        return result;
     }
     
      // Note: tauM = tm in Art Palmer's code, and taui in Relax. tau = ts in Art Palmer's code (taue in the paper), and taue in Relax.
@@ -215,6 +250,30 @@ public class RelaxEquations {
         return value;
     }
     
+    public double[] getDiffusionConstants(String type) {
+        String[] types = {"sphere", "spheroid", "ellipsoid"};
+        double[][] constants = {{1}};//, 
+//            {0.25*(3.0*dz2 - 1)*(3.0*dz2 - 1), 3*dz2*(1 - dz2), 0.75*(3.0*dz2 - 1)*(3.0*dz2 - 1)},
+//            {0.25*(dtot - e), 3*dy2*dz2, 3*dx2*dz2, 3*dx2*dy2, 0.25*(dtot + e)}};
+        return constants[Arrays.asList(types).indexOf(type)];
+    }
+    
+    public double[] getCorrelationTimes(String type, double Diso, double Da, double Dr) {
+        String[] types = {"sphere", "spheroid", "ellipsoid"};
+        double[][] tauInv = {{6*Diso}};//, 
+//            {6*Diso - 2*Da, 6*Diso - Da, 6*Diso + 2*Da},
+//            {6*Diso - 2*Da*R, 6*Diso - Da*(1 + 3*Dr), 6*Diso - Da*(1 - 3*Dr), 6*Diso + 2*Da, 6*Diso + 2*Da*R}};
+        int index = Arrays.asList(types).indexOf(type);
+        double[] taus = new double[tauInv[index].length];
+        for (int i=0; i<taus.length; i++) {
+            taus[i] = 1/tauInv[index][i];
+        }
+        return taus;
+    }
+    
+    public double calcS2(double J0, double bN, double mN) {
+        return (5/2)*Math.sqrt((J0 - bN)*mN);
+    }
     
     /**
      * Spectral density function calculations.
