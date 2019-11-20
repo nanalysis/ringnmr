@@ -31,11 +31,11 @@ public class ExpMTest {
 
     @Test
     public void testDiagonalMatrix() {
-        RealMatrix matrix
-                = MatrixUtils.createRealMatrix(new double[][]{
+        double[][] matrix
+                = new double[][]{
             {1.0, 0.0},
             {0.0, 2.0}
-        });
+        };
 
         RealMatrix valid
                 = MatrixUtils.createRealMatrix(new double[][]{
@@ -44,23 +44,26 @@ public class ExpMTest {
         });
 
         RealMatrixFormat formatter = new RealMatrixFormat(); 
-        RealMatrix result = MtxExp.matrixExp(matrix);
-        System.out.println(formatter.format(valid));
-        System.out.println(formatter.format(result));
+        double[][] result = MtxExp.matrixExp(matrix);
+        RealMatrix resultR = MatrixUtils.createRealMatrix(result);
+//        RealMatrix resultOrig = MtxExp.matrixExp(MatrixUtils.createRealMatrix(matrix));
+        System.out.println("valid = " + formatter.format(valid));
+        System.out.println("result = " + formatter.format(resultR));
+//        System.out.println("orig result = " + formatter.format(resultOrig));
 
-        double norm = result.subtract(valid).getNorm();
+        double norm = resultR.subtract(valid).getNorm();
         Assert.assertEquals(0, norm, 6.0e-13);
     }
     
     @Test
     public void testDiagonalMatrix1() {
-        RealMatrix matrix
-                = MatrixUtils.createRealMatrix(new double[][]{
+        double[][] matrix
+                = new double[][]{
             {0.0, 6.0, 0.0, 0.0},
             {0.0, 0.0, 6.0, 0.0},
             {0.0, 0.0, 0.0, 6.0},
             {0.0, 0.0, 0.0, 0.0}
-        });
+        };
 
         RealMatrix valid
                 = MatrixUtils.createRealMatrix(new double[][]{
@@ -71,22 +74,25 @@ public class ExpMTest {
         });
 
         RealMatrixFormat formatter = new RealMatrixFormat(); 
-        RealMatrix result = MtxExp.matrixExp(matrix);
-        System.out.println(formatter.format(valid));
-        System.out.println(formatter.format(result));
+        double[][] result = MtxExp.matrixExp(matrix);
+        RealMatrix resultR = MatrixUtils.createRealMatrix(result);
+//        RealMatrix resultOrig = MtxExp.matrixExp(MatrixUtils.createRealMatrix(matrix));
+        System.out.println("valid = " + formatter.format(valid));
+        System.out.println("result = " + formatter.format(resultR));
+//        System.out.println("orig result = " + formatter.format(resultOrig));
 
-        double norm = result.subtract(valid).getNorm();
+        double norm = resultR.subtract(valid).getNorm();
         Assert.assertEquals(0, norm, 6.0e-13);
     }
     
     @Test
     public void testDiagonalMatrix2() {
-        RealMatrix matrix
-                = MatrixUtils.createRealMatrix(new double[][]{
+        double[][] matrix
+                = new double[][]{
             {29.87942128909879,    0.7815750847907159, -2.289519314033932},
             {0.7815750847907159, 25.72656945571064,    8.680737820540137},
             {-2.289519314033932,   8.680737820540137,  34.39400925519054 }
-        });
+        };
 
         RealMatrix valid
                 = MatrixUtils.createRealMatrix(new double[][]{
@@ -96,11 +102,14 @@ public class ExpMTest {
         });
 
         RealMatrixFormat formatter = new RealMatrixFormat(); 
-        RealMatrix result = MtxExp.matrixExp(matrix);
-        System.out.println(formatter.format(valid));
-        System.out.println(formatter.format(result));
+        double[][] result = MtxExp.matrixExp(matrix);
+        RealMatrix resultR = MatrixUtils.createRealMatrix(result);
+//        RealMatrix resultOrig = MtxExp.matrixExp(MatrixUtils.createRealMatrix(matrix));
+        System.out.println("valid = " + formatter.format(valid));
+        System.out.println("result = " + formatter.format(resultR));
+//        System.out.println("orig result = " + formatter.format(resultOrig));
 
-        double norm = result.subtract(valid).getNorm();
-        Assert.assertEquals(0, norm, 3.0e3);
+        double norm = resultR.subtract(valid).getNorm();
+        Assert.assertEquals(0, norm, 6.0e3);
     }
 }
