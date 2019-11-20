@@ -250,6 +250,10 @@ public class RelaxFit {
         }
     }
     
+    /**
+     * Set bounds for TauM input by user.
+     * @param bounds double[] [tauM LB, tauM UB]
+     */
     public void setTauMBounds(double[] bounds) {
         tauMBounds[0] = bounds[0];
         tauMBounds[1] = bounds[1];
