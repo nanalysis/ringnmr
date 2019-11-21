@@ -82,7 +82,7 @@ public class MtxExp {
         for(int k = 2; k <= q; k++) {
             c = c * (q - k + 1) / (k * (2 * q - k + 1));
             CommonOps_DDRM.mult(Aold, X1, X);
-            X1 = X.copy();
+            X1.set(X);
             CommonOps_DDRM.divide(X, 1/c);
             CommonOps_DDRM.add(E, X, E);
           
@@ -101,7 +101,7 @@ public class MtxExp {
         
         for(int k = 1; k <= s; k++) {
             CommonOps_DDRM.mult(E1, E1, E);
-            E1 = E.copy();
+            E1.set(E);
         }
         return E;
     }

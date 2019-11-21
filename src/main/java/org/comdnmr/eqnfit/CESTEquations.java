@@ -29,15 +29,16 @@ import org.comdnmr.util.Utilities;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.stream.Stream;
-import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.linear.Array2DRowRealMatrix;
-import org.apache.commons.math3.linear.EigenDecomposition;
+//import org.apache.commons.math3.linear.EigenDecomposition;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.ejml.data.Complex_F64;
+import org.ejml.data.DMatrixRMaj;
+import org.ejml.dense.row.CommonOps_DDRM;
+import org.ejml.dense.row.decomposition.eig.WatchedDoubleStepQRDecomposition_DDRM;
+import org.ejml.dense.row.factory.DecompositionFactory_DDRM;
 import org.ojalgo.ann.ArtificialNeuralNetwork;
 import org.ojalgo.matrix.store.MatrixStore;
 import org.ojalgo.structure.Access1D;
@@ -184,6 +185,28 @@ public class CESTEquations {
         {0, k1, 0, 0, -km1, 0, 0},
         {0, 0, k1, 0, 0, -km1, 0},
         {0, 0, 0, k1, 0, 0, -km1}};
+        
+        double[][] La = {{0, 0, 0, 0, 0, 0, 0},
+            {0, -R2A, 0, 0, 0, 0, 0}, //{0, -R2A, -deltaA, 0, 0, 0, 0}
+            {0, 0, -R2A, 0, 0, 0, 0}, //{0, deltaA, -R2A, -omegaB1[i], 0, 0, 0}
+            {2 * R1A * (1 - pb), 0, 0, -R1A, 0, 0, 0}, //{2 * R1A * (1 - pb), 0, omegaB1[i], -R1A, 0, 0, 0}
+            {0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0}};
+
+        double[][] Lb = {{0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, -R2B, 0, 0}, //{0, 0, 0, 0, -R2B, -deltaB, 0}
+            {0, 0, 0, 0, 0, -R2B, 0}, //{0, 0, 0, 0, deltaB, -R2B, -omegaB1[i]}
+            {2 * R1B * pb, 0, 0, 0, 0, 0, -R1B}}; //{2 * R1B * pb, 0, 0, 0, 0, omegaB1[i], -R1B}
+        
+        DMatrixRMaj La1 = new DMatrixRMaj(La);
+        DMatrixRMaj Lb1 = new DMatrixRMaj(Lb);
+        DMatrixRMaj K1 = new DMatrixRMaj(K);
+
+        DMatrixRMaj Z = new DMatrixRMaj(new double[La.length][La[0].length]);
 
         for (int i = 0; i < omegarf.length; i++) {
             omegaB1[i] = b1Field[i] * 2.0 * Math.PI;
@@ -195,40 +218,27 @@ public class CESTEquations {
             double sint = omegaB1[i] / we;
             double cost = omegaBar / we;
 
-            double[][] La = {{0, 0, 0, 0, 0, 0, 0},
-            {0, -R2A, -deltaA, 0, 0, 0, 0},
-            {0, deltaA, -R2A, -omegaB1[i], 0, 0, 0},
-            {2 * R1A * (1 - pb), 0, omegaB1[i], -R1A, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0}};
+            La1.set(1, 2, -deltaA); 
+            La1.set(2, 1, deltaA);
+            La1.set(2, 3, -omegaB1[i]);
+            La1.set(3, 2, omegaB1[i]);
 
-            double[][] Lb = {{0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, -R2B, -deltaB, 0},
-            {0, 0, 0, 0, deltaB, -R2B, -omegaB1[i]},
-            {2 * R1B * pb, 0, 0, 0, 0, omegaB1[i], -R1B}};
+            Lb1.set(4, 5, -deltaB); 
+            Lb1.set(5, 4, deltaB);
+            Lb1.set(5, 6, -omegaB1[i]);
+            Lb1.set(6, 5, omegaB1[i]);
+            
+            CommonOps_DDRM.add(La1, Lb1, Z);
+            CommonOps_DDRM.addEquals(Z, K1);
+            
+            CommonOps_DDRM.divide(Z, 1/tdelay);
+            
+            DMatrixRMaj at = MtxExp.matrixExp(Z);
 
-            double[][] Z = new double[La.length][La[0].length];
-            for (int k = 0; k < La.length; k++) {
-                for (int j = 0; j < La[k].length; j++) {
-                    Z[k][j] = La[k][j] + Lb[k][j] + K[k][j];
-                }
-            }
-
-            double[][] at = new double[Z.length][Z[0].length];
-            for (int k = 0; k < Z.length; k++) {
-                for (int j = 0; j < Z[k].length; j++) {
-                    at[k][j] = tdelay * Z[k][j];
-                }
-            }
-
-            at = MtxExp.matrixExp(at);
-
-            double magA = at[3][0] * m0[0] + at[3][3] * m0[3] + at[3][6] * m0[6];
-            magA = magA - (at[3][0] * m1[0] + at[3][3] * m1[3] + at[3][6] * m1[6]);
+//            double magA = at[3][0] * m0[0] + at[3][3] * m0[3] + at[3][6] * m0[6];
+//            magA = magA - (at[3][0] * m1[0] + at[3][3] * m1[3] + at[3][6] * m1[6]);
+            double magA = at.get(3, 0) * m0[0] + at.get(3, 3) * m0[3] + at.get(3, 6) * m0[6];
+            magA = magA - (at.get(3, 0) * m1[0] + at.get(3, 3) * m1[3] + at.get(3, 6) * m1[6]);
             magA = magA / 2;
 
             cest[i] = magA;
@@ -287,6 +297,26 @@ public class CESTEquations {
         {k1, 0, 0, -km1, 0, 0},
         {0, k1, 0, 0, -km1, 0},
         {0, 0, k1, 0, 0, -km1}};
+        
+        double[][] La = {{-R2A, 0, 0, 0, 0, 0}, //{-R2A, -deltaA, 0, 0, 0, 0}
+            {0, -R2A, 0, 0, 0, 0}, //{deltaA, -R2A, -omegaB1[i], 0, 0, 0}
+            {0, 0, -R1A, 0, 0, 0}, //{0, omegaB1[i], -R1A, 0, 0, 0}
+            {0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0}};
+
+        double[][] Lb = {{0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0},
+            {0, 0, 0, -R2B, 0, 0}, //{0, 0, 0, -R2B, -deltaB, 0}
+            {0, 0, 0, 0, -R2B, 0}, //{0, 0, 0, deltaB, -R2B, -omegaB1[i]}
+            {0, 0, 0, 0, 0, -R1B}}; //{0, 0, 0, 0, omegaB1[i], -R1B}
+        
+        DMatrixRMaj La1 = new DMatrixRMaj(La);
+        DMatrixRMaj Lb1 = new DMatrixRMaj(Lb);
+        DMatrixRMaj K1 = new DMatrixRMaj(K);
+
+        DMatrixRMaj Z = new DMatrixRMaj(new double[La.length][La[0].length]);
 
         for (int i = 0; i < omegarf.length; i++) {
             omegaB1[i] = b1Field[i] * 2.0 * Math.PI;
@@ -297,41 +327,32 @@ public class CESTEquations {
 
             double sint = omegaB1[i] / we;
             double cost = omegaBar / we;
+            
+            La1.set(0, 1, -deltaA); 
+            La1.set(1, 0, deltaA);
+            La1.set(1, 2, -omegaB1[i]);
+            La1.set(2, 1, omegaB1[i]);
 
-            double[][] La = {{-R2A, -deltaA, 0, 0, 0, 0},
-            {deltaA, -R2A, -omegaB1[i], 0, 0, 0},
-            {0, omegaB1[i], -R1A, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0}};
-
-            double[][] Lb = {{0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0},
-            {0, 0, 0, -R2B, -deltaB, 0},
-            {0, 0, 0, deltaB, -R2B, -omegaB1[i]},
-            {0, 0, 0, 0, omegaB1[i], -R1B}};
-
-            double[][] Z = new double[La.length][La[0].length];
-            for (int k = 0; k < La.length; k++) {
-                for (int j = 0; j < La[k].length; j++) {
-                    Z[k][j] = La[k][j] + Lb[k][j] + K[k][j];
-                }
-            }
-
-            RealMatrix zR = new Array2DRowRealMatrix(Z);
-            EigenDecomposition Zeig = new EigenDecomposition(zR);
-            double[] Zeigreal = Zeig.getRealEigenvalues();
-            double[] Zeigimag = Zeig.getImagEigenvalues();
-
+            Lb1.set(3, 4, -deltaB); 
+            Lb1.set(4, 3, deltaB);
+            Lb1.set(4, 5, -omegaB1[i]);
+            Lb1.set(5, 4, omegaB1[i]);         
+            
+            CommonOps_DDRM.add(La1, Lb1, Z);
+            CommonOps_DDRM.addEquals(Z, K1);
+            
+            
             List<Double> r1rho1 = new ArrayList<>();
-            for (int j = 0; j < Zeigimag.length; j++) {
-                if (Zeigimag[j] == 0) {
-                    r1rho1.add(Zeigreal[j]);
-                    // i++;
+            WatchedDoubleStepQRDecomposition_DDRM eig = (WatchedDoubleStepQRDecomposition_DDRM) DecompositionFactory_DDRM.eig(Z.getNumCols(), true, false);
+            eig.decompose(Z);
+            int numEigVec = eig.getNumberOfEigenvalues();
+            for (int v=0; v<numEigVec; v++) {
+                Complex_F64 ZEigVal = eig.getEigenvalue(v);
+                if (ZEigVal.isReal()) {
+                    r1rho1.add(ZEigVal.getReal());
                 }
             }
-
+            
             double r1rho = Math.abs(Collections.max(r1rho1));
 
             cest[i] = cost * cost * Math.exp(-tdelay * r1rho);
