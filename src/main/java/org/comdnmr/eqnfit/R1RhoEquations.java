@@ -20,12 +20,12 @@ package org.comdnmr.eqnfit;
 import org.comdnmr.util.MtxExp;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import org.apache.commons.math3.linear.Array2DRowRealMatrix;
-import org.apache.commons.math3.linear.EigenDecomposition;
-import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.ejml.data.Complex_F64;
+import org.ejml.data.DMatrixRMaj;
+import org.ejml.dense.row.CommonOps_DDRM;
+import org.ejml.dense.row.decomposition.eig.WatchedDoubleStepQRDecomposition_DDRM;
+import org.ejml.dense.row.factory.DecompositionFactory_DDRM;
 
 /**
  *
@@ -116,7 +116,7 @@ public class R1RhoEquations {
         return r1rho;
     }
 
-    public static double r1rhoExact0(double tdelay, double omega, double pB, double kex, double deltaA, double deltaB, double R1A, double R1B, double R2A, double R2B) {
+    public static double r1rhoExact0(DMatrixRMaj Z, double[] m0, double[] m1, double tdelay) {//(double tdelay, double omega, double pB, double kex, double deltaA, double deltaB, double R1A, double R1B, double R2A, double R2B) {
         // Performs an exact numerical calculation and returns CEST intensity ratio.
         //
         // X: array containing two arrays:
@@ -131,62 +131,14 @@ public class R1RhoEquations {
         // R2A, R2B: R20 relaxation rate constants of A and B states
 
         // time delay is hard-coded below
-        double pA = 1.0 - pB;
-        double kAB = pB * kex;
-        double kBA = pA * kex;
 
-        double theta = Math.atan2(omega, deltaA);
-        double cosA = Math.cos(theta);
-        double sinA = Math.sin(theta);
-
-        double[] m0 = {pA * sinA, 0.0, pA * cosA, 0.0, 0.0, 0.0};
-        double[] m1 = {sinA, 0.0, cosA, 0.0, 0.0, 0.0};
-
-        double[][] K = {
-            {-kAB, 0, 0, kBA, 0, 0},
-            {0, -kAB, 0, 0, kBA, 0},
-            {0, 0, -kAB, 0, 0, kBA},
-            {kAB, 0, 0, -kBA, 0, 0},
-            {0, kAB, 0, 0, -kBA, 0},
-            {0, 0, kAB, 0, 0, -kBA}};
-
-        double[][] La = {
-            {-R2A, -deltaA, 0, 0, 0, 0},
-            {deltaA, -R2A, -omega, 0, 0, 0},
-            {0, omega, -R1A, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0}};
-
-        double[][] Lb = {
-            {0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0},
-            {0, 0, 0, -R2B, -deltaB, 0},
-            {0, 0, 0, deltaB, -R2B, -omega},
-            {0, 0, 0, 0, omega, -R1B}};
-
-        double[][] Z = new double[La.length][La[0].length];
-        for (int k = 0; k < La.length; k++) {
-            for (int j = 0; j < La[k].length; j++) {
-                Z[k][j] = La[k][j] + Lb[k][j] + K[k][j];
-            }
-        }
-
-        double[][] at = new double[Z.length][Z[0].length];
-        for (int k = 0; k < Z.length; k++) {
-            for (int j = 0; j < Z[k].length; j++) {
-                at[k][j] = tdelay * Z[k][j];
-            }
-        }
-
-        at = MtxExp.matrixExp(at);
-        Array2DRowRealMatrix aM = new Array2DRowRealMatrix(at);
-        double[] v = aM.operate(m0);
+        DMatrixRMaj at = MtxExp.matrixExp(Z);
+        DMatrixRMaj v = new DMatrixRMaj(m0);
+        CommonOps_DDRM.mult(at, new DMatrixRMaj(m0), v);
         double magA = 0.0;
         double magA0 = 0.0;
-        for (int i = 0; i < v.length; i++) {
-            magA += m1[i] * v[i];
+        for (int i = 0; i < v.getNumRows(); i++) {
+            magA += m1[i] * v.get(i, 0);
             magA0 += m1[i] * m0[i];
         }
 
@@ -199,7 +151,7 @@ public class R1RhoEquations {
         return r1rho;
     }
 
-    public static double r1rhoExact(double omega, double pb, double kex, double deltaA, double deltaB, double R1A, double R1B, double R2A, double R2B) {
+    public static double r1rhoExact(DMatrixRMaj Z) {//(double omega, double pb, double kex, double deltaA, double deltaB, double R1A, double R1B, double R2A, double R2B) {
         // Performs an exact numerical calculation of the eigenvalue and returns R1rho.
         //
         // omega: B1 field strength (1/s)
@@ -209,26 +161,14 @@ public class R1RhoEquations {
         // deltaB: offset of B state (angular units, 1/s)
         // R1A, R1B: R10 relaxation rate constants of A and B states
         // R2A, R2B: R20 relaxation rate constants of A and B states
-        double k1 = pb * kex;
-        double km1 = (1 - pb) * kex;
-        double[][] La = {{-R2A, -deltaA, 0, 0, 0, 0}, {deltaA, -R2A, -omega, 0, 0, 0}, {0, omega, -R1A, 0, 0, 0}, {0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0}};
-        double[][] Lb = {{0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0}, {0, 0, 0, -R2B, -deltaB, 0}, {0, 0, 0, deltaB, -R2B, -omega}, {0, 0, 0, 0, omega, -R1B}};
-        double[][] K = {{-k1, 0, 0, km1, 0, 0}, {0, -k1, 0, 0, km1, 0}, {0, 0, -k1, 0, 0, km1}, {k1, 0, 0, -km1, 0, 0}, {0, k1, 0, 0, -km1, 0}, {0, 0, k1, 0, 0, -km1}};
-        double[][] Z = new double[La.length][La[0].length];
-        for (int i = 0; i < La.length; i++) {
-            for (int j = 0; j < La[i].length; j++) {
-                Z[i][j] = La[i][j] + Lb[i][j] + K[i][j];
-            }
-        }
-        RealMatrix zR = new Array2DRowRealMatrix(Z);
-        EigenDecomposition Zeig = new EigenDecomposition(zR);
-        double[] Zeigreal = Zeig.getRealEigenvalues();
-        double[] Zeigimag = Zeig.getImagEigenvalues();
         List<Double> r1rho1 = new ArrayList<>();
-        for (int i = 0; i < Zeigimag.length; i++) {
-            if (Zeigimag[i] == 0) {
-                r1rho1.add(Zeigreal[i]);
-                // i++;
+        WatchedDoubleStepQRDecomposition_DDRM eig = (WatchedDoubleStepQRDecomposition_DDRM) DecompositionFactory_DDRM.eig(Z.getNumCols(), true, false);
+        eig.decompose(Z);
+        int numEigVec = eig.getNumberOfEigenvalues();
+        for (int v=0; v<numEigVec; v++) {
+            Complex_F64 ZEigVal = eig.getEigenvalue(v);
+            if (ZEigVal.isReal()) {
+                r1rho1.add(ZEigVal.getReal());
             }
         }
         double r1rho = Math.abs(Collections.max(r1rho1));
