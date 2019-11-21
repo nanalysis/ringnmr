@@ -1,6 +1,5 @@
 package org.comdnmr.data;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.function.BiFunction;
 import java.util.stream.IntStream;
@@ -129,7 +128,7 @@ public class Fitter {
         this.yValues = yValues;
         this.errValues = errValues;
     }
-
+    
     class Optimizer implements MultivariateFunction {
 
         RandomGenerator random = new SynchronizedRandomGenerator(new Well19937c());
