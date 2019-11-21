@@ -25,7 +25,8 @@ package org.comdnmr.eqnfit;
 import org.comdnmr.util.CoMDPreferences;
 import java.util.Arrays;
 import java.util.List;
-import org.comdnmr.eqnfit.CESTPeak;
+import org.ejml.data.DMatrixRMaj;
+import org.ejml.dense.row.CommonOps_DDRM;
 
 /**
  *
@@ -269,11 +270,51 @@ public enum R1RhoEquation implements R1RhoEquationType {
                     double R2A = par[map[6]];
                     double R2B = par[map[7]];
                     double[] yCalc = new double[X[1].length];
+                    double k1 = pb * kex;
+                    double km1 = (1 - pb) * kex;
+                    double[][] K = {{-k1, 0, 0, km1, 0, 0}, 
+                        {0, -k1, 0, 0, km1, 0}, 
+                        {0, 0, -k1, 0, 0, km1}, 
+                        {k1, 0, 0, -km1, 0, 0}, 
+                        {0, k1, 0, 0, -km1, 0}, 
+                        {0, 0, k1, 0, 0, -km1}};
+                    double[][] La = {{-R2A, 0, 0, 0, 0, 0}, //{-R2A, -deltaA, 0, 0, 0, 0}
+                        {0, -R2A, 0, 0, 0, 0}, //{deltaA, -R2A, -omegaB1[i], 0, 0, 0}
+                        {0, 0, -R1A, 0, 0, 0}, //{0, omegaB1[i], -R1A, 0, 0, 0}
+                        {0, 0, 0, 0, 0, 0},
+                        {0, 0, 0, 0, 0, 0},
+                        {0, 0, 0, 0, 0, 0}};
+
+                    double[][] Lb = {{0, 0, 0, 0, 0, 0},
+                        {0, 0, 0, 0, 0, 0},
+                        {0, 0, 0, 0, 0, 0},
+                        {0, 0, 0, -R2B, 0, 0}, //{0, 0, 0, -R2B, -deltaB, 0}
+                        {0, 0, 0, 0, -R2B, 0}, //{0, 0, 0, deltaB, -R2B, -omegaB1[i]}
+                        {0, 0, 0, 0, 0, -R1B}}; //{0, 0, 0, 0, omegaB1[i], -R1B}
+
+                    DMatrixRMaj La1 = new DMatrixRMaj(La);
+                    DMatrixRMaj Lb1 = new DMatrixRMaj(Lb);
+                    DMatrixRMaj K1 = new DMatrixRMaj(K);
+
+                    DMatrixRMaj Z = new DMatrixRMaj(new double[La.length][La[0].length]);
                     for (int i = 0; i < yCalc.length; i++) {
                         double omegaB1 = X[1][i] * 2.0 * Math.PI;
                         double deltaA = (deltaA0 - X[0][i]) * fields[i] * 2.0 * Math.PI;
                         double deltaB = (deltaB0 - X[0][i]) * fields[i] * 2.0 * Math.PI;
-                        yCalc[i] = R1RhoEquations.r1rhoExact(omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
+                        La1.set(0, 1, -deltaA); 
+                        La1.set(1, 0, deltaA);
+                        La1.set(1, 2, -omegaB1);
+                        La1.set(2, 1, omegaB1);
+
+                        Lb1.set(3, 4, -deltaB); 
+                        Lb1.set(4, 3, deltaB);
+                        Lb1.set(4, 5, -omegaB1);
+                        Lb1.set(5, 4, omegaB1);         
+
+                        CommonOps_DDRM.add(La1, Lb1, Z);
+                        CommonOps_DDRM.addEquals(Z, K1);
+//                        yCalc[i] = R1RhoEquations.r1rhoExact(omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
+                        yCalc[i] = R1RhoEquations.r1rhoExact(Z);
                     }
                     return yCalc;
                 }
@@ -314,11 +355,67 @@ public enum R1RhoEquation implements R1RhoEquationType {
                     double R2B = par[map[7]];
                     double[] yCalc = new double[X[1].length];
                     double delay = X[2][0];
+                    double pA = 1.0 - pb;
+                    double kAB = pb * kex;
+                    double kBA = pA * kex;
+            
+                    double[][] K = {
+                        {-kAB, 0, 0, kBA, 0, 0},
+                        {0, -kAB, 0, 0, kBA, 0},
+                        {0, 0, -kAB, 0, 0, kBA},
+                        {kAB, 0, 0, -kBA, 0, 0},
+                        {0, kAB, 0, 0, -kBA, 0},
+                        {0, 0, kAB, 0, 0, -kBA}};
+
+                    double[][] La = {{-R2A, 0, 0, 0, 0, 0}, //{-R2A, -deltaA, 0, 0, 0, 0}
+                        {0, -R2A, 0, 0, 0, 0}, //{deltaA, -R2A, -omegaB1[i], 0, 0, 0}
+                        {0, 0, -R1A, 0, 0, 0}, //{0, omegaB1[i], -R1A, 0, 0, 0}
+                        {0, 0, 0, 0, 0, 0},
+                        {0, 0, 0, 0, 0, 0},
+                        {0, 0, 0, 0, 0, 0}};
+
+                    double[][] Lb = {{0, 0, 0, 0, 0, 0},
+                        {0, 0, 0, 0, 0, 0},
+                        {0, 0, 0, 0, 0, 0},
+                        {0, 0, 0, -R2B, 0, 0}, //{0, 0, 0, -R2B, -deltaB, 0}
+                        {0, 0, 0, 0, -R2B, 0}, //{0, 0, 0, deltaB, -R2B, -omegaB1[i]}
+                        {0, 0, 0, 0, 0, -R1B}}; //{0, 0, 0, 0, omegaB1[i], -R1B}
+                    
+                    DMatrixRMaj La1 = new DMatrixRMaj(La);
+                    DMatrixRMaj Lb1 = new DMatrixRMaj(Lb);
+                    DMatrixRMaj K1 = new DMatrixRMaj(K);
+
+                    DMatrixRMaj Z = new DMatrixRMaj(new double[La.length][La[0].length]);
+                    double[] m0 = new double[La.length];
+                    double[] m1 = new double[La.length];
                     for (int i = 0; i < yCalc.length; i++) {
                         double omegaB1 = X[1][i] * 2.0 * Math.PI;
                         double deltaA = (deltaA0 - X[0][i]) * fields[i] * 2.0 * Math.PI;
                         double deltaB = (deltaB0 - X[0][i]) * fields[i] * 2.0 * Math.PI;
-                        double r1rho = R1RhoEquations.r1rhoExact0(delay, omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
+                        double theta = Math.atan2(omegaB1, deltaA);
+                        double cosA = Math.cos(theta);
+                        double sinA = Math.sin(theta);
+
+                        m0[0] = pA * sinA;
+                        m0[2] = pA * cosA;
+                        m1[0] = sinA;
+                        m1[2] = cosA;
+                        
+                        La1.set(0, 1, -deltaA); 
+                        La1.set(1, 0, deltaA);
+                        La1.set(1, 2, -omegaB1);
+                        La1.set(2, 1, omegaB1);
+
+                        Lb1.set(3, 4, -deltaB); 
+                        Lb1.set(4, 3, deltaB);
+                        Lb1.set(4, 5, -omegaB1);
+                        Lb1.set(5, 4, omegaB1);         
+
+                        CommonOps_DDRM.add(La1, Lb1, Z);
+                        CommonOps_DDRM.addEquals(Z, K1);
+                        CommonOps_DDRM.divide(Z, 1/delay);
+//                        double r1rho = R1RhoEquations.r1rhoExact0(delay, omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
+                        double r1rho = R1RhoEquations.r1rhoExact0(Z, m0, m1, delay);
                         yCalc[i] = r1rho;
                     }
                     return yCalc;

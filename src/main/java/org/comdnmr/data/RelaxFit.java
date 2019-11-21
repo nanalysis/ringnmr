@@ -80,6 +80,40 @@ public class RelaxFit {
 //        }
         return J;
     }
+    
+    public double[] getJDiffusion(double[] pars, RelaxEquations relaxObj, int modelNum) {
+        double[][] D = {{pars[0], 0.0, 0.0}, {0.0, pars[1], 0.0}, {0.0, 0.0, pars[2]}};
+        double[] v = {0.0, 0.0, 0.0}; //fixme should be calculated vector coords
+        double s2 = pars[3];
+        double[] J = new double[5];
+        switch (modelNum) {
+            case 1:
+                J = relaxObj.getJDiffusion(D, v, s2);
+                break;
+            case 2:
+                double tau = pars[4];
+                J = relaxObj.getJDiffusion(D, v, s2, tau);
+                break;
+            case 5:
+                tau = pars[4];
+                double sf2 = pars[5];
+                J = relaxObj.getJDiffusion(D, v, s2, tau, sf2);
+                break;
+            case 6:
+                tau = pars[4];
+                sf2 = pars[5];
+                double tauS = pars[6];
+//                System.out.println("tau, sf2, tauS = " + tau + " " + sf2 + " " + tauS);
+                J = relaxObj.getJDiffusion(D, v, s2, tau, sf2, tauS);
+                break;
+            default:
+                break;
+        }
+//        for (double Jval : J) {
+//            System.out.println("J: " + Jval);
+//        }
+        return J;
+    }
 
     public double getYVal(double[] pars, RelaxEquations relaxObj, double[] J, ExptType type) {
         double y = 0.0;
@@ -238,6 +272,10 @@ public class RelaxFit {
         return residueModels;
     }
     
+    public ArrayList<RelaxEquations> getRelaxObjs() {
+        return relaxObjs;
+    }
+    
     public void setResidueModels(int[] bestModels) {
         residueModels = bestModels;
         resParStart = new int[residueModels.length];
@@ -250,10 +288,6 @@ public class RelaxFit {
         }
     }
     
-    /**
-     * Set bounds for TauM input by user.
-     * @param bounds double[] [tauM LB, tauM UB]
-     */
     public void setTauMBounds(double[] bounds) {
         tauMBounds[0] = bounds[0];
         tauMBounds[1] = bounds[1];
@@ -308,6 +342,7 @@ public class RelaxFit {
             int k = bestPars.length;
             int n = yValues.length;
             bestAIC = n * Math.log(bestChiSq) + 2 * k;
+//            bestAIC += (2*k*k + 2*k)/(n - k - 1); //corrected AIC for small sample sizes
             bestFitter = fitter;
             return result;
         } catch (Exception ex) {
