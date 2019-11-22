@@ -22,6 +22,7 @@ package org.comdnmr.util;
  * @author brucejohnson
  */
 public class Utilities {
+    public static final double TWO_PI = 2.0 * Math.PI;
 
     public static double[][] copy2DArray(double[][] inData) {
         double[][] outData = new double[inData.length][];

@@ -66,25 +66,23 @@ public class MtxExp {
         
         CommonOps_DDRM.divide(A, Math.pow(2, s));
         
-        DMatrixRMaj Aold = A.copy();
-        DMatrixRMaj X = A.copy();
+        DMatrixRMaj X = new DMatrixRMaj(nRows, nCols);
         DMatrixRMaj X1 = A.copy();
         double c = 0.5;
         DMatrixRMaj I = CommonOps_DDRM.identity(nRows, nCols);
-        DMatrixRMaj E = new DMatrixRMaj(new double[nRows][nCols]);
-        DMatrixRMaj D = new DMatrixRMaj(new double[nRows][nCols]);
-        CommonOps_DDRM.divide(A, 1/c);
-        CommonOps_DDRM.add(I, A, E);
-        CommonOps_DDRM.subtract(I, A, D);
+        DMatrixRMaj E = new DMatrixRMaj(nRows, nCols);
+        DMatrixRMaj D = new DMatrixRMaj(nRows, nCols);
+        CommonOps_DDRM.add(I, c, A, E);
+        CommonOps_DDRM.add(I, -c, A, D);
         
         double q = 6;
         boolean p = true;
         
         for(int k = 2; k <= q; k++) {
             c = c * (q - k + 1) / (k * (2 * q - k + 1));
-            CommonOps_DDRM.mult(Aold, X1, X);
-            X1 = X.copy();
-            CommonOps_DDRM.divide(X, 1/c);
+            CommonOps_DDRM.mult(A, X1, X);
+            X1.set(X);
+            CommonOps_DDRM.scale(c, X);
             CommonOps_DDRM.add(E, X, E);
           
             if (p == true) {
@@ -94,15 +92,14 @@ public class MtxExp {
             }
             p = !p;
         }
-        
+
         LinearSolverDense LS = LinearSolverFactory_DDRM.lu(D.getNumRows());
         LS.setA(D);
         LS.solve(E, X);
-        DMatrixRMaj E1 = X.copy();
         
         for(int k = 1; k <= s; k++) {
-            CommonOps_DDRM.mult(E1, E1, E);
-            E1 = E.copy();
+            CommonOps_DDRM.mult(X, X, E);
+            X.set(E);
         }
         return E;
     }
