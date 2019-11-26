@@ -25,6 +25,7 @@ package org.comdnmr.eqnfit;
 import org.comdnmr.util.CoMDPreferences;
 import java.util.Arrays;
 import java.util.List;
+import static org.comdnmr.util.Utilities.TWO_PI;
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.dense.row.CommonOps_DDRM;
 
@@ -53,9 +54,9 @@ public enum R1RhoEquation implements R1RhoEquationType {
                     double[] deltaB = new double[omegarf.length];
                     double[] omegaB1 = new double[omegarf.length];
                     for (int i = 0; i < omegarf.length; i++) {
-                        deltaA[i] = (deltaA0 - omegarf[i]) * fields[i] * 2.0 * Math.PI;
-                        deltaB[i] = (deltaB0 - omegarf[i]) * fields[i] * 2.0 * Math.PI;
-                        omegaB1[i] = b1Field[i] * 2.0 * Math.PI;
+                        deltaA[i] = (deltaA0 - omegarf[i]) * fields[i] * TWO_PI;
+                        deltaB[i] = (deltaB0 - omegarf[i]) * fields[i] * TWO_PI;
+                        omegaB1[i] = b1Field[i] * TWO_PI;
                     }
                     double[] yCalc = R1RhoEquations.r1rhoPerturbation(omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
                     return yCalc;
@@ -96,8 +97,8 @@ public enum R1RhoEquation implements R1RhoEquationType {
                     double[] omegaB1 = new double[omegarf.length];
 
                     for (int i = 0; i < omegarf.length; i++) {
-                        deltaA[i] = (deltaA0 - omegarf[i]) * fields[i] * 2.0 * Math.PI;
-                        omegaB1[i] = b1Field[i] * 2.0 * Math.PI;
+                        deltaA[i] = (deltaA0 - omegarf[i]) * fields[i] * TWO_PI;
+                        omegaB1[i] = b1Field[i] * TWO_PI;
 
                     }
                     double[] yCalc = R1RhoEquations.r1rhoPerturbationNoEx(omegaB1, deltaA, R1A, R2A);
@@ -181,9 +182,9 @@ public enum R1RhoEquation implements R1RhoEquationType {
                     double[] deltaB = new double[omegarf.length];
                     double[] omegaB1 = new double[omegarf.length];
                     for (int i = 0; i < omegarf.length; i++) {
-                        deltaA[i] = (deltaA0 - omegarf[i]) * fields[i] * 2.0 * Math.PI;
-                        deltaB[i] = (deltaB0 - omegarf[i]) * fields[i] * 2.0 * Math.PI;
-                        omegaB1[i] = b1Field[i] * 2.0 * Math.PI;
+                        deltaA[i] = (deltaA0 - omegarf[i]) * fields[i] * TWO_PI;
+                        deltaB[i] = (deltaB0 - omegarf[i]) * fields[i] * TWO_PI;
+                        omegaB1[i] = b1Field[i] * TWO_PI;
                     }
                     double[] yCalc = R1RhoEquations.r1rhoBaldwinKay(omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
                     return yCalc;
@@ -228,9 +229,9 @@ public enum R1RhoEquation implements R1RhoEquationType {
                     double[] deltaB = new double[omegarf.length];
                     double[] omegaB1 = new double[omegarf.length];
                     for (int i = 0; i < omegarf.length; i++) {
-                        deltaA[i] = (deltaA0 - omegarf[i]) * fields[i] * 2.0 * Math.PI;
-                        deltaB[i] = (deltaB0 - omegarf[i]) * fields[i] * 2.0 * Math.PI;
-                        omegaB1[i] = b1Field[i] * 2.0 * Math.PI;
+                        deltaA[i] = (deltaA0 - omegarf[i]) * fields[i] * TWO_PI;
+                        deltaB[i] = (deltaB0 - omegarf[i]) * fields[i] * TWO_PI;
+                        omegaB1[i] = b1Field[i] * TWO_PI;
                     }
                     double[] yCalc = R1RhoEquations.r1rhoLaguerre(omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
                     return yCalc;
@@ -296,11 +297,11 @@ public enum R1RhoEquation implements R1RhoEquationType {
                     DMatrixRMaj Lb1 = new DMatrixRMaj(Lb);
                     DMatrixRMaj K1 = new DMatrixRMaj(K);
 
-                    DMatrixRMaj Z = new DMatrixRMaj(new double[La.length][La[0].length]);
+                    DMatrixRMaj Z = new DMatrixRMaj(La.length, La[0].length);
                     for (int i = 0; i < yCalc.length; i++) {
-                        double omegaB1 = X[1][i] * 2.0 * Math.PI;
-                        double deltaA = (deltaA0 - X[0][i]) * fields[i] * 2.0 * Math.PI;
-                        double deltaB = (deltaB0 - X[0][i]) * fields[i] * 2.0 * Math.PI;
+                        double omegaB1 = X[1][i] * TWO_PI;
+                        double deltaA = (deltaA0 - X[0][i]) * fields[i] * TWO_PI;
+                        double deltaB = (deltaB0 - X[0][i]) * fields[i] * TWO_PI;
                         La1.set(0, 1, -deltaA); 
                         La1.set(1, 0, deltaA);
                         La1.set(1, 2, -omegaB1);
@@ -385,13 +386,13 @@ public enum R1RhoEquation implements R1RhoEquationType {
                     DMatrixRMaj Lb1 = new DMatrixRMaj(Lb);
                     DMatrixRMaj K1 = new DMatrixRMaj(K);
 
-                    DMatrixRMaj Z = new DMatrixRMaj(new double[La.length][La[0].length]);
+                    DMatrixRMaj Z = new DMatrixRMaj(La.length, La[0].length);
                     double[] m0 = new double[La.length];
                     double[] m1 = new double[La.length];
                     for (int i = 0; i < yCalc.length; i++) {
-                        double omegaB1 = X[1][i] * 2.0 * Math.PI;
-                        double deltaA = (deltaA0 - X[0][i]) * fields[i] * 2.0 * Math.PI;
-                        double deltaB = (deltaB0 - X[0][i]) * fields[i] * 2.0 * Math.PI;
+                        double omegaB1 = X[1][i] * TWO_PI;
+                        double deltaA = (deltaA0 - X[0][i]) * fields[i] * TWO_PI;
+                        double deltaB = (deltaB0 - X[0][i]) * fields[i] * TWO_PI;
                         double theta = Math.atan2(omegaB1, deltaA);
                         double cosA = Math.cos(theta);
                         double sinA = Math.sin(theta);
@@ -413,7 +414,7 @@ public enum R1RhoEquation implements R1RhoEquationType {
 
                         CommonOps_DDRM.add(La1, Lb1, Z);
                         CommonOps_DDRM.addEquals(Z, K1);
-                        CommonOps_DDRM.divide(Z, 1/delay);
+                        CommonOps_DDRM.scale(delay, Z);
 //                        double r1rho = R1RhoEquations.r1rhoExact0(delay, omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
                         double r1rho = R1RhoEquations.r1rhoExact0(Z, m0, m1, delay);
                         yCalc[i] = r1rho;
