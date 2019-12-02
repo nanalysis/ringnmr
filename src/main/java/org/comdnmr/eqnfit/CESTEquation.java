@@ -27,7 +27,7 @@ import java.util.List;
  */
 public enum CESTEquation implements CESTEquationType {
 
-    CESTR1RHOPERTURBATION("cestR1rhoPerturbation", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
+    TROTT_PALMER("trott_Palmer", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
 
         @Override
         public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double[] fields) {
@@ -39,7 +39,7 @@ public enum CESTEquation implements CESTEquationType {
             double R1B = par[map[5]];
             double R2A = par[map[6]];
             double R2B = par[map[7]];
-            double[] yCalc = CESTEquations.cestR1rhoApprox("trott", X, fields, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
+            double[] yCalc = CESTEquations.r1rhoApprox("trott", X, fields, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
             return yCalc;
         }
        
@@ -64,14 +64,14 @@ public enum CESTEquation implements CESTEquationType {
             return map;
         }
     },
-    CESTR1RHOPERTURBATIONNOEX("cestR1rhoPerturbationNoEx", 0, "deltaA0", "R1A", "R2A") {
+    NOEX("noEx", 0, "deltaA0", "R1A", "R2A") {
 
         @Override
         public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double[] fields) {
             double deltaA0 = par[map[0]];
             double R1A = par[map[1]];
             double R2A = par[map[2]];
-            double[] yCalc = CESTEquations.cestR1rhoPerturbationNoEx(X, fields, deltaA0, R1A, R2A);
+            double[] yCalc = CESTEquations.noEx(X, fields, deltaA0, R1A, R2A);
             return yCalc;
         }
 
@@ -137,7 +137,7 @@ public enum CESTEquation implements CESTEquationType {
         }
 
     },
-    CESTR1RHOSD("cestR1rhoSD", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
+    SD("sD", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
 
         @Override
         public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double[] fields) {
@@ -149,7 +149,7 @@ public enum CESTEquation implements CESTEquationType {
             double R1B = par[map[5]];
             double R2A = par[map[6]];
             double R2B = par[map[7]];
-            double[] yCalc = CESTEquations.cestR1rhoApprox("sd", X, fields, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
+            double[] yCalc = CESTEquations.r1rhoApprox("sd", X, fields, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
             return yCalc;
         }
 
@@ -174,7 +174,7 @@ public enum CESTEquation implements CESTEquationType {
             return map;
         }
     },
-    CESTR1RHOBALDWINKAY("cestR1rhoBaldwinKay", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
+    BALDWINKAY("baldwinKay", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
 
         @Override
         public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double[] field) {
@@ -186,7 +186,7 @@ public enum CESTEquation implements CESTEquationType {
             double R1B = par[map[5]];
             double R2A = par[map[6]];
             double R2B = par[map[7]];
-            double[] yCalc = CESTEquations.cestR1rhoApprox("baldwinkay", X, field, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
+            double[] yCalc = CESTEquations.r1rhoApprox("baldwinkay", X, field, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
             return yCalc;
         }
 
@@ -211,7 +211,7 @@ public enum CESTEquation implements CESTEquationType {
             return map;
         }
     },
-    CESTR1RHON("cestR1rhoN", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
+    LAGUERRE("laguerre", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
 
         @Override
         public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double[] field) {
@@ -223,7 +223,7 @@ public enum CESTEquation implements CESTEquationType {
             double R1B = par[map[5]];
             double R2A = par[map[6]];
             double R2B = par[map[7]];
-            double[] yCalc = CESTEquations.cestR1rhoApprox("laguerre", X, field, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
+            double[] yCalc = CESTEquations.r1rhoApprox("laguerre", X, field, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
             return yCalc;
         }
 
@@ -248,7 +248,7 @@ public enum CESTEquation implements CESTEquationType {
             return map;
         }
     },
-    CESTR1RHOEXACT1("cestR1rhoExact1", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
+    R1RHOEXACT1("r1rhoExact1", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
 
         @Override
         public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double[] field) {
@@ -260,7 +260,7 @@ public enum CESTEquation implements CESTEquationType {
             double R1B = par[map[5]];
             double R2A = par[map[6]];
             double R2B = par[map[7]];
-            double[] yCalc = CESTEquations.cestR1rhoExact1(X, field, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
+            double[] yCalc = CESTEquations.r1rhoExact1(X, field, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
             return yCalc;
         }
 
@@ -286,7 +286,7 @@ public enum CESTEquation implements CESTEquationType {
         }
 
     },
-    CESTEXACT0("cestExact0", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
+    EXACT0("exact0", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
 
         @Override
         public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double field[]) {
@@ -298,7 +298,7 @@ public enum CESTEquation implements CESTEquationType {
             double R1B = par[map[5]];
             double R2A = par[map[6]];
             double R2B = par[map[7]];
-            double[] yCalc = CESTEquations.cestExact0(X, field, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
+            double[] yCalc = CESTEquations.exact0(X, field, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
             return yCalc;
         }
 
@@ -325,7 +325,7 @@ public enum CESTEquation implements CESTEquationType {
         }
 
     },
-    CESTEXACT1("cestExact1", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
+    EXACT1("exact1", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
 
         @Override
         public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double[] field) {
@@ -337,7 +337,7 @@ public enum CESTEquation implements CESTEquationType {
             double R1B = par[map[5]];
             double R2A = par[map[6]];
             double R2B = par[map[7]];
-            double[] yCalc = CESTEquations.cestExact0(X, field, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
+            double[] yCalc = CESTEquations.exact0(X, field, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
             return yCalc;
         }
 
@@ -363,7 +363,7 @@ public enum CESTEquation implements CESTEquationType {
         }
 
     },
-    CESTEXACT2("cestExact2", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
+    EXACT2("exact2", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
 
         @Override
         public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double[] field) {
@@ -375,7 +375,7 @@ public enum CESTEquation implements CESTEquationType {
             double R1B = par[map[5]];
             double R2A = par[map[6]];
             double R2B = par[map[7]];
-            double[] yCalc = CESTEquations.cestExact0(X, field, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
+            double[] yCalc = CESTEquations.exact0(X, field, pb, kex, deltaA0, deltaB0, R1A, R1B, R2A, R2B);
             return yCalc;
         }
 
@@ -437,8 +437,8 @@ public enum CESTEquation implements CESTEquationType {
     }
 
     public static String[] getAllEquationNames() {
-        String[] equationNames = {"CESTR1RHOPERTURBATIONNOEX", "CESTR1RHOPERTURBATION", "CESTR1RHOSD", "CESTR1RHOBALDWINKAY", "CESTR1RHON",
-            "CESTR1RHOEXACT1", "CESTEXACT0", "CESTEXACT1", "CESTEXACT2"};
+        String[] equationNames = {"NOEX", "TROTT_PALMER", "SD", "BALDWINKAY", "LAGUERRE",
+            "R1RHOEXACT1", "EXACT0", "EXACT1", "EXACT2"};
         return equationNames;
     }
 
