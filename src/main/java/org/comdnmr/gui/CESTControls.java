@@ -236,11 +236,11 @@ public class CESTControls extends EquationControls {
             updatingTable = false;
         }
         switch (equationName) {
-            case "CESTR1RHOPERTURBATION":
-            case "CESTR1RHOBALDWINKAY":
-            case "CESTR1RHOSD":
-            case "CESTR1RHOEXACT1":
-            case "CESTEXACT1":
+            case "TROTT_PALMER":
+            case "BALDWINKAY":
+            case "SD":
+            case "R1RHOEXACT1":
+            case "EXACT1":
                 KEX.disabled(false);
                 KEX.valueText.setDisable(false);
                 PB.disabled(false);
@@ -257,7 +257,7 @@ public class CESTControls extends EquationControls {
                 B1FIELD.disabled(false);
                 TEX.disabled(false);
                 break;
-            case "CESTR1RHON":
+            case "LAGUERRE":
                 KEX.disabled(false);
                 KEX.valueText.setDisable(false);
                 PB.disabled(false);
@@ -274,7 +274,7 @@ public class CESTControls extends EquationControls {
                 B1FIELD.disabled(false);
                 TEX.disabled(false);
                 break;
-            case "CESTEXACT0":
+            case "EXACT0":
                 KEX.disabled(false);
                 KEX.valueText.setDisable(false);
                 PB.disabled(false);
@@ -291,7 +291,7 @@ public class CESTControls extends EquationControls {
                 B1FIELD.disabled(false);
                 TEX.disabled(false);
                 break;
-            case "CESTEXACT2":
+            case "EXACT2":
                 KEX.disabled(false);
                 KEX.valueText.setDisable(false);
                 PB.disabled(false);
@@ -308,7 +308,7 @@ public class CESTControls extends EquationControls {
                 B1FIELD.disabled(false);
                 TEX.disabled(false);
                 break;
-            case "CESTR1RHOPERTURBATIONNOEX":
+            case "NOEX":
                 KEX.disabled(true);
                 KEX.valueText.setDisable(true);
                 PB.disabled(true);
@@ -367,14 +367,14 @@ public class CESTControls extends EquationControls {
         double Tex = TEX.getValue();
         double[][] pars;
         switch (equationName) {
-            case "CESTR1RHOPERTURBATION":
-            case "CESTR1RHON":
-            case "CESTR1RHOSD":
-            case "CESTR1RHOBALDWINKAY":
-            case "CESTR1RHOEXACT1":
-            case "CESTEXACT0":
-            case "CESTEXACT1":
-            case "CESTEXACT2":
+            case "TROTT_PALMER":
+            case "LAGUERRE":
+            case "SD":
+            case "BALDWINKAY":
+            case "R1RHOEXACT1":
+            case "EXACT0":
+            case "EXACT1":
+            case "EXACT2":
                 pars = new double[2][8];
                 pars[0][0] = kex;
                 pars[0][1] = pb;
@@ -387,7 +387,7 @@ public class CESTControls extends EquationControls {
                 pars[1][0] = B1field;
                 pars[1][1] = Tex;
                 break;
-            case "CESTR1RHOPERTURBATIONNOEX":
+            case "NOEX":
                 pars = new double[2][8];
 //                pars[0][0] = kex;
 //                pars[0][1] = pb;
@@ -441,14 +441,14 @@ public class CESTControls extends EquationControls {
         double Tex = TEX.getValue();
         double[][] pars;
         switch (equationName) {
-            case "CESTR1RHOPERTURBATION":
-            case "CESTR1RHON":
-            case "CESTR1RHOSD":
-            case "CESTR1RHOBALDWINKAY":
-            case "CESTR1RHOEXACT1":
-            case "CESTEXACT0":
-            case "CESTEXACT1":
-            case "CESTEXACT2":
+            case "TROTT_PALMER":
+            case "LAGUERRE":
+            case "SD":
+            case "BALDWINKAY":
+            case "R1RHOEXACT1":
+            case "EXACT0":
+            case "EXACT1":
+            case "EXACT2":
                 pars = new double[2][8];
                 pars[0][0] = kex;
                 pars[0][1] = pb;
@@ -461,7 +461,7 @@ public class CESTControls extends EquationControls {
                 pars[1][0] = B1field;
                 pars[1][1] = Tex;
                 break;
-            case "CESTR1RHOPERTURBATIONNOEX":
+            case "NOEX":
                 pars = new double[2][8];
 //                pars[0][0] = kex;
 //                pars[0][1] = pb;
@@ -484,14 +484,14 @@ public class CESTControls extends EquationControls {
     double[][] getPars(String equationName, Map<String, ParValueInterface> parValues) {
         double[][] pars;
         switch (equationName) {
-            case "CESTR1RHOPERTURBATION":
-            case "CESTR1RHON":
-            case "CESTR1RHOBALDWINKAY":
-            case "CESTR1RHOSD":
-            case "CESTR1RHOEXACT1":
-            case "CESTEXACT0":
-            case "CESTEXACT1":
-            case "CESTEXACT2":
+            case "TROTT_PALMER":
+            case "LAGUERRE":
+            case "BALDWINKAY":
+            case "SD":
+            case "R1RHOEXACT1":
+            case "EXACT0":
+            case "EXACT1":
+            case "EXACT2":
                 pars = new double[2][8];
                 pars[0][0] = parValues.get("kex").getValue();
                 pars[0][1] = parValues.get("pb").getValue();
@@ -504,7 +504,7 @@ public class CESTControls extends EquationControls {
                 pars[1][0] = parValues.get("B1field").getValue();
                 pars[1][1] = parValues.get("Tex").getValue();
                 break;
-            case "CESTR1RHOPERTURBATIONNOEX":
+            case "NOEX":
                 pars = new double[2][8];
 //                pars[0][0] = parValues.get("kex").getValue();
 //                pars[0][1] = parValues.get("pb").getValue();
@@ -538,11 +538,11 @@ public class CESTControls extends EquationControls {
         int nPars = CESTFitFunction.getNPars(map);
         double[] guesses = new double[nPars];
         switch (equationName) {
-            case "CESTR1RHOPERTURBATION":
-            case "CESTR1RHOSD":
-            case "CESTR1RHOBALDWINKAY":
-            case "CESTR1RHOEXACT1":
-            case "CESTEXACT1":
+            case "TROTT_PALMER":
+            case "SD":
+            case "BALDWINKAY":
+            case "R1RHOEXACT1":
+            case "EXACT1":
                 for (int id = 0; id < map.length; id++) {
                     guesses[map[id][0]] = kex; //kex
                     guesses[map[id][1]] = pb; //pb
@@ -554,7 +554,7 @@ public class CESTControls extends EquationControls {
                     guesses[map[id][7]] = R2b; //R2B
                 }
                 break;
-            case "CESTEXACT0":
+            case "EXACT0":
                 for (int id = 0; id < map.length; id++) {
                     guesses[map[id][0]] = kex; //kex
                     guesses[map[id][1]] = pb; //pb
@@ -566,7 +566,7 @@ public class CESTControls extends EquationControls {
                     guesses[map[id][7]] = R2b; //R2B
                 }
                 break;
-            case "CESTEXACT2":
+            case "EXACT2":
                 for (int id = 0; id < map.length; id++) {
                     guesses[map[id][0]] = kex; //kex
                     guesses[map[id][1]] = pb; //pb
@@ -578,7 +578,7 @@ public class CESTControls extends EquationControls {
                     guesses[map[id][7]] = R2a; //R2B
                 }
                 break;
-            case "CESTR1RHON":
+            case "LAGUERRE":
                 for (int id = 0; id < map.length; id++) {
                     guesses[map[id][0]] = kex; //kex
                     guesses[map[id][1]] = pb; //pb
@@ -590,7 +590,7 @@ public class CESTControls extends EquationControls {
                     guesses[map[id][7]] = R2a; //R2B
                 }
                 break;
-            case "CESTR1RHOPERTURBATIONNOEX":
+            case "NOEX":
                 for (int id = 0; id < map.length; id++) {
 //                    guesses[map[id][0]] = kex; //kex
 //                    guesses[map[id][1]] = pb; //pb
@@ -676,11 +676,11 @@ public class CESTControls extends EquationControls {
         String equationName = equationSelector.getValue().toString();
         List<String> parNames1 = new ArrayList<>();
         switch (equationName) {
-            case "CESTR1RHOPERTURBATION":
-            case "CESTR1RHOBALDWINKAY":
-            case "CESTR1RHOSD":
-            case "CESTR1RHOEXACT1":
-            case "CESTEXACT1":
+            case "TROTT_PALMER":
+            case "BALDWINKAY":
+            case "SD":
+            case "R1RHOEXACT1":
+            case "EXACT1":
                 parNames1.add("Kex");
                 parNames1.add("Pb");
                 parNames1.add("deltaA0");
@@ -689,7 +689,7 @@ public class CESTControls extends EquationControls {
                 parNames1.add("R2A");
                 parNames1.add("R2B");
                 break;
-            case "CESTEXACT0":
+            case "EXACT0":
                 parNames1.add("Kex");
                 parNames1.add("Pb");
                 parNames1.add("deltaA0");
@@ -699,7 +699,7 @@ public class CESTControls extends EquationControls {
                 parNames1.add("R2A");
                 parNames1.add("R2B");
                 break;
-            case "CESTEXACT2":
+            case "EXACT2":
                 parNames1.add("Kex");
                 parNames1.add("Pb");
                 parNames1.add("deltaA0");
@@ -708,7 +708,7 @@ public class CESTControls extends EquationControls {
                 parNames1.add("R1B");
                 parNames1.add("R2A");
                 break;
-            case "CESTR1RHON":
+            case "LAGUERRE":
                 parNames1.add("Kex");
                 parNames1.add("Pb");
                 parNames1.add("deltaA0");
@@ -716,7 +716,7 @@ public class CESTControls extends EquationControls {
                 parNames1.add("R1A");
                 parNames1.add("R2A");
                 break;
-            case "CESTR1RHOPERTURBATIONNOEX":
+            case "NOEX":
 //                parNames1.add("Kex");
 //                parNames1.add("Pb");
                 parNames1.add("deltaA0");

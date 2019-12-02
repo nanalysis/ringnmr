@@ -136,8 +136,8 @@ public class PreferencesController implements Initializable {
         IntRangeOperationItem nProcessesItem = new IntRangeOperationItem(nprocessListener, nProcessesDefault, 1, 32, "Processor", "NProcesses", "How many parallel processes to run during processing");
 
         ArrayList<String> cestEqnChoices = new ArrayList<>();
-        cestEqnChoices.addAll(Arrays.asList("CESTR1RHOPERTURBATIONNOEX", "CESTR1RHOPERTURBATION", "CESTR1RHOBALDWINKAY", "CESTR1RHOSD", "CESTR1RHON", "CESTR1RHOEXACT1",
-                "CESTEXACT0", "CESTEXACT1", "CESTEXACT2"));
+        cestEqnChoices.addAll(Arrays.asList("NOEX", "TROTT_PALMER", "SD", "BALDWINKAY", "LAGUERRE",
+            "R1RHOEXACT1", "EXACT0", "EXACT1", "EXACT2"));
 
         ArrayList<String> r1rhoEqnChoices = new ArrayList<>();
         r1rhoEqnChoices.addAll(Arrays.asList("R1RHOPERTURBATIONNOEX", "R1RHOPERTURBATION", "R1RHOBALDWINKAY", "R1RHOLAGUERRE", "R1RHOEXACT", "R1RHOEXACT0"));
