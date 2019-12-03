@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package org.comdnmr.data;
 
 import java.io.BufferedReader;
@@ -299,6 +299,11 @@ public class DataIO {
                             intensity = Double.parseDouble(sfields[i].trim());
                             yValue = yConv.convert(intensity, refIntensity, tau);
                         } catch (NumberFormatException nFE) {
+                            ok = false;
+                            continue;
+                        }
+                        if ((yValue == null) || Double.isNaN(yValue) || Double.isInfinite(yValue)) {
+                            ok = false;
                             continue;
                         }
                         xValueList.add(xValues[j]);
@@ -321,6 +326,7 @@ public class DataIO {
                     if (expMode.equals("cest")) {
                         processCESTData(expData, residueNum, xValueList, yValueList, errValueList, peakNum);
                     } else {
+                        System.out.println("res " + residueNum + " \n " + xValueList + "\n  " + yValueList + "\n " + errValueList);
                         ResidueData residueData = new ResidueData(expData, residueNum, xValueList, yValueList, errValueList, peakRefList, peakNum);
                         expData.addResidueData(residueNum, residueData);
                     }
