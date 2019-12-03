@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package org.comdnmr.fit.calc;
 
 import org.comdnmr.util.CoMDPreferences;
@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import org.comdnmr.data.ExperimentData;
 import org.comdnmr.eqnfit.CESTFitter;
+import org.comdnmr.util.CoMDOptions;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -66,37 +67,37 @@ public class CESTFitTest {
             6283.185307179586);
 
     private List<Double> omega = Arrays.asList(111.08671623, 111.08671623, 111.08671623, 111.08671623, 111.08671623,
-             111.08671623, 111.08671623, 111.08671623, 111.08671623, 111.08671623,
-             111.08671623, 111.08671623, 111.08671623, 111.08671623, 111.08671623,
-             111.08671623, 111.08671623, 111.08671623, 111.08671623, 111.08671623,
-             111.08671623, 111.08671623, 111.08671623, 111.08671623, 111.08671623,
-             111.08671623, 111.08671623, 111.08671623, 111.08671623, 111.08671623,
-             111.08671623, 111.08671623, 111.08671623, 111.08671623, 111.08671623,
-             111.08671623, 111.08671623, 111.08671623, 111.08671623, 111.08671623,
-             111.08671623, 111.08671623, 111.08671623, 111.08671623, 111.08671623,
-             111.08671623, 111.08671623, 111.08671623, 111.08671623, 111.08671623,
-             111.08671623, 111.08671623, 111.08671623, 111.08671623, 111.08671623,
-             111.08671623, 111.08671623, 111.08671623, 111.08671623, 111.08671623,
-             111.08671623, 111.08671623, 111.08671623, 111.08671623, 111.08671623,
-             111.08671623, 111.08671623, 175.30087007, 175.30087007, 175.30087007,
-             175.30087007, 175.30087007, 175.30087007, 175.30087007, 175.30087007,
-             175.30087007, 175.30087007, 175.30087007, 175.30087007, 175.30087007,
-             175.30087007, 175.30087007, 175.30087007, 175.30087007, 175.30087007,
-             175.30087007, 175.30087007, 175.30087007, 175.30087007, 175.30087007,
-             175.30087007, 175.30087007, 175.30087007, 175.30087007, 175.30087007,
-             175.30087007, 175.30087007, 175.30087007, 175.30087007, 175.30087007,
-             175.30087007, 175.30087007, 175.30087007, 175.30087007, 175.30087007,
-             175.30087007, 175.30087007, 175.30087007, 175.30087007, 175.30087007,
-             175.30087007, 175.30087007, 175.30087007, 175.30087007, 175.30087007,
-             175.30087007, 175.30087007, 175.30087007, 302.91236366, 302.91236366,
-             302.91236366, 302.91236366, 302.91236366, 302.91236366, 302.91236366,
-             302.91236366, 302.91236366, 302.91236366, 302.91236366, 302.91236366,
-             302.91236366, 302.91236366, 302.91236366, 302.91236366, 302.91236366,
-             302.91236366, 302.91236366, 302.91236366, 302.91236366, 302.91236366,
-             302.91236366, 302.91236366, 302.91236366, 302.91236366, 302.91236366,
-             302.91236366, 302.91236366, 302.91236366, 302.91236366, 302.91236366,
-             302.91236366, 302.91236366, 302.91236366, 302.91236366, 302.91236366,
-             302.91236366, 302.91236366, 302.91236366, 302.91236366);
+            111.08671623, 111.08671623, 111.08671623, 111.08671623, 111.08671623,
+            111.08671623, 111.08671623, 111.08671623, 111.08671623, 111.08671623,
+            111.08671623, 111.08671623, 111.08671623, 111.08671623, 111.08671623,
+            111.08671623, 111.08671623, 111.08671623, 111.08671623, 111.08671623,
+            111.08671623, 111.08671623, 111.08671623, 111.08671623, 111.08671623,
+            111.08671623, 111.08671623, 111.08671623, 111.08671623, 111.08671623,
+            111.08671623, 111.08671623, 111.08671623, 111.08671623, 111.08671623,
+            111.08671623, 111.08671623, 111.08671623, 111.08671623, 111.08671623,
+            111.08671623, 111.08671623, 111.08671623, 111.08671623, 111.08671623,
+            111.08671623, 111.08671623, 111.08671623, 111.08671623, 111.08671623,
+            111.08671623, 111.08671623, 111.08671623, 111.08671623, 111.08671623,
+            111.08671623, 111.08671623, 111.08671623, 111.08671623, 111.08671623,
+            111.08671623, 111.08671623, 175.30087007, 175.30087007, 175.30087007,
+            175.30087007, 175.30087007, 175.30087007, 175.30087007, 175.30087007,
+            175.30087007, 175.30087007, 175.30087007, 175.30087007, 175.30087007,
+            175.30087007, 175.30087007, 175.30087007, 175.30087007, 175.30087007,
+            175.30087007, 175.30087007, 175.30087007, 175.30087007, 175.30087007,
+            175.30087007, 175.30087007, 175.30087007, 175.30087007, 175.30087007,
+            175.30087007, 175.30087007, 175.30087007, 175.30087007, 175.30087007,
+            175.30087007, 175.30087007, 175.30087007, 175.30087007, 175.30087007,
+            175.30087007, 175.30087007, 175.30087007, 175.30087007, 175.30087007,
+            175.30087007, 175.30087007, 175.30087007, 175.30087007, 175.30087007,
+            175.30087007, 175.30087007, 175.30087007, 302.91236366, 302.91236366,
+            302.91236366, 302.91236366, 302.91236366, 302.91236366, 302.91236366,
+            302.91236366, 302.91236366, 302.91236366, 302.91236366, 302.91236366,
+            302.91236366, 302.91236366, 302.91236366, 302.91236366, 302.91236366,
+            302.91236366, 302.91236366, 302.91236366, 302.91236366, 302.91236366,
+            302.91236366, 302.91236366, 302.91236366, 302.91236366, 302.91236366,
+            302.91236366, 302.91236366, 302.91236366, 302.91236366, 302.91236366,
+            302.91236366, 302.91236366, 302.91236366, 302.91236366, 302.91236366,
+            302.91236366, 302.91236366, 302.91236366, 302.91236366);
 
     private List<Double> Texarray = Arrays.asList(0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3,
             0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3,
@@ -175,8 +176,8 @@ public class CESTFitTest {
 
     private List<Double> fixOffset(List<Double> values, double field) {
         List<Double> newValues = new ArrayList<>();
-        for (double value:values) {
-             newValues.add(value/(2.0*Math.PI)/field);
+        for (double value : values) {
+            newValues.add(value / (2.0 * Math.PI) / field);
         }
         return newValues;
     }
@@ -185,23 +186,24 @@ public class CESTFitTest {
     public void testTrottPalmer() {
         CESTFitter fitting = new CESTFitter();
         ExperimentData.Nuclei nuc = ExperimentData.Nuclei.get("C13");
-        double field = CoMDPreferences.getRefField() * nuc.getRatio(); 
+        double field = CoMDPreferences.getRefField() * nuc.getRatio();
         List<Double> fieldArray = Collections.nCopies(errarray.size(), field);
         fitting.setData(fixOffset(offset, field), fixOffset(omega, 1.0), Texarray, intenarray, errarray, fieldArray);
 
         double[] guesses = {180.795, 0.103, 2.784, -1.193, 2.383, 11.569, 88.052};
-        
-        FitResult fit = fitting.doFit("trott_palmer", guesses);
+
+        CoMDOptions options = new CoMDOptions(false);
+        FitResult fit = fitting.doFit("trott_palmer", guesses, options);
 
         double[] fitpars = fit.getPars(0);
-        double validDeltaA0 = fixOffset(Arrays.asList(2705.7656176771607),field).get(0);
-        double validDeltaB0 = fixOffset(Arrays.asList(-1244.26540485914),field).get(0);
+        double validDeltaA0 = fixOffset(Arrays.asList(2705.7656176771607), field).get(0);
+        double validDeltaB0 = fixOffset(Arrays.asList(-1244.26540485914), field).get(0);
         double[] validpars = new double[]{159.40549413953838, 0.07848868547481112, validDeltaA0, validDeltaB0, 2.3834525779746167,
             2.3834525779746167, 16.071477740770437, 134.1181936680427}; //{165.02477973700172, 0.07911350221009517, 2708.726939741288, -1244.5123148064008, 2.382606761775722, 15.637464131056309, 127.51875931837206};
 
         double[] fiterrs = fit.getErrs(0);
-        double validDeltaA0Err = fixOffset(Arrays.asList(2.1870880660250585),field).get(0);
-        double validDeltaB0Err = fixOffset(Arrays.asList(4.25048585761765),field).get(0);
+        double validDeltaA0Err = fixOffset(Arrays.asList(2.1870880660250585), field).get(0);
+        double validDeltaB0Err = fixOffset(Arrays.asList(4.25048585761765), field).get(0);
         double[] validerrs = new double[]{4.070771048976483, 7.910314021442713E-4, validDeltaA0Err, validDeltaB0Err, 0.004839626206279982,
             0.004839626206279982, 0.33246477045330786, 4.989869976578456}; //{4.379924820081111, 0.0007986456868965598, 2.6001243193320365, 4.046178640951488, 0.0048026137212628375, 0.33970335899651316, 5.304491575138278};
 
@@ -225,23 +227,24 @@ public class CESTFitTest {
     public void testSD() {
         CESTFitter fitting = new CESTFitter();
         ExperimentData.Nuclei nuc = ExperimentData.Nuclei.get("C13");
-        double field = CoMDPreferences.getRefField() * nuc.getRatio(); 
+        double field = CoMDPreferences.getRefField() * nuc.getRatio();
         List<Double> fieldArray = Collections.nCopies(errarray.size(), field);
         fitting.setData(fixOffset(offset, field), fixOffset(omega, 1.0), Texarray, intenarray, errarray, fieldArray);
 
         double[] guesses = {180.795, 0.103, 2.784, -1.193, 2.383, 11.569, 88.052};
-        
-        FitResult fit = fitting.doFit("sd", guesses);
+
+        CoMDOptions options = new CoMDOptions(false);
+        FitResult fit = fitting.doFit("sd", guesses, options);
 
         double[] fitpars = fit.getPars(0);
-        double validDeltaA0 = fixOffset(Arrays.asList(2710.5848956396685),field).get(0);
-        double validDeltaB0 = fixOffset(Arrays.asList(-1247.6238696374273),field).get(0);
+        double validDeltaA0 = fixOffset(Arrays.asList(2710.5848956396685), field).get(0);
+        double validDeltaB0 = fixOffset(Arrays.asList(-1247.6238696374273), field).get(0);
         double[] validpars = new double[]{164.31219540872297, 0.08000559530543723, validDeltaA0, validDeltaB0, 2.3747806394904574,
             2.3747806394904574, 16.15024270349437, 125.73252396217907};
 
         double[] fiterrs = fit.getErrs(0);
-        double validDeltaA0Err = fixOffset(Arrays.asList(2.6506158711548755),field).get(0);
-        double validDeltaB0Err = fixOffset(Arrays.asList(4.4500688239216775),field).get(0);
+        double validDeltaA0Err = fixOffset(Arrays.asList(2.6506158711548755), field).get(0);
+        double validDeltaB0Err = fixOffset(Arrays.asList(4.4500688239216775), field).get(0);
         double[] validerrs = new double[]{4.694876487305635, 0.0008407892782788573, validDeltaA0Err, validDeltaB0Err, 0.00510500924091006,
             0.00510500924091006, 0.38366068154645305, 5.631002751559051};
         dumpPars("SD", fitpars, validpars, fiterrs, validerrs);
@@ -262,23 +265,24 @@ public class CESTFitTest {
     public void testBaldwinKay() {
         CESTFitter fitting = new CESTFitter();
         ExperimentData.Nuclei nuc = ExperimentData.Nuclei.get("C13");
-        double field = CoMDPreferences.getRefField() * nuc.getRatio(); 
+        double field = CoMDPreferences.getRefField() * nuc.getRatio();
         List<Double> fieldArray = Collections.nCopies(errarray.size(), field);
         fitting.setData(fixOffset(offset, field), fixOffset(omega, 1.0), Texarray, intenarray, errarray, fieldArray);
-        
+
         double[] guesses = {180.795, 0.103, 2.784, -1.193, 2.383, 11.569, 88.052};
 
-        FitResult fit = fitting.doFit("baldwinkay", guesses);
+        CoMDOptions options = new CoMDOptions(false);
+        FitResult fit = fitting.doFit("baldwinkay", guesses, options);
 
         double[] fitpars = fit.getPars(0);
-        double validDeltaA0 = fixOffset(Arrays.asList(2705.4283684664874),field).get(0);
-        double validDeltaB0 = fixOffset(Arrays.asList(-1244.1504931304519),field).get(0);
+        double validDeltaA0 = fixOffset(Arrays.asList(2705.4283684664874), field).get(0);
+        double validDeltaB0 = fixOffset(Arrays.asList(-1244.1504931304519), field).get(0);
         double[] validpars = new double[]{168.45940742687503, 0.07848006386286228, validDeltaA0, validDeltaB0, 2.3839104552778836,
             2.3839104552778836, 17.777799052418256, 132.49073925170381};
 
         double[] fiterrs = fit.getErrs(0);
-        double validDeltaA0Err = fixOffset(Arrays.asList(2.3553917781329563),field).get(0);
-        double validDeltaB0Err = fixOffset(Arrays.asList(3.3808605211180436),field).get(0);
+        double validDeltaA0Err = fixOffset(Arrays.asList(2.3553917781329563), field).get(0);
+        double validDeltaB0Err = fixOffset(Arrays.asList(3.3808605211180436), field).get(0);
         double[] validerrs = new double[]{4.527537134628853, 0.0007171967856360292, validDeltaA0Err, validDeltaB0Err, 0.004685962985573297,
             0.004685962985573297, 0.3932615215677069, 5.7049278404942605};
 
@@ -300,23 +304,24 @@ public class CESTFitTest {
     public void testLaguerre() {
         CESTFitter fitting = new CESTFitter();
         ExperimentData.Nuclei nuc = ExperimentData.Nuclei.get("C13");
-        double field = CoMDPreferences.getRefField() * nuc.getRatio(); 
+        double field = CoMDPreferences.getRefField() * nuc.getRatio();
         List<Double> fieldArray = Collections.nCopies(errarray.size(), field);
         fitting.setData(fixOffset(offset, field), fixOffset(omega, 1.0), Texarray, intenarray, errarray, fieldArray);
 
         double[] guesses = {180.795, 0.103, 2.784, -1.193, 2.383, 88.052};
-        
-        FitResult fit = fitting.doFit("laguerre", guesses);
+        CoMDOptions options = new CoMDOptions(false);
+
+        FitResult fit = fitting.doFit("laguerre", guesses, options);
 
         double[] fitpars = fit.getPars(0);
-        double validDeltaA0 = fixOffset(Arrays.asList(2771.0529601396183),field).get(0);
-        double validDeltaB0 = fixOffset(Arrays.asList(-1285.1744405197783),field).get(0);
+        double validDeltaA0 = fixOffset(Arrays.asList(2771.0529601396183), field).get(0);
+        double validDeltaB0 = fixOffset(Arrays.asList(-1285.1744405197783), field).get(0);
         double[] validpars = new double[]{288.937925578066, 0.07087265844081425, validDeltaA0, validDeltaB0, 2.4246256495623104,
             2.4246256495623104, 8.121844525582754, 8.121844525582754};
 
         double[] fiterrs = fit.getErrs(0);
-        double validDeltaA0Err = fixOffset(Arrays.asList(2.5674908203535574),field).get(0);
-        double validDeltaB0Err = fixOffset(Arrays.asList(3.0651902549305405),field).get(0);
+        double validDeltaA0Err = fixOffset(Arrays.asList(2.5674908203535574), field).get(0);
+        double validDeltaB0Err = fixOffset(Arrays.asList(3.0651902549305405), field).get(0);
         double[] validerrs = new double[]{3.58822964273236, 0.0006570223547152888, validDeltaA0Err, validDeltaB0Err, 0.004205721940200411,
             0.004205721940200411, 0.2937911953297107, 0.2937911953297107};
 

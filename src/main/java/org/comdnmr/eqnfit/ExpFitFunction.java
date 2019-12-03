@@ -14,10 +14,9 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package org.comdnmr.eqnfit;
 
-import org.comdnmr.util.CoMDPreferences;
 import java.util.ArrayList;
 import java.util.stream.IntStream;
 import org.apache.commons.math3.optim.PointValuePair;
@@ -26,6 +25,7 @@ import org.apache.commons.math3.random.SynchronizedRandomGenerator;
 import org.apache.commons.math3.random.Well19937c;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.util.FastMath;
+import org.comdnmr.util.CoMDOptions;
 
 public class ExpFitFunction extends FitFunction {
 
@@ -126,16 +126,16 @@ public class ExpFitFunction extends FitFunction {
     }
 
     @Override
-    public double[] simBounds(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) {
+    public double[] simBounds(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma, CoMDOptions options) {
         reportFitness = false;
-        int nSim = CoMDPreferences.getSampleSize();
+        int nSim = options.getSampleSize();
         int nPar = start.length;
         parValues = new double[nPar + 1][nSim];
         double[] yPred = getPredicted(start);
         double[] yValuesOrig = yValues.clone();
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
-        String optimizer = CoMDPreferences.getBootStrapOptimizer();
+        String optimizer = options.getBootStrapOptimizer();
 
         for (int i = 0; i < nSim; i++) {
             for (int k = 0; k < yValues.length; k++) {
@@ -162,24 +162,24 @@ public class ExpFitFunction extends FitFunction {
 
     @Override
     public double[] simBoundsStream(double[] start, double[] lowerBounds,
-            double[] upperBounds, double inputSigma, boolean nonParametric) {
-        if (nonParametric) {
-            return simBoundsStreamNonParametric(start, lowerBounds, upperBounds, inputSigma);
+            double[] upperBounds, double inputSigma, CoMDOptions options) {
+        if (options.getNonParametricBootstrap()) {
+            return simBoundsStreamNonParametric(start, lowerBounds, upperBounds, inputSigma, options);
         } else {
-            return simBoundsStreamParametric(start, lowerBounds, upperBounds, inputSigma);
+            return simBoundsStreamParametric(start, lowerBounds, upperBounds, inputSigma, options);
         }
     }
 
     public double[] simBoundsStreamParametric(double[] start,
-            double[] lowerBounds, double[] upperBounds, double inputSigma) {
+            double[] lowerBounds, double[] upperBounds, double inputSigma, CoMDOptions options) {
         reportFitness = false;
         int nPar = start.length;
-        int nSim = CoMDPreferences.getSampleSize();
+        int nSim = options.getSampleSize();
         parValues = new double[nPar + 1][nSim];
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
         double[] yPred = getPredicted(start);
-        String optimizer = CoMDPreferences.getBootStrapOptimizer();
+        String optimizer = options.getBootStrapOptimizer();
 
         IntStream.range(0, nSim).parallel().forEach(i -> {
 //        IntStream.range(0, nSim).forEach(i -> {
@@ -211,14 +211,14 @@ public class ExpFitFunction extends FitFunction {
         return parSDev;
     }
 
-    public double[] simBoundsStreamNonParametric(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) {
+    public double[] simBoundsStreamNonParametric(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma, CoMDOptions options) {
         reportFitness = false;
         int nPar = start.length;
-        int nSim = CoMDPreferences.getSampleSize();
+        int nSim = options.getSampleSize();
         parValues = new double[nPar + 1][nSim];
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
-        String optimizer = CoMDPreferences.getBootStrapOptimizer();
+        String optimizer = options.getBootStrapOptimizer();
 
         IntStream.range(0, nSim).parallel().forEach(i -> {
             ExpFitFunction rDisp = new ExpFitFunction(xValues, yValues, errValues, fieldValues, idNums);

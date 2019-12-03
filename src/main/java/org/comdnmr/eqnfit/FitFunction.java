@@ -38,6 +38,7 @@ import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.util.FastMath;
+import org.comdnmr.util.CoMDOptions;
 
 /**
  *
@@ -234,10 +235,10 @@ public abstract class FitFunction implements MultivariateFunction {
 
     public abstract int[] getMask();
 
-    public abstract double[] simBounds(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma);
+    public abstract double[] simBounds(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma, CoMDOptions options);
 
     public abstract double[] simBoundsStream(double[] start,
-            double[] lowerBounds, double[] upperBounds, double inputSigma, boolean nonParametric);
+            double[] lowerBounds, double[] upperBounds, double inputSigma, CoMDOptions options);
 
     public abstract double[][] getSimPars();
 

@@ -26,6 +26,7 @@ import org.apache.commons.math3.random.SynchronizedRandomGenerator;
 import org.apache.commons.math3.random.Well19937c;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.util.FastMath;
+import org.comdnmr.util.CoMDOptions;
 
 public class CPMGFitFunction extends FitFunction {
 
@@ -167,16 +168,16 @@ public class CPMGFitFunction extends FitFunction {
     }
 
     @Override
-    public double[] simBounds(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) {
+    public double[] simBounds(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma, CoMDOptions options) {
         reportFitness = false;
-        int nSim = CoMDPreferences.getSampleSize();
+        int nSim = options.getSampleSize();
         int nPar = start.length;
         parValues = new double[nPar + 1][nSim];
         double[] yPred = simY(start);
         double[] yValuesOrig = yValues.clone();
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
-        String optimizer = CoMDPreferences.getBootStrapOptimizer();
+        String optimizer = options.getBootStrapOptimizer();
 
         for (int i = 0; i < nSim; i++) {
             for (int k = 0; k < yValues.length; k++) {
@@ -255,19 +256,19 @@ public class CPMGFitFunction extends FitFunction {
     }
 
     @Override
-    public double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma, boolean nonParametric) {
+    public double[] simBoundsStream(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma, CoMDOptions options) {
         reportFitness = false;
         int nPar = start.length;
-        int nSim = CoMDPreferences.getSampleSize();
+        int nSim = options.getSampleSize();
         parValues = new double[nPar + 1][nSim];
         double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
         double[] yPred = simY(start);
-        String optimizer = CoMDPreferences.getBootStrapOptimizer();
+        String optimizer = options.getBootStrapOptimizer();
         IntStream.range(0, nSim).parallel().forEach(i -> {
 //        IntStream.range(0, nSim).forEach(i -> {
             CPMGFitFunction rDisp;
-            if (nonParametric) {
+            if (options.getNonParametricBootstrap()) {
                 rDisp = setupNonParametricBootstrap(yPred);
             } else {
                 rDisp = setupParametricBootstrap(yPred);

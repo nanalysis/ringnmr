@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import org.apache.commons.math3.optim.PointValuePair;
+import org.comdnmr.util.CoMDOptions;
 
 /**
  *
@@ -215,7 +216,7 @@ public class ExpFitter implements EquationFitter {
     }
 
     @Override
-    public FitResult doFit(String eqn, double[] sliderguesses) {
+    public FitResult doFit(String eqn, double[] sliderguesses, CoMDOptions options) {
         setupFit(eqn);
 
         int[][] map = expModel.getMap();
@@ -228,9 +229,9 @@ public class ExpFitter implements EquationFitter {
         }
 //        System.out.println("dofit guesses = " + guesses);
         double[][] boundaries = expModel.boundaries(guesses);
-        double sigma = CoMDPreferences.getStartingRadius();
+        double sigma = options.getStartRadius();
         PointValuePair result = expModel.refine(guesses, boundaries[0], boundaries[1],
-                sigma, CoMDPreferences.getOptimizer());
+                sigma, options.getOptimizer());
         double[] pars = result.getPoint();
         /*
         for (int i = 0; i < map.length; i++) {
@@ -260,24 +261,24 @@ public class ExpFitter implements EquationFitter {
         if (FitFunction.getCalcError()) {
             long startTime = System.currentTimeMillis();
             errEstimates = expModel.simBoundsStream(pars.clone(),
-                    boundaries[0], boundaries[1], sigma, CoMDPreferences.getNonParametric());
+                    boundaries[0], boundaries[1], sigma, options);
             long endTime = System.currentTimeMillis();
             errTime = endTime - startTime;
             simPars = expModel.getSimPars();
         } else {
             errEstimates = new double[pars.length];
         }
-        String refineOpt = CoMDPreferences.getOptimizer();
-        String bootstrapOpt = CoMDPreferences.getBootStrapOptimizer();
+        String refineOpt = options.getOptimizer();
+        String bootstrapOpt = options.getBootStrapOptimizer();
         long fitTime = expModel.fitTime;
         long bootTime = errTime;
-        int nSamples = CoMDPreferences.getSampleSize();
-        boolean useAbs = CoMDPreferences.getAbsValueFit();
-        boolean useNonParametric = CoMDPreferences.getNonParametric();
-        double sRadius = CoMDPreferences.getStartingRadius();
-        double fRadius = CoMDPreferences.getFinalRadius();
-        double tol = CoMDPreferences.getTolerance();
-        boolean useWeight = CoMDPreferences.getWeightFit();
+        int nSamples = options.getSampleSize();
+        boolean useAbs = options.getAbsValueFit();
+        boolean useNonParametric = options.getNonParametricBootstrap();
+        double sRadius = options.getStartRadius();
+        double fRadius = options.getFinalRadius();
+        double tol = options.getTolerance();
+        boolean useWeight = options.getWeightFit();
         CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs,
                 useNonParametric, sRadius, fRadius, tol, useWeight);
         double[] usedFields = getFields(fieldValues, idValues);

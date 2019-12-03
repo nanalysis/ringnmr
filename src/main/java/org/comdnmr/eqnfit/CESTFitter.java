@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import org.apache.commons.math3.optim.PointValuePair;
+import org.comdnmr.util.CoMDOptions;
 
 /**
  *
@@ -265,7 +266,7 @@ public class CESTFitter implements EquationFitter {
     }
 
     @Override
-    public FitResult doFit(String eqn, double[] sliderguesses) {
+    public FitResult doFit(String eqn, double[] sliderguesses, CoMDOptions options) {
         double[][] xvals = new double[xValues.length][xValues[0].size()];
         double[] yvals = new double[yValues.size()];
         int[] idNums = new int[yValues.size()];
@@ -295,9 +296,9 @@ public class CESTFitter implements EquationFitter {
             //        double[] guesses = setupFit(eqn, absMode);
             if (guesses != null) {
                 double[][] boundaries = calcCEST.boundaries(guesses);
-                double sigma = CoMDPreferences.getStartingRadius();
+                double sigma = options.getStartRadius();
                 PointValuePair result = calcCEST.refine(guesses, boundaries[0],
-                        boundaries[1], sigma, CoMDPreferences.getOptimizer());
+                        boundaries[1], sigma, options.getOptimizer());
                 double[] pars = result.getPoint();
                 System.out.println(eqn);
 
@@ -326,11 +327,11 @@ public class CESTFitter implements EquationFitter {
                 double[] errEstimates;
                 double[][] simPars = null;
                 boolean exchangeValid = true;
-                double deltaABdiff = CoMDPreferences.getDeltaABDiff();
+                double deltaABdiff = options.getDeltaABDiff();
                 if (FitFunction.getCalcError()) {
                     long startTime = System.currentTimeMillis();
                     errEstimates = calcCEST.simBoundsStream(pars.clone(),
-                            boundaries[0], boundaries[1], sigma, CoMDPreferences.getNonParametric());
+                            boundaries[0], boundaries[1], sigma, options);
                     long endTime = System.currentTimeMillis();
                     errTime = endTime - startTime;
                     simPars = calcCEST.getSimPars();
@@ -353,17 +354,17 @@ public class CESTFitter implements EquationFitter {
                 for (int j = 1; j < extras.length; j++) {
                     extras[j] = xValues[j].get(0);
                 }
-                String refineOpt = CoMDPreferences.getOptimizer();
-                String bootstrapOpt = CoMDPreferences.getBootStrapOptimizer();
+                String refineOpt = options.getOptimizer();
+                String bootstrapOpt = options.getBootStrapOptimizer();
                 long fitTime = calcCEST.fitTime;
                 long bootTime = errTime;
-                int nSamples = CoMDPreferences.getSampleSize();
-                boolean useAbs = CoMDPreferences.getAbsValueFit();
-                boolean useNonParametric = CoMDPreferences.getNonParametric();
-                double sRadius = CoMDPreferences.getStartingRadius();
-                double fRadius = CoMDPreferences.getFinalRadius();
-                double tol = CoMDPreferences.getTolerance();
-                boolean useWeight = CoMDPreferences.getWeightFit();
+                int nSamples = options.getSampleSize();
+                boolean useAbs = options.getAbsValueFit();
+                boolean useNonParametric = options.getNonParametricBootstrap();
+                double sRadius = options.getStartRadius();
+                double fRadius = options.getFinalRadius();
+                double tol = options.getTolerance();
+                boolean useWeight = options.getWeightFit();
                 CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs,
                         useNonParametric, sRadius, fRadius, tol, useWeight);
                 return getResults(this, eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, exchangeValid, curveStats);

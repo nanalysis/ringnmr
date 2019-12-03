@@ -28,6 +28,7 @@ import org.comdnmr.eqnfit.EquationFitter;
 import org.comdnmr.eqnfit.FitFunction;
 import org.comdnmr.data.ResidueProperties;
 import java.util.List;
+import org.comdnmr.util.CoMDOptions;
 
 /**
  *
@@ -46,7 +47,7 @@ public class NOEFit implements EquationFitter {
     }
 
     @Override
-    public FitResult doFit(String eqn, double[] sliderGuesses) {
+    public FitResult doFit(String eqn, double[] sliderGuesses, CoMDOptions options) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

@@ -14,8 +14,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/*
+ */
+ /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
@@ -180,7 +180,7 @@ public class CoMDPreferences {
         }
     }
 
-    public static Double getStartingRadius() {
+    public static Double getStartRadius() {
         if (startRadius == null) {
             String value = getPrefs().get("START_RADIUS", "20.0");
             startRadius = Double.parseDouble(value);
@@ -265,7 +265,7 @@ public class CoMDPreferences {
         }
     }
 
-    public static Boolean getNonParametric() {
+    public static Boolean getNonParametricBootstrap() {
         if (nonParametricBootstrap == null) {
             String value = getPrefs().get("NONPARAMETRIC", "true");
             nonParametricBootstrap = Boolean.parseBoolean(value);
@@ -343,10 +343,14 @@ public class CoMDPreferences {
         String[] stringList = s.split("\n");
         for (String strValue : stringList) {
             String[] strValueParts = strValue.split(";");
+            String key = strValueParts[0];
+            if (key.startsWith("CEST")) {
+                key = key.substring(4); // kluge for removing CEST from equation names
+            }
             if (strValueParts[1].equals("true")) {
-                map.put(strValueParts[0], Boolean.TRUE);
+                map.put(key, Boolean.TRUE);
             } else {
-                map.put(strValueParts[0], Boolean.FALSE);
+                map.put(key, Boolean.FALSE);
             }
         }
         return map;

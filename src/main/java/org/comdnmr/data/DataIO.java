@@ -326,7 +326,6 @@ public class DataIO {
                     if (expMode.equals("cest")) {
                         processCESTData(expData, residueNum, xValueList, yValueList, errValueList, peakNum);
                     } else {
-                        System.out.println("res " + residueNum + " \n " + xValueList + "\n  " + yValueList + "\n " + errValueList);
                         ResidueData residueData = new ResidueData(expData, residueNum, xValueList, yValueList, errValueList, peakRefList, peakNum);
                         expData.addResidueData(residueNum, residueData);
                     }

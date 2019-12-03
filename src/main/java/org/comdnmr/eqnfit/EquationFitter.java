@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.comdnmr.util.CoMDOptions;
 
 /**
  *
@@ -38,7 +39,7 @@ public interface EquationFitter {
 
     public FitFunction getFitModel();
 
-    public FitResult doFit(String eqn, double[] sliderGuesses);
+    public FitResult doFit(String eqn, double[] sliderGuesses, CoMDOptions options);
 
     public void setupFit(String eqn);
 

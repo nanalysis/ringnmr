@@ -44,6 +44,7 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
+import org.comdnmr.util.CoMDOptions;
 
 /**
  *
@@ -276,7 +277,8 @@ public class ResidueFitter {
 
             EquationFitter equationFitter = getFitter();
             equationFitter.setData(resProps, resNums);
-            fitResult = equationFitter.doFit(equationName, null);
+            CoMDOptions options = new CoMDOptions(true);
+            fitResult = equationFitter.doFit(equationName, null, options);
             fitResults.put(equationName, fitResult);
             if (fitResult.getAicc() < aicMin) {
                 aicMin = fitResult.getAicc();

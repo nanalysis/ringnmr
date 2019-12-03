@@ -17,7 +17,6 @@
 */
 package org.comdnmr.eqnfit;
 
-import org.comdnmr.util.CoMDPreferences;
 import org.comdnmr.data.ResidueProperties;
 import org.comdnmr.data.ResidueData;
 import org.comdnmr.data.ExperimentData;
@@ -28,6 +27,7 @@ import java.util.List;
 import org.apache.commons.math3.optim.PointValuePair;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.stat.inference.TTest;
+import org.comdnmr.util.CoMDOptions;
 
 /**
  *
@@ -220,7 +220,7 @@ public class CPMGFitter implements EquationFitter {
     }
 
     @Override
-    public FitResult doFit(String eqn, double[] sliderguesses) {
+    public FitResult doFit(String eqn, double[] sliderguesses, CoMDOptions options) {
         setupFit(eqn);
         int[][] map = calcR.getMap();
         double[] guesses;
@@ -232,9 +232,9 @@ public class CPMGFitter implements EquationFitter {
         }
 //        System.out.println("dofit guesses = " + guesses);
         double[][] boundaries = calcR.boundaries(guesses);
-        double sigma = CoMDPreferences.getStartingRadius();
+        double sigma = options.getStartRadius();
         PointValuePair result = calcR.refine(guesses, boundaries[0],
-                boundaries[1], sigma, CoMDPreferences.getOptimizer());
+                boundaries[1], sigma, options.getOptimizer());
         double[] pars = result.getPoint();
         System.out.print("Fit pars \n");
         for (int i = 0; i < pars.length; i++) {
@@ -272,7 +272,7 @@ public class CPMGFitter implements EquationFitter {
         double[][] simPars = null;
         double[] rexValues = calcR.getRex(pars);
         boolean okRex = false;
-        double rexRatio = CoMDPreferences.getRexRatio();
+        double rexRatio = options.getRexRatio();
         for (double rexValue : rexValues) {
             if (rexValue > rexRatio * rms) {
                 okRex = true;
@@ -284,7 +284,7 @@ public class CPMGFitter implements EquationFitter {
         if (FitFunction.getCalcError()) {
             long startTime = System.currentTimeMillis();
             errEstimates = calcR.simBoundsStream(pars.clone(),
-                    boundaries[0], boundaries[1], sigma, CoMDPreferences.getNonParametric());
+                    boundaries[0], boundaries[1], sigma, options);
             long endTime = System.currentTimeMillis();
             errTime = endTime - startTime;
             simPars = calcR.getSimPars();
@@ -319,17 +319,17 @@ public class CPMGFitter implements EquationFitter {
         } else {
             errEstimates = new double[pars.length];
         }
-        String refineOpt = CoMDPreferences.getOptimizer();
-        String bootstrapOpt = CoMDPreferences.getBootStrapOptimizer();
+        String refineOpt = options.getOptimizer();
+        String bootstrapOpt = options.getBootStrapOptimizer();
         long fitTime = calcR.fitTime;
         long bootTime = errTime;
-        int nSamples = CoMDPreferences.getSampleSize();
-        boolean useAbs = CoMDPreferences.getAbsValueFit();
-        boolean useNonParametric = CoMDPreferences.getNonParametric();
-        double sRadius = CoMDPreferences.getStartingRadius();
-        double fRadius = CoMDPreferences.getFinalRadius();
-        double tol = CoMDPreferences.getTolerance();
-        boolean useWeight = CoMDPreferences.getWeightFit();
+        int nSamples = options.getSampleSize();
+        boolean useAbs = options.getAbsValueFit();
+        boolean useNonParametric = options.getNonParametricBootstrap();
+        double sRadius = options.getStartRadius();
+        double fRadius = options.getFinalRadius();
+        double tol = options.getTolerance();
+        boolean useWeight = options.getWeightFit();
         CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs,
                 useNonParametric, sRadius, fRadius, tol, useWeight);
         double[] usedFields = getFields(fieldValues, idValues);
