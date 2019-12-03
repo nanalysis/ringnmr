@@ -105,7 +105,7 @@ public class CESTEquations {
      * @param R2A R2A value. Transverse relaxation rate for Ground/Major state.
      * @return CEST intensity array.
      */
-    public static double[] cestR1rhoPerturbationNoEx(double[][] X, double[] fields, double deltaA0, double R1A, double R2A) {
+    public static double[] noEx(double[][] X, double[] fields, double deltaA0, double R1A, double R2A) {
         double[] omegarf = X[0];
         double[] b1Field = X[1];
         double[] Tex = X[2];
@@ -149,7 +149,7 @@ public class CESTEquations {
      * @param R2B R2B value. Transverse relaxation rate for Excited/Minor state.
      * @return CEST intensity array.
      */
-    public static double[] cestExact0(double[][] X, double[] fields, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A, double R2B) {
+    public static double[] exact0(double[][] X, double[] fields, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A, double R2B) {
         // Performs an exact numerical calculation and returns CEST intensity ratio.
         //
         // X: array containing two arrays:
@@ -258,7 +258,7 @@ public class CESTEquations {
      * @param R2B R2B value. Transverse relaxation rate for Excited/Minor state.
      * @return CEST intensity array.
      */
-    public static double[] cestR1rhoExact1(double[][] X, double[] fields, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A, double R2B) {
+    public static double[] r1rhoExact1(double[][] X, double[] fields, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A, double R2B) {
         // Performs an exact numerical calculation and returns CEST intensity ratio.
         // Assumes R1A = R1B.
         //
@@ -282,7 +282,6 @@ public class CESTEquations {
         double tdelay = Tex[0];//0.3;
 
         double[] cest = new double[omegarf.length];
-        double[] omegaB1 = new double[b1Field.length];
 
         double k1 = pb * kex;
         double km1 = (1 - pb) * kex;
@@ -312,27 +311,26 @@ public class CESTEquations {
         DMatrixRMaj Lb1 = new DMatrixRMaj(Lb);
         DMatrixRMaj K1 = new DMatrixRMaj(K);
 
-        DMatrixRMaj Z = new DMatrixRMaj(new double[La.length][La[0].length]);
+        DMatrixRMaj Z = new DMatrixRMaj(La.length, La[0].length);
 
         for (int i = 0; i < omegarf.length; i++) {
-            omegaB1[i] = b1Field[i] * 2.0 * Math.PI;
-            double deltaA = (deltaA0 - omegarf[i]) * fields[i] * 2.0 * Math.PI;
-            double deltaB = (deltaB0 - omegarf[i]) * fields[i] * 2.0 * Math.PI;
+            double omegaB1 = b1Field[i] * TWO_PI;
+            double deltaA = (deltaA0 - omegarf[i]) * fields[i] * TWO_PI;
+            double deltaB = (deltaB0 - omegarf[i]) * fields[i] * TWO_PI;
             double omegaBar = (1 - pb) * deltaA + pb * deltaB;
-            double we = Math.sqrt(omegaB1[i] * omegaB1[i] + omegaBar * omegaBar);
+            double we = Math.sqrt(omegaB1 * omegaB1 + omegaBar * omegaBar);
 
-            double sint = omegaB1[i] / we;
             double cost = omegaBar / we;
             
             La1.set(0, 1, -deltaA); 
             La1.set(1, 0, deltaA);
-            La1.set(1, 2, -omegaB1[i]);
-            La1.set(2, 1, omegaB1[i]);
+            La1.set(1, 2, -omegaB1);
+            La1.set(2, 1, omegaB1);
 
             Lb1.set(3, 4, -deltaB); 
             Lb1.set(4, 3, deltaB);
-            Lb1.set(4, 5, -omegaB1[i]);
-            Lb1.set(5, 4, omegaB1[i]);         
+            Lb1.set(4, 5, -omegaB1);
+            Lb1.set(5, 4, omegaB1);         
             
             CommonOps_DDRM.add(La1, Lb1, Z);
             CommonOps_DDRM.addEquals(Z, K1);
@@ -376,7 +374,7 @@ public class CESTEquations {
      * @param R2B R2B value. Transverse relaxation rate for Excited/Minor state.
      * @return CEST intensity array.
      */
-    public static double[] cestR1rhoApprox(String approx, double[][] X, double[] fields, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A, double R2B) {
+    public static double[] r1rhoApprox(String approx, double[][] X, double[] fields, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A, double R2B) {
 
         // X: array containing two arrays:
         //  omegarf: CEST irradiation frequency (ppm)
@@ -401,9 +399,9 @@ public class CESTEquations {
         double[] omegaBar = new double[omegarf.length];
         double[] omegaB1 = new double[omegarf.length];
         for (int i = 0; i < omegarf.length; i++) {
-            omegaB1[i] = b1Field[i] * 2.0 * Math.PI;
-            deltaA[i] = (deltaA0 - omegarf[i]) * fields[i] * 2.0 * Math.PI;
-            deltaB[i] = (deltaB0 - omegarf[i]) * fields[i] * 2.0 * Math.PI;
+            omegaB1[i] = b1Field[i] * TWO_PI;
+            deltaA[i] = (deltaA0 - omegarf[i]) * fields[i] * TWO_PI;
+            deltaB[i] = (deltaB0 - omegarf[i]) * fields[i] * TWO_PI;
             omegaBar[i] = pa * deltaA[i] + pb * deltaB[i];
         }
 

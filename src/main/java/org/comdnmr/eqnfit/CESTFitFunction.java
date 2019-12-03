@@ -34,7 +34,7 @@ public class CESTFitFunction extends FitFunction {
     CESTEquations cestEq = new CESTEquations();
 
     public CESTFitFunction() {
-        this.equation = CESTEquation.CESTR1RHOPERTURBATION;
+        this.equation = CESTEquation.TROTT_PALMER;
     }
 
     @Override
@@ -56,7 +56,7 @@ public class CESTFitFunction extends FitFunction {
         this.fieldValues = fieldValues.clone();
         this.idNums = idNums.clone();
         this.idNums = new int[yValues.length];
-        this.equation = CESTEquation.CESTR1RHOPERTURBATION;
+        this.equation = CESTEquation.TROTT_PALMER;
         if (setNID()) {
             throw new IllegalArgumentException("Invalid idNums, some values not used");
         }

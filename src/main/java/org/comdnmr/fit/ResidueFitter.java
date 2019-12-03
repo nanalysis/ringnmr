@@ -258,7 +258,7 @@ public class ResidueFitter {
                 break;
             case "cest":
                 equationNames = CESTFitter.getEquationNames();
-                bestEquation = "CESTR1RHOPERTURBATIONNOEX";
+                bestEquation = "NOEX";
                 break;
             case "r1rho":
                 equationNames = R1RhoFitter.getEquationNames();
