@@ -148,7 +148,7 @@ public class PreferencesController implements Initializable {
 
         DoubleRangeOperationItem startingRadiusItem = new DoubleRangeOperationItem((obs, oldV, newV) -> {
             CoMDPreferences.setStartingRadius((Double) newV);
-        }, CoMDPreferences.getStartingRadius(), 1.0, 30.0, "Optimizer", "Starting Radius", "Iniital search radius for optimizer");
+        }, CoMDPreferences.getStartRadius(), 1.0, 30.0, "Optimizer", "Starting Radius", "Iniital search radius for optimizer");
         DoubleRangeOperationItem finalRadiusItem = new DoubleRangeOperationItem((obs, oldV, newV) -> {
             CoMDPreferences.setFinalRadius((Double) newV);
         }, CoMDPreferences.getFinalRadius(), -6, -1.0, "Optimizer", "Final Radius", "Final search radius for BOBYQA");
@@ -164,7 +164,7 @@ public class PreferencesController implements Initializable {
         BooleanOperationItem nonParametricItem = new BooleanOperationItem(
                 (obs, oldV, newV) -> {
                     CoMDPreferences.setNonParametric((Boolean) newV);
-                }, CoMDPreferences.getNonParametric(), "Optimizer", "Non-Parametric",
+                }, CoMDPreferences.getNonParametricBootstrap(), "Optimizer", "Non-Parametric",
                 "Bootstrapping with non-parametric method");
         BooleanOperationItem absValueItem = new BooleanOperationItem(
                 (obs, oldV, newV) -> {

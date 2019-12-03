@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package org.comdnmr.gui;
 
 import de.jensd.fx.glyphs.GlyphsDude;
@@ -104,6 +104,7 @@ import org.comdnmr.eqnfit.R1RhoFitter;
 import static org.comdnmr.gui.MainApp.preferencesController;
 import static org.comdnmr.gui.MainApp.console;
 import static org.comdnmr.gui.MainApp.primaryStage;
+import org.comdnmr.util.CoMDOptions;
 import org.comdnmr.utils.NMRFxClient;
 import org.controlsfx.dialog.ExceptionDialog;
 import org.nmrfx.chart.Axis;
@@ -1406,7 +1407,8 @@ public class PyController implements Initializable {
                 if (sliderGuessCheckBox.isSelected()) {
                     sliderGuesses = simControls.sliderGuess(equationName, map);
                 }
-                fitResult = equationFitter.doFit(equationName, sliderGuesses);
+                CoMDOptions options = new CoMDOptions(true);
+                fitResult = equationFitter.doFit(equationName, sliderGuesses, options);
                 updateAfterFit(fitResult);
             }
         } catch (NullPointerException npE2) {
@@ -2009,7 +2011,8 @@ public class PyController implements Initializable {
         if (sliderGuessCheckBox.isSelected()) {
             sliderGuesses = simControls.sliderGuess(equationName, map);
         }
-        fitResult = equationFitter.doFit(equationName, sliderGuesses);
+        CoMDOptions options = new CoMDOptions(true);
+        fitResult = equationFitter.doFit(equationName, sliderGuesses, options);
         updateAfterFit(fitResult);
     }
 
