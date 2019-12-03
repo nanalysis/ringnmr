@@ -89,7 +89,7 @@ public class CoMDPreferences {
 
     public static Double getRefField() {
         if (refField == null) {
-            String value = getPrefs().get("REF_FIELD", "500.0");
+            String value = getPrefs().get("REF_FIELD", String.valueOf(CoMDDefaults.getRefField()));
             refField = Double.parseDouble(value);
         }
         return refField;
@@ -97,7 +97,7 @@ public class CoMDPreferences {
 
     public static Integer getSampleSize() {
         if (sampleSize == null) {
-            String value = getPrefs().get("SAMPLE_SIZE", "50");
+            String value = getPrefs().get("SAMPLE_SIZE", String.valueOf(CoMDDefaults.getSampleSize()));
             sampleSize = Integer.parseInt(value);
         }
         return sampleSize;
@@ -114,7 +114,7 @@ public class CoMDPreferences {
 
     public static String getOptimizer() {
         if (optimizer == null) {
-            String value = getPrefs().get("OPTIMIZER", "CMA-ES");
+            String value = getPrefs().get("OPTIMIZER", CoMDDefaults.getOptimizer());
             optimizer = value;
         }
         return optimizer;
@@ -131,7 +131,7 @@ public class CoMDPreferences {
 
     public static String getBootStrapOptimizer() {
         if (bootStrapOptimizer == null) {
-            String value = getPrefs().get("BOOTSTRAP-OPTIMIZER", "BOBYQA");
+            String value = getPrefs().get("BOOTSTRAP-OPTIMIZER",  CoMDDefaults.getOptimizer());
             bootStrapOptimizer = value;
         }
         return bootStrapOptimizer;
@@ -148,7 +148,7 @@ public class CoMDPreferences {
 
     public static Double getRexRatio() {
         if (rexRatio == null) {
-            String value = getPrefs().get("REX_RATIO", "3.0");
+            String value = getPrefs().get("REX_RATIO", String.valueOf(CoMDDefaults.getRexRatio()));
             rexRatio = Double.parseDouble(value);
         }
         return rexRatio;
@@ -165,7 +165,7 @@ public class CoMDPreferences {
 
     public static Double getDeltaABDiff() {
         if (deltaABdiff == null) {
-            String value = getPrefs().get("DELTAAB_DIFF", "0.1");
+            String value = getPrefs().get("DELTAAB_DIFF", String.valueOf(CoMDDefaults.getDeltaABDiff()));
             deltaABdiff = Double.parseDouble(value);
         }
         return deltaABdiff;
@@ -182,7 +182,7 @@ public class CoMDPreferences {
 
     public static Double getStartRadius() {
         if (startRadius == null) {
-            String value = getPrefs().get("START_RADIUS", "20.0");
+            String value = getPrefs().get("START_RADIUS", String.valueOf(CoMDDefaults.getStartRadius()));
             startRadius = Double.parseDouble(value);
         }
         return startRadius;
@@ -199,7 +199,7 @@ public class CoMDPreferences {
 
     public static Double getFinalRadius() {
         if (finalRadius == null) {
-            String value = getPrefs().get("FINAL_RADIUS", "-5");
+            String value = getPrefs().get("FINAL_RADIUS", String.valueOf(CoMDDefaults.getFinalRadius()));
             finalRadius = Double.parseDouble(value);
         }
         return finalRadius;
@@ -216,7 +216,7 @@ public class CoMDPreferences {
 
     public static Double getTolerance() {
         if (tolerance == null) {
-            String value = getPrefs().get("TOLERANCE", "-5");
+            String value = getPrefs().get("TOLERANCE", String.valueOf(CoMDDefaults.getTolerance()));
             tolerance = Double.parseDouble(value);
         }
         return tolerance;
@@ -233,7 +233,7 @@ public class CoMDPreferences {
 
     public static Boolean getWeightFit() {
         if (weightFit == null) {
-            String value = getPrefs().get("WEIGHT_FIT", "true");
+            String value = getPrefs().get("WEIGHT_FIT", String.valueOf(CoMDDefaults.getWeightFit()));
             weightFit = Boolean.parseBoolean(value);
         }
         return weightFit;
@@ -250,7 +250,7 @@ public class CoMDPreferences {
 
     public static Boolean getAbsValueFit() {
         if (absValueFit == null) {
-            String value = getPrefs().get("ABSVAL_FIT", "true");
+            String value = getPrefs().get("ABSVAL_FIT", String.valueOf(CoMDDefaults.getAbsValueFit()));
             absValueFit = Boolean.parseBoolean(value);
         }
         return absValueFit;
@@ -267,7 +267,7 @@ public class CoMDPreferences {
 
     public static Boolean getNonParametricBootstrap() {
         if (nonParametricBootstrap == null) {
-            String value = getPrefs().get("NONPARAMETRIC", "true");
+            String value = getPrefs().get("NONPARAMETRIC", String.valueOf(CoMDDefaults.getNonParametricBootstrap()));
             nonParametricBootstrap = Boolean.parseBoolean(value);
         }
         return nonParametricBootstrap;
@@ -284,7 +284,7 @@ public class CoMDPreferences {
 
     public static Boolean getNeuralNetworkGuess() {
         if (neuralNetworkGuess == null) {
-            String value = getPrefs().get("NEURALNETWORKGUESS", "true");
+            String value = getPrefs().get("NEURALNETWORKGUESS", String.valueOf(CoMDDefaults.getNeuralNetworkGuess()));
             neuralNetworkGuess = Boolean.parseBoolean(value);
         }
         return neuralNetworkGuess;
