@@ -181,12 +181,12 @@ public class CESTFitTest {
     }
 
     @Test
-    public void testcestR1rhoPerturbation() {
+    public void testTrottPalmer() {
         CESTFitter fitting = new CESTFitter();
         List<Double> fieldArray = Collections.nCopies(errarray.size(), CoMDPreferences.getRefField());
         fitting.setData(fixOffset(offset), fixOffset(omega), Texarray, intenarray, errarray, fieldArray);
 
-        FitResult fit = fitting.doFit("cestr1rhoperturbation", null);
+        FitResult fit = fitting.doFit("trott_palmer", null);
 
         double[] fitpars = fit.getPars(0);
         double[] validpars = new double[]{159.40549413953838, 0.07848868547481112, 2705.7656176771607, -1244.26540485914, 2.3834525779746167,
@@ -196,7 +196,7 @@ public class CESTFitTest {
         double[] validerrs = new double[]{4.070771048976483, 7.910314021442713E-4, 2.1870880660250585, 4.25048585761765, 0.004839626206279982,
             0.004839626206279982, 0.33246477045330786, 4.989869976578456}; //{4.379924820081111, 0.0007986456868965598, 2.6001243193320365, 4.046178640951488, 0.0048026137212628375, 0.33970335899651316, 5.304491575138278};
 
-        dumpPars("cestR1rhoPerturbation", fitpars, validpars, fiterrs, validerrs);
+        dumpPars("trott_palmer", fitpars, validpars, fiterrs, validerrs);
 
         Assert.assertArrayEquals(fiterrs, validerrs, 6.0e1);
 
@@ -213,12 +213,12 @@ public class CESTFitTest {
     }
 
     @Test
-    public void testcestR1rhoSD() {
+    public void testSD() {
         CESTFitter fitting = new CESTFitter();
         List<Double> fieldArray = Collections.nCopies(errarray.size(), CoMDPreferences.getRefField());
         fitting.setData(fixOffset(offset), fixOffset(omega), Texarray, intenarray, errarray, fieldArray);
 
-        FitResult fit = fitting.doFit("cestr1rhosd", null);
+        FitResult fit = fitting.doFit("sd", null);
 
         double[] fitpars = fit.getPars(0);
         double[] validpars = new double[]{164.31219540872297, 0.08000559530543723, 2710.5848956396685, -1247.6238696374273, 2.3747806394904574,
@@ -227,7 +227,7 @@ public class CESTFitTest {
         double[] fiterrs = fit.getErrs(0);
         double[] validerrs = new double[]{4.694876487305635, 0.0008407892782788573, 2.6506158711548755, 4.4500688239216775, 0.00510500924091006,
             0.00510500924091006, 0.38366068154645305, 5.631002751559051};
-        dumpPars("cestR1rhoSD", fitpars, validpars, fiterrs, validerrs);
+        dumpPars("SD", fitpars, validpars, fiterrs, validerrs);
 
         Assert.assertArrayEquals(fiterrs, validerrs, 6.0e1);
 
@@ -242,12 +242,12 @@ public class CESTFitTest {
     }
 
     @Test
-    public void testcestR1rhoBaldwinKay() {
+    public void testBaldwinKay() {
         CESTFitter fitting = new CESTFitter();
         List<Double> fieldArray = Collections.nCopies(errarray.size(), CoMDPreferences.getRefField());
         fitting.setData(fixOffset(offset), fixOffset(omega), Texarray, intenarray, errarray, fieldArray);
 
-        FitResult fit = fitting.doFit("cestr1rhobaldwinkay", null);
+        FitResult fit = fitting.doFit("baldwinkay", null);
 
         double[] fitpars = fit.getPars(0);
         double[] validpars = new double[]{168.45940742687503, 0.07848006386286228, 2705.4283684664874, -1244.1504931304519, 2.3839104552778836,
@@ -257,7 +257,7 @@ public class CESTFitTest {
         double[] validerrs = new double[]{4.527537134628853, 0.0007171967856360292, 2.3553917781329563, 3.3808605211180436, 0.004685962985573297,
             0.004685962985573297, 0.3932615215677069, 5.7049278404942605};
 
-        dumpPars("cestR1rhoBaldwinKay", fitpars, validpars, fiterrs, validerrs);
+        dumpPars("BaldwinKay", fitpars, validpars, fiterrs, validerrs);
 
         Assert.assertArrayEquals(fiterrs, validerrs, 6.0e1);
 
@@ -272,12 +272,12 @@ public class CESTFitTest {
     }
 
     @Test
-    public void testcestR1rhoN() {
+    public void testLaguerre() {
         CESTFitter fitting = new CESTFitter();
         List<Double> fieldArray = Collections.nCopies(errarray.size(), CoMDPreferences.getRefField());
         fitting.setData(fixOffset(offset), fixOffset(omega), Texarray, intenarray, errarray, fieldArray);
 
-        FitResult fit = fitting.doFit("cestr1rhon", null);
+        FitResult fit = fitting.doFit("laguerre", null);
 
         double[] fitpars = fit.getPars(0);
         double[] validpars = new double[]{288.937925578066, 0.07087265844081425, 2771.0529601396183, -1285.1744405197783, 2.4246256495623104,
@@ -287,7 +287,7 @@ public class CESTFitTest {
         double[] validerrs = new double[]{3.58822964273236, 0.0006570223547152888, 2.5674908203535574, 3.0651902549305405, 0.004205721940200411,
             0.004205721940200411, 0.2937911953297107, 0.2937911953297107};
 
-        dumpPars("cestR1rhoN", fitpars, validpars, fiterrs, validerrs);
+        dumpPars("Laguerre", fitpars, validpars, fiterrs, validerrs);
 
         Assert.assertArrayEquals(fiterrs, validerrs, 6.0e1);
 

@@ -51,7 +51,7 @@ public class CoMDPreferences {
     private static Map<String, Boolean> cestEqnMap = null;
     private static Map<String, Boolean> r1rhoEqnMap = null;
     private static Map<String, Boolean> expEqnMap = null;
-    private static final String DEFAULT_CEST_EQNS = "CESTR1RHOPERTURBATIONNOEX;true\nCESTR1RHOPERTURBATION;true";
+    private static final String DEFAULT_CEST_EQNS = "NOEX;true\nTROTT_PALMER;true";
     private static final String DEFAULT_R1RHO_EQNS = "R1RHOPERTURBATIONNOEX;true\nR1RHOPERTURBATION;true";
     private static final String DEFAULT_EXP_EQNS = "EXPAB;true";
     private static Double deltaABdiff = null;
