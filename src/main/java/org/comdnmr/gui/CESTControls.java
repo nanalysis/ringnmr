@@ -239,7 +239,7 @@ public class CESTControls extends EquationControls {
             case "TROTT_PALMER":
             case "BALDWINKAY":
             case "SD":
-            case "R1RHOEXACT1":
+            case "EIGENEXACT1":
             case "EXACT1":
                 KEX.disabled(false);
                 KEX.valueText.setDisable(false);
@@ -371,7 +371,7 @@ public class CESTControls extends EquationControls {
             case "LAGUERRE":
             case "SD":
             case "BALDWINKAY":
-            case "R1RHOEXACT1":
+            case "EIGENEXACT1":
             case "EXACT0":
             case "EXACT1":
             case "EXACT2":
@@ -445,7 +445,7 @@ public class CESTControls extends EquationControls {
             case "LAGUERRE":
             case "SD":
             case "BALDWINKAY":
-            case "R1RHOEXACT1":
+            case "EIGENEXACT1":
             case "EXACT0":
             case "EXACT1":
             case "EXACT2":
@@ -488,7 +488,7 @@ public class CESTControls extends EquationControls {
             case "LAGUERRE":
             case "BALDWINKAY":
             case "SD":
-            case "R1RHOEXACT1":
+            case "EIGENEXACT1":
             case "EXACT0":
             case "EXACT1":
             case "EXACT2":
@@ -541,7 +541,7 @@ public class CESTControls extends EquationControls {
             case "TROTT_PALMER":
             case "SD":
             case "BALDWINKAY":
-            case "R1RHOEXACT1":
+            case "EIGENEXACT1":
             case "EXACT1":
                 for (int id = 0; id < map.length; id++) {
                     guesses[map[id][0]] = kex; //kex
@@ -679,7 +679,7 @@ public class CESTControls extends EquationControls {
             case "TROTT_PALMER":
             case "BALDWINKAY":
             case "SD":
-            case "R1RHOEXACT1":
+            case "EIGENEXACT1":
             case "EXACT1":
                 parNames1.add("Kex");
                 parNames1.add("Pb");

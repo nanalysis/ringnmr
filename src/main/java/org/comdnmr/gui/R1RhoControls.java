@@ -225,8 +225,8 @@ public class R1RhoControls extends EquationControls {
             updatingTable = false;
         }
         switch (equationName) {
-            case "R1RHOPERTURBATION":
-            case "R1RHOBALDWINKAY":
+            case "TROTT_PALMER":
+            case "BALDWINKAY":
                 KEX.disabled(false);
                 KEX.valueText.setDisable(false);
                 PB.disabled(false);
@@ -243,7 +243,7 @@ public class R1RhoControls extends EquationControls {
                 B1FIELD.disabled(false);
                 TEX.disabled(false);
                 break;
-            case "R1RHOLAGUERRE":
+            case "LAGUERRE":
                 KEX.disabled(false);
                 KEX.valueText.setDisable(false);
                 PB.disabled(false);
@@ -261,8 +261,8 @@ public class R1RhoControls extends EquationControls {
                 B1FIELD.disabled(false);
                 TEX.disabled(false);
                 break;
-            case "R1RHOEXACT":
-            case "R1RHOEXACT0":
+            case "EXACT":
+            case "EXACT0":
                 KEX.disabled(false);
                 KEX.valueText.setDisable(false);
                 PB.disabled(false);
@@ -279,7 +279,7 @@ public class R1RhoControls extends EquationControls {
                 B1FIELD.disabled(false);
                 TEX.disabled(false);
                 break;
-            case "R1RHOPERTURBATIONNOEX":
+            case "NOEX":
                 KEX.disabled(true);
                 KEX.valueText.setDisable(true);
                 PB.disabled(true);
@@ -338,11 +338,11 @@ public class R1RhoControls extends EquationControls {
         double Tex = TEX.getValue();
         double[][] pars;
         switch (equationName) {
-            case "R1RHOPERTURBATION":
-            case "R1RHOLAGUERRE":
-            case "R1RHOBALDWINKAY":
-            case "R1RHOEXACT":
-            case "R1RHOEXACT0":
+            case "TROTT_PALMER":
+            case "LAGUERRE":
+            case "BALDWINKAY":
+            case "EXACT":
+            case "EXACT0":
                 pars = new double[2][8];
                 pars[0][0] = kex;
                 pars[0][1] = pb;
@@ -355,7 +355,7 @@ public class R1RhoControls extends EquationControls {
                 pars[1][0] = B1field;
                 pars[1][1] = Tex;
                 break;
-            case "R1RHOPERTURBATIONNOEX":
+            case "NOEX":
                 pars = new double[2][8];
 //                pars[0][0] = kex;
 //                pars[0][1] = pb;
@@ -409,11 +409,11 @@ public class R1RhoControls extends EquationControls {
         double Tex = TEX.getValue();
         double[][] pars;
         switch (equationName) {
-            case "R1RHOPERTURBATION":
-            case "R1RHOLAGUERRE":
-            case "R1RHOBALDWINKAY":
-            case "R1RHOEXACT":
-            case "R1RHOEXACT0":
+            case "TROTT_PALMER":
+            case "LAGUERRE":
+            case "BALDWINKAY":
+            case "EXACT":
+            case "EXACT0":
                 pars = new double[2][8];
                 pars[0][0] = kex;
                 pars[0][1] = pb;
@@ -426,7 +426,7 @@ public class R1RhoControls extends EquationControls {
                 pars[1][0] = B1field;
                 pars[1][1] = Tex;
                 break;
-            case "R1RHOPERTURBATIONNOEX":
+            case "NOEX":
                 pars = new double[2][8];
 //                pars[0][0] = kex;
 //                pars[0][1] = pb;
@@ -449,11 +449,11 @@ public class R1RhoControls extends EquationControls {
     double[][] getPars(String equationName, Map<String, ParValueInterface> parValues) {
         double[][] pars;
         switch (equationName) {
-            case "R1RHOPERTURBATION":
-            case "R1RHOLAGUERRE":
-            case "R1RHOBALDWINKAY":
-            case "R1RHOEXACT":
-            case "R1RHOEXACT0":
+            case "TROTT_PALMER":
+            case "LAGUERRE":
+            case "BALDWINKAY":
+            case "EXACT":
+            case "EXACT0":
                 pars = new double[2][8];
                 pars[0][0] = parValues.get("kex").getValue();
                 pars[0][1] = parValues.get("pb").getValue();
@@ -466,7 +466,7 @@ public class R1RhoControls extends EquationControls {
                 pars[1][0] = parValues.get("B1field").getValue();
                 pars[1][1] = parValues.get("Tex").getValue();
                 break;
-            case "R1RHOPERTURBATIONNOEX":
+            case "NOEX":
                 pars = new double[2][8];
 //                pars[0][0] = parValues.get("kex").getValue();
 //                pars[0][1] = parValues.get("pb").getValue();
@@ -500,8 +500,8 @@ public class R1RhoControls extends EquationControls {
         int nPars = R1RhoFitFunction.getNPars(map);
         double[] guesses = new double[nPars];
         switch (equationName) {
-            case "R1RHOPERTURBATION":
-            case "R1RHOBALDWINKAY":
+            case "TROTT_PALMER":
+            case "BALDWINKAY":
                 for (int id = 0; id < map.length; id++) {
                     guesses[map[id][0]] = kex; //kex
                     guesses[map[id][1]] = pb; //pb
@@ -513,7 +513,7 @@ public class R1RhoControls extends EquationControls {
                     guesses[map[id][7]] = R2b; //R2B
                 }
                 break;
-            case "R1RHOEXACT":
+            case "EXACT":
                 for (int id = 0; id < map.length; id++) {
                     guesses[map[id][0]] = kex; //kex
                     guesses[map[id][1]] = pb; //pb
@@ -525,7 +525,7 @@ public class R1RhoControls extends EquationControls {
                     guesses[map[id][7]] = R2b; //R2B
                 }
                 break;
-            case "R1RHOEXACT0":
+            case "EXACT0":
                 for (int id = 0; id < map.length; id++) {
                     guesses[map[id][0]] = kex; //kex
                     guesses[map[id][1]] = pb; //pb
@@ -537,7 +537,7 @@ public class R1RhoControls extends EquationControls {
                     guesses[map[id][7]] = R2b; //R2B
                 }
                 break;
-            case "R1RHOLAGUERRE":
+            case "LAGUERRE":
                 for (int id = 0; id < map.length; id++) {
                     guesses[map[id][0]] = kex; //kex
                     guesses[map[id][1]] = pb; //pb
@@ -549,7 +549,7 @@ public class R1RhoControls extends EquationControls {
                     guesses[map[id][7]] = R2a; //R2B
                 }
                 break;
-            case "R1RHOPERTURBATIONNOEX":
+            case "NOEX":
                 for (int id = 0; id < map.length; id++) {
 //                    guesses[map[id][0]] = kex; //kex
 //                    guesses[map[id][1]] = pb; //pb
@@ -635,8 +635,8 @@ public class R1RhoControls extends EquationControls {
         String equationName = equationSelector.getValue().toString();
         List<String> parNames1 = new ArrayList<>();
         switch (equationName) {
-            case "R1RHOPERTURBATION":
-            case "R1RHOBALDWINKAY":
+            case "TROTT_PALMER":
+            case "BALDWINKAY":
                 parNames1.add("Kex");
                 parNames1.add("Pb");
                 parNames1.add("deltaA0");
@@ -645,8 +645,8 @@ public class R1RhoControls extends EquationControls {
                 parNames1.add("R2A");
                 parNames1.add("R2B");
                 break;
-            case "R1RHOEXACT":
-            case "R1RHOEXACT0":
+            case "EXACT":
+            case "EXACT0":
                 parNames1.add("Kex");
                 parNames1.add("Pb");
                 parNames1.add("deltaA0");
@@ -656,7 +656,7 @@ public class R1RhoControls extends EquationControls {
                 parNames1.add("R2A");
                 parNames1.add("R2B");
                 break;
-            case "R1RhoR1RHOLAGUERRE":
+            case "LAGUERRE":
                 parNames1.add("Kex");
                 parNames1.add("Pb");
                 parNames1.add("deltaA0");
@@ -664,7 +664,7 @@ public class R1RhoControls extends EquationControls {
                 parNames1.add("R1A");
                 parNames1.add("R2A");
                 break;
-            case "R1RhoR1RHOPERTURBATIONNOEX":
+            case "NOEX":
 //                parNames1.add("Kex");
 //                parNames1.add("Pb");
                 parNames1.add("deltaA0");

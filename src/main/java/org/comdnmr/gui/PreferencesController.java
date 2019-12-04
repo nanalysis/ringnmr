@@ -137,10 +137,10 @@ public class PreferencesController implements Initializable {
 
         ArrayList<String> cestEqnChoices = new ArrayList<>();
         cestEqnChoices.addAll(Arrays.asList("NOEX", "TROTT_PALMER", "SD", "BALDWINKAY", "LAGUERRE",
-            "R1RHOEXACT1", "EXACT0", "EXACT1", "EXACT2"));
+            "EIGENEXACT1", "EXACT0", "EXACT1", "EXACT2"));
 
         ArrayList<String> r1rhoEqnChoices = new ArrayList<>();
-        r1rhoEqnChoices.addAll(Arrays.asList("R1RHOPERTURBATIONNOEX", "R1RHOPERTURBATION", "R1RHOBALDWINKAY", "R1RHOLAGUERRE", "R1RHOEXACT", "R1RHOEXACT0"));
+        r1rhoEqnChoices.addAll(Arrays.asList("NOEX", "TROTT_PALMER", "BALDWINKAY", "LAGUERRE", "EXACT", "EXACT0"));
 
         ArrayList<String> expEqnChoices = new ArrayList<>();
         expEqnChoices.addAll(Arrays.asList("EXPAB", "EXPABC"));
