@@ -377,7 +377,8 @@ public class PyController implements Initializable {
         }
         VBox vBox = simControls.makeControls(mainController);
         simPane.centerProperty().set(vBox);
-        residueFitter = new ResidueFitter(this::updateFitProgress, this::updateStatus);
+        CoMDOptions options = new CoMDOptions(true);
+        residueFitter = new ResidueFitter(options, this::updateFitProgress, this::updateStatus);
         statusCircle = new Circle(10);
         statusBar.getLeftItems().add(statusCircle);
         updateEquationChoices(getFittingMode());
@@ -1761,14 +1762,15 @@ public class PyController implements Initializable {
     }
 
     public EquationFitter getFitter() {
+        CoMDOptions options = new CoMDOptions(true);
         if (getFittingMode().equals("exp")) {
-            return new ExpFitter();
+            return new ExpFitter(options);
         } else if (getFittingMode().equals("cpmg")) {
-            return new CPMGFitter();
+            return new CPMGFitter(options);
         } else if (getFittingMode().equals("cest")) {
-            return new CESTFitter();
+            return new CESTFitter(options);
         } else if (getFittingMode().equals("r1rho")) {
-            return new R1RhoFitter();
+            return new R1RhoFitter(options);
         }
         return null;
     }
