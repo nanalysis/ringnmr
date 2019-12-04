@@ -14,10 +14,9 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package org.comdnmr.eqnfit;
 
-import org.comdnmr.util.CoMDPreferences;
 import java.util.ArrayList;
 import java.util.stream.IntStream;
 import org.apache.commons.math3.optim.PointValuePair;
@@ -34,7 +33,8 @@ public class CPMGFitFunction extends FitFunction {
     int[] r2Mask = {0, 1, 3};
     double[] rexErrors = new double[nID];
 
-    public CPMGFitFunction() {
+    public CPMGFitFunction(CoMDOptions options) {
+        super(options);
         this.equation = CPMGEquation.CPMGFAST;
     }
 
@@ -43,11 +43,12 @@ public class CPMGFitFunction extends FitFunction {
         equation = CPMGEquation.valueOf(eqName.toUpperCase());
     }
 
-    public CPMGFitFunction(double[][] x, double[] y, double[] err, double[] fieldValues) throws IllegalArgumentException {
-        this(x, y, err, fieldValues, new int[x.length]);
+    public CPMGFitFunction(CoMDOptions options, double[][] x, double[] y, double[] err, double[] fieldValues) throws IllegalArgumentException {
+        this(options, x, y, err, fieldValues, new int[x.length]);
     }
 
-    public CPMGFitFunction(double[][] x, double[] y, double[] err, double[] fieldValues, int[] idNums) throws IllegalArgumentException {
+    public CPMGFitFunction(CoMDOptions options, double[][] x, double[] y, double[] err, double[] fieldValues, int[] idNums) throws IllegalArgumentException {
+        super(options);
         this.xValues = new double[1][];
         this.xValues[0] = x[0].clone();
         this.yValues = y.clone();
@@ -218,7 +219,7 @@ public class CPMGFitFunction extends FitFunction {
         for (int k = 0; k < yValues.length; k++) {
             newY[k] = yPred[k] + errValues[k] * random.nextGaussian();
         }
-        CPMGFitFunction rDisp = new CPMGFitFunction(xValues, newY, errValues, fieldValues, idNums);
+        CPMGFitFunction rDisp = new CPMGFitFunction(options, xValues, newY, errValues, fieldValues, idNums);
         rDisp.setEquation(equation.getName());
         rDisp.setXY(xValues, newY);
         rDisp.setIds(idNums);
@@ -227,7 +228,7 @@ public class CPMGFitFunction extends FitFunction {
     }
 
     private CPMGFitFunction setupNonParametricBootstrap(double[] yPred) {
-        CPMGFitFunction rDisp = new CPMGFitFunction(xValues, yValues, errValues, fieldValues, idNums);
+        CPMGFitFunction rDisp = new CPMGFitFunction(options, xValues, yValues, errValues, fieldValues, idNums);
         rDisp.setEquation(equation.getName());
         double[][] newX = new double[1][yValues.length];
         double[] newY = new double[yValues.length];

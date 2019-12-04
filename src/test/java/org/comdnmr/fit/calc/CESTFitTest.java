@@ -138,7 +138,7 @@ public class CESTFitTest {
             0.003, 0.003, 0.003, 0.003, 0.003);
 
     private void testPars(double[] fitpars, double[] validpars, double[] fiterrs) {
-        double scale = 4.0;
+        double scale = 5.0;
         for (int i = 0; i < fitpars.length; i++) {
             boolean inRange = Math.abs(fitpars[i] - validpars[i]) < fiterrs[i] * scale;
             if (!inRange) {
@@ -184,7 +184,8 @@ public class CESTFitTest {
 
     @Test
     public void testTrottPalmer() {
-        CESTFitter fitting = new CESTFitter();
+        CoMDOptions options = new CoMDOptions(false);
+        CESTFitter fitting = new CESTFitter(options);
         ExperimentData.Nuclei nuc = ExperimentData.Nuclei.get("C13");
         double field = CoMDPreferences.getRefField() * nuc.getRatio();
         List<Double> fieldArray = Collections.nCopies(errarray.size(), field);
@@ -192,7 +193,6 @@ public class CESTFitTest {
 
         double[] guesses = {180.795, 0.103, 2.784, -1.193, 2.383, 11.569, 88.052};
 
-        CoMDOptions options = new CoMDOptions(false);
         FitResult fit = fitting.doFit("trott_palmer", guesses, options);
 
         double[] fitpars = fit.getPars(0);
@@ -225,7 +225,8 @@ public class CESTFitTest {
 
     @Test
     public void testSD() {
-        CESTFitter fitting = new CESTFitter();
+        CoMDOptions options = new CoMDOptions(false);
+        CESTFitter fitting = new CESTFitter(options);
         ExperimentData.Nuclei nuc = ExperimentData.Nuclei.get("C13");
         double field = CoMDPreferences.getRefField() * nuc.getRatio();
         List<Double> fieldArray = Collections.nCopies(errarray.size(), field);
@@ -233,7 +234,6 @@ public class CESTFitTest {
 
         double[] guesses = {180.795, 0.103, 2.784, -1.193, 2.383, 11.569, 88.052};
 
-        CoMDOptions options = new CoMDOptions(false);
         FitResult fit = fitting.doFit("sd", guesses, options);
 
         double[] fitpars = fit.getPars(0);
@@ -263,7 +263,8 @@ public class CESTFitTest {
 
     @Test
     public void testBaldwinKay() {
-        CESTFitter fitting = new CESTFitter();
+        CoMDOptions options = new CoMDOptions(false);
+        CESTFitter fitting = new CESTFitter(options);
         ExperimentData.Nuclei nuc = ExperimentData.Nuclei.get("C13");
         double field = CoMDPreferences.getRefField() * nuc.getRatio();
         List<Double> fieldArray = Collections.nCopies(errarray.size(), field);
@@ -271,7 +272,6 @@ public class CESTFitTest {
 
         double[] guesses = {180.795, 0.103, 2.784, -1.193, 2.383, 11.569, 88.052};
 
-        CoMDOptions options = new CoMDOptions(false);
         FitResult fit = fitting.doFit("baldwinkay", guesses, options);
 
         double[] fitpars = fit.getPars(0);
@@ -302,14 +302,14 @@ public class CESTFitTest {
 
     @Test
     public void testLaguerre() {
-        CESTFitter fitting = new CESTFitter();
+        CoMDOptions options = new CoMDOptions(false);
+        CESTFitter fitting = new CESTFitter(options);
         ExperimentData.Nuclei nuc = ExperimentData.Nuclei.get("C13");
         double field = CoMDPreferences.getRefField() * nuc.getRatio();
         List<Double> fieldArray = Collections.nCopies(errarray.size(), field);
         fitting.setData(fixOffset(offset, field), fixOffset(omega, 1.0), Texarray, intenarray, errarray, fieldArray);
 
         double[] guesses = {180.795, 0.103, 2.784, -1.193, 2.383, 88.052};
-        CoMDOptions options = new CoMDOptions(false);
 
         FitResult fit = fitting.doFit("laguerre", guesses, options);
 

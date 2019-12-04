@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package org.comdnmr.eqnfit;
 
 import org.comdnmr.util.CoMDPreferences;
@@ -36,7 +36,8 @@ public class ExpFitter implements EquationFitter {
 
     public static final double[] SIMX = {0.0, 0.025, 0.05, 0.1, 0.15, 0.25, 0.35, 0.5, 0.75, 1.0};
 
-    FitFunction expModel = new ExpFitFunction();
+    FitFunction expModel;
+    CoMDOptions options;
     List<Double> xValues = new ArrayList<>();
     List<Double> yValues = new ArrayList<>();
     List<Double> errValues = new ArrayList<>();
@@ -67,6 +68,11 @@ public class ExpFitter implements EquationFitter {
         int getTempIndex(int i) {
             return states[i][2];
         }
+    }
+
+    public ExpFitter(CoMDOptions options) {
+        expModel = new ExpFitFunction(options);
+        this.options = options;
     }
 
     public static int getMapIndex(int[] state, int[] stateCount, int... mask) {

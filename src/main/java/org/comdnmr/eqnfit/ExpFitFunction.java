@@ -33,7 +33,8 @@ public class ExpFitFunction extends FitFunction {
     int[] r2Mask = {0, 1, 3};
     double[] rexErrors = new double[nID];
 
-    public ExpFitFunction() {
+    public ExpFitFunction(CoMDOptions options) {
+        super(options);
         this.equation = ExpEquation.EXPAB;
     }
 
@@ -42,11 +43,12 @@ public class ExpFitFunction extends FitFunction {
         equation = ExpEquation.valueOf(eqName.toUpperCase());
     }
 
-    public ExpFitFunction(double[][] x, double[] y, double[] err, double[] fieldValues) throws IllegalArgumentException {
-        this(x, y, err, fieldValues, new int[x.length]);
+    public ExpFitFunction(CoMDOptions options,double[][] x, double[] y, double[] err, double[] fieldValues) throws IllegalArgumentException {
+        this(options, x, y, err, fieldValues, new int[x.length]);
     }
 
-    public ExpFitFunction(double[][] x, double[] y, double[] err, double[] fieldValues, int[] idNums) throws IllegalArgumentException {
+    public ExpFitFunction(CoMDOptions options, double[][] x, double[] y, double[] err, double[] fieldValues, int[] idNums) throws IllegalArgumentException {
+        super(options);
         this.xValues = new double[1][];
         this.xValues[0] = x[0].clone();
         this.yValues = y.clone();
@@ -183,7 +185,7 @@ public class ExpFitFunction extends FitFunction {
 
         IntStream.range(0, nSim).parallel().forEach(i -> {
 //        IntStream.range(0, nSim).forEach(i -> {
-            ExpFitFunction rDisp = new ExpFitFunction(xValues, yPred, errValues, fieldValues, idNums);
+            ExpFitFunction rDisp = new ExpFitFunction(options, xValues, yPred, errValues, fieldValues, idNums);
             rDisp.setEquation(equation.getName());
             double[] newY = new double[yValues.length];
             for (int k = 0; k < yValues.length; k++) {
@@ -221,7 +223,7 @@ public class ExpFitFunction extends FitFunction {
         String optimizer = options.getBootStrapOptimizer();
 
         IntStream.range(0, nSim).parallel().forEach(i -> {
-            ExpFitFunction rDisp = new ExpFitFunction(xValues, yValues, errValues, fieldValues, idNums);
+            ExpFitFunction rDisp = new ExpFitFunction(options, xValues, yValues, errValues, fieldValues, idNums);
             rDisp.setEquation(equation.getName());
             double[][] newX = new double[1][yValues.length];
             double[] newY = new double[yValues.length];

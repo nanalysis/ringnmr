@@ -17,7 +17,6 @@
  */
 package org.comdnmr.eqnfit;
 
-import org.comdnmr.util.CoMDPreferences;
 import java.util.stream.IntStream;
 import org.apache.commons.math3.optim.PointValuePair;
 import org.apache.commons.math3.random.RandomGenerator;
@@ -30,11 +29,13 @@ import org.comdnmr.util.CoMDOptions;
 public class CESTFitFunction extends FitFunction {
 
     static RandomGenerator random = new SynchronizedRandomGenerator(new Well19937c());
+
     int[] r2Mask = {0, 1, 3};
     double[] rexErrors = new double[nID];
     CESTEquations cestEq = new CESTEquations();
 
-    public CESTFitFunction() {
+    public CESTFitFunction(CoMDOptions options) {
+        super(options);
         this.equation = CESTEquation.TROTT_PALMER;
     }
 
@@ -43,11 +44,12 @@ public class CESTFitFunction extends FitFunction {
         equation = CESTEquation.valueOf(eqName.toUpperCase());
     }
 
-    public CESTFitFunction(double[][] x, double[] y, double[] err, double[] fieldValues) throws IllegalArgumentException {
-        this(x, y, err, fieldValues, new int[x.length]);
+    public CESTFitFunction(CoMDOptions options, double[][] x, double[] y, double[] err, double[] fieldValues) throws IllegalArgumentException {
+        this(options, x, y, err, fieldValues, new int[x.length]);
     }
 
-    public CESTFitFunction(double[][] x, double[] y, double[] err, double[] fieldValues, int[] idNums) throws IllegalArgumentException {
+    public CESTFitFunction(CoMDOptions options, double[][] x, double[] y, double[] err, double[] fieldValues, int[] idNums) throws IllegalArgumentException {
+        super(options);
         this.xValues = new double[x.length][];
         this.xValues[0] = x[0].clone();
         this.xValues[1] = x[1].clone();
@@ -183,7 +185,7 @@ public class CESTFitFunction extends FitFunction {
 
         IntStream.range(0, nSim).parallel().forEach(i -> {
 //        IntStream.range(0, nSim).forEach(i -> {
-            CESTFitFunction rDisp = new CESTFitFunction(xValues, yPred, errValues, fieldValues, idNums);
+            CESTFitFunction rDisp = new CESTFitFunction(options, xValues, yPred, errValues, fieldValues, idNums);
             rDisp.setEquation(equation.getName());
             double[] newY = new double[yValues.length];
             for (int k = 0; k < yValues.length; k++) {
@@ -221,7 +223,7 @@ public class CESTFitFunction extends FitFunction {
         String optimizer = options.getBootStrapOptimizer();
 
         IntStream.range(0, nSim).parallel().forEach(i -> {
-            CESTFitFunction rDisp = new CESTFitFunction(xValues, yValues, errValues, fieldValues, idNums);
+            CESTFitFunction rDisp = new CESTFitFunction(options, xValues, yValues, errValues, fieldValues, idNums);
             rDisp.setEquation(equation.getName());
             double[][] newX = new double[3][yValues.length];
             double[] newY = new double[yValues.length];

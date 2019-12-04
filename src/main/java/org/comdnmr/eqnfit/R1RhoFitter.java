@@ -36,7 +36,8 @@ import org.comdnmr.util.CoMDOptions;
  */
 public class R1RhoFitter implements EquationFitter {
 
-    FitFunction calcR1Rho = new R1RhoFitFunction();
+    FitFunction calcR1Rho;
+    CoMDOptions options;
     List<Double>[] xValues;
     List<Double> yValues = new ArrayList<>();
     List<Double> errValues = new ArrayList<>();
@@ -68,6 +69,10 @@ public class R1RhoFitter implements EquationFitter {
         int getTempIndex(int i) {
             return states[i][2];
         }
+    }
+    public R1RhoFitter(CoMDOptions options) {
+        calcR1Rho = new R1RhoFitFunction(options);
+        this.options = options;
     }
 
     public static int getMapIndex(int[] state, int[] stateCount, int... mask) {

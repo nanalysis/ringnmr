@@ -51,7 +51,7 @@ import org.comdnmr.util.CoMDOptions;
  * @author Bruce Johnson
  */
 public class ResidueFitter {
-
+    final CoMDOptions options;
     private final FitResidues processDataset = new FitResidues();
     final ReadOnlyObjectProperty<Worker.State> stateProperty = processDataset.worker.stateProperty();
     private boolean isProcessing = false;
@@ -61,12 +61,14 @@ public class ResidueFitter {
     List<List<String>> residueFitGroups = null;
     FitResult fitResult;
 
-    public ResidueFitter() {
+    public ResidueFitter(CoMDOptions options) {
+        this.options = options;
     }
 
-    public ResidueFitter(Function<Double, Double> updaterFunction, Function<ProcessingStatus, Double> statusFunction) {
+    public ResidueFitter(CoMDOptions options, Function<Double, Double> updaterFunction, Function<ProcessingStatus, Double> statusFunction) {
         this.updaterFunction = updaterFunction;
         this.statusFunction = statusFunction;
+        this.options = options;
     }
 
     public void fitResidues(ResidueProperties resProps) {
@@ -208,20 +210,20 @@ public class ResidueFitter {
 
     }
 
-    EquationFitter getFitter() {
+    EquationFitter getFitter(CoMDOptions options) {
         EquationFitter fitter;
         switch (resProps.getExpMode()) {
             case "cpmg":
-                fitter = new CPMGFitter();
+                fitter = new CPMGFitter(options);
                 break;
             case "exp":
-                fitter = new ExpFitter();
+                fitter = new ExpFitter(options);
                 break;
             case "cest":
-                fitter = new CESTFitter();
+                fitter = new CESTFitter(options);
                 break;
             case "r1rho":
-                fitter = new R1RhoFitter();
+                fitter = new R1RhoFitter(options);
                 break;
             default:
                 throw new IllegalArgumentException("Invalid mode " + resProps.getExpMode());
@@ -275,7 +277,7 @@ public class ResidueFitter {
                 continue;
             }
 
-            EquationFitter equationFitter = getFitter();
+            EquationFitter equationFitter = getFitter(options);
             equationFitter.setData(resProps, resNums);
             CoMDOptions options = new CoMDOptions(true);
             fitResult = equationFitter.doFit(equationName, null, options);

@@ -17,7 +17,6 @@
  */
 package org.comdnmr.eqnfit;
 
-import org.comdnmr.util.CoMDPreferences;
 import java.util.stream.IntStream;
 import org.apache.commons.math3.optim.PointValuePair;
 import org.apache.commons.math3.random.RandomGenerator;
@@ -34,7 +33,8 @@ public class R1RhoFitFunction extends FitFunction {
     double[] rexErrors = new double[nID];
     R1RhoEquations r1rhoEq = new R1RhoEquations();
 
-    public R1RhoFitFunction() {
+    public R1RhoFitFunction(CoMDOptions options) {
+        super(options);
         this.equation = R1RhoEquation.R1RHOPERTURBATION;
     }
 
@@ -43,11 +43,12 @@ public class R1RhoFitFunction extends FitFunction {
         equation = R1RhoEquation.valueOf(eqName.toUpperCase());
     }
 
-    public R1RhoFitFunction(double[][] x, double[] y, double[] err, double[] fieldValues) throws IllegalArgumentException {
-        this(x, y, err, fieldValues, new int[x.length]);
+    public R1RhoFitFunction(CoMDOptions options, double[][] x, double[] y, double[] err, double[] fieldValues) throws IllegalArgumentException {
+        this(options, x, y, err, fieldValues, new int[x.length]);
     }
 
-    public R1RhoFitFunction(double[][] x, double[] y, double[] err, double[] fieldValues, int[] idNums) throws IllegalArgumentException {
+    public R1RhoFitFunction(CoMDOptions options, double[][] x, double[] y, double[] err, double[] fieldValues, int[] idNums) throws IllegalArgumentException {
+        super(options);
         this.xValues = new double[x.length][];
         this.xValues[0] = x[0].clone();
         this.xValues[1] = x[1].clone();
@@ -179,7 +180,7 @@ public class R1RhoFitFunction extends FitFunction {
 
         IntStream.range(0, nSim).parallel().forEach(i -> {
 //        IntStream.range(0, nSim).forEach(i -> {
-            R1RhoFitFunction rDisp = new R1RhoFitFunction(xValues, yPred, errValues, fieldValues, idNums);
+            R1RhoFitFunction rDisp = new R1RhoFitFunction(options, xValues, yPred, errValues, fieldValues, idNums);
             rDisp.setEquation(equation.getName());
             double[] newY = new double[yValues.length];
             for (int k = 0; k < yValues.length; k++) {
@@ -216,7 +217,7 @@ public class R1RhoFitFunction extends FitFunction {
         String optimizer = options.getBootStrapOptimizer();
 
         IntStream.range(0, nSim).parallel().forEach(i -> {
-            R1RhoFitFunction rDisp = new R1RhoFitFunction(xValues, yValues, errValues, fieldValues, idNums);
+            R1RhoFitFunction rDisp = new R1RhoFitFunction(options, xValues, yValues, errValues, fieldValues, idNums);
             rDisp.setEquation(equation.getName());
             double[][] newX = new double[3][yValues.length];
             double[] newY = new double[yValues.length];

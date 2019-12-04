@@ -34,7 +34,8 @@ import org.comdnmr.util.CoMDOptions;
  */
 public class CESTFitter implements EquationFitter {
 
-    FitFunction calcCEST = new CESTFitFunction();
+    FitFunction calcCEST;
+    CoMDOptions options;
     List<Double>[] xValues;
     List<Double> yValues = new ArrayList<>();
     List<Double> errValues = new ArrayList<>();
@@ -66,6 +67,10 @@ public class CESTFitter implements EquationFitter {
         int getTempIndex(int i) {
             return states[i][2];
         }
+    }
+    public CESTFitter(CoMDOptions options) {
+        calcCEST = new CESTFitFunction(options);
+        this.options = options;
     }
 
     public static int getMapIndex(int[] state, int[] stateCount, int... mask) {

@@ -14,10 +14,9 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package org.comdnmr.eqnfit;
 
-import org.comdnmr.util.CoMDPreferences;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 import org.apache.commons.math3.analysis.MultivariateFunction;
@@ -48,6 +47,7 @@ public abstract class FitFunction implements MultivariateFunction {
 
     // fixme is there a thread safe RandomGenerator
     public final RandomGenerator DEFAULT_RANDOMGENERATOR = new MersenneTwister(1);
+    CoMDOptions options;
     int reportAt = 10;
 
     EquationType equation;
@@ -62,12 +62,12 @@ public abstract class FitFunction implements MultivariateFunction {
     int[][] map;
     int nID = 1;
     boolean reportFitness = false;
-    final boolean absMode = CoMDPreferences.getAbsValueFit();
+    final boolean absMode ;
     private static boolean calcError = true;
     double[][] parValues;
     double[] lowerBounds;
     double[] upperBounds;
-    final boolean weightFit = CoMDPreferences.getWeightFit();
+    final boolean weightFit;
 
     public class Checker extends SimpleValueChecker {
 
@@ -90,6 +90,12 @@ public abstract class FitFunction implements MultivariateFunction {
             }
             return converged;
         }
+    }
+    
+    public FitFunction(CoMDOptions options) {
+        this.options = options;
+        absMode = options.getAbsValueFit();
+        weightFit = options.getWeightFit();     
     }
 
     public abstract void setEquation(String eqName);
@@ -114,7 +120,7 @@ public abstract class FitFunction implements MultivariateFunction {
         int nSteps = 2000;
         double stopFitness = 0.0;
         int diagOnly = 0;
-        double tol = CoMDPreferences.getTolerance();
+        double tol = options.getTolerance();
         tol = Math.pow(10.0, tol);
         double[] normLower = new double[guess.length];
         double[] normUpper = new double[guess.length];
@@ -171,7 +177,7 @@ public abstract class FitFunction implements MultivariateFunction {
         int n = guess.length;
         int nInterp = 2 * n + 1;
         double initialRadius = inputSigma;
-        double stopRadius = CoMDPreferences.getFinalRadius();
+        double stopRadius = options.getFinalRadius();
         stopRadius = Math.pow(10.0, stopRadius);
 
         BOBYQAOptimizer optimizer = new BOBYQAOptimizer(nInterp, initialRadius, stopRadius);

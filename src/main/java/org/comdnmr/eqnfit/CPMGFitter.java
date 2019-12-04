@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package org.comdnmr.eqnfit;
 
 import org.comdnmr.data.ResidueProperties;
@@ -37,7 +37,8 @@ public class CPMGFitter implements EquationFitter {
 
     public static final double[] SIMX = {25.0, 50.0, 100.0, 150.0, 250.0, 350.0, 500.0, 750.0, 1000.0};
 
-    CPMGFitFunction calcR = new CPMGFitFunction();
+    CPMGFitFunction calcR;
+    CoMDOptions options;
     static List<String> equationNameList = Arrays.asList(CPMGEquation.getEquationNames());
     List<Double> xValues = new ArrayList<>();
     List<Double> yValues = new ArrayList<>();
@@ -68,6 +69,11 @@ public class CPMGFitter implements EquationFitter {
         int getTempIndex(int i) {
             return states[i][2];
         }
+    }
+
+    public CPMGFitter(CoMDOptions options) {
+        calcR = new CPMGFitFunction(options);
+        this.options = options;
     }
 
     public static int getMapIndex(int[] state, int[] stateCount, int... mask) {
