@@ -258,7 +258,7 @@ public class CESTEquations {
      * @param R2B R2B value. Transverse relaxation rate for Excited/Minor state.
      * @return CEST intensity array.
      */
-    public static double[] r1rhoExact1(double[][] X, double[] fields, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A, double R2B) {
+    public static double[] eigenExact1(double[][] X, double[] fields, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A, double R2B) {
         // Performs an exact numerical calculation and returns CEST intensity ratio.
         // Assumes R1A = R1B.
         //

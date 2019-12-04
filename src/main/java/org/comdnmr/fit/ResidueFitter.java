@@ -265,7 +265,7 @@ public class ResidueFitter {
                 break;
             case "r1rho":
                 equationNames = R1RhoFitter.getEquationNames();
-                bestEquation = "R1RHOPERTURBATIONNOEX";
+                bestEquation = "NOEX";
                 break;
             case "noe":
                 return doNOE(resProps, resNums, groupId, useEquation);

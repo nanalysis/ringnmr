@@ -52,7 +52,7 @@ public class CoMDPreferences {
     private static Map<String, Boolean> r1rhoEqnMap = null;
     private static Map<String, Boolean> expEqnMap = null;
     private static final String DEFAULT_CEST_EQNS = "NOEX;true\nTROTT_PALMER;true";
-    private static final String DEFAULT_R1RHO_EQNS = "R1RHOPERTURBATIONNOEX;true\nR1RHOPERTURBATION;true";
+    private static final String DEFAULT_R1RHO_EQNS = "NOEX;true\nTROTT_PALMER;true";
     private static final String DEFAULT_EXP_EQNS = "EXPAB;true";
     private static Double deltaABdiff = null;
 
@@ -301,16 +301,16 @@ public class CoMDPreferences {
 
     static Map<String, Boolean> getCESTEqnMap() {
         if (cestEqnMap == null) {
-            Preferences prefs = Preferences.userNodeForPackage(ExperimentData.class);
+            Preferences prefs = getPrefs();//Preferences.userNodeForPackage(ExperimentData.class);
             String eqns = prefs.get("CEST_EQNS", DEFAULT_CEST_EQNS);
             cestEqnMap = stringToMap(eqns);
-        }
+        } 
         return cestEqnMap;
     }
 
     static Map<String, Boolean> getR1RhoEqnMap() {
         if (r1rhoEqnMap == null) {
-            Preferences prefs = Preferences.userNodeForPackage(ExperimentData.class);
+            Preferences prefs = getPrefs();//Preferences.userNodeForPackage(ExperimentData.class);
             String eqns = prefs.get("R1RHO_EQNS", DEFAULT_R1RHO_EQNS);
             r1rhoEqnMap = stringToMap(eqns);
         }
@@ -319,7 +319,7 @@ public class CoMDPreferences {
 
     static Map<String, Boolean> getExpEqnMap() {
         if (expEqnMap == null) {
-            Preferences prefs = Preferences.userNodeForPackage(ExperimentData.class);
+            Preferences prefs = getPrefs();//Preferences.userNodeForPackage(ExperimentData.class);
             String eqns = prefs.get("EXP_EQNS", DEFAULT_EXP_EQNS);
             expEqnMap = stringToMap(eqns);
         }
@@ -344,9 +344,6 @@ public class CoMDPreferences {
         for (String strValue : stringList) {
             String[] strValueParts = strValue.split(";");
             String key = strValueParts[0];
-            if (key.startsWith("CEST")) {
-                key = key.substring(4); // kluge for removing CEST from equation names
-            }
             if (strValueParts[1].equals("true")) {
                 map.put(key, Boolean.TRUE);
             } else {
@@ -368,7 +365,7 @@ public class CoMDPreferences {
     }
 
     public static void saveCESTEqnPrefs() {
-        Preferences prefs = Preferences.userNodeForPackage(ExperimentData.class);
+        Preferences prefs = getPrefs();//Preferences.userNodeForPackage(ExperimentData.class);
         String eqnString = DEFAULT_CEST_EQNS;
         if (cestEqnMap != null) {
             eqnString = mapToString(getCESTEqnMap());
@@ -377,7 +374,7 @@ public class CoMDPreferences {
     }
 
     public static void saveR1RhoEqnPrefs() {
-        Preferences prefs = Preferences.userNodeForPackage(ExperimentData.class);
+        Preferences prefs = getPrefs();//Preferences.userNodeForPackage(ExperimentData.class);
         String eqnString = DEFAULT_R1RHO_EQNS;
         if (r1rhoEqnMap != null) {
             eqnString = mapToString(getR1RhoEqnMap());
@@ -386,7 +383,7 @@ public class CoMDPreferences {
     }
 
     public static void saveExpEqnPrefs() {
-        Preferences prefs = Preferences.userNodeForPackage(ExperimentData.class);
+        Preferences prefs = getPrefs();//Preferences.userNodeForPackage(ExperimentData.class);
         String eqnString = DEFAULT_EXP_EQNS;
         if (expEqnMap != null) {
             eqnString = mapToString(getExpEqnMap());
