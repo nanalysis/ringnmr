@@ -35,7 +35,7 @@ public class R1RhoFitFunction extends FitFunction {
 
     public R1RhoFitFunction(CoMDOptions options) {
         super(options);
-        this.equation = R1RhoEquation.R1RHOPERTURBATION;
+        this.equation = R1RhoEquation.TROTT_PALMER;
     }
 
     @Override
@@ -58,7 +58,7 @@ public class R1RhoFitFunction extends FitFunction {
         this.fieldValues = fieldValues.clone();
         this.idNums = idNums.clone();
         this.idNums = new int[yValues.length];
-        this.equation = R1RhoEquation.R1RHOPERTURBATION;
+        this.equation = R1RhoEquation.TROTT_PALMER;
         if (setNID()) {
             throw new IllegalArgumentException("Invalid idNums, some values not used");
         }

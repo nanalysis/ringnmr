@@ -36,7 +36,7 @@ import org.ejml.dense.row.CommonOps_DDRM;
 public enum R1RhoEquation implements R1RhoEquationType {
 //     public double[] cestR1rhoPerturbation(double[][] X, double pb, double kex, double deltaA0, double deltaB0, double R10, double R2A, double R2B) {
 
-    R1RHOPERTURBATION("R1rhoPerturbation", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
+    TROTT_PALMER("trott_Palmer", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
 
                 @Override
                 public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double[] fields) {
@@ -84,7 +84,7 @@ public enum R1RhoEquation implements R1RhoEquationType {
                 }
 
             },
-    R1RHOPERTURBATIONNOEX("R1rhoPerturbationNoEx", 0, "deltaA0", "R1A", "R2A") {
+    NOEX("noEx", 0, "deltaA0", "R1A", "R2A") {
 
                 @Override
                 public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double[] fields) {
@@ -164,7 +164,7 @@ public enum R1RhoEquation implements R1RhoEquationType {
                 }
 
             },
-    R1RHOBALDWINKAY("R1rhoBaldwinKay", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
+    BALDWINKAY("baldwinKay", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
 
                 @Override
                 public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double[] fields) {
@@ -211,7 +211,7 @@ public enum R1RhoEquation implements R1RhoEquationType {
                     return map;
                 }
             },
-    R1RHOLAGUERRE("R1rhoLaguerre", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
+    LAGUERRE("laguerre", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
 
                 @Override
                 public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double[] fields) {
@@ -258,7 +258,7 @@ public enum R1RhoEquation implements R1RhoEquationType {
                     return map;
                 }
             },
-    R1RHOEXACT("R1rhoExact", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
+    EXACT("exact", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
 
                 @Override
                 public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double[] fields) {
@@ -342,7 +342,7 @@ public enum R1RhoEquation implements R1RhoEquationType {
                 }
 
             },
-    R1RHOEXACT0("R1rhoExact0", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
+    EXACT0("exact0", 0, "Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B") {
 
                 @Override
                 public double[] calculate(double[] par, int[] map, double[][] X, int idNum, double[] fields) {
@@ -497,7 +497,7 @@ public enum R1RhoEquation implements R1RhoEquationType {
     }
 
     public static String[] getAllEquationNames() {
-        String[] equationNames = {"R1RHOPERTURBATIONNOEX", "R1RHOPERTURBATION", "R1RHOBALDWINKAY", "R1RHOLAGUERRE", "R1RHOEXACT", "R1RHOEXACT0"};
+        String[] equationNames = {"NOEX", "TROTT_PALMER", "BALDWINKAY", "LAGUERRE", "EXACT", "EXACT0"};
         return equationNames;
     }
 
