@@ -317,14 +317,14 @@ public class ExpControls extends EquationControls {
             double[] errs = new double[pars.length];
             double[] extras = new double[1];
             extras[0] = 1.0;
-            GUIPlotEquation plotEquation = new GUIPlotEquation(equationName, pars, errs, extras);
+            GUIPlotEquation plotEquation = new GUIPlotEquation("exp", equationName, pars, errs, extras);
             equations.add(plotEquation);
         } else {
             pars = getPars(equationName);
             double[] errs = new double[pars.length];
             double[] extras = new double[1];
             extras[0] = 1.0;
-            GUIPlotEquation plotEquation = new GUIPlotEquation(equationName, pars, errs, extras);
+            GUIPlotEquation plotEquation = new GUIPlotEquation("exp", equationName, pars, errs, extras);
             equations.add(plotEquation);
         }
         controller.showEquations(equations);

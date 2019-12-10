@@ -29,12 +29,12 @@ public class GUIPlotEquation extends PlotEquation {
     private Color color = Color.BLACK;
     private double scaleValue = 1.0;
 
-    public GUIPlotEquation(String name, double[] pars, double[] errs, double[] extras) {
-        super(name, pars, errs, extras);
+    public GUIPlotEquation(String expType, String name, double[] pars, double[] errs, double[] extras) {
+        super(expType, name, pars, errs, extras);
     }
 
-    public GUIPlotEquation(PlotEquation eqn) {
-        super(eqn.getName(), eqn.getPars(), eqn.getErrs(), eqn.getExtras());
+    public GUIPlotEquation(String expType, PlotEquation eqn) {
+        super(expType, eqn.getName(), eqn.getPars(), eqn.getErrs(), eqn.getExtras());
     }
 
     /**

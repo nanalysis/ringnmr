@@ -583,7 +583,7 @@ public class PyController implements Initializable {
             genDataXUBTextField.setText("8.0");
             genDataXValTextField.setDisable(true);
             genDataXValTextField.setText("");
-        } else if (getFittingMode().equals("r1rho") && !(simControls instanceof R1RhoControls)) {
+        } else if (getSimMode().equals("r1rho") && !(simControls instanceof R1RhoControls)) {
             simControls = new R1RhoControls();
             ((R1RhoControls) simControls).updateDeltaLimits();
             update = true;
@@ -919,10 +919,11 @@ public class PyController implements Initializable {
 
     public void updateChartEquations(String equationName, double[] pars, double[] errs, double[] fields) {
         List<GUIPlotEquation> equations = new ArrayList<>();
+        String expType = getFittingMode();
         for (int i = 0; i < fields.length; i++) {
             double[] extras = {fields[i] / fields[0]};
             //System.out.println("updateChartEquations got called with extras length = "+extras.length);
-            GUIPlotEquation plotEquation = new GUIPlotEquation(equationName, pars, errs, extras);
+            GUIPlotEquation plotEquation = new GUIPlotEquation(expType, equationName, pars, errs, extras);
             equations.add(plotEquation);
         }
         showEquations(equations);
@@ -1437,6 +1438,7 @@ public class PyController implements Initializable {
             updateTableWithPars(parValues);
             simControls.updateSliders(parValues, fitResult.getEquationName());
             String equationName = fitResult.getEquationName(); //equationSelector.getValue();
+            String expType = getFittingMode();
             //System.out.println("Fit button residueProperties = " + residueProperties);
             //System.out.println("Fit button expData = " + residueProps.getExperimentData("cest"));
             Optional<ExperimentData> optionalData = Optional.empty();
@@ -1453,7 +1455,7 @@ public class PyController implements Initializable {
                     extras[1] = expData.getExtras().get(0);
                     extras[2] = expData.getExtras().get(1);
 //                    System.out.println("Fit button expData extras size = " + expData.getExtras().size() + " extra[1] = " + extras[1]);
-                    GUIPlotEquation plotEquation = new GUIPlotEquation(equationName, pars, errs, extras);
+                    GUIPlotEquation plotEquation = new GUIPlotEquation(expType, equationName, pars, errs, extras);
 //                    for (int i = 0; i < extras.length; i++) {
 //                        System.out.println(iCurve + " " + i + " extra " + extras[i]);
 //                    }
@@ -1509,7 +1511,7 @@ public class PyController implements Initializable {
                 //for (int i = 0; i < pars.length; i++) {
                 //System.out.println(iCurve + " " + i + " pars " + pars[i]);
                 //}
-                GUIPlotEquation plotEquation = new GUIPlotEquation(equationName, pars, errs, extras);
+                GUIPlotEquation plotEquation = new GUIPlotEquation(expType, equationName, pars, errs, extras);
 
                 //equationCopy.setExtra(extras);
                 //System.out.println("Fit button extras size = " + extras.length + " extra[0] = " + extras[0]);
@@ -1776,7 +1778,8 @@ public class PyController implements Initializable {
     }
 
     public String[] getParNames(String equationName) {
-        EquationType type = ResidueFitter.getEquationType(equationName);
+        String fitMode = getFittingMode();
+        EquationType type = ResidueFitter.getEquationType(fitMode, equationName);
         return type.getParNames();
     }
 
@@ -2062,7 +2065,8 @@ public class PyController implements Initializable {
     void showSimData(ActionEvent e) {
         ObservableList<DataSeries> allData = FXCollections.observableArrayList();
         String equationName = simControls.getEquation();
-        EquationType eType = ResidueFitter.getEquationType(equationName);
+        String simMode = getSimMode();
+        EquationType eType = ResidueFitter.getEquationType(simMode, equationName);
         int[][] map = eType.makeMap(1);
         EquationFitter equationFitter = getFitter();
         equationFitter.getFitModel().setMap(map);
@@ -2074,7 +2078,6 @@ public class PyController implements Initializable {
             genDataSDevTextField.setText(String.valueOf(sdev));
         }
         double[] xValues = equationFitter.getSimXDefaults();
-        String simMode = getSimMode();
         if (simMode.equals("cest") || simMode.equals("r1rho")) {
             int nPts = Integer.parseInt(genDataNPtsTextField.getText());
             double xLB = Double.parseDouble(genDataXLBTextField.getText());

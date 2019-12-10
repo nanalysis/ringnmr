@@ -452,7 +452,7 @@ public class CPMGControls extends EquationControls {
             double[] errs = new double[pars.length];
             double[] extras = new double[1];
             extras[0] = CoMDPreferences.getRefField() * getNucleus().getRatio();
-            GUIPlotEquation plotEquation = new GUIPlotEquation(equationName, pars, errs, extras);
+            GUIPlotEquation plotEquation = new GUIPlotEquation("cpmg", equationName, pars, errs, extras);
             equations.add(plotEquation);
         } else {
             double[] fields = resProps.getFields();
@@ -482,7 +482,7 @@ public class CPMGControls extends EquationControls {
                         extras[0] = fields[iField] * getNucleus().getRatio();
                     }
                     double[] errs = new double[pars.length];
-                    GUIPlotEquation plotEquation = new GUIPlotEquation(equationName, pars, errs, extras);
+                    GUIPlotEquation plotEquation = new GUIPlotEquation("cpmg", equationName, pars, errs, extras);
                     equations.add(plotEquation);
                 }
             }
