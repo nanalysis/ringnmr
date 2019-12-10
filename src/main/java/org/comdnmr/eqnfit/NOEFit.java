@@ -45,6 +45,11 @@ public class NOEFit implements EquationFitter {
     public FitFunction getFitModel() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+    
+    @Override
+    public String getExpType() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 
     @Override
     public FitResult doFit(String eqn, double[] sliderGuesses, CoMDOptions options) {

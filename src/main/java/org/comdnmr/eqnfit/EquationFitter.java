@@ -38,6 +38,8 @@ public interface EquationFitter {
     public List<String> getEquationNameList();
 
     public FitFunction getFitModel();
+    
+    public String getExpType();
 
     public FitResult doFit(String eqn, double[] sliderGuesses, CoMDOptions options);
 
@@ -126,7 +128,7 @@ public interface EquationFitter {
             double[] extras = new double[1];
             extras[0] = usedFields[states[iCurve][1]];
             System.out.println("getResults got called with extras length = " + extras.length);
-            PlotEquation plotEquation = new PlotEquation(eqn, parArray, errArray, extras);
+            PlotEquation plotEquation = new PlotEquation(fitter.getExpType(), eqn, parArray, errArray, extras);
             CurveFit curveFit = new CurveFit(stateString, resNums[states[iCurve][0]], parMap, plotEquation);
             curveFits.add(curveFit);
         }

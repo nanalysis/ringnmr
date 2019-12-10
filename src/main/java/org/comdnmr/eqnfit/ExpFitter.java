@@ -50,6 +50,7 @@ public class ExpFitter implements EquationFitter {
     String[] resNums;
     static List<String> equationNameList = Arrays.asList(ExpEquation.getEquationNames());
     long errTime;
+    static final String expType = "exp";
 
     class StateCount {
 
@@ -160,6 +161,11 @@ public class ExpFitter implements EquationFitter {
     @Override
     public List<String> getEquationNameList() {
         return getEquationNames();
+    }
+    
+    @Override
+    public String getExpType() {
+        return expType;
     }
 
     public static List<String> getEquationNames() {

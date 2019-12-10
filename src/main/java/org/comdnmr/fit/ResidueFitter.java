@@ -362,22 +362,36 @@ public class ResidueFitter {
         }
     }
 
-    public static EquationType getEquationType(String name) throws IllegalArgumentException {
-        EquationType equationType;
-
-        try {
-            equationType = CPMGEquation.valueOf(name);
-        } catch (IllegalArgumentException iaE) {
-            try {
+    public static EquationType getEquationType(String expType, String name) throws IllegalArgumentException {
+        EquationType equationType = null;
+//        try {
+        switch (expType) {
+            case "cpmg":
+                equationType = CPMGEquation.valueOf(name);
+                break;
+            case "exp":
                 equationType = ExpEquation.valueOf(name);
-            } catch (IllegalArgumentException iaE2) {
-                try {
-                    equationType = CESTEquation.valueOf(name);
-                } catch (IllegalArgumentException iaE3) {
-                    equationType = R1RhoEquation.valueOf(name);
-                }
-            }
+                break;
+            case "cest":
+                equationType = CESTEquation.valueOf(name);
+                break;
+            case "r1rho":
+                equationType = R1RhoEquation.valueOf(name);
+                break;
+            default:
+                break;
         }
+//        } catch (IllegalArgumentException iaE) {
+////            try {
+////                equationType = ExpEquation.valueOf(name);
+////            } catch (IllegalArgumentException iaE2) {
+////                try {
+////                    equationType = CESTEquation.valueOf(name);
+////                } catch (IllegalArgumentException iaE3) {
+////                    equationType = R1RhoEquation.valueOf(name);
+////                }
+////            }
+//        }
         return equationType;
     }
 

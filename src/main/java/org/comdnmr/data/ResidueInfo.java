@@ -290,7 +290,7 @@ public class ResidueInfo {
                 sBuilder.append(plotEquation.getName()).append(sep);
                 Map<String, Double> parMap = curveFit.getParMap();
                 parValue = parMap.get("RMS");
-                sBuilder.append(String.format("%.2f", parValue)).append(sep);
+                sBuilder.append(String.format("%.3f", parValue)).append(sep);
                 parValue = parMap.get("AIC");
                 sBuilder.append(String.format("%.1f", parValue)).append(sep);
                 if (bestEquation.getName().equals(plotEquation.getName())) {
