@@ -289,6 +289,7 @@ public class ChartUtil {
         ResidueProperties residueProps = residueProperties.get(seriesName);
         ResidueInfo resInfo = residueProps.getResidueInfo(resNum);
         GUIPlotEquation equationCopy = null;
+        String expType = expData.getExpMode();
 //            ExperimentData expData = residueProps.getExperimentData("cest"); // fixme
         Optional<ExperimentData> optionalData = Optional.empty();
         optionalData = residueProps.getExperimentData().stream().findFirst();
@@ -317,11 +318,11 @@ public class ChartUtil {
                     extras[0] = field;
                     extras[1] = expData.getExtras().get(0);
                     extras[2] = expData.getExtras().get(1);
-                    equationCopy = new GUIPlotEquation(useEquationName, pars, errs, extras);
+                    equationCopy = new GUIPlotEquation(expType, useEquationName, pars, errs, extras);
                 } else {
                     double[] extras = new double[1];
                     extras[0] = expData.getNucleusField();
-                    equationCopy = new GUIPlotEquation(equation);
+                    equationCopy = new GUIPlotEquation(expType, equation);
                     equationCopy.setExtra(extras);
                     //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[0] = " + extras[0]);
 
