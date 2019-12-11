@@ -10,8 +10,10 @@ import argparse
 import org.comdnmr.util.CoMDPreferences as CoMDPreferences
 import org.comdnmr.eqnfit.CESTEquation as CESTEquation
 import org.comdnmr.eqnfit.R1RhoEquation as R1RhoEquation
+import org.comdnmr.util.CoMDOptions as CoMDOptions
 
-calcR = CPMGFitFunction()
+options = CoMDOptions(False)
+calcR = CPMGFitFunction(options)
 
 def findDuplicates(vcpmgs):
     dupDict = {}
@@ -406,7 +408,7 @@ def getResidues(resProp):
 
 def fitProject(resProp, groups, equationName, saveStats, outFileName):
     expDataSets = resProp.getExperimentData()
-    residueFitter = ResidueFitter()
+    residueFitter = ResidueFitter(options)
     groupID = 0
     for group in groups:
         sgroup = [str(groupNum) for groupNum in group]
@@ -494,6 +496,7 @@ def parseArgs():
     tolerance = args.tolerance
     finalRadius = args.finalRadius
     useWeight = args.weight
+    print "useWeight =", useWeight
 
     CoMDPreferences.setOptimizer(refineOpt)
     CoMDPreferences.setBootStrapOptimizer(bootstrapOpt)

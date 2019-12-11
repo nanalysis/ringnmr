@@ -444,14 +444,14 @@ public class DataIO {
     }
 
     public static void loadTextFile(String fileName, ResidueProperties resProp,
-            String nucleus, double temperature, double field, XCONV xConv)
+            String nucleus, double temperature, double field, XCONV xConv, String expMode)
             throws IOException, IllegalArgumentException {
         Path path = Paths.get(fileName);
         String fileTail = path.getFileName().toString();
         fileTail = fileTail.substring(0, fileTail.indexOf('.'));
 
 //        ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature);
-        ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, null, null, null, null, null, null);
+        ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, null, null, expMode, null, null, null);
         resProp.addExperimentData(fileTail, expData);
         boolean gotHeader = false;
         String[] peakRefs = null;
@@ -667,7 +667,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     }
                 }
                 parMap.put("Equation", 1.0 + equationNames.indexOf(equationName));
-                PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, fields);
+                PlotEquation plotEquation = new PlotEquation(fitMode, equationName, pars, errs, fields);
                 CurveFit curveSet = new CurveFit(stateString, residueNumber, parMap, plotEquation);
                 residueInfo.addCurveSet(curveSet, bestValue.equals("best"));
             }
@@ -833,7 +833,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 File file = new File(dataFileName).getAbsoluteFile();
                 dataFileName = file.getName();
                 String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
-                loadTextFile(textFileName, resProp, nucleus, temperature, B0field, xConv);
+                loadTextFile(textFileName, resProp, nucleus, temperature, B0field, xConv, expMode);
             } else {
                 String dataFileName = (String) dataMap3.get("file");
                 String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();

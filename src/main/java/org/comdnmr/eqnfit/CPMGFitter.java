@@ -51,6 +51,7 @@ public class CPMGFitter implements EquationFitter {
     int[] stateCount;
     String[] resNums;
     long errTime;
+    static final String expType = "cpmg";
 
     class StateCount {
 
@@ -164,6 +165,11 @@ public class CPMGFitter implements EquationFitter {
     @Override
     public List<String> getEquationNameList() {
         return getEquationNames();
+    }
+    
+    @Override
+    public String getExpType() {
+        return expType;
     }
 
     public static List<String> getEquationNames() {

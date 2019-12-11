@@ -49,6 +49,7 @@ public class CESTFitter implements EquationFitter {
     String[] resNums;
     static List<String> equationNameList = Arrays.asList(CESTEquation.getEquationNames());
     long errTime;
+    static final String expType = "cest";
 
     class StateCount {
 
@@ -203,6 +204,11 @@ public class CESTFitter implements EquationFitter {
     @Override
     public List<String> getEquationNameList() {
         return getEquationNames();
+    }
+    
+    @Override
+    public String getExpType() {
+        return expType;
     }
 
     public static List<String> getEquationNames() {

@@ -31,12 +31,14 @@ import org.comdnmr.fit.ResidueFitter;
 public class PlotEquation {
 
     //        CalcRDisp.CPMGEquation equation = CalcRDisp.CPMGEquation.CPMGFAST;
+    String expType;
     String name;
     double[] pars;
     double[] errs;
     double[] extras;
 
-    public PlotEquation(String name, double[] pars, double[] errs, double[] extras) {
+    public PlotEquation(String expType, String name, double[] pars, double[] errs, double[] extras) {
+        this.expType = expType;
         this.name = name;
         this.pars = pars.clone();
         this.errs = errs.clone();
@@ -47,7 +49,7 @@ public class PlotEquation {
 
     @Override
     public PlotEquation clone() {
-        return new PlotEquation(name, pars, errs, extras);
+        return new PlotEquation(expType, name, pars, errs, extras);
     }
 
     public String getName() {
@@ -75,13 +77,13 @@ public class PlotEquation {
     }
 
     public double calculate(double[] pars, double[] xValue, double field) {
-        EquationType equationType = ResidueFitter.getEquationType(name);
+        EquationType equationType = ResidueFitter.getEquationType(expType, name);
         int[][] map = equationType.makeMap(1);
         return equationType.calculate(pars, map[0], xValue, 0, field);
     }
 
     public double calculate(double[] xValue, double field) {
-        EquationType equationType = ResidueFitter.getEquationType(name);
+        EquationType equationType = ResidueFitter.getEquationType(expType, name);
         int[][] map = equationType.makeMap(1);
 
         double y = equationType.calculate(pars, map[0], xValue, 0, field);
@@ -89,7 +91,7 @@ public class PlotEquation {
     }
 
     public double calculate(double xValue) {
-        EquationType equationType = ResidueFitter.getEquationType(name);
+        EquationType equationType = ResidueFitter.getEquationType(expType, name);
         int[][] map = equationType.makeMap(1);
         double[] ax = new double[extras.length];
         ax[0] = xValue;
@@ -101,12 +103,12 @@ public class PlotEquation {
     }
 
     public double getMinX() {
-        EquationType equationType = ResidueFitter.getEquationType(name);
+        EquationType equationType = ResidueFitter.getEquationType(expType, name);
         return equationType.getMinX();
     }
 
     public double getMaxX() {
-        EquationType equationType = ResidueFitter.getEquationType(name);
+        EquationType equationType = ResidueFitter.getEquationType(expType, name);
         return equationType.getMaxX();
     }
 

@@ -51,6 +51,7 @@ public class R1RhoFitter implements EquationFitter {
     static List<String> equationNameList = Arrays.asList(R1RhoEquation.getEquationNames());
     long errTime;
     Map<String, List<Double>>[] constraints;
+    static final String expType = "r1rho";
 
     class StateCount {
 
@@ -199,6 +200,11 @@ public class R1RhoFitter implements EquationFitter {
     @Override
     public List<String> getEquationNameList() {
         return getEquationNames();
+    }
+    
+    @Override
+    public String getExpType() {
+        return expType;
     }
 
     public static List<String> getEquationNames() {
