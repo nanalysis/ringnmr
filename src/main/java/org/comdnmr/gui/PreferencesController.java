@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package org.comdnmr.gui;
 
 import org.nmrfx.utils.properties.DirectoryOperationItem;
@@ -137,7 +137,7 @@ public class PreferencesController implements Initializable {
 
         ArrayList<String> cestEqnChoices = new ArrayList<>();
         cestEqnChoices.addAll(Arrays.asList("NOEX", "TROTT_PALMER", "SD", "BALDWINKAY", "LAGUERRE",
-            "EIGENEXACT1", "EXACT0", "EXACT1", "EXACT2"));
+                "EIGENEXACT1", "EXACT0", "EXACT1", "EXACT2"));
 
         ArrayList<String> r1rhoEqnChoices = new ArrayList<>();
         r1rhoEqnChoices.addAll(Arrays.asList("NOEX", "TROTT_PALMER", "BALDWINKAY", "LAGUERRE", "EXACT", "EXACT0"));
@@ -176,10 +176,15 @@ public class PreferencesController implements Initializable {
                     CoMDPreferences.setNeuralNetworkGuess((Boolean) newV);
                 }, CoMDPreferences.getNeuralNetworkGuess(), "Optimizer", "Neural Network Guess",
                 "Use Neural Network for guesses");
+        BooleanOperationItem corrR1RhoItem = new BooleanOperationItem(
+                (obs, oldV, newV) -> {
+                    CoMDPreferences.setCalR1rhoCorr((Boolean) newV);
+                }, CoMDPreferences.getCalR1rhoCorr(), "R1Rho Equations", "Correct R1rho",
+                "Correction if starting in ground state");
 
         prefSheet.getItems().addAll(nProcessesItem, refFieldItem, maxFreqItem, rexRatioItem, deltaABdiffItem,
                 absValueItem, nonParametricItem, nSamplesItem, optimizerChoiceItem, bootStrapOptimizerrChoiceItem,
-                startingRadiusItem, toleranceItem, finalRadiusItem, weightFitItem, neuralNetworkGuessItem);
+                startingRadiusItem, toleranceItem, finalRadiusItem, weightFitItem, neuralNetworkGuessItem, corrR1RhoItem);
         for (String eqn : cestEqnChoices) {
             boolean defaultState = CoMDPreferences.getCESTEquationState(eqn);
             BooleanOperationItem cestEqnListItem = new BooleanOperationItem(cestEqnListener, defaultState, "CEST Equations", eqn, "List of equations to use during CEST Fitting");
