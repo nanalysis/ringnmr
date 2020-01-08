@@ -14,8 +14,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/*
+ */
+ /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
@@ -97,11 +97,13 @@ public class CESTEquations {
 
     /**
      * CEST no-exchange model.
-     * 
-     * @param X Matrix containing the offset values i.e. CEST irradiation frequency (X[0]), the B1 field values (X[1]), and the Tex values (X[2]).
+     *
+     * @param X Matrix containing the offset values i.e. CEST irradiation
+     * frequency (X[0]), the B1 field values (X[1]), and the Tex values (X[2]).
      * @param fields Array containing the B0 field values.
      * @param deltaA0 deltaA0 value. Ground/Major state peak position.
-     * @param R1A R1A value. Longitudinal relaxation rate for Ground/Major state.
+     * @param R1A R1A value. Longitudinal relaxation rate for Ground/Major
+     * state.
      * @param R2A R2A value. Transverse relaxation rate for Ground/Major state.
      * @return CEST intensity array.
      */
@@ -135,16 +137,21 @@ public class CESTEquations {
     }
 
     /**
-     * CEST exact model. Assumes R1A != R1B and R2A != R2B. Uses matrix exponential. Numerical integration of thermalized Bloch-McConnell rate matrix.
-     * 
-     * @param X Matrix containing the offset values i.e. CEST irradiation frequency (X[0]), the B1 field values (X[1]), and the Tex values (X[2]).
+     * CEST exact model. Assumes R1A != R1B and R2A != R2B. Uses matrix
+     * exponential. Numerical integration of thermalized Bloch-McConnell rate
+     * matrix.
+     *
+     * @param X Matrix containing the offset values i.e. CEST irradiation
+     * frequency (X[0]), the B1 field values (X[1]), and the Tex values (X[2]).
      * @param fields Array containing the B0 field values.
      * @param pb pb value. Population of the Excited/Minor state.
      * @param kex kex value. Rate constant for Major-Minor state exchange.
      * @param deltaA0 deltaA0 value. Ground/Major state peak position.
      * @param deltaB0 deltaB0 value. Excited/Minor state peak position.
-     * @param R1A R1A value. Longitudinal relaxation rate for Ground/Major state.
-     * @param R1B R1B value. Longitudinal relaxation rate for Excited/Minor state.
+     * @param R1A R1A value. Longitudinal relaxation rate for Ground/Major
+     * state.
+     * @param R1B R1B value. Longitudinal relaxation rate for Excited/Minor
+     * state.
      * @param R2A R2A value. Transverse relaxation rate for Ground/Major state.
      * @param R2B R2B value. Transverse relaxation rate for Excited/Minor state.
      * @return CEST intensity array.
@@ -185,23 +192,23 @@ public class CESTEquations {
         {0, k1, 0, 0, -km1, 0, 0},
         {0, 0, k1, 0, 0, -km1, 0},
         {0, 0, 0, k1, 0, 0, -km1}};
-        
+
         double[][] La = {{0, 0, 0, 0, 0, 0, 0},
-            {0, -R2A, 0, 0, 0, 0, 0}, //{0, -R2A, -deltaA, 0, 0, 0, 0}
-            {0, 0, -R2A, 0, 0, 0, 0}, //{0, deltaA, -R2A, -omegaB1[i], 0, 0, 0}
-            {2 * R1A * (1 - pb), 0, 0, -R1A, 0, 0, 0}, //{2 * R1A * (1 - pb), 0, omegaB1[i], -R1A, 0, 0, 0}
-            {0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0}};
+        {0, -R2A, 0, 0, 0, 0, 0}, //{0, -R2A, -deltaA, 0, 0, 0, 0}
+        {0, 0, -R2A, 0, 0, 0, 0}, //{0, deltaA, -R2A, -omegaB1[i], 0, 0, 0}
+        {2 * R1A * (1 - pb), 0, 0, -R1A, 0, 0, 0}, //{2 * R1A * (1 - pb), 0, omegaB1[i], -R1A, 0, 0, 0}
+        {0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0}};
 
         double[][] Lb = {{0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, -R2B, 0, 0}, //{0, 0, 0, 0, -R2B, -deltaB, 0}
-            {0, 0, 0, 0, 0, -R2B, 0}, //{0, 0, 0, 0, deltaB, -R2B, -omegaB1[i]}
-            {2 * R1B * pb, 0, 0, 0, 0, 0, -R1B}}; //{2 * R1B * pb, 0, 0, 0, 0, omegaB1[i], -R1B}
-        
+        {0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, -R2B, 0, 0}, //{0, 0, 0, 0, -R2B, -deltaB, 0}
+        {0, 0, 0, 0, 0, -R2B, 0}, //{0, 0, 0, 0, deltaB, -R2B, -omegaB1[i]}
+        {2 * R1B * pb, 0, 0, 0, 0, 0, -R1B}}; //{2 * R1B * pb, 0, 0, 0, 0, omegaB1[i], -R1B}
+
         DMatrixRMaj La1 = new DMatrixRMaj(La);
         DMatrixRMaj Lb1 = new DMatrixRMaj(Lb);
         DMatrixRMaj K1 = new DMatrixRMaj(K);
@@ -213,26 +220,26 @@ public class CESTEquations {
             double deltaA = (deltaA0 - omegarf[i]) * fields[i] * TWO_PI;
             double deltaB = (deltaB0 - omegarf[i]) * fields[i] * TWO_PI;
 
-            La1.set(1, 2, -deltaA); 
+            La1.set(1, 2, -deltaA);
             La1.set(2, 1, deltaA);
             La1.set(2, 3, -omegaB1);
             La1.set(3, 2, omegaB1);
 
-            Lb1.set(4, 5, -deltaB); 
+            Lb1.set(4, 5, -deltaB);
             Lb1.set(5, 4, deltaB);
             Lb1.set(5, 6, -omegaB1);
             Lb1.set(6, 5, omegaB1);
-            
+
             CommonOps_DDRM.add(La1, Lb1, Z);
             CommonOps_DDRM.addEquals(Z, K1);
-            
+
             CommonOps_DDRM.scale(tdelay, Z);
-            
+
             DMatrixRMaj at = MtxExp.matrixExp(Z);
 
-            double a30 = at.get(3,0);
-            double a33 = at.get(3,3);
-            double a36 = at.get(3,6);
+            double a30 = at.get(3, 0);
+            double a33 = at.get(3, 3);
+            double a36 = at.get(3, 6);
             double magA = a30 * m0[0] + a33 * m0[3] + a36 * m0[6];
             magA = magA - (a30 * m1[0] + a33 * m1[3] + a36 * m1[6]);
             magA = magA / 2;
@@ -244,16 +251,20 @@ public class CESTEquations {
     }
 
     /**
-     * CEST exact model. Assumes R1A = R1B and R2A != R2B. Uses numerical determination of least negative eigenvalue to calculate CEST.
-     * 
-     * @param X Matrix containing the offset values i.e. CEST irradiation frequency (X[0]), the B1 field values (X[1]), and the Tex values (X[2]).
+     * CEST exact model. Assumes R1A = R1B and R2A != R2B. Uses numerical
+     * determination of least negative eigenvalue to calculate CEST.
+     *
+     * @param X Matrix containing the offset values i.e. CEST irradiation
+     * frequency (X[0]), the B1 field values (X[1]), and the Tex values (X[2]).
      * @param fields Array containing the B0 field values.
      * @param pb pb value. Population of the Excited/Minor state.
      * @param kex kex value. Rate constant for Major-Minor state exchange.
      * @param deltaA0 deltaA0 value. Ground/Major state peak position.
      * @param deltaB0 deltaB0 value. Excited/Minor state peak position.
-     * @param R1A R1A value. Longitudinal relaxation rate for Ground/Major state.
-     * @param R1B R1B value. Longitudinal relaxation rate for Excited/Minor state.
+     * @param R1A R1A value. Longitudinal relaxation rate for Ground/Major
+     * state.
+     * @param R1B R1B value. Longitudinal relaxation rate for Excited/Minor
+     * state.
      * @param R2A R2A value. Transverse relaxation rate for Ground/Major state.
      * @param R2B R2B value. Transverse relaxation rate for Excited/Minor state.
      * @return CEST intensity array.
@@ -292,21 +303,21 @@ public class CESTEquations {
         {k1, 0, 0, -km1, 0, 0},
         {0, k1, 0, 0, -km1, 0},
         {0, 0, k1, 0, 0, -km1}};
-        
+
         double[][] La = {{-R2A, 0, 0, 0, 0, 0}, //{-R2A, -deltaA, 0, 0, 0, 0}
-            {0, -R2A, 0, 0, 0, 0}, //{deltaA, -R2A, -omegaB1[i], 0, 0, 0}
-            {0, 0, -R1A, 0, 0, 0}, //{0, omegaB1[i], -R1A, 0, 0, 0}
-            {0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0}};
+        {0, -R2A, 0, 0, 0, 0}, //{deltaA, -R2A, -omegaB1[i], 0, 0, 0}
+        {0, 0, -R1A, 0, 0, 0}, //{0, omegaB1[i], -R1A, 0, 0, 0}
+        {0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0}};
 
         double[][] Lb = {{0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0},
-            {0, 0, 0, 0, 0, 0},
-            {0, 0, 0, -R2B, 0, 0}, //{0, 0, 0, -R2B, -deltaB, 0}
-            {0, 0, 0, 0, -R2B, 0}, //{0, 0, 0, deltaB, -R2B, -omegaB1[i]}
-            {0, 0, 0, 0, 0, -R1B}}; //{0, 0, 0, 0, omegaB1[i], -R1B}
-        
+        {0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0},
+        {0, 0, 0, -R2B, 0, 0}, //{0, 0, 0, -R2B, -deltaB, 0}
+        {0, 0, 0, 0, -R2B, 0}, //{0, 0, 0, deltaB, -R2B, -omegaB1[i]}
+        {0, 0, 0, 0, 0, -R1B}}; //{0, 0, 0, 0, omegaB1[i], -R1B}
+
         DMatrixRMaj La1 = new DMatrixRMaj(La);
         DMatrixRMaj Lb1 = new DMatrixRMaj(Lb);
         DMatrixRMaj K1 = new DMatrixRMaj(K);
@@ -321,32 +332,31 @@ public class CESTEquations {
             double we = Math.sqrt(omegaB1 * omegaB1 + omegaBar * omegaBar);
 
             double cost = omegaBar / we;
-            
-            La1.set(0, 1, -deltaA); 
+
+            La1.set(0, 1, -deltaA);
             La1.set(1, 0, deltaA);
             La1.set(1, 2, -omegaB1);
             La1.set(2, 1, omegaB1);
 
-            Lb1.set(3, 4, -deltaB); 
+            Lb1.set(3, 4, -deltaB);
             Lb1.set(4, 3, deltaB);
             Lb1.set(4, 5, -omegaB1);
-            Lb1.set(5, 4, omegaB1);         
-            
+            Lb1.set(5, 4, omegaB1);
+
             CommonOps_DDRM.add(La1, Lb1, Z);
             CommonOps_DDRM.addEquals(Z, K1);
-            
-            
+
             List<Double> r1rho1 = new ArrayList<>();
             WatchedDoubleStepQRDecomposition_DDRM eig = (WatchedDoubleStepQRDecomposition_DDRM) DecompositionFactory_DDRM.eig(Z.getNumCols(), true, false);
             eig.decompose(Z);
             int numEigVec = eig.getNumberOfEigenvalues();
-            for (int v=0; v<numEigVec; v++) {
+            for (int v = 0; v < numEigVec; v++) {
                 Complex_F64 ZEigVal = eig.getEigenvalue(v);
                 if (ZEigVal.isReal()) {
                     r1rho1.add(ZEigVal.getReal());
                 }
             }
-            
+
             double r1rho = Math.abs(Collections.max(r1rho1));
 
             cest[i] = cost * cost * Math.exp(-tdelay * r1rho);
@@ -356,20 +366,26 @@ public class CESTEquations {
     }
 
     /**
-     * CEST approximation models. All expect laguerre assume R1A = R1B and R2A != R2B. Laguerre assumes R1A = R1B and R2A = R2B.
-     * Laguerre: R1rho approximation to calculate CEST Second-order approximation, assuming R1A=R1B and R2A=R2B
-     * Perturbation: Uses Trott perturbation R1rho approximation to calculate CEST Assumes R1A=R1B
-     * SD: Uses perturbation R1rho approximation to calculate CEST second-order approximation, assuming R1A=R1B. Averages over B1 inhomogeneity
-     * BaldwinKay Uses first-order R1rho approximation to calculate CEST. Assumes R1A=R1B
-     * 
-     * @param X Matrix containing the offset values i.e. CEST irradiation frequency (X[0]), the B1 field values (X[1]), and the Tex values (X[2]).
+     * CEST approximation models. All expect laguerre assume R1A = R1B and R2A
+     * != R2B. Laguerre assumes R1A = R1B and R2A = R2B. Laguerre: R1rho
+     * approximation to calculate CEST Second-order approximation, assuming
+     * R1A=R1B and R2A=R2B Perturbation: Uses Trott perturbation R1rho
+     * approximation to calculate CEST Assumes R1A=R1B SD: Uses perturbation
+     * R1rho approximation to calculate CEST second-order approximation,
+     * assuming R1A=R1B. Averages over B1 inhomogeneity BaldwinKay Uses
+     * first-order R1rho approximation to calculate CEST. Assumes R1A=R1B
+     *
+     * @param X Matrix containing the offset values i.e. CEST irradiation
+     * frequency (X[0]), the B1 field values (X[1]), and the Tex values (X[2]).
      * @param fields Array containing the B0 field values.
      * @param pb pb value. Population of the Excited/Minor state.
      * @param kex kex value. Rate constant for Major-Minor state exchange.
      * @param deltaA0 deltaA0 value. Ground/Major state peak position.
      * @param deltaB0 deltaB0 value. Excited/Minor state peak position.
-     * @param R1A R1A value. Longitudinal relaxation rate for Ground/Major state.
-     * @param R1B R1B value. Longitudinal relaxation rate for Excited/Minor state.
+     * @param R1A R1A value. Longitudinal relaxation rate for Ground/Major
+     * state.
+     * @param R1B R1B value. Longitudinal relaxation rate for Excited/Minor
+     * state.
      * @param R2A R2A value. Transverse relaxation rate for Ground/Major state.
      * @param R2B R2B value. Transverse relaxation rate for Excited/Minor state.
      * @return CEST intensity array.
@@ -418,7 +434,7 @@ public class CESTEquations {
             switch (approx) {
                 case "laguerre": {
                     // if(R2.length == 1){
-                    double[] r1rho = R1RhoEquations.r1rhoLaguerre(omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
+                    double[] r1rho = R1RhoEquations.r1rhoLaguerre(trad, false, omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
                     //double[] cest = new double[cos2t.length];
                     for (int i = 0; i < cos2t.length; i++) {
                         cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
@@ -429,7 +445,7 @@ public class CESTEquations {
                     break;
                 }
                 case "trott": {
-                    double[] r1rho = R1RhoEquations.r1rhoPerturbation(omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
+                    double[] r1rho = R1RhoEquations.r1rhoPerturbation(trad, false, omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
                     //double[] cest = new double[cos2t.length];
                     for (int i = 0; i < cos2t.length; i++) {
                         cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
@@ -445,7 +461,7 @@ public class CESTEquations {
                     break;
                 }
                 case "baldwinkay": {
-                    double[] r1rho = R1RhoEquations.r1rhoBaldwinKay(omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
+                    double[] r1rho = R1RhoEquations.r1rhoBaldwinKay(trad, false, omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
                     //double[] cest = new double[cos2t.length];
                     for (int i = 0; i < cos2t.length; i++) {
                         cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
@@ -476,7 +492,7 @@ public class CESTEquations {
                             cos2t[j] = (omegaBar[j] / we[j]) * (omegaBar[j] / we[j]);
                         }
 
-                        double[] r1rho = R1RhoEquations.r1rhoPerturbation(omegatmp, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
+                        double[] r1rho = R1RhoEquations.r1rhoPerturbation(trad, false, omegatmp, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
 
                         for (int j = 0; j < cest.length; j++) {
                             cest[j] = cos2t[j] * Math.exp(-trad * r1rho[j]);
@@ -496,13 +512,15 @@ public class CESTEquations {
 
     /**
      * Applies a Savitzky-Golay filter to the CEST/R1rho data for smoothing.
-     * 
+     *
      * @param vec Array of CEST/R1rho intensity values to smooth.
      * @param j1 Start index for smoothing in the CEST/R1rho intensity array.
      * @param j2 End index for smoothing in the CEST/R1rho intensity array.
      * @param order Smoothing order. Default is 3.
-     * @param smoothSize Size of the smoothing filter. Should be one of 5, 7, 9, ... 25. Depends on intensity array size.
-     * @param X Empty array for smoothed values. Same length as intensity array. Returned if an exception is raised.
+     * @param smoothSize Size of the smoothing filter. Should be one of 5, 7, 9,
+     * ... 25. Depends on intensity array size.
+     * @param X Empty array for smoothed values. Same length as intensity array.
+     * Returned if an exception is raised.
      * @return Array of smoothed intensity values.
      */
     public static double[] smoothCEST(double[] vec, int j1, int j2, int order, int smoothSize, double[] X) {
@@ -519,7 +537,7 @@ public class CESTEquations {
 
     /**
      * Estimates the baseline of the CEST/R1rho data
-     * 
+     *
      * @param vec Array of CEST/R1rho intensity values.
      * @param fitMode String "cest" or "r1rho" specifying CEST or R1rho data.
      * @return Array of the estimate of the baseline in the data.
@@ -544,13 +562,15 @@ public class CESTEquations {
     }
 
     /**
-     * Estimates CEST/R1rho peak positions and widths for initial guesses before fitting.
-     * 
+     * Estimates CEST/R1rho peak positions and widths for initial guesses before
+     * fitting.
+     *
      * @param xvals Array of the offset values i.e. CEST irradiation frequency.
      * @param yvals Array of the CEST intensities.
      * @param field B0 field value.
      * @param fitMode String "cest" or "r1rho" specifying CEST or R1rho data.
-     * @return List of CESTPeak objects. The major state peak is listed first, then the minor state peak, if any.
+     * @return List of CESTPeak objects. The major state peak is listed first,
+     * then the minor state peak, if any.
      */
     public static List<CESTPeak> cestPeakGuess(double[] xvals, double[] yvals, double field, String fitMode) {
         // Estimates CEST peak positions for initial guesses for before fitting.
@@ -738,7 +758,7 @@ public class CESTEquations {
 
     /**
      * Estimates the CEST/R1rho pb values for initial guesses before fitting.
-     * 
+     *
      * @param peaks List of CESTPeak objects from CEST/R1rho peak guesser.
      * @param yvals Array of the CEST intensities.
      * @param fitMode String "cest" or "r1rho" specifying CEST or R1rho data.
@@ -787,12 +807,14 @@ public class CESTEquations {
     }
 
     /**
-     * Estimates the CEST/R1rho R2A and R2B values for initial guesses before fitting.
-     * 
+     * Estimates the CEST/R1rho R2A and R2B values for initial guesses before
+     * fitting.
+     *
      * @param peaks List of CESTPeak objects from CEST/R1rho peak guesser.
      * @param yvals Array of the CEST intensities.
      * @param fitMode String "cest" or "r1rho" specifying CEST or R1rho data.
-     * @return Matrix of CEST/R1rho R2A and R2B value estimates. R2A is listed first, then R2B.
+     * @return Matrix of CEST/R1rho R2A and R2B value estimates. R2A is listed
+     * first, then R2B.
      */
     public static double[][] cestR2Guess(List<CESTPeak> peaks, double[] yvals, String fitMode) {
         // Estimates CEST R2A and R2B values from peak widths for initial guesses for before fitting.
@@ -855,7 +877,7 @@ public class CESTEquations {
 
     /**
      * Estimates CEST/R1rho Kex values for initial guesses for fitting.
-     * 
+     *
      * @param peaks List of CESTPeak objects from CEST/R1rho peak guesser.
      * @param fitMode String "cest" or "r1rho" specifying CEST or R1rho data.
      * @return CEST/R1rho Kex value estimate.
@@ -888,7 +910,7 @@ public class CESTEquations {
 
     /**
      * Calculates the CEST/R1rho R1 boundaries for fitting.
-     * 
+     *
      * @param r1 R1 value.
      * @param tex Tex value. Irradiation time.
      * @param delta Delta value that defines the R1 boundary (i.e. R1 +- delta).
@@ -908,11 +930,12 @@ public class CESTEquations {
 
     /**
      * Estimates CEST/R1rho R1 values for initial guesses before fitting.
-     * 
+     *
      * @param yvals Array of the CEST/R1rho intensities.
      * @param Tex Tex value. Irradiation time.
      * @param fitMode String "cest" or "r1rho" specifying CEST or R1rho data.
-     * @return Array of CEST/R1rho R1A and R1B value estimates. R1A is listed first, then R1B.
+     * @return Array of CEST/R1rho R1A and R1B value estimates. R1A is listed
+     * first, then R1B.
      */
     public static double[] cestR1Guess(double[] yvals, Double Tex, String fitMode) {
         // Estimates CEST R1 values from data baseline intensity and Tex for initial guesses for before fitting.
@@ -942,12 +965,15 @@ public class CESTEquations {
 
     /**
      * Combines CEST/R1rho x and y values into a single matrix.
-     * 
-     * @param xValues Matrix containing the offset values i.e. CEST/R1rho irradiation frequency (X[0]), the B1 field values (X[1]), and the Tex values (X[2]).
+     *
+     * @param xValues Matrix containing the offset values i.e. CEST/R1rho
+     * irradiation frequency (X[0]), the B1 field values (X[1]), and the Tex
+     * values (X[2]).
      * @param yValues Array of the CEST/R1rho intensities.
      * @param idNums Array of the ID numbers for the datasets.
      * @param id Integer ID number to retrieve the x and y values.
-     * @return Matrix containing the offset (x) and intensity (y) values. X values are in the first array, Y values are in the second.
+     * @return Matrix containing the offset (x) and intensity (y) values. X
+     * values are in the first array, Y values are in the second.
      */
     public static double[][] getXYValues(double[][] xValues, double[] yValues, int[] idNums, int id) {
         int n = 0;
@@ -971,10 +997,11 @@ public class CESTEquations {
 
     /**
      * Gets CEST/R1rho indices for a specific dataset.
-     * 
+     *
      * @param idNums Array of the ID numbers for the datasets.
      * @param id Integer ID number to retrieve the x and y values.
-     * @return Integer Array containing the dataset indices for the specified ID number.
+     * @return Integer Array containing the dataset indices for the specified ID
+     * number.
      */
     public static int[] getIndicies(int[] idNums, int id) {
         int n = 0;
@@ -997,11 +1024,14 @@ public class CESTEquations {
 
     /**
      * Gets CEST/R1rho x values for a specific dataset.
-     * 
-     * @param xValues Matrix containing the offset values i.e. CEST/R1rho irradiation frequency (X[0]), the B1 field values (X[1]), and the Tex values (X[2]).
+     *
+     * @param xValues Matrix containing the offset values i.e. CEST/R1rho
+     * irradiation frequency (X[0]), the B1 field values (X[1]), and the Tex
+     * values (X[2]).
      * @param idNums Array of the ID numbers for the datasets.
      * @param id Integer ID number to retrieve the x values.
-     * @return Matrix containing the offset (x) values for the specified ID number.
+     * @return Matrix containing the offset (x) values for the specified ID
+     * number.
      */
     public static double[][] getXValues(double[][] xValues, int[] idNums, int id) {
         int n = 0;
@@ -1026,11 +1056,12 @@ public class CESTEquations {
 
     /**
      * Gets CEST/R1rho y values for a specific dataset.
-     * 
+     *
      * @param values Array of the CEST/R1rho intensities.
      * @param idNums Array of the ID numbers for the datasets.
      * @param id Integer ID number to retrieve the x and y values.
-     * @return Matrix containing the intensity (y) values for the specified ID number.
+     * @return Matrix containing the intensity (y) values for the specified ID
+     * number.
      */
     public static double[] getValues(double[] values, int[] idNums, int id) {
         int n = 0;
@@ -1093,14 +1124,14 @@ public class CESTEquations {
             // updating DELTA_A and DELTA_B
             outputs.replace("deltaA", peaks.get(0).getPosition());
             outputs.replace("deltaB", peaks.get(peaks.size() - 1).getPosition());
-            
+
             // Get scale values
             HashMap scaleTracker = ANN.getScaleValues();
-            
+
             // updating scale values for deltaA and deltaB
             scaleTracker.replace("deltaA", peakScaleVals);
             scaleTracker.replace("deltaB", peakScaleVals);
-            
+
             // CODE TO SCALE INPUT:
             List<Double> annInput = new ArrayList(ANN.getNumberOfInputNodes());
             peaks.forEach((peak) -> {
@@ -1109,7 +1140,7 @@ public class CESTEquations {
                     annInput.add(Utilities.scale(width, (double[]) scaleTracker.get("b1Field"), true));
                 }
             });
-            
+
             // Guessing R1A/R1B
             double[] r1 = cestR1Guess(yValues, tEx, "cest");
             outputs.replace("r1A", r1[0]);

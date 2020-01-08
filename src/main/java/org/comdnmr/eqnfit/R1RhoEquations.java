@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package org.comdnmr.eqnfit;
 
 import org.comdnmr.util.MtxExp;
@@ -33,7 +33,19 @@ import org.ejml.dense.row.factory.DecompositionFactory_DDRM;
  */
 public class R1RhoEquations {
 
-    public static double[] r1rhoLaguerre(double[] omega, double pb, double kex, double[] deltaA, double[] deltaB, double R1A, double R1B, double R2A, double R2B) {
+    // see Korzhnev, Orekhov, and Kay  JACS 2005 127:713-721
+    public static double calcInitialStateCorr(double delay, double omega, double deltaA, double deltaB, double pb) {
+        double thetaA = Math.PI / 2.0 - Math.atan(deltaA / omega);
+        double thetaB = Math.PI / 2.0 - Math.atan(deltaB / omega);
+        double cosDelTheta = Math.cos(thetaA - thetaB);
+        double a1 = 1.0 - pb * cosDelTheta * cosDelTheta;
+        double corr = -1.0 / delay * Math.log(a1);
+        return corr;
+    }
+
+    public static double[] r1rhoLaguerre(double delay, boolean calCorr,
+            double[] omega, double pb, double kex, double[] deltaA,
+            double[] deltaB, double R1A, double R1B, double R2A, double R2B) {
         // Calculates the Miloushev-Palmer Laguerre second-order approximation to the eigenvalue and returns R1rho.
         // Assumes the intrinsic relaxation rate constants for sites A and B are nearly identical, so that only
         // the average rates are calculated for projection from the laboratory frame to the tilted frame
@@ -63,11 +75,17 @@ public class R1RhoEquations {
             double z = x * (1 + 2 * (kex * kex) * (pa * (weA * weA) + pb * (weB * weB)) / ((weA * weA) * (weB * weB) + (we * we) * (kex * kex)));
             double REx = kex * x / (y - z);
             r1rho[i] = (1 - sin2t) * R1Bar + sin2t * R2Bar + REx;
+            if (calCorr) {
+                double corr = calcInitialStateCorr(delay, omega[i], deltaA[i], deltaB[i], pb);
+                r1rho[i] += corr;
+            }
         }
         return r1rho;
     }
 
-    public static double[] r1rhoBaldwinKay(double[] omega, double pb, double kex, double[] deltaA, double[] deltaB, double R1A, double R1B, double R2A, double R2B) {
+    public static double[] r1rhoBaldwinKay(double delay, boolean calCorr,
+            double[] omega, double pb, double kex, double[] deltaA,
+            double[] deltaB, double R1A, double R1B, double R2A, double R2B) {
         // Calculates the Baldwin-Kay first-order approximation to the eigenvalue and returns R1rho.
         // Allows the intrinsic relaxation rate constants for sites A and B to differ.
         //
@@ -101,6 +119,11 @@ public class R1RhoEquations {
             double c2 = (dp / sin2t - f2p / tan2t - f1p + dR * f2) / (dp + dR * f3 * sin2t);
             double rex = (f1p * kex + dR * f1) / (dp + dR * f3 * sin2t);
             r1rho[i] = c1 * R1A * cos2t + sin2t * (c2 * R2A + rex);
+            if (calCorr) {
+                double corr = calcInitialStateCorr(delay, omega[i], deltaA[i], deltaB[i], pb);
+                r1rho[i] += corr;
+            }
+
         }
         return r1rho;
     }
@@ -131,7 +154,6 @@ public class R1RhoEquations {
         // R2A, R2B: R20 relaxation rate constants of A and B states
 
         // time delay is hard-coded below
-
         DMatrixRMaj at = MtxExp.matrixExp(Z);
         DMatrixRMaj v = new DMatrixRMaj(m0);
         CommonOps_DDRM.mult(at, new DMatrixRMaj(m0), v);
@@ -165,7 +187,7 @@ public class R1RhoEquations {
         WatchedDoubleStepQRDecomposition_DDRM eig = (WatchedDoubleStepQRDecomposition_DDRM) DecompositionFactory_DDRM.eig(Z.getNumCols(), true, false);
         eig.decompose(Z);
         int numEigVec = eig.getNumberOfEigenvalues();
-        for (int v=0; v<numEigVec; v++) {
+        for (int v = 0; v < numEigVec; v++) {
             Complex_F64 ZEigVal = eig.getEigenvalue(v);
             if (ZEigVal.isReal()) {
                 r1rho1.add(ZEigVal.getReal());
@@ -181,7 +203,9 @@ public class R1RhoEquations {
         return r1rho;
     }
 
-    public static double[] r1rhoPerturbation(double[] omega, double pb, double kex, double[] deltaA, double[] deltaB, double R1A, double R1B, double R2A, double R2B) {
+    public static double[] r1rhoPerturbation(double delay, boolean calCorr,
+            double[] omega, double pb, double kex, double[] deltaA,
+            double[] deltaB, double R1A, double R1B, double R2A, double R2B) {
         // Calculates the Trott-Palmer perturbation approximation to the eigenvalue and returns R1rho.
         // Allows the intrinsic relaxation rate constants for sites A and B to differ.
         // This result is not as accurate as the first-order Baldwin-Kay result, but simpler.
@@ -208,7 +232,17 @@ public class R1RhoEquations {
             double y = km1 * (weB * weB + (km1 + dR) * (km1 + dR)) + dR * (omega[i] * omega[i]);
             double REx = k1 * x / y;
             r1rho[i] = (1 - sin2t) * R1A + sin2t * R2A + sin2t * REx;
+            if (calCorr) {
+                double corr = calcInitialStateCorr(delay, omega[i], deltaA[i], deltaB[i], pb);
+                r1rho[i] += corr;
+            }
         }
+
+        //        double r1rho = -Math.log(magA / magA0) / tdelay;
+        //         r1rho = -Math.log(magA/ (magA0*pa)/tdelay
+        //           exp(-r1rho*tdelay) = magA/(magA0*pa)
+        //         magA0 = magA/pA  * 1/exp(-r1rho*tdelay)
+        //
         return r1rho;
     }
 

@@ -45,6 +45,7 @@ public class CoMDPreferences {
     static private Boolean absValueFit = null;
     static private Boolean nonParametricBootstrap = null;
     static private Boolean neuralNetworkGuess = null;
+    static private Boolean calR1rhoCorr = null;
     static private Integer sampleSize = null;
     static private String optimizer = null;
     static private String bootStrapOptimizer = null;
@@ -131,7 +132,7 @@ public class CoMDPreferences {
 
     public static String getBootStrapOptimizer() {
         if (bootStrapOptimizer == null) {
-            String value = getPrefs().get("BOOTSTRAP-OPTIMIZER",  CoMDDefaults.getOptimizer());
+            String value = getPrefs().get("BOOTSTRAP-OPTIMIZER", CoMDDefaults.getOptimizer());
             bootStrapOptimizer = value;
         }
         return bootStrapOptimizer;
@@ -299,12 +300,29 @@ public class CoMDPreferences {
         }
     }
 
+    public static Boolean getCalR1rhoCorr() {
+        if (calR1rhoCorr == null) {
+            String value = getPrefs().get("CALR1RHOCORR", String.valueOf(CoMDDefaults.getCalR1rhoCorr()));
+            calR1rhoCorr = Boolean.parseBoolean(value);
+        }
+        return calR1rhoCorr;
+    }
+
+    public static void setCalR1rhoCorr(Boolean value) {
+        calR1rhoCorr = value;
+        if (value != null) {
+            getPrefs().put("CALR1RHOCORR", value.toString());
+        } else {
+            getPrefs().remove("CALR1RHOCORR");
+        }
+    }
+
     static Map<String, Boolean> getCESTEqnMap() {
         if (cestEqnMap == null) {
             Preferences prefs = getPrefs();//Preferences.userNodeForPackage(ExperimentData.class);
             String eqns = prefs.get("CEST_EQNS", DEFAULT_CEST_EQNS);
             cestEqnMap = stringToMap(eqns);
-        } 
+        }
         return cestEqnMap;
     }
 

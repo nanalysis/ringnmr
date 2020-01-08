@@ -22,6 +22,7 @@ public class CoMDDefaults {
     static final Boolean ABS_VALUE_FIT = false;// false
     static final Boolean NON_PARAMETRIC_BOOTSTRAP = true;
     static final Boolean NEURAL_NETWORK_GUESS = true;
+    static final Boolean CAL_R1RHO_CORR = true;
     static final Integer SAMPLE_SIZE = 50; // 
     static final String OPTIMIZER = "CMA-ES";
     static final String BOOTSTRAP_OPTIMIZER = "CMA-ES";
@@ -47,13 +48,12 @@ public class CoMDDefaults {
         return REX_RATIO;
     }
 
-      /**
+    /**
      * @return the AB Diff limit
      */
     public static Double getDeltaABDiff() {
         return DELTA_AB_DIFF;
     }
-
 
     /**
      * @return the startRadius
@@ -95,6 +95,13 @@ public class CoMDDefaults {
      */
     public static Boolean getNonParametricBootstrap() {
         return NON_PARAMETRIC_BOOTSTRAP;
+    }
+
+    /**
+     * @return whether to calculate r1rho correction
+     */
+    public static Boolean getCalR1rhoCorr() {
+        return CAL_R1RHO_CORR;
     }
 
     /**
