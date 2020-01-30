@@ -1,6 +1,8 @@
 package org.comdnmr.data;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.commons.math3.optim.PointValuePair;
 import static org.comdnmr.data.RelaxFit.ExptType.NOE;
 import static org.comdnmr.data.RelaxFit.ExptType.R1;
@@ -177,9 +179,9 @@ public class RelaxFit {
             double delta = y - values[2][i];
             sum += (delta * delta) / (errValues[i] * errValues[i]);
         }
-        double chisq = Math.sqrt(sum / n);
+        double rms = Math.sqrt(sum / n);
 
-        return chisq;
+        return rms;
 
     }
 
@@ -204,60 +206,51 @@ public class RelaxFit {
             sum += (delta * delta) / (errValues[i] * errValues[i]);
         }
 
-        double chisq = Math.sqrt(sum / n);
+        double rms = Math.sqrt(sum / n);
 
-        return chisq;
+        return rms;
 
     }
     
     public double valueDiffusion(double[] pars, double[][] values) {
         int n = values[0].length;
         double sum = 0.0;
-        double r1 = 0.0;
-        double r2 = 0.0;
-        double noe = 0.0;
-        double r1Err = 0.0;
-        double r2Err = 0.0;
-        double noeErr = 0.0;
-        boolean calcSum = false;
+        Map<Integer, double[]> expValMap = new HashMap<>();
+        Map<Integer, double[]> expErrMap = new HashMap<>();
         for (int i=0; i<n; i++) {
             int iField = (int) xValues[i][0];
             RelaxEquations relaxObj = relaxObjs.get(iField);
             int iRes = (int) xValues[i][1];
             int iExpType = (int) xValues[i][2];
+            int iCoord = (int) xValues[i][3];
             int modelNum = residueModels[iRes];
-            double[] v = coords[0];
+            double[] v = coords[iCoord];
             double[] J = getJDiffusion(pars, relaxObj, modelNum, v);
-            ExptType type = expTypeArray[iExpType];
-            switch (type) {
-                case R1:
-                    r1 = values[2][i];
-                    r1Err = errValues[i];
-                    calcSum = false;
-                    break;
-                case R2:
-                    r2 = values[2][i];
-                    r2Err = errValues[i];
-                    break;
-                case NOE:
-                    noe = values[2][i];
-                    noeErr = errValues[i];
-                    calcSum = true;
-                    break;
-                default:
-                    break;
+            if (!expValMap.containsKey(iRes)) {
+                expValMap.put(iRes, new double[3]);
+                expErrMap.put(iRes, new double[3]);
             }
-            if (calcSum) {
+            if (expValMap.get(iRes)[iExpType] == 0.0) {
+                expValMap.get(iRes)[iExpType] = values[2][i];
+                expErrMap.get(iRes)[iExpType] = errValues[i];
+            }
+            double r1 = expValMap.get(iRes)[0];
+            double r2 = expValMap.get(iRes)[1];
+            double noe = expValMap.get(iRes)[2];
+            if (r1 != 0.0 && r2 != 0.0 && noe != 0.0) {
+                double r1Err = expErrMap.get(iRes)[0];
+                double r2Err = expErrMap.get(iRes)[1];
+                double noeErr = expErrMap.get(iRes)[2];
                 double rhoExp = relaxObj.calcRhoExp(r1, r2, noe, J);
                 double rhoPred = relaxObj.calcRhoPred(J);
                 double delta = rhoPred - rhoExp; 
-                double error = (r1Err + r2Err + noeErr) / 3;
-                sum += (delta * delta) / (error * error);
-            }  
+                double error = relaxObj.calcRhoExpError(r1, r2, noe, J, r1Err, r2Err, noeErr, rhoExp);//(r1Err + r2Err + noeErr) / 3;//
+                sum += (delta * delta) / (error * error); 
+            }
         }
-        double chisq = Math.sqrt(sum / n / 3);
+        double rms = Math.sqrt(sum / n / 3);
 
-        return chisq;
+        return rms;
 
     }
 
@@ -269,13 +262,14 @@ public class RelaxFit {
             RelaxEquations relaxObj = relaxObjs.get(iField);
             int iRes = (int) xValues[i][1];
             int iExpType = (int) xValues[i][2];
+            int iCoord = (int) xValues[i][3];
             int modelNum = residueModels[iRes];
             double[] resPars = new double[nParsPerModel[modelNum] + 1];
             resPars[0] = pars[0];
             int parStart = resParStart[iRes] + 1;
             System.arraycopy(pars, parStart, resPars, 1, nParsPerModel[modelNum]);
 //            parStart += resParStart[i];
-            double[] v = coords[iRes];
+            double[] v = coords[iCoord];
             double[] J = getJDiffusion(resPars, relaxObj, modelNum, v);
             ExptType type = expTypeArray[iExpType];
             double y = getYVal(resPars, relaxObj, J, type);
@@ -284,9 +278,9 @@ public class RelaxFit {
             //fixme need to change chisq calculation to match the Fushman paper.
         }
 
-        double chisq = Math.sqrt(sum / n);
+        double rms = Math.sqrt(sum / n);
 
-        return chisq;
+        return rms;
 
     }
 
@@ -298,16 +292,14 @@ public class RelaxFit {
             RelaxEquations relaxObj = relaxObjs.get(iField);
             int iRes = (int) xValues[i][1];
             int iExpType = (int) xValues[i][2];
+            int iCoord = (int) xValues[i][3];
             int modelNum = residueModels[iRes];
-            double[] J = getJ(pars, relaxObj, modelNum);
+            double[] J;
             if (diffusion) {
-                double[] v = coords[0];
-//                System.out.println(iRes);
-//                for (double val : v) {
-//                    System.out.print(val + " ");
-//                }
-//                System.out.println();
+                double[] v = coords[iCoord];
                 J = getJDiffusion(pars, relaxObj, modelNum, v);
+            } else {
+                J = getJ(pars, relaxObj, modelNum);
             }
             ExptType type = expTypeArray[iExpType];
             double y = getYVal(pars, relaxObj, J, type);
@@ -319,7 +311,7 @@ public class RelaxFit {
     //            parStart += resParStart[i];
                 J = getJ(resPars, relaxObj, modelNum);
                 if (diffusion) {
-                    double[] v = coords[iRes];
+                    double[] v = coords[iCoord];
                     J = getJDiffusion(resPars, relaxObj, modelNum, v);
                 }
                 y = getYVal(resPars, relaxObj, J, type);
@@ -417,8 +409,8 @@ public class RelaxFit {
         double[] lower = new double[guesses.length]; //{max0 / 2.0, r0 / 2.0, max1 / 2.0, 1.0};
         double[] upper = new double[guesses.length]; //{max0 * 2.0, r0 * 2.0, max1 * 2.0, 100.0};
         for (int i = 0; i < lower.length; i++) {
-            lower[i] = guesses[i] / 10.0;
-            upper[i] = guesses[i] * 10.0;
+            lower[i] = guesses[i] / 20.0;
+            upper[i] = guesses[i] * 20.0;
         }
         if (diffusion) {
             lower[3] = 0.0;

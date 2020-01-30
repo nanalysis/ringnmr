@@ -725,6 +725,35 @@ public class RelaxEquations {
     }
     
     /**
+     * Calculate the sigma squared error in rhoExp.
+     * 
+     * @param R1 double. Experimentally measured R1 value.
+     * @param R2 double. Experimentally measured R2 value.
+     * @param NOE double. Experimentally measured NOE value.
+     * @param J double[]. Array of spectral density function values, J(w).
+     * @param R1err double. Error value for the experimentally measured R1 value.
+     * @param R2err double. Error value for the experimentally measured R2 value.
+     * @param NOEerr double. Error value for the experimentally measured NOE value.
+     * @param rhoExp double. Calculated rhoExp value.
+     * @return double. RhoExp sigma squared error.
+     */
+    public double calcRhoExpError(double R1, double R2, double NOE, double[] J, double R1err, double R2err, double NOEerr, double rhoExp) {
+        double w1 = (J[ImS] + 6*J[IpS]) / (6*J[IpS] - J[ImS]);
+        double w2 = (6*J[I]) / (6*J[IpS] - J[ImS]);
+        double f = (gammaS / gammaI) * R1 * (NOE - 1);
+        double rhoExp1 = 2*R2 - R1 - w2*f;
+        double rhoExp2 = R1 - w1*f;
+        double rhoExpErr1 = 2*2*R2err*R2err + R1err*R1err + 
+                w2*w2*(gammaS/gammaI)*(gammaS/gammaI)*(R1*R1*NOEerr*NOEerr + NOE*NOE*R1err*R1err + R1err*R1err*NOEerr*NOEerr + R1err*R1err);
+                //w2*w2*(gammaS/gammaI)*(gammaS/gammaI)*(f*f*((R1err/R1)*(R1err/R1)+(NOEerr/NOE)*(NOEerr/NOE)) + R1err*R1err);
+        double rhoExpErr2 = R1err*R1err + 
+                w1*w1*(gammaS/gammaI)*(gammaS/gammaI)*(R1*R1*NOEerr*NOEerr + NOE*NOE*R1err*R1err + R1err*R1err*NOEerr*NOEerr + R1err*R1err);
+                //w1*w1*(gammaS/gammaI)*(gammaS/gammaI)*(f*f*((R1err/R1)*(R1err/R1)+(NOEerr/NOE)*(NOEerr/NOE)) + R1err*R1err);
+        double rhoExpErr = rhoExp*rhoExp*((rhoExpErr1/rhoExp1)*(rhoExpErr1/rhoExp1) + (rhoExpErr2/rhoExp2)*(rhoExpErr2/rhoExp2));
+        return rhoExpErr;
+    }
+    
+    /**
      * Calculate rhoExp from function computeRho() in RotDif code (..../relax/RelaxationDatum.java).
      * 
      * @param R1 double. Experimentally measured R1 value.
