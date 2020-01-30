@@ -247,6 +247,12 @@ public class RelaxEquations {
         return result;
     }
     
+    /**
+     * Calculate the d array for the diffusion J(w) calculations.
+     * Equations from the SI of Berlin K.; Longhini, A.; Dayie, T. K. and Fushman, D., J. Biomol NMR, 2013.
+     * @param D double[][]. The diffusion matrix.
+     * @return double[]. The d array.
+     */
     public double[] calcDiffusiond (double[][] D) {
         double Dx = D[0][0];
         double Dy = D[1][1];
@@ -257,6 +263,13 @@ public class RelaxEquations {
         return dDiff;
     }
     
+    /**
+     * Calculate the a array for the diffusion J(w) calculations.
+     * Equations from the SI of Berlin K.; Longhini, A.; Dayie, T. K. and Fushman, D., J. Biomol NMR, 2013.
+     * @param D double[][]. The diffusion matrix.
+     * @param vec double[]. The unit vector for the SI bond.
+     * @return double[]. The a array.
+     */
     public double[] calcDiffusiona (double[][] D, double[] vec) {
         double Dx = D[0][0];
         double Dy = D[1][1];
@@ -283,6 +296,13 @@ public class RelaxEquations {
         return a;
     }
     
+    /**
+     * Calculate the e array for the diffusion J(w) calculations.
+     * Equations from the SI of Berlin K.; Longhini, A.; Dayie, T. K. and Fushman, D., J. Biomol NMR, 2013.
+     * @param dDiff double[]. The d array.
+     * @param tauLoc double. The internal correlation time.
+     * @return double[]. The e array.
+     */
     public double[] calcDiffusione (double[] dDiff, double tauLoc) {
         double[] e = new double[dDiff.length];
         for (int i=0; i<e.length; i++) {
@@ -292,7 +312,8 @@ public class RelaxEquations {
     }
     
     /**
-     * Model Free spectral density function, J(omega), calculation using Model 1.
+     * Model Free spectral density function, J(omega), diffusion calculation using Model 1.
+     * Equations from the SI of Berlin K.; Longhini, A.; Dayie, T. K. and Fushman, D., J. Biomol NMR, 2013.
      * @param w double. The frequency, omega.
      * @param D double[][]. The diffusion matrix.
      * @param v double[]. The unit vector for the SI bond.
@@ -315,7 +336,8 @@ public class RelaxEquations {
     // tau = ts in Art Palmer's code (taue in the paper: Phys Chem Chem Phys, 2016, 18, 5839-5849), and taue in Relax.
 
     /**
-     * Model Free spectral density function, J(omega), calculation using Model 2.
+     * Model Free spectral density function, J(omega), diffusion calculation using Model 2.
+     * Equations from the SI of Berlin K.; Longhini, A.; Dayie, T. K. and Fushman, D., J. Biomol NMR, 2013.
      * @param w double. The frequency, omega.
      * @param D double[][]. The diffusion matrix.
      * @param v double[]. The unit vector for the SI bond.
@@ -340,7 +362,8 @@ public class RelaxEquations {
     // Note: tauM = tm in Art Palmer's code. tau = ts in Art Palmer's code.
 
     /**
-     * Model Free spectral density function, J(omega), calculation using Model 5.
+     * Model Free spectral density function, J(omega), diffusion calculation using Model 5.
+     * Equations from the SI of Berlin K.; Longhini, A.; Dayie, T. K. and Fushman, D., J. Biomol NMR, 2013.
      * @param w double. The frequency, omega.
      * @param D double[][]. The diffusion matrix.
      * @param v double[]. The unit vector for the SI bond.
@@ -364,7 +387,8 @@ public class RelaxEquations {
     }
     
     /**
-     * Model Free spectral density function, J(omega), calculation using Model 6.
+     * Model Free spectral density function, J(omega), diffusion calculation using Model 6.
+     * Equations from the SI of Berlin K.; Longhini, A.; Dayie, T. K. and Fushman, D., J. Biomol NMR, 2013.
      * @param w double. The frequency, omega.
      * @param D double[][]. The diffusion matrix.
      * @param v double[]. The unit vector for the SI bond.
@@ -683,6 +707,15 @@ public class RelaxEquations {
         return nuxy2;
     }
     
+    /**
+     * Calculate rhoExp from Eqn 6 in Berlin K.; Longhini, A.; Dayie, T. K. and Fushman, D., J. Biomol NMR, 2013.
+     * 
+     * @param R1 double. Experimentally measured R1 value.
+     * @param R2 double. Experimentally measured R2 value.
+     * @param NOE double. Experimentally measured NOE value.
+     * @param J double[]. Array of spectral density function values, J(w).
+     * @return double. RhoExp.
+     */
     public double calcRhoExp(double R1, double R2, double NOE, double[] J) {
         double w1 = (J[ImS] + 6*J[IpS]) / (6*J[IpS] - J[ImS]);
         double w2 = (6*J[I]) / (6*J[IpS] - J[ImS]);
@@ -691,6 +724,31 @@ public class RelaxEquations {
         return rhoExp;
     }
     
+    /**
+     * Calculate rhoExp from function computeRho() in RotDif code (..../relax/RelaxationDatum.java).
+     * 
+     * @param R1 double. Experimentally measured R1 value.
+     * @param R2 double. Experimentally measured R2 value.
+     * @param NOE double. Experimentally measured NOE value.
+     * @param J double[]. Array of spectral density function values, J(w).
+     * @return double. RhoExp.
+     */
+    public double calcRhoExpCode(double R1, double R2, double NOE, double[] J) {
+        double w1 = (J[ImS] + 6*J[IpS]) / (6*J[IpS] - J[ImS]);
+        double w2 = 0.5*(6*J[I] + 6*J[IpS] + J[ImS]) / (6*J[IpS] - J[ImS]);
+        double f = (gammaS / gammaI) * R1 * (NOE - 1);
+        double R1c = R1 - w1*f;
+        double R2c = R2 - w2*f;
+        double rhoExp = (2*R2c - R1c) / (R1c);
+        return rhoExp;
+    }
+    
+    /**
+     * Calculate rhoPred from Eqn 7 in Berlin K.; Longhini, A.; Dayie, T. K. and Fushman, D., J. Biomol NMR, 2013.
+     * 
+     * @param J double[]. Array of spectral density function values, J(w).
+     * @return double. RhoExp.
+     */
     public double calcRhoPred(double[] J) {
         double rhoPred = (4.0/3.0) * (J[0]/J[S]);
         return rhoPred;
