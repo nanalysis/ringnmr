@@ -3,11 +3,18 @@ package org.comdnmr.data;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.math3.geometry.euclidean.threed.NotARotationMatrixException;
+import org.apache.commons.math3.geometry.euclidean.threed.Rotation;
+import org.apache.commons.math3.geometry.euclidean.threed.RotationConvention;
+import org.apache.commons.math3.geometry.euclidean.threed.RotationOrder;
 import org.apache.commons.math3.optim.PointValuePair;
 import static org.comdnmr.data.RelaxFit.ExptType.NOE;
 import static org.comdnmr.data.RelaxFit.ExptType.R1;
 import static org.comdnmr.data.RelaxFit.ExptType.R2;
 import org.comdnmr.modelfree.RelaxEquations;
+import org.ejml.data.DMatrixRMaj;
+import org.ejml.dense.row.CommonOps_DDRM;
+import static org.ejml.dense.row.CommonOps_DDRM.transpose;
 
 /**
  *
@@ -34,6 +41,7 @@ public class RelaxFit {
     static ExptType[] expTypeArray = {R1, R2, NOE};
     double[] tauMBounds = {3.8e-9, 4.5e-9};
     double[][] coords;
+    String diffusionType;
     
     public void setXYE(double[][] xValues, double[] yValues, double[] errValues) {
         this.xValues = xValues;
@@ -43,6 +51,10 @@ public class RelaxFit {
     
     public void setCoords(double[][] coords) {
         this.coords = coords;
+    }
+    
+    public void setDiffusionType(String type) {
+        this.diffusionType = type;
     }
 
     public enum ExptType {
@@ -88,28 +100,35 @@ public class RelaxFit {
         return J;
     }
     
-    public double[] getJDiffusion(double[] pars, RelaxEquations relaxObj, int modelNum, double[] v) {
-        double[][] D = {{pars[0], 0.0, 0.0}, {0.0, pars[1], 0.0}, {0.0, 0.0, pars[2]}};
-//        double[] v = {0.0, 0.0, 0.0}; //fixme should be calculated vector coords for the SI bond
-        double s2 = pars[3];
+    public double[] getJDiffusion(double[] pars, RelaxEquations relaxObj, int modelNum, double[] v, String diffType) {
+        int nEqlDiffPars = 0;
+        int nNullAngles = 0;
+        if (diffType.equals("prolate") || diffType.equals("oblate")) { //Dxx = Dyy or Dyy = Dzz
+            nEqlDiffPars = 1;
+            nNullAngles = 1;
+        }
+        
+        double[][] D = getD(pars, diffType);
+    
+        double s2 = pars[6-nEqlDiffPars-nNullAngles];
         double[] J = new double[5];
         switch (modelNum) {
             case 1:
                 J = relaxObj.getJDiffusion(D, v, s2);
                 break;
             case 2:
-                double tau = pars[4];
+                double tau = pars[7-nEqlDiffPars-nNullAngles];
                 J = relaxObj.getJDiffusion(D, v, s2, tau);
                 break;
             case 5:
-                tau = pars[4];
-                double sf2 = pars[5];
+                tau = pars[7-nEqlDiffPars-nNullAngles];
+                double sf2 = pars[8-nEqlDiffPars-nNullAngles];
                 J = relaxObj.getJDiffusion(D, v, s2, tau, sf2);
                 break;
             case 6:
-                tau = pars[4];
-                sf2 = pars[5];
-                double tauS = pars[6];
+                tau = pars[7-nEqlDiffPars-nNullAngles];
+                sf2 = pars[8-nEqlDiffPars-nNullAngles];
+                double tauS = pars[9-nEqlDiffPars-nNullAngles];
 //                System.out.println("tau, sf2, tauS = " + tau + " " + sf2 + " " + tauS);
                 J = relaxObj.getJDiffusion(D, v, s2, tau, sf2, tauS);
                 break;
@@ -120,6 +139,78 @@ public class RelaxFit {
 //            System.out.println("J: " + Jval);
 //        }
         return J;
+    }
+    
+    public double[][] getD(double[] pars, String diffType) {
+        int nEqlDiffPars = 0;
+        double Dxx = pars[0];
+        double Dyy = pars[1];
+        double Dzz;
+        double alpha;
+        double beta;
+        double gamma;
+        if (diffType.equals("prolate")) { //Dxx = Dyy
+            nEqlDiffPars = 1;
+            Dyy = pars[1-nEqlDiffPars];
+            Dzz = pars[2-nEqlDiffPars];
+            alpha = pars[3-nEqlDiffPars];
+            beta = pars[4-nEqlDiffPars];
+            gamma = 0;
+        } else if (diffType.equals("oblate")) { //Dyy = Dzz
+            nEqlDiffPars = 1;
+            Dzz = pars[2-nEqlDiffPars];
+            alpha = pars[3-nEqlDiffPars];
+            beta = pars[4-nEqlDiffPars];
+            gamma = 0;
+        } else {
+            nEqlDiffPars = 0;
+            Dxx = pars[0];
+            Dyy = pars[1];
+            Dzz = pars[2];
+            alpha = pars[3];
+            beta = pars[4];
+            gamma = pars[5];
+        }
+        double[][] D = {{Dxx, 0.0, 0.0}, 
+                        {0.0, Dyy, 0.0}, 
+                        {0.0, 0.0, Dzz}};
+        Rotation rot = null;
+        try {
+            rot = new Rotation(RotationOrder.ZYZ, RotationConvention.VECTOR_OPERATOR, alpha, beta, gamma);
+        } catch (NotARotationMatrixException nE) {
+            System.out.println("Can't create rot mat:" + nE.getMessage());
+            double[][] rotMatCatch = rot.getMatrix();
+            for (int i = 0; i < 3; i++) {
+                rotMatCatch[1][i] = -rotMatCatch[1][i];
+            }
+            try {
+                rot = new Rotation(rotMatCatch, 1e-6);
+            } catch (NotARotationMatrixException nE2) {
+                System.out.println("Can't create rot mat 2nd try:" + nE.getMessage());
+                rot = null;
+            }
+        }
+        if (rot != null) {
+            double[][] rotMat = rot.getMatrix();
+            DMatrixRMaj D1 = new DMatrixRMaj(D);
+            DMatrixRMaj rotMat1 = new DMatrixRMaj(rotMat);
+            DMatrixRMaj rotMat1T = new DMatrixRMaj(rotMat1.numRows, rotMat1.numCols);
+            DMatrixRMaj res1 = new DMatrixRMaj(D1.numRows, D1.numCols);
+            DMatrixRMaj res2 = new DMatrixRMaj(res1.numRows, res1.numCols);
+            transpose(rotMat1, rotMat1T);
+            CommonOps_DDRM.mult(rotMat1, D1, res1);
+            CommonOps_DDRM.mult(res1, rotMat1T, res2);
+            DMatrixRMaj DScaled = new DMatrixRMaj(D1.numRows, D1.numCols);
+            for (int i=0; i<res2.numRows; i++) {
+                for (int j=0; j<res2.numCols; j++) {
+                    D[i][j] = res2.get(i, j);
+                    DScaled.set(i, j, res2.get(i, j)/1e7);
+                } 
+            }
+//            System.out.println(res2.toString());
+//            System.out.println("scaled D = " + DScaled.toString());
+        }
+        return D;
     }
 
     public double getYVal(double[] pars, RelaxEquations relaxObj, double[] J, ExptType type) {
@@ -225,7 +316,7 @@ public class RelaxFit {
             int iCoord = (int) xValues[i][3];
             int modelNum = residueModels[iRes];
             double[] v = coords[iCoord];
-            double[] J = getJDiffusion(pars, relaxObj, modelNum, v);
+            double[] J = getJDiffusion(pars, relaxObj, modelNum, v, diffusionType);
             if (!expValMap.containsKey(iRes)) {
                 expValMap.put(iRes, new double[3]);
                 expErrMap.put(iRes, new double[3]);
@@ -257,6 +348,8 @@ public class RelaxFit {
     public double valueDiffusionMultiResidue(double[] pars, double[][] values) {
         int n = values[0].length;
         double sum = 0.0;
+        Map<Integer, double[]> expValMap = new HashMap<>();
+        Map<Integer, double[]> expErrMap = new HashMap<>();
         for (int i=0; i<values[2].length; i++) {
             int iField = (int) xValues[i][0];
             RelaxEquations relaxObj = relaxObjs.get(iField);
@@ -264,18 +357,40 @@ public class RelaxFit {
             int iExpType = (int) xValues[i][2];
             int iCoord = (int) xValues[i][3];
             int modelNum = residueModels[iRes];
-            double[] resPars = new double[nParsPerModel[modelNum] + 1];
-            resPars[0] = pars[0];
-            int parStart = resParStart[iRes] + 1;
-            System.arraycopy(pars, parStart, resPars, 1, nParsPerModel[modelNum]);
+            int nDiffPars = 6;
+            if (diffusionType.equals("oblate") || diffusionType.equals("prolate")) {
+                nDiffPars = 4;
+            }
+            double[] resPars = new double[nParsPerModel[modelNum] + nDiffPars];
+            for (int j=0; j<nDiffPars; j++) {
+                resPars[j] = pars[j];
+            }
+            int parStart = resParStart[iRes] + nDiffPars;
+            System.arraycopy(pars, parStart, resPars, nDiffPars, nParsPerModel[modelNum]);
 //            parStart += resParStart[i];
             double[] v = coords[iCoord];
-            double[] J = getJDiffusion(resPars, relaxObj, modelNum, v);
-            ExptType type = expTypeArray[iExpType];
-            double y = getYVal(resPars, relaxObj, J, type);
-            double delta = y - values[2][i];
-            sum += (delta * delta) / (errValues[i] * errValues[i]);
-            //fixme need to change chisq calculation to match the Fushman paper.
+            double[] J = getJDiffusion(resPars, relaxObj, modelNum, v, diffusionType);
+            if (!expValMap.containsKey(iRes)) {
+                expValMap.put(iRes, new double[3]);
+                expErrMap.put(iRes, new double[3]);
+            }
+            if (expValMap.get(iRes)[iExpType] == 0.0) {
+                expValMap.get(iRes)[iExpType] = values[2][i];
+                expErrMap.get(iRes)[iExpType] = errValues[i];
+            }
+            double r1 = expValMap.get(iRes)[0];
+            double r2 = expValMap.get(iRes)[1];
+            double noe = expValMap.get(iRes)[2];
+            if (r1 != 0.0 && r2 != 0.0 && noe != 0.0) {
+                double r1Err = expErrMap.get(iRes)[0];
+                double r2Err = expErrMap.get(iRes)[1];
+                double noeErr = expErrMap.get(iRes)[2];
+                double rhoExp = relaxObj.calcRhoExp(r1, r2, noe, J);
+                double rhoPred = relaxObj.calcRhoPred(J);
+                double delta = rhoPred - rhoExp; 
+                double error = relaxObj.calcRhoExpError(r1, r2, noe, J, r1Err, r2Err, noeErr, rhoExp);//(r1Err + r2Err + noeErr) / 3;//
+                sum += (delta * delta) / (error * error); 
+            }
         }
 
         double rms = Math.sqrt(sum / n);
@@ -297,22 +412,34 @@ public class RelaxFit {
             double[] J;
             if (diffusion) {
                 double[] v = coords[iCoord];
-                J = getJDiffusion(pars, relaxObj, modelNum, v);
+                J = getJDiffusion(pars, relaxObj, modelNum, v, diffusionType);
             } else {
                 J = getJ(pars, relaxObj, modelNum);
             }
             ExptType type = expTypeArray[iExpType];
             double y = getYVal(pars, relaxObj, J, type);
             if (multiRes) {
-                double[] resPars = new double[nParsPerModel[modelNum] + 1];
-                resPars[0] = pars[0];
-                int parStart = resParStart[iRes] + 1;
-                System.arraycopy(pars, parStart, resPars, 1, nParsPerModel[modelNum]);
-    //            parStart += resParStart[i];
-                J = getJ(resPars, relaxObj, modelNum);
+                double[] resPars;
                 if (diffusion) {
+                    int nDiffPars = 6;
+                    if (diffusionType.equals("oblate") || diffusionType.equals("prolate")) {
+                        nDiffPars = 4;
+                    }
+                    resPars = new double[nParsPerModel[modelNum] + nDiffPars];
+                    for (int j=0; j<nDiffPars; j++) {
+                        resPars[j] = pars[j];
+                    }
+                    int parStart = resParStart[iRes] + nDiffPars;
+                    System.arraycopy(pars, parStart, resPars, nDiffPars, nParsPerModel[modelNum]);
                     double[] v = coords[iCoord];
-                    J = getJDiffusion(resPars, relaxObj, modelNum, v);
+                    J = getJDiffusion(resPars, relaxObj, modelNum, v, diffusionType);
+                } else {
+                    resPars = new double[nParsPerModel[modelNum] + 1];
+                    resPars[0] = pars[0];
+                    int parStart = resParStart[iRes] + 1;
+                    System.arraycopy(pars, parStart, resPars, 1, nParsPerModel[modelNum]);
+        //            parStart += resParStart[i];
+                    J = getJ(resPars, relaxObj, modelNum);
                 }
                 y = getYVal(resPars, relaxObj, J, type);
             }
@@ -377,9 +504,6 @@ public class RelaxFit {
         resParStart[0] = 0;
         for (int i=1; i<residueModels.length; i++) {
             resParStart[i] = nParsPerModel[residueModels[i-1]] + nParsPrev;
-            if (diffusion) {
-                resParStart[i] = nParsPerModel[residueModels[i-1]] + 3 + nParsPrev;
-            }
             nParsPrev = resParStart[i];
 //            System.out.println(i + " resModel " + residueModels[i] + " resParStart " + resParStart[i]);
         }
@@ -412,34 +536,69 @@ public class RelaxFit {
             lower[i] = guesses[i] / 20.0;
             upper[i] = guesses[i] * 20.0;
         }
+        int iS2diff = 6;
+        //bounds for the global fit parameters (e.g. tauM, Dxx, Dyy, Dzz, alpha, 
+        //beta, gamma), where the indices in the parameter array are always the
+        //same regardless of the model used.
         if (diffusion) {
-            lower[3] = 0.0;
-            upper[3] = 1.0;
-            if (lower.length > 5) {
-                lower[5] = 0.0;
-                upper[5] = 1.0;
+            if (diffusionType.equals("oblate") || diffusionType.equals("prolate")) {
+                int nEqlDiffPars = 1;
+                int nNullAngles = 1;
+                int iAlpha = 3 - nEqlDiffPars;
+                int iBeta = 4 - nEqlDiffPars;
+                lower[iAlpha] = 0.0;
+                upper[iAlpha] = Math.PI/2;
+                lower[iBeta] = 0.0;
+                upper[iBeta] = Math.PI/2;
+                iS2diff -= (nEqlDiffPars + nNullAngles);
+            } else { //anisotropic
+                int iAlpha = 3;
+                int iBeta = 4;
+                int iGamma = 5;
+                lower[iAlpha] = 0.0;
+                upper[iAlpha] = Math.PI/2;
+                lower[iBeta] = 0.0;
+                upper[iBeta] = Math.PI/2;
+                lower[iGamma] = 0.0;
+                upper[iGamma] = Math.PI/2;
             }
         } else {
-            lower[0] = tauMBounds[0];
-            upper[0] = tauMBounds[1];
-            lower[1] = 0.0;
-            upper[1] = 1.0;
-            if (globalFit) {
-                for (int i=0; i<resParStart.length; i++) {
-                    int modelNum = residueModels[i];
-                    int iS2 = resParStart[i]+1;
-                    lower[iS2] = 0.0;
-                    upper[iS2] = 1.0;
-                    if (modelNum >= 5) {
-                        lower[iS2+2] = 0.0;
-                        upper[iS2+2] = 1.0;
-                    }
+            int iTauM = 0;
+            lower[iTauM] = tauMBounds[0];
+            upper[iTauM] = tauMBounds[1];
+        }
+        //bounds for the other fit parameters (e.g. S2, tau, Sf2, tauS), which 
+        //can have different indices in the parameter array depending on the 
+        //model used and individual vs. global fitting.
+        int iS2;
+        if (globalFit) {
+            for (int i=0; i<resParStart.length; i++) {
+                int modelNum = residueModels[i];
+                if (diffusion) {
+                    iS2 = resParStart[i] + iS2diff;
+                } else {
+                    iS2 = resParStart[i] + 1; 
                 }
+                lower[iS2] = 0.0;
+                upper[iS2] = 1.0;
+                if (modelNum >= 5) {
+                    int iS2f = iS2 + 2;
+                    lower[iS2f] = 0.0;
+                    upper[iS2f] = 1.0;
+                }
+            }
+        } else {
+            if (diffusion) {
+                iS2 = iS2diff;
             } else {
-                if (lower.length > 3) {
-                    lower[3] = 0.0;
-                    upper[3] = 1.0;
-                }
+                iS2 = 1;
+            }
+            lower[iS2] = 0.0;
+            upper[iS2] = 1.0;
+            int iS2f = iS2 + 2;
+            if (lower.length > iS2f) {
+                lower[iS2f] = 0.0;
+                upper[iS2f] = 1.0;
             }
         }
 //        for (int i=0; i<guesses.length; i++) {
