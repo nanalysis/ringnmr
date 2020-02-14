@@ -380,7 +380,7 @@ public class DataIO {
     public static void loadResidueDataFile(String fileName, ExperimentData expData,
             String residueNum, ResidueProperties resProp, String nucleus,
             double temperature, double field,
-            HashMap<String, Object> errorPars, XCONV xConv, YCONV yConv)
+            HashMap<String, Object> errorPars, XCONV xConv, YCONV yConv, double refIntensity)
             throws IOException, IllegalArgumentException {
         boolean gotHeader = false;
         int nValues = 0;
@@ -390,6 +390,8 @@ public class DataIO {
         System.out.println("Load XY file " + fileName);
 
         resProp.addExperimentData(expData.getName(), expData);
+        String splitPattern = "\t";
+        String[] sfields;
 
         try (BufferedReader fileReader = new BufferedReader(new FileReader(fileName))) {
             while (true) {
@@ -406,11 +408,18 @@ public class DataIO {
                 if (sline.charAt(0) == '#') {
                     continue;
                 }
-                String[] sfields = line.split("\t", -1);
                 if (!gotHeader) {
+                    if (!line.contains("\t")) {
+                        splitPattern = ",";
+                        if (!line.contains(",")) {
+                            splitPattern = " +";
+                        }
+                    }
+                    sfields = line.split(splitPattern, -1);
                     nValues = sfields.length;
                     gotHeader = true;
                 } else {
+                    sfields = line.split(splitPattern, -1);
                     try {
 
                         double offsetFreq = Double.parseDouble(sfields[0].trim());
@@ -420,6 +429,7 @@ public class DataIO {
                             error = Double.parseDouble(sfields[2].trim());
                         }
                         offsetFreq = xConv.convert(offsetFreq, null, expData);
+                        intensity = yConv.convert(intensity, refIntensity, 0.0);
                         xValueList.add(offsetFreq);
                         yValueList.add(intensity);
                         errValueList.add(error);
@@ -821,12 +831,16 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     expData.setConstraints(constraintMap);
                     String residueNum = filesMap.get("residue").toString();
                     String dataFileName = (String) filesMap.get("file");
+                    double refIntensity = 1.0;
+                    if (filesMap.containsKey("refIntensity")) {
+                        refIntensity = (Double) filesMap.get("refIntensity");
+                    }
                     File file = new File(dataFileName).getAbsoluteFile();
                     dataFileName = file.getName();
                     String fileTail = dataFileName.substring(0, dataFileName.indexOf('.'));
                     String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
                     loadResidueDataFile(textFileName, expData, residueNum, resProp, nucleus,
-                            temperature, B0field, errorPars, xConv, yConv);
+                            temperature, B0field, errorPars, xConv, yConv, refIntensity);
                 }
             } else if (vcpmgList == null) {
                 String dataFileName = (String) dataMap3.get("file");
