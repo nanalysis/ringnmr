@@ -20,7 +20,12 @@ package org.comdnmr.modelfree;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
+import org.ejml.data.DMatrixRMaj;
+import org.ejml.dense.row.CommonOps_DDRM;
+import static org.comdnmr.data.RelaxFit.DiffusionType;
+import static org.comdnmr.data.RelaxFit.DiffusionType.ANISOTROPIC;
+import static org.comdnmr.data.RelaxFit.DiffusionType.OBLATE;
+import static org.comdnmr.data.RelaxFit.DiffusionType.PROLATE;
 
 /**
  *
@@ -250,49 +255,115 @@ public class RelaxEquations {
     /**
      * Calculate the d array for the diffusion J(w) calculations.
      * Equations from the SI of Berlin K.; Longhini, A.; Dayie, T. K. and Fushman, D., J. Biomol NMR, 2013.
+     * @param diffType DiffusionType. The type of diffusion: anisotropic, prolate, or oblate.
      * @param D double[][]. The diffusion matrix.
      * @return double[]. The d array.
      */
-    public double[] calcDiffusiond (double[][] D) {
+    public double[] calcDiffusiond (DiffusionType diffType, double[][] D) {
         double Dx = D[0][0];
         double Dy = D[1][1];
         double Dz = D[2][2];
-        double[] k = {Dy - Dx, Dz - Dx, (Dx + Dy + Dz)/3, 0};
-        k[3] = Math.sqrt(k[0]*k[0] - k[0]*k[1] + k[1]*k[1]);
-        double[] dDiff = {4*Dx + Dy + Dz, Dx  + 4*Dy + Dz, Dx + Dy + 4*Dz, 6*k[2] + 2*k[3], 6*k[2] - 2*k[3]};
+        double[] dDiff = new double[5];
+        switch (diffType) {
+            case ANISOTROPIC:
+                double[] k = {Dy - Dx, Dz - Dx, (Dx + Dy + Dz)/3, 0};
+                k[3] = Math.sqrt(k[0]*k[0] - k[0]*k[1] + k[1]*k[1]);
+                dDiff[0] = 4*Dx + Dy + Dz;
+                dDiff[1] = Dx  + 4*Dy + Dz;
+                dDiff[2] = Dx + Dy + 4*Dz;
+                dDiff[3] = 6*k[2] + 2*k[3];
+                dDiff[4] = 6*k[2] - 2*k[3];
+                break;
+            case PROLATE:{
+                //Dxx = Dyy
+                double Dpar = Dz;
+                double Dperp = Dx;
+                dDiff = new double[3];
+                dDiff[0] = 5*Dperp + Dpar;
+                dDiff[1] = 2*Dperp + 4*Dpar;
+                dDiff[2] = 6*Dperp;
+                    break;
+                }
+            case OBLATE:{
+                //Dyy = Dzz
+                double Dpar = Dx;
+                double Dperp = Dz;
+                dDiff = new double[3];
+                dDiff[0] = 5*Dperp + Dpar;
+                dDiff[1] = 2*Dperp + 4*Dpar;
+                dDiff[2] = 6*Dperp;
+                    break;
+                }
+            default:
+                break;
+        }
+//        for (int i=0; i<dDiff.length; i++) {
+//            System.out.println("dDiff " + i + ": " + dDiff[i]);
+//        }
         return dDiff;
     }
     
     /**
      * Calculate the a array for the diffusion J(w) calculations.
      * Equations from the SI of Berlin K.; Longhini, A.; Dayie, T. K. and Fushman, D., J. Biomol NMR, 2013.
+     * @param diffType DiffusionType. The type of diffusion: anisotropic, prolate, or oblate.
      * @param D double[][]. The diffusion matrix.
      * @param vec double[]. The unit vector for the SI bond.
      * @return double[]. The a array.
      */
-    public double[] calcDiffusiona (double[][] D, double[] vec) {
+    public double[] calcDiffusiona (DiffusionType diffType, double[][] D, double[][] VT, double[] vec) {
         double Dx = D[0][0];
         double Dy = D[1][1];
         double Dz = D[2][2];
-        double vx = vec[0]; //vec.getX();
-        double vy = vec[1]; //vec.getY();
-        double vz = vec[2]; //vec.getZ();
-        double[] v = {vx, vy, vz};
-        double[] k = {Dy - Dx, Dz - Dx, (Dx + Dy + Dz)/3, 0};
-        k[3] = Math.sqrt(k[0]*k[0] - k[0]*k[1] + k[1]*k[1]);
-        double[] delta = {(-k[0] - k[1])/k[3], (2*k[0] - k[1])/k[3], (2*k[1] - k[0])/4};
-        if (k[0] == 0.0 & k[1] == 0.0 & k[3] == 0.0) {
-            delta = new double[3];
-        } 
-        double[] a = {3*(vy*vy)*(vz*vz), 3*(vx*vx)*(vz*vz), 3*(vx*vx)*(vy*vy), 0, 0};
-        double p1 = 0.25*(3*((vx*vx*vx*vx) + (vy*vy*vy*vy) + (vz*vz*vz*vz)) - 1);
-        double sum = 0.0;
-        for (int i=0; i<v.length; i++) {
-            sum += delta[i]*(3*v[i]*v[i]*v[i]*v[i] + 2*a[i] - 1);
+        DMatrixRMaj vec1 = new DMatrixRMaj(vec);
+        DMatrixRMaj VT1 = new DMatrixRMaj(VT);
+        DMatrixRMaj v = new DMatrixRMaj(vec1.numRows, vec1.numCols);
+        CommonOps_DDRM.mult(VT1, vec1, v);
+        double vx = v.get(0, 0); //vec[0]; //vec.getX();
+        double vy = v.get(1, 0); //vec[1]; //vec.getY();
+        double vz = v.get(2, 0); //vec[2]; //vec.getZ();
+        double vx2 = vx*vx;
+        double vy2 = vy*vy;
+        double vz2 = vz*vz;
+        double[] a = new double[5];
+        switch (diffType) {
+            case ANISOTROPIC:
+                double[] k = {Dy - Dx, Dz - Dx, (Dx + Dy + Dz)/3, 0};
+                k[3] = Math.sqrt(k[0]*k[0] - k[0]*k[1] + k[1]*k[1]);
+                double[] delta = {(-k[0] - k[1])/k[3], (2*k[0] - k[1])/k[3], (2*k[1] - k[0])/k[3]};
+                if (k[0] == 0.0 && k[1] == 0.0 && k[3] == 0.0) {
+                    delta = new double[3];
+                }   a[0] = 3*(vy2)*(vz2);
+                a[1] = 3*(vx2)*(vz2);
+                a[2] = 3*(vx2)*(vy2);
+                double p1 = 0.25*(3*((vx2*vx2) + (vy2*vy2) + (vz2*vz2)) - 1);
+                double val1 = delta[0]*(3*vx2*vx2 + 2*a[0] - 1);
+                double val2 = delta[1]*(3*vy2*vy2 + 2*a[1] - 1);
+                double val3 = delta[2]*(3*vz2*vz2 + 2*a[2] - 1);
+                double p2 = (1/12.0)*(val1 + val2 + val3);
+                a[3] = p1 - p2;
+                a[4] = p1 + p2;
+                break;
+            case PROLATE:
+                //Dxx = Dyy
+                a = new double[3];
+                a[0] = 3*(vz2)*(1 - vz2);
+                a[1] = 0.75*(1 - vz2)*(1 - vz2);
+                a[2] = 0.25*(3*vz2 - 1)*(3*vz2 - 1);
+                break;
+            case OBLATE:
+                //Dyy = Dzz
+                a = new double[3];
+                a[0] = 3*(vx2)*(1 - vx2);
+                a[1] = 0.75*(1 - vx2)*(1 - vx2);
+                a[2] = 0.25*(3*vx2 - 1)*(3*vx2 - 1);
+                break;
+            default:
+                break;
         }
-        double p2 = (1/12)*sum;
-        a[3] = p1 - p2;
-        a[4] = p1 + p2;
+//        for (int i=0; i<a.length; i++) {
+//            System.out.println("a " + i + ": " + a[i]);
+//        }
         return a;
     }
     
@@ -312,102 +383,49 @@ public class RelaxEquations {
     }
     
     /**
-     * Model Free spectral density function, J(omega), diffusion calculation using Model 1.
+     * Model Free spectral density function, J(omega), diffusion calculation using ModelFree Model 1, 2, 5, or 6.
      * Equations from the SI of Berlin K.; Longhini, A.; Dayie, T. K. and Fushman, D., J. Biomol NMR, 2013.
+     * @param diffType DiffusionType. The type of diffusion: anisotropic, prolate, or oblate.
      * @param w double. The frequency, omega.
-     * @param D double[][]. The diffusion matrix.
+     * @param D double[][]. The diagonalized diffusion matrix.
+     * @param VT double[][]. The transposed orthonormal matrix of the eigenvectors of D.
      * @param v double[]. The unit vector for the SI bond.
      * @param s2 double. The order parameter S^2.
+     * @param tauF Double. The internal fast correlation time.
+     * @param sf2 Double. The order parameter for intramolecular motions with fast correlation times.
+     * @param tauS Double. The internal slow correlation time.
      * @return J(w) value.
      */
-    public double JDiffusion(double w, double[][] D, double[] v, double s2) {
-        double[] dDiff = calcDiffusiond(D);
-        double[] a = calcDiffusiona(D, v);
-        double value1 = 0.0;
-        for (int i=0; i<dDiff.length; i++) {
-            value1 += s2*(dDiff[i]*a[i])/(dDiff[i]*dDiff[i] + w*w);
+    public double JDiffusion(DiffusionType diffType, double w, double[][] D, double[][] VT, double[] v, double s2, Double tauF, Double sf2, Double tauS) {
+        double w2 = w*w;
+        double[] dDiff = calcDiffusiond(diffType, D);
+        double[] a = calcDiffusiona(diffType, D, VT, v);
+        double[] eF = new double[dDiff.length];
+        double[] eS = new double[dDiff.length];
+        if (tauF != null) {
+            eF = calcDiffusione(dDiff, tauF);
+            if (tauS != null) {
+                eS = calcDiffusione(dDiff, tauS);
+            }
         }
-        double value = 0.4 * (value1);
-        return value;
-    }
-    
-
-    // Note: tauM = tm in Art Palmer's code, and taui in Relax. 
-    // tau = ts in Art Palmer's code (taue in the paper: Phys Chem Chem Phys, 2016, 18, 5839-5849), and taue in Relax.
-
-    /**
-     * Model Free spectral density function, J(omega), diffusion calculation using Model 2.
-     * Equations from the SI of Berlin K.; Longhini, A.; Dayie, T. K. and Fushman, D., J. Biomol NMR, 2013.
-     * @param w double. The frequency, omega.
-     * @param D double[][]. The diffusion matrix.
-     * @param v double[]. The unit vector for the SI bond.
-     * @param s2 double. The order parameter S^2.
-     * @param tau double. The internal correlation time.
-     * @return J(w) value.
-     */
-    public double JDiffusion(double w, double[][] D, double[] v, double s2, double tau) {
-        double[] dDiff = calcDiffusiond(D);
-        double[] a = calcDiffusiona(D, v);
-        double[] e = calcDiffusione(dDiff, tau);
+//        double value1 = 0.0;
+//        for (int i=0; i<dDiff.length; i++) {
+//            value1 += s2*(dDiff[i]*a[i])/(dDiff[i]*dDiff[i] + w*w);
+//        }
+//        double value = 0.4 * (value1);
         double sum = 0.0;
         for (int i=0; i<dDiff.length; i++) {
-            double value1 = s2*(dDiff[i]*a[i])/(dDiff[i]*dDiff[i] + w*w);
-            double value2 = (1.0 - s2)*(e[i]*a[i])/(e[i]*e[i] + w*w);
-            sum += value1 + value2;
-        }
-        double value = 0.4 * sum;
-        return value;
-    }
-    
-    // Note: tauM = tm in Art Palmer's code. tau = ts in Art Palmer's code.
-
-    /**
-     * Model Free spectral density function, J(omega), diffusion calculation using Model 5.
-     * Equations from the SI of Berlin K.; Longhini, A.; Dayie, T. K. and Fushman, D., J. Biomol NMR, 2013.
-     * @param w double. The frequency, omega.
-     * @param D double[][]. The diffusion matrix.
-     * @param v double[]. The unit vector for the SI bond.
-     * @param tau double. The internal correlation time.
-     * @param s2 double. The order parameter S^2.
-     * @param sf2 double. The order parameter for intramolecular motions with fast correlation times.
-     * @return J(w) value.
-     */
-    public double JDiffusion(double w, double[][] D, double[] v, double s2, double tau, double sf2) {
-        double[] dDiff = calcDiffusiond(D);
-        double[] a = calcDiffusiona(D, v);
-        double[] e = calcDiffusione(dDiff, tau);
-        double sum = 0.0;
-        for (int i=0; i<dDiff.length; i++) {
-            double value1 = s2*(dDiff[i]*a[i])/(dDiff[i]*dDiff[i] + w*w);
-            double value2 = (sf2 - s2)*(e[i]*a[i])/(e[i]*e[i] + w*w);
-            sum += value1 + value2;
-        }
-        double value = 0.4 * sum;
-        return value;
-    }
-    
-    /**
-     * Model Free spectral density function, J(omega), diffusion calculation using Model 6.
-     * Equations from the SI of Berlin K.; Longhini, A.; Dayie, T. K. and Fushman, D., J. Biomol NMR, 2013.
-     * @param w double. The frequency, omega.
-     * @param D double[][]. The diffusion matrix.
-     * @param v double[]. The unit vector for the SI bond.
-     * @param tauF double. The internal fast correlation time.
-     * @param tauS double. The internal slow correlation time.
-     * @param s2 double. The order parameter S^2.
-     * @param sf2 double. The order parameter for intramolecular motions with fast correlation times.
-     * @return J(w) value.
-     */
-    public double JDiffusion(double w, double[][] D, double[] v, double s2, double tauF, double sf2, double tauS) {
-        double[] dDiff = calcDiffusiond(D);
-        double[] a = calcDiffusiona(D, v);
-        double[] eS = calcDiffusione(dDiff, tauS);
-        double[] eF = calcDiffusione(dDiff, tauF);
-        double sum = 0.0;
-        for (int i=0; i<dDiff.length; i++) {
-            double value1 = s2*(dDiff[i]*a[i])/(dDiff[i]*dDiff[i] + w*w);
-            double value2 = (sf2 - s2)*(eS[i]*a[i])/(eS[i]*eS[i] + w*w);
-            double value3 = (1.0 - sf2)*(eF[i]*a[i])/(eF[i]*eF[i] + w*w);
+            double value1 = s2*(dDiff[i]*a[i])/(dDiff[i]*dDiff[i] + w2);
+            double value2 = 0.0;
+            double value3 = 0.0;
+            if (tauF != null && sf2 == null && tauS == null) {
+                value2 = (1.0 - s2)*(eF[i]*a[i])/(eF[i]*eF[i] + w2);
+            } else if (tauF != null && sf2 != null && tauS == null) {
+                value2 = (sf2 - s2)*(eF[i]*a[i])/(eF[i]*eF[i] + w2);
+            } else if (tauF != null && sf2 != null && tauS != null) {
+                value2 = (sf2 - s2)*(eS[i]*a[i])/(eS[i]*eS[i] + w2);
+                value3 = (1.0 - sf2)*(eF[i]*a[i])/(eF[i]*eF[i] + w2);
+            }
             sum += value1 + value2 + value3;
         }
         double value = 0.4 * sum;
@@ -417,82 +435,27 @@ public class RelaxEquations {
     // Note: tauM = tm in Art Palmer's code, and taui in Relax. 
 
     /**
-     * Model Free spectral density function, J(omega), calculations using Model 1.
-     * @param D double[][]. The diffusion matrix.
+     * Model Free spectral density function, J(omega), calculations using ModelFree Model 1, 2, 5, or 6.
+     * @param diffType DiffusionType. The type of diffusion: anisotropic, prolate, or oblate.
+     * @param D double[][]. The diagonalized diffusion matrix.
+     * @param VT double[][]. The transposed orthonormal matrix of the eigenvectors of D.
      * @param v double[]. The unit vector for the SI bond.
      * @param s2 double. The order parameter S^2.
+     * @param tauF Double. The internal fast correlation time.
+     * @param sf2 Double. The order parameter for intramolecular motions with fast correlation times.
+     * @param tauS Double. The internal slow correlation time.
      * @return double[]. Array of J(w) values.
      */
-    public double[] getJDiffusion(double[][] D, double[] v, double s2) {
-        double J0 = JDiffusion(0.0, D, v, s2);
-        double JIplusS = JDiffusion(wI + wS, D, v, s2); //R1, R2, NOE
-        double JIminusS = JDiffusion(wI - wS, D, v, s2); // R1, R2, NOE
-        double JI = JDiffusion(wI, D, v, s2); // R2
-        double JS = JDiffusion(wS, D, v, s2); //R1, R2
+    public double[] getJDiffusion(DiffusionType diffType, double[][] D, double[][] VT, double[] v, double s2, Double tauF, Double sf2, Double tauS) {
+        double J0 = JDiffusion(diffType, 0.0, D, VT, v, s2, tauF, sf2, tauS);
+        double JIplusS = JDiffusion(diffType, wI + wS, D, VT, v, s2, tauF, sf2, tauS); //R1, R2, NOE
+        double JIminusS = JDiffusion(diffType, wI - wS, D, VT, v, s2, tauF, sf2, tauS); // R1, R2, NOE
+        double JI = JDiffusion(diffType, wI, D, VT, v, s2, tauF, sf2, tauS); // R2
+        double JS = JDiffusion(diffType, wS, D, VT, v, s2, tauF, sf2, tauS); //R1, R2
         double[] result = {J0, JS, JIminusS, JI, JIplusS};
         return result;
     }
     
-     // Note: tauM = tm in Art Palmer's code, and taui in Relax. tau = ts in Art Palmer's code (taue in the paper), and taue in Relax.
-
-    /**
-     * Model Free spectral density function, J(omega), calculations using Model 2.
-     * @param D double[][]. The diffusion matrix.
-     * @param v double[]. The unit vector for the SI bond.
-     * @param s2 double. The order parameter S^2.
-     * @param tau double. The internal correlation time.
-     * @return double[]. Array of J(w) values.
-     */
-    public double[] getJDiffusion(double[][] D, double[] v, double s2, double tau) {
-        double J0 = JDiffusion(0.0, D, v, s2, tau);
-        double JIplusS = JDiffusion(wI + wS, D, v, s2, tau); //R1, R2, NOE
-        double JIminusS = JDiffusion(wI - wS, D, v, s2, tau); // R1, R2, NOE
-        double JI = JDiffusion(wI, D, v, s2, tau); // R2
-        double JS = JDiffusion(wS, D, v, s2, tau); //R1, R2
-        double[] result = {J0, JS, JIminusS, JI, JIplusS};
-        return result;
-    }
-    
-    // Note: tauM = tm in Art Palmer's code. tau = ts in Art Palmer's code.
-
-    /**
-     * Model Free spectral density function, J(omega), calculations using Model 5.
-     * @param D double[][]. The diffusion matrix.
-     * @param v double[]. The unit vector for the SI bond.
-     * @param s2 double. The order parameter S^2.
-     * @param tau double. The internal correlation time.
-     * @param sf2 double. The order parameter for intramolecular motions with fast correlation times.
-     * @return double[]. Array of J(w) values.
-     */
-    public double[] getJDiffusion(double[][] D, double[] v, double s2, double tau, double sf2) {
-        double J0 = JDiffusion(0.0, D, v, s2, tau, sf2);
-        double JIplusS = JDiffusion(wI + wS, D, v, s2, tau, sf2); //R1, R2, NOE
-        double JIminusS = JDiffusion(wI - wS, D, v, s2, tau, sf2); // R1, R2, NOE
-        double JI = JDiffusion(wI, D, v, s2, tau, sf2); // R2
-        double JS = JDiffusion(wS, D, v, s2, tau, sf2); //R1, R2
-        double[] result = {J0, JS, JIminusS, JI, JIplusS};
-        return result;
-    }
-    
-    /**
-     * Model Free spectral density function, J(omega), calculations using Model 6.
-     * @param D double[][]. The diffusion matrix.
-     * @param v double[]. The unit vector for the SI bond.
-     * @param s2 double. The order parameter S^2.
-     * @param tauF double. The internal fast correlation time.
-     * @param sf2 double. The order parameter for intramolecular motions with fast correlation times.
-     * @param tauS double. The internal slow correlation time.
-     * @return double[]. Array of J(w) values.
-     */
-    public double[] getJDiffusion(double[][] D, double[] v, double s2, double tauF, double sf2, double tauS) {
-        double J0 = JDiffusion(0.0, D, v, s2, tauF, sf2, tauS);
-        double JIplusS = JDiffusion(wI + wS, D, v, s2, tauF, sf2, tauS); //R1, R2, NOE
-        double JIminusS = JDiffusion(wI - wS, D, v, s2, tauF, sf2, tauS); // R1, R2, NOE
-        double JI = JDiffusion(wI, D, v, s2, tauF, sf2, tauS); // R2
-        double JS = JDiffusion(wS, D, v, s2, tauF, sf2, tauS); //R1, R2
-        double[] result = {J0, JS, JIminusS, JI, JIplusS};
-        return result;
-    }
 
     /**
      * Spectral density function calculation.
