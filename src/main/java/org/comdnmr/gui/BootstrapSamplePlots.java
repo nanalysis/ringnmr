@@ -14,12 +14,16 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package org.comdnmr.gui;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javafx.beans.Observable;
 import javafx.event.ActionEvent;
@@ -91,8 +95,10 @@ public class BootstrapSamplePlots {
             HBox.setHgrow(hBox, Priority.ALWAYS);
             Button exportButton = new Button("Export");
             exportButton.setOnAction(e -> exportBarPlotSVGAction(e));
+            Button saveButton = new Button("Save");
+            saveButton.setOnAction(e -> saveBootstrapData());
 
-            hBox.getChildren().addAll(exportButton, xlabel, xArrayChoice, ylabel, yArrayChoice);
+            hBox.getChildren().addAll(exportButton, saveButton, xlabel, xArrayChoice, ylabel, yArrayChoice);
             //Create the Scatter chart
             XYChartPane chartPane = new XYChartPane();
             activeChart = chartPane.getChart();
@@ -103,6 +109,48 @@ public class BootstrapSamplePlots {
         updateMCPlotChoices();
         stage.show();
         updateMCplot();
+    }
+
+    void saveBootstrapData() {
+        FileWriter writer = null;
+        try {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Save Bootstrap data");
+            fileChooser.setInitialDirectory(pyController.getInitialDirectory());
+            File selectedFile = fileChooser.showSaveDialog(null);
+            writer = new FileWriter(selectedFile);
+            if (selectedFile != null) {
+                Map<String, double[]> simsMap = getMCSimsMap();
+
+                int nPar = simsMap.keySet().size();
+                double[][] data = new double[nPar][];
+                int iPar = 0;
+                for (String key : simsMap.keySet()) {
+                    if (iPar > 0) {
+                        writer.write("\t");
+                    }
+                    writer.write(key);
+                    data[iPar++] = simsMap.get(key);
+                }
+                for (int i = 0; i < data[0].length; i++) {
+                    for (int j = 0; j < nPar; j++) {
+                        if (iPar > 0) {
+                            writer.write("\t");
+                        }
+                        writer.write(String.format("%.2f", data[j][i]));
+                    }
+                    writer.write("\n");
+                }
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(BootstrapSamplePlots.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                writer.close();
+            } catch (IOException ex) {
+                Logger.getLogger(BootstrapSamplePlots.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 
     void updateMCplot() {
