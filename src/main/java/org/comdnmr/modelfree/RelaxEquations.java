@@ -26,6 +26,7 @@ import static org.comdnmr.data.RelaxFit.DiffusionType;
 import static org.comdnmr.data.RelaxFit.DiffusionType.ANISOTROPIC;
 import static org.comdnmr.data.RelaxFit.DiffusionType.OBLATE;
 import static org.comdnmr.data.RelaxFit.DiffusionType.PROLATE;
+import static org.comdnmr.data.RelaxFit.DiffusionType.ISOTROPIC;
 
 /**
  *
@@ -263,36 +264,36 @@ public class RelaxEquations {
         double Dx = D[0][0];
         double Dy = D[1][1];
         double Dz = D[2][2];
-        double[] dDiff = new double[5];
+//        System.out.println("Dx = " + Dx + " Dy = " + Dy + " Dz = " + Dz);
+        double[] dDiff = new double[3];
         switch (diffType) {
             case ANISOTROPIC:
-                double[] k = {Dy - Dx, Dz - Dx, (Dx + Dy + Dz)/3, 0};
+                dDiff = new double[5];
+                double[] k = {Dy - Dx, Dz - Dx, (Dx + Dy + Dz)/3.0, 0};
                 k[3] = Math.sqrt(k[0]*k[0] - k[0]*k[1] + k[1]*k[1]);
-                dDiff[0] = 4*Dx + Dy + Dz;
-                dDiff[1] = Dx  + 4*Dy + Dz;
-                dDiff[2] = Dx + Dy + 4*Dz;
-                dDiff[3] = 6*k[2] + 2*k[3];
-                dDiff[4] = 6*k[2] - 2*k[3];
+                dDiff[0] = 4.0*Dx + Dy + Dz;
+                dDiff[1] = Dx  + 4.0*Dy + Dz;
+                dDiff[2] = Dx + Dy + 4.0*Dz;
+                dDiff[3] = 6.0*k[2] + 2.0*k[3];
+                dDiff[4] = 6.0*k[2] - 2.0*k[3];
                 break;
             case PROLATE:{
                 //Dxx = Dyy
                 double Dpar = Dz;
                 double Dperp = Dx;
-                dDiff = new double[3];
-                dDiff[0] = 5*Dperp + Dpar;
-                dDiff[1] = 2*Dperp + 4*Dpar;
-                dDiff[2] = 6*Dperp;
-                    break;
+                dDiff[0] = 5.0*Dperp + Dpar;
+                dDiff[1] = 2.0*Dperp + 4.0*Dpar;
+                dDiff[2] = 6.0*Dperp;
+                break;
                 }
             case OBLATE:{
                 //Dyy = Dzz
                 double Dpar = Dx;
                 double Dperp = Dz;
-                dDiff = new double[3];
-                dDiff[0] = 5*Dperp + Dpar;
-                dDiff[1] = 2*Dperp + 4*Dpar;
-                dDiff[2] = 6*Dperp;
-                    break;
+                dDiff[0] = 5.0*Dperp + Dpar;
+                dDiff[1] = 2.0*Dperp + 4.0*Dpar;
+                dDiff[2] = 6.0*Dperp;
+                break;
                 }
             default:
                 break;
@@ -325,36 +326,40 @@ public class RelaxEquations {
         double vx2 = vx*vx;
         double vy2 = vy*vy;
         double vz2 = vz*vz;
-        double[] a = new double[5];
+        double[] a = new double[3];
         switch (diffType) {
             case ANISOTROPIC:
-                double[] k = {Dy - Dx, Dz - Dx, (Dx + Dy + Dz)/3, 0};
+                a = new double[5];
+                double[] k = {Dy - Dx, Dz - Dx, (Dx + Dy + Dz)/3.0, 0.0};
                 k[3] = Math.sqrt(k[0]*k[0] - k[0]*k[1] + k[1]*k[1]);
-                double[] delta = {(-k[0] - k[1])/k[3], (2*k[0] - k[1])/k[3], (2*k[1] - k[0])/k[3]};
-                if (k[0] == 0.0 && k[1] == 0.0 && k[3] == 0.0) {
+                double[] delta = {(-k[0] - k[1])/k[3], (2.0*k[0] - k[1])/k[3], (2.0*k[1] - k[0])/k[3]};
+                if (k[0] <= 1e-12 && k[1] <= 1e-12 && k[3] <= 1e-12) {
                     delta = new double[3];
-                }   a[0] = 3*(vy2)*(vz2);
-                a[1] = 3*(vx2)*(vz2);
-                a[2] = 3*(vx2)*(vy2);
-                double p1 = 0.25*(3*((vx2*vx2) + (vy2*vy2) + (vz2*vz2)) - 1);
-                double val1 = delta[0]*(3*vx2*vx2 + 2*a[0] - 1);
-                double val2 = delta[1]*(3*vy2*vy2 + 2*a[1] - 1);
-                double val3 = delta[2]*(3*vz2*vz2 + 2*a[2] - 1);
-                double p2 = (1/12.0)*(val1 + val2 + val3);
+                }   
+//                for (int i=0; i<delta.length; i++) {
+//                    System.out.print("del " + i + " = " + delta[i] + " ");
+//                }
+//                System.out.println();
+                a[0] = 3.0*(vy2)*(vz2);
+                a[1] = 3.0*(vx2)*(vz2);
+                a[2] = 3.0*(vx2)*(vy2);
+                double p1 = 0.25*(3.0*((vx2*vx2) + (vy2*vy2) + (vz2*vz2)) - 1.0);
+                double val1 = delta[0]*(3*vx2*vx2 + 2*a[0] - 1.0);
+                double val2 = delta[1]*(3*vy2*vy2 + 2*a[1] - 1.0);
+                double val3 = delta[2]*(3*vz2*vz2 + 2*a[2] - 1.0);
+                double p2 = (1.0/12.0)*(val1 + val2 + val3);
                 a[3] = p1 - p2;
                 a[4] = p1 + p2;
                 break;
             case PROLATE:
                 //Dxx = Dyy
-                a = new double[3];
-                a[0] = 3*(vz2)*(1 - vz2);
-                a[1] = 0.75*(1 - vz2)*(1 - vz2);
-                a[2] = 0.25*(3*vz2 - 1)*(3*vz2 - 1);
+                a[0] = 3.0*(vz2)*(1.0 - vz2);
+                a[1] = 0.75*(1.0 - vz2)*(1.0 - vz2);
+                a[2] = 0.25*(3.0*vz2 - 1.0)*(3.0*vz2 - 1.0);
                 break;
             case OBLATE:
                 //Dyy = Dzz
-                a = new double[3];
-                a[0] = 3*(vx2)*(1 - vx2);
+                a[0] = 3.0*(vx2)*(1 - vx2);
                 a[1] = 0.75*(1 - vx2)*(1 - vx2);
                 a[2] = 0.25*(3*vx2 - 1)*(3*vx2 - 1);
                 break;
@@ -414,19 +419,48 @@ public class RelaxEquations {
 //        }
 //        double value = 0.4 * (value1);
         double sum = 0.0;
-        for (int i=0; i<dDiff.length; i++) {
-            double value1 = s2*(dDiff[i]*a[i])/(dDiff[i]*dDiff[i] + w2);
+        double[] Df = new double[dDiff.length];
+        for (int d=0; d<Df.length; d++) {
+            if (w2 > 0.0) {
+                Df[d] = dDiff[d]/(dDiff[d]*dDiff[d] + w2);
+            } else {
+                Df[d] = 1.0/dDiff[d];
+            }
+        }
+        if (diffType == ISOTROPIC) {
+            double Diso = (D[0][0] + D[1][1] + D[2][2])/3.0;
+            double tauC = 1.0/(6*Diso);
+            double value1 = s2*tauC/(1.0+w2*tauC*tauC);
             double value2 = 0.0;
             double value3 = 0.0;
             if (tauF != null && sf2 == null && tauS == null) {
-                value2 = (1.0 - s2)*(eF[i]*a[i])/(eF[i]*eF[i] + w2);
+                double tauf = tauC*tauF/(tauC + tauF);
+                value2 = (1.0 - s2)*(tauf)/(1.0 + w2*tauf*tauf);
             } else if (tauF != null && sf2 != null && tauS == null) {
-                value2 = (sf2 - s2)*(eF[i]*a[i])/(eF[i]*eF[i] + w2);
+                double tauf = tauC*tauF/(tauC + tauF);
+                value2 = (sf2 - s2)*(tauf)/(1.0 + w2*tauf*tauf);
             } else if (tauF != null && sf2 != null && tauS != null) {
-                value2 = (sf2 - s2)*(eS[i]*a[i])/(eS[i]*eS[i] + w2);
-                value3 = (1.0 - sf2)*(eF[i]*a[i])/(eF[i]*eF[i] + w2);
+                double taue = tauC*tauS/(tauC + tauS);
+                double tauf = tauC*tauF/(tauC + tauF);
+                value2 = (sf2 - s2)*(taue)/(1.0 + w2*taue*taue);//(eS[i]*eS[i] + w2);
+                value3 = (1.0 - sf2)*(tauf)/(1.0 + w2*tauf*tauf);//(eF[i]*eF[i] + w2);
             }
-            sum += value1 + value2 + value3;
+            sum = value1 + value2 + value3; 
+        } else {
+            for (int i=0; i<dDiff.length; i++) {
+                double value1 = s2*(Df[i]*a[i]);
+                double value2 = 0.0;
+                double value3 = 0.0;
+                if (tauF != null && sf2 == null && tauS == null) {
+                    value2 = (1.0 - s2)*(eF[i]*a[i])/(1.0 + w2*eF[i]*eF[i]);//(eF[i]*eF[i] + w2);
+                } else if (tauF != null && sf2 != null && tauS == null) {
+                    value2 = (sf2 - s2)*(eF[i]*a[i])/(1.0 + w2*eF[i]*eF[i]);//(eF[i]*eF[i] + w2);
+                } else if (tauF != null && sf2 != null && tauS != null) {
+                    value2 = (sf2 - s2)*(eS[i]*a[i])/(1.0 + w2*eS[i]*eS[i]);//(eS[i]*eS[i] + w2);
+                    value3 = (1.0 - sf2)*(eF[i]*a[i])/(1.0 + w2*eF[i]*eF[i]);//(eF[i]*eF[i] + w2);
+                }
+                sum += value1 + value2 + value3;
+            }
         }
         double value = 0.4 * sum;
         return value;
@@ -688,7 +722,7 @@ public class RelaxEquations {
     }
     
     /**
-     * Calculate the sigma squared error in rhoExp.
+     * Calculate the standard deviation error in rhoExp.
      * 
      * @param R1 double. Experimentally measured R1 value.
      * @param R2 double. Experimentally measured R2 value.
@@ -706,13 +740,11 @@ public class RelaxEquations {
         double f = (gammaS / gammaI) * R1 * (NOE - 1);
         double rhoExp1 = 2*R2 - R1 - w2*f;
         double rhoExp2 = R1 - w1*f;
-        double rhoExpErr1 = 2*2*R2err*R2err + R1err*R1err + 
-                w2*w2*(gammaS/gammaI)*(gammaS/gammaI)*(R1*R1*NOEerr*NOEerr + NOE*NOE*R1err*R1err + R1err*R1err*NOEerr*NOEerr + R1err*R1err);
-                //w2*w2*(gammaS/gammaI)*(gammaS/gammaI)*(f*f*((R1err/R1)*(R1err/R1)+(NOEerr/NOE)*(NOEerr/NOE)) + R1err*R1err);
-        double rhoExpErr2 = R1err*R1err + 
-                w1*w1*(gammaS/gammaI)*(gammaS/gammaI)*(R1*R1*NOEerr*NOEerr + NOE*NOE*R1err*R1err + R1err*R1err*NOEerr*NOEerr + R1err*R1err);
-                //w1*w1*(gammaS/gammaI)*(gammaS/gammaI)*(f*f*((R1err/R1)*(R1err/R1)+(NOEerr/NOE)*(NOEerr/NOE)) + R1err*R1err);
-        double rhoExpErr = rhoExp*rhoExp*((rhoExpErr1/rhoExp1)*(rhoExpErr1/rhoExp1) + (rhoExpErr2/rhoExp2)*(rhoExpErr2/rhoExp2));
+        double rhoExpErr1 = Math.sqrt(2*2*R2err*R2err + R1err*R1err + 
+                w2*w2*(f*f*((R1err/R1)*(R1err/R1)+(NOEerr/NOE)*(NOEerr/NOE)) + R1err*R1err));
+        double rhoExpErr2 = Math.sqrt(R1err*R1err + 
+                w1*w1*(f*f*((R1err/R1)*(R1err/R1)+(NOEerr/NOE)*(NOEerr/NOE)) + R1err*R1err));
+        double rhoExpErr = Math.sqrt(rhoExp*rhoExp*((rhoExpErr1/rhoExp1)*(rhoExpErr1/rhoExp1) + (rhoExpErr2/rhoExp2)*(rhoExpErr2/rhoExp2)));
         return rhoExpErr;
     }
     
