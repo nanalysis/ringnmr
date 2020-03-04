@@ -67,7 +67,7 @@ public class RelaxFit {
     }
     
     public enum DiffusionType {
-        PROLATE, OBLATE, ANISOTROPIC;
+        ISOTROPIC, PROLATE, OBLATE, ANISOTROPIC;
     }
 
     public void makeRelaxObjs(double[] fields, String elem1, String elem2) {
