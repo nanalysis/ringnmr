@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package org.comdnmr.gui;
 
 import java.util.ArrayList;
@@ -42,7 +42,7 @@ public class NOEControls extends EquationControls {
     String[] parNames = {"NOE"};
 
     enum PARS implements ParControls {
-        NOE("NOE", 0.0, 1.25,0.25,1.0,1);
+        NOE("NOE", 0.0, 1.25, 0.25, 1.0, 1);
         String name;
         Slider slider;
         Label label;
@@ -105,13 +105,6 @@ public class NOEControls extends EquationControls {
         public double getValue() {
             return slider.getValue();
         }
-
-        @Override
-        public void updateLimits(double min, double max) {
-            slider.setMin(min);
-            slider.setMax(max);
-        }
-
     }
 
     boolean updatingTable = false;
@@ -144,6 +137,7 @@ public class NOEControls extends EquationControls {
                     if (!text.equals("")) {
                         try {
                             double value = Double.parseDouble(text);
+                            control.adjustLimits(value);
                             control.getSlider().setValue(value);
                         } catch (NumberFormatException nfe) {
 

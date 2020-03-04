@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package org.comdnmr.gui;
 
 import java.util.ArrayList;
@@ -138,13 +138,6 @@ public class CESTControls extends EquationControls {
         public double getValue() {
             return slider.getValue();
         }
-
-        @Override
-        public void updateLimits(double min, double max) {
-            slider.setMin(min);
-            slider.setMax(max);
-        }
-
     }
 
     public List<String> getEquationNameList() {
@@ -195,6 +188,7 @@ public class CESTControls extends EquationControls {
                     if (!text.equals("")) {
                         try {
                             double value = Double.parseDouble(text);
+                            control.adjustLimits(value);
                             control.getSlider().setValue(value);
                         } catch (NumberFormatException nfe) {
 
