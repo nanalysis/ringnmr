@@ -156,8 +156,8 @@ public class DataIO {
                     }
                 } else if (errorMode.equals("noise")) {
                     if (errorPars.containsKey("value")) {
-                        String percentValue = errorPars.get("value").toString();
-                        noise = Double.parseDouble(percentValue);
+                        String noiseValueStr = errorPars.get("value").toString();
+                        noise = Double.parseDouble(noiseValueStr);
                         eSet = true;
                     }
                 }
@@ -315,8 +315,17 @@ public class DataIO {
                             } else if (errorMode.equals("percent")) {
                                 eValue = (errF * refIntensity) / (intensity * tau);
                             }
+                        } else if (expMode.equals("noe") && (yConv == YCONV.NORMALIZE)) {
+                            double r1 = noise / refIntensity;
+                            double r2 = noise / intensity;
+                            eValue = Math.abs(yValue) * Math.sqrt(r1 * r1 + r2 * r2);
                         } else {
-                            eValue = Math.abs(yValue) * errF;
+                            if (errorMode.equals("percent")) {
+                                eValue = Math.abs(yValue) * errF;
+                            } else if (errorMode.equals("noise")) {
+                                eValue = noise;
+                            }
+
                         }
                         errValueList.add(eValue);
                     }
