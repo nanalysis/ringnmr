@@ -4,7 +4,7 @@
 
     <groupId>org.comdnmr</groupId>
     <artifactId>comdnmrgui</artifactId>
-    <version>0.97</version>
+    <version>0.99</version>
     <name>comdnmrgui</name>
     <packaging>jar</packaging>
 
@@ -17,7 +17,7 @@
         <dependency>
             <groupId>org.comdnmr</groupId>
             <artifactId>comdnmr</artifactId>
-            <version>0.97</version>
+            <version>0.99</version>
         </dependency>
         <dependency>
             <groupId>org.nmrfx</groupId>

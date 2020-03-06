@@ -52,7 +52,7 @@ public class MainApp extends Application {
     public void start(Stage primaryStage) {
         this.primaryStage = primaryStage;
         primaryStage.setScene(new Scene(new StackPane(), 200, 200));
-        primaryStage.setTitle("CoMD/NMR Dynamics Analysis");
+        primaryStage.setTitle("RING NMR Dynamics");
         primaryStage.show();
         Parameters parameters = getParameters();
         try {

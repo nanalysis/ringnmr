@@ -85,6 +85,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import javafx.beans.property.SimpleStringProperty;
 import java.util.Random;
+import javafx.animation.PauseTransition;
 import javafx.print.PrinterJob;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -97,6 +98,8 @@ import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ToolBar;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
+import javafx.util.Duration;
 import org.comdnmr.util.CoMDPreferences;
 import org.comdnmr.modelfree.CorrelationTime;
 import org.comdnmr.eqnfit.FitFunction;
@@ -124,6 +127,8 @@ public class PyController implements Initializable {
     @FXML
     SSRegion ssregion;
 
+    @FXML
+    StackPane stackPane;
     @FXML
     XYPlotDataPane chartPane;
 
@@ -421,6 +426,13 @@ public class PyController implements Initializable {
         addChart();
         barPlotCanvas.setOnMouseClicked(e -> mouseClickedOnBarCanvas(e));
 //        mainController.setOnHidden(e -> Platform.exit());
+        PauseTransition logoTransition = new PauseTransition(Duration.seconds(5));
+        logoTransition.setOnFinished(e -> removeLogo());
+        logoTransition.play();
+    }
+
+    void removeLogo() {
+        stackPane.getChildren().remove(1);
     }
 
     void resizeXYPlotCanvas() {

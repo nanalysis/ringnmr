@@ -6,6 +6,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.image.*?>
 <?import org.comdnmr.gui.*?>
 <?import org.controlsfx.control.*?>
 <?import org.nmrfx.chart.XYChartPane?>
@@ -86,7 +87,16 @@
             <items>
                 <SplitPane orientation="horizontal" prefHeight="550">
                     <items>
-                        <XYPlotDataPane fx:id="chartPane" HBox.hgrow="ALWAYS" />
+                        <StackPane fx:id="stackPane">
+                            <children>
+                                <XYPlotDataPane fx:id="chartPane" HBox.hgrow="ALWAYS" />
+                                <ImageView>
+                                    <image>
+                                        <Image url="@/images/ring.png" />
+                                    </image>
+                                </ImageView>
+                            </children>
+                        </StackPane>
                         <VBox HBox.hgrow="ALWAYS"  VBox.vgrow="ALWAYS" >
                             <TabPane fx:id="parTabPane"  VBox.vgrow="ALWAYS" >
                                 <Tab text="Parameters" closable="false" > 
