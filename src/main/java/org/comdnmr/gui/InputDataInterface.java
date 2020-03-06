@@ -415,6 +415,8 @@ public class InputDataInterface {
         if (file != null) {
             Path path = dirPath.relativize(file.toPath());
             chosenFileLabel.setText(path.toString());
+            String fileTail = chosenFileLabel.getText().substring(0, chosenFileLabel.getText().lastIndexOf('.'));
+            yamlTextField.setText(fileTail + ".yaml");
         }
     }
 
@@ -529,8 +531,8 @@ public class InputDataInterface {
             hm.put("vcpmg", fxvals);
         }
         dataList.add(hm);
-        String fileTail = chosenFileLabel.getText().substring(0, chosenFileLabel.getText().lastIndexOf('.'));
-        yamlTextField.setText(fileTail + ".yaml");
+//        String fileTail = chosenFileLabel.getText().substring(0, chosenFileLabel.getText().lastIndexOf('.'));
+//        yamlTextField.setText(fileTail + ".yaml");
 //        for (int i=0; i<dataList.size(); i++) {
 //            System.out.println("dataList " + i + " " + dataList.get(i));
 //        }
@@ -541,6 +543,7 @@ public class InputDataInterface {
             addInfo();
         }
         makeYAML(dataList);
+        dataList.clear();
     }
 
     public void makeYAML(List data) {
