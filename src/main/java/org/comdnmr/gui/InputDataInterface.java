@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package org.comdnmr.gui;
 
 import java.io.BufferedReader;
@@ -178,28 +178,25 @@ public class InputDataInterface {
         }
 
         fitModeChoice.getItems().clear();
-        fitModeChoice.getItems().addAll(Arrays.asList("Select", "CPMG", "EXP", "CEST", "R1RHO"));
+        fitModeChoice.getItems().addAll(Arrays.asList("Select", "EXP", "NOE", "CPMG", "CEST", "R1RHO"));
         fitModeChoice.setValue("Select");
 
         fitModeChoice.valueProperty().addListener(x -> {
             updateInfoInterface();
         });
-        
+
         formatChoice.getItems().clear();
         formatChoice.getItems().addAll(Arrays.asList("mpk2", "ires", "txt"));
         formatChoice.setValue("mpk2");
 
-        
         nucChoice.getItems().clear();
         nucChoice.getItems().addAll(Arrays.asList("H1", "F19", "P31", "C13", "N15"));
         nucChoice.setValue("H1");
 
-        
         B0fieldChoice.getItems().clear();
         B0fieldChoice.getItems().addAll(Arrays.asList("400", "500", "600", "700", "750", "800", "900", "950", "1000", "1200"));
         B0fieldChoice.setValue("400");
         B0fieldChoice.setEditable(true);
-
 
         EventHandler<ActionEvent> boxevent = new EventHandler<ActionEvent>() {
 
@@ -207,7 +204,7 @@ public class InputDataInterface {
                 String[] xvals = xValTextArea.getText().split("\t");
                 ArrayList<Double> fxvals = new ArrayList();
                 String xString = "";
-                if ((fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST") || fitModeChoice.getSelectionModel().getSelectedItem().equals("R1RHO")) 
+                if ((fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST") || fitModeChoice.getSelectionModel().getSelectedItem().equals("R1RHO"))
                         && ppmBox.isSelected()) {
                     for (int i = 0; i < xvals.length; i++) {
                         fxvals.add(Double.parseDouble(xvals[i]) * Double.parseDouble(B0fieldChoice.getSelectionModel().getSelectedItem().toString()));
@@ -231,25 +228,24 @@ public class InputDataInterface {
 
         errModeChoice.getItems().addAll(Arrays.asList("percent", "replicates", "noise"));
         errModeChoice.setValue("percent");
-        
+
         xConvChoice.getItems().addAll(Arrays.asList("identity", "tau2", "ppmtohz", "hztoppm", "calc"));
         xConvChoice.setValue("identity");
-        
+
         xConvChoice.valueProperty().addListener(x -> {
             updateDelays();
         });
-        
+
         yConvChoice.getItems().addAll(Arrays.asList("identity", "rate", "normalize"));
         yConvChoice.setValue("identity");
-       
-        
+
         HBox delayBox = new HBox();
         delayBox.getChildren().addAll(new Label("C0:  "), delayC0TextField, new Label("  Delta:  "), delayDeltaTextField, new Label("  Delta0:  "), delayDelta0TextField);
 
-        delayC0TextField.setMaxWidth(textFieldWidth-20);
-        delayDeltaTextField.setMaxWidth(textFieldWidth-20);
-        delayDelta0TextField.setMaxWidth(textFieldWidth-20);
-        
+        delayC0TextField.setMaxWidth(textFieldWidth - 20);
+        delayDeltaTextField.setMaxWidth(textFieldWidth - 20);
+        delayDelta0TextField.setMaxWidth(textFieldWidth - 20);
+
         inputInfoDisplay.add(fitModeChoice, 1, 0);
         inputInfoDisplay.add(dirChoiceButton, 2, 1);
         inputInfoDisplay.add(chosenDirLabel, 1, 1);
@@ -336,6 +332,8 @@ public class InputDataInterface {
                 for (Button button : buttons) {
                     button.setDisable(false);
                 }
+                errModeChoice.getItems().setAll(Arrays.asList("percent", "replicates", "noise"));
+                errModeChoice.setValue("percent");
                 xValTextArea.setDisable(false);
                 errModeChoice.setDisable(false);
                 xConvChoice.setDisable(false);
@@ -363,6 +361,18 @@ public class InputDataInterface {
                     yConvChoice.getItems().addAll(Arrays.asList("identity", "normalize"));
                     xConvChoice.setValue("identity");
                     yConvChoice.setValue("identity");
+                } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("NOE")) {
+                    errModeChoice.getItems().setAll(Arrays.asList("percent", "noise"));
+                    errModeChoice.setValue("noise");
+                    B1TextField.setDisable(true);
+                    tauTextField.setDisable(true);
+                    ppmBox.setDisable(true);
+                    xConvChoice.getItems().clear();
+                    xConvChoice.getItems().addAll(Arrays.asList("identity"));
+                    yConvChoice.getItems().clear();
+                    yConvChoice.getItems().addAll(Arrays.asList("normalize"));
+                    xConvChoice.setValue("identity");
+                    yConvChoice.setValue("normalize");
                 } else if ((fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST") || fitModeChoice.getSelectionModel().getSelectedItem().equals("R1RHO"))) {
                     B1TextField.setDisable(false);
                     tauTextField.setDisable(false);
@@ -381,10 +391,10 @@ public class InputDataInterface {
         }
 
     }
-    
+
     public void updateDelays() {
-        if (!fitModeChoice.getSelectionModel().getSelectedItem().equals("Select") && 
-        (xConvChoice.getSelectionModel().getSelectedItem() != null) && xConvChoice.getSelectionModel().getSelectedItem().equals("calc")) {
+        if (!fitModeChoice.getSelectionModel().getSelectedItem().equals("Select")
+                && (xConvChoice.getSelectionModel().getSelectedItem() != null) && xConvChoice.getSelectionModel().getSelectedItem().equals("calc")) {
             delayC0TextField.setDisable(false);
             delayDeltaTextField.setDisable(false);
             delayDelta0TextField.setDisable(false);
