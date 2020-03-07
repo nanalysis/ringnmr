@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package org.comdnmr.gui;
 
 import java.io.BufferedReader;
@@ -138,29 +138,119 @@ public class InputDataInterface {
         fileChoiceButton.setOnAction(e -> chooseFile(e));
         fileChoiceButton.setText("Browse");
         chosenFileLabel.setText("");
+        chosenFileLabel.setStyle("-fx-control-inner-background: red;");
+        chosenFileLabel.textProperty().addListener((observable, oldValue, newValue)
+                -> {
+            if (newValue.equals("")) {
+                chosenFileLabel.setStyle("-fx-control-inner-background: red;");
+            } else {
+                chosenFileLabel.setStyle(null);
+            }
+
+        });
 
 //        Button xpk2ChoiceButton = new Button();
         xpk2ChoiceButton.setOnAction(e -> chooseXPK2File(e));
         xpk2ChoiceButton.setText("Browse");
         chosenXPK2FileLabel.setText("");
+        chosenXPK2FileLabel.setStyle("-fx-control-inner-background: red;");
+        chosenXPK2FileLabel.textProperty().addListener((observable, oldValue, newValue)
+                -> {
+            if (newValue.equals("")) {
+                chosenXPK2FileLabel.setStyle("-fx-control-inner-background: red;");
+            } else {
+                chosenXPK2FileLabel.setStyle(null);
+            }
+
+        });
 
 //        Button paramFileChoiceButton = new Button();
         paramFileChoiceButton.setOnAction(e -> chooseParamFile(e));
         paramFileChoiceButton.setText("Browse");
         chosenParamFileLabel.setText("");
+        chosenParamFileLabel.setStyle("-fx-control-inner-background: red;");
+        chosenParamFileLabel.textProperty().addListener((observable, oldValue, newValue)
+                -> {
+            if (newValue.equals("")) {
+                chosenParamFileLabel.setStyle("-fx-control-inner-background: red;");
+            } else {
+                chosenParamFileLabel.setStyle(null);
+            }
+
+        });
 
         ppmBox.setSelected(false);
 
         double textFieldWidth = 100;
         double xValAreaWidth = 150; //240;
 
-        tempTextField.setText("25.0");
-        pTextField.setText("20.0");
-        tauTextField.setText("0.04");
-        B1TextField.setText("20.0");
-        errPercentTextField.setText("5");
+        tempTextField.setText("");
+        tempTextField.setStyle("-fx-control-inner-background: red;");
+        tempTextField.textProperty().addListener((observable, oldValue, newValue)
+                -> {
+            if (newValue.equals("")) {
+                tempTextField.setStyle("-fx-control-inner-background: red;");
+            } else {
+                tempTextField.setStyle(null);
+            }
+
+        });
+        pTextField.setText("");
+        pTextField.setStyle("-fx-control-inner-background: red;");
+        pTextField.textProperty().addListener((observable, oldValue, newValue)
+                -> {
+            if (newValue.equals("")) {
+                pTextField.setStyle("-fx-control-inner-background: red;");
+            } else {
+                pTextField.setStyle(null);
+            }
+
+        });
+        tauTextField.setText("");
+        tauTextField.setStyle("-fx-control-inner-background: red;");
+        tauTextField.textProperty().addListener((observable, oldValue, newValue)
+                -> {
+            if (newValue.equals("")) {
+                tauTextField.setStyle("-fx-control-inner-background: red;");
+            } else {
+                tauTextField.setStyle(null);
+            }
+
+        });
+        B1TextField.setText("");
+        B1TextField.setStyle("-fx-control-inner-background: red;");
+        B1TextField.textProperty().addListener((observable, oldValue, newValue)
+                -> {
+            if (newValue.equals("")) {
+                B1TextField.setStyle("-fx-control-inner-background: red;");
+            } else {
+                B1TextField.setStyle(null);
+            }
+
+        });
+        errPercentTextField.setText("");
+        errPercentTextField.setStyle("-fx-control-inner-background: red;");
+        errPercentTextField.textProperty().addListener((observable, oldValue, newValue)
+                -> {
+            if (newValue.equals("")) {
+                errPercentTextField.setStyle("-fx-control-inner-background: red;");
+            } else {
+                errPercentTextField.setStyle(null);
+            }
+
+        });
         errPercentTextField.setMaxWidth(textFieldWidth);
         xValTextArea.setText("");
+        xValTextArea.setStyle("-fx-control-inner-background: red;");
+        xValTextArea.textProperty().addListener((observable, oldValue, newValue)
+                -> {
+            if (newValue.equals("")) {
+                xValTextArea.setStyle("-fx-control-inner-background: red;");
+            } else {
+                xValTextArea.setStyle(null);
+            }
+
+        });
         xValTextArea.setMaxWidth(xValAreaWidth);
         xValTextArea.setWrapText(true);
         yamlTextField.setText("");
@@ -184,22 +274,28 @@ public class InputDataInterface {
         fitModeChoice.valueProperty().addListener(x -> {
             updateInfoInterface();
         });
-        
+
         formatChoice.getItems().clear();
         formatChoice.getItems().addAll(Arrays.asList("mpk2", "ires", "txt"));
         formatChoice.setValue("mpk2");
 
-        
         nucChoice.getItems().clear();
         nucChoice.getItems().addAll(Arrays.asList("H1", "F19", "P31", "C13", "N15"));
         nucChoice.setValue("H1");
 
-        
         B0fieldChoice.getItems().clear();
         B0fieldChoice.getItems().addAll(Arrays.asList("400", "500", "600", "700", "750", "800", "900", "950", "1000", "1200"));
-        B0fieldChoice.setValue("400");
-        B0fieldChoice.setEditable(true);
+        B0fieldChoice.setValue("");
+        B0fieldChoice.itemsProperty().addListener((observable, oldValue, newValue)
+                -> {
+            if (newValue.equals("")) {
+                tauTextField.setStyle("-fx-control-inner-background: red;");
+            } else {
+                tauTextField.setStyle(null);
+            }
 
+        });
+        B0fieldChoice.setEditable(true);
 
         EventHandler<ActionEvent> boxevent = new EventHandler<ActionEvent>() {
 
@@ -207,7 +303,7 @@ public class InputDataInterface {
                 String[] xvals = xValTextArea.getText().split("\t");
                 ArrayList<Double> fxvals = new ArrayList();
                 String xString = "";
-                if ((fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST") || fitModeChoice.getSelectionModel().getSelectedItem().equals("R1RHO")) 
+                if ((fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST") || fitModeChoice.getSelectionModel().getSelectedItem().equals("R1RHO"))
                         && ppmBox.isSelected()) {
                     for (int i = 0; i < xvals.length; i++) {
                         fxvals.add(Double.parseDouble(xvals[i]) * Double.parseDouble(B0fieldChoice.getSelectionModel().getSelectedItem().toString()));
@@ -231,25 +327,24 @@ public class InputDataInterface {
 
         errModeChoice.getItems().addAll(Arrays.asList("percent", "replicates", "noise"));
         errModeChoice.setValue("percent");
-        
+
         xConvChoice.getItems().addAll(Arrays.asList("identity", "tau2", "ppmtohz", "hztoppm", "calc"));
         xConvChoice.setValue("identity");
-        
+
         xConvChoice.valueProperty().addListener(x -> {
             updateDelays();
         });
-        
+
         yConvChoice.getItems().addAll(Arrays.asList("identity", "rate", "normalize"));
         yConvChoice.setValue("identity");
-       
-        
+
         HBox delayBox = new HBox();
         delayBox.getChildren().addAll(new Label("C0:  "), delayC0TextField, new Label("  Delta:  "), delayDeltaTextField, new Label("  Delta0:  "), delayDelta0TextField);
 
-        delayC0TextField.setMaxWidth(textFieldWidth-20);
-        delayDeltaTextField.setMaxWidth(textFieldWidth-20);
-        delayDelta0TextField.setMaxWidth(textFieldWidth-20);
-        
+        delayC0TextField.setMaxWidth(textFieldWidth - 20);
+        delayDeltaTextField.setMaxWidth(textFieldWidth - 20);
+        delayDelta0TextField.setMaxWidth(textFieldWidth - 20);
+
         inputInfoDisplay.add(fitModeChoice, 1, 0);
         inputInfoDisplay.add(dirChoiceButton, 2, 1);
         inputInfoDisplay.add(chosenDirLabel, 1, 1);
@@ -381,10 +476,10 @@ public class InputDataInterface {
         }
 
     }
-    
+
     public void updateDelays() {
-        if (!fitModeChoice.getSelectionModel().getSelectedItem().equals("Select") && 
-        (xConvChoice.getSelectionModel().getSelectedItem() != null) && xConvChoice.getSelectionModel().getSelectedItem().equals("calc")) {
+        if (!fitModeChoice.getSelectionModel().getSelectedItem().equals("Select")
+                && (xConvChoice.getSelectionModel().getSelectedItem() != null) && xConvChoice.getSelectionModel().getSelectedItem().equals("calc")) {
             delayC0TextField.setDisable(false);
             delayDeltaTextField.setDisable(false);
             delayDelta0TextField.setDisable(false);
