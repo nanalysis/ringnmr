@@ -58,9 +58,8 @@ public class CorrelationTime {
 
             DescriptiveStatistics stats = new DescriptiveStatistics();
             r2Map.values().stream().forEach(v -> stats.addValue(v));
-            double mean = stats.getMean();
-            double median = stats.getPercentile(50.0);
-            double sdev = stats.getStandardDeviation();
+            double perLower = stats.getPercentile(25.0);
+            double perUpper = stats.getPercentile(75.0);
 
             stats.clear();
             DescriptiveStatistics r1Stats = new DescriptiveStatistics();
@@ -69,7 +68,7 @@ public class CorrelationTime {
                 Double r1 = r1Map.get(res);
                 Double r2 = r2Map.get(res);
                 if ((r1 != null) && (r2 != null)) {
-                    if ((r2 > (median - sdev)) && (r2 < (median + sdev))) {
+                    if ((r2 > perLower) && (r2 < perUpper)) {
                         r1Stats.addValue(r1);
                         r2Stats.addValue(r2);
                     }
@@ -81,7 +80,7 @@ public class CorrelationTime {
             double sfX = RelaxEquations.getSF(b0 * 1.0e6, nucName);
             tau = fit(sf, ratio);
             double tauEst = 1.0 / (4.0 * Math.PI * sfX) * Math.sqrt(6.0 * ratio - 7.0);
-            System.out.println("tau " + sf + " " + sfX + " " + ratio + " " + tau + " " + tauEst);
+            System.out.println("tau " + sf + " " + sfX + " " + ratio + " " + perLower + " " + perUpper + " " + tau + " " + tauEst);
         }
         return tau;
     }
