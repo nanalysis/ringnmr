@@ -352,8 +352,8 @@ public class DataIO {
                 }
             }
         }
-        double errValue = estimateErrors(expData);
         if (!eSet) {
+            double errValue = estimateErrors(expData);
             setErrors(expData, errValue);
         }
     }
@@ -563,10 +563,14 @@ public class DataIO {
                 }
             }
         }
-        double error2 = Math.sqrt(sumDelta2 / (2.0 * nDups));
-        double errorA = Math.sqrt(Math.PI / 2.0) * sumAbs / (2.0 * nDups);
+        double errorA = 0.0;
+        double error2 = 0.0;
+        if (nDups > 0) {
+            error2 = Math.sqrt(sumDelta2 / (2.0 * nDups));
+            errorA = Math.sqrt(Math.PI / 2.0) * sumAbs / (2.0 * nDups);
+        }
         System.out.println("data " + expData.name + " errors " + error2 + "errorA " + errorA + " ndup " + nDups);
-        return errorA;
+        return error2;
     }
 
     public static ResidueProperties loadResultsFile(String fitMode, String fileName) throws IOException {
