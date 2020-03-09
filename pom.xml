@@ -4,7 +4,7 @@
 
     <groupId>org.comdnmr</groupId>
     <artifactId>comdnmr</artifactId>
-    <version>0.97</version>
+    <version>0.99</version>
     <name>comdnmr</name>
     <packaging>jar</packaging>
 
