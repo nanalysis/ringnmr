@@ -21,10 +21,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -36,7 +36,6 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
-import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
@@ -63,6 +62,7 @@ import org.yaml.snakeyaml.Yaml;
  */
 public class InputDataInterface {
 
+    static final String INACTIVE_TEXT_STYLE = "-fx-control-inner-background: red;";
     PyController pyController;
 
     GridPane inputInfoDisplay = new GridPane();
@@ -108,7 +108,7 @@ public class InputDataInterface {
     public void inputParameters() {
 
         infoStage.setTitle("Input Data Parameters");
-        Label fileLabel = new Label("  MPK2 File:  ");
+        Label fileLabel = new Label("  Value File:  ");
         Label dirLabel = new Label("  Directory:  ");
         Label xpk2FileLabel = new Label("  XPK2 File:  ");
         Label fitFileLabel = new Label("  CoMD/NMR Analysis File:  ");
@@ -138,29 +138,62 @@ public class InputDataInterface {
         fileChoiceButton.setOnAction(e -> chooseFile(e));
         fileChoiceButton.setText("Browse");
         chosenFileLabel.setText("");
+        chosenFileLabel.setStyle("-fx-control-inner-background: red;");
+        chosenFileLabel.textProperty().addListener((observable, oldValue, newValue)
+                -> {
+            if (newValue.equals("")) {
+                chosenFileLabel.setStyle("-fx-control-inner-background: red;");
+            } else {
+                chosenFileLabel.setStyle(null);
+            }
+
+        });
 
 //        Button xpk2ChoiceButton = new Button();
         xpk2ChoiceButton.setOnAction(e -> chooseXPK2File(e));
         xpk2ChoiceButton.setText("Browse");
         chosenXPK2FileLabel.setText("");
+        chosenXPK2FileLabel.setStyle("-fx-control-inner-background: red;");
+        chosenXPK2FileLabel.textProperty().addListener((observable, oldValue, newValue)
+                -> {
+            if (newValue.equals("")) {
+                chosenXPK2FileLabel.setStyle("-fx-control-inner-background: red;");
+            } else {
+                chosenXPK2FileLabel.setStyle(null);
+            }
+
+        });
 
 //        Button paramFileChoiceButton = new Button();
         paramFileChoiceButton.setOnAction(e -> chooseParamFile(e));
         paramFileChoiceButton.setText("Browse");
         chosenParamFileLabel.setText("");
+        chosenParamFileLabel.setStyle("-fx-control-inner-background: red;");
+        chosenParamFileLabel.textProperty().addListener((observable, oldValue, newValue)
+                -> {
+            if (newValue.equals("")) {
+                chosenParamFileLabel.setStyle("-fx-control-inner-background: red;");
+            } else {
+                chosenParamFileLabel.setStyle(null);
+            }
+
+        });
 
         ppmBox.setSelected(false);
 
         double textFieldWidth = 100;
         double xValAreaWidth = 150; //240;
 
-        tempTextField.setText("25.0");
-        pTextField.setText("20.0");
-        tauTextField.setText("0.04");
-        B1TextField.setText("20.0");
-        errPercentTextField.setText("5");
-        errPercentTextField.setMaxWidth(textFieldWidth);
-        xValTextArea.setText("");
+        TextField[] textFields = {B1TextField, tauTextField, tempTextField, pTextField,
+            errPercentTextField};
+
+        for (TextField textField : textFields) {
+            textField.setText("");
+            textField.setStyle(INACTIVE_TEXT_STYLE);
+            textField.textProperty().addListener((observable, oldValue, newValue) -> updateTextField(textField, newValue));
+            textField.setMaxWidth(textFieldWidth);
+        }
+
         xValTextArea.setMaxWidth(xValAreaWidth);
         xValTextArea.setWrapText(true);
         yamlTextField.setText("");
@@ -195,7 +228,15 @@ public class InputDataInterface {
 
         B0fieldChoice.getItems().clear();
         B0fieldChoice.getItems().addAll(Arrays.asList("400", "500", "600", "700", "750", "800", "900", "950", "1000", "1200"));
-        B0fieldChoice.setValue("400");
+        B0fieldChoice.setValue("");
+        B0fieldChoice.itemsProperty().addListener((observable, oldValue, newValue)
+                -> {
+            if (newValue.equals("")) {
+                tauTextField.setStyle("-fx-control-inner-background: red;");
+            } else {
+                tauTextField.setStyle(null);
+            }
+        });
         B0fieldChoice.setEditable(true);
 
         EventHandler<ActionEvent> boxevent = new EventHandler<ActionEvent>() {
@@ -228,6 +269,7 @@ public class InputDataInterface {
 
         errModeChoice.getItems().addAll(Arrays.asList("percent", "replicates", "noise"));
         errModeChoice.setValue("percent");
+        errModeChoice.valueProperty().addListener(e -> updateErrorMode());
 
         xConvChoice.getItems().addAll(Arrays.asList("identity", "tau2", "ppmtohz", "hztoppm", "calc"));
         xConvChoice.setValue("identity");
@@ -297,6 +339,24 @@ public class InputDataInterface {
         infoStage.setScene(inputScene);
         infoStage.show();
 
+    }
+
+    void updateTextField(TextField textField, String newValue) {
+        if (newValue.equals("")) {
+            textField.setStyle(INACTIVE_TEXT_STYLE);
+        } else {
+            textField.setStyle(null);
+        }
+    }
+
+    void updateErrorMode() {
+        if ((errModeChoice != null) && (errModeChoice.getValue() != null)) {
+            if (errModeChoice.getValue().equals("replicates")) {
+                errPercentTextField.setDisable(true);
+            } else {
+                errPercentTextField.setDisable(false);
+            }
+        }
     }
 
     public void updateInfoInterface() {
@@ -424,9 +484,19 @@ public class InputDataInterface {
         File file = fileChooser.showOpenDialog(infoStage);
         if (file != null) {
             Path path = dirPath.relativize(file.toPath());
-            chosenFileLabel.setText(path.toString());
-            String fileTail = chosenFileLabel.getText().substring(0, chosenFileLabel.getText().lastIndexOf('.'));
-            yamlTextField.setText(fileTail + ".yaml");
+            String pathString = path.toString();
+            chosenFileLabel.setText(pathString);
+            if (pathString.contains(".")) {
+                String fileTail = pathString.substring(0, pathString.lastIndexOf('.'));
+                yamlTextField.setText(fileTail + ".yaml");
+                if (pathString.endsWith(".mpk2")) {
+                    FileSystem fileSystem = FileSystems.getDefault();
+                    File xpk2File = fileSystem.getPath(file.getParent(), fileTail + ".xpk2").toFile();
+                    if (xpk2File.canRead()) {
+                        parseXPK2File(xpk2File);
+                    }
+                }
+            }
         }
     }
 
@@ -439,41 +509,46 @@ public class InputDataInterface {
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("xpk2 File", "*.xpk2"));
         File file = fileChooser.showOpenDialog(infoStage);
         if (file != null) {
-            Path path = dirPath.relativize(file.toPath());
-            chosenXPK2FileLabel.setText(path.toString());
-
-            Path path1 = file.toPath();
-
-            List<String[]> head = new ArrayList<>();
-
-            try (BufferedReader fileReader = Files.newBufferedReader(path1)) {
-                while (true) {
-                    String line = fileReader.readLine();
-                    if (line == null) {
-                        break;
-                    }
-                    String sline = line.trim();
-                    if (sline.length() == 0) {
-                        continue;
-                    }
-                    if (sline.startsWith("id")) {
-                        break;
-                    }
-                    String[] sline1 = line.split("\t", -1);
-                    head.add(sline1);
-                }
-            } catch (IOException ioe) {
-                ioe.printStackTrace();
-            }
-            int sfInd = Arrays.asList(head.get(2)).indexOf("sf");
-            int codeInd = Arrays.asList(head.get(2)).indexOf("code");
-            String field = Arrays.asList(head.get(3)).get(sfInd);
-            String nuc = Arrays.asList(head.get(4)).get(codeInd);
-            String nuc1 = nuc.replaceAll("[^a-zA-Z]", "");
-            String nuc2 = nuc.replaceAll("[a-zA-Z]", "");
-            nucChoice.setValue(nuc1 + nuc2);
-            B0fieldChoice.getSelectionModel().select(field);
+            parseXPK2File(file);
         }
+    }
+
+    void parseXPK2File(File file) {
+        Path path = dirPath.relativize(file.toPath());
+        chosenXPK2FileLabel.setText(path.toString());
+
+        Path path1 = file.toPath();
+
+        List<String[]> head = new ArrayList<>();
+
+        try (BufferedReader fileReader = Files.newBufferedReader(path1)) {
+            while (true) {
+                String line = fileReader.readLine();
+                if (line == null) {
+                    break;
+                }
+                String sline = line.trim();
+                if (sline.length() == 0) {
+                    continue;
+                }
+                if (sline.startsWith("id")) {
+                    break;
+                }
+                String[] sline1 = line.split("\t", -1);
+                head.add(sline1);
+            }
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+        int sfInd = Arrays.asList(head.get(2)).indexOf("sf");
+        int codeInd = Arrays.asList(head.get(2)).indexOf("code");
+        String field = Arrays.asList(head.get(3)).get(sfInd);
+        String nuc = Arrays.asList(head.get(4)).get(codeInd);
+        String nuc1 = nuc.replaceAll("[^a-zA-Z]", "");
+        String nuc2 = nuc.replaceAll("[a-zA-Z]", "");
+        nucChoice.setValue(nuc1 + nuc2);
+        B0fieldChoice.getSelectionModel().select(field);
+
     }
 
     public void chooseParamFile(ActionEvent event) {
@@ -502,20 +577,27 @@ public class InputDataInterface {
     public void addInfo() {
         HashMap hm = new HashMap();
         hm.put("file", chosenFileLabel.getText());
+
         hm.put("paramFile", chosenParamFileLabel.getText());
         hm.put("temperature", Double.parseDouble(tempTextField.getText()));
         hm.put("xconv", xConvChoice.getSelectionModel().getSelectedItem());
         hm.put("yconv", yConvChoice.getSelectionModel().getSelectedItem());
         hm.put("B0", Double.parseDouble(B0fieldChoice.getSelectionModel().getSelectedItem().toString()));
         hm.put("nucleus", nucChoice.getSelectionModel().getSelectedItem().replaceAll("[^a-zA-Z]", ""));
-        hm.put("tau", Double.parseDouble(tauTextField.getText()));
+        if (!tauTextField.isDisabled()) {
+            hm.put("tau", Double.parseDouble(tauTextField.getText()));
+        }
         hm.put("pressure", Double.parseDouble(pTextField.getText()));
         hm.put("format", formatChoice.getSelectionModel().getSelectedItem());
         hm.put("fitmode", fitModeChoice.getSelectionModel().getSelectedItem().toLowerCase());
-        hm.put("B1", Double.parseDouble(B1TextField.getText()));
+        if (!B1TextField.isDisabled()) {
+            hm.put("B1", Double.parseDouble(B1TextField.getText()));
+        }
         HashMap hmde = new HashMap();
-        hmde.put("mode", errModeChoice.getSelectionModel().getSelectedItem());
-        hmde.put("value", Double.parseDouble(errPercentTextField.getText()));
+        hmde.put("mode", errModeChoice.getValue());
+        if (!errModeChoice.getValue().equals("replicates")) {
+            hmde.put("value", Double.parseDouble(errPercentTextField.getText()));
+        }
         HashMap hmdd = new HashMap();
         if (!delayC0TextField.getText().equals("") && !delayDeltaTextField.getText().equals("") && !delayDelta0TextField.getText().equals("")) {
             hmdd.put("c0", Double.parseDouble(delayC0TextField.getText()));
@@ -613,12 +695,18 @@ public class InputDataInterface {
         if (dataList.isEmpty()) {
             addInfo();
         }
+        String projectName = yamlTextField.getText().trim();
+        if (projectName.length() == 0) {
+
+        } else if (projectName.endsWith(".yaml")) {
+            projectName = projectName.substring(0, projectName.indexOf(".yaml"));
+        }
         File projectDirFile = new File(chosenDirLabel.getText().trim());
         dirPath = projectDirFile.toPath();
 
         ResidueProperties resProp = null;
         String expMode = fitModeChoice.getSelectionModel().getSelectedItem().toLowerCase();
-        resProp = new ResidueProperties(projectDirFile.getName(), projectDirFile.toString());
+        resProp = new ResidueProperties(projectName, projectDirFile.toString());
         expMode = expMode.toLowerCase();
         resProp.setExpMode(expMode);
 
@@ -656,6 +744,7 @@ public class InputDataInterface {
         PyController.mainController.setControls();
 
         fitModeChoice.setValue("Select");
+        dataList.clear();
         updateInfoInterface();
     }
 

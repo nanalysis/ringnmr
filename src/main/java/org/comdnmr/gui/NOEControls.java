@@ -210,12 +210,14 @@ public class NOEControls extends EquationControls {
         updatingTable = true;
         for (ParValueInterface parValue : parValues) {
             String parName = parValue.getName();
-            ParControls control = PARS.valueOf(parName.toUpperCase());
-            if (control != null) {
-                control.setValue(parValue.getValue());
+            if (parName.toUpperCase().equals("NOE")) {
+                ParControls control = PARS.valueOf(parName.toUpperCase());
+                if (control != null) {
+                    control.setValue(parValue.getValue());
+                }
             }
+            equationSelector.setValue(equationName);
         }
-        equationSelector.setValue(equationName);
         updatingTable = false;
     }
 
