@@ -14,8 +14,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/*
+ */
+ /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
@@ -31,7 +31,9 @@ import org.apache.commons.math3.optim.univariate.BrentOptimizer;
 import org.apache.commons.math3.optim.univariate.SearchInterval;
 import org.apache.commons.math3.optim.univariate.UnivariateObjectiveFunction;
 import org.apache.commons.math3.optim.univariate.UnivariatePointValuePair;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
+import org.comdnmr.data.ExperimentData;
 
 /**
  *
@@ -44,6 +46,9 @@ public class CorrelationTime {
         ResidueProperties resPropsR1 = residueProps.get(r1SetName);
         ResidueProperties resPropsR2 = residueProps.get(r2SetName);
         ResidueProperties resPropsNOE = residueProps.get(noeSetName);
+        ExperimentData r1Data = resPropsR1.getExperimentData().stream().findFirst().get();
+        double b0 = r1Data.getField();
+        String nucName = r1Data.getNucleusName();
         double tau = 0.0;
         if ((resPropsR1 != null) && (resPropsR2 != null)) {
             Map<Integer, Double> r1Map = resPropsR1.getParMapData(
@@ -51,24 +56,31 @@ public class CorrelationTime {
             Map<Integer, Double> r2Map = resPropsR2.getParMapData(
                     "best", "0:0:0", "R");
 
-            SummaryStatistics stats = new SummaryStatistics();
+            DescriptiveStatistics stats = new DescriptiveStatistics();
             r2Map.values().stream().forEach(v -> stats.addValue(v));
-            double mean = stats.getMean();
-            double sdev = stats.getStandardDeviation();
+            double perLower = stats.getPercentile(25.0);
+            double perUpper = stats.getPercentile(75.0);
+
             stats.clear();
+            DescriptiveStatistics r1Stats = new DescriptiveStatistics();
+            DescriptiveStatistics r2Stats = new DescriptiveStatistics();
             for (Integer res : r1Map.keySet()) {
                 Double r1 = r1Map.get(res);
                 Double r2 = r2Map.get(res);
                 if ((r1 != null) && (r2 != null)) {
-                    if (r2 > (mean - sdev)) {
-                        stats.addValue(r2 / r1);
+                    if ((r2 > perLower) && (r2 < perUpper)) {
+                        r1Stats.addValue(r1);
+                        r2Stats.addValue(r2);
                     }
                 }
             }
-            double ratio = stats.getMean();
-            double sf = 600e6;
+            double ratio = r2Stats.getPercentile(50.0)
+                    / r1Stats.getPercentile(50.0);
+            double sf = b0 * 1.0e6;
+            double sfX = RelaxEquations.getSF(b0 * 1.0e6, nucName);
             tau = fit(sf, ratio);
-            System.out.println("tau " + ratio + " " + tau);
+            double tauEst = 1.0 / (4.0 * Math.PI * sfX) * Math.sqrt(6.0 * ratio - 7.0);
+            System.out.println("tau " + sf + " " + sfX + " " + ratio + " " + perLower + " " + perUpper + " " + tau + " " + tauEst);
         }
         return tau;
     }
@@ -168,8 +180,8 @@ public class CorrelationTime {
         ResidueProperties resPropsR1 = residueProps.get(r1SetName);
         ResidueProperties resPropsR2 = residueProps.get(r2SetName);
         ResidueProperties resPropsNOE = residueProps.get(noeSetName);
-        System.out.println("fit S " + resPropsR1 + " " +resPropsR2 + " " + 
-                resPropsNOE);
+        System.out.println("fit S " + resPropsR1 + " " + resPropsR2 + " "
+                + resPropsNOE);
         double tau = 0.0;
         if ((resPropsR1 != null) && (resPropsR2 != null)) {
             Map<Integer, Double> r1Map = resPropsR1.getParMapData(
@@ -191,11 +203,11 @@ public class CorrelationTime {
                 Double r1 = r1Map.get(res);
                 Double r2 = r2Map.get(res);
                 Double noe = noeMap.get(res);
-                    System.out.print("res " + res + " " + r1  + " " + r2 + " " + noe);
+                System.out.print("res " + res + " " + r1 + " " + r2 + " " + noe);
                 Double r1Err = r1ErrMap.get(res);
                 Double r2Err = r2ErrMap.get(res);
                 Double noeErr = noeErrMap.get(res);
-                    System.out.println(" " + r1Err  + " " + r2Err + " " + noeErr);
+                System.out.println(" " + r1Err + " " + r2Err + " " + noeErr);
                 double[] targets = {r1, r2, noe};
                 double[] sigmas = {r1Err, r2Err, noeErr};
                 if ((r1 != null) && (r2 != null) && (noe != null)) {

@@ -61,7 +61,7 @@ public class RelaxFit {
     public void setDiffusionType(DiffusionType type) {
         this.diffusionType = type;
     }
-
+    
     public enum ExptType {
         R1, R2, NOE;
     }
@@ -247,7 +247,7 @@ public class RelaxFit {
 
         return resList;
     }
-
+    
     public double getYVal(double[] pars, RelaxEquations relaxObj, double[] J, ExptType type) {
         double y = 0.0;
         switch (type) {

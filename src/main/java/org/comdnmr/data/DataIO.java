@@ -156,8 +156,8 @@ public class DataIO {
                     }
                 } else if (errorMode.equals("noise")) {
                     if (errorPars.containsKey("value")) {
-                        String percentValue = errorPars.get("value").toString();
-                        noise = Double.parseDouble(percentValue);
+                        String noiseValueStr = errorPars.get("value").toString();
+                        noise = Double.parseDouble(noiseValueStr);
                         eSet = true;
                     }
                 }
@@ -315,8 +315,17 @@ public class DataIO {
                             } else if (errorMode.equals("percent")) {
                                 eValue = (errF * refIntensity) / (intensity * tau);
                             }
+                        } else if (expMode.equals("noe") && (yConv == YCONV.NORMALIZE)) {
+                            double r1 = noise / refIntensity;
+                            double r2 = noise / intensity;
+                            eValue = Math.abs(yValue) * Math.sqrt(r1 * r1 + r2 * r2);
                         } else {
-                            eValue = Math.abs(yValue) * errF;
+                            if (errorMode.equals("percent")) {
+                                eValue = Math.abs(yValue) * errF;
+                            } else if (errorMode.equals("noise")) {
+                                eValue = noise;
+                            }
+
                         }
                         errValueList.add(eValue);
                     }
@@ -343,8 +352,8 @@ public class DataIO {
                 }
             }
         }
-        double errValue = estimateErrors(expData);
         if (!eSet) {
+            double errValue = estimateErrors(expData);
             setErrors(expData, errValue);
         }
     }
@@ -554,10 +563,14 @@ public class DataIO {
                 }
             }
         }
-        double error2 = Math.sqrt(sumDelta2 / (2.0 * nDups));
-        double errorA = Math.sqrt(Math.PI / 2.0) * sumAbs / (2.0 * nDups);
+        double errorA = 0.0;
+        double error2 = 0.0;
+        if (nDups > 0) {
+            error2 = Math.sqrt(sumDelta2 / (2.0 * nDups));
+            errorA = Math.sqrt(Math.PI / 2.0) * sumAbs / (2.0 * nDups);
+        }
         System.out.println("data " + expData.name + " errors " + error2 + "errorA " + errorA + " ndup " + nDups);
-        return errorA;
+        return error2;
     }
 
     public static ResidueProperties loadResultsFile(String fitMode, String fileName) throws IOException {

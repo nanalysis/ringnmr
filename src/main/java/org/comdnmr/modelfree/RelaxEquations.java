@@ -94,6 +94,10 @@ public class RelaxEquations {
         this.sf = sf;
     }
 
+    public static double getSF(double sf, String elemX) {
+        return Math.abs(sf * GAMMA_MAP.get(elemX) / GAMMA_H);
+    }
+
     // Note: tauM = tm in Art Palmer's code, and taui in Relax. 
     /**
      * Model Free spectral density function, J(omega), calculation using Model
@@ -252,15 +256,18 @@ public class RelaxEquations {
         double[] result = {J0, JS, JIminusS, JI, JIplusS};
         return result;
     }
-    
+
     /**
-     * Calculate the d array for the diffusion J(w) calculations.
-     * Equations from the SI of Berlin K.; Longhini, A.; Dayie, T. K. and Fushman, D., J. Biomol NMR, 2013.
-     * @param diffType DiffusionType. The type of diffusion: anisotropic, prolate, or oblate.
+     * Calculate the d array for the diffusion J(w) calculations. Equations from
+     * the SI of Berlin K.; Longhini, A.; Dayie, T. K. and Fushman, D., J.
+     * Biomol NMR, 2013.
+     *
+     * @param diffType DiffusionType. The type of diffusion: anisotropic,
+     * prolate, or oblate.
      * @param D double[][]. The diffusion matrix.
      * @return double[]. The d array.
      */
-    public double[] calcDiffusiond (DiffusionType diffType, double[][] D) {
+    public double[] calcDiffusiond(DiffusionType diffType, double[][] D) {
         double Dx = D[0][0];
         double Dy = D[1][1];
         double Dz = D[2][2];
@@ -269,32 +276,32 @@ public class RelaxEquations {
         switch (diffType) {
             case ANISOTROPIC:
                 dDiff = new double[5];
-                double[] k = {Dy - Dx, Dz - Dx, (Dx + Dy + Dz)/3.0, 0};
-                k[3] = Math.sqrt(k[0]*k[0] - k[0]*k[1] + k[1]*k[1]);
-                dDiff[0] = 4.0*Dx + Dy + Dz;
-                dDiff[1] = Dx  + 4.0*Dy + Dz;
-                dDiff[2] = Dx + Dy + 4.0*Dz;
-                dDiff[3] = 6.0*k[2] + 2.0*k[3];
-                dDiff[4] = 6.0*k[2] - 2.0*k[3];
+                double[] k = {Dy - Dx, Dz - Dx, (Dx + Dy + Dz) / 3.0, 0};
+                k[3] = Math.sqrt(k[0] * k[0] - k[0] * k[1] + k[1] * k[1]);
+                dDiff[0] = 4.0 * Dx + Dy + Dz;
+                dDiff[1] = Dx + 4.0 * Dy + Dz;
+                dDiff[2] = Dx + Dy + 4.0 * Dz;
+                dDiff[3] = 6.0 * k[2] + 2.0 * k[3];
+                dDiff[4] = 6.0 * k[2] - 2.0 * k[3];
                 break;
-            case PROLATE:{
+            case PROLATE: {
                 //Dxx = Dyy
                 double Dpar = Dz;
                 double Dperp = Dx;
-                dDiff[0] = 5.0*Dperp + Dpar;
-                dDiff[1] = 2.0*Dperp + 4.0*Dpar;
-                dDiff[2] = 6.0*Dperp;
+                dDiff[0] = 5.0 * Dperp + Dpar;
+                dDiff[1] = 2.0 * Dperp + 4.0 * Dpar;
+                dDiff[2] = 6.0 * Dperp;
                 break;
-                }
-            case OBLATE:{
+            }
+            case OBLATE: {
                 //Dyy = Dzz
                 double Dpar = Dx;
                 double Dperp = Dz;
-                dDiff[0] = 5.0*Dperp + Dpar;
-                dDiff[1] = 2.0*Dperp + 4.0*Dpar;
-                dDiff[2] = 6.0*Dperp;
+                dDiff[0] = 5.0 * Dperp + Dpar;
+                dDiff[1] = 2.0 * Dperp + 4.0 * Dpar;
+                dDiff[2] = 6.0 * Dperp;
                 break;
-                }
+            }
             default:
                 break;
         }
@@ -303,16 +310,19 @@ public class RelaxEquations {
 //        }
         return dDiff;
     }
-    
+
     /**
-     * Calculate the a array for the diffusion J(w) calculations.
-     * Equations from the SI of Berlin K.; Longhini, A.; Dayie, T. K. and Fushman, D., J. Biomol NMR, 2013.
-     * @param diffType DiffusionType. The type of diffusion: anisotropic, prolate, or oblate.
+     * Calculate the a array for the diffusion J(w) calculations. Equations from
+     * the SI of Berlin K.; Longhini, A.; Dayie, T. K. and Fushman, D., J.
+     * Biomol NMR, 2013.
+     *
+     * @param diffType DiffusionType. The type of diffusion: anisotropic,
+     * prolate, or oblate.
      * @param D double[][]. The diffusion matrix.
      * @param vec double[]. The unit vector for the SI bond.
      * @return double[]. The a array.
      */
-    public double[] calcDiffusiona (DiffusionType diffType, double[][] D, double[][] VT, double[] vec) {
+    public double[] calcDiffusiona(DiffusionType diffType, double[][] D, double[][] VT, double[] vec) {
         double Dx = D[0][0];
         double Dy = D[1][1];
         double Dz = D[2][2];
@@ -323,45 +333,45 @@ public class RelaxEquations {
         double vx = v.get(0, 0); //vec[0]; //vec.getX();
         double vy = v.get(1, 0); //vec[1]; //vec.getY();
         double vz = v.get(2, 0); //vec[2]; //vec.getZ();
-        double vx2 = vx*vx;
-        double vy2 = vy*vy;
-        double vz2 = vz*vz;
+        double vx2 = vx * vx;
+        double vy2 = vy * vy;
+        double vz2 = vz * vz;
         double[] a = new double[3];
         switch (diffType) {
             case ANISOTROPIC:
                 a = new double[5];
-                double[] k = {Dy - Dx, Dz - Dx, (Dx + Dy + Dz)/3.0, 0.0};
-                k[3] = Math.sqrt(k[0]*k[0] - k[0]*k[1] + k[1]*k[1]);
-                double[] delta = {(-k[0] - k[1])/k[3], (2.0*k[0] - k[1])/k[3], (2.0*k[1] - k[0])/k[3]};
+                double[] k = {Dy - Dx, Dz - Dx, (Dx + Dy + Dz) / 3.0, 0.0};
+                k[3] = Math.sqrt(k[0] * k[0] - k[0] * k[1] + k[1] * k[1]);
+                double[] delta = {(-k[0] - k[1]) / k[3], (2.0 * k[0] - k[1]) / k[3], (2.0 * k[1] - k[0]) / k[3]};
                 if (k[0] <= 1e-12 && k[1] <= 1e-12 && k[3] <= 1e-12) {
                     delta = new double[3];
-                }   
+                }
 //                for (int i=0; i<delta.length; i++) {
 //                    System.out.print("del " + i + " = " + delta[i] + " ");
 //                }
 //                System.out.println();
-                a[0] = 3.0*(vy2)*(vz2);
-                a[1] = 3.0*(vx2)*(vz2);
-                a[2] = 3.0*(vx2)*(vy2);
-                double p1 = 0.25*(3.0*((vx2*vx2) + (vy2*vy2) + (vz2*vz2)) - 1.0);
-                double val1 = delta[0]*(3*vx2*vx2 + 2*a[0] - 1.0);
-                double val2 = delta[1]*(3*vy2*vy2 + 2*a[1] - 1.0);
-                double val3 = delta[2]*(3*vz2*vz2 + 2*a[2] - 1.0);
-                double p2 = (1.0/12.0)*(val1 + val2 + val3);
+                a[0] = 3.0 * (vy2) * (vz2);
+                a[1] = 3.0 * (vx2) * (vz2);
+                a[2] = 3.0 * (vx2) * (vy2);
+                double p1 = 0.25 * (3.0 * ((vx2 * vx2) + (vy2 * vy2) + (vz2 * vz2)) - 1.0);
+                double val1 = delta[0] * (3 * vx2 * vx2 + 2 * a[0] - 1.0);
+                double val2 = delta[1] * (3 * vy2 * vy2 + 2 * a[1] - 1.0);
+                double val3 = delta[2] * (3 * vz2 * vz2 + 2 * a[2] - 1.0);
+                double p2 = (1.0 / 12.0) * (val1 + val2 + val3);
                 a[3] = p1 - p2;
                 a[4] = p1 + p2;
                 break;
             case PROLATE:
                 //Dxx = Dyy
-                a[0] = 3.0*(vz2)*(1.0 - vz2);
-                a[1] = 0.75*(1.0 - vz2)*(1.0 - vz2);
-                a[2] = 0.25*(3.0*vz2 - 1.0)*(3.0*vz2 - 1.0);
+                a[0] = 3.0 * (vz2) * (1.0 - vz2);
+                a[1] = 0.75 * (1.0 - vz2) * (1.0 - vz2);
+                a[2] = 0.25 * (3.0 * vz2 - 1.0) * (3.0 * vz2 - 1.0);
                 break;
             case OBLATE:
                 //Dyy = Dzz
-                a[0] = 3.0*(vx2)*(1 - vx2);
-                a[1] = 0.75*(1 - vx2)*(1 - vx2);
-                a[2] = 0.25*(3*vx2 - 1)*(3*vx2 - 1);
+                a[0] = 3.0 * (vx2) * (1 - vx2);
+                a[1] = 0.75 * (1 - vx2) * (1 - vx2);
+                a[2] = 0.25 * (3 * vx2 - 1) * (3 * vx2 - 1);
                 break;
             default:
                 break;
@@ -371,38 +381,45 @@ public class RelaxEquations {
 //        }
         return a;
     }
-    
+
     /**
-     * Calculate the e array for the diffusion J(w) calculations.
-     * Equations from the SI of Berlin K.; Longhini, A.; Dayie, T. K. and Fushman, D., J. Biomol NMR, 2013.
+     * Calculate the e array for the diffusion J(w) calculations. Equations from
+     * the SI of Berlin K.; Longhini, A.; Dayie, T. K. and Fushman, D., J.
+     * Biomol NMR, 2013.
+     *
      * @param dDiff double[]. The d array.
      * @param tauLoc double. The internal correlation time.
      * @return double[]. The e array.
      */
-    public double[] calcDiffusione (double[] dDiff, double tauLoc) {
+    public double[] calcDiffusione(double[] dDiff, double tauLoc) {
         double[] e = new double[dDiff.length];
-        for (int i=0; i<e.length; i++) {
-            e[i] = tauLoc/(dDiff[i]*tauLoc + 1);
+        for (int i = 0; i < e.length; i++) {
+            e[i] = tauLoc / (dDiff[i] * tauLoc + 1);
         }
         return e;
     }
-    
+
     /**
-     * Model Free spectral density function, J(omega), diffusion calculation using ModelFree Model 1, 2, 5, or 6.
-     * Equations from the SI of Berlin K.; Longhini, A.; Dayie, T. K. and Fushman, D., J. Biomol NMR, 2013.
-     * @param diffType DiffusionType. The type of diffusion: anisotropic, prolate, or oblate.
+     * Model Free spectral density function, J(omega), diffusion calculation
+     * using ModelFree Model 1, 2, 5, or 6. Equations from the SI of Berlin K.;
+     * Longhini, A.; Dayie, T. K. and Fushman, D., J. Biomol NMR, 2013.
+     *
+     * @param diffType DiffusionType. The type of diffusion: anisotropic,
+     * prolate, or oblate.
      * @param w double. The frequency, omega.
      * @param D double[][]. The diagonalized diffusion matrix.
-     * @param VT double[][]. The transposed orthonormal matrix of the eigenvectors of D.
+     * @param VT double[][]. The transposed orthonormal matrix of the
+     * eigenvectors of D.
      * @param v double[]. The unit vector for the SI bond.
      * @param s2 double. The order parameter S^2.
      * @param tauF Double. The internal fast correlation time.
-     * @param sf2 Double. The order parameter for intramolecular motions with fast correlation times.
+     * @param sf2 Double. The order parameter for intramolecular motions with
+     * fast correlation times.
      * @param tauS Double. The internal slow correlation time.
      * @return J(w) value.
      */
     public double JDiffusion(DiffusionType diffType, double w, double[][] D, double[][] VT, double[] v, double s2, Double tauF, Double sf2, Double tauS) {
-        double w2 = w*w;
+        double w2 = w * w;
         double[] dDiff = calcDiffusiond(diffType, D);
         double[] a = calcDiffusiona(diffType, D, VT, v);
         double[] eF = new double[dDiff.length];
@@ -420,44 +437,44 @@ public class RelaxEquations {
 //        double value = 0.4 * (value1);
         double sum = 0.0;
         double[] Df = new double[dDiff.length];
-        for (int d=0; d<Df.length; d++) {
+        for (int d = 0; d < Df.length; d++) {
             if (w2 > 0.0) {
-                Df[d] = dDiff[d]/(dDiff[d]*dDiff[d] + w2);
+                Df[d] = dDiff[d] / (dDiff[d] * dDiff[d] + w2);
             } else {
-                Df[d] = 1.0/dDiff[d];
+                Df[d] = 1.0 / dDiff[d];
             }
         }
         if (diffType == ISOTROPIC) {
-            double Diso = (D[0][0] + D[1][1] + D[2][2])/3.0;
-            double tauC = 1.0/(6*Diso);
-            double value1 = s2*tauC/(1.0+w2*tauC*tauC);
+            double Diso = (D[0][0] + D[1][1] + D[2][2]) / 3.0;
+            double tauC = 1.0 / (6 * Diso);
+            double value1 = s2 * tauC / (1.0 + w2 * tauC * tauC);
             double value2 = 0.0;
             double value3 = 0.0;
             if (tauF != null && sf2 == null && tauS == null) {
-                double tauf = tauC*tauF/(tauC + tauF);
-                value2 = (1.0 - s2)*(tauf)/(1.0 + w2*tauf*tauf);
+                double tauf = tauC * tauF / (tauC + tauF);
+                value2 = (1.0 - s2) * (tauf) / (1.0 + w2 * tauf * tauf);
             } else if (tauF != null && sf2 != null && tauS == null) {
-                double tauf = tauC*tauF/(tauC + tauF);
-                value2 = (sf2 - s2)*(tauf)/(1.0 + w2*tauf*tauf);
+                double tauf = tauC * tauF / (tauC + tauF);
+                value2 = (sf2 - s2) * (tauf) / (1.0 + w2 * tauf * tauf);
             } else if (tauF != null && sf2 != null && tauS != null) {
-                double taue = tauC*tauS/(tauC + tauS);
-                double tauf = tauC*tauF/(tauC + tauF);
-                value2 = (sf2 - s2)*(taue)/(1.0 + w2*taue*taue);//(eS[i]*eS[i] + w2);
-                value3 = (1.0 - sf2)*(tauf)/(1.0 + w2*tauf*tauf);//(eF[i]*eF[i] + w2);
+                double taue = tauC * tauS / (tauC + tauS);
+                double tauf = tauC * tauF / (tauC + tauF);
+                value2 = (sf2 - s2) * (taue) / (1.0 + w2 * taue * taue);//(eS[i]*eS[i] + w2);
+                value3 = (1.0 - sf2) * (tauf) / (1.0 + w2 * tauf * tauf);//(eF[i]*eF[i] + w2);
             }
-            sum = value1 + value2 + value3; 
+            sum = value1 + value2 + value3;
         } else {
-            for (int i=0; i<dDiff.length; i++) {
-                double value1 = s2*(Df[i]*a[i]);
+            for (int i = 0; i < dDiff.length; i++) {
+                double value1 = s2 * (Df[i] * a[i]);
                 double value2 = 0.0;
                 double value3 = 0.0;
                 if (tauF != null && sf2 == null && tauS == null) {
-                    value2 = (1.0 - s2)*(eF[i]*a[i])/(1.0 + w2*eF[i]*eF[i]);//(eF[i]*eF[i] + w2);
+                    value2 = (1.0 - s2) * (eF[i] * a[i]) / (1.0 + w2 * eF[i] * eF[i]);//(eF[i]*eF[i] + w2);
                 } else if (tauF != null && sf2 != null && tauS == null) {
-                    value2 = (sf2 - s2)*(eF[i]*a[i])/(1.0 + w2*eF[i]*eF[i]);//(eF[i]*eF[i] + w2);
+                    value2 = (sf2 - s2) * (eF[i] * a[i]) / (1.0 + w2 * eF[i] * eF[i]);//(eF[i]*eF[i] + w2);
                 } else if (tauF != null && sf2 != null && tauS != null) {
-                    value2 = (sf2 - s2)*(eS[i]*a[i])/(1.0 + w2*eS[i]*eS[i]);//(eS[i]*eS[i] + w2);
-                    value3 = (1.0 - sf2)*(eF[i]*a[i])/(1.0 + w2*eF[i]*eF[i]);//(eF[i]*eF[i] + w2);
+                    value2 = (sf2 - s2) * (eS[i] * a[i]) / (1.0 + w2 * eS[i] * eS[i]);//(eS[i]*eS[i] + w2);
+                    value3 = (1.0 - sf2) * (eF[i] * a[i]) / (1.0 + w2 * eF[i] * eF[i]);//(eF[i]*eF[i] + w2);
                 }
                 sum += value1 + value2 + value3;
             }
@@ -465,18 +482,22 @@ public class RelaxEquations {
         double value = 0.4 * sum;
         return value;
     }
-    
-    // Note: tauM = tm in Art Palmer's code, and taui in Relax. 
 
+    // Note: tauM = tm in Art Palmer's code, and taui in Relax. 
     /**
-     * Model Free spectral density function, J(omega), calculations using ModelFree Model 1, 2, 5, or 6.
-     * @param diffType DiffusionType. The type of diffusion: anisotropic, prolate, or oblate.
+     * Model Free spectral density function, J(omega), calculations using
+     * ModelFree Model 1, 2, 5, or 6.
+     *
+     * @param diffType DiffusionType. The type of diffusion: anisotropic,
+     * prolate, or oblate.
      * @param D double[][]. The diagonalized diffusion matrix.
-     * @param VT double[][]. The transposed orthonormal matrix of the eigenvectors of D.
+     * @param VT double[][]. The transposed orthonormal matrix of the
+     * eigenvectors of D.
      * @param v double[]. The unit vector for the SI bond.
      * @param s2 double. The order parameter S^2.
      * @param tauF Double. The internal fast correlation time.
-     * @param sf2 Double. The order parameter for intramolecular motions with fast correlation times.
+     * @param sf2 Double. The order parameter for intramolecular motions with
+     * fast correlation times.
      * @param tauS Double. The internal slow correlation time.
      * @return double[]. Array of J(w) values.
      */
@@ -489,7 +510,6 @@ public class RelaxEquations {
         double[] result = {J0, JS, JIminusS, JI, JIplusS};
         return result;
     }
-    
 
     /**
      * Spectral density function calculation.
@@ -540,7 +560,7 @@ public class RelaxEquations {
     public double calcS2(double J0, double bN, double mN) {
         return (5 / 2) * Math.sqrt((J0 - bN) * mN);
     }
-        
+
     /**
      * Spectral density function calculations.
      *
@@ -703,10 +723,11 @@ public class RelaxEquations {
         double nuxy2 = 2.0 * p * dN * (4.0 * J[0] + 3.0 * J[S]) * (3.0 * cosTheta * cosTheta - 1.0);
         return nuxy2;
     }
-    
+
     /**
-     * Calculate rhoExp from Eqn 6 in Berlin K.; Longhini, A.; Dayie, T. K. and Fushman, D., J. Biomol NMR, 2013.
-     * 
+     * Calculate rhoExp from Eqn 6 in Berlin K.; Longhini, A.; Dayie, T. K. and
+     * Fushman, D., J. Biomol NMR, 2013.
+     *
      * @param R1 double. Experimentally measured R1 value.
      * @param R2 double. Experimentally measured R2 value.
      * @param NOE double. Experimentally measured NOE value.
@@ -714,43 +735,47 @@ public class RelaxEquations {
      * @return double. RhoExp.
      */
     public double calcRhoExp(double R1, double R2, double NOE, double[] J) {
-        double w1 = (J[ImS] + 6*J[IpS]) / (6*J[IpS] - J[ImS]);
-        double w2 = (6*J[I]) / (6*J[IpS] - J[ImS]);
+        double w1 = (J[ImS] + 6 * J[IpS]) / (6 * J[IpS] - J[ImS]);
+        double w2 = (6 * J[I]) / (6 * J[IpS] - J[ImS]);
         double f = (gammaS / gammaI) * R1 * (NOE - 1);
-        double rhoExp = (2*R2 - R1 - w2*f) / (R1 - w1*f);
+        double rhoExp = (2 * R2 - R1 - w2 * f) / (R1 - w1 * f);
         return rhoExp;
     }
-    
+
     /**
      * Calculate the standard deviation error in rhoExp.
-     * 
+     *
      * @param R1 double. Experimentally measured R1 value.
      * @param R2 double. Experimentally measured R2 value.
      * @param NOE double. Experimentally measured NOE value.
      * @param J double[]. Array of spectral density function values, J(w).
-     * @param R1err double. Error value for the experimentally measured R1 value.
-     * @param R2err double. Error value for the experimentally measured R2 value.
-     * @param NOEerr double. Error value for the experimentally measured NOE value.
+     * @param R1err double. Error value for the experimentally measured R1
+     * value.
+     * @param R2err double. Error value for the experimentally measured R2
+     * value.
+     * @param NOEerr double. Error value for the experimentally measured NOE
+     * value.
      * @param rhoExp double. Calculated rhoExp value.
      * @return double. RhoExp sigma squared error.
      */
     public double calcRhoExpError(double R1, double R2, double NOE, double[] J, double R1err, double R2err, double NOEerr, double rhoExp) {
-        double w1 = (J[ImS] + 6*J[IpS]) / (6*J[IpS] - J[ImS]);
-        double w2 = (6*J[I]) / (6*J[IpS] - J[ImS]);
+        double w1 = (J[ImS] + 6 * J[IpS]) / (6 * J[IpS] - J[ImS]);
+        double w2 = (6 * J[I]) / (6 * J[IpS] - J[ImS]);
         double f = (gammaS / gammaI) * R1 * (NOE - 1);
-        double rhoExp1 = 2*R2 - R1 - w2*f;
-        double rhoExp2 = R1 - w1*f;
-        double rhoExpErr1 = Math.sqrt(2*2*R2err*R2err + R1err*R1err + 
-                w2*w2*(f*f*((R1err/R1)*(R1err/R1)+(NOEerr/NOE)*(NOEerr/NOE)) + R1err*R1err));
-        double rhoExpErr2 = Math.sqrt(R1err*R1err + 
-                w1*w1*(f*f*((R1err/R1)*(R1err/R1)+(NOEerr/NOE)*(NOEerr/NOE)) + R1err*R1err));
-        double rhoExpErr = Math.sqrt(rhoExp*rhoExp*((rhoExpErr1/rhoExp1)*(rhoExpErr1/rhoExp1) + (rhoExpErr2/rhoExp2)*(rhoExpErr2/rhoExp2)));
+        double rhoExp1 = 2 * R2 - R1 - w2 * f;
+        double rhoExp2 = R1 - w1 * f;
+        double rhoExpErr1 = Math.sqrt(2 * 2 * R2err * R2err + R1err * R1err
+                + w2 * w2 * (f * f * ((R1err / R1) * (R1err / R1) + (NOEerr / NOE) * (NOEerr / NOE)) + R1err * R1err));
+        double rhoExpErr2 = Math.sqrt(R1err * R1err
+                + w1 * w1 * (f * f * ((R1err / R1) * (R1err / R1) + (NOEerr / NOE) * (NOEerr / NOE)) + R1err * R1err));
+        double rhoExpErr = Math.sqrt(rhoExp * rhoExp * ((rhoExpErr1 / rhoExp1) * (rhoExpErr1 / rhoExp1) + (rhoExpErr2 / rhoExp2) * (rhoExpErr2 / rhoExp2)));
         return rhoExpErr;
     }
-    
+
     /**
-     * Calculate rhoExp from function computeRho() in RotDif code (..../relax/RelaxationDatum.java).
-     * 
+     * Calculate rhoExp from function computeRho() in RotDif code
+     * (..../relax/RelaxationDatum.java).
+     *
      * @param R1 double. Experimentally measured R1 value.
      * @param R2 double. Experimentally measured R2 value.
      * @param NOE double. Experimentally measured NOE value.
@@ -758,23 +783,24 @@ public class RelaxEquations {
      * @return double. RhoExp.
      */
     public double calcRhoExpCode(double R1, double R2, double NOE, double[] J) {
-        double w1 = (J[ImS] + 6*J[IpS]) / (6*J[IpS] - J[ImS]);
-        double w2 = 0.5*(6*J[I] + 6*J[IpS] + J[ImS]) / (6*J[IpS] - J[ImS]);
+        double w1 = (J[ImS] + 6 * J[IpS]) / (6 * J[IpS] - J[ImS]);
+        double w2 = 0.5 * (6 * J[I] + 6 * J[IpS] + J[ImS]) / (6 * J[IpS] - J[ImS]);
         double f = (gammaS / gammaI) * R1 * (NOE - 1);
-        double R1c = R1 - w1*f;
-        double R2c = R2 - w2*f;
-        double rhoExp = (2*R2c - R1c) / (R1c);
+        double R1c = R1 - w1 * f;
+        double R2c = R2 - w2 * f;
+        double rhoExp = (2 * R2c - R1c) / (R1c);
         return rhoExp;
     }
-    
+
     /**
-     * Calculate rhoPred from Eqn 7 in Berlin K.; Longhini, A.; Dayie, T. K. and Fushman, D., J. Biomol NMR, 2013.
-     * 
+     * Calculate rhoPred from Eqn 7 in Berlin K.; Longhini, A.; Dayie, T. K. and
+     * Fushman, D., J. Biomol NMR, 2013.
+     *
      * @param J double[]. Array of spectral density function values, J(w).
      * @return double. RhoExp.
      */
     public double calcRhoPred(double[] J) {
-        double rhoPred = (4.0/3.0) * (J[0]/J[S]);
+        double rhoPred = (4.0 / 3.0) * (J[0] / J[S]);
         return rhoPred;
     }
 
