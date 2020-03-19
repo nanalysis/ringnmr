@@ -13,7 +13,8 @@ rem
 if "%OS%" == "Windows_NT" setlocal
 
 set comdnmrver=${project.version}
-set comdnmrmain=org.comdnmr.comdnmr.chart.MainApp
+set comdnmrmain=org.python.util.jython
+
 
 
 set dir=%~dp0
