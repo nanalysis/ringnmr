@@ -41,9 +41,9 @@ public class RelaxEquations {
     public final static double SQRT2 = Math.sqrt(2.0);
 
     public final static double MU0 = 4.0e-7 * Math.PI;
-    public final static double GAMMA_N = -2.71e7;
+    public final static double GAMMA_N = -2.7116e7;
     public final static double GAMMA_C = 6.72828e7;
-    public final static double GAMMA_H = 2.68e8;
+    public final static double GAMMA_H = 2.6752218744e8;
 
     public final static double PLANCK = 1.054e-34;
     public final static double R_HN = 1.02e-10;
