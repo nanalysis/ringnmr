@@ -165,6 +165,7 @@ public class DataIO {
         }
 
         boolean gotHeader = false;
+        boolean hasErrColumns = false;
         String[] peakRefs = null;
         double[] xValues = null;
         int offset = 0;
@@ -216,6 +217,13 @@ public class DataIO {
                                 break;
                             }
                         }
+                        // check to see if file has err values
+                        for (int i = 0; i < nfields; i++) {
+                            if (sfields[i].startsWith("err")) {
+                                hasErrColumns = true;
+                                break;
+                            }
+                        }
                     } else {
                         for (int i = 0; i < nfields; i++) {
                             if (sfields[i].startsWith("Res")) {
@@ -227,28 +235,37 @@ public class DataIO {
                     }
                     if (expMode.equals("cest") || expMode.equals("cpmg") || expMode.equals("noe")) {
                         offset++;
+                        if (hasErrColumns) {
+                            offset++;
+                        }
                     }
-
                     int nValues = nfields - offset;
+                    if (hasErrColumns) {
+                        nValues /= 2;
+                    }
                     xValues = new double[nValues];
                     peakRefs = new String[nValues];
-                    System.out.println("off " + offset + " " + nfields);
+                    System.out.println("off " + offset + " " + nfields + " " + hasErrColumns);
+                    int iX = 0;
                     for (int i = offset; i < nfields; i++) {
-                        int j = i - offset;
                         // fixme assumes first vcpmg is the 0 ref   
                         // fixme. need to explicitly account for alternating x-value, errorHeader fields
                         if (xVals == null) {
                             try {
                                 double x = Double.parseDouble(sfields[i].trim());
-                                xValues[j] = xConv.convert(x, delayCalc, expData);
+                                if (hasErrColumns) {
+                                    i++;
+                                }
+                                xValues[iX] = xConv.convert(x, delayCalc, expData);
 
                             } catch (NumberFormatException nFE) {
                             }
                         } else {
-                            xValues[j] = xVals[j];
+                            xValues[iX] = xVals[iX];
                         }
-                        peakRefs[j] = String.valueOf(j);
-                        peakRefList.add(peakRefs[j]);
+                        peakRefs[iX] = String.valueOf(iX);
+                        peakRefList.add(peakRefs[iX]);
+                        iX++;
                     }
                     gotHeader = true;
                     header = sline;
@@ -280,15 +297,22 @@ public class DataIO {
                         }
                     }
                     double refIntensity = 1.0;
+                    double refError = 0.0;
                     if (expMode.equals("cest") || expMode.equals("cpmg") || expMode.equals("noe")) {
-                        refIntensity = Double.parseDouble(sfields[offset - 1].trim());
+                        if (hasErrColumns) {
+                            refIntensity = Double.parseDouble(sfields[offset - 2].trim());
+                            refError = Double.parseDouble(sfields[offset - 1].trim());
+                        } else {
+                            refIntensity = Double.parseDouble(sfields[offset - 1].trim());
+                        }
+
                     }
                     List<Double> xValueList = new ArrayList<>();
                     List<Double> yValueList = new ArrayList<>();
                     List<Double> errValueList = new ArrayList<>();
                     boolean ok = true;
+                    int iX = 0;
                     for (int i = offset; i < sfields.length; i++) {
-                        int j = i - offset;
                         String valueStr = sfields[i].trim();
                         if ((valueStr.length() == 0) || valueStr.equals("NA")) {
                             continue;
@@ -306,10 +330,24 @@ public class DataIO {
                             ok = false;
                             continue;
                         }
-                        xValueList.add(xValues[j]);
+                        xValueList.add(xValues[iX]);
                         yValueList.add(yValue);
+
                         double eValue = 0.0;
-                        if (expMode.equals("cpmg")) {
+                        if (hasErrColumns) {
+                            i++;
+                        }
+                        if (hasErrColumns && errorMode.equals("measured")) {
+                            eValue = Double.parseDouble(sfields[i].trim());
+                            eSet = true;
+                            if (expMode.equals("cpmg")) {
+                                eValue = eValue / (intensity * tau);
+                            } else if (expMode.equals("noe") && (yConv == YCONV.NORMALIZE)) {
+                                double r1 = refError / refIntensity;
+                                double r2 = eValue / intensity;
+                                eValue = Math.abs(yValue) * Math.sqrt(r1 * r1 + r2 * r2);
+                            }
+                        } else if (expMode.equals("cpmg")) {
                             if (errorMode.equals("noise")) {
                                 eValue = noise / (intensity * tau);
                             } else if (errorMode.equals("percent")) {
@@ -325,9 +363,9 @@ public class DataIO {
                             } else if (errorMode.equals("noise")) {
                                 eValue = noise;
                             }
-
                         }
                         errValueList.add(eValue);
+                        iX++;
                     }
                     if (!ok) {
                         continue;
