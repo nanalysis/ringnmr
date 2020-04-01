@@ -57,6 +57,19 @@ public class Fitter {
         return fitter;
     }
 
+    public double value(double[] par) {
+        // setup values array in case we've passed in a functin that uses it
+
+        int nA = xValues.length + 2;
+        double[][] values = new double[nA][];
+        for (int i = 0; i < xValues.length; i++) {
+            values[i] = xValues[i];
+        }
+        values[nA - 2] = yValues;
+        values[nA - 1] = errValues;
+        return valuesFunction.apply(par, values);
+    }
+
 //    public static Fitter getExpressionFitter(String expression, String[] parNames, String[] varNames) throws CompileException {
 //        Fitter fitter = new Fitter();
 //
@@ -73,7 +86,6 @@ public class Fitter {
 //        fitter.ee = ee;
 //        return fitter;
 //    }
-
 //    public double evalExpression(double[] pars, double[] vars) {
 //        Double[] exprPars = new Double[pars.length + vars.length];
 //        for (int i = 0; i < pars.length; i++) {
@@ -110,7 +122,6 @@ public class Fitter {
 //        }
 //        return values;
 //    }
-
     public PointValuePair fit(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) throws Exception {
         this.start = start;
         this.lowerBounds = lowerBounds.clone();
@@ -128,7 +139,7 @@ public class Fitter {
         this.yValues = yValues;
         this.errValues = errValues;
     }
-    
+
     class Optimizer implements MultivariateFunction {
 
         RandomGenerator random = new SynchronizedRandomGenerator(new Well19937c());
@@ -172,7 +183,7 @@ public class Fitter {
 
             double[] par = deNormalize(normPar);
 //            if (valuesFunction != null) {
-                return valuesFunction.apply(par, values);
+            return valuesFunction.apply(par, values);
 //            }
 //            double sumAbs = 0.0;
 //            double sumSq = 0.0;
@@ -287,12 +298,11 @@ public class Fitter {
         }
     }
 
-    
     public double[] bootstrap(double[] guess, int nSim, boolean parametric, double[] yPred) {
         reportFitness = false;
         int nPar = start.length;
         parValues = new double[nPar + 1][nSim];
-        
+
         IntStream.range(0, nSim).parallel().forEach(iSim -> {
             double[][] newX = new double[xValues.length][yValues.length];
             double[] newY = new double[yValues.length];
