@@ -267,7 +267,7 @@ public class InputDataInterface {
         // set event to checkbox 
         ppmBox.setOnAction(boxevent);
 
-        errModeChoice.getItems().addAll(Arrays.asList("percent", "replicates", "noise"));
+        errModeChoice.getItems().addAll(Arrays.asList("percent", "replicates", "noise", "measured"));
         errModeChoice.setValue("percent");
         errModeChoice.valueProperty().addListener(e -> updateErrorMode());
 
@@ -351,7 +351,7 @@ public class InputDataInterface {
 
     void updateErrorMode() {
         if ((errModeChoice != null) && (errModeChoice.getValue() != null)) {
-            if (errModeChoice.getValue().equals("replicates")) {
+            if (errModeChoice.getValue().equals("replicates") || errModeChoice.getValue().equals("measured")) {
                 errPercentTextField.setDisable(true);
             } else {
                 errPercentTextField.setDisable(false);
@@ -392,7 +392,7 @@ public class InputDataInterface {
                 for (Button button : buttons) {
                     button.setDisable(false);
                 }
-                errModeChoice.getItems().setAll(Arrays.asList("percent", "replicates", "noise"));
+                errModeChoice.getItems().setAll(Arrays.asList("percent", "replicates", "noise", "measured"));
                 errModeChoice.setValue("percent");
                 xValTextArea.setDisable(false);
                 errModeChoice.setDisable(false);
@@ -422,7 +422,7 @@ public class InputDataInterface {
                     xConvChoice.setValue("identity");
                     yConvChoice.setValue("identity");
                 } else if (fitModeChoice.getSelectionModel().getSelectedItem().equals("NOE")) {
-                    errModeChoice.getItems().setAll(Arrays.asList("percent", "noise"));
+                    errModeChoice.getItems().setAll(Arrays.asList("percent", "noise", "measured"));
                     errModeChoice.setValue("noise");
                     B1TextField.setDisable(true);
                     tauTextField.setDisable(true);
@@ -595,7 +595,7 @@ public class InputDataInterface {
         }
         HashMap hmde = new HashMap();
         hmde.put("mode", errModeChoice.getValue());
-        if (!errModeChoice.getValue().equals("replicates")) {
+        if (!errModeChoice.getValue().equals("replicates") && !errModeChoice.getValue().equals("measured")) {
             hmde.put("value", Double.parseDouble(errPercentTextField.getText()));
         }
         HashMap hmdd = new HashMap();
