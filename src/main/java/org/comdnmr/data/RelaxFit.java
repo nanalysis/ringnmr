@@ -61,7 +61,7 @@ public class RelaxFit {
     public void setDiffusionType(DiffusionType type) {
         this.diffusionType = type;
     }
-    
+
     public enum ExptType {
         R1, R2, NOE;
     }
@@ -247,7 +247,7 @@ public class RelaxFit {
 
         return resList;
     }
-    
+
     public double getYVal(double[] pars, RelaxEquations relaxObj, double[] J, ExptType type) {
         double y = 0.0;
         switch (type) {
@@ -361,7 +361,8 @@ public class RelaxFit {
             double rhoExp = relaxObj.calcRhoExp(r1, r2, noe, J);
             double rhoPred = relaxObj.calcRhoPred(J);
             double delta = rhoPred - rhoExp;
-//            System.out.println(iRes + ": " + rhoExp + ", " + rhoPred + " " + delta);
+            System.out.println(r1 + " " + r2 + " " + noe);
+            System.out.println(iRes + ": " + rhoExp + ", " + rhoPred + " " + delta);
             double error = relaxObj.calcRhoExpError(r1, r2, noe, J, r1Err, r2Err, noeErr, rhoExp);//(r1Err + r2Err + noeErr) / 3;//
             chiSq = (delta * delta) / (error * error);
             val = delta * delta;
@@ -474,13 +475,10 @@ public class RelaxFit {
         double[][] VT = rotResults[1];
         int n = values[0].length;
         double sum = 0.0;
-        Map<Integer, double[]> expValMap = new HashMap<>();
-        Map<Integer, double[]> expErrMap = new HashMap<>();
-        for (int i = 0; i < n; i++) {
+        for (int i = 0; i < n; i += 3) {
             int iField = (int) xValues[i][0];
             RelaxEquations relaxObj = relaxObjs.get(iField);
             int iRes = (int) xValues[i][1];
-            int iExpType = (int) xValues[i][2];
             int iCoord = (int) xValues[i][3];
             int modelNum = residueModels[iRes];
             int nDiffPars = 6;
@@ -497,10 +495,24 @@ public class RelaxFit {
 //            parStart += resParStart[i];
             double[] v = coords[iCoord];
             double[] J = getJDiffusion(resPars, relaxObj, modelNum, v, diffusionType, D, VT);
-            sum += diffSqDiffusion(iRes, iExpType, i, values, relaxObj, J, expValMap, expErrMap);
+            double r1 = values[2][i];
+            double r2 = values[2][i + 1];
+            double noe = values[2][i + 2];
+//            double r1Err = errValues[i];
+//            double r2Err = errValues[i+1];
+//            double noeErr = errValues[i+2];
+            double rhoExp = relaxObj.calcRhoExp(r1, r2, noe, J);
+            double rhoPred = relaxObj.calcRhoPred(J);
+            double delta = rhoPred - rhoExp;
+            System.out.println("i iRes iField " + i + " " + iRes + " " + iField);
+            System.out.println("R1, R2, NOE: " + r1 + ", " + r2 + ", " + noe);
+            System.out.println("RhoExp, RhoPred, delta: " + rhoExp + ", " + rhoPred + ", " + delta);
+//            double error = relaxObj.calcRhoExpError(r1, r2, noe, J, r1Err, r2Err, noeErr, rhoExp);//(r1Err + r2Err + noeErr) / 3;//
+//            sum += (delta * delta) / (error * error);
+            sum += delta * delta;
 //            System.out.println("sum = " + sum);
         }
-        double rms = Math.sqrt(sum / n / 3);
+        double rms = Math.sqrt(sum / n);
 
         return rms;
 
@@ -758,6 +770,16 @@ public class RelaxFit {
         parErrs = fitter.bootstrap(result.getPoint(), 300, true, yCalc);
     }
 
+    public double calcD(double sf, double[] pars) {
+        Fitter fitter = Fitter.getArrayFitter(this::valueDMat);
+        this.B0 = sf * 2.0 * Math.PI / RelaxEquations.GAMMA_H;
+        double[] xVals0 = new double[yValues.length];
+        double[][] xValues2 = {xVals0, xVals0};//{xValues[0], xValues[1]};
+        fitter.setXYE(xValues2, yValues, errValues);
+        
+        return fitter.value(pars);
+    }
+
     public PointValuePair fitD(double sf, double[] guesses) {
         Fitter fitter = Fitter.getArrayFitter(this::valueDMat);
         this.B0 = sf * 2.0 * Math.PI / RelaxEquations.GAMMA_H;
@@ -768,8 +790,8 @@ public class RelaxFit {
         double[] lower = new double[guesses.length]; //{max0 / 2.0, r0 / 2.0, max1 / 2.0, 1.0};
         double[] upper = new double[guesses.length]; //{max0 * 2.0, r0 * 2.0, max1 * 2.0, 100.0};
         for (int i = 0; i < lower.length; i++) {
-            lower[i] = guesses[i] / 20.0;
-            upper[i] = guesses[i] * 20.0;
+            lower[i] = guesses[i] * 0.5;
+            upper[i] = guesses[i] * 2.0;
         }
         //bounds for the global fit parameters (e.g. tauM, Dxx, Dyy, Dzz, alpha, 
         //beta, gamma), where the indices in the parameter array are always the
