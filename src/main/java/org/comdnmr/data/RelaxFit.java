@@ -1,6 +1,7 @@
 package org.comdnmr.data;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.math3.geometry.euclidean.threed.NotARotationMatrixException;
@@ -17,9 +18,6 @@ import static org.comdnmr.data.RelaxFit.DiffusionType.OBLATE;
 import static org.comdnmr.data.RelaxFit.DiffusionType.PROLATE;
 import static org.comdnmr.data.RelaxFit.DiffusionType.ISOTROPIC;
 import org.comdnmr.modelfree.RelaxEquations;
-import org.ejml.data.DMatrixRMaj;
-import org.ejml.dense.row.CommonOps_DDRM;
-import static org.ejml.dense.row.CommonOps_DDRM.transpose;
 
 /**
  *
@@ -61,7 +59,7 @@ public class RelaxFit {
     public void setDiffusionType(DiffusionType type) {
         this.diffusionType = type;
     }
-    
+
     public enum ExptType {
         R1, R2, NOE;
     }
@@ -247,7 +245,7 @@ public class RelaxFit {
 
         return resList;
     }
-    
+
     public double getYVal(double[] pars, RelaxEquations relaxObj, double[] J, ExptType type) {
         double y = 0.0;
         switch (type) {
@@ -361,7 +359,8 @@ public class RelaxFit {
             double rhoExp = relaxObj.calcRhoExp(r1, r2, noe, J);
             double rhoPred = relaxObj.calcRhoPred(J);
             double delta = rhoPred - rhoExp;
-//            System.out.println(iRes + ": " + rhoExp + ", " + rhoPred + " " + delta);
+            System.out.println(r1 + " " + r2 + " " + noe);
+            System.out.println(iRes + ": " + rhoExp + ", " + rhoPred + " " + delta);
             double error = relaxObj.calcRhoExpError(r1, r2, noe, J, r1Err, r2Err, noeErr, rhoExp);//(r1Err + r2Err + noeErr) / 3;//
             chiSq = (delta * delta) / (error * error);
             val = delta * delta;
@@ -466,6 +465,11 @@ public class RelaxFit {
     public double valueDMat(double[] pars, double[][] values) {
         //fixme first 3 pars are NOT the values of the diagonlized D, but should be
         //angles wrong as well because of this??
+        if (diffusionType == OBLATE || diffusionType == PROLATE) {
+            Arrays.sort(pars, 0, 2);
+        } else if (diffusionType == ANISOTROPIC) {
+            Arrays.sort(pars, 0, 3);
+        }
 //        for (int p=0; p<9; p++) {
 //            System.out.println("pars " + p + " = " + pars[p]);
 //        }
@@ -474,13 +478,10 @@ public class RelaxFit {
         double[][] VT = rotResults[1];
         int n = values[0].length;
         double sum = 0.0;
-        Map<Integer, double[]> expValMap = new HashMap<>();
-        Map<Integer, double[]> expErrMap = new HashMap<>();
-        for (int i = 0; i < n; i++) {
+        for (int i = 0; i < n; i += 3) {
             int iField = (int) xValues[i][0];
             RelaxEquations relaxObj = relaxObjs.get(iField);
             int iRes = (int) xValues[i][1];
-            int iExpType = (int) xValues[i][2];
             int iCoord = (int) xValues[i][3];
             int modelNum = residueModels[iRes];
             int nDiffPars = 6;
@@ -490,6 +491,7 @@ public class RelaxFit {
             double[] resPars = new double[nParsPerModel[modelNum] + nDiffPars];
             for (int j = 0; j < nDiffPars; j++) {
                 resPars[j] = pars[j];
+//                System.out.println(resPars[j]);
             }
 //            int parStart = resParStart[iRes] + nDiffPars;
 //            System.arraycopy(pars, parStart, resPars, nDiffPars, nParsPerModel[modelNum]);
@@ -497,10 +499,24 @@ public class RelaxFit {
 //            parStart += resParStart[i];
             double[] v = coords[iCoord];
             double[] J = getJDiffusion(resPars, relaxObj, modelNum, v, diffusionType, D, VT);
-            sum += diffSqDiffusion(iRes, iExpType, i, values, relaxObj, J, expValMap, expErrMap);
+            double r1 = values[2][i];
+            double r2 = values[2][i + 1];
+            double noe = values[2][i + 2];
+//            double r1Err = errValues[i];
+//            double r2Err = errValues[i+1];
+//            double noeErr = errValues[i+2];
+            double rhoExp = relaxObj.calcRhoExp(r1, r2, noe, J);
+            double rhoPred = relaxObj.calcRhoPred(J);
+            double delta = rhoPred - rhoExp;
+//            System.out.println("iField, iRes = " + iField + ", " + iRes);
+//            System.out.println("Fit R1, R2, NOE: " + r1 + ", " + r2 + ", " + noe);
+//            System.out.println("RhoExp, RhoPred, delta: " + rhoExp + ", " + rhoPred + ", " + delta);
+//            double error = relaxObj.calcRhoExpError(r1, r2, noe, J, r1Err, r2Err, noeErr, rhoExp);//(r1Err + r2Err + noeErr) / 3;//
+//            sum += (delta * delta) / (error * error);
+            sum += delta * delta;
 //            System.out.println("sum = " + sum);
         }
-        double rms = Math.sqrt(sum / n / 3);
+        double rms = Math.sqrt(sum / n);
 
         return rms;
 
@@ -758,6 +774,15 @@ public class RelaxFit {
         parErrs = fitter.bootstrap(result.getPoint(), 300, true, yCalc);
     }
 
+    public double calcD(double sf, double[] pars) {
+        Fitter fitter = Fitter.getArrayFitter(this::valueDMat);
+        this.B0 = sf * 2.0 * Math.PI / RelaxEquations.GAMMA_H;
+        double[] xVals0 = new double[yValues.length];
+        double[][] xValues2 = {xVals0, xVals0};//{xValues[0], xValues[1]};
+        fitter.setXYE(xValues2, yValues, errValues);
+        return fitter.value(pars);
+    }
+
     public PointValuePair fitD(double sf, double[] guesses) {
         Fitter fitter = Fitter.getArrayFitter(this::valueDMat);
         this.B0 = sf * 2.0 * Math.PI / RelaxEquations.GAMMA_H;
@@ -768,36 +793,62 @@ public class RelaxFit {
         double[] lower = new double[guesses.length]; //{max0 / 2.0, r0 / 2.0, max1 / 2.0, 1.0};
         double[] upper = new double[guesses.length]; //{max0 * 2.0, r0 * 2.0, max1 * 2.0, 100.0};
         for (int i = 0; i < lower.length; i++) {
-            lower[i] = guesses[i] / 20.0;
-            upper[i] = guesses[i] * 20.0;
+            lower[i] = guesses[i] / 2;//1.0005;//20.0;
+            upper[i] = guesses[i] * 2;//1.0005;//20.0;
         }
         //bounds for the global fit parameters (e.g. tauM, Dxx, Dyy, Dzz, alpha, 
         //beta, gamma), where the indices in the parameter array are always the
         //same regardless of the model used.
+        //guess = 0, 0, 0
+        int nDiffPars = 1;
+        int nAnglePars = 1;
+        double lba = 0.0;
+        double uba = Math.PI / 2.0;
         if (diffusionType == OBLATE || diffusionType == PROLATE) {
-            int iAlpha = 2;
-            int iBeta = 3;
-            lower[iAlpha] = 0.0;
-            upper[iAlpha] = Math.PI;///2;
-            lower[iBeta] = 0.0;
-            upper[iBeta] = Math.PI;///2;
-//            iS2diff -= 2;
+            nDiffPars = 2;
+            nAnglePars = 2;
         } else { //anisotropic
-            int iAlpha = 3;
-            int iBeta = 4;
-            int iGamma = 5;
-            lower[iAlpha] = 0.0;
-            upper[iAlpha] = Math.PI;///2;
-            lower[iBeta] = 0.0;
-            upper[iBeta] = Math.PI;///2;
-            lower[iGamma] = 0.0;
-            upper[iGamma] = Math.PI;///2;
+            nDiffPars = 3;
+            nAnglePars = 3;
+        }
+        for (int a = nDiffPars; a < nDiffPars + nAnglePars; a++) {
+            if (guesses[a] >= 0.0 && guesses[a] < Math.PI / 2.0) {
+                lba = 0.0;
+                uba = Math.PI / 2.0;
+            } else if (guesses[a] >= Math.PI / 2.0 && guesses[a] < Math.PI) {
+                lba = Math.PI / 2.0;
+                uba = Math.PI;
+            } else if (guesses[a] >= Math.PI && guesses[a] < 3 * Math.PI / 2.0) {
+                lba = Math.PI;
+                uba = 3* Math.PI / 2.0;
+            } else if (guesses[a] >= 3 * Math.PI / 2.0 && guesses[a] <= 2 * Math.PI) {
+                lba = 3 * Math.PI / 2.0;
+                uba = 2 * Math.PI;
+            }
+            lower[a] = lba;
+            upper[a] = uba;
         }
 //        for (int i=0; i<guesses.length; i++) {
 //            System.out.println("guess lower upper " + i + " " + guesses[i] + " " + lower[i] + " " + upper[i]);
 //        }
         try {
             PointValuePair result = fitter.fit(start, lower, upper, 10.0);
+            System.out.println("Scaled guess, bounds:");
+            for (int i = 0; i < lower.length; i++) {
+                double lb = lower[i];
+                double ub = upper[i];
+                double guess = guesses[i];
+                if (i < 3) {
+                    lb /= 1e7;
+                    ub /= 1e7;
+                    guess /= 1e7;
+                } else {
+                    lb = Math.toDegrees(lb);
+                    ub = Math.toDegrees(ub);
+                    guess = Math.toDegrees(guess);
+                }
+                System.out.printf("guess %7.3f LB %7.3f UB %7.3f\n", guess, lb, ub);
+            }
             bestPars = result.getPoint();
             bestChiSq = result.getValue();
             int k = bestPars.length;

@@ -30,7 +30,7 @@ import org.comdnmr.modelfree.RelaxEquations;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class JDiffusionTestAnisotropic {
+public class JDiffusionAnisotropicTest {
     
     private final double Dxx = 4.4170*1e7; //44169507.013
     private final double Dyy = 4.5832*1e7; //45831876.669
