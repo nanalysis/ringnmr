@@ -40,11 +40,11 @@
     </fileSets>
     <files>
         <file>
-            <source>src/main/scripts/comdnmr.bat</source>
+            <source>src/main/scripts/ringnmr.bat</source>
             <filtered>true</filtered>
         </file>
         <file>
-            <source>src/main/scripts/comdnmr</source>
+            <source>src/main/scripts/ringnmr</source>
             <filtered>true</filtered>
             <fileMode>0744</fileMode>
         </file>
