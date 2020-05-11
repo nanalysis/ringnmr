@@ -46,6 +46,27 @@ public class RelaxFit {
     double[] tauMBounds = {3.8e-9, 4.5e-9};
     double[][] coords;
     DiffusionType diffusionType;
+    static int ANISO_ANGLE_STARTS[][] = {
+        {0, 0, 0},
+        {1, 0, 0},
+        {0, 1, 0},
+        {1, 1, 0},
+        {0, 0, 1},
+        {1, 0, 1},
+        {0, 1, 1},
+        {1, 1, 1}
+    };
+    static int ANGLE_STARTS[][] = {
+        {0, 0},
+        {1, 0},
+        {0, 1},
+        {1, 1}
+    };
+
+    public static double[] getDValues(double isoD) {
+        double[] anisoD = {0.75 * isoD, isoD, 1.25 * isoD};
+        return anisoD;
+    }
 
     public void setXYE(double[][] xValues, double[] yValues, double[] errValues) {
         this.xValues = xValues;
@@ -66,7 +87,90 @@ public class RelaxFit {
     }
 
     public enum DiffusionType {
-        PROLATE, OBLATE, ANISOTROPIC, ISOTROPIC;
+        ISOTROPIC(1, 0) {
+            @Override
+            public double[] getGuess(double isoD) {
+                double[] guess = {isoD};
+                return guess;
+            }
+
+            public double[] getAngles(int iStart) {
+                return new double[0];
+            }
+        },
+        PROLATE(2, 2) {
+            @Override
+            public double[] getGuess(double isoD) {
+                double[] guess = {0.75 * isoD, 1.25 * isoD};
+                return guess;
+            }
+
+            public double[] getAngles(int iStart) {
+                int[] jAng = ANGLE_STARTS[iStart];
+                double[] angles = new double[2];
+                for (int i = 0; i < 2; i++) {
+                    angles[i] = (Math.PI * (jAng[i] * 2 + 1)) / 4;
+                }
+                return angles;
+            }
+        }, OBLATE(2, 2) {
+            @Override
+            public double[] getGuess(double isoD) {
+                double[] guess = {0.75 * isoD, 1.25 * isoD};
+                return guess;
+            }
+
+            public double[] getAngles(int iStart) {
+                int[] jAng = ANGLE_STARTS[iStart];
+                double[] angles = new double[2];
+                for (int i = 0; i < 2; i++) {
+                    angles[i] = (Math.PI * (jAng[i] * 2 + 1)) / 4;
+                }
+                return angles;
+            }
+        }, ANISOTROPIC(3, 3) {
+            @Override
+            public double[] getGuess(double isoD) {
+                double[] anisoD = {0.75 * isoD, isoD, 1.25 * isoD};
+                return anisoD;
+            }
+
+            public double[] getAngles(int iStart) {
+                int[] jAng = ANISO_ANGLE_STARTS[iStart];
+                double[] angles = new double[3];
+                for (int i = 0; i < 3; i++) {
+                    angles[i] = (Math.PI * (jAng[i] * 2 + 1)) / 4;
+                }
+                return angles;
+            }
+        };
+
+        int nAnglePars;
+        int nDiffPars;
+        int nAngleGuesses;
+
+        DiffusionType(int nDiffPars, int nAnglePars) {
+            this.nAnglePars = nAnglePars;
+            this.nDiffPars = nDiffPars;
+            this.nAngleGuesses = (int) Math.pow(2, nAnglePars);
+        }
+
+        public abstract double[] getGuess(double isoD);
+
+        public abstract double[] getAngles(int iStart);
+
+        public int getNAnglePars() {
+            return nAnglePars;
+        }
+
+        public int getNDiffusionPars() {
+            return nDiffPars;
+        }
+
+        public int getNAngleGuesses() {
+            return nAngleGuesses;
+        }
+
     }
 
     public void makeRelaxObjs(double[] fields, String elem1, String elem2) {
@@ -234,7 +338,22 @@ public class RelaxFit {
 
     public double[][][] rotateD(double[] resPars) {
         double[][][] resList = new double[2][3][3];
-        double[][] D = {{resPars[0], 0.0, 0.0}, {0.0, resPars[1], 0.0}, {0.0, 0.0, resPars[2]}};
+        double dx = resPars[0];
+        double d1 = resPars[1];
+        double d2 = 0.0;
+        double dy = 0.0;
+        double dz = 0.0;
+        if (diffusionType == PROLATE) {
+            dy = dx;
+            dz = d1;
+        } else if (diffusionType == OBLATE) {
+            dy = d1;
+            dz = d1;
+        } else if (diffusionType == ANISOTROPIC) {
+            dy = d1;
+            dz = resPars[2];
+        }
+        double[][] D = {{dx, 0.0, 0.0}, {0.0, dy, 0.0}, {0.0, 0.0, dz}};
         Rotation rot = getDRotation(resPars, diffusionType);
         double[][] VT = getRotationMatrix(rot);//getVT();
         for (int i = 0; i < 3; i++) {
@@ -797,41 +916,15 @@ public class RelaxFit {
             lower[i] = guesses[i] / 2;//1.0005;//20.0;
             upper[i] = guesses[i] * 2;//1.0005;//20.0;
         }
-        //bounds for the global fit parameters (e.g. tauM, Dxx, Dyy, Dzz, alpha, 
-        //beta, gamma), where the indices in the parameter array are always the
-        //same regardless of the model used.
-        //guess = 0, 0, 0
-        int nDiffPars = 1;
-        int nAnglePars = 1;
+        int nDiffPars = diffusionType.getNDiffusionPars();
+        int nAnglePars = diffusionType.getNAnglePars();
         double lba = 0.0;
         double uba = Math.PI / 2.0;
-        if (diffusionType == OBLATE || diffusionType == PROLATE) {
-            nDiffPars = 2;
-            nAnglePars = 2;
-        } else { //anisotropic
-            nDiffPars = 3;
-            nAnglePars = 3;
-        }
+        System.out.println(diffusionType + " " + nDiffPars + " " + nAnglePars);
         for (int a = nDiffPars; a < nDiffPars + nAnglePars; a++) {
-            if (guesses[a] >= 0.0 && guesses[a] < Math.PI / 2.0) {
-                lba = 0.0;
-                uba = Math.PI / 2.0;
-            } else if (guesses[a] >= Math.PI / 2.0 && guesses[a] < Math.PI) {
-                lba = Math.PI / 2.0;
-                uba = Math.PI;
-            } else if (guesses[a] >= Math.PI && guesses[a] < 3 * Math.PI / 2.0) {
-                lba = Math.PI;
-                uba = 3* Math.PI / 2.0;
-            } else if (guesses[a] >= 3 * Math.PI / 2.0 && guesses[a] <= 2 * Math.PI) {
-                lba = 3 * Math.PI / 2.0;
-                uba = 2 * Math.PI;
-            }
-            lower[a] = lba;
-            upper[a] = uba;
+            lower[a] = guesses[a] - Math.PI / 4.0;
+            upper[a] = guesses[a] + Math.PI / 4.0;
         }
-//        for (int i=0; i<guesses.length; i++) {
-//            System.out.println("guess lower upper " + i + " " + guesses[i] + " " + lower[i] + " " + upper[i]);
-//        }
         try {
             PointValuePair result = fitter.fit(start, lower, upper, 10.0);
             System.out.println("Scaled guess, bounds:");
@@ -839,7 +932,7 @@ public class RelaxFit {
                 double lb = lower[i];
                 double ub = upper[i];
                 double guess = guesses[i];
-                if (i < 3) {
+                if (i < nDiffPars) {
                     lb /= 1e7;
                     ub /= 1e7;
                     guess /= 1e7;

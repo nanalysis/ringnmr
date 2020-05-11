@@ -28,7 +28,6 @@ public class DRefineTest {
     private final double[][] coords = {{-0.840520439988, 0.251236972341, -0.480005597563}, {0.9814339134, -0.191797895758, 0.00102020157318}, {-0.955293038943, -0.171462853144, 0.240864484178}, {0.884096563515, -0.0510448362307, -0.464508009699}, {-0.740091119785, -0.354222922159, 0.571656589075}, {0.568022639788, -0.0418113612771, -0.821950175349}, {-0.815494393476, -0.509683995923, 0.274209989806}, {0.117286198689, 0.160121158211, -0.980104669048}, {-0.877336828014, 0.139761797021, 0.459071596054}, {0.922063885321, 0.028591128227, -0.385980231065}, {0.977466549127, -0.0499956794439, -0.205084317719}, {-0.962280468126, 0.206130068464, -0.177557583726}, {0.835347749015, -0.417163894197, 0.358006178149}, {-0.843690894955, 0.371346415676, -0.387669335046}, {0.446877359685, -0.567268977135, 0.691741666362}, {-0.511024992739, 0.504904932945, -0.695646796502}, {-0.681249363051, 0.730201413091, -0.0520115531671}, {0.774191188537, -0.630369110034, -0.0571208255047}, {0.423475119964, -0.834705176219, -0.352045581657}, {0.693167203159, -0.720730552917, 0.00816691844665}, {0.30004358509, -0.890945747563, -0.340865841565}, {0.46422529739, -0.884578753489, 0.0448921166707}, {0.655160369331, -0.735779791725, -0.171443834965}, {0.405310151205, -0.769783007578, -0.493110335093}, {0.209243269664, -0.947208557308, -0.242926332585}, {0.493075645756, -0.861606304385, -0.120461544926}, {0.60182153356, -0.724225913267, -0.336612044194}, {0.319231733984, -0.920978452994, -0.223360222819}, {0.786943256562, -0.593014308771, -0.170453338321}, {-0.00408038799316, -0.374375598373, -0.927268171446}, {-0.123584417003, 0.18793002255, 0.97437631257}, {0.49378604147, 0.326470110063, -0.805973084218}, {-0.882976391784, -0.0193724612516, 0.469017482934}, {0.984036808696, 0.135623725965, -0.115229180707}, {-0.97872532189, 0.0826660595132, 0.187784629018}, {0.900929419262, 0.378533198807, -0.21222346456}, {0.976239430559, -0.171377454894, 0.132613506763}, {-0.978994554933, -0.186815436447, 0.0816679503594}, {0.842285008542, 0.0326704488162, -0.538041453941}, {-0.735384340313, -0.215209564225, 0.64256884105}, {0.688828228668, -0.0591882033522, -0.722504275402}};
 
     private final int[] residueModels = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    private final DiffusionType diffusionType = ANISOTROPIC;
 
     private final double tauC = 3.3e-9;
     private final double Di = 1.0 / (6.0 * tauC);
@@ -40,18 +39,19 @@ public class DRefineTest {
     {0.75 * Di, Di, 1.25 * Di, 3 * Math.PI / 4.0, Math.PI / 4.0, 3 * Math.PI / 4.0},
     {0.75 * Di, Di, 1.25 * Di, Math.PI / 4.0, 3 * Math.PI / 4.0, 3 * Math.PI / 4.0},
     {0.75 * Di, Di, 1.25 * Di, 3 * Math.PI / 4.0, 3 * Math.PI / 4.0, 3 * Math.PI / 4.0}};
+
 //    private final double[] guesses = {0.75 * Di, Di, 1.25 * Di, Math.PI / 2, Math.PI / 2, Math.PI / 2};
 //    private final double[] guesses = {4.4170 * 1e7, 4.5832 * 1e7, 6.0129 * 1e7, Math.toRadians(98.06),
 //            Math.toRadians(68.64), Math.toRadians(77.42)};
     private final double[] fields = {400.0e6, 500e6, 600e6, 700e6, 800.0e6};
 
-    public double[] scalePars(double[] pars) {
+    public double[] scalePars(double[] pars, int nDiffPars) {
         double[] scaledPars = new double[pars.length];
         for (int p = 0; p < pars.length; p++) {
             double newPar = pars[p];
-            if (p < 3) {
+            if (p < nDiffPars) {
                 newPar /= 1.0e7;
-            } else if (p >= 3 && p <= 6) {
+            } else if (p >= nDiffPars) {
                 newPar *= 180.0 / Math.PI;
             }
             scaledPars[p] = newPar;
@@ -66,7 +66,7 @@ public class DRefineTest {
 
         relaxFit.setXYE(xVals, yVals, errVals);
         relaxFit.setCoords(coords);
-        relaxFit.setDiffusionType(diffusionType);
+        relaxFit.setDiffusionType(DiffusionType.ANISOTROPIC);
         relaxFit.setResidueModels(residueModels, true);
         double[] pars = {4.4170 * 1e7, 4.5832 * 1e7, 6.0129 * 1e7, Math.toRadians(98.06),
             Math.toRadians(68.64), Math.toRadians(77.42)};
@@ -83,47 +83,60 @@ public class DRefineTest {
 
         relaxFit.setXYE(xVals, yVals, errVals);
         relaxFit.setCoords(coords);
-        relaxFit.setDiffusionType(diffusionType);
         relaxFit.setResidueModels(residueModels, true);
 
         double[] rotDifPars = {4.4170, 4.5832, 6.0129, 98.06, 68.64, 77.42};
-        double bestFitRMS = Integer.MAX_VALUE;
-        Fitter bestFitter;
-        double[] bestGuesses = new double[guessList[0].length];
-        double[] bestFitPars = new double[guessList[0].length];
-        for (double[] guessSub : guessList) {
-            PointValuePair fitResult = relaxFit.fitD(fields[0], guessSub);
-            double fitRMS = fitResult.getValue();
-            double[] scaledGuesses = scalePars(guessSub);
-            Fitter fitter = relaxFit.getFitter();
-            double[] fitPars = relaxFit.getPars();
-            Arrays.sort(fitPars, 0, 3);
-            double[] scaledPars = scalePars(fitPars);
+        double bestFitRMS = Double.MAX_VALUE;
+        double[] bestGuesses = null;
+        double[] bestFitPars = null;
+        DiffusionType bestType = null;
 
-            System.out.println("RMS: " + fitRMS);
-            System.out.println("Scaled guesses, Fit Pars, RotDif Pars: ");
-            for (int i = 0; i < scaledGuesses.length; i++) {
-                System.out.printf("guess %7.3f best Fit %7.3f RotDif %7.3f\n",
-                        scaledGuesses[i], scaledPars[i], rotDifPars[i]);
+        double isoD = 1.0 / (6.0 * tauC);
+        for (DiffusionType diffType : DiffusionType.values()) {
+            if (diffType == DiffusionType.ISOTROPIC) {
+                continue;
             }
-            System.out.println();
-            
-            if (fitRMS < bestFitRMS) {
-                bestGuesses = guessSub;
-                bestFitRMS = fitRMS;
-                bestFitter = fitter;
-                bestFitPars = fitPars;
+            int nPars = diffType.getNAnglePars() + diffType.getNDiffusionPars();
+            double[] guess = new double[nPars];
+            relaxFit.setDiffusionType(diffType);
+            System.out.println("ddddddddddddddd " + diffType.toString() + " " + nPars);
+            System.arraycopy(diffType.getGuess(isoD), 0, guess, 0, diffType.getNDiffusionPars());
+            int nGuesses = diffType.getNAngleGuesses();
+            for (int iGuess = 0; iGuess < nGuesses; iGuess++) {
+                double[] angleGuess = diffType.getAngles(iGuess);
+                System.arraycopy(angleGuess, 0, guess, diffType.getNDiffusionPars(), diffType.getNAnglePars());
+                PointValuePair fitResult = relaxFit.fitD(fields[0], guess);
+                double fitRMS = fitResult.getValue();
+                double[] scaledGuesses = scalePars(guess, diffType.getNDiffusionPars());
+                double[] fitPars = relaxFit.getPars();
+                Arrays.sort(fitPars, 0, diffType.getNDiffusionPars());
+                double[] scaledPars = scalePars(fitPars, diffType.getNDiffusionPars());
+
+                System.out.println("RMS: " + fitRMS);
+                System.out.println("Scaled guesses, Fit Pars, RotDif Pars: ");
+                for (int i = 0; i < scaledGuesses.length; i++) {
+                    System.out.printf("guess %7.3f best Fit %7.3f RotDif %7.3f\n",
+                            scaledGuesses[i], scaledPars[i], rotDifPars[i]);
+                }
+                System.out.println();
+
+                if (fitRMS < bestFitRMS) {
+                    bestGuesses = guess.clone();
+                    bestFitRMS = fitRMS;
+                    bestFitPars = fitPars.clone();
+                    bestType = diffType;
+                }
             }
         }
-
+        relaxFit.setDiffusionType(bestType);
         double[][][] rotResults = relaxFit.rotateD(bestFitPars);
         double[][] D = rotResults[0];
         double[][] VT = rotResults[1];
 
-        double[] scaledBestGuesses = scalePars(bestGuesses);
-        double[] scaledBestFitPars = scalePars(bestFitPars);
-     
-        System.out.println("\nbest Fit RMS: " + bestFitRMS);
+        double[] scaledBestGuesses = scalePars(bestGuesses, bestType.getNDiffusionPars());
+        double[] scaledBestFitPars = scalePars(bestFitPars, bestType.getNDiffusionPars());
+
+        System.out.println("\nbest Fit RMS: " + bestFitRMS + " " + bestType.toString());
         System.out.println("Scaled best guesses, best Fit Pars, RotDif Pars: ");
         for (int i = 0; i < scaledBestGuesses.length; i++) {
             System.out.printf("guess %7.3f best Fit %7.3f RotDif %7.3f\n",
