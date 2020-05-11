@@ -1,4 +1,4 @@
-package org.comdnmr.data;
+package org.comdnmr.modelfree;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,13 +10,14 @@ import org.apache.commons.math3.geometry.euclidean.threed.RotationConvention;
 import org.apache.commons.math3.geometry.euclidean.threed.RotationOrder;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.optim.PointValuePair;
-import static org.comdnmr.data.RelaxFit.ExptType.NOE;
-import static org.comdnmr.data.RelaxFit.ExptType.R1;
-import static org.comdnmr.data.RelaxFit.ExptType.R2;
-import static org.comdnmr.data.RelaxFit.DiffusionType.ANISOTROPIC;
-import static org.comdnmr.data.RelaxFit.DiffusionType.OBLATE;
-import static org.comdnmr.data.RelaxFit.DiffusionType.PROLATE;
-import static org.comdnmr.data.RelaxFit.DiffusionType.ISOTROPIC;
+import org.comdnmr.data.Fitter;
+import static org.comdnmr.modelfree.RelaxFit.ExptType.NOE;
+import static org.comdnmr.modelfree.RelaxFit.ExptType.R1;
+import static org.comdnmr.modelfree.RelaxFit.ExptType.R2;
+import static org.comdnmr.modelfree.RelaxFit.DiffusionType.ANISOTROPIC;
+import static org.comdnmr.modelfree.RelaxFit.DiffusionType.OBLATE;
+import static org.comdnmr.modelfree.RelaxFit.DiffusionType.PROLATE;
+import static org.comdnmr.modelfree.RelaxFit.DiffusionType.ISOTROPIC;
 import org.comdnmr.modelfree.RelaxEquations;
 
 /**

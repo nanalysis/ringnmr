@@ -9,9 +9,9 @@ import java.util.Arrays;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.optim.PointValuePair;
 import org.comdnmr.data.Fitter;
-import org.comdnmr.data.RelaxFit;
-import org.comdnmr.data.RelaxFit.DiffusionType;
-import static org.comdnmr.data.RelaxFit.DiffusionType.ANISOTROPIC;
+import org.comdnmr.modelfree.RelaxFit;
+import org.comdnmr.modelfree.RelaxFit.DiffusionType;
+import static org.comdnmr.modelfree.RelaxFit.DiffusionType.ANISOTROPIC;
 import org.junit.Test;
 import org.junit.Assert;
 

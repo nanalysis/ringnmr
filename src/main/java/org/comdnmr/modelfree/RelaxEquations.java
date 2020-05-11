@@ -22,11 +22,11 @@ import java.util.HashMap;
 import java.util.Map;
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.dense.row.CommonOps_DDRM;
-import static org.comdnmr.data.RelaxFit.DiffusionType;
-import static org.comdnmr.data.RelaxFit.DiffusionType.ANISOTROPIC;
-import static org.comdnmr.data.RelaxFit.DiffusionType.OBLATE;
-import static org.comdnmr.data.RelaxFit.DiffusionType.PROLATE;
-import static org.comdnmr.data.RelaxFit.DiffusionType.ISOTROPIC;
+import static org.comdnmr.modelfree.RelaxFit.DiffusionType;
+import static org.comdnmr.modelfree.RelaxFit.DiffusionType.ANISOTROPIC;
+import static org.comdnmr.modelfree.RelaxFit.DiffusionType.OBLATE;
+import static org.comdnmr.modelfree.RelaxFit.DiffusionType.PROLATE;
+import static org.comdnmr.modelfree.RelaxFit.DiffusionType.ISOTROPIC;
 
 /**
  *
