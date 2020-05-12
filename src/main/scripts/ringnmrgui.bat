@@ -20,13 +20,13 @@ set comdnmrmain=org.comdnmr.gui.MainApp
 set dir=%~dp0
 set javaexe=java
 
-set cp="%dir%comdnmrgui-%nvjver%.jar;%dir%lib/Manifest.jar"
+set cp="%dir%ringnmrgui-%nvjver%.jar;%dir%lib/Manifest.jar"
 
 set testjava=%dir%jre\bin\java.exe
 
 if exist %testjava% (
     set javaexe="%testjava%"
-    set cp="%dir%lib/comdnmrgui-%comdnmrver%.jar;%dir%lib/%Manifest.jar"
+    set cp="%dir%lib/ringnmrgui-%comdnmrver%.jar;%dir%lib/%Manifest.jar"
 )
 
 
