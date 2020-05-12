@@ -3,6 +3,7 @@ package org.comdnmr.modelfree;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.apache.commons.math3.geometry.euclidean.threed.NotARotationMatrixException;
 import org.apache.commons.math3.geometry.euclidean.threed.Rotation;
@@ -10,6 +11,7 @@ import org.apache.commons.math3.geometry.euclidean.threed.RotationConvention;
 import org.apache.commons.math3.geometry.euclidean.threed.RotationOrder;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.optim.PointValuePair;
+import org.comdnmr.data.BondVectorData;
 import org.comdnmr.data.Fitter;
 import static org.comdnmr.modelfree.RelaxFit.ExptType.NOE;
 import static org.comdnmr.modelfree.RelaxFit.ExptType.R1;
@@ -18,7 +20,6 @@ import static org.comdnmr.modelfree.RelaxFit.DiffusionType.ANISOTROPIC;
 import static org.comdnmr.modelfree.RelaxFit.DiffusionType.OBLATE;
 import static org.comdnmr.modelfree.RelaxFit.DiffusionType.PROLATE;
 import static org.comdnmr.modelfree.RelaxFit.DiffusionType.ISOTROPIC;
-import org.comdnmr.modelfree.RelaxEquations;
 
 /**
  *
@@ -33,6 +34,8 @@ public class RelaxFit {
     double[][] xValues;
     double[] yValues;
     double[] errValues;
+    List<RelaxDataValue> dValues;
+    BondVectorData bData;
     double[] bestPars;
     double[] parErrs;
     double bestAIC;
@@ -66,6 +69,14 @@ public class RelaxFit {
     public static double[] getDValues(double isoD) {
         double[] anisoD = {0.75 * isoD, isoD, 1.25 * isoD};
         return anisoD;
+    }
+
+    public void setRelaxData(List<RelaxDataValue> dValues) {
+        this.dValues = dValues;
+    }
+
+    public void setBondVectorData(BondVectorData bData) {
+        this.bData = bData;
     }
 
     public void setXYE(double[][] xValues, double[] yValues, double[] errValues) {
@@ -582,6 +593,37 @@ public class RelaxFit {
 
     }
 
+    public double valueDMat2(double[] pars, double[][] values) {
+        if (diffusionType == OBLATE || diffusionType == PROLATE) {
+            Arrays.sort(pars, 0, 2);
+        } else if (diffusionType == ANISOTROPIC) {
+            Arrays.sort(pars, 0, 3);
+        }
+        double[][][] rotResults = rotateD(pars);
+        double[][] D = rotResults[0];
+        double[][] VT = rotResults[1];
+        double sumSq = 0.0;
+        double[][] vectors = bData.getVectors();
+        int modelNum = 1;
+        int nDiffPars = diffusionType.getNDiffusionPars() + diffusionType.getNAnglePars();
+        for (RelaxDataValue dValue : dValues) {
+            RelaxEquations relaxObj = dValue.relaxObj;
+            double[] v = vectors[dValue.resIndex];
+            double[] resPars = new double[nParsPerModel[modelNum] + nDiffPars];
+            System.arraycopy(pars, 0, resPars, 0, nDiffPars);
+            resPars[resPars.length - 1] = 1.0; //Model 0: S2 = 1.0, all others null.
+            double[] J = getJDiffusion(resPars, relaxObj, modelNum, v, diffusionType, D, VT);
+            double rhoExp = dValue.calcExpRho(J);
+            double rhoPred = dValue.calcPredRho(J);
+            double delta = rhoPred - rhoExp;
+            sumSq += delta * delta;
+        }
+        double rms = Math.sqrt(sumSq / dValues.size());
+
+        return rms;
+
+    }
+
     public double valueDMat(double[] pars, double[][] values) {
         //fixme first 3 pars are NOT the values of the diagonlized D, but should be
         //angles wrong as well because of this??
@@ -613,10 +655,7 @@ public class RelaxFit {
                 resPars[j] = pars[j];
 //                System.out.println(resPars[j]);
             }
-//            int parStart = resParStart[iRes] + nDiffPars;
-//            System.arraycopy(pars, parStart, resPars, nDiffPars, nParsPerModel[modelNum]);
             resPars[resPars.length - 1] = 1.0; //Model 0: S2 = 1.0, all others null.
-//            parStart += resParStart[i];
             double[] v = coords[iCoord];
             double[] J = getJDiffusion(resPars, relaxObj, modelNum, v, diffusionType, D, VT);
             double r1 = values[2][i];
@@ -956,5 +995,48 @@ public class RelaxFit {
             return null;
         }
 
+    }
+
+    public PointValuePair fitD2(double[] guesses) {
+        Fitter fitter = Fitter.getArrayFitter(this::valueDMat2);
+        double[] start = guesses;
+        double[] lower = new double[guesses.length];
+        double[] upper = new double[guesses.length];
+        int nDiffPars = diffusionType.getNDiffusionPars();
+        int nAnglePars = diffusionType.getNAnglePars();
+        System.out.println(diffusionType + " " + nDiffPars + " " + nAnglePars);
+        for (int i = 0; i < nDiffPars; i++) {
+            lower[i] = guesses[i] / 2;
+            upper[i] = guesses[i] * 2;
+        }
+        for (int i = nDiffPars; i < nDiffPars + nAnglePars; i++) {
+            lower[i] = guesses[i] - Math.PI / 4.0;
+            upper[i] = guesses[i] + Math.PI / 4.0;
+        }
+        try {
+            PointValuePair result = fitter.fit(start, lower, upper, 10.0);
+            System.out.println("Scaled guess, bounds:");
+            for (int i = 0; i < lower.length; i++) {
+                double lb = lower[i];
+                double ub = upper[i];
+                double guess = guesses[i];
+                if (i < nDiffPars) {
+                    lb /= 1e7;
+                    ub /= 1e7;
+                    guess /= 1e7;
+                } else {
+                    lb = Math.toDegrees(lb);
+                    ub = Math.toDegrees(ub);
+                    guess = Math.toDegrees(guess);
+                }
+                System.out.printf("guess %7.3f LB %7.3f UB %7.3f\n", guess, lb, ub);
+            }
+            bestPars = result.getPoint();
+            bestChiSq = result.getValue();
+            return result;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
+        }
     }
 }

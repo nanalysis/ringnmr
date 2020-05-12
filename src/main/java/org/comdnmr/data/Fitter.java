@@ -37,18 +37,10 @@ public class Fitter {
     double[] upperBounds;
     double[] start;
     double inputSigma;
-    BiFunction<double[], double[], Double> function;
     BiFunction<double[], double[][], Double> valuesFunction = null;
-//    ExpressionEvaluator ee = null;
 
     private Fitter() {
 
-    }
-
-    public static Fitter getFitter(BiFunction<double[], double[], Double> function) {
-        Fitter fitter = new Fitter();
-        fitter.function = function;
-        return fitter;
     }
 
     public static Fitter getArrayFitter(BiFunction<double[], double[][], Double> function) {
@@ -70,65 +62,13 @@ public class Fitter {
         return valuesFunction.apply(par, values);
     }
 
-//    public static Fitter getExpressionFitter(String expression, String[] parNames, String[] varNames) throws CompileException {
-//        Fitter fitter = new Fitter();
-//
-//        ExpressionEvaluator ee = new ExpressionEvaluator();
-//        Class[] allClasses = new Class[parNames.length + varNames.length];
-//        String[] allNames = new String[parNames.length + varNames.length];
-//        System.arraycopy(parNames, 0, allNames, 0, parNames.length);
-//        System.arraycopy(varNames, 0, allNames, parNames.length, varNames.length);
-//
-//        Arrays.fill(allClasses, double.class);
-//        ee.setParameters(allNames, allClasses);
-//        ee.setExpressionType(double.class);
-//        ee.cook(expression);
-//        fitter.ee = ee;
-//        return fitter;
-//    }
-//    public double evalExpression(double[] pars, double[] vars) {
-//        Double[] exprPars = new Double[pars.length + vars.length];
-//        for (int i = 0; i < pars.length; i++) {
-//            exprPars[i] = pars[i];
-//        }
-//        for (int i = 0; i < vars.length; i++) {
-//            exprPars[i + pars.length] = vars[i];
-//        }
-//        double value = 0.0;
-//        try {
-//            value = (Double) ee.evaluate(exprPars);
-//        } catch (InvocationTargetException ex) {
-//        }
-//        return value;
-//    }
-//
-//    public double[] evalExpression(double[] pars, double[][] vars) {
-//        Double[] exprPars = new Double[pars.length + vars.length];
-//        int n = vars[0].length;
-//        double[] values = new double[n];
-//        for (int j = 0; j < n; j++) {
-//            for (int i = 0; i < pars.length; i++) {
-//                exprPars[i] = pars[i];
-//            }
-//            for (int i = 0; i < vars.length; i++) {
-//                exprPars[i + pars.length] = vars[i][j];
-//            }
-//            double value = 0.0;
-//            try {
-//                value = (Double) ee.evaluate(exprPars);
-//            } catch (InvocationTargetException ex) {
-//            }
-//            values[j] = value;
-//        }
-//        return values;
-//    }
     public PointValuePair fit(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) throws Exception {
         this.start = start;
         this.lowerBounds = lowerBounds.clone();
         this.upperBounds = upperBounds.clone();
         this.inputSigma = inputSigma;
         Optimizer opt = new Optimizer();
-        opt.setXYE(xValues, yValues, errValues);
+       // opt.setXYE(xValues, yValues, errValues);
         PointValuePair result = opt.refineCMAES(start, inputSigma);
 
         return result;
@@ -180,38 +120,8 @@ public class Fitter {
 
         @Override
         public double value(double[] normPar) {
-
             double[] par = deNormalize(normPar);
-//            if (valuesFunction != null) {
             return valuesFunction.apply(par, values);
-//            }
-//            double sumAbs = 0.0;
-//            double sumSq = 0.0;
-//            double[] ax = new double[xValues.length];
-//            for (int i = 0; i < yValues.length; i++) {
-//                final double value;
-//                for (int j = 0; j < xValues.length; j++) {
-//                    ax[j] = xValues[j][i];
-//                }
-//                if (ee != null) {
-//                    value = evalExpression(par, ax);
-//                } else {
-//                    value = function.apply(par, ax);
-//
-//                }
-//                double delta = (value - yValues[i]);
-//                if (weightFit) {
-//                    delta /= errValues[i];
-//                }
-//                sumAbs += FastMath.abs(delta);
-//                sumSq += delta * delta;
-//            }
-//            if (absMode) {
-//                return sumAbs / (yValues.length - par.length);
-//            } else {
-//                return sumSq / (yValues.length - par.length);
-//            }
-
         }
 
         void fixGuesses(double[] guesses) {

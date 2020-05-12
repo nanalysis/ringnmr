@@ -34,6 +34,8 @@ import static org.comdnmr.modelfree.RelaxFit.DiffusionType.ISOTROPIC;
  */
 public class RelaxEquations {
 
+    static Map<String, RelaxEquations> relaxMap = new HashMap<>();
+
     static final int S = 1;
     static final int ImS = 2;
     static final int I = 3;
@@ -92,6 +94,24 @@ public class RelaxEquations {
         c2 = c * c;
 
         this.sf = sf;
+    }
+
+    public static RelaxEquations getRelaxEquations(double sf, String elem1, String elem2) {
+        int sfI = (int) Math.round(sf / 1.0e6);
+        String key = sfI + elem1 + elem2;
+        if (!relaxMap.containsKey(key)) {
+            RelaxEquations rObj = new RelaxEquations(sf, elem1, elem2);
+            relaxMap.put(key, rObj);
+        }
+        return relaxMap.get(key);
+    }
+
+    public double getGammaS() {
+        return gammaS;
+    }
+
+    public double getGammaI() {
+        return gammaI;
     }
 
     public static double getSF(double sf, String elemX) {
