@@ -420,22 +420,19 @@ public class RelaxFit {
     }
 
     public double value(double[] pars, double[][] values) {
-        int n = values[0].length;
-        double sum = 0.0;
-        for (int i = 0; i < n; i++) {
-            int iField = (int) xValues[i][0];
-            RelaxEquations relaxObj = relaxObjs.get(iField);
-            int iRes = (int) xValues[i][1];
-            int iExpType = (int) xValues[i][2];
-            int modelNum = residueModels[iRes];
+        int modelNum = 1;
+        double sumSq = 0.0;
+        for (RelaxDataValue dValue : dValues) {
+            RelaxEquations relaxObj = dValue.relaxObj;
             double[] J = getJ(pars, relaxObj, modelNum);
-            ExptType type = expTypeArray[iExpType];
-            double y = getYVal(pars, relaxObj, J, type);
-            double delta = y - values[2][i];
-            sum += (delta * delta) / (errValues[i] * errValues[i]);
-        }
-        double rms = Math.sqrt(sum / n);
+            double r1 = relaxObj.R1(J);
+            double r2 = relaxObj.R2(J, 0.0);
+            double noe = relaxObj.NOE(J);
+            double delta2 = dValue.score2(r1, r2, noe);
 
+            sumSq += delta2;
+        }
+        double rms = Math.sqrt(sumSq / (3.0 * dValues.size()));
         return rms;
 
     }
@@ -901,6 +898,40 @@ public class RelaxFit {
         parErrs = fitter.bootstrap(result.getPoint(), 300, true, yCalc);
     }
 
+    public PointValuePair fitResidueToModel1(double[] guesses) {
+        Fitter fitter = Fitter.getArrayFitter(this::value);
+        double[] start = guesses;
+        double[] lower = new double[guesses.length];
+        double[] upper = new double[guesses.length];
+        lower[0] = guesses[0] / 2.0;
+        upper[0] = guesses[0] * 2.0;
+        lower[1] = 0.05;
+        upper[1] = 1.0;
+        try {
+            PointValuePair result = fitter.fit(start, lower, upper, 10.0);
+            return result;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
+        }
+    }
+    public PointValuePair fitResidueToModel2(double[] guesses) {
+        Fitter fitter = Fitter.getArrayFitter(this::value);
+        double[] start = guesses;
+        double[] lower = new double[guesses.length];
+        double[] upper = new double[guesses.length];
+        lower[0] = guesses[0] / 2.0;
+        upper[0] = guesses[0] * 2.0;
+        lower[1] = 0.05;
+        upper[1] = 1.0;
+        try {
+            PointValuePair result = fitter.fit(start, lower, upper, 10.0);
+            return result;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
+        }
+    }
 
     public PointValuePair fitDiffusion(double[] guesses) {
         Fitter fitter = Fitter.getArrayFitter(this::valueDMat);

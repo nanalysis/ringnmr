@@ -57,6 +57,10 @@ public class RelaxDataValue {
 
     }
 
+    public String getResSpecifier() {
+        return resSpecifier;
+    }
+
     public double calcExpRho(double[] J) {
         double rhoExp = relaxObj.calcRhoExp(R1, R2, NOE, J);
         return rhoExp;
@@ -65,6 +69,14 @@ public class RelaxDataValue {
     public double calcPredRho(double[] J) {
         double rhoPred = relaxObj.calcRhoPred(J);
         return rhoPred;
+    }
+
+    public double score2(double r1P, double r2P, double noeP) {
+        double r1D = (r1P - R1) / R1err;
+        double r2D = (r2P - R2) / R2err;
+        double noeD = (noeP - NOE) / NOEerr;
+        double score = r1D * r1D + r2D * r2D + noeD * noeD;
+        return score;
     }
 
 }

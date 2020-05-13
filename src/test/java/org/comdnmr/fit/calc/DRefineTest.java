@@ -14,6 +14,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.optim.PointValuePair;
 import org.comdnmr.data.BondVectorData;
@@ -119,6 +121,24 @@ public class DRefineTest {
         return scaledPars;
     }
 
+    private void loadResidueData(RelaxFit relaxFit, String specifier) {
+        try {
+            BondVectorData bData = loadVectors("src/test/data/1P7F_A_vectors.txt");
+            List<RelaxDataValue> rData = loadData("src/test/data/1P7F_data.txt", bData);
+            List<RelaxDataValue> resData = new ArrayList<>();
+            for (RelaxDataValue rValue : rData) {
+                if (rValue.getResSpecifier().equals(specifier)) {
+                    resData.add(rValue);
+                }
+            }
+            relaxFit.setRelaxData(resData);
+
+        } catch (IOException ex) {
+            Logger.getLogger(DRefineTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
+
     private void loadTestData(RelaxFit relaxFit) {
         try {
             BondVectorData bData = loadVectors("src/test/data/1P7F_A_vectors.txt");
@@ -131,6 +151,20 @@ public class DRefineTest {
             return;
         }
 
+    }
+
+    @Test
+    public void testModel1() {
+        RelaxFit relaxFit = new RelaxFit();
+        loadResidueData(relaxFit, "A31");
+        double[] guesses = {5.0e-9, 0.5};
+        PointValuePair fitResult = relaxFit.fitResidueToModel1(guesses);
+        double[] values = fitResult.getPoint();
+        double score = fitResult.getValue();
+        for (double val:values) {
+        System.out.print(val + " ");
+        }
+        System.out.println(score);
     }
 
     @Test
