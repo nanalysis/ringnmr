@@ -68,7 +68,9 @@ public class Fitter {
         this.upperBounds = upperBounds.clone();
         this.inputSigma = inputSigma;
         Optimizer opt = new Optimizer();
-       // opt.setXYE(xValues, yValues, errValues);
+        if (xValues != null) {
+            opt.setXYE(xValues, yValues, errValues);
+        }
         PointValuePair result = opt.refineCMAES(start, inputSigma);
 
         return result;

@@ -438,7 +438,7 @@ public class RelaxEquations {
      * @param tauS Double. The internal slow correlation time.
      * @return J(w) value.
      */
-    public double JDiffusion(DiffusionType diffType, double w, double[][] D, double[][] VT, double[] v, double s2, Double tauF, Double sf2, Double tauS) {
+    private double JDiffusion(DiffusionType diffType, double w, double[][] D, double[][] VT, double[] v, double s2, Double tauF, Double sf2, Double tauS) {
         double w2 = w * w;
         double[] dDiff = calcDiffusiond(diffType, D);
         double[] a = calcDiffusiona(diffType, D, VT, v);
