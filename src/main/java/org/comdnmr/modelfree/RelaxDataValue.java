@@ -15,8 +15,7 @@ import static org.comdnmr.modelfree.RelaxEquations.IpS;
  */
 public class RelaxDataValue {
 
-    final int resIndex;
-    final String resSpecifier;
+    final MolDataValues molDataValue;
     final double R1;
     final double R1err;
     final double R2;
@@ -26,11 +25,10 @@ public class RelaxDataValue {
     final RelaxEquations relaxObj;
     double rhoError = 0.0;
 
-    public RelaxDataValue(int resIndex, String resSpecifier, double r1,
+    public RelaxDataValue(MolDataValues molDataValue, double r1,
             double r1Error, double r2, double r2Error, double noe, double noeError,
             RelaxEquations relaxObj) {
-        this.resIndex = resIndex;
-        this.resSpecifier = resSpecifier;
+        this.molDataValue = molDataValue;
         this.R1 = r1;
         this.R1err = r1Error;
         this.R2 = r2;
@@ -57,8 +55,8 @@ public class RelaxDataValue {
 
     }
 
-    public String getResSpecifier() {
-        return resSpecifier;
+    public MolDataValues getMolData() {
+        return molDataValue;
     }
 
     public double calcExpRho(double[] J) {

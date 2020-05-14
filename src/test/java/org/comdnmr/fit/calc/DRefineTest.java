@@ -9,16 +9,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.TreeMap;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.optim.PointValuePair;
-import org.comdnmr.data.BondVectorData;
+import org.comdnmr.modelfree.MolDataValues;
 import org.comdnmr.modelfree.RelaxDataValue;
 import org.comdnmr.modelfree.RelaxEquations;
 import org.comdnmr.modelfree.RelaxFit;
@@ -37,10 +34,10 @@ public class DRefineTest {
 //            Math.toRadians(68.64), Math.toRadians(77.42)};
     private final double[] fields = {400.0e6, 500e6, 600e6, 700e6, 800.0e6};
 
-    private BondVectorData loadVectors(String vectorFileName) throws IOException {
+    private Map<String, MolDataValues> loadVectors(String vectorFileName) throws IOException {
         File file = new File(vectorFileName);
         Path path = file.toPath();
-        Map<String, double[]> coordMap = new HashMap<>();
+        Map<String, MolDataValues> molValues = new TreeMap<>();
 
         Files.lines(path).forEach(line -> {
             String[] fields = line.split("\t");
@@ -52,40 +49,27 @@ public class DRefineTest {
                 v[0] = Double.valueOf(fields[2]);
                 v[1] = Double.valueOf(fields[3]);
                 v[2] = Double.valueOf(fields[4]);
-                coordMap.put(resSpecifier, v);
+                MolDataValues molDataValue = new MolDataValues(resSpecifier, v);
+                molValues.put(resSpecifier, molDataValue);
             }
         });
-        Map<String, Integer> coordIndices = new HashMap<>();
-        double[][] vectors = new double[coordMap.size()][3];
-        List<String> names = new ArrayList<>();
-        coordMap.keySet().stream().sorted().forEach(k -> {
 
-            int i = coordIndices.size();
-            double[] v = coordMap.get(k);
-            vectors[i][0] = v[0];
-            vectors[i][1] = v[1];
-            vectors[i][2] = v[2];
-            coordIndices.put(k, i);
-            names.add(k);
-        });
-        BondVectorData bData = new BondVectorData(vectors, names, coordIndices);
-        return bData;
+        return molValues;
     }
 
-    private List<RelaxDataValue> loadData(String relaxDataFileName, BondVectorData bData) throws IOException {
+    private void loadData(String relaxDataFileName, Map<String, MolDataValues> molDataValues) throws IOException {
 
         File relaxFile = new File(relaxDataFileName);
         Path relaxPath = relaxFile.toPath();
         Map<Integer, Integer> fieldMap = new HashMap<>();
-        List<RelaxDataValue> result = new ArrayList<>();
         Files.lines(relaxPath).forEach(line -> {
             String[] fields = line.split("\\s+");
             if (fields.length == 11) {
                 int iRes = Integer.valueOf(fields[0]);
                 String chain = fields[1];
                 String resSpecifier = chain + iRes;
-                Integer resIndex = bData.getIndex(resSpecifier);
-                if (resIndex == null) {
+                MolDataValues molData = molDataValues.get(resSpecifier);
+                if (molData == null) {
                     System.out.println("no res " + resSpecifier);
                 } else {
                     double field = Double.valueOf(fields[4]);
@@ -99,12 +83,11 @@ public class DRefineTest {
                     double r2Error = Double.valueOf(fields[8]);
                     double noe = Double.valueOf(fields[9]);
                     double noeError = Double.valueOf(fields[10]);
-                    RelaxDataValue dValue = new RelaxDataValue(resIndex, resSpecifier, r1, r1Error, r2, r2Error, noe, noeError, relaxObj);
-                    result.add(dValue);
+                    RelaxDataValue dValue = new RelaxDataValue(molData, r1, r1Error, r2, r2Error, noe, noeError, relaxObj);
+                    molData.addData(dValue);
                 }
             }
         });
-        return result;
     }
 
     public double[] scalePars(double[] pars, int nDiffPars) {
@@ -121,56 +104,126 @@ public class DRefineTest {
         return scaledPars;
     }
 
-    private void loadResidueData(RelaxFit relaxFit, String specifier) {
+    private Map<String, MolDataValues> loadTestData() {
         try {
-            BondVectorData bData = loadVectors("src/test/data/1P7F_A_vectors.txt");
-            List<RelaxDataValue> rData = loadData("src/test/data/1P7F_data.txt", bData);
-            List<RelaxDataValue> resData = new ArrayList<>();
-            for (RelaxDataValue rValue : rData) {
-                if (rValue.getResSpecifier().equals(specifier)) {
-                    resData.add(rValue);
-                }
-            }
-            relaxFit.setRelaxData(resData);
-
+            Map<String, MolDataValues> molDataValues = loadVectors("src/test/data/1P7F_A_vectors.txt");
+            loadData("src/test/data/1P7F_data.txt", molDataValues);
+            return molDataValues;
         } catch (IOException ex) {
-            Logger.getLogger(DRefineTest.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println(ex.getMessage());
+            return null;
         }
 
     }
 
-    private void loadTestData(RelaxFit relaxFit) {
-        try {
-            BondVectorData bData = loadVectors("src/test/data/1P7F_A_vectors.txt");
-            System.out.println(bData);
-            List<RelaxDataValue> rData = loadData("src/test/data/1P7F_data.txt", bData);
-            relaxFit.setBondVectorData(bData);
-            relaxFit.setRelaxData(rData);
-        } catch (IOException ex) {
-            System.out.println(ex.getMessage());
-            return;
+    public void testModel(RelaxFit relaxFit, int model) {
+        Map<String, MolDataValues> molData = loadTestData();
+        Map<String, MolDataValues> molDataRes = new TreeMap<>();
+        double tau = 5.0e-9;
+        for (String key : molData.keySet()) {
+            molDataRes.clear();
+            MolDataValues resData = molData.get(key);
+            if (!resData.getData().isEmpty()) {
+                resData.setTestModel(model);
+                molDataRes.put(key, molData.get(key));
+                relaxFit.setRelaxData(molDataRes);
+                double[][] guessBounds = RelaxFit.guesses(model, tau);
+                double[] guesses;
+                double[] lower;
+                double[] upper;
+                if (relaxFit.isUseGlobalTau()) {
+                    guesses = new double[guessBounds[0].length - 1];
+                    lower = new double[guessBounds[0].length - 1];
+                    upper = new double[guessBounds[0].length - 1];
+                    System.arraycopy(guessBounds[0], 1, guesses, 0, guesses.length);
+                    System.arraycopy(guessBounds[1], 1, lower, 0, lower.length);
+                    System.arraycopy(guessBounds[2], 1, upper, 0, upper.length);
+                } else {
+                    guesses = guessBounds[0];
+                    lower = guessBounds[1];
+                    upper = guessBounds[2];
+                }
+                PointValuePair fitResult = relaxFit.fitResidueToModel(guesses, lower, upper);
+                double[] values = fitResult.getPoint();
+                double score = fitResult.getValue();
+                for (double val : values) {
+                    System.out.print(val + " ");
+                }
+                System.out.println(score + " " + key);
+            }
         }
-
     }
 
     @Test
     public void testModel1() {
         RelaxFit relaxFit = new RelaxFit();
-        loadResidueData(relaxFit, "A31");
-        double[] guesses = {5.0e-9, 0.5};
-        PointValuePair fitResult = relaxFit.fitResidueToModel1(guesses);
+        testModel(relaxFit, 1);
+    }
+
+    @Test
+    public void testModel1Constrain() {
+        RelaxFit relaxFit = new RelaxFit();
+        relaxFit.setUseGlobalTau(true);
+        relaxFit.setGlobalTau(3.27e-9);
+        testModel(relaxFit, 1);
+    }
+
+    @Test
+    public void testModel5() {
+        RelaxFit relaxFit = new RelaxFit();
+        testModel(relaxFit, 5);
+    }
+
+    @Test
+    public void testMultiResidueModel() {
+        RelaxFit relaxFit = new RelaxFit();
+        int model = 1;
+        Map<String, MolDataValues> molData = loadTestData();
+        double tau = 5.0e-9;
+        Map<String, MolDataValues> molDataRes = new TreeMap<>();
+        for (String key : molData.keySet()) {
+            MolDataValues resData = molData.get(key);
+            resData.setTestModel(model);
+            if (!resData.getData().isEmpty()) {
+                resData.setTestModel(model);
+                molDataRes.put(key, molData.get(key));
+            }
+        }
+        int nMolData = molDataRes.size();
+        double[][] guessBounds = RelaxFit.guesses(model, tau);
+        int nResPars = guessBounds[0].length - 1;
+        int nGuesses = 1 + nMolData * nResPars;
+
+        double[] guesses = new double[nGuesses];
+        double[] lower = new double[nGuesses];
+        double[] upper = new double[nGuesses];
+
+        int start = 1;
+        for (String key : molDataRes.keySet()) {
+            System.arraycopy(guessBounds[0], 1, guesses, start, nResPars);
+            System.arraycopy(guessBounds[1], 1, lower, start, nResPars);
+            System.arraycopy(guessBounds[2], 1, upper, start, nResPars);
+            start += nResPars;
+        }
+        guesses[0] = guessBounds[0][0];
+        lower[0] = guessBounds[1][0];
+        upper[0] = guessBounds[2][0];
+        relaxFit.setRelaxData(molDataRes);
+        PointValuePair fitResult = relaxFit.fitMultiResidueToModel(guesses, lower, upper);
         double[] values = fitResult.getPoint();
         double score = fitResult.getValue();
-        for (double val:values) {
-        System.out.print(val + " ");
+        for (double val : values) {
+            System.out.println(val + " ");
         }
         System.out.println(score);
+
     }
 
     @Test
     public void testValueDMat1() {
         RelaxFit relaxFit = new RelaxFit();
-        loadTestData(relaxFit);
+        Map<String, MolDataValues> molData = loadTestData();
+        relaxFit.setRelaxData(molData);
         relaxFit.setDiffusionType(DiffusionType.ANISOTROPIC);
         double[] pars = {4.4170 * 1e7, 4.5832 * 1e7, 6.0129 * 1e7, Math.toRadians(98.06),
             Math.toRadians(68.64), Math.toRadians(77.42)};
@@ -183,7 +236,8 @@ public class DRefineTest {
     @Test
     public void testValueDMatFile() {
         RelaxFit relaxFit = new RelaxFit();
-        loadTestData(relaxFit);
+        Map<String, MolDataValues> molData = loadTestData();
+        relaxFit.setRelaxData(molData);
         double tauCGuess = 3.3e-9;
 
         double[] rotDifPars = {4.4170, 4.5832, 6.0129, 98.06, 68.64, 77.42};
