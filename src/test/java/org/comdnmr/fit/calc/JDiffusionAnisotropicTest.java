@@ -17,14 +17,12 @@
  */
 package org.comdnmr.fit.calc;
 
-import java.util.ArrayList;
 import org.apache.commons.math3.geometry.euclidean.threed.Rotation;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealMatrixFormat;
 import org.comdnmr.modelfree.RelaxFit;
-import org.comdnmr.modelfree.RelaxFit.DiffusionType;
 import static org.comdnmr.modelfree.RelaxFit.DiffusionType.ANISOTROPIC;
 import org.comdnmr.modelfree.RelaxEquations;
 import org.junit.Assert;
@@ -37,12 +35,12 @@ public class JDiffusionAnisotropicTest {
     private final double Dzz = 6.0129 * 1e7; //60129330.314
     private final double[] resPars = {Dxx, Dyy, Dzz, 98.06 / 180. * Math.PI, 68.64 / 180. * Math.PI, 77.42 / 180. * Math.PI};//Dxx, Dyy, Dzz, alpha, beta, gamma
     private final double[] v = {0.688828228668, -0.0591882033522, -0.722504275402}; //normalized unit vector for residue 55 of 1P7F.pdb
-    private final DiffusionType dType = ANISOTROPIC;
 
     double[][] D = {{resPars[0], 0.0, 0.0}, {0.0, resPars[1], 0.0}, {0.0, 0.0, resPars[2]}};
     double[][] VT = {{-0.9775, -0.0583, -0.2029}, {-0.1659, -0.3825, 0.9089}, {-0.1306, 0.9221, 0.3642}};
 
     public double[] genJ(RelaxFit relaxFit, RelaxEquations relaxObj, double[] vec, int modelNum, double[] modelPars) {
+        relaxFit.setDiffusionType(ANISOTROPIC);
         double[] pars = new double[resPars.length + 1];
         double s2 = modelPars[0];
         switch (modelNum) {
@@ -86,14 +84,14 @@ public class JDiffusionAnisotropicTest {
 //            System.out.print(par + " ");
 //        }
 //        System.out.println();
-        double[] J = relaxFit.getJDiffusion(pars, relaxObj, modelNum, vec, dType, D, VT);
+        double[] J = relaxFit.getJDiffusion(pars, relaxObj, modelNum, vec, D, VT);
         return J;
     }
 
     @Test
     public void testGetRotVT() {
         RelaxFit relaxFit = new RelaxFit();
-        Rotation rot = relaxFit.getDRotation(resPars, dType);
+        Rotation rot = relaxFit.getDRotation(resPars, ANISOTROPIC);
         double[][] VTres = new Array2DRowRealMatrix(rot.getMatrix()).transpose().getData();
         RealMatrixFormat formatter = new RealMatrixFormat();
         RealMatrix VTR = MatrixUtils.createRealMatrix(VTres);

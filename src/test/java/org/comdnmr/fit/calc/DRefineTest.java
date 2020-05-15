@@ -117,10 +117,17 @@ public class DRefineTest {
     }
 
     public void testModel(RelaxFit relaxFit, int model) {
+        testModel(relaxFit, model, null);
+    }
+
+    public void testModel(RelaxFit relaxFit, int model, String matchSpec) {
         Map<String, MolDataValues> molData = loadTestData();
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
         double tau = 5.0e-9;
         for (String key : molData.keySet()) {
+            if ((matchSpec != null) && !key.equals(matchSpec)) {
+                continue;
+            }
             molDataRes.clear();
             MolDataValues resData = molData.get(key);
             if (!resData.getData().isEmpty()) {
@@ -153,29 +160,60 @@ public class DRefineTest {
             }
         }
     }
+    
+    @Test
+    public void testModel6OneRes() {
+        System.out.println("test constrain 5 res");
 
+        RelaxFit relaxFit = new RelaxFit();
+        relaxFit.setUseGlobalTau(true);
+        relaxFit.setGlobalTau(3.27e-9);
+        testModel(relaxFit, 2, "A44");
+    }
+
+    
     @Test
     public void testModel1() {
+        System.out.println("test 1");
         RelaxFit relaxFit = new RelaxFit();
         testModel(relaxFit, 1);
     }
 
     @Test
-    public void testModel1Constrain() {
+    public void testModel6Constrain() {
+        System.out.println("test constrain 6");
+
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setUseGlobalTau(true);
         relaxFit.setGlobalTau(3.27e-9);
-        testModel(relaxFit, 1);
+        testModel(relaxFit, 6);
+    }
+
+    @Test
+    public void testModel2() {
+        System.out.println("test 2");
+        RelaxFit relaxFit = new RelaxFit();
+        testModel(relaxFit, 2);
     }
 
     @Test
     public void testModel5() {
+        System.out.println("test 5");
         RelaxFit relaxFit = new RelaxFit();
         testModel(relaxFit, 5);
     }
 
     @Test
+    public void testModel6() {
+        System.out.println("test 6");
+        RelaxFit relaxFit = new RelaxFit();
+        testModel(relaxFit, 6);
+    }
+
+    @Test
     public void testMultiResidueModel() {
+        System.out.println("test multi 1");
+
         RelaxFit relaxFit = new RelaxFit();
         int model = 1;
         Map<String, MolDataValues> molData = loadTestData();
@@ -247,9 +285,6 @@ public class DRefineTest {
         DiffusionType bestType = null;
         double isoD = 1.0 / (6.0 * tauCGuess);
         for (DiffusionType diffType : DiffusionType.values()) {
-            if (diffType == DiffusionType.ISOTROPIC) {
-                continue;
-            }
             int nPars = diffType.getNAnglePars() + diffType.getNDiffusionPars();
             double[] guess = new double[nPars];
             relaxFit.setDiffusionType(diffType);
@@ -281,9 +316,8 @@ public class DRefineTest {
             }
         }
         relaxFit.setDiffusionType(bestType);
-        double[][][] rotResults = relaxFit.rotateD(bestFitPars);
-        double[][] D = rotResults[0];
-        double[][] VT = rotResults[1];
+        double[][] D = relaxFit.parsToD(bestFitPars, bestType);
+        double[][] VT = relaxFit.parsToVT(bestFitPars, bestType);
 
         double[] scaledBestGuesses = scalePars(bestGuesses, bestType.getNDiffusionPars());
         double[] scaledBestFitPars = scalePars(bestFitPars, bestType.getNDiffusionPars());

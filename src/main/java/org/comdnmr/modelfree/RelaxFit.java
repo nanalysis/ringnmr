@@ -12,6 +12,10 @@ import org.comdnmr.data.Fitter;
 import static org.comdnmr.modelfree.RelaxFit.DiffusionType.ANISOTROPIC;
 import static org.comdnmr.modelfree.RelaxFit.DiffusionType.OBLATE;
 import static org.comdnmr.modelfree.RelaxFit.DiffusionType.PROLATE;
+import org.comdnmr.modelfree.models.MFModel1;
+import org.comdnmr.modelfree.models.MFModel2;
+import org.comdnmr.modelfree.models.MFModel5;
+import org.comdnmr.modelfree.models.MFModel6;
 
 /**
  *
@@ -200,76 +204,72 @@ public class RelaxFit {
         return J;
     }
 
-    public double[] getJDiffusion(double[] pars, RelaxEquations relaxObj, int modelNum, double[] v, DiffusionType dType, double[][] D, double[][] VT) {
-        int nEqlDiffPars = 0;
-        int nNullAngles = 0;
-        if (dType == PROLATE || dType == OBLATE) { //Dxx = Dyy or Dyy = Dzz
-            nEqlDiffPars = 1;
-            nNullAngles = 1;
-        }
+    public double[][] parsToD(double[] pars, DiffusionType dType) {
+        double Dxx = pars[0];
+        double Dyy;
+        double Dzz;
+        switch (dType) {
+            case PROLATE:
+                //Dxx = Dyy
+                Dyy = pars[0];
+                Dzz = pars[1];
+                break;
+            case OBLATE:
+                //Dyy = Dzz
+                Dyy = pars[1];
+                Dzz = pars[1];
+                break;
+            case ANISOTROPIC:
+                Dyy = pars[1];
+                Dzz = pars[2];
+                break;
+            default:
+                Dyy = pars[0];
+                Dzz = pars[0];
 
-        if (D == null && VT == null) {
-            double Dxx = pars[0];
-            double Dyy = pars[1];
-            double Dzz = 0.0;
-            switch (dType) {
-                case PROLATE:
-                    //Dxx = Dyy
-                    nEqlDiffPars = 1;
-                    Dyy = pars[1 - nEqlDiffPars];
-                    Dzz = pars[2 - nEqlDiffPars];
-                    break;
-                case OBLATE:
-                    //Dyy = Dzz
-                    nEqlDiffPars = 1;
-                    Dzz = pars[2 - nEqlDiffPars];
-                    break;
-                case ANISOTROPIC:
-                    nEqlDiffPars = 0;
-                    Dxx = pars[0];
-                    Dyy = pars[1];
-                    Dzz = pars[2];
-                    break;
-            }
-            double[][] D1 = {{Dxx, 0.0, 0.0},
-            {0.0, Dyy, 0.0},
-            {0.0, 0.0, Dzz}};
-
-            Rotation rot = getDRotation(pars, dType);
-            D = D1;
-            VT = getRotationMatrix(rot);
-//            System.out.println("Rotated Deig = " + new Array2DRowRealMatrix(D).toString());
-//            System.out.println("Rotated VTeig = " + new Array2DRowRealMatrix(VT).toString());
         }
-        int nDiffPars = 6;
-        double s2 = pars[nDiffPars - nEqlDiffPars - nNullAngles];
+        double[][] D = {{Dxx, 0.0, 0.0},
+        {0.0, Dyy, 0.0},
+        {0.0, 0.0, Dzz}};
+        return D;
+    }
+
+    public double[][] parsToVT(double[] pars, DiffusionType dType) {
+        Rotation rot = getDRotation(pars, dType);
+        double[][] VT = getRotationMatrix(rot);
+        return VT;
+    }
+
+    public double[] getJDiffusion(double[] pars, RelaxEquations relaxObj, int modelNum, double[] v, double[][] D, double[][] VT) {
+        int extraParStart = diffusionType.getNDiffusionPars() + diffusionType.getNAnglePars();
+        double s2 = pars[extraParStart];
         double[] J = new double[5];
         switch (modelNum) {
             case 1:
-                J = relaxObj.getJDiffusion(dType, D, VT, v, s2, null, null, null);
+                MFModel1 model1 = new MFModel1(diffusionType, D, VT, v);
+                J = model1.calc(relaxObj.wValues, s2);
                 break;
             case 2:
-                double tau = pars[nDiffPars + 1 - nEqlDiffPars - nNullAngles];
-                J = relaxObj.getJDiffusion(dType, D, VT, v, s2, tau, null, null);
+                double tau = pars[extraParStart + 1];
+                MFModel2 model2 = new MFModel2(diffusionType, D, VT, v);
+                J = model2.calc(relaxObj.wValues, s2, tau);
                 break;
             case 5:
-                tau = pars[nDiffPars + 1 - nEqlDiffPars - nNullAngles];
-                double sf2 = pars[nDiffPars + 2 - nEqlDiffPars - nNullAngles];
-                J = relaxObj.getJDiffusion(dType, D, VT, v, s2, tau, sf2, null);
+                tau = pars[extraParStart + 1];
+                double sf2 = pars[extraParStart + 2];
+                MFModel5 model5 = new MFModel5(diffusionType, D, VT, v);
+                J = model5.calc(relaxObj.wValues, s2, tau, sf2);
                 break;
             case 6:
-                tau = pars[nDiffPars + 1 - nEqlDiffPars - nNullAngles];
-                sf2 = pars[nDiffPars + 2 - nEqlDiffPars - nNullAngles];
-                double tauS = pars[nDiffPars + 3 - nEqlDiffPars - nNullAngles];
-//                System.out.println("tau, sf2, tauS = " + tau + " " + sf2 + " " + tauS);
-                J = relaxObj.getJDiffusion(dType, D, VT, v, s2, tau, sf2, tauS);
+                tau = pars[extraParStart + 1];
+                sf2 = pars[extraParStart + 2];
+                double tauS = pars[extraParStart + 3];
+                MFModel6 model6 = new MFModel6(diffusionType, D, VT, v);
+                J = model6.calc(relaxObj.wValues, s2, tau, sf2, tauS);
                 break;
             default:
                 break;
         }
-//        for (double Jval : J) {
-//            System.out.println("J: " + Jval);
-//        }
         return J;
     }
 
@@ -322,36 +322,6 @@ public class RelaxFit {
 
     public double[][] getRotationMatrix(Rotation rot) {
         return new Array2DRowRealMatrix(rot.getMatrix()).transpose().getData();
-    }
-
-    public double[][][] rotateD(double[] resPars) {
-        double[][][] resList = new double[2][3][3];
-        double dx = resPars[0];
-        double d1 = resPars[1];
-        double d2 = 0.0;
-        double dy = 0.0;
-        double dz = 0.0;
-        if (diffusionType == PROLATE) {
-            dy = dx;
-            dz = d1;
-        } else if (diffusionType == OBLATE) {
-            dy = d1;
-            dz = d1;
-        } else if (diffusionType == ANISOTROPIC) {
-            dy = d1;
-            dz = resPars[2];
-        }
-        double[][] D = {{dx, 0.0, 0.0}, {0.0, dy, 0.0}, {0.0, 0.0, dz}};
-        Rotation rot = getDRotation(resPars, diffusionType);
-        double[][] VT = getRotationMatrix(rot);//getVT();
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                resList[0][i][j] = D[i][j];
-                resList[1][i][j] = VT[i][j];
-            }
-        }
-
-        return resList;
     }
 
     public double value(double[] pars, double[][] values) {
@@ -431,9 +401,8 @@ public class RelaxFit {
         } else if (diffusionType == ANISOTROPIC) {
             Arrays.sort(pars, 0, 3);
         }
-        double[][][] rotResults = rotateD(pars);
-        double[][] D = rotResults[0];
-        double[][] VT = rotResults[1];
+        double[][] D = parsToD(pars, diffusionType);
+        double[][] VT = parsToVT(pars, diffusionType);
         double sumSq = 0.0;
         int modelNum = 1;
         int nDiffPars = diffusionType.getNDiffusionPars() + diffusionType.getNAnglePars();
@@ -445,7 +414,7 @@ public class RelaxFit {
                 double[] resPars = new double[nParsPerModel[modelNum] + nDiffPars];
                 System.arraycopy(pars, 0, resPars, 0, nDiffPars);
                 resPars[resPars.length - 1] = 1.0; //Model 0: S2 = 1.0, all others null.
-                double[] J = getJDiffusion(resPars, relaxObj, modelNum, v, diffusionType, D, VT);
+                double[] J = getJDiffusion(resPars, relaxObj, modelNum, v, D, VT);
                 double rhoExp = dValue.calcExpRho(J);
                 double rhoPred = dValue.calcPredRho(J);
                 double delta = rhoPred - rhoExp;
@@ -465,9 +434,8 @@ public class RelaxFit {
         } else if (diffusionType == ANISOTROPIC) {
             Arrays.sort(pars, 0, 3);
         }
-        double[][][] rotResults = rotateD(pars);
-        double[][] D = rotResults[0];
-        double[][] VT = rotResults[1];
+        double[][] D = parsToD(pars, diffusionType);
+        double[][] VT = parsToVT(pars, diffusionType);
         int modelNum = 1;
         int nDiffPars = diffusionType.getNDiffusionPars() + diffusionType.getNAnglePars();
         for (MolDataValues molData : molDataValues.values()) {
@@ -477,7 +445,7 @@ public class RelaxFit {
                 double[] resPars = new double[nParsPerModel[modelNum] + nDiffPars];
                 System.arraycopy(pars, 0, resPars, 0, nDiffPars);
                 resPars[resPars.length - 1] = 1.0; //Model 0: S2 = 1.0, all others null.
-                double[] J = getJDiffusion(resPars, relaxObj, modelNum, v, diffusionType, D, VT);
+                double[] J = getJDiffusion(resPars, relaxObj, modelNum, v, D, VT);
                 double rhoExp = dValue.calcExpRho(J);
                 double rhoPred = dValue.calcPredRho(J);
                 System.out.println(rhoExp + " " + rhoPred + " " + (rhoExp - rhoPred) + " " + molData.specifier);
@@ -530,15 +498,15 @@ public class RelaxFit {
         double[] guess1 = {tau, 0.9};
         double[] lower1 = {tau / 10.0, 0.0};
         double[] upper1 = {tau * 10.0, 1.0};
-        double[] guess2 = {tau, 0.9, tau / 10.0};
-        double[] lower2 = {tau / 10.0, 0.0};
-        double[] upper2 = {tau * 10.0, 1.0};
-        double[] guess5 = {tau, 0.9, tau / 10.0, 0.9};
-        double[] lower5 = {tau / 10.0, 0.0, tau / 100.0, 0.0};
-        double[] upper5 = {tau * 10.0, 1.0, tau * 2.0, 1.0};
-        double[] guess6 = {tau, 0.9, tau / 10.0, 0.9, tau / 4.0, 0.9};
-        double[] lower6 = {tau / 10.0, 0.0, tau / 100.0, tau / 100.0, 0.0};
-        double[] upper6 = {tau * 10.0, 1.0, tau * 2.0, tau * 2.0, 1.0};
+        double[] guess2 = {tau, 0.9, tau / 40.0};
+        double[] lower2 = {tau / 10.0, 0.0, tau / 1000.0};
+        double[] upper2 = {tau * 10.0, 1.0, tau / 10.0};
+        double[] guess5 = {tau, 0.9, tau / 40.0, 0.9};
+        double[] lower5 = {tau / 10.0, 0.0, tau / 1000.0, 0.0};
+        double[] upper5 = {tau * 10.0, 1.0, tau / 10.0, 1.0};
+        double[] guess6 = {tau, 0.9, tau / 40.0, 0.9, tau / 40.0};
+        double[] lower6 = {tau / 10.0, 0.0, tau / 1000.0, 0.0, tau / 1000.0};
+        double[] upper6 = {tau * 10.0, 1.0, tau / 10.0, 1.0, tau / 10.0};
         double[][] guesses = {null, guess1, guess2, null, null, guess5, guess6};
         double[][] lower = {null, lower1, lower2, null, null, lower5, lower6};
         double[][] upper = {null, upper1, upper2, null, null, upper5, upper6};
