@@ -22,15 +22,52 @@
  */
 package org.comdnmr.modelfree.models;
 
+import org.comdnmr.modelfree.RelaxFit;
+
 /**
  *
  * @author brucejohnson
  */
-public abstract class MFModelIso {
+public class MFModelIso1 extends MFModelIso {
 
-    public abstract double[] calc(double[] omegas, double[] pars);
+    double tauM;
+    double s2;
+    final boolean hasTau;
 
-    public abstract double[] calc(double[] omega);
-    
+    public MFModelIso1() {
+        hasTau = false;
+    }
+
+    public MFModelIso1(double tauM) {
+        hasTau = true;
+        this.tauM = tauM;
+    }
+
+    @Override
+    public double[] calc(double[] omegas) {
+        double[] J = new double[omegas.length];
+        int j = 0;
+        for (double omega : omegas) {
+            double omega2 = omega * omega;
+            J[j++] = 0.4 * s2 * tauM / (1.0 + omega2 * tauM * tauM);
+        }
+        return J;
+    }
+
+    @Override
+    public double[] calc(double[] omegas, double[] pars) {
+        int parStart = 0;
+        if (!hasTau) {
+            tauM = pars[0];
+            parStart = 1;
+        }
+        this.s2 = pars[parStart];
+        return calc(omegas);
+    }
+
+    public double[] calc(double[] omegas, double s2) {
+        this.s2 = s2;
+        return calc(omegas);
+    }
 
 }

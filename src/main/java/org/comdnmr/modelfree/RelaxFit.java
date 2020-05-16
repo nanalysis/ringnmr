@@ -16,6 +16,10 @@ import org.comdnmr.modelfree.models.MFModel1;
 import org.comdnmr.modelfree.models.MFModel2;
 import org.comdnmr.modelfree.models.MFModel5;
 import org.comdnmr.modelfree.models.MFModel6;
+import org.comdnmr.modelfree.models.MFModelIso1;
+import org.comdnmr.modelfree.models.MFModelIso2;
+import org.comdnmr.modelfree.models.MFModelIso5;
+import org.comdnmr.modelfree.models.MFModelIso6;
 
 /**
  *
@@ -177,23 +181,26 @@ public class RelaxFit {
         double[] J = new double[5];
         switch (modelNum) {
             case 1:
-                J = relaxObj.getJModelFree(tauM, s2);
+                MFModelIso1 model1 = new MFModelIso1(tauM);
+                J = model1.calc(relaxObj.wValues, s2);
                 break;
             case 2:
                 double tau = pars[2];
-                J = relaxObj.getJModelFree(tau, tauM, s2);
+                MFModelIso2 model2 = new MFModelIso2(tauM);
+                J = model2.calc(relaxObj.wValues, s2, tau);
                 break;
             case 5:
                 tau = pars[2];
                 double sf2 = pars[3];
-                J = relaxObj.getJModelFree(tau, tauM, s2, sf2);
+                MFModelIso5 model5 = new MFModelIso5(tauM);
+                J = model5.calc(relaxObj.wValues, s2, tau, sf2);
                 break;
             case 6:
                 tau = pars[2];
                 sf2 = pars[3];
                 double tauS = pars[4];
-//                System.out.println("tau, sf2, tauS = " + tau + " " + sf2 + " " + tauS);
-                J = relaxObj.getJModelFree(tau, tauM, tauS, s2, sf2);
+                MFModelIso6 model6 = new MFModelIso6(tauM);
+                J = model6.calc(relaxObj.wValues, s2, tau, sf2, tauS);
                 break;
             default:
                 break;
