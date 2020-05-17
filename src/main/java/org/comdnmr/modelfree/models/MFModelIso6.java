@@ -30,8 +30,14 @@ public class MFModelIso6 extends MFModelIso5 {
 
     double tauS;
 
+    public MFModelIso6() {
+        super();
+        nPars = 4;
+    }
+
     public MFModelIso6(double tauM) {
         super(tauM);
+        nPars = 4;
     }
 
     @Override
@@ -71,6 +77,26 @@ public class MFModelIso6 extends MFModelIso5 {
         this.sf2 = sf2;
         this.tauS = tauS;
         return calc(omegas);
+    }
+
+    @Override
+    public boolean checkParConstraints() {
+        return tauF < tauM && tauS < tauM;
+    }
+
+    @Override
+    public double[] getStart(double tau, boolean includeTau) {
+        return getParValues(includeTau, tau, 0.9, tau / 40.0, 0.9, tau / 40.0);
+    }
+
+    @Override
+    public double[] getLower(double tau, boolean includeTau) {
+        return getParValues(includeTau, tau / 10., 0.0, tau / 1000.0, 0.0, tau / 1000.0);
+    }
+
+    @Override
+    public double[] getUpper(double tau, boolean includeTau) {
+        return getParValues(includeTau, tau * 10., 1.0, tau / 10.0, 1.0, tau / 10.0);
     }
 
 }

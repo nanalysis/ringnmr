@@ -20,6 +20,11 @@ import org.comdnmr.modelfree.RelaxDataValue;
 import org.comdnmr.modelfree.RelaxEquations;
 import org.comdnmr.modelfree.RelaxFit;
 import org.comdnmr.modelfree.RelaxFit.DiffusionType;
+import org.comdnmr.modelfree.models.MFModelIso;
+import org.comdnmr.modelfree.models.MFModelIso1;
+import org.comdnmr.modelfree.models.MFModelIso2;
+import org.comdnmr.modelfree.models.MFModelIso5;
+import org.comdnmr.modelfree.models.MFModelIso6;
 import org.junit.Test;
 import org.junit.Assert;
 
@@ -116,11 +121,33 @@ public class DRefineTest {
 
     }
 
-    public void testModel(RelaxFit relaxFit, int model) {
-        testModel(relaxFit, model, null);
+    public void testModel(RelaxFit relaxFit, int modelNum) {
+        testModel(relaxFit, modelNum, null);
+
     }
 
-    public void testModel(RelaxFit relaxFit, int model, String matchSpec) {
+    public void testModel(RelaxFit relaxFit, int modelNum, String matchSpec) {
+        MFModelIso model;
+        switch (modelNum) {
+            case 1:
+                model = new MFModelIso1();
+                break;
+            case 2:
+                model = new MFModelIso2();
+                break;
+            case 5:
+                model = new MFModelIso5();
+                break;
+            case 6:
+                model = new MFModelIso6();
+                break;
+            default:
+                model = new MFModelIso1();
+        }
+        testModel(relaxFit, model, matchSpec);
+    }
+
+    public void testModel(RelaxFit relaxFit, MFModelIso model, String matchSpec) {
         Map<String, MolDataValues> molData = loadTestData();
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
         double tau = 5.0e-9;
@@ -134,23 +161,10 @@ public class DRefineTest {
                 resData.setTestModel(model);
                 molDataRes.put(key, molData.get(key));
                 relaxFit.setRelaxData(molDataRes);
-                double[][] guessBounds = RelaxFit.guesses(model, tau);
-                double[] guesses;
-                double[] lower;
-                double[] upper;
-                if (relaxFit.isUseGlobalTau()) {
-                    guesses = new double[guessBounds[0].length - 1];
-                    lower = new double[guessBounds[0].length - 1];
-                    upper = new double[guessBounds[0].length - 1];
-                    System.arraycopy(guessBounds[0], 1, guesses, 0, guesses.length);
-                    System.arraycopy(guessBounds[1], 1, lower, 0, lower.length);
-                    System.arraycopy(guessBounds[2], 1, upper, 0, upper.length);
-                } else {
-                    guesses = guessBounds[0];
-                    lower = guessBounds[1];
-                    upper = guessBounds[2];
-                }
-                PointValuePair fitResult = relaxFit.fitResidueToModel(guesses, lower, upper);
+                double[] start = model.getStart(tau, !relaxFit.isUseGlobalTau());
+                double[] lower = model.getLower(tau, !relaxFit.isUseGlobalTau());
+                double[] upper = model.getUpper(tau, !relaxFit.isUseGlobalTau());
+                PointValuePair fitResult = relaxFit.fitResidueToModel(start, lower, upper);
                 double[] values = fitResult.getPoint();
                 double score = fitResult.getValue();
                 for (double val : values) {
@@ -160,7 +174,7 @@ public class DRefineTest {
             }
         }
     }
-    
+
     @Test
     public void testModel6OneRes() {
         System.out.println("test constrain 5 res");
@@ -171,7 +185,6 @@ public class DRefineTest {
         testModel(relaxFit, 2, "A44");
     }
 
-    
     @Test
     public void testModel1() {
         System.out.println("test 1");
@@ -215,22 +228,21 @@ public class DRefineTest {
         System.out.println("test multi 1");
 
         RelaxFit relaxFit = new RelaxFit();
-        int model = 1;
+        relaxFit.setUseGlobalTau(true);
         Map<String, MolDataValues> molData = loadTestData();
         double tau = 5.0e-9;
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
+        int nModelPars = 0;
         for (String key : molData.keySet()) {
             MolDataValues resData = molData.get(key);
-            resData.setTestModel(model);
+            MFModelIso model = new MFModelIso1();
             if (!resData.getData().isEmpty()) {
+                nModelPars += model.getNPars();
                 resData.setTestModel(model);
                 molDataRes.put(key, molData.get(key));
             }
         }
-        int nMolData = molDataRes.size();
-        double[][] guessBounds = RelaxFit.guesses(model, tau);
-        int nResPars = guessBounds[0].length - 1;
-        int nGuesses = 1 + nMolData * nResPars;
+        int nGuesses = 1 + nModelPars;
 
         double[] guesses = new double[nGuesses];
         double[] lower = new double[nGuesses];
@@ -238,14 +250,20 @@ public class DRefineTest {
 
         int start = 1;
         for (String key : molDataRes.keySet()) {
-            System.arraycopy(guessBounds[0], 1, guesses, start, nResPars);
-            System.arraycopy(guessBounds[1], 1, lower, start, nResPars);
-            System.arraycopy(guessBounds[2], 1, upper, start, nResPars);
-            start += nResPars;
+            MolDataValues resData = molData.get(key);
+            MFModelIso model = resData.getTestModel();
+            double[] resStart = model.getStart(tau, !relaxFit.isUseGlobalTau());
+            double[] resLower = model.getLower(tau, !relaxFit.isUseGlobalTau());
+            double[] resUpper = model.getUpper(tau, !relaxFit.isUseGlobalTau());
+
+            System.arraycopy(resStart, 0, guesses, start, resStart.length);
+            System.arraycopy(resLower, 0, lower, start, resStart.length);
+            System.arraycopy(resUpper, 0, upper, start, resStart.length);
+            start += resStart.length;
         }
-        guesses[0] = guessBounds[0][0];
-        lower[0] = guessBounds[1][0];
-        upper[0] = guessBounds[2][0];
+        guesses[0] = tau;
+        lower[0] = tau / 4.0;
+        upper[0] = tau * 4.0;
         relaxFit.setRelaxData(molDataRes);
         PointValuePair fitResult = relaxFit.fitMultiResidueToModel(guesses, lower, upper);
         double[] values = fitResult.getPoint();

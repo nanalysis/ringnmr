@@ -36,11 +36,14 @@ public class MFModelIso1 extends MFModelIso {
 
     public MFModelIso1() {
         hasTau = false;
+        nPars = 1;
     }
 
     public MFModelIso1(double tauM) {
         hasTau = true;
         this.tauM = tauM;
+        nPars = 1;
+
     }
 
     @Override
@@ -68,6 +71,21 @@ public class MFModelIso1 extends MFModelIso {
     public double[] calc(double[] omegas, double s2) {
         this.s2 = s2;
         return calc(omegas);
+    }
+
+    @Override
+    public double[] getStart(double tau, boolean includeTau) {
+        return getParValues(includeTau, tau, 0.9);
+    }
+
+    @Override
+    public double[] getLower(double tau, boolean includeTau) {
+        return getParValues(includeTau, tau / 10., 0.0);
+    }
+
+    @Override
+    public double[] getUpper(double tau, boolean includeTau) {
+        return getParValues(includeTau, tau * 10., 1.0);
     }
 
 }

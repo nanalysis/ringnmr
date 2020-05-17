@@ -12,10 +12,12 @@ import org.comdnmr.data.Fitter;
 import static org.comdnmr.modelfree.RelaxFit.DiffusionType.ANISOTROPIC;
 import static org.comdnmr.modelfree.RelaxFit.DiffusionType.OBLATE;
 import static org.comdnmr.modelfree.RelaxFit.DiffusionType.PROLATE;
+import org.comdnmr.modelfree.models.MFModel;
 import org.comdnmr.modelfree.models.MFModel1;
 import org.comdnmr.modelfree.models.MFModel2;
 import org.comdnmr.modelfree.models.MFModel5;
 import org.comdnmr.modelfree.models.MFModel6;
+import org.comdnmr.modelfree.models.MFModelIso;
 import org.comdnmr.modelfree.models.MFModelIso1;
 import org.comdnmr.modelfree.models.MFModelIso2;
 import org.comdnmr.modelfree.models.MFModelIso5;
@@ -336,29 +338,29 @@ public class RelaxFit {
         int n = 0;
         boolean parsOK = true;
         for (MolDataValues molData : molDataValues.values()) {
-            int testModel = molData.getTestModel();
+            MFModelIso testModel = molData.getTestModel();
             double[] resPars;
             if (useGlobalTau) {
-                int nResPars = nParsPerModel[testModel];
+                int nResPars = testModel.getNPars();
                 resPars = new double[nResPars + 1];
                 resPars[0] = globalTau;
                 System.arraycopy(pars, 0, resPars, 1, nResPars);
             } else {
                 resPars = pars;
             }
-            if (!checkParConstraint(resPars, testModel)) {
-                parsOK = false;
-            }
 
             for (RelaxDataValue dValue : molData.getData()) {
                 RelaxEquations relaxObj = dValue.relaxObj;
-                double[] J = getJ(resPars, relaxObj, testModel);
+                double[] J = testModel.calc(relaxObj.wValues, resPars);
                 double r1 = relaxObj.R1(J);
                 double r2 = relaxObj.R2(J, 0.0);
                 double noe = relaxObj.NOE(J);
                 double delta2 = dValue.score2(r1, r2, noe);
                 sumSq += delta2;
                 n += 3;
+            }
+            if (!testModel.checkParConstraints()) {
+                parsOK = false;
             }
         }
         double rms = Math.sqrt(sumSq / n);
@@ -374,25 +376,25 @@ public class RelaxFit {
         boolean parsOK = true;
         int parStart = 1;
         for (MolDataValues molData : molDataValues.values()) {
-            int testModel = molData.getTestModel();
-            int nResPars = nParsPerModel[testModel];
+            MFModelIso testModel = molData.getTestModel();
+            int nResPars = testModel.getNPars();
             double[] resPars = new double[nResPars + 1];
             resPars[0] = pars[0];
             System.arraycopy(pars, parStart, resPars, 1, nResPars);
             parStart += nResPars;
-            if (!checkParConstraint(resPars, testModel)) {
-                parsOK = false;
-            }
 
             for (RelaxDataValue dValue : molData.getData()) {
                 RelaxEquations relaxObj = dValue.relaxObj;
-                double[] J = getJ(resPars, relaxObj, testModel);
+                double[] J = testModel.calc(relaxObj.wValues, resPars);
                 double r1 = relaxObj.R1(J);
                 double r2 = relaxObj.R2(J, 0.0);
                 double noe = relaxObj.NOE(J);
                 double delta2 = dValue.score2(r1, r2, noe);
                 sumSq += delta2;
                 n += 3;
+            }
+            if (!testModel.checkParConstraints()) {
+                parsOK = false;
             }
         }
         double rms = Math.sqrt(sumSq / n);

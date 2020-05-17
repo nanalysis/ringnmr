@@ -7,6 +7,8 @@ package org.comdnmr.modelfree;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.comdnmr.modelfree.models.MFModel;
+import org.comdnmr.modelfree.models.MFModelIso;
 
 /**
  *
@@ -17,7 +19,7 @@ public class MolDataValues {
     final String specifier;
     final double[] vector = new double[3];
     final List<RelaxDataValue> dataValues = new ArrayList<>();
-    int testModel = 1;
+    MFModelIso model;
 
     public MolDataValues(String specifier, double[] vector) {
         this.specifier = specifier;
@@ -32,12 +34,12 @@ public class MolDataValues {
         return dataValues;
     }
 
-    public void setTestModel(int model) {
-        this.testModel = model;
+    public void setTestModel(MFModelIso model) {
+        this.model = model;
     }
 
-    public int getTestModel() {
-        return testModel;
+    public MFModelIso getTestModel() {
+        return model;
     }
 
 }

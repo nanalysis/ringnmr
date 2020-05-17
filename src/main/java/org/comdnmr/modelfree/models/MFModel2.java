@@ -34,6 +34,7 @@ public class MFModel2 extends MFModel1 {
 
     public MFModel2(RelaxFit.DiffusionType diffType, double[][] D, double[][] VT, double[] v) {
         super(diffType, D, VT, v);
+        nPars = 2;
     }
 
     @Override
@@ -57,5 +58,21 @@ public class MFModel2 extends MFModel1 {
         this.tauF = tauF;
         return calc(omegas);
     }
+
+      @Override
+    public double[] getStart(double tau, boolean includeTau) {
+        return getParValues(includeTau, tau, 0.9, tau / 40.0);
+    }
+
+    @Override
+    public double[] getLower(double tau, boolean includeTau) {
+        return getParValues(includeTau, tau / 10., 0.0, tau / 1000.0);
+    }
+
+    @Override
+    public double[] getUpper(double tau, boolean includeTau) {
+        return getParValues(includeTau, tau * 10., 1.0, tau / 10.0);
+    }
+
 
 }
