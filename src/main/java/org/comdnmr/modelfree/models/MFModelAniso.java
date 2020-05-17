@@ -22,50 +22,47 @@
  */
 package org.comdnmr.modelfree.models;
 
+import org.comdnmr.modelfree.DiffusionPars;
 import org.comdnmr.modelfree.RelaxFit;
 
 /**
  *
  * @author brucejohnson
  */
-public class MFModel1 extends MFModel {
+public abstract class MFModelAniso extends MFModel {
 
-    double s2;
+    DiffusionPars diffPars;
+    double[] dDiff;
+    double[] a;
+    double[] Df;
 
-    public MFModel1(RelaxFit.DiffusionType diffType, double[][] D, double[][] VT, double[] v) {
-        super(diffType, D, VT, v);
-        nPars = 1;
+    MFModelAniso(RelaxFit.DiffusionType diffType,
+            double[] v) {
+        diffPars = new DiffusionPars(diffType, v);
     }
 
-    @Override
-    double calc(double omega2, int i) {
-        return s2 * (Df[i] * a[i]);
+    MFModelAniso(RelaxFit.DiffusionType diffType,
+            double[][] D, double[][] VT, double[] v) {
+        diffPars = new DiffusionPars(diffType, D, VT, v);
+        dDiff = diffPars.dDiff;
+        a = diffPars.a;
     }
 
-    @Override
-    public double[] calc(double[] omegas, double[] pars) {
-        this.s2 = pars[0];
-        return calc(omegas);
-    }
+    abstract double calc(double omega2, int i);
 
-    public double[] calc(double[] omegas, double s2) {
-        this.s2 = s2;
-        return calc(omegas);
-    }
-
-    @Override
-    public double[] getStart(double tau, boolean includeTau) {
-        return getParValues(includeTau, tau, 0.9);
-    }
-
-    @Override
-    public double[] getLower(double tau, boolean includeTau) {
-        return getParValues(includeTau, tau / 10., 0.0);
-    }
-
-    @Override
-    public double[] getUpper(double tau, boolean includeTau) {
-        return getParValues(includeTau, tau * 10., 1.0);
+    public double[] calc(double[] omegas) {
+        double[] J = new double[omegas.length];
+        int j = 0;
+        for (double omega : omegas) {
+            double omega2 = omega * omega;
+            Df = diffPars.getDf(omega2);
+            double sum = 0.0;
+            for (int i = 0; i < dDiff.length; i++) {
+                sum += calc(omega2, i);
+            }
+            J[j++] = 0.4 * sum;
+        }
+        return J;
     }
 
 }

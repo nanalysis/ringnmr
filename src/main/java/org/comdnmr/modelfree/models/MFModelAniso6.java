@@ -28,62 +28,56 @@ import org.comdnmr.modelfree.RelaxFit;
  *
  * @author brucejohnson
  */
-public class MFModelIso1 extends MFModelIso {
+public class MFModelAniso6 extends MFModelAniso5 {
 
-    double s2;
+    double tauS;
 
-    public MFModelIso1() {
-        super(false);
-        nPars = 1;
-    }
-
-    public MFModelIso1(double tauM) {
-        super(true);
-        this.tauM = tauM;
-        nPars = 1;
-
+    public MFModelAniso6(RelaxFit.DiffusionType diffType, double[][] D, double[][] VT, double[] v) {
+        super(diffType, D, VT, v);
+        nPars = 4;
     }
 
     @Override
-    public double[] calc(double[] omegas) {
-        double[] J = new double[omegas.length];
-        int j = 0;
-        for (double omega : omegas) {
-            double omega2 = omega * omega;
-            J[j++] = 0.4 * s2 * tauM / (1.0 + omega2 * tauM * tauM);
-        }
-        return J;
+    double calc(double omega2, int i) {
+        double[] eF = diffPars.calcDiffusione(tauF);
+        double[] eS = diffPars.calcDiffusione(tauS);
+        double value1 = s2 * (Df[i] * a[i]);
+        double value2 = (sf2 - s2) * (eS[i] * a[i]) / (1.0 + omega2 * eS[i] * eS[i]);
+        double value3 = (1.0 - sf2) * (eF[i] * a[i]) / (1.0 + omega2 * eF[i] * eF[i]);
+        return value1 + value2 + value3;
+
     }
 
     @Override
     public double[] calc(double[] omegas, double[] pars) {
-        int parStart = 0;
-        if (!hasTau) {
-            tauM = pars[0];
-            parStart = 1;
-        }
-        this.s2 = pars[parStart];
+        this.s2 = pars[0];
+        this.tauF = pars[1];
+        this.sf2 = pars[2];
+        this.tauS = pars[3];
         return calc(omegas);
     }
 
-    public double[] calc(double[] omegas, double s2) {
+    public double[] calc(double[] omegas, double s2, double tauF, double sf2, double tauS) {
         this.s2 = s2;
+        this.tauF = tauF;
+        this.sf2 = sf2;
+        this.tauS = tauS;
         return calc(omegas);
     }
 
     @Override
     public double[] getStart(double tau, boolean includeTau) {
-        return getParValues(includeTau, tau, 0.9);
+        return getParValues(includeTau, tau, 0.9, tau / 40.0, 0.9, tau / 40.0);
     }
 
     @Override
     public double[] getLower(double tau, boolean includeTau) {
-        return getParValues(includeTau, tau / 10., 0.0);
+        return getParValues(includeTau, tau / 10., 0.0, tau / 1000.0, 0.0, tau / 1000.0);
     }
 
     @Override
     public double[] getUpper(double tau, boolean includeTau) {
-        return getParValues(includeTau, tau * 10., 1.0);
+        return getParValues(includeTau, tau * 10., 1.0, tau / 10.0, 1.0, tau / 10.0);
     }
 
 }

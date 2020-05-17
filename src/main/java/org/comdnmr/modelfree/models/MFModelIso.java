@@ -26,35 +26,13 @@ package org.comdnmr.modelfree.models;
  *
  * @author brucejohnson
  */
-public abstract class MFModelIso {
+public abstract class MFModelIso extends MFModel {
 
-    int nPars;
+    double tauM;
+    final boolean hasTau;
 
-    public abstract double[] calc(double[] omegas, double[] pars);
-
-    public abstract double[] calc(double[] omega);
-
-    public double[] getParValues(boolean includeTau, double... parValues) {
-        int n = includeTau ? nPars + 1 : nPars;
-        int start = includeTau ? 0 : 1;
-        double[] values = new double[n];
-        System.arraycopy(parValues, start, values, 0, n);
-        return values;
-
-    }
-
-    public abstract double[] getStart(double tau, boolean includeTau);
-
-    public abstract double[] getLower(double tau, boolean includeTau);
-
-    public abstract double[] getUpper(double tau, boolean includeTau);
-
-    public boolean checkParConstraints() {
-        return true;
-    }
-
-    public int getNPars() {
-        return nPars;
+    public MFModelIso(boolean hasTau) {
+        this.hasTau = hasTau;
     }
 
 }

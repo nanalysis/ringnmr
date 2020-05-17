@@ -22,47 +22,39 @@
  */
 package org.comdnmr.modelfree.models;
 
-import org.comdnmr.modelfree.DiffusionPars;
-import org.comdnmr.modelfree.RelaxFit;
-
 /**
  *
  * @author brucejohnson
  */
-public abstract class MFModel extends MFModelIso {
+public abstract class MFModel {
 
-    DiffusionPars diffPars;
-    double[] dDiff;
-    double[] a;
-    double[] Df;
+    int nPars;
 
-    MFModel(RelaxFit.DiffusionType diffType,
-            double[] v) {
-        diffPars = new DiffusionPars(diffType, v);
+    public abstract double[] calc(double[] omegas, double[] pars);
+
+    public abstract double[] calc(double[] omega);
+
+    public double[] getParValues(boolean includeTau, double... parValues) {
+        int n = includeTau ? nPars + 1 : nPars;
+        int start = includeTau ? 0 : 1;
+        double[] values = new double[n];
+        System.arraycopy(parValues, start, values, 0, n);
+        return values;
+
     }
 
-    MFModel(RelaxFit.DiffusionType diffType,
-            double[][] D, double[][] VT, double[] v) {
-        diffPars = new DiffusionPars(diffType, D, VT, v);
-        dDiff = diffPars.dDiff;
-        a = diffPars.a;
+    public abstract double[] getStart(double tau, boolean includeTau);
+
+    public abstract double[] getLower(double tau, boolean includeTau);
+
+    public abstract double[] getUpper(double tau, boolean includeTau);
+
+    public boolean checkParConstraints() {
+        return true;
     }
 
-    abstract double calc(double omega2, int i);
-
-    public double[] calc(double[] omegas) {
-        double[] J = new double[omegas.length];
-        int j = 0;
-        for (double omega : omegas) {
-            double omega2 = omega * omega;
-            Df = diffPars.getDf(omega2);
-            double sum = 0.0;
-            for (int i = 0; i < dDiff.length; i++) {
-                sum += calc(omega2, i);
-            }
-            J[j++] = 0.4 * sum;
-        }
-        return J;
+    public int getNPars() {
+        return nPars;
     }
 
 }

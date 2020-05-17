@@ -20,6 +20,7 @@ import org.comdnmr.modelfree.RelaxDataValue;
 import org.comdnmr.modelfree.RelaxEquations;
 import org.comdnmr.modelfree.RelaxFit;
 import org.comdnmr.modelfree.RelaxFit.DiffusionType;
+import org.comdnmr.modelfree.models.MFModel;
 import org.comdnmr.modelfree.models.MFModelIso;
 import org.comdnmr.modelfree.models.MFModelIso1;
 import org.comdnmr.modelfree.models.MFModelIso2;
@@ -121,12 +122,12 @@ public class DRefineTest {
 
     }
 
-    public void testModel(RelaxFit relaxFit, int modelNum) {
-        testModel(relaxFit, modelNum, null);
+    public void testIsoModel(RelaxFit relaxFit, int modelNum) {
+        DRefineTest.this.testIsoModel(relaxFit, modelNum, null);
 
     }
 
-    public void testModel(RelaxFit relaxFit, int modelNum, String matchSpec) {
+    public void testIsoModel(RelaxFit relaxFit, int modelNum, String matchSpec) {
         MFModelIso model;
         switch (modelNum) {
             case 1:
@@ -144,10 +145,10 @@ public class DRefineTest {
             default:
                 model = new MFModelIso1();
         }
-        testModel(relaxFit, model, matchSpec);
+        DRefineTest.this.testIsoModel(relaxFit, model, matchSpec);
     }
 
-    public void testModel(RelaxFit relaxFit, MFModelIso model, String matchSpec) {
+    public void testIsoModel(RelaxFit relaxFit, MFModelIso model, String matchSpec) {
         Map<String, MolDataValues> molData = loadTestData();
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
         double tau = 5.0e-9;
@@ -182,14 +183,14 @@ public class DRefineTest {
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setUseGlobalTau(true);
         relaxFit.setGlobalTau(3.27e-9);
-        testModel(relaxFit, 2, "A44");
+        DRefineTest.this.testIsoModel(relaxFit, 2, "A44");
     }
 
     @Test
     public void testModel1() {
         System.out.println("test 1");
         RelaxFit relaxFit = new RelaxFit();
-        testModel(relaxFit, 1);
+        testIsoModel(relaxFit, 1);
     }
 
     @Test
@@ -199,28 +200,28 @@ public class DRefineTest {
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setUseGlobalTau(true);
         relaxFit.setGlobalTau(3.27e-9);
-        testModel(relaxFit, 6);
+        testIsoModel(relaxFit, 6);
     }
 
     @Test
     public void testModel2() {
         System.out.println("test 2");
         RelaxFit relaxFit = new RelaxFit();
-        testModel(relaxFit, 2);
+        testIsoModel(relaxFit, 2);
     }
 
     @Test
     public void testModel5() {
         System.out.println("test 5");
         RelaxFit relaxFit = new RelaxFit();
-        testModel(relaxFit, 5);
+        testIsoModel(relaxFit, 5);
     }
 
     @Test
     public void testModel6() {
         System.out.println("test 6");
         RelaxFit relaxFit = new RelaxFit();
-        testModel(relaxFit, 6);
+        testIsoModel(relaxFit, 6);
     }
 
     @Test
@@ -251,7 +252,7 @@ public class DRefineTest {
         int start = 1;
         for (String key : molDataRes.keySet()) {
             MolDataValues resData = molData.get(key);
-            MFModelIso model = resData.getTestModel();
+            MFModel model = resData.getTestModel();
             double[] resStart = model.getStart(tau, !relaxFit.isUseGlobalTau());
             double[] resLower = model.getLower(tau, !relaxFit.isUseGlobalTau());
             double[] resUpper = model.getUpper(tau, !relaxFit.isUseGlobalTau());

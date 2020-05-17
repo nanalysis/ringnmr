@@ -19,7 +19,7 @@ public class MolDataValues {
     final String specifier;
     final double[] vector = new double[3];
     final List<RelaxDataValue> dataValues = new ArrayList<>();
-    MFModelIso model;
+    MFModel model;
 
     public MolDataValues(String specifier, double[] vector) {
         this.specifier = specifier;
@@ -34,11 +34,11 @@ public class MolDataValues {
         return dataValues;
     }
 
-    public void setTestModel(MFModelIso model) {
+    public void setTestModel(MFModel model) {
         this.model = model;
     }
 
-    public MFModelIso getTestModel() {
+    public MFModel getTestModel() {
         return model;
     }
 

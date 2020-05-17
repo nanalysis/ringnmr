@@ -13,10 +13,10 @@ import static org.comdnmr.modelfree.RelaxFit.DiffusionType.ANISOTROPIC;
 import static org.comdnmr.modelfree.RelaxFit.DiffusionType.OBLATE;
 import static org.comdnmr.modelfree.RelaxFit.DiffusionType.PROLATE;
 import org.comdnmr.modelfree.models.MFModel;
-import org.comdnmr.modelfree.models.MFModel1;
-import org.comdnmr.modelfree.models.MFModel2;
-import org.comdnmr.modelfree.models.MFModel5;
-import org.comdnmr.modelfree.models.MFModel6;
+import org.comdnmr.modelfree.models.MFModelAniso1;
+import org.comdnmr.modelfree.models.MFModelAniso2;
+import org.comdnmr.modelfree.models.MFModelAniso5;
+import org.comdnmr.modelfree.models.MFModelAniso6;
 import org.comdnmr.modelfree.models.MFModelIso;
 import org.comdnmr.modelfree.models.MFModelIso1;
 import org.comdnmr.modelfree.models.MFModelIso2;
@@ -255,25 +255,25 @@ public class RelaxFit {
         double[] J = new double[5];
         switch (modelNum) {
             case 1:
-                MFModel1 model1 = new MFModel1(diffusionType, D, VT, v);
+                MFModelAniso1 model1 = new MFModelAniso1(diffusionType, D, VT, v);
                 J = model1.calc(relaxObj.wValues, s2);
                 break;
             case 2:
                 double tau = pars[extraParStart + 1];
-                MFModel2 model2 = new MFModel2(diffusionType, D, VT, v);
+                MFModelAniso2 model2 = new MFModelAniso2(diffusionType, D, VT, v);
                 J = model2.calc(relaxObj.wValues, s2, tau);
                 break;
             case 5:
                 tau = pars[extraParStart + 1];
                 double sf2 = pars[extraParStart + 2];
-                MFModel5 model5 = new MFModel5(diffusionType, D, VT, v);
+                MFModelAniso5 model5 = new MFModelAniso5(diffusionType, D, VT, v);
                 J = model5.calc(relaxObj.wValues, s2, tau, sf2);
                 break;
             case 6:
                 tau = pars[extraParStart + 1];
                 sf2 = pars[extraParStart + 2];
                 double tauS = pars[extraParStart + 3];
-                MFModel6 model6 = new MFModel6(diffusionType, D, VT, v);
+                MFModelAniso6 model6 = new MFModelAniso6(diffusionType, D, VT, v);
                 J = model6.calc(relaxObj.wValues, s2, tau, sf2, tauS);
                 break;
             default:
@@ -338,7 +338,7 @@ public class RelaxFit {
         int n = 0;
         boolean parsOK = true;
         for (MolDataValues molData : molDataValues.values()) {
-            MFModelIso testModel = molData.getTestModel();
+            MFModel testModel = molData.getTestModel();
             double[] resPars;
             if (useGlobalTau) {
                 int nResPars = testModel.getNPars();
@@ -376,7 +376,7 @@ public class RelaxFit {
         boolean parsOK = true;
         int parStart = 1;
         for (MolDataValues molData : molDataValues.values()) {
-            MFModelIso testModel = molData.getTestModel();
+            MFModel testModel = molData.getTestModel();
             int nResPars = testModel.getNPars();
             double[] resPars = new double[nResPars + 1];
             resPars[0] = pars[0];

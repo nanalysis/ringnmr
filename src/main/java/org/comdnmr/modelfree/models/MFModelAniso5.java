@@ -28,20 +28,21 @@ import org.comdnmr.modelfree.RelaxFit;
  *
  * @author brucejohnson
  */
-public class MFModel2 extends MFModel1 {
+public class MFModelAniso5 extends MFModelAniso2 {
 
-    double tauF;
+    double sf2;
 
-    public MFModel2(RelaxFit.DiffusionType diffType, double[][] D, double[][] VT, double[] v) {
+    public MFModelAniso5(RelaxFit.DiffusionType diffType, double[][] D, double[][] VT, double[] v) {
         super(diffType, D, VT, v);
-        nPars = 2;
+        nPars = 3;
+
     }
 
     @Override
     double calc(double omega2, int i) {
         double[] eF = diffPars.calcDiffusione(tauF);
         double value1 = s2 * (Df[i] * a[i]);
-        double value2 = (1.0 - s2) * (eF[i] * a[i]) / (1.0 + omega2 * eF[i] * eF[i]);//(eF[i]*eF[i] + w2);
+        double value2 = (sf2 - s2) * (eF[i] * a[i]) / (1.0 + omega2 * eF[i] * eF[i]);//(eF[i]*eF[i] + w2);
         return value1 + value2;
 
     }
@@ -50,29 +51,30 @@ public class MFModel2 extends MFModel1 {
     public double[] calc(double[] omegas, double[] pars) {
         this.s2 = pars[0];
         this.tauF = pars[1];
+        this.sf2 = pars[2];
         return calc(omegas);
     }
 
-    public double[] calc(double[] omegas, double s2, double tauF) {
+    public double[] calc(double[] omegas, double s2, double tauF, double sf2) {
         this.s2 = s2;
         this.tauF = tauF;
+        this.sf2 = sf2;
         return calc(omegas);
     }
 
-      @Override
+    @Override
     public double[] getStart(double tau, boolean includeTau) {
-        return getParValues(includeTau, tau, 0.9, tau / 40.0);
+        return getParValues(includeTau, tau, 0.9, tau / 40.0, 0.9);
     }
 
     @Override
     public double[] getLower(double tau, boolean includeTau) {
-        return getParValues(includeTau, tau / 10., 0.0, tau / 1000.0);
+        return getParValues(includeTau, tau / 10., 0.0, tau / 1000.0, 0.0);
     }
 
     @Override
     public double[] getUpper(double tau, boolean includeTau) {
-        return getParValues(includeTau, tau * 10., 1.0, tau / 10.0);
+        return getParValues(includeTau, tau * 10., 1.0, tau / 10.0, 1.0);
     }
-
 
 }
