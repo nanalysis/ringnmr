@@ -37,6 +37,11 @@ public class MFModelAniso1 extends MFModelAniso {
         nPars = 1;
     }
 
+    public MFModelAniso1(RelaxFit.DiffusionType diffType, double[] v) {
+        super(diffType, v);
+        nPars = 1;
+    }
+
     @Override
     double calc(double omega2, int i) {
         return s2 * (Df[i] * a[i]);

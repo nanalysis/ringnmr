@@ -13,6 +13,7 @@ import static org.comdnmr.modelfree.RelaxFit.DiffusionType.ANISOTROPIC;
 import static org.comdnmr.modelfree.RelaxFit.DiffusionType.OBLATE;
 import static org.comdnmr.modelfree.RelaxFit.DiffusionType.PROLATE;
 import org.comdnmr.modelfree.models.MFModel;
+import org.comdnmr.modelfree.models.MFModelAniso;
 import org.comdnmr.modelfree.models.MFModelAniso1;
 import org.comdnmr.modelfree.models.MFModelAniso2;
 import org.comdnmr.modelfree.models.MFModelAniso5;
@@ -249,6 +250,16 @@ public class RelaxFit {
         return VT;
     }
 
+    public double[] getJDiffusion(double[] pars, RelaxEquations relaxObj, MFModelAniso model, double[] v, double[][] D, double[][] VT) {
+        int extraParStart = diffusionType.getNDiffusionPars() + diffusionType.getNAnglePars();
+        double[] J = new double[5];
+        double[] modelPars = new double[model.getNPars()];
+        System.arraycopy(pars, extraParStart, modelPars, 0, model.getNPars());
+        model.update(D, VT);
+        J = model.calc(relaxObj.wValues, modelPars);
+        return J;
+    }
+
     public double[] getJDiffusion(double[] pars, RelaxEquations relaxObj, int modelNum, double[] v, double[][] D, double[][] VT) {
         int extraParStart = diffusionType.getNDiffusionPars() + diffusionType.getNAnglePars();
         double s2 = pars[extraParStart];
@@ -410,20 +421,31 @@ public class RelaxFit {
         } else if (diffusionType == ANISOTROPIC) {
             Arrays.sort(pars, 0, 3);
         }
-        double[][] D = parsToD(pars, diffusionType);
-        double[][] VT = parsToVT(pars, diffusionType);
+        double[][] D = null;
+        double[][] VT = null;
+        if (diffusionType != DiffusionType.ISOTROPIC) {
+            D = parsToD(pars, diffusionType);
+            VT = parsToVT(pars, diffusionType);
+        }
         double sumSq = 0.0;
-        int modelNum = 1;
         int nDiffPars = diffusionType.getNDiffusionPars() + diffusionType.getNAnglePars();
         int n = 0;
         for (MolDataValues molData : molDataValues.values()) {
+            MFModel model = molData.getTestModel();
             for (RelaxDataValue dValue : molData.getData()) {
                 RelaxEquations relaxObj = dValue.relaxObj;
                 double[] v = molData.vector;
-                double[] resPars = new double[nParsPerModel[modelNum] + nDiffPars];
+                int nModelPars = model.getNPars();
+                double[] resPars = new double[nModelPars + nDiffPars];
                 System.arraycopy(pars, 0, resPars, 0, nDiffPars);
                 resPars[resPars.length - 1] = 1.0; //Model 0: S2 = 1.0, all others null.
-                double[] J = getJDiffusion(resPars, relaxObj, modelNum, v, D, VT);
+                double[] J;
+                if (model instanceof MFModelIso) {
+                    resPars[0] = 1.0 / (6.0 * resPars[0]);
+                    J = model.calc(relaxObj.wValues, resPars);
+                } else {
+                    J = getJDiffusion(resPars, relaxObj, (MFModelAniso) model, v, D, VT);
+                }
                 double rhoExp = dValue.calcExpRho(J);
                 double rhoPred = dValue.calcPredRho(J);
                 double delta = rhoPred - rhoExp;

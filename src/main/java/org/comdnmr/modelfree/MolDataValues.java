@@ -41,5 +41,9 @@ public class MolDataValues {
     public MFModel getTestModel() {
         return model;
     }
+    
+    public double[] getVector() {
+        return vector;
+    }
 
 }

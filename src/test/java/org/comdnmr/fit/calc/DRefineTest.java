@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
@@ -21,6 +22,7 @@ import org.comdnmr.modelfree.RelaxEquations;
 import org.comdnmr.modelfree.RelaxFit;
 import org.comdnmr.modelfree.RelaxFit.DiffusionType;
 import org.comdnmr.modelfree.models.MFModel;
+import org.comdnmr.modelfree.models.MFModelAniso1;
 import org.comdnmr.modelfree.models.MFModelIso;
 import org.comdnmr.modelfree.models.MFModelIso1;
 import org.comdnmr.modelfree.models.MFModelIso2;
@@ -94,6 +96,14 @@ public class DRefineTest {
                 }
             }
         });
+        Iterator<Map.Entry<String, MolDataValues>> iter = molDataValues.entrySet().iterator();
+        while (iter.hasNext()) {
+            Map.Entry<String, MolDataValues> entry = iter.next();
+            if (entry.getValue().getData().isEmpty()) {
+                iter.remove();
+            }
+
+        }
     }
 
     public double[] scalePars(double[] pars, int nDiffPars) {
@@ -280,6 +290,10 @@ public class DRefineTest {
     public void testValueDMat1() {
         RelaxFit relaxFit = new RelaxFit();
         Map<String, MolDataValues> molData = loadTestData();
+        for (MolDataValues molDataValue : molData.values()) {
+            MFModelAniso1 model = new MFModelAniso1(DiffusionType.ANISOTROPIC, molDataValue.getVector());
+            molDataValue.setTestModel(model);
+        }
         relaxFit.setRelaxData(molData);
         relaxFit.setDiffusionType(DiffusionType.ANISOTROPIC);
         double[] pars = {4.4170 * 1e7, 4.5832 * 1e7, 6.0129 * 1e7, Math.toRadians(98.06),
@@ -287,7 +301,7 @@ public class DRefineTest {
 
         double value = relaxFit.valueDMat(pars, null);
         System.out.println("value " + value);
-        Assert.assertEquals(0.0, value, 1.2e-1);
+        Assert.assertEquals(0.0, value, 0.11);
     }
 
     @Test
@@ -298,12 +312,22 @@ public class DRefineTest {
         double tauCGuess = 3.3e-9;
 
         double[] rotDifPars = {4.4170, 4.5832, 6.0129, 98.06, 68.64, 77.42};
+        double[] deltas = {0.125, 0.125, 0.125, 2.0, 6.0, 50.0};
         double bestFitRMS = Double.MAX_VALUE;
         double[] bestGuesses = null;
         double[] bestFitPars = null;
         DiffusionType bestType = null;
         double isoD = 1.0 / (6.0 * tauCGuess);
         for (DiffusionType diffType : DiffusionType.values()) {
+            for (MolDataValues molDataValue : molData.values()) {
+                MFModel model;
+                if (diffType == DiffusionType.ISOTROPIC) {
+                    model = new MFModelIso1();
+                } else {
+                    model = new MFModelAniso1(diffType, molDataValue.getVector());
+                }
+                molDataValue.setTestModel(model);
+            }
             int nPars = diffType.getNAnglePars() + diffType.getNDiffusionPars();
             double[] guess = new double[nPars];
             relaxFit.setDiffusionType(diffType);
@@ -319,13 +343,13 @@ public class DRefineTest {
                 Arrays.sort(fitPars, 0, diffType.getNDiffusionPars());
                 double[] scaledPars = scalePars(fitPars, diffType.getNDiffusionPars());
 
-//                System.out.println("RMS: " + fitRMS);
-//                System.out.println("Scaled guesses, Fit Pars, RotDif Pars: ");
-//                for (int i = 0; i < scaledGuesses.length; i++) {
-//                    System.out.printf("guess %7.3f best Fit %7.3f RotDif %7.3f\n",
-//                            scaledGuesses[i], scaledPars[i], rotDifPars[i]);
-//                }
-//                System.out.println();
+                System.out.println("RMS: " + fitRMS + " " + diffType + " guess " + iGuess);
+                System.out.println("Scaled guesses, Fit Pars, RotDif Pars: ");
+                for (int i = 0; i < scaledGuesses.length; i++) {
+                    System.out.printf("guess %7.3f best Fit %7.3f RotDif %7.3f\n",
+                            scaledGuesses[i], scaledPars[i], rotDifPars[i]);
+                }
+                System.out.println();
                 if (fitRMS < bestFitRMS) {
                     bestGuesses = guess.clone();
                     bestFitRMS = fitRMS;
@@ -348,8 +372,11 @@ public class DRefineTest {
                     scaledBestGuesses[i], scaledBestFitPars[i], rotDifPars[i]);
         }
         System.out.println();
-        System.out.println("best Fit D = " + new Array2DRowRealMatrix(D).toString());
-        System.out.println("best Fit VT = " + new Array2DRowRealMatrix(VT).toString());
+        Assert.assertEquals(0.1, bestFitRMS, 0.01);
+        for (int i = 0; i < scaledBestGuesses.length; i++) {
+            Assert.assertEquals(rotDifPars[i], scaledBestFitPars[i], deltas[i]);
+        }
+        Assert.assertEquals(bestType, DiffusionType.ANISOTROPIC);
         //  relaxFit.dumpValues(bestFitPars);
 
     }

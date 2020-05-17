@@ -48,6 +48,12 @@ public abstract class MFModelAniso extends MFModel {
         a = diffPars.a;
     }
 
+    public void update(double[][] D, double[][] VT) {
+        diffPars.update(D, VT);
+        dDiff = diffPars.dDiff;
+        a = diffPars.a;
+    }
+
     abstract double calc(double omega2, int i);
 
     public double[] calc(double[] omegas) {
