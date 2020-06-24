@@ -775,9 +775,9 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
 
     public static void processYAMLDataSections(ResidueProperties resProp, Path dirPath, String expMode, ArrayList<HashMap<String, Object>> dataList) throws IOException {
         for (HashMap<String, Object> dataMap3 : dataList) {
-            Double temperature = (Double) dataMap3.get("temperature");
+            Double temperature = ((Number) dataMap3.get("temperature")).doubleValue();
             if (temperature == null) {
-                temperature = (Double) dataMap3.get("temperatureK");
+                temperature = ((Number) dataMap3.get("temperatureK")).doubleValue();
             } else {
                 temperature += 273.15;
             }
@@ -811,12 +811,12 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 }
             }
 
-            Double B0field = (Double) dataMap3.get("B0");
+            Double B0field = ((Number) dataMap3.get("B0")).doubleValue();
             String nucleus = (String) dataMap3.get("nucleus");
             List<Number> vcpmgList = (List<Number>) dataMap3.get("vcpmg");
-            Double tau = (Double) dataMap3.get("tau");
+            Double tau = ((Number) dataMap3.get("tau")).doubleValue();
             tau = tau == null ? 1.0 : tau;  // fixme throw error if  ratemode and no tau
-            Double B1field = (Double) dataMap3.get("B1");
+            Double B1field = ((Number) dataMap3.get("B1")).doubleValue();
 
             String fileFormat = (String) dataMap3.get("format");
 
@@ -884,7 +884,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     String dataFileName = (String) filesMap.get("file");
                     double refIntensity = 1.0;
                     if (filesMap.containsKey("refIntensity")) {
-                        refIntensity = (Double) filesMap.get("refIntensity");
+                        refIntensity = ((Number) filesMap.get("refIntensity")).doubleValue();
                     }
                     File file = new File(dataFileName).getAbsoluteFile();
                     dataFileName = file.getName();
@@ -931,11 +931,16 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 Map dataMap = (HashMap<String, Object>) data;
                 Map dataMap2 = (HashMap<String, Object>) dataMap.get("fit");
                 if (dataMap2 != null) {
-                    String parName = (String) dataMap2.get("file");
                     String expMode = (String) dataMap2.get("mode");
                     expMode = expMode == null ? "cpmg" : expMode;
+                    String parName = (String) dataMap2.get("file");
+                    if (parName == null) {
+                        String yamlName = yamlFile.getName();
+                        parName = yamlName.substring(0, yamlName.length() - 5) + "_out.txt";
+                    }
                     String parFileName = FileSystems.getDefault().getPath(dirPath.toString(), parName).toString();
                     resProp = DataIO.loadResultsFile(expMode, parFileName);
+
                     resProp.setExpMode(expMode);
                     getFitParameters(resProp, dataMap2);
                     processYAMLDataSections(resProp, dataMap2, dirPath, expMode);
