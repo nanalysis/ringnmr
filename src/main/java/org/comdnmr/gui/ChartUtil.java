@@ -58,6 +58,8 @@ import org.comdnmr.data.ResidueData;
 import org.nmrfx.chart.DataSeries;
 import org.nmrfx.chart.XYEValue;
 import org.nmrfx.chart.XYValue;
+import org.nmrfx.processor.star.ParseException;
+import org.nmrfx.structure.chemistry.io.MoleculeIOException;
 
 public class ChartUtil {
 
@@ -452,4 +454,46 @@ public class ChartUtil {
         PyController.mainController.setControls();
     }
 
+    public static void loadMoleculeFile(String fileName, String type) throws MoleculeIOException, ParseException {
+        File file = new File(fileName);
+        if (!file.exists()) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Parameter file error");
+            alert.setContentText("File " + fileName + " not found");
+            alert.showAndWait();
+            return;
+        }
+      
+        try {
+            DataIO.readMoleculeFile(fileName, type); 
+            if (!residueProperties.isEmpty()) {
+                Set<String> keySet = residueProperties.keySet();
+                for (String key : keySet) {
+                    ResidueProperties resProp = residueProperties.get(key);
+                    List<ResidueInfo> resInfoList = resProp.getResidueValues();
+                    for (ResidueInfo resInfo : resInfoList) {
+                        int resNum = resInfo.getResNum();
+                        String resName = DataIO.getResidueName(resNum);
+                        resInfo.setResName(resName);
+                        System.out.println("chartUtil loadMolFile resName = " + resNum + " " + resInfo.getResName());
+                    }
+                    Collection<ExperimentData> expDataSets = resProp.getExperimentData();
+                    for (ExperimentData expData : expDataSets) {
+                        for (String resNumS : expData.getResidues()) {
+                            int resNum = Integer.parseInt(resNumS);
+                            ResidueData resData = expData.getResidueData(resNumS);
+                            String resName = DataIO.getResidueName(resNum);
+                            resData.setResName(resName);
+                        }
+                    }
+                }
+            }
+        } catch (IOException ex) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Parameter file error");
+            alert.setContentText("Error reading file\n" + ex.getLocalizedMessage());
+            alert.showAndWait();
+            return;
+        }
+    }
 }

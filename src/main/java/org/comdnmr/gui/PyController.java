@@ -79,9 +79,7 @@ import org.controlsfx.control.StatusBar;
 import org.comdnmr.eqnfit.CESTFitter;
 import java.text.DecimalFormat;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Optional;
 import javafx.beans.property.SimpleStringProperty;
 import java.util.Random;
@@ -116,6 +114,8 @@ import org.nmrfx.chart.XYEValue;
 import org.nmrfx.chart.XYValue;
 import org.nmrfx.graphicsio.GraphicsIOException;
 import org.nmrfx.graphicsio.SVGGraphicsContext;
+import org.nmrfx.processor.star.ParseException;
+import org.nmrfx.structure.chemistry.io.MoleculeIOException;
 
 public class PyController implements Initializable {
 
@@ -726,6 +726,55 @@ public class PyController implements Initializable {
         }
         clearSecondaryStructure();
     }
+    
+    @FXML
+    public void loadPDBFile(Event e) throws MoleculeIOException, ParseException {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("PDB File", "*.pdb"));
+        Stage stage = MainApp.primaryStage;
+        File file = fileChooser.showOpenDialog(stage);
+        String type = "pdb";
+        if (file != null) {
+            ChartUtil.loadMoleculeFile(file.toString(), type);
+        }
+    }
+    
+    @FXML
+    public void loadSTARFile(Event e) throws MoleculeIOException, ParseException {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("STAR File", "*.str"));
+        Stage stage = MainApp.primaryStage;
+        File file = fileChooser.showOpenDialog(stage);
+        String type = "star";
+        if (file != null) {
+            ChartUtil.loadMoleculeFile(file.toString(), type);
+        }
+    }
+    
+    @FXML
+    public void loadNEFFile(Event e) throws MoleculeIOException, ParseException {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("NEF File", "*.nef"));
+        Stage stage = MainApp.primaryStage;
+        File file = fileChooser.showOpenDialog(stage);
+        String type = "nef";
+        if (file != null) {
+            ChartUtil.loadMoleculeFile(file.toString(), type);
+        }
+    }
+    
+    @FXML
+    public void loadCIFFile(Event e) throws MoleculeIOException, ParseException {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("CIF File", "*.cif"));
+        Stage stage = MainApp.primaryStage;
+        File file = fileChooser.showOpenDialog(stage);
+        String type = "cif";
+        if (file != null) {
+            ChartUtil.loadMoleculeFile(file.toString(), type);
+        }
+    }
+
 
     @FXML
     public void loadSecondaryStructure() {
@@ -988,21 +1037,27 @@ public class PyController implements Initializable {
         ObservableList<ResidueData.DataValue> data = FXCollections.observableArrayList();
         for (ResidueData resData : resDatas) {
             data.addAll(resData.getDataValues());
+            System.out.println(data);
+            for (ResidueData.DataValue val : data) {
+                System.out.println(val.getResName());
+            }
         }
         resInfoTable.itemsProperty().setValue(data);
 
         TableColumn<ResidueData.DataValue, String> nameColumn = new TableColumn<>("Name");
         TableColumn<ResidueData.DataValue, String> resColumn = new TableColumn<>("Residue");
+        TableColumn<ResidueData.DataValue, String> resNameColumn = new TableColumn<>("Res Name");
         TableColumn<ResidueData.DataValue, String> errColumn = new TableColumn<>("Error");
         TableColumn<ResidueData.DataValue, String> peakColumn = new TableColumn<>("Peak");
 
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("Name"));
         resColumn.setCellValueFactory(new PropertyValueFactory<>("Residue"));
+        resNameColumn.setCellValueFactory(new PropertyValueFactory<>("Res Name"));
         errColumn.setCellValueFactory(new PropertyValueFactory<>("Error"));
         peakColumn.setCellValueFactory(new PropertyValueFactory<>("Peak"));
 
         resInfoTable.getColumns().clear();
-        resInfoTable.getColumns().addAll(nameColumn, resColumn, errColumn, peakColumn);
+        resInfoTable.getColumns().addAll(nameColumn, resColumn, resNameColumn, errColumn, peakColumn);
 
         if (getFittingMode().equals("cpmg")) {
             TableColumn<ResidueData.DataValue, Double> xColumn = new TableColumn<>("Vcpmg");
@@ -1012,7 +1067,7 @@ public class PyController implements Initializable {
             yColumn.setCellValueFactory(new PropertyValueFactory<>("Y"));
 
             resInfoTable.getColumns().clear();
-            resInfoTable.getColumns().addAll(nameColumn, resColumn, xColumn, yColumn, errColumn, peakColumn);
+            resInfoTable.getColumns().addAll(nameColumn, resColumn, resNameColumn, xColumn, yColumn, errColumn, peakColumn);
         } else if (getFittingMode().equals("exp")) {
             TableColumn<ResidueData.DataValue, Double> xColumn = new TableColumn<>("Delay");
             TableColumn<ResidueData.DataValue, Double> yColumn = new TableColumn<>("Intensity");
@@ -1021,7 +1076,7 @@ public class PyController implements Initializable {
             yColumn.setCellValueFactory(new PropertyValueFactory<>("Y"));
 
             resInfoTable.getColumns().clear();
-            resInfoTable.getColumns().addAll(nameColumn, resColumn, xColumn, yColumn, errColumn, peakColumn);
+            resInfoTable.getColumns().addAll(nameColumn, resColumn, resNameColumn, xColumn, yColumn, errColumn, peakColumn);
         } else if (getFittingMode().equals("cest")) {
             TableColumn<ResidueData.DataValue, Double> x0Column = new TableColumn<>("Offset");
             TableColumn<ResidueData.DataValue, Double> x1Column = new TableColumn<>("B1 Field");
@@ -1032,7 +1087,7 @@ public class PyController implements Initializable {
             yColumn.setCellValueFactory(new PropertyValueFactory<>("Y"));
 
             resInfoTable.getColumns().clear();
-            resInfoTable.getColumns().addAll(nameColumn, resColumn, x0Column, x1Column, yColumn, errColumn, peakColumn);
+            resInfoTable.getColumns().addAll(nameColumn, resColumn, resNameColumn, x0Column, x1Column, yColumn, errColumn, peakColumn);
         } else if (getFittingMode().equals("r1rho")) {
             TableColumn<ResidueData.DataValue, Double> x0Column = new TableColumn<>("Offset");
             TableColumn<ResidueData.DataValue, Double> x1Column = new TableColumn<>("B1 Field");
@@ -1043,7 +1098,7 @@ public class PyController implements Initializable {
             yColumn.setCellValueFactory(new PropertyValueFactory<>("Y"));
 
             resInfoTable.getColumns().clear();
-            resInfoTable.getColumns().addAll(nameColumn, resColumn, x0Column, x1Column, yColumn, errColumn, peakColumn);
+            resInfoTable.getColumns().addAll(nameColumn, resColumn, resNameColumn, x0Column, x1Column, yColumn, errColumn, peakColumn);
         }
     }
 
@@ -1126,12 +1181,14 @@ public class PyController implements Initializable {
     public void updateTableWithPars(List<ParValueInterface> parValues) {
         DecimalFormat df = new DecimalFormat();
         TableColumn<ParValueInterface, String> residueColumn = new TableColumn<>("Residue");
+        TableColumn<ParValueInterface, String> resNameColumn = new TableColumn<>("Res Name");
         TableColumn<ParValueInterface, String> stateColumn = new TableColumn<>("State");
         TableColumn<ParValueInterface, String> nameColumn = new TableColumn<>("Name");
         TableColumn<ParValueInterface, String> valueColumn = new TableColumn<>("Value");
         TableColumn<ParValueInterface, String> errorColumn = new TableColumn<>("Error");
 
         residueColumn.setCellValueFactory(new PropertyValueFactory<>("Residue"));
+        resNameColumn.setCellValueFactory(new PropertyValueFactory<>("Res Name"));
         stateColumn.setCellValueFactory(new PropertyValueFactory<>("State"));
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("Name"));
         valueColumn.setCellValueFactory(c -> {
@@ -1160,7 +1217,7 @@ public class PyController implements Initializable {
         });
 
         parameterTable.getColumns().clear();
-        parameterTable.getColumns().addAll(residueColumn, stateColumn, nameColumn, valueColumn, errorColumn);
+        parameterTable.getColumns().addAll(residueColumn, resNameColumn, stateColumn, nameColumn, valueColumn, errorColumn);
         ObservableList<ParValueInterface> data = FXCollections.observableArrayList();
 
         for (ParValueInterface parValue : parValues) {
@@ -1909,6 +1966,7 @@ public class PyController implements Initializable {
                 String expName = expData.getName();
                 for (String resNum : residues) {
                     if (expData.getResidueData(resNum) != null) {
+                        System.out.println(expData.getResidueData(resNum));
                         resDatas.add(expData.getResidueData(resNum));
                         DataSeries series = ChartUtil.getMapData(mapName, expName, resNum);
                         series.setStroke(PlotData.colors[iSeries % 8]);

@@ -30,8 +30,16 @@
                                 <items>
                                     <MenuItem text="Project File..." onAction="#loadParameterFile" fx:id="loadMenuItem"/>
                                     <MenuItem text="Setup Parameters..." onAction="#inputParameters" fx:id="inputMenuItem"/>
-                                    <MenuItem text="Load Secondary Structure..." onAction="#loadSecondaryStructure" fx:id="loadSSMenuItem"/>
+                                    <MenuItem text="Secondary Structure..." onAction="#loadSecondaryStructure" fx:id="loadSSMenuItem"/>
                                     <MenuItem text="Chart  Data..." onAction="#loadSimData"/>
+                                    <Menu text="Molecule File...">
+                                        <items>
+                                            <MenuItem text="PDB File" onAction="#loadPDBFile" fx:id="loadPDBMenuItem"/>
+                                            <MenuItem text="STAR3 File" onAction="#loadSTARFile" fx:id="loadSTARMenuItem"/>
+                                            <MenuItem text="NEF File" onAction="#loadNEFFile" fx:id="loadNEFMenuItem"/>
+                                            <MenuItem text="mmCIF File" onAction="#loadCIFFile" fx:id="loadCIFMenuItem"/>
+                                        </items>
+                                    </Menu>
                                 </items>
                             </Menu>
                             <MenuItem text="Save Analysis..." onAction="#saveParameters" fx:id="savePars"/>

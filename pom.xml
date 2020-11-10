@@ -16,8 +16,8 @@
     <dependencies>
         <dependency>
             <groupId>org.comdnmr</groupId>
-            <artifactId>comdnmr</artifactId>
-            <version>0.99</version>
+            <artifactId>ringnmr</artifactId>
+            <version>1.00</version>
         </dependency>
         <dependency>
             <groupId>org.nmrfx</groupId>
