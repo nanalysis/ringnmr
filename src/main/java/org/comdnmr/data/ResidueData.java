@@ -29,6 +29,7 @@ public class ResidueData {
 
     ExperimentData expData;
     String resNum;
+    String resName;
     double[][] xValues;
     double[] errValues;
     double[] yValues;
@@ -176,6 +177,10 @@ public class ResidueData {
         public String getResidue() {
             return resInfo.resNum;
         }
+        
+        public String getResName() {
+            return resInfo.resName;
+    }
     }
 
     public ArrayList<DataValue> getDataValues() {
@@ -192,6 +197,10 @@ public class ResidueData {
 
     public ExperimentData getExperimentData() {
         return expData;
+    }
+    
+    public void setResName(String residueName) {
+        this.resName = residueName;
     }
 
 }

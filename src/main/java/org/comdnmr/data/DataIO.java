@@ -33,6 +33,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -50,7 +51,18 @@ import org.comdnmr.eqnfit.ExpFitter;
 import org.comdnmr.eqnfit.PlotEquation;
 import org.comdnmr.eqnfit.R1RhoEquation;
 import org.comdnmr.eqnfit.R1RhoFitter;
+import org.nmrfx.processor.star.ParseException;
+import org.nmrfx.structure.chemistry.Entity;
+import org.nmrfx.structure.chemistry.Molecule;
+import org.nmrfx.structure.chemistry.Polymer;
+import org.nmrfx.structure.chemistry.Residue;
+import org.nmrfx.structure.chemistry.io.MMcifReader;
+import org.nmrfx.structure.chemistry.io.MoleculeIOException;
+import org.nmrfx.structure.chemistry.io.NMRNEFReader;
+import org.nmrfx.structure.chemistry.io.NMRStarReader;
 import org.yaml.snakeyaml.Yaml;
+import org.nmrfx.structure.chemistry.io.NMRStarWriter;
+import org.nmrfx.structure.chemistry.io.PDBFile;
 
 /**
  *
@@ -370,15 +382,22 @@ public class DataIO {
                     if (!ok) {
                         continue;
                     }
+                    String resName = "";
                     if (expMode.equals("cest")) {
                         processCESTData(expData, residueNum, xValueList, yValueList, errValueList, peakNum);
                     } else {
                         ResidueData residueData = new ResidueData(expData, residueNum, xValueList, yValueList, errValueList, peakRefList, peakNum);
+                        resName = getResidueName(Integer.parseInt(residueNum));
+                        residueData.setResName(resName);
                         expData.addResidueData(residueNum, residueData);
                     }
                     ResidueInfo residueInfo = resProp.getResidueInfo(residueNum);
+                    residueInfo.setResName(resName);
+                    System.out.println("loadPeakFile resInfo = " + residueInfo.getResName());
+                    
                     if (residueInfo == null) {
                         residueInfo = new ResidueInfo(resProp, residueNumInt, 0, 0, 0);
+                        residueInfo.setResName(resName);
                         resProp.addResidueInfo(residueNum, residueInfo);
                     }
                     if (expMode.equals("noe")) {
@@ -417,11 +436,41 @@ public class DataIO {
         xValueLists[1] = B1fieldList;
         xValueLists[2] = tauList;
         ResidueData residueData = new ResidueData(expData, residueNum, xValueLists, yValueList, errValueList, peakNum);
+        String resName = getResidueName(Integer.parseInt(residueNum));
+        residueData.setResName(resName);
         expData.addResidueData(residueNum, residueData);
         expData.getExtras().clear();
         expData.setExtras(bFieldUniqueValue);
         expData.setExtras(tauList1);
 
+    }
+    
+    /**
+     * Get the residue name from a molecule, if present. 
+     * 
+     * @param residueNum int. The residue number.
+     * @return name String. The name of the corresponding residue in the molecule.
+     */
+    public static String getResidueName(int residueNum) {
+        Molecule mol = Molecule.getActive();
+        String name = "";
+        if (mol != null) {
+            Iterator entityIterator = mol.entityLabels.values().iterator();
+            while (entityIterator.hasNext()) {
+                Entity entity = (Entity) entityIterator.next();
+                if (entity instanceof Polymer) {
+                    List<Residue> resList = ((Polymer) entity).getResidues();
+                    for (Residue res : resList) {
+                        int num = res.getIDNum();
+                        if (num == residueNum) {
+                            name = res.getName();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return name;
     }
 
     public static void loadResidueDataFile(String fileName, ExperimentData expData,
@@ -1031,4 +1080,22 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         List[] result = {xValues, yValues, errValues};
         return result;
     }
+    
+    public static void readMoleculeFile(String fileName, String type) throws ParseException, MoleculeIOException, IOException {
+        if (type.equals("pdb")) {
+            PDBFile pdb = new PDBFile();
+            Molecule mol = pdb.read(fileName);
+            mol.updateAtomArray();
+        } else if (type.equals("star")) {
+            File starFile = new File(fileName).getAbsoluteFile();
+            NMRStarReader.read(starFile);
+        } else if (type.equals("nef")) {
+            NMRNEFReader.read(fileName);
+        } else if (type.equals("cif")) {
+            File cifFile = new File(fileName).getAbsoluteFile();
+            MMcifReader.read(cifFile);
+        }
+        System.out.println(type + " " + Molecule.getActive());
+        
+    }    
 }

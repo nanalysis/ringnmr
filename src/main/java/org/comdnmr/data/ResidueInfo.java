@@ -42,6 +42,7 @@ public class ResidueInfo {
     ResidueProperties resProps;
 
     int resNum;
+    String resName;
     Map<String, Map<String, CurveFit>> curveSets = new LinkedHashMap<>();
     Map<String, FitResult> fitResults = new LinkedHashMap<>();
     PlotEquation bestEquation = null;
@@ -105,6 +106,11 @@ public class ResidueInfo {
         @Override
         public String getResidue() {
             return String.valueOf(resInfo.resNum);
+        }
+        
+        @Override
+        public String getResidueName() {
+            return String.valueOf(resInfo.resName);
         }
 
         @Override
@@ -183,6 +189,14 @@ public class ResidueInfo {
 
     public int getResNum() {
         return resNum;
+    }
+    
+    public String getResName() {
+        return resName;
+    }
+    
+    public void setResName(String name) {
+        this.resName = name;
     }
 
     public Double getParValue(String equationName, String state, String parName) {

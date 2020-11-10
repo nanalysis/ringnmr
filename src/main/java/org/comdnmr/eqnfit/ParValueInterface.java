@@ -24,6 +24,8 @@ package org.comdnmr.eqnfit;
 public interface ParValueInterface {
 
     public String getResidue();
+    
+    public String getResidueName();
 
     public String getState();
 

@@ -30,6 +30,7 @@ public class ParValue implements ParValueInterface {
 
     String state;
     String residue;
+    String resName;
     String name;
     double value;
     double err;
@@ -67,6 +68,11 @@ public class ParValue implements ParValueInterface {
     @Override
     public String getResidue() {
         return residue;
+    }
+    
+    @Override
+    public String getResidueName() {
+        return resName;
     }
 
     @Override
