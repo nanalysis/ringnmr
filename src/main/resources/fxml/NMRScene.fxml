@@ -43,6 +43,7 @@
                                 </items>
                             </Menu>
                             <MenuItem text="Save Analysis..." onAction="#saveParameters" fx:id="savePars"/>
+                            <MenuItem text="Save STAR3..." onAction="#saveParametersSTAR" fx:id="saveParsSTAR"/>
                             <Menu text="Export Graphics">
                                 <items>
                                     <MenuItem text="XY to SVG..." onAction="#exportSVGAction"/>                       

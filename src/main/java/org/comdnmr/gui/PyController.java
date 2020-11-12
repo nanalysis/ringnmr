@@ -114,7 +114,9 @@ import org.nmrfx.chart.XYEValue;
 import org.nmrfx.chart.XYValue;
 import org.nmrfx.graphicsio.GraphicsIOException;
 import org.nmrfx.graphicsio.SVGGraphicsContext;
+import org.nmrfx.processor.datasets.peaks.InvalidPeakException;
 import org.nmrfx.processor.star.ParseException;
+import org.nmrfx.structure.chemistry.InvalidMoleculeException;
 import org.nmrfx.structure.chemistry.io.MoleculeIOException;
 
 public class PyController implements Initializable {
@@ -1647,6 +1649,15 @@ public class PyController implements Initializable {
         File file = fileChooser.showSaveDialog(MainApp.primaryStage);
         if (file != null) {
             DataIO.saveResultsFile(file.getAbsolutePath(), currentResProps, false);
+        }
+    }
+    
+    @FXML
+    public void saveParametersSTAR(ActionEvent event) throws IOException, InvalidMoleculeException, ParseException, InvalidPeakException {
+        FileChooser fileChooser = new FileChooser();
+        File file = fileChooser.showSaveDialog(MainApp.primaryStage);
+        if (file != null) {
+            DataIO.writeSTAR3File(file.getAbsolutePath(), currentResProps);
         }
     }
 

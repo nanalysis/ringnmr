@@ -458,7 +458,7 @@ public class ChartUtil {
         File file = new File(fileName);
         if (!file.exists()) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Parameter file error");
+            alert.setTitle("Molecule file error");
             alert.setContentText("File " + fileName + " not found");
             alert.showAndWait();
             return;
@@ -475,7 +475,7 @@ public class ChartUtil {
                         int resNum = resInfo.getResNum();
                         String resName = DataIO.getResidueName(resNum);
                         resInfo.setResName(resName);
-                        System.out.println("chartUtil loadMolFile resName = " + resNum + " " + resInfo.getResName());
+//                        System.out.println("chartUtil loadMolFile resName = " + resNum + " " + resInfo.getResName());
                     }
                     Collection<ExperimentData> expDataSets = resProp.getExperimentData();
                     for (ExperimentData expData : expDataSets) {
