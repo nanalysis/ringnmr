@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -395,13 +396,13 @@ public class DataIO {
                         expData.addResidueData(residueNum, residueData);
                     }
                     ResidueInfo residueInfo = resProp.getResidueInfo(residueNum);
-                    residueInfo.setResName(resName);
-//                    System.out.println("loadPeakFile resInfo = " + residueInfo.getResName());
                     
                     if (residueInfo == null) {
                         residueInfo = new ResidueInfo(resProp, residueNumInt, 0, 0, 0);
                         residueInfo.setResName(resName);
                         resProp.addResidueInfo(residueNum, residueInfo);
+                    } else {
+                        residueInfo.setResName(resName);
                     }
                     if (expMode.equals("noe")) {
                         residueInfo.value = yValueList.get(0);
@@ -986,7 +987,10 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     String parName = (String) dataMap2.get("file");
                     String expMode = (String) dataMap2.get("mode");
                     expMode = expMode == null ? "cpmg" : expMode;
-                    String parFileName = FileSystems.getDefault().getPath(dirPath.toString(), parName).toString();
+                    String parFileName = "analysis.txt";
+                    if (parName != null) {
+                        parFileName = FileSystems.getDefault().getPath(dirPath.toString(), parName).toString();
+                    }
                     resProp = DataIO.loadResultsFile(expMode, parFileName);
                     resProp.setExpMode(expMode);
                     getFitParameters(resProp, dataMap2);
@@ -1098,67 +1102,72 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             File cifFile = new File(fileName).getAbsoluteFile();
             MMcifReader.read(cifFile);
         }
-        System.out.println(type + " " + Molecule.getActive());
+        System.out.println("loaded molecule " + Molecule.getActive().getName() + " from " + fileName);
         
     } 
     
-    public static void writeSTAR3File(String fileName, ResidueProperties resProp) throws IOException, ParseException, InvalidMoleculeException, InvalidPeakException {
-        try (FileWriter writer = new FileWriter(fileName)) {
-            writeSTAR3File(writer, resProp);
-        }
-    }
-
-    public static void writeSTAR3File(File file, ResidueProperties resProp) throws IOException, ParseException, InvalidMoleculeException, InvalidPeakException {
-        try (FileWriter writer = new FileWriter(file)) {
-            writeSTAR3File(writer, resProp);
-        }
-    }
-    
-    public static void writeSTAR3File(FileWriter chan, ResidueProperties resProp) throws IOException, ParseException, InvalidMoleculeException, InvalidPeakException {
-        String expType = "T2"; //fixme get dynamically
+    public static void addT1T2FitResults(ResidueProperties resProp, String expType) {
         String frameName = resProp.getName();
         ExperimentData expData = resProp.getExperimentData(resProp.getName());
         String nucName = expData.getNucleusName();
-        String expMode = expData.getExpMode();
-        String expName = "";
-        if (expMode.equals("exp")) {
-            expName = "EXPAB";
-        }
+        String expName = "EXPAB";
         double[] fields = resProp.getFields();
-        Iterator entityIterator = Molecule.getActive().entityLabels.values().iterator();
+//        Collections.sort(fields, (a, b) -> Double.compare(a, b));
+        Molecule mol = Molecule.getActive();
+        Iterator entityIterator = mol.entityLabels.values().iterator();
         while (entityIterator.hasNext()) {
             Entity entity = (Entity) entityIterator.next();
-            entity.setPropertyObject("expType", expType);
-            entity.setPropertyObject("fields", fields);
-            entity.setPropertyObject("frameName", frameName);
-            entity.setPropertyObject("nucName", nucName);
-//        Collections.sort(fields, (a, b) -> Double.compare(a, b));
+            TreeSet<String> expTypes = (TreeSet<String>) entity.getPropertyObject("expTypes");
+            if (expTypes == null) {
+                expTypes = new TreeSet<>();
+            } 
+            expTypes.add(expType); 
+            entity.setPropertyObject("expTypes", expTypes);
+            entity.setPropertyObject(expType + "fields", fields);
+            entity.setPropertyObject(expType + "frameName", frameName);
+            entity.setPropertyObject(expType + "nucName", nucName);
             Polymer polymer = (Polymer) entity;
+            //Nested Map for fit results: <resNum, <field, <parName, parValue>>>
             Map<Integer, Map<Integer, Map<String, Double>>> allFitResults = new HashMap<>();
             for (int f=0; f<fields.length; f++) {
                 int field = (int) fields[f];
                 List<ResidueInfo> resInfoList = resProp.getResidueValues();
                 for (ResidueInfo resInfo : resInfoList) {
                     Map<Integer, Map<String, Double>> fitResMap; 
-                    Map<String, CurveFit> fitMap = resInfo.curveSets.get(expName);
-                    List<Object> fitKeys = Arrays.asList(fitMap.keySet().toArray());
-                    Collections.sort(fitKeys, (a, b) -> a.toString().compareTo(b.toString()));
-                    CurveFit curveFit = fitMap.get(fitKeys.get(f).toString());
+                    Map<String, CurveFit> parMap = resInfo.curveSets.get(expName);
+                    List<Object> states = Arrays.asList(parMap.keySet().toArray());
+                    Collections.sort(states, (a, b) -> a.toString().compareTo(b.toString()));
+                    CurveFit curveFit = parMap.get(states.get(f).toString());
+                    Map<String, Double> fitPars = curveFit.getParMap();
 //                    System.out.println(resInfo.resNum + " " + polymer.getResidue(resInfo.resNum - 1));
                     if (!allFitResults.containsKey(resInfo.resNum)) {
                         fitResMap = new HashMap<>(); 
-                        Map<String, Double> fitPars = curveFit.getParMap();
                         fitResMap.put(field, fitPars);
                         allFitResults.put(resInfo.resNum, fitResMap);
                     } else {
                         fitResMap = allFitResults.get(resInfo.resNum);
-                        Map<String, Double> fitPars = curveFit.getParMap();
                         fitResMap.put(field, fitPars);
                     }
                     polymer.getResidue(resInfo.resNum - 1).setPropertyObject(expType + "fitResults", fitResMap);
                 }
             }
         }
+        System.out.println(expType + " fit results added to molecule " + mol.getName());
+    }
+    
+    public static void writeSTAR3File(String fileName) throws IOException, ParseException, InvalidMoleculeException, InvalidPeakException {
+        try (FileWriter writer = new FileWriter(fileName)) {
+            writeSTAR3File(writer);
+        }
+    }
+
+    public static void writeSTAR3File(File file) throws IOException, ParseException, InvalidMoleculeException, InvalidPeakException {
+        try (FileWriter writer = new FileWriter(file)) {
+            writeSTAR3File(writer);
+        }
+    }
+    
+    public static void writeSTAR3File(FileWriter chan) throws IOException, ParseException, InvalidMoleculeException, InvalidPeakException {
         NMRStarWriter.writeAll(chan);
     }
 }
