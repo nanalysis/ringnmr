@@ -145,7 +145,7 @@ public class ResidueChart extends XYCanvasBarChart {
         String equationName = seriesNameParts[1];
         String state = seriesNameParts[2];
         state = "*:" + state.substring(2);
-        System.out.println("series " + seriesName + " map " + mapName + " eqn " + equationName + " state " + state);
+//        System.out.println("series " + seriesName + " map " + mapName + " eqn " + equationName + " state " + state);
         String[] residues = new String[selectedResidues.size()];
         selectedResidues.toArray(residues);
         controller.showInfo(resProps, equationName, mapName, state, residues, xyCanvasChart);

@@ -92,6 +92,7 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ToolBar;
 import javafx.scene.input.MouseEvent;
@@ -117,6 +118,7 @@ import org.nmrfx.graphicsio.SVGGraphicsContext;
 import org.nmrfx.processor.datasets.peaks.InvalidPeakException;
 import org.nmrfx.processor.star.ParseException;
 import org.nmrfx.structure.chemistry.InvalidMoleculeException;
+import org.nmrfx.structure.chemistry.Molecule;
 import org.nmrfx.structure.chemistry.io.MoleculeIOException;
 
 public class PyController implements Initializable {
@@ -1039,10 +1041,6 @@ public class PyController implements Initializable {
         ObservableList<ResidueData.DataValue> data = FXCollections.observableArrayList();
         for (ResidueData resData : resDatas) {
             data.addAll(resData.getDataValues());
-            System.out.println(data);
-            for (ResidueData.DataValue val : data) {
-                System.out.println(val.getResName());
-            }
         }
         resInfoTable.itemsProperty().setValue(data);
 
@@ -1657,7 +1655,40 @@ public class PyController implements Initializable {
         FileChooser fileChooser = new FileChooser();
         File file = fileChooser.showSaveDialog(MainApp.primaryStage);
         if (file != null) {
-            DataIO.writeSTAR3File(file.getAbsolutePath(), currentResProps);
+            DataIO.writeSTAR3File(file.getAbsolutePath());
+            System.out.println("wrote " + file.getAbsolutePath());
+        }
+    }
+    
+    @FXML
+    public void addT1Results(ActionEvent event) {
+        Molecule mol = Molecule.getActive();
+        if (mol == null) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText("No active molecule.");
+            alert.showAndWait();
+        } else {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Add T1 results to molecule " + mol.getName() + "?");
+            Optional<ButtonType> response = alert.showAndWait();
+            if (response.isPresent() && response.get().getText().equals("OK")) {
+                DataIO.addT1T2FitResults(currentResProps, "T1");
+            }
+        }
+    }
+    
+    @FXML
+    public void addT2Results(ActionEvent event) {
+        Molecule mol = Molecule.getActive();
+        if (mol == null) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setContentText("No active molecule.");
+            alert.showAndWait();
+        } else {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Add T2 results to molecule " + mol.getName() + "?");
+            Optional<ButtonType> response = alert.showAndWait();
+            if (response.isPresent() && response.get().getText().equals("OK")) {
+                DataIO.addT1T2FitResults(currentResProps, "T2");
+            }
         }
     }
 
@@ -1977,7 +2008,7 @@ public class PyController implements Initializable {
                 String expName = expData.getName();
                 for (String resNum : residues) {
                     if (expData.getResidueData(resNum) != null) {
-                        System.out.println(expData.getResidueData(resNum));
+//                        System.out.println(expData.getResidueData(resNum));
                         resDatas.add(expData.getResidueData(resNum));
                         DataSeries series = ChartUtil.getMapData(mapName, expName, resNum);
                         series.setStroke(PlotData.colors[iSeries % 8]);

@@ -43,7 +43,13 @@
                                 </items>
                             </Menu>
                             <MenuItem text="Save Analysis..." onAction="#saveParameters" fx:id="savePars"/>
-                            <MenuItem text="Save STAR3..." onAction="#saveParametersSTAR" fx:id="saveParsSTAR"/>
+                            <Menu text="Prep/Save STAR3 File...">
+                                <items>
+                                    <MenuItem text="Add T1 Results to Molecule" onAction="#addT1Results" fx:id="addT1MenuItem"/>
+                                    <MenuItem text="Add T2 Results to Molecule" onAction="#addT2Results" fx:id="addT2MenuItem"/>
+                                    <MenuItem text="Save STAR3 File..." onAction="#saveParametersSTAR" fx:id="saveParsSTARMenuItem"/>
+                                </items>
+                            </Menu>
                             <Menu text="Export Graphics">
                                 <items>
                                     <MenuItem text="XY to SVG..." onAction="#exportSVGAction"/>                       
