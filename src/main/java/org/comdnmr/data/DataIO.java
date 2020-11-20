@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -135,6 +136,8 @@ public class DataIO {
     }
 
     static Pattern resPatter = Pattern.compile("[^0-9]*([0-9]+)[^0-9]*");
+    //Nested Map for T1/T2 fit results: <expType, List<frameName, fields, fitResultsMap <resNum, <field, <parName, parValue>>>>>
+    static Map<String, List<Object>> expFitResults = new TreeMap<>();
 
     public static void loadPeakFile(String fileName, ExperimentData expData,
             ResidueProperties resProp, XCONV xConv, YCONV yConv)
@@ -1124,7 +1127,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
     } 
     
     /**
-     * Add the T1/T2 fit results to a molecule, if present.
+     * Add the T1/T2 fit results to a map, and to a molecule, if present.
      * @param resProp ResidueProperties. The residue properties of the fit.
      * @param expType String. The experiment type, T1 or T2.
      */
@@ -1134,58 +1137,70 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         String nucName = expData.getNucleusName();
         String expName = "EXPAB";
         double[] fields = resProp.getFields();
+        List<Object> expResults = new ArrayList<>();
+        expResults.add(frameName);
+        expResults.add(nucName);
+        expResults.add(fields);
 //        Collections.sort(fields, (a, b) -> Double.compare(a, b));
-        Molecule mol = Molecule.getActive();
-        mol.setProperty(expType + "frameName", frameName);
-        mol.setProperty(expType + "nucName", nucName);
-        Iterator entityIterator = mol.entityLabels.values().iterator();
-        List<Integer> addedRes = new ArrayList<>();
         List<Object> states = new ArrayList<>();
-        Map<Integer, Map<Integer, Map<String, Double>>> allFitResults = new HashMap<>();
-        while (entityIterator.hasNext()) {
-            Entity entity = (Entity) entityIterator.next();
-            TreeSet<String> expTypes = (TreeSet<String>) entity.getPropertyObject("expTypes");
-            if (expTypes == null) {
-                expTypes = new TreeSet<>();
-            } 
-            expTypes.add(expType); 
-            entity.setPropertyObject("expTypes", expTypes);
-            entity.setPropertyObject(expType + "fields", fields);
-            List<Integer> compoundRes = new ArrayList<>();
-            //Nested Map for fit results: <resNum, <field, <parName, parValue>>>
-            for (int f=0; f<fields.length; f++) {
-                int field = (int) fields[f];
+        //Nested Map for fit results: <resNum, <field, <parName, parValue>>>
+        Map<Integer, Map<Integer, Map<String, Double>>> allFitResults = new TreeMap<>();
+        for (int f=0; f<fields.length; f++) {
+            int field = (int) fields[f];
+            List<ResidueInfo> resInfoList = resProp.getResidueValues();
+            for (ResidueInfo resInfo : resInfoList) {
+                Map<Integer, Map<String, Double>> fitResFieldMap; 
+                Map<String, CurveFit> parMap = resInfo.curveSets.get(expName);
+                if (resInfoList.indexOf(resInfo) == 0) {
+                    states = Arrays.asList(parMap.keySet().toArray());
+                    Collections.sort(states, (a, b) -> a.toString().compareTo(b.toString()));
+                }
+                CurveFit curveFit = parMap.get(states.get(f).toString());
+                Map<String, Double> fitPars = curveFit.getParMap();
+//                    System.out.println(resInfo.resNum + " " + polymer.getResidue(resInfo.resNum - 1));
+                if (!allFitResults.containsKey(resInfo.resNum)) {
+                    fitResFieldMap = new HashMap<>(); 
+                } else {
+                    fitResFieldMap = allFitResults.get(resInfo.resNum);
+                }
+                fitResFieldMap.put(field, fitPars);
+                allFitResults.put(resInfo.resNum, fitResFieldMap);
+            }
+        }
+        expResults.add(allFitResults);
+        expFitResults.put(expType, expResults);
+        System.out.println(expType + " fit results added to map");
+        
+        Molecule mol = Molecule.getActive();
+        if (mol != null) {
+            mol.setProperty(expType + "frameName", frameName);
+            mol.setProperty(expType + "nucName", nucName);
+            Iterator entityIterator = mol.entityLabels.values().iterator();
+            List<Integer> addedRes = new ArrayList<>();
+            while (entityIterator.hasNext()) {
+                Entity entity = (Entity) entityIterator.next();
+                TreeSet<String> expTypes = (TreeSet<String>) entity.getPropertyObject("expTypes");
+                if (expTypes == null) {
+                    expTypes = new TreeSet<>();
+                } 
+                expTypes.add(expType); 
+                entity.setPropertyObject("expTypes", expTypes);
+                entity.setPropertyObject(expType + "fields", fields);
+                List<Integer> compoundRes = new ArrayList<>();
                 List<ResidueInfo> resInfoList = resProp.getResidueValues();
                 for (ResidueInfo resInfo : resInfoList) {
                     if (addedRes.contains(resInfo.resNum)) {
                         continue;
                     }
-                    Map<Integer, Map<String, Double>> fitResFieldMap; 
-                    Map<String, CurveFit> parMap = resInfo.curveSets.get(expName);
-                    if (resInfoList.indexOf(resInfo) == 0) {
-                        states = Arrays.asList(parMap.keySet().toArray());
-                        Collections.sort(states, (a, b) -> a.toString().compareTo(b.toString()));
-                    }
-                    CurveFit curveFit = parMap.get(states.get(f).toString());
-                    Map<String, Double> fitPars = curveFit.getParMap();
-//                    System.out.println(resInfo.resNum + " " + polymer.getResidue(resInfo.resNum - 1));
-                    if (!allFitResults.containsKey(resInfo.resNum)) {
-                        fitResFieldMap = new HashMap<>(); 
-                        fitResFieldMap.put(field, fitPars);
-                        allFitResults.put(resInfo.resNum, fitResFieldMap);
-                    } else {
-                        fitResFieldMap = allFitResults.get(resInfo.resNum);
-                        fitResFieldMap.put(field, fitPars);
-                    }
                     if (entity instanceof Polymer) {
                         Polymer polymer = (Polymer) entity;
-                        if (resInfo.resNum <= Integer.valueOf(polymer.getLastResidue().getNumber())) {
-                            polymer.getResidue(resInfo.resNum - 1).setPropertyObject(expType + "fitResults", fitResFieldMap);
+                        if (resInfo.resNum <= Integer.valueOf(polymer.getLastResidue().getNumber())) { //fixme probably won't work for multiple polymers
+                            polymer.getResidue(resInfo.resNum - 1).setPropertyObject(expType + "fitResults", allFitResults.get(resInfo.resNum));
                             addedRes.add(resInfo.resNum);
                         }
                     } else if (entity instanceof Compound) {
                         Compound compound = (Compound) entity;
-                        compound.setPropertyObject(expType + String.valueOf(resInfo.resNum) + "fitResults", fitResFieldMap);
+                        compound.setPropertyObject(expType + String.valueOf(resInfo.resNum) + "fitResults", allFitResults.get(resInfo.resNum));
                         addedRes.add(resInfo.resNum);
                         compoundRes.add(resInfo.resNum);
                         compound.setPropertyObject("compRes", compoundRes);
@@ -1193,25 +1208,27 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     }
                 }
             }
+            System.out.println(expType + " fit results added to molecule " + mol.getName());
         }
-        System.out.println(expType + " fit results added to molecule " + mol.getName());
     }
     
-    public static void writeSTAR3File(String fileName) throws IOException, ParseException, InvalidMoleculeException, InvalidPeakException {
+    public static void writeSTAR3File(String fileName, ResidueProperties resProp) throws IOException, ParseException, InvalidMoleculeException, InvalidPeakException {
         try (FileWriter writer = new FileWriter(fileName)) {
-            writeSTAR3File(writer);
+            writeSTAR3File(writer, resProp);
         }
     }
 
-    public static void writeSTAR3File(File file) throws IOException, ParseException, InvalidMoleculeException, InvalidPeakException {
+    public static void writeSTAR3File(File file, ResidueProperties resProp) throws IOException, ParseException, InvalidMoleculeException, InvalidPeakException {
         try (FileWriter writer = new FileWriter(file)) {
-            writeSTAR3File(writer);
+            writeSTAR3File(writer, resProp);
         }
     }
     
-    public static void writeSTAR3File(FileWriter chan) throws IOException, ParseException, InvalidMoleculeException, InvalidPeakException {
+    public static void writeSTAR3File(FileWriter chan, ResidueProperties resProp) throws IOException, ParseException, InvalidMoleculeException, InvalidPeakException {
         if (Molecule.getActive() != null) {
-            NMRStarWriter.writeAll(chan);
+            NMRStarWriter.writeAll(chan, null);
+        } else {
+            NMRStarWriter.writeAll(chan, expFitResults);
         }
     }
 }
