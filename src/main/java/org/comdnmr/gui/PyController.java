@@ -1655,7 +1655,7 @@ public class PyController implements Initializable {
         FileChooser fileChooser = new FileChooser();
         File file = fileChooser.showSaveDialog(MainApp.primaryStage);
         if (file != null) {
-            DataIO.writeSTAR3File(file.getAbsolutePath());
+            DataIO.writeSTAR3File(file.getAbsolutePath(), currentResProps);
             System.out.println("wrote " + file.getAbsolutePath());
         }
     }
@@ -1663,32 +1663,28 @@ public class PyController implements Initializable {
     @FXML
     public void addT1Results(ActionEvent event) {
         Molecule mol = Molecule.getActive();
-        if (mol == null) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setContentText("No active molecule.");
-            alert.showAndWait();
-        } else {
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Add T1 results to molecule " + mol.getName() + "?");
-            Optional<ButtonType> response = alert.showAndWait();
-            if (response.isPresent() && response.get().getText().equals("OK")) {
-                DataIO.addT1T2FitResults(currentResProps, "T1");
-            }
+        String alertText = "Add T1 results to map?";
+        if (mol != null) {
+            alertText = "Add T1 results to molecule " + mol.getName() + "?";
+        } 
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, alertText);
+        Optional<ButtonType> response = alert.showAndWait();
+        if (response.isPresent() && response.get().getText().equals("OK")) {
+            DataIO.addT1T2FitResults(currentResProps, "T1");
         }
     }
     
     @FXML
     public void addT2Results(ActionEvent event) {
         Molecule mol = Molecule.getActive();
-        if (mol == null) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setContentText("No active molecule.");
-            alert.showAndWait();
-        } else {
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Add T2 results to molecule " + mol.getName() + "?");
-            Optional<ButtonType> response = alert.showAndWait();
-            if (response.isPresent() && response.get().getText().equals("OK")) {
-                DataIO.addT1T2FitResults(currentResProps, "T2");
-            }
+        String alertText = "Add T2 results to map?";
+        if (mol != null) {
+            alertText = "Add T2 results to molecule " + mol.getName() + "?";
+        } 
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, alertText);
+        Optional<ButtonType> response = alert.showAndWait();
+        if (response.isPresent() && response.get().getText().equals("OK")) {
+            DataIO.addT1T2FitResults(currentResProps, "T2");
         }
     }
 
