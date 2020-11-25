@@ -773,14 +773,26 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         return constraintMap;
     }
 
+    static Double getDoubleValue(Map<String, Object> dataMap, String key, Double defaultValue) {
+        Double value = defaultValue;
+        if (dataMap.containsKey(key)) {
+            Object oValue = dataMap.get(key);
+            if (oValue instanceof Number) {
+                value = ((Number) oValue).doubleValue();
+            }
+        }
+        return value;
+    }
+
     public static void processYAMLDataSections(ResidueProperties resProp, Path dirPath, String expMode, ArrayList<HashMap<String, Object>> dataList) throws IOException {
         for (HashMap<String, Object> dataMap3 : dataList) {
-            Double temperature = ((Number) dataMap3.get("temperature")).doubleValue();
-            if (temperature == null) {
-                temperature = ((Number) dataMap3.get("temperatureK")).doubleValue();
-            } else {
+            Double temperature = getDoubleValue(dataMap3, "temperature", null);
+            if (temperature != null) {
                 temperature += 273.15;
+            } else {
+                temperature = getDoubleValue(dataMap3, "temperatureK", null);
             }
+
             XCONV xConv;
             YCONV yConv;
             switch (expMode) {
@@ -814,9 +826,8 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             Double B0field = ((Number) dataMap3.get("B0")).doubleValue();
             String nucleus = (String) dataMap3.get("nucleus");
             List<Number> vcpmgList = (List<Number>) dataMap3.get("vcpmg");
-            Double tau = ((Number) dataMap3.get("tau")).doubleValue();
-            tau = tau == null ? 1.0 : tau;  // fixme throw error if  ratemode and no tau
-            Double B1field = ((Number) dataMap3.get("B1")).doubleValue();
+            Double tau = getDoubleValue(dataMap3, "tau", 1.0);
+            Double B1field = getDoubleValue(dataMap3, "B1", null);
 
             String fileFormat = (String) dataMap3.get("format");
 
@@ -830,10 +841,10 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             System.out.println("delays " + delayField);
             double[] delayCalc = {0.0, 0.0, 1.0};
             if (delayField instanceof Map) {
-                Map<String, Number> delayMap = (Map<String, Number>) delayField;
-                delayCalc[0] = delayMap.get("delta0").doubleValue();
-                delayCalc[1] = delayMap.get("c0").doubleValue();
-                delayCalc[2] = delayMap.get("delta").doubleValue();
+                Map<String, Object> delayMap = (Map<String, Object>) delayField;
+                delayCalc[0] = getDoubleValue(delayMap, "delta0", 0.0);
+                delayCalc[1] = getDoubleValue(delayMap, "c0", 0.0);
+                delayCalc[2] = getDoubleValue(delayMap, "delta", 1.0);
             }
             System.out.println("err " + errorPars);
 
