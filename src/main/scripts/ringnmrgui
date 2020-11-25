@@ -39,7 +39,7 @@ while [ -h "$pgm" ]; do
     fi
 done
 
-dir=`dirname $pgm`
+dir=`dirname "$pgm"`
 CLASSPATH=${dir}"/lib/Manifest.jar"
 
 if [ -d "${dir}/../jre.bundle/Contents/Home/jre/bin" ] ; then
