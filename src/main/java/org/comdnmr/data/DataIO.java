@@ -1177,6 +1177,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             mol.setProperty(expType + "nucName", nucName);
             Iterator entityIterator = mol.entityLabels.values().iterator();
             List<Integer> addedRes = new ArrayList<>();
+            int iPolyRes = 0;
             while (entityIterator.hasNext()) {
                 Entity entity = (Entity) entityIterator.next();
                 TreeSet<String> expTypes = (TreeSet<String>) entity.getPropertyObject("expTypes");
@@ -1188,16 +1189,21 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 entity.setPropertyObject(expType + "fields", fields);
                 List<Integer> compoundRes = new ArrayList<>();
                 List<ResidueInfo> resInfoList = resProp.getResidueValues();
+                Collections.sort(resInfoList, (a, b) -> Integer.compare(a.resNum, b.resNum));
+                if (entity instanceof Polymer) {
+                    iPolyRes = 0;
+                }
                 for (ResidueInfo resInfo : resInfoList) {
                     if (addedRes.contains(resInfo.resNum)) {
                         continue;
                     }
                     if (entity instanceof Polymer) {
                         Polymer polymer = (Polymer) entity;
-                        if (resInfo.resNum <= Integer.valueOf(polymer.getLastResidue().getNumber())) { //fixme probably won't work for multiple polymers
-                            polymer.getResidue(resInfo.resNum - 1).setPropertyObject(expType + "fitResults", allFitResults.get(resInfo.resNum));
+                        if (resInfo.resNum <= Integer.valueOf(polymer.getLastResidue().getNumber())) { 
+                            polymer.getResidue(iPolyRes).setPropertyObject(expType + "fitResults", allFitResults.get(resInfo.resNum));
                             addedRes.add(resInfo.resNum);
-                        }
+                            iPolyRes++;
+                        } 
                     } else if (entity instanceof Compound) {
                         Compound compound = (Compound) entity;
                         compound.setPropertyObject(expType + String.valueOf(resInfo.resNum) + "fitResults", allFitResults.get(resInfo.resNum));
