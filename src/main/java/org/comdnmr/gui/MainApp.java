@@ -14,12 +14,14 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package org.comdnmr.gui;
 
+import java.beans.PropertyChangeSupport;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import javafx.application.Application;
+import javafx.application.HostServices;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -40,6 +42,8 @@ public class MainApp extends Application {
     public static InteractiveInterpreter interpreter = new InteractiveInterpreter();
     public static PreferencesController preferencesController;
     public static ConsoleRedirect console;
+    public static HostServices hostServices;
+    public static final String APP_NAME = "RING NMR Dynamics";
 
     public static void main(String[] args) throws ScriptException {
         engine = new ScriptEngineManager().getEngineByName("jython");
@@ -49,29 +53,21 @@ public class MainApp extends Application {
     }
 
     @Override
-    public void start(Stage primaryStage) {
-        this.primaryStage = primaryStage;
-        primaryStage.setScene(new Scene(new StackPane(), 200, 200));
-        primaryStage.setTitle("RING NMR Dynamics");
-        primaryStage.show();
-        Parameters parameters = getParameters();
-        try {
-            InputStream stream = MainApp.class.getClassLoader().getResourceAsStream("stage.py");
-            InputStreamReader streamReader = new InputStreamReader(stream);
-            engine.eval(streamReader);
-        } catch (ScriptException ioE) {
-            System.out.println(ioE.getMessage());
-            ioE.printStackTrace();
+    public void start(Stage stage) throws Exception {
+        PyController controller = PyController.create(stage);
+        Platform.setImplicitExit(true);
+        hostServices = getHostServices();
+        stage.setTitle(APP_NAME + " " + ""); // fixme getVersion
 
-        }
-        primaryStage.setOnCloseRequest(e -> {
-            checkExit();
-            e.consume();
-        });
-//        try (FileReader fileReader = new FileReader(parameters.getRaw().get(0))) {
-//            engine.eval(fileReader);
-//        } catch (FileNotFoundException fnfE) {
-//        } catch (IOException | ScriptException ioE) {
+        Parameters parameters = getParameters();
+        System.out.println(parameters.getRaw());
+
+//        interpreter.exec("from pyproc import *\ninitLocal()\nfrom gscript import *\nnw=NMRFxWindowScripting()\nfrom dscript import *\nfrom pscript import *\nimport os");
+//        interpreter.set("argv", parameters.getRaw());
+//        interpreter.exec("parseArgs(argv)");
+        // Dataset.addObserver(this);
+//        if (defaultFont == null) {
+//            loadFont();
 //        }
     }
 

@@ -36,7 +36,6 @@ import java.util.Map;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.geometry.Bounds;
@@ -84,7 +83,10 @@ import java.util.Optional;
 import javafx.beans.property.SimpleStringProperty;
 import java.util.Random;
 import javafx.animation.PauseTransition;
+import javafx.embed.swing.SwingFXUtils;
+import javafx.fxml.FXMLLoader;
 import javafx.print.PrinterJob;
+import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Alert;
@@ -98,6 +100,7 @@ import javafx.scene.control.ToolBar;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.stage.StageStyle;
 import javafx.util.Duration;
 import org.comdnmr.util.CoMDPreferences;
 import org.comdnmr.modelfree.CorrelationTime;
@@ -113,18 +116,20 @@ import org.nmrfx.chart.Axis;
 import org.nmrfx.chart.DataSeries;
 import org.nmrfx.chart.XYEValue;
 import org.nmrfx.chart.XYValue;
+import org.nmrfx.chemistry.InvalidMoleculeException;
+import org.nmrfx.chemistry.MoleculeBase;
+import org.nmrfx.chemistry.MoleculeFactory;
+import org.nmrfx.chemistry.io.MoleculeIOException;
 import org.nmrfx.graphicsio.GraphicsIOException;
 import org.nmrfx.graphicsio.SVGGraphicsContext;
-import org.nmrfx.processor.datasets.peaks.InvalidPeakException;
-import org.nmrfx.processor.star.ParseException;
-import org.nmrfx.structure.chemistry.InvalidMoleculeException;
-import org.nmrfx.structure.chemistry.Molecule;
-import org.nmrfx.structure.chemistry.io.MoleculeIOException;
+import org.nmrfx.peaks.InvalidPeakException;
+import org.nmrfx.star.ParseException;
 
 public class PyController implements Initializable {
 
     public static PyController mainController;
     ResidueChart activeChart;
+    Stage stage;
     List<ResidueChart> barCharts = new ArrayList<>();
 
     SSPainter ssPainter = null;
@@ -274,6 +279,31 @@ public class PyController implements Initializable {
             return;
         }
 
+    }
+    public static PyController create(Stage stage) {
+        FXMLLoader loader = new FXMLLoader(PyController.class.getResource("/fxml/NMRScene.fxml"));
+        PyController controller = null;
+        if (stage == null) {
+            stage = new Stage(StageStyle.DECORATED);
+        }
+
+        try {
+            Scene scene = new Scene((Pane) loader.load());
+            stage.setScene(scene);
+            scene.getStylesheets().add("/styles/Styles.css");
+
+            controller = loader.<PyController>getController();
+            controller.stage = stage;
+            //controllers.add(controller);
+            PyController myController = controller;
+            stage.setTitle("NMRFx Processor");
+            stage.show();
+        } catch (IOException ioE) {
+
+            ioE.printStackTrace();
+            System.out.println(ioE.getMessage());
+        }
+        return controller;
     }
 
     @Override
@@ -730,7 +760,7 @@ public class PyController implements Initializable {
         }
         clearSecondaryStructure();
     }
-    
+
     @FXML
     public void loadPDBFile(Event e) throws MoleculeIOException, ParseException {
         FileChooser fileChooser = new FileChooser();
@@ -742,7 +772,7 @@ public class PyController implements Initializable {
             ChartUtil.loadMoleculeFile(file.toString(), type);
         }
     }
-    
+
     @FXML
     public void loadSTARFile(Event e) throws MoleculeIOException, ParseException {
         FileChooser fileChooser = new FileChooser();
@@ -754,7 +784,7 @@ public class PyController implements Initializable {
             ChartUtil.loadMoleculeFile(file.toString(), type);
         }
     }
-    
+
     @FXML
     public void loadNEFFile(Event e) throws MoleculeIOException, ParseException {
         FileChooser fileChooser = new FileChooser();
@@ -766,7 +796,7 @@ public class PyController implements Initializable {
             ChartUtil.loadMoleculeFile(file.toString(), type);
         }
     }
-    
+
     @FXML
     public void loadCIFFile(Event e) throws MoleculeIOException, ParseException {
         FileChooser fileChooser = new FileChooser();
@@ -778,7 +808,6 @@ public class PyController implements Initializable {
             ChartUtil.loadMoleculeFile(file.toString(), type);
         }
     }
-
 
     @FXML
     public void loadSecondaryStructure() {
@@ -1649,7 +1678,7 @@ public class PyController implements Initializable {
             DataIO.saveResultsFile(file.getAbsolutePath(), currentResProps, false);
         }
     }
-    
+
     @FXML
     public void saveParametersSTAR(ActionEvent event) throws IOException, InvalidMoleculeException, ParseException, InvalidPeakException {
         FileChooser fileChooser = new FileChooser();
@@ -1659,28 +1688,28 @@ public class PyController implements Initializable {
             System.out.println("wrote " + file.getAbsolutePath());
         }
     }
-    
+
     @FXML
     public void addT1Results(ActionEvent event) {
-        Molecule mol = Molecule.getActive();
+        MoleculeBase mol = MoleculeFactory.getActive();
         String alertText = "Add T1 results to map?";
         if (mol != null) {
             alertText = "Add T1 results to molecule " + mol.getName() + "?";
-        } 
+        }
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION, alertText);
         Optional<ButtonType> response = alert.showAndWait();
         if (response.isPresent() && response.get().getText().equals("OK")) {
             DataIO.addT1T2FitResults(currentResProps, "T1");
         }
     }
-    
+
     @FXML
     public void addT2Results(ActionEvent event) {
-        Molecule mol = Molecule.getActive();
+        MoleculeBase mol = MoleculeFactory.getActive();
         String alertText = "Add T2 results to map?";
         if (mol != null) {
             alertText = "Add T2 results to molecule " + mol.getName() + "?";
-        } 
+        }
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION, alertText);
         Optional<ButtonType> response = alert.showAndWait();
         if (response.isPresent() && response.get().getText().equals("OK")) {
@@ -1842,7 +1871,6 @@ public class PyController implements Initializable {
         spa.setTransform(javafx.scene.transform.Transform.scale(scale, scale));
         node.snapshot(spa, image);
         ImageIO.write(SwingFXUtils.fromFXImage(image, null), "png", file);
-
     }
 
     public FitResult getFitResult() {

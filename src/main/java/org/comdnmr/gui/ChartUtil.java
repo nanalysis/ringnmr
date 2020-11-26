@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.stream.Stream;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -58,8 +57,8 @@ import org.comdnmr.data.ResidueData;
 import org.nmrfx.chart.DataSeries;
 import org.nmrfx.chart.XYEValue;
 import org.nmrfx.chart.XYValue;
-import org.nmrfx.processor.star.ParseException;
-import org.nmrfx.structure.chemistry.io.MoleculeIOException;
+import org.nmrfx.chemistry.io.MoleculeIOException;
+import org.nmrfx.star.ParseException;
 
 public class ChartUtil {
 
