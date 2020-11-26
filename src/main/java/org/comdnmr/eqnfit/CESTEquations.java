@@ -634,6 +634,7 @@ public class CESTEquations {
 
                     double[] widthinten = {halfinten, quarterinten, threequarterinten};
                     double[][] widthpos = new double[widthinten.length][2];
+                    boolean[][] foundPos = new boolean[widthinten.length][2];
 
                     // search from peak center in both directions to find
                     // the peak width50.  Find a value above and below the 
@@ -668,8 +669,9 @@ public class CESTEquations {
                                 j += iDir;
                             }
                             if ((fitMode.equals("cest") && ((dLow == Double.MAX_VALUE) || (dUp == Double.MAX_VALUE))) || (fitMode.equals("r1rho") && ((dLow == Double.MIN_VALUE) || (dUp == Double.MIN_VALUE)))) {
-                                ok = false;
-                                break;
+                                foundPos[w][k] = false;
+                            } else {
+                                foundPos[w][k] = true;
                             }
                             double delta = dLow + dUp;
                             widthpos[w][k] = xvals[iLow] * dUp / delta + xvals[iUp] * dLow / delta;
@@ -680,18 +682,21 @@ public class CESTEquations {
                         double xCenter = xvals[iCenter];
                         double yCenter = yvals[iCenter];
                         for (int w = 0; w < widthpos.length; w++) {
-                            double width = Math.abs(widthpos[w][0] - widthpos[w][1]) * field;
-                            double widthLeft = widthpos[w][0] - xCenter;
-                            double widthRight = widthpos[w][1] - xCenter;
-                            if (widthpos[w][1] < xCenter) {
-                                widthLeft = widthpos[w][1] - xCenter;
-                                widthRight = widthpos[w][0] - xCenter;
+                            if (foundPos[w][0]) {
+                                widthtab[w][1] = Math.abs(widthpos[w][0] - xCenter) * field;
+                            } else if (foundPos[w][1]) {
+                                widthtab[w][1] = Math.abs(widthpos[w][1] - xCenter) * field;
+                            } else if (w > 0) {
+                                widthtab[w][1] = widthtab[w - 1][1] * 1.3;
                             }
-                            double widthL = Math.abs(widthLeft) * field;
-                            double widthR = Math.abs(widthRight) * field;
-                            widthtab[w][0] = width;
-                            widthtab[w][1] = widthL;
-                            widthtab[w][2] = widthR;
+                            if (foundPos[w][1]) {
+                                widthtab[w][2] = Math.abs(widthpos[w][1] - xCenter) * field;
+                            } else if (foundPos[w][0]) {
+                                widthtab[w][2] = Math.abs(widthpos[w][0] - xCenter) * field;
+                            } else if (w > 0) {
+                                widthtab[w][2] = widthtab[w - 1][2] * 1.3;
+                            }
+                            widthtab[w][0] = (widthtab[w][1] + widthtab[w][2]);
                         }
                         CESTPeak peak = new CESTPeak(iCenter, xCenter, yCenter, widthtab[0][0], widthtab[0][1], widthtab[0][2], widthtab[1][0], widthtab[1][1], widthtab[1][2], widthtab[2][0], widthtab[2][1], widthtab[2][2], baseline);
                         peaks.add(peak);
