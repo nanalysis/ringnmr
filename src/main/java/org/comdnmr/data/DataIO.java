@@ -54,21 +54,22 @@ import org.comdnmr.eqnfit.ExpFitter;
 import org.comdnmr.eqnfit.PlotEquation;
 import org.comdnmr.eqnfit.R1RhoEquation;
 import org.comdnmr.eqnfit.R1RhoFitter;
-import org.nmrfx.processor.datasets.peaks.InvalidPeakException;
-import org.nmrfx.processor.star.ParseException;
-import org.nmrfx.structure.chemistry.Compound;
-import org.nmrfx.structure.chemistry.Entity;
-import org.nmrfx.structure.chemistry.InvalidMoleculeException;
-import org.nmrfx.structure.chemistry.Molecule;
-import org.nmrfx.structure.chemistry.Polymer;
-import org.nmrfx.structure.chemistry.Residue;
-import org.nmrfx.structure.chemistry.io.MMcifReader;
-import org.nmrfx.structure.chemistry.io.MoleculeIOException;
-import org.nmrfx.structure.chemistry.io.NMRNEFReader;
-import org.nmrfx.structure.chemistry.io.NMRStarReader;
+import org.nmrfx.chemistry.Compound;
+import org.nmrfx.chemistry.Entity;
+import org.nmrfx.chemistry.InvalidMoleculeException;
+import org.nmrfx.chemistry.MoleculeBase;
+import org.nmrfx.chemistry.MoleculeFactory;
+import org.nmrfx.chemistry.Polymer;
+import org.nmrfx.chemistry.Residue;
+import org.nmrfx.chemistry.io.MMcifReader;
+import org.nmrfx.chemistry.io.MoleculeIOException;
+import org.nmrfx.chemistry.io.NMRNEFReader;
+import org.nmrfx.chemistry.io.NMRStarReader;
+import org.nmrfx.chemistry.io.NMRStarWriter;
+import org.nmrfx.chemistry.io.PDBFile;
+import org.nmrfx.peaks.InvalidPeakException;
+import org.nmrfx.star.ParseException;
 import org.yaml.snakeyaml.Yaml;
-import org.nmrfx.structure.chemistry.io.NMRStarWriter;
-import org.nmrfx.structure.chemistry.io.PDBFile;
 
 /**
  *
@@ -400,7 +401,7 @@ public class DataIO {
                         expData.addResidueData(residueNum, residueData);
                     }
                     ResidueInfo residueInfo = resProp.getResidueInfo(residueNum);
-                    
+
                     if (residueInfo == null) {
                         residueInfo = new ResidueInfo(resProp, residueNumInt, 0, 0, 0);
                         residueInfo.setResName(resName);
@@ -452,15 +453,16 @@ public class DataIO {
         expData.setExtras(tauList1);
 
     }
-    
+
     /**
-     * Get the residue name from a molecule, if present. 
-     * 
+     * Get the residue name from a molecule, if present.
+     *
      * @param residueNum int. The residue number.
-     * @return name String. The name of the corresponding residue in the molecule.
+     * @return name String. The name of the corresponding residue in the
+     * molecule.
      */
     public static String getResidueName(int residueNum) {
-        Molecule mol = Molecule.getActive();
+        MoleculeBase mol = MoleculeFactory.getActive();
         String name = "";
         if (mol != null) {
             Iterator entityIterator = mol.entityLabels.values().iterator();
@@ -1091,10 +1093,10 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         List[] result = {xValues, yValues, errValues};
         return result;
     }
-    
+
     /**
      * Load molecular information from a file.
-     * 
+     *
      * @param fileName String. The file to read.
      * @param type String. The filetype: pdb, star, nef, or cif.
      * @throws ParseException
@@ -1105,7 +1107,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         switch (type) {
             case "pdb":
                 PDBFile pdb = new PDBFile();
-                Molecule mol = pdb.read(fileName);
+                MoleculeBase mol = pdb.read(fileName);
                 mol.updateAtomArray();
                 break;
             case "star":
@@ -1122,12 +1124,13 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             default:
                 break;
         }
-        System.out.println("loaded molecule " + Molecule.getActive().getName() + " from " + fileName);
-        
-    } 
-    
+        System.out.println("loaded molecule " + MoleculeFactory.getActive().getName() + " from " + fileName);
+
+    }
+
     /**
      * Add the T1/T2 fit results to a map, and to a molecule, if present.
+     *
      * @param resProp ResidueProperties. The residue properties of the fit.
      * @param expType String. The experiment type, T1 or T2.
      */
@@ -1145,11 +1148,11 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         List<Object> states = new ArrayList<>();
         //Nested Map for fit results: <resNum, <field, <parName, parValue>>>
         Map<Integer, Map<Integer, Map<String, Double>>> allFitResults = new TreeMap<>();
-        for (int f=0; f<fields.length; f++) {
+        for (int f = 0; f < fields.length; f++) {
             int field = (int) fields[f];
             List<ResidueInfo> resInfoList = resProp.getResidueValues();
             for (ResidueInfo resInfo : resInfoList) {
-                Map<Integer, Map<String, Double>> fitResFieldMap; 
+                Map<Integer, Map<String, Double>> fitResFieldMap;
                 Map<String, CurveFit> parMap = resInfo.curveSets.get(expName);
                 if (resInfoList.indexOf(resInfo) == 0) {
                     states = Arrays.asList(parMap.keySet().toArray());
@@ -1159,7 +1162,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 Map<String, Double> fitPars = curveFit.getParMap();
 //                    System.out.println(resInfo.resNum + " " + polymer.getResidue(resInfo.resNum - 1));
                 if (!allFitResults.containsKey(resInfo.resNum)) {
-                    fitResFieldMap = new HashMap<>(); 
+                    fitResFieldMap = new HashMap<>();
                 } else {
                     fitResFieldMap = allFitResults.get(resInfo.resNum);
                 }
@@ -1170,8 +1173,8 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         expResults.add(allFitResults);
         expFitResults.put(expType, expResults);
         System.out.println(expType + " fit results added to map");
-        
-        Molecule mol = Molecule.getActive();
+
+        MoleculeBase mol = MoleculeFactory.getActive();
         if (mol != null) {
             mol.setProperty(expType + "frameName", frameName);
             mol.setProperty(expType + "nucName", nucName);
@@ -1183,8 +1186,8 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 TreeSet<String> expTypes = (TreeSet<String>) entity.getPropertyObject("expTypes");
                 if (expTypes == null) {
                     expTypes = new TreeSet<>();
-                } 
-                expTypes.add(expType); 
+                }
+                expTypes.add(expType);
                 entity.setPropertyObject("expTypes", expTypes);
                 entity.setPropertyObject(expType + "fields", fields);
                 List<Integer> compoundRes = new ArrayList<>();
@@ -1199,11 +1202,11 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     }
                     if (entity instanceof Polymer) {
                         Polymer polymer = (Polymer) entity;
-                        if (resInfo.resNum <= Integer.valueOf(polymer.getLastResidue().getNumber())) { 
+                        if (resInfo.resNum <= Integer.valueOf(polymer.getLastResidue().getNumber())) {
                             polymer.getResidue(iPolyRes).setPropertyObject(expType + "fitResults", allFitResults.get(resInfo.resNum));
                             addedRes.add(resInfo.resNum);
                             iPolyRes++;
-                        } 
+                        }
                     } else if (entity instanceof Compound) {
                         Compound compound = (Compound) entity;
                         compound.setPropertyObject(expType + String.valueOf(resInfo.resNum) + "fitResults", allFitResults.get(resInfo.resNum));
@@ -1217,7 +1220,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             System.out.println(expType + " fit results added to molecule " + mol.getName());
         }
     }
-    
+
     public static void writeSTAR3File(String fileName, ResidueProperties resProp) throws IOException, ParseException, InvalidMoleculeException, InvalidPeakException {
         try (FileWriter writer = new FileWriter(fileName)) {
             writeSTAR3File(writer, resProp);
@@ -1229,10 +1232,10 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             writeSTAR3File(writer, resProp);
         }
     }
-    
+
     public static void writeSTAR3File(FileWriter chan, ResidueProperties resProp) throws IOException, ParseException, InvalidMoleculeException, InvalidPeakException {
-        if (Molecule.getActive() != null) {
-            NMRStarWriter.writeAll(chan, null);
+        if (MoleculeFactory.getActive() != null) {
+            NMRStarWriter.writeAll(chan);
         } else {
             NMRStarWriter.writeAll(chan, expFitResults);
         }

@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package org.comdnmr.fit;
 
 import org.comdnmr.eqnfit.R1RhoFitter;
@@ -51,6 +51,7 @@ import org.comdnmr.util.CoMDOptions;
  * @author Bruce Johnson
  */
 public class ResidueFitter {
+
     final CoMDOptions options;
     private final FitResidues processDataset = new FitResidues();
     final ReadOnlyObjectProperty<Worker.State> stateProperty = processDataset.worker.stateProperty();
