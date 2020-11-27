@@ -3,9 +3,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.comdnmr</groupId>
-    <artifactId>comdnmrgui</artifactId>
+    <artifactId>ringnmrgui</artifactId>
     <version>1.01</version>
-    <name>comdnmrgui</name>
+    <name>ringnmrgui</name>
     <packaging>jar</packaging>
 
     <properties>
@@ -34,7 +34,7 @@
         <dependency>
             <groupId>org.python</groupId>
             <artifactId>jython-standalone</artifactId>
-            <version>2.7.0</version>
+            <version>2.7.2</version>
         </dependency>
         <dependency>
             <groupId>org.controlsfx</groupId>

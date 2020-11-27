@@ -25,11 +25,11 @@ do
 
     mkdir -p $dir
     cd $dir
-    cp -r -p ../../target/comdnmrgui-*-bin/comdnmrgui* .
-    sdir=`ls -d comdnmrgui-*`
+    cp -r -p ../../target/ringnmrgui-*-bin/ringnmrgui* .
+    sdir=`ls -d ringnmrgui-*`
     cd $sdir
-    cp -p ../../../../comdnmr/target/comdnmr-*-bin/comdnmr-*/comdnmr .
-    cp -p ../../../../comdnmr/target/comdnmr-*-bin/comdnmr-*/comdnmr.bat .
+    cp -p ../../../../comdnmr/target/ringnmr-*-bin/ringnmr-*/ringnmr .
+    cp -p ../../../../comdnmr/target/ringnmr-*-bin/ringnmr-*/ringnmr.bat .
 
     mkdir jre
     cd jre

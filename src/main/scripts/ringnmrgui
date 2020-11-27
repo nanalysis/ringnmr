@@ -39,15 +39,15 @@ while [ -h "$pgm" ]; do
     fi
 done
 
-dir=`dirname $pgm`
+dir=`dirname "$pgm"`
 CLASSPATH=${dir}"/lib/Manifest.jar"
 
 if [ -d "${dir}/../jre.bundle/Contents/Home/jre/bin" ] ; then
     JAVA="${dir}/../jre.bundle/Contents/Home/jre/bin/java"
-    CLASSPATH="$dir/lib/comdnmrgui-$comdnmrguiver.jar:$CLASSPATH"
+    CLASSPATH="$dir/lib/ringnmrgui-$comdnmrguiver.jar:$CLASSPATH"
 elif [ -d "${dir}/jre/bin" ] ; then
     JAVA="${dir}/jre/bin/java"
-    CLASSPATH="$dir/lib/comdnmrgui-$comdnmrguiver.jar:$CLASSPATH"
+    CLASSPATH="$dir/lib/ringnmrgui-$comdnmrguiver.jar:$CLASSPATH"
 else
     if [ -n "$JAVA_HOME" ] ; then
         if [ -x "$JAVA_HOME/jre/sh/java"  ] ; then
@@ -60,13 +60,13 @@ else
 
     if $ismsys ; then
         comdnmrguidir=`$dir/echopath "$dir"`
-        CLASSPATH="$comdnmrguidir/comdnmrgui-$comdnmrguiver.jar;$CLASSPATH"
+        CLASSPATH="$comdnmrguidir/ringnmrgui-$comdnmrguiver.jar;$CLASSPATH"
     elif $iscygwin ; then
         CLASSPATH=`cygpath -pu "$CLASSPATH"`
-        CLASSPATH="$dir/comdnmrgui-$comdnmrguiver.jar;$CLASSPATH"
+        CLASSPATH="$dir/ringnmrgui-$comdnmrguiver.jar;$CLASSPATH"
         CLASSPATH=`cygpath -pw "$CLASSPATH"`
     else
-        CLASSPATH="$dir/comdnmrgui-$comdnmrguiver.jar:$CLASSPATH"
+        CLASSPATH="$dir/ringnmrgui-$comdnmrguiver.jar:$CLASSPATH"
     fi
 fi
 
