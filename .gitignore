@@ -1,5 +1,7 @@
 /target/
 /sandbox/
+/.idea/
+ringnmr.iml
 
 # Compiled source #
 ###################
