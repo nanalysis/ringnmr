@@ -16,7 +16,7 @@ else
 fi
 
 comdnmrguiver=${project.version}
-cpmgfig2guimain=org.comdnmr.gui.MainApp
+cpmgfig2guimain=org.comdnmr.gui.NMRApp
 iscygwin=false
 ismsys=false
 case "`uname`" in
