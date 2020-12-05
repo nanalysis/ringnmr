@@ -280,9 +280,11 @@ public class PyController implements Initializable {
         }
 
     }
+
     public static PyController create(Stage stage) {
-        FXMLLoader loader = new FXMLLoader(PyController.class.getResource("/fxml/NMRScene.fxml"));
+        FXMLLoader loader = new FXMLLoader(PyController.class.getResource("/fxml/RINGScene.fxml"));
         PyController controller = null;
+
         if (stage == null) {
             stage = new Stage(StageStyle.DECORATED);
         }
@@ -295,8 +297,7 @@ public class PyController implements Initializable {
             controller = loader.<PyController>getController();
             controller.stage = stage;
             //controllers.add(controller);
-            PyController myController = controller;
-            stage.setTitle("NMRFx Processor");
+            stage.setTitle("RING NMR Dynamics");
             stage.show();
         } catch (IOException ioE) {
 
@@ -463,6 +464,10 @@ public class PyController implements Initializable {
         PauseTransition logoTransition = new PauseTransition(Duration.seconds(5));
         logoTransition.setOnFinished(e -> removeLogo());
         logoTransition.play();
+    }
+    
+    public Stage getStage() {
+        return stage;
     }
 
     void removeLogo() {

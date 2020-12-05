@@ -18,7 +18,7 @@ module org.comdnmr.gui {
     requires snakeyaml;
     requires org.nmrfx.core;
     requires ejml.fat;
-    requires nmrfxutils;
+    requires org.nmrfx.utils;
     requires javafx.controls;
     requires javafx.fxml;
     requires fontawesomefx;

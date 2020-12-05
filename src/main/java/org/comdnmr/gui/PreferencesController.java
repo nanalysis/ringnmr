@@ -205,7 +205,7 @@ public class PreferencesController implements Initializable {
     }
 
     public static PreferencesController create(Stage parent) {
-        FXMLLoader loader = new FXMLLoader(PyController.class.getResource("/fxml/PreferencesScene.fxml"));
+        FXMLLoader loader = new FXMLLoader(PyController.class.getResource("/fxml/RINGPreferencesScene.fxml"));
         PreferencesController controller = null;
         Stage stage = new Stage(StageStyle.DECORATED);
 
