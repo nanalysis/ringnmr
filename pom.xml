@@ -2,15 +2,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.comdnmr</groupId>
+        <groupId>org.comdnmr</groupId>
     <artifactId>ringnmrgui</artifactId>
     <version>1.01</version>
     <name>ringnmrgui</name>
     <packaging>jar</packaging>
-
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <mainClass>org.comdnmr.comdnmr.chart.MainApp</mainClass>
+        <mainClass>org.comdnmr.comdnmr.chart.NMRApp</mainClass>
     </properties>
 
     <dependencies>
@@ -22,7 +21,7 @@
         <dependency>
             <groupId>org.nmrfx</groupId>
             <artifactId>nmrfx-core</artifactId>
-            <version>11.1.1</version>
+            <version>11.1.2</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -32,14 +31,9 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>org.python</groupId>
-            <artifactId>jython-standalone</artifactId>
-            <version>2.7.2</version>
-        </dependency>
-        <dependency>
             <groupId>org.controlsfx</groupId>
             <artifactId>controlsfx</artifactId>
-            <version>8.40.11</version>
+            <version>11.0.3</version>
         </dependency>
         <dependency>
             <groupId>org.fxmisc.richtext</groupId>
@@ -75,23 +69,28 @@
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
+            <artifactId>javafx-base</artifactId>
+            <version>15</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
             <artifactId>javafx-graphics</artifactId>
-            <version>11</version>
+            <version>15</version>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
-            <version>11</version>
+            <version>15</version>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-web</artifactId>
-            <version>11</version>
+            <version>15</version>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-swing</artifactId>
-            <version>11</version>
+            <version>15</version>
         </dependency>
 <dependency>
     <groupId>org.yaml</groupId>
@@ -101,6 +100,60 @@
     </dependencies>
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>2.7</version>
+                <configuration>
+                    <generateBackupPoms>false</generateBackupPoms>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>11</source>
+                    <target>11</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>0.0.4</version>
+                <configuration>
+                    <mainClass>org.nmrfx.processor.gui.MainApp</mainClass>
+                    <options>
+                        <option>--add-opens</option>
+                        <option>javafx.graphics/com.sun.javafx.tk=centerdevice.nsmenufx</option>
+                        <option>--add-opens</option>
+                        <option>javafx.graphics/com.sun.javafx.tk.quantum=centerdevice.nsmenufx</option>
+                        <option>--add-opens</option>
+                        <option>javafx.graphics/com.sun.javafx.tk=centerdevice.nsmenufx</option>
+                        <option>--add-opens</option>
+                        <option>javafx.graphics/com.sun.glass.ui=centerdevice.nsmenufx</option>
+                        <option>--add-opens</option>
+                        <option>javafx.graphics/com.sun.glass.ui.mac=centerdevice.nsmenufx</option>
+                        <option>--add-opens</option>
+                        <option>javafx.graphics/com.sun.javafx.menu=centerdevice.nsmenufx</option>
+                        <option>--add-opens</option>
+                        <option>javafx.controls/com.sun.javafx.scene.control=centerdevice.nsmenufx</option>
+                        <option>--add-opens</option>
+                        <option>javafx.graphics/com.sun.javafx.scene.traversal=org.controlsfx.controls</option>
+                        <option>--add-opens</option>
+                        <option>javafx.graphics/com.sun.javafx.css=org.controlsfx.controls</option>
+                        <option>--add-opens</option>
+                        <option>javafx.controls/com.sun.javafx.scene.control=org.controlsfx.controls</option>
+                        <option>--add-opens</option>
+                        <option>javafx.controls/com.sun.javafx.scene.control.behavior=org.controlsfx.controls</option>
+                        <option>--add-opens</option>
+                        <option>javafx.controls/com.sun.javafx.scene.control.inputmap=org.controlsfx.controls</option>
+                        <option>--add-opens</option>
+                        <option>javafx.graphics/com.sun.javafx.css=org.controlsfx.controls</option>
+                    </options>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
@@ -117,7 +170,6 @@
                             <excludeGroupIds>junit,org.mockito,org.hamcrest</excludeGroupIds>
                             <outputFile>target/myFilter.properties</outputFile>
                             <prefix>.</prefix>
-                            <fileSeparator>/</fileSeparator>
                         </configuration>
                     </execution>
                 </executions>
@@ -165,6 +217,8 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.3.0</version>
+                <!-- Required for https://issues.apache.org/jira/browse/MASSEMBLY-289 -->
                 <executions>
                     <execution>
                         <id>assembly:package</id>
@@ -182,29 +236,34 @@
                             </descriptors>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>assembly:package:noattach</id>
+                        <phase>package</phase>
+                        <goals>
+                            <!--
+                              Work around for http://jira.codehaus.org/browse/MASSEMBLY-97
+                              as the goal should be attached.
+                            -->
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/bin-dir.xml</descriptor>
+                            </descriptors>
+                            <attach>false</attach>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>  
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.1</version>
-                <configuration>
-                    <source>11</source>
-                    <target>11</target>
-                    <compilerArguments>
-                        <bootclasspath>${sun.boot.class.path}${path.separator}${java.home}/lib/jfxrt.jar</bootclasspath>
-                    </compilerArguments>
-                </configuration>
+                <artifactId>maven-site-plugin</artifactId>
+                <version>3.7.1</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.16</version>
-                <configuration>
-                    <additionalClasspathElements>
-                        <additionalClasspathElement>${java.home}/lib/jfxrt.jar</additionalClasspathElement>
-                    </additionalClasspathElements>
-                </configuration>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+                <version>3.0.0</version>
             </plugin>
         </plugins>
     </build>
