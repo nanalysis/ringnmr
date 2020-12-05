@@ -14,7 +14,7 @@ rem
 if "%OS%" == "Windows_NT" setlocal
 
 set comdnmrver=${project.version}
-set comdnmrmain=org.comdnmr.gui.MainApp
+set comdnmrmain=org.comdnmr.gui.NMRApp
 
 
 set dir=%~dp0
