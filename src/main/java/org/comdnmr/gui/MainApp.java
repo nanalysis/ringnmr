@@ -17,18 +17,11 @@
  */
 package org.comdnmr.gui;
 
-import java.beans.PropertyChangeSupport;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import javafx.application.Application;
 import javafx.application.HostServices;
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
-import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
