@@ -1,6 +1,8 @@
 /target/
 /sandbox/
 /installers/
+/.idea/
+ringnmrgui.iml
 
 # Compiled source #
 ###################
