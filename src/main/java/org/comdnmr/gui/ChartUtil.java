@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package org.comdnmr.gui;
 
 import java.io.BufferedReader;
@@ -58,6 +58,7 @@ import org.nmrfx.chart.DataSeries;
 import org.nmrfx.chart.XYEValue;
 import org.nmrfx.chart.XYValue;
 import org.nmrfx.chemistry.io.MoleculeIOException;
+import org.nmrfx.peaks.PeakList;
 import org.nmrfx.star.ParseException;
 
 public class ChartUtil {
@@ -453,6 +454,28 @@ public class ChartUtil {
         PyController.mainController.setControls();
     }
 
+    public static void loadPeakList(PeakList peakList) {
+        ResidueChart reschartNode = PyController.mainController.getActiveChart();
+        if (reschartNode == null) {
+            reschartNode = PyController.mainController.addChart();
+
+        }
+        ResidueProperties resProp = DataIO.processPeakList(peakList);
+        residueProperties.put(resProp.getName(), resProp);
+        String parName = "Kex";
+        if (resProp.getExpMode().equals("exp")) {
+            parName = "R";
+        } else if (resProp.getExpMode().equals("noe")) {
+            parName = "NOE";
+        }
+        ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
+        PyController.mainController.currentResProps = resProp;
+        PyController.mainController.makeAxisMenu();
+        PyController.mainController.setYAxisType(resProp.getName(), "best", "0:0:0", parName);
+        reschartNode.setResProps(resProp);
+        PyController.mainController.setControls();
+    }
+
     public static void loadMoleculeFile(String fileName, String type) throws MoleculeIOException, ParseException {
         File file = new File(fileName);
         if (!file.exists()) {
@@ -462,9 +485,9 @@ public class ChartUtil {
             alert.showAndWait();
             return;
         }
-      
+
         try {
-            DataIO.readMoleculeFile(fileName, type); 
+            DataIO.readMoleculeFile(fileName, type);
             if (!residueProperties.isEmpty()) {
                 Set<String> keySet = residueProperties.keySet();
                 for (String key : keySet) {

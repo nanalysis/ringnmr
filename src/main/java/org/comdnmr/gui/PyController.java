@@ -842,12 +842,6 @@ public class PyController implements Initializable {
     }
 
     @FXML
-    public void loadPeakList() {
-        PeakList peakList = PeakList.get("AC_hsqct1etf3gpsi3d");
-        ChartUtil.loadPeakList(peakList);
-    }
-
-    @FXML
     public void startServer(ActionEvent event) {
         String tempDir = System.getProperty("java.io.tmpdir");
         String userName = System.getProperty("user.name");
