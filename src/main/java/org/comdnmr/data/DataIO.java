@@ -67,7 +67,9 @@ import org.nmrfx.chemistry.io.NMRNEFReader;
 import org.nmrfx.chemistry.io.NMRStarReader;
 import org.nmrfx.chemistry.io.NMRStarWriter;
 import org.nmrfx.chemistry.io.PDBFile;
+import org.nmrfx.datasets.DatasetBase;
 import org.nmrfx.peaks.InvalidPeakException;
+import org.nmrfx.peaks.PeakList;
 import org.nmrfx.star.ParseException;
 import org.yaml.snakeyaml.Yaml;
 
@@ -139,6 +141,89 @@ public class DataIO {
     static Pattern resPatter = Pattern.compile("[^0-9]*([0-9]+)[^0-9]*");
     //Nested Map for T1/T2 fit results: <expType, List<frameName, fields, fitResultsMap <resNum, <field, <parName, parValue>>>>>
     static Map<String, List<Object>> expFitResults = new TreeMap<>();
+
+    public static void loadFromPeakList(PeakList peakList, ExperimentData expData,
+            ResidueProperties resProp, XCONV xConv, YCONV yConv) {
+        String expMode = expData.getExpMode();
+        DatasetBase dataset = DatasetBase.getDataset(peakList.fileName);
+        final double[] xValues;
+        if (dataset != null) {
+            xValues = dataset.getValues(2);
+        } else {
+            xValues = null;
+        }
+        resProp.addExperimentData(expData.getName(), expData);
+        boolean eSet = false;
+        peakList.peaks().stream().filter(p -> p.getStatus() >= 0).forEach(p -> {
+            String resName = "";
+            int peakField = -1;
+            String residueNum;
+            int peakNum = p.getIdNum();
+            String label = p.getPeakDim(0).getLabel();
+            if (label.contains(".")) {
+                residueNum = label.substring(0, label.indexOf("."));
+            } else {
+                residueNum = String.valueOf(p.getIndex());
+            }
+            int residueNumInt = 0;
+            if (residueNum.length() > 0) {
+                try {
+                    residueNumInt = Integer.parseInt(residueNum);
+                } catch (NumberFormatException nfE) {
+                    Matcher matcher = resPatter.matcher(residueNum);
+                    if (matcher.matches()) {
+                        residueNum = matcher.group(1);
+                        residueNumInt = Integer.parseInt(residueNum);
+                    }
+                }
+            }
+            double refIntensity = 1.0;
+            double refError = 0.0;
+            List<Double> xValueList = new ArrayList<>();
+            List<Double> yValueList = new ArrayList<>();
+            List<Double> errValueList = new ArrayList<>();
+            List<String> peakRefList = new ArrayList<>();
+
+            if (p.getMeasures().isPresent()) {
+                double[][] v = p.getMeasures().get();
+                for (int i = 0; i < v[0].length; i++) {
+                    xValueList.add(xValues[i]);
+                    yValueList.add(v[0][i]);
+                    errValueList.add(v[1][i]);
+                    peakRefList.add(String.valueOf(i));
+
+                }
+            }
+            if (expMode.equals("cest")) {
+                processCESTData(expData, residueNum, xValueList, yValueList, errValueList, peakNum);
+            } else {
+                ResidueData residueData = new ResidueData(expData, residueNum, xValueList, yValueList, errValueList, peakRefList, peakNum);
+                resName = getResidueName(Integer.parseInt(residueNum));
+                residueData.setResName(resName);
+                expData.addResidueData(residueNum, residueData);
+            }
+            boolean ok = true;
+
+            ResidueInfo residueInfo = resProp.getResidueInfo(residueNum);
+
+            if (residueInfo == null) {
+                residueInfo = new ResidueInfo(resProp, residueNumInt, 0, 0, 0);
+                residueInfo.setResName(resName);
+                resProp.addResidueInfo(residueNum, residueInfo);
+            } else {
+                residueInfo.setResName(resName);
+            }
+            if (expMode.equals("noe")) {
+                residueInfo.value = yValueList.get(0);
+                residueInfo.err = errValueList.get(0);
+            }
+        });
+        if (!eSet) {
+            double errValue = estimateErrors(expData);
+            setErrors(expData, errValue);
+        }
+
+    }
 
     public static void loadPeakFile(String fileName, ExperimentData expData,
             ResidueProperties resProp, XCONV xConv, YCONV yConv)
@@ -841,6 +926,33 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             }
         }
         return value;
+    }
+
+    public static ResidueProperties processPeakList(PeakList peakList) {
+        String peakListName = peakList.getName();
+        List<Number> vcpmgList = null;
+        ResidueProperties resProp = null;
+        DatasetBase dataset = DatasetBase.getDataset(peakList.fileName);
+        String expMode = "exp";
+        resProp = new ResidueProperties(peakListName, peakListName);
+        expMode = expMode.toLowerCase();
+        resProp.setExpMode(expMode);
+        if (vcpmgList == null) {
+            String nucleus = dataset.getNucleus(1).getName();
+            double B0field = dataset.getSf(1);
+            double temperature = dataset.getTempK();
+            Double tau = null;
+            Double B1field = null;
+            double[] delayCalc = {0.0, 0.0, 1.0};
+            HashMap<String, Object> errorPars = new HashMap<>();
+            ExperimentData expData = new ExperimentData(peakListName,
+                    nucleus, B0field, temperature, tau, null, expMode,
+                    errorPars, delayCalc, B1field);
+
+            loadFromPeakList(peakList, expData, resProp, XCONV.IDENTITY, YCONV.IDENTITY);
+        }
+        return resProp;
+
     }
 
     public static void processYAMLDataSections(ResidueProperties resProp, Path dirPath, String expMode, ArrayList<HashMap<String, Object>> dataList) throws IOException {
