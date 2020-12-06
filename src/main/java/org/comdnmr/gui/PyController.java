@@ -123,6 +123,7 @@ import org.nmrfx.chemistry.io.MoleculeIOException;
 import org.nmrfx.graphicsio.GraphicsIOException;
 import org.nmrfx.graphicsio.SVGGraphicsContext;
 import org.nmrfx.peaks.InvalidPeakException;
+import org.nmrfx.peaks.PeakList;
 import org.nmrfx.star.ParseException;
 
 public class PyController implements Initializable {
@@ -465,7 +466,7 @@ public class PyController implements Initializable {
         logoTransition.setOnFinished(e -> removeLogo());
         logoTransition.play();
     }
-    
+
     public Stage getStage() {
         return stage;
     }
@@ -841,6 +842,12 @@ public class PyController implements Initializable {
     }
 
     @FXML
+    public void loadPeakList() {
+        PeakList peakList = PeakList.get("AC_hsqct1etf3gpsi3d");
+        ChartUtil.loadPeakList(peakList);
+    }
+
+    @FXML
     public void startServer(ActionEvent event) {
         String tempDir = System.getProperty("java.io.tmpdir");
         String userName = System.getProperty("user.name");
@@ -1080,13 +1087,13 @@ public class PyController implements Initializable {
 
         TableColumn<ResidueData.DataValue, String> nameColumn = new TableColumn<>("Name");
         TableColumn<ResidueData.DataValue, String> resColumn = new TableColumn<>("Residue");
-        TableColumn<ResidueData.DataValue, String> resNameColumn = new TableColumn<>("Res Name");
+        TableColumn<ResidueData.DataValue, String> resNameColumn = new TableColumn<>("ResName");
         TableColumn<ResidueData.DataValue, String> errColumn = new TableColumn<>("Error");
         TableColumn<ResidueData.DataValue, String> peakColumn = new TableColumn<>("Peak");
 
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("Name"));
         resColumn.setCellValueFactory(new PropertyValueFactory<>("Residue"));
-        resNameColumn.setCellValueFactory(new PropertyValueFactory<>("Res Name"));
+        resNameColumn.setCellValueFactory(new PropertyValueFactory<>("ResName"));
         errColumn.setCellValueFactory(new PropertyValueFactory<>("Error"));
         peakColumn.setCellValueFactory(new PropertyValueFactory<>("Peak"));
 
@@ -1215,14 +1222,14 @@ public class PyController implements Initializable {
     public void updateTableWithPars(List<ParValueInterface> parValues) {
         DecimalFormat df = new DecimalFormat();
         TableColumn<ParValueInterface, String> residueColumn = new TableColumn<>("Residue");
-        TableColumn<ParValueInterface, String> resNameColumn = new TableColumn<>("Res Name");
+        TableColumn<ParValueInterface, String> resNameColumn = new TableColumn<>("ResName");
         TableColumn<ParValueInterface, String> stateColumn = new TableColumn<>("State");
         TableColumn<ParValueInterface, String> nameColumn = new TableColumn<>("Name");
         TableColumn<ParValueInterface, String> valueColumn = new TableColumn<>("Value");
         TableColumn<ParValueInterface, String> errorColumn = new TableColumn<>("Error");
 
         residueColumn.setCellValueFactory(new PropertyValueFactory<>("Residue"));
-        resNameColumn.setCellValueFactory(new PropertyValueFactory<>("Res Name"));
+        resNameColumn.setCellValueFactory(new PropertyValueFactory<>("ResName"));
         stateColumn.setCellValueFactory(new PropertyValueFactory<>("State"));
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("Name"));
         valueColumn.setCellValueFactory(c -> {
