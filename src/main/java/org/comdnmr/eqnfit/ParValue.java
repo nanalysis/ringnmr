@@ -71,7 +71,7 @@ public class ParValue implements ParValueInterface {
     }
     
     @Override
-    public String getResidueName() {
+    public String getResName() {
         return resName;
     }
 

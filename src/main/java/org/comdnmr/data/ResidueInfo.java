@@ -109,7 +109,7 @@ public class ResidueInfo {
         }
         
         @Override
-        public String getResidueName() {
+        public String getResName() {
             return String.valueOf(resInfo.resName);
         }
 

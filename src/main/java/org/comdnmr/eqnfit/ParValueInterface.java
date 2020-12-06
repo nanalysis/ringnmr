@@ -25,7 +25,7 @@ public interface ParValueInterface {
 
     public String getResidue();
     
-    public String getResidueName();
+    public String getResName();
 
     public String getState();
 
