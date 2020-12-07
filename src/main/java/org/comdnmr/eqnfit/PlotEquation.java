@@ -14,8 +14,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/*
+ */
+ /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
@@ -104,11 +104,19 @@ public class PlotEquation {
 
     public double getMinX() {
         EquationType equationType = ResidueFitter.getEquationType(expType, name);
+        if (equationType == null) {
+            System.out.println(expType + " " + name);
+            return 0.0;
+        }
         return equationType.getMinX();
     }
 
     public double getMaxX() {
         EquationType equationType = ResidueFitter.getEquationType(expType, name);
+        if (equationType == null) {
+            System.out.println(expType + " " + name);
+            return 0.0;
+        }
         return equationType.getMaxX();
     }
 

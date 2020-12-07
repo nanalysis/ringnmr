@@ -143,6 +143,13 @@ public class DataIO {
     static Map<String, List<Object>> expFitResults = new TreeMap<>();
 
     public static void loadFromPeakList(PeakList peakList, ExperimentData expData,
+            ResidueProperties resProp, String xConvStr, String yConvStr) {
+        loadFromPeakList(peakList, expData, resProp, XCONV.valueOf(xConvStr.toUpperCase()),
+                YCONV.valueOf(yConvStr.toUpperCase()));
+
+    }
+
+    public static void loadFromPeakList(PeakList peakList, ExperimentData expData,
             ResidueProperties resProp, XCONV xConv, YCONV yConv) {
         String expMode = expData.getExpMode();
         DatasetBase dataset = DatasetBase.getDataset(peakList.fileName);
@@ -929,27 +936,29 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
     }
 
     public static ResidueProperties processPeakList(PeakList peakList) {
-        String peakListName = peakList.getName();
-        List<Number> vcpmgList = null;
         ResidueProperties resProp = null;
-        DatasetBase dataset = DatasetBase.getDataset(peakList.fileName);
-        String expMode = "exp";
-        resProp = new ResidueProperties(peakListName, peakListName);
-        expMode = expMode.toLowerCase();
-        resProp.setExpMode(expMode);
-        if (vcpmgList == null) {
-            String nucleus = dataset.getNucleus(1).getName();
-            double B0field = dataset.getSf(1);
-            double temperature = dataset.getTempK();
-            Double tau = null;
-            Double B1field = null;
-            double[] delayCalc = {0.0, 0.0, 1.0};
-            HashMap<String, Object> errorPars = new HashMap<>();
-            ExperimentData expData = new ExperimentData(peakListName,
-                    nucleus, B0field, temperature, tau, null, expMode,
-                    errorPars, delayCalc, B1field);
+        if (peakList != null) {
+            String peakListName = peakList.getName();
+            List<Number> vcpmgList = null;
+            DatasetBase dataset = DatasetBase.getDataset(peakList.fileName);
+            String expMode = "exp";
+            resProp = new ResidueProperties(peakListName, peakListName);
+            expMode = expMode.toLowerCase();
+            resProp.setExpMode(expMode);
+            if (vcpmgList == null) {
+                String nucleus = dataset.getNucleus(1).getName();
+                double B0field = dataset.getSf(1);
+                double temperature = dataset.getTempK();
+                Double tau = null;
+                Double B1field = null;
+                double[] delayCalc = {0.0, 0.0, 1.0};
+                HashMap<String, Object> errorPars = new HashMap<>();
+                ExperimentData expData = new ExperimentData(peakListName,
+                        nucleus, B0field, temperature, tau, null, expMode,
+                        errorPars, delayCalc, B1field);
 
-            loadFromPeakList(peakList, expData, resProp, XCONV.IDENTITY, YCONV.IDENTITY);
+                loadFromPeakList(peakList, expData, resProp, XCONV.IDENTITY, YCONV.IDENTITY);
+            }
         }
         return resProp;
 

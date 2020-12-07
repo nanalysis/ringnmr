@@ -366,6 +366,7 @@ public class ResidueFitter {
     public static EquationType getEquationType(String expType, String name) throws IllegalArgumentException {
         EquationType equationType = null;
 //        try {
+        expType = expType.toLowerCase();
         switch (expType) {
             case "cpmg":
                 equationType = CPMGEquation.valueOf(name);
