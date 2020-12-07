@@ -49,11 +49,14 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.comdnmr.data.DataIO;
+import org.comdnmr.data.ExperimentData;
 import org.comdnmr.data.ResidueProperties;
 import static org.comdnmr.gui.ChartUtil.residueProperties;
 import org.controlsfx.control.textfield.TextFields;
 import org.controlsfx.dialog.ExceptionDialog;
 import org.nmrfx.chart.DataSeries;
+import org.nmrfx.datasets.DatasetBase;
+import org.nmrfx.peaks.PeakList;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -72,7 +75,7 @@ public class InputDataInterface {
     TextField chosenFileLabel = new TextField();
     TextField chosenXPK2FileLabel = new TextField();
     TextField chosenParamFileLabel = TextFields.createClearableTextField();
-    ComboBox B0fieldChoice = new ComboBox();
+    ComboBox<String> B0fieldChoice = new ComboBox();
     TextField tempTextField = new TextField();
     ChoiceBox<String> nucChoice = new ChoiceBox<>();
     TextField pTextField = new TextField();
@@ -80,6 +83,7 @@ public class InputDataInterface {
     TextField tauTextField = new TextField();
     TextArea xValTextArea = new TextArea();
     ChoiceBox<String> fitModeChoice = new ChoiceBox<>();
+    ChoiceBox<String> peakListChoice = new ChoiceBox<>();
     TextField B1TextField = new TextField();
     TextField yamlTextField = new TextField();
     CheckBox ppmBox = new CheckBox("ppm to Hz");
@@ -110,13 +114,13 @@ public class InputDataInterface {
         infoStage.setTitle("Input Data Parameters");
         Label fileLabel = new Label("  Value File:  ");
         Label dirLabel = new Label("  Directory:  ");
+        Label peakListLabel = new Label("  PeakList:  ");
         Label xpk2FileLabel = new Label("  XPK2 File:  ");
         Label fitFileLabel = new Label("  CoMD/NMR Analysis File:  ");
         Label fieldLabel = new Label("  B0 Field (1H MHz) :  ");
         Label tempLabel = new Label("  Temperature:  ");
         Label nucLabel = new Label("  Nucleus:  ");
         Label pLabel = new Label("  Pressure:  ");
-        Label formatLabel = new Label("  Format:  ");
         Label tauLabel = new Label("  Tau:  ");
         Label xValLabel = new Label("  X Values Conversion:  ");
         Label yValLabel = new Label("  Y Values Conversion:  ");
@@ -127,8 +131,8 @@ public class InputDataInterface {
         Label errModeLabel = new Label("  Error Mode:  ");
         Label errPercentLabel = new Label("  Error Value:  ");
 
-        Label[] labels = {fitModeLabel, dirLabel, fileLabel, xpk2FileLabel, fitFileLabel, fieldLabel, tempLabel, pLabel,
-            tauLabel, B1FieldLabel, formatLabel, nucLabel, errModeLabel, errPercentLabel, xValLabel, delayLabel, yValLabel, yamlLabel};
+        Label[] labels = {fitModeLabel, peakListLabel, dirLabel, fileLabel, xpk2FileLabel, fitFileLabel, fieldLabel, tempLabel, pLabel,
+            tauLabel, B1FieldLabel, nucLabel, errModeLabel, errPercentLabel, xValLabel, delayLabel, yValLabel, yamlLabel};
 
         dirChoiceButton.setText("Browse");
         dirChoiceButton.setOnAction(e -> chooseDirectory(e));
@@ -206,7 +210,7 @@ public class InputDataInterface {
             inputInfoDisplay.add(labels[i], 0, i);
         }
         for (int i = 0; i < texts.length; i++) {
-            inputInfoDisplay.add(texts[i], 1, i + 6);
+            inputInfoDisplay.add(texts[i], 1, i + 7);
             texts[i].setMaxWidth(textFieldWidth);
         }
 
@@ -216,6 +220,14 @@ public class InputDataInterface {
 
         fitModeChoice.valueProperty().addListener(x -> {
             updateInfoInterface();
+        });
+
+        peakListChoice.getItems().clear();
+        peakListChoice.getItems().add("");
+        PeakList.peakLists().stream().forEach(p -> peakListChoice.getItems().add(p.getName()));
+        peakListChoice.setValue("");
+        peakListChoice.valueProperty().addListener(x -> {
+            updatePeakList();
         });
 
         formatChoice.getItems().clear();
@@ -287,18 +299,19 @@ public class InputDataInterface {
         delayC0TextField.setMaxWidth(textFieldWidth - 20);
         delayDeltaTextField.setMaxWidth(textFieldWidth - 20);
         delayDelta0TextField.setMaxWidth(textFieldWidth - 20);
-
-        inputInfoDisplay.add(fitModeChoice, 1, 0);
-        inputInfoDisplay.add(dirChoiceButton, 2, 1);
-        inputInfoDisplay.add(chosenDirLabel, 1, 1);
-        inputInfoDisplay.add(fileChoiceButton, 2, 2);
-        inputInfoDisplay.add(chosenFileLabel, 1, 2);
-        inputInfoDisplay.add(xpk2ChoiceButton, 2, 3);
-        inputInfoDisplay.add(chosenXPK2FileLabel, 1, 3);
-        inputInfoDisplay.add(paramFileChoiceButton, 2, 4);
-        inputInfoDisplay.add(chosenParamFileLabel, 1, 4);
-        inputInfoDisplay.add(B0fieldChoice, 1, 5);
-        inputInfoDisplay.add(formatChoice, 1, labels.length - 8);
+        int row = 0;
+        inputInfoDisplay.add(fitModeChoice, 1, row++);
+        inputInfoDisplay.add(peakListChoice, 1, row++);
+        inputInfoDisplay.add(dirChoiceButton, 2, row);
+        inputInfoDisplay.add(chosenDirLabel, 1, row++);
+        inputInfoDisplay.add(fileChoiceButton, 2, row);
+        inputInfoDisplay.add(chosenFileLabel, 1, row);
+        inputInfoDisplay.add(formatChoice, 3, row++);
+        inputInfoDisplay.add(xpk2ChoiceButton, 2, row);
+        inputInfoDisplay.add(chosenXPK2FileLabel, 1, row++);
+        inputInfoDisplay.add(paramFileChoiceButton, 2, row);
+        inputInfoDisplay.add(chosenParamFileLabel, 1, row++);
+        inputInfoDisplay.add(B0fieldChoice, 1, row);
         inputInfoDisplay.add(nucChoice, 1, labels.length - 7);
         inputInfoDisplay.add(errModeChoice, 1, labels.length - 6);
         inputInfoDisplay.add(errPercentTextField, 1, labels.length - 5);
@@ -360,11 +373,13 @@ public class InputDataInterface {
     }
 
     public void updateInfoInterface() {
+        Button[] buttons = {fileChoiceButton, xpk2ChoiceButton, paramFileChoiceButton, addButton, clearButton, loadButton};
+        TextField[] textFields = {B1TextField, tauTextField, tempTextField, pTextField,
+            errPercentTextField, yamlTextField, chosenFileLabel, chosenXPK2FileLabel, chosenParamFileLabel};
+//                TextField[] textFields = {tempTextField, pTextField,
+//                    errPercentTextField, yamlTextField, chosenFileLabel, chosenXPK2FileLabel, chosenParamFileLabel};
         if (fitModeChoice.getSelectionModel().getSelectedItem() != null) {
             if (fitModeChoice.getSelectionModel().getSelectedItem().equals("Select")) {
-                TextField[] textFields = {B1TextField, tauTextField, tempTextField, pTextField,
-                    errPercentTextField, yamlTextField, chosenFileLabel, chosenXPK2FileLabel, chosenParamFileLabel};
-                Button[] buttons = {fileChoiceButton, xpk2ChoiceButton, paramFileChoiceButton, addButton, clearButton, loadButton};
                 for (TextField textField : textFields) {
                     textField.setDisable(true);
                 }
@@ -383,14 +398,25 @@ public class InputDataInterface {
                 delayDeltaTextField.setDisable(true);
                 delayDelta0TextField.setDisable(true);
             } else if (!fitModeChoice.getSelectionModel().getSelectedItem().equals("Select")) {
-                TextField[] textFields = {tempTextField, pTextField,
-                    errPercentTextField, yamlTextField, chosenFileLabel, chosenXPK2FileLabel, chosenParamFileLabel};
-                Button[] buttons = {fileChoiceButton, xpk2ChoiceButton, paramFileChoiceButton, addButton, clearButton, loadButton};
                 for (TextField textField : textFields) {
                     textField.setDisable(false);
                 }
                 for (Button button : buttons) {
                     button.setDisable(false);
+                }
+                formatChoice.setDisable(false);
+
+                if (!peakListChoice.getValue().equals("")) {
+                    TextField[] textFields2 = {yamlTextField, chosenFileLabel, chosenXPK2FileLabel, chosenParamFileLabel};
+                    for (TextField textField : textFields2) {
+                        textField.setDisable(true);
+                    }
+                    for (Button button : buttons) {
+                        button.setDisable(true);
+                    }
+                    dirChoiceButton.setDisable(true);
+                    formatChoice.setDisable(true);
+                    loadButton.setDisable(false);
                 }
                 errModeChoice.getItems().setAll(Arrays.asList("percent", "replicates", "noise", "measured"));
                 errModeChoice.setValue("percent");
@@ -548,7 +574,80 @@ public class InputDataInterface {
         String nuc2 = nuc.replaceAll("[a-zA-Z]", "");
         nucChoice.setValue(nuc1 + nuc2);
         B0fieldChoice.getSelectionModel().select(field);
+    }
 
+    void updatePeakList() {
+        updateInfoInterface();
+        PeakList peakList = PeakList.get(peakListChoice.getValue());
+        if (peakList != null) {
+            int peakDim = 1;
+            String peakListName = peakList.getName();
+            List<Number> vcpmgList = null;
+            DatasetBase dataset = DatasetBase.getDataset(peakList.fileName);
+
+            String nucleus = dataset.getNucleus(peakDim).getNameNumber();
+            double B0field = dataset.getSf(0);
+            double temperature = dataset.getTempK();
+            System.out.println(temperature);
+
+            nucChoice.setValue(nucleus);
+            B0fieldChoice.setValue(String.valueOf(B0field));
+            tempTextField.setText(String.valueOf(temperature));
+
+        }
+    }
+
+    Double getDouble(String str) {
+        Double value;
+        try {
+            value = Double.parseDouble(str);
+        } catch (NumberFormatException nfe) {
+            value = null;
+        }
+        return value;
+    }
+
+    void loadFromPeakList() {
+        PeakList peakList = PeakList.get(peakListChoice.getValue());
+        if (peakList != null) {
+            String peakListName = peakList.getName();
+            ResidueProperties resProp = new ResidueProperties(peakListName, peakListName);
+            String expMode = fitModeChoice.getValue().toLowerCase();
+            resProp.setExpMode(expMode);
+            double[] delayCalc = {0.0, 0.0, 1.0};
+            HashMap<String, Object> errorPars = new HashMap<>();
+            Double temperatureK = getDouble(tempTextField.getText());
+            Double tau = getDouble(tauTextField.getText());
+            Double B1field = getDouble(B1TextField.getText());
+
+            ExperimentData expData = new ExperimentData(peakList.getName(),
+                    nucChoice.getValue(), Double.parseDouble(B0fieldChoice.getValue()),
+                    temperatureK, tau, null,
+                    fitModeChoice.getValue(),
+                    errorPars, delayCalc, B1field);
+
+            DataIO.loadFromPeakList(peakList, expData, resProp, xConvChoice.getValue(), yConvChoice.getValue());
+            if (resProp != null) {
+                ResidueChart reschartNode = PyController.mainController.getActiveChart();
+                if (reschartNode == null) {
+                    reschartNode = PyController.mainController.addChart();
+
+                }
+                residueProperties.put(resProp.getName(), resProp);
+                String parName = "Kex";
+                if (resProp.getExpMode().equals("exp")) {
+                    parName = "R";
+                } else if (resProp.getExpMode().equals("noe")) {
+                    parName = "NOE";
+                }
+                ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
+                PyController.mainController.currentResProps = resProp;
+                PyController.mainController.makeAxisMenu();
+                PyController.mainController.setYAxisType(resProp.getName(), "best", "0:0:0", parName);
+                reschartNode.setResProps(resProp);
+                PyController.mainController.setControls();
+            }
+        }
     }
 
     public void chooseParamFile(ActionEvent event) {
@@ -692,6 +791,10 @@ public class InputDataInterface {
     }
 
     public void loadInfo(ActionEvent event) {
+        if (!peakListChoice.getValue().equals("")) {
+            loadFromPeakList();
+            return;
+        }
         if (dataList.isEmpty()) {
             addInfo();
         }

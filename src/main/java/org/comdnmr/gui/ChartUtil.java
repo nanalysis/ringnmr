@@ -455,25 +455,30 @@ public class ChartUtil {
     }
 
     public static void loadPeakList(PeakList peakList) {
+        if (peakList == null) {
+            return;
+        }
         ResidueChart reschartNode = PyController.mainController.getActiveChart();
         if (reschartNode == null) {
             reschartNode = PyController.mainController.addChart();
 
         }
         ResidueProperties resProp = DataIO.processPeakList(peakList);
-        residueProperties.put(resProp.getName(), resProp);
-        String parName = "Kex";
-        if (resProp.getExpMode().equals("exp")) {
-            parName = "R";
-        } else if (resProp.getExpMode().equals("noe")) {
-            parName = "NOE";
+        if (resProp != null) {
+            residueProperties.put(resProp.getName(), resProp);
+            String parName = "Kex";
+            if (resProp.getExpMode().equals("exp")) {
+                parName = "R";
+            } else if (resProp.getExpMode().equals("noe")) {
+                parName = "NOE";
+            }
+            ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
+            PyController.mainController.currentResProps = resProp;
+            PyController.mainController.makeAxisMenu();
+            PyController.mainController.setYAxisType(resProp.getName(), "best", "0:0:0", parName);
+            reschartNode.setResProps(resProp);
+            PyController.mainController.setControls();
         }
-        ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
-        PyController.mainController.currentResProps = resProp;
-        PyController.mainController.makeAxisMenu();
-        PyController.mainController.setYAxisType(resProp.getName(), "best", "0:0:0", parName);
-        reschartNode.setResProps(resProp);
-        PyController.mainController.setControls();
     }
 
     public static void loadMoleculeFile(String fileName, String type) throws MoleculeIOException, ParseException {
