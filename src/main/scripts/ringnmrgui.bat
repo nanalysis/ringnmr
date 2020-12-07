@@ -20,13 +20,13 @@ set comdnmrmain=org.comdnmr.gui.NMRApp
 set dir=%~dp0
 set javaexe=java
 
-set cp="%dir%ringnmrgui-%nvjver%.jar;%dir%lib/Manifest.jar"
+set cp="%dir%ringnmr-gui-%nvjver%.jar;%dir%lib/Manifest.jar"
 
 set testjava=%dir%jre\bin\java.exe
 
 if exist %testjava% (
     set javaexe="%testjava%"
-    set cp="%dir%lib/ringnmrgui-%comdnmrver%.jar;%dir%lib/%Manifest.jar"
+    set cp="%dir%lib/ringnmr-gui-%comdnmrver%.jar;%dir%lib/%Manifest.jar"
 )
 
 
