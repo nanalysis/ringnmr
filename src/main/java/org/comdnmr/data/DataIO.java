@@ -161,16 +161,16 @@ public class DataIO {
         }
         resProp.addExperimentData(expData.getName(), expData);
         boolean eSet = false;
-        peakList.peaks().stream().filter(p -> p.getStatus() >= 0).forEach(p -> {
+        peakList.peaks().stream().filter(peak -> peak.getStatus() >= 0).forEach(peak -> {
             String resName = "";
             int peakField = -1;
             String residueNum;
-            int peakNum = p.getIdNum();
-            String label = p.getPeakDim(0).getLabel();
+            int peakNum = peak.getIdNum();
+            String label = peak.getPeakDim(0).getLabel();
             if (label.contains(".")) {
                 residueNum = label.substring(0, label.indexOf("."));
             } else {
-                residueNum = String.valueOf(p.getIndex());
+                residueNum = String.valueOf(peak.getIndex());
             }
             int residueNumInt = 0;
             if (residueNum.length() > 0) {
@@ -191,8 +191,8 @@ public class DataIO {
             List<Double> errValueList = new ArrayList<>();
             List<String> peakRefList = new ArrayList<>();
 
-            if (p.getMeasures().isPresent()) {
-                double[][] v = p.getMeasures().get();
+            if (peak.getMeasures().isPresent()) {
+                double[][] v = peak.getMeasures().get();
                 for (int i = 0; i < v[0].length; i++) {
                     xValueList.add(xValues[i]);
                     yValueList.add(v[0][i]);
@@ -204,6 +204,8 @@ public class DataIO {
             if (expMode.equals("cest")) {
                 processCESTData(expData, residueNum, xValueList, yValueList, errValueList, peakNum);
             } else {
+                DynamicsSource dynSource = DynamicsSource.createFromPeak(peak);
+                System.out.println(dynSource.toString());
                 ResidueData residueData = new ResidueData(expData, residueNum, xValueList, yValueList, errValueList, peakRefList, peakNum);
                 resName = getResidueName(Integer.parseInt(residueNum));
                 residueData.setResName(resName);
