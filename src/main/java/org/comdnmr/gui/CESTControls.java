@@ -18,11 +18,10 @@
 package org.comdnmr.gui;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
@@ -637,7 +636,9 @@ public class CESTControls extends EquationControls {
                     if (controller.currentResProps != null) {
                         if (controller.currentResProps.getExperimentData() != null) {
 //                            double[] xVals = controller.currentResProps.getExperimentData().stream().findFirst().get().getXVals();
-                            String resNum = String.valueOf(controller.currentResProps.getResidueValues().get(0).getResNum());
+                            List<ResidueInfo> resVals = controller.currentResProps.getResidueValues();
+                            Collections.sort(resVals, (a,b) -> Integer.compare(a.getResNum(), b.getResNum()));
+                            String resNum = String.valueOf(resVals.get(0).getResNum());
                             double[] xVals = controller.currentResProps.getExperimentData().stream().findFirst().get().getResidueData(resNum).getXValues()[0];
                             if (xVals != null) {
                                 double min = Math.floor(xVals[1] / 2) * 2;

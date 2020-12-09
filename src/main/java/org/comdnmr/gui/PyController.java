@@ -667,9 +667,19 @@ public class PyController implements Initializable {
         } else if (mode.equals("noe")) {
             simControls.updateEquations(equationChoice, ExpFitter.getEquationNames());
         } else if (mode.equals("cest")) {
-            simControls.updateEquations(equationChoice, CESTFitter.getEquationNames());
+            if (!CESTFitter.getEquationNames().isEmpty()) {
+                simControls.updateEquations(equationChoice, CESTFitter.getEquationNames());
+            } else {
+                Alert alert = new Alert(Alert.AlertType.ERROR, "At least one CEST equation must be selected in Preferences.");
+                alert.showAndWait();
+            }
         } else if (mode.equals("r1rho")) {
-            simControls.updateEquations(equationChoice, R1RhoFitter.getEquationNames());
+            if (!R1RhoFitter.getEquationNames().isEmpty()) {
+                simControls.updateEquations(equationChoice, R1RhoFitter.getEquationNames());
+            } else {
+                Alert alert = new Alert(Alert.AlertType.ERROR, "At least one R1RHO equation must be selected in Preferences.");
+                alert.showAndWait();
+            }
         }
     }
 
