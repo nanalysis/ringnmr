@@ -837,18 +837,48 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 HashMap<String, Double> parMap = new HashMap<>();
                 EquationType equationType = null;
                 List<String> equationNames;
-                if (fitMode.equals("exp")) {
-                    equationType = ExpEquation.valueOf(equationName);
-                    equationNames = ExpFitter.getEquationNames();
-                } else if (fitMode.equals("cest")) {
-                    equationType = CESTEquation.valueOf(equationName);
-                    equationNames = CESTFitter.getEquationNames();
-                } else if (fitMode.equals("r1rho")) {
-                    equationType = R1RhoEquation.valueOf(equationName);
-                    equationNames = R1RhoFitter.getEquationNames();
-                } else {
-                    equationType = CPMGEquation.valueOf(equationName);
-                    equationNames = CPMGFitter.getEquationNames();
+                switch (fitMode) {
+                    case "exp":
+                        equationType = ExpEquation.valueOf(equationName);
+                        equationNames = ExpFitter.getEquationNames();
+                        break;
+                    case "cest":
+                        equationName = equationName.replace("CEST", "");
+                        if (equationName.startsWith("R1RHO")) {
+                            equationName = equationName.replace("R1RHO", "");
+                            switch (equationName) {
+                                case "EXACT1":
+                                    equationName = "EIGENEXACT1";
+                                    break;
+                                case "N":
+                                    equationName = "LAGUERRE";
+                                    break;
+                                case "PERTURBATION":
+                                    equationName = "TROTT_PALMER";
+                                    break;
+                                case "PERTURBATIONNOEX":
+                                    equationName = "NOEX";
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }   
+                        equationType = CESTEquation.valueOf(equationName);
+                        equationNames = CESTFitter.getEquationNames();
+                        break;
+                    case "r1rho":
+                        equationName = equationName.replace("R1RHO", "");
+                        if (equationName.equals("PERTURBATION")) {
+                            equationName = "TROTT_PALMER";
+                        } else if (equationName.equals("PERTURBATIONNOEX")) {
+                            equationName = "NOEX";
+                        }   equationType = R1RhoEquation.valueOf(equationName);
+                        equationNames = R1RhoFitter.getEquationNames();
+                        break;
+                    default:
+                        equationType = CPMGEquation.valueOf(equationName);
+                        equationNames = CPMGFitter.getEquationNames();
+                        break;
                 }
                 String[] eqnParNames = equationType.getParNames();
                 int nPar = eqnParNames.length;
@@ -1324,7 +1354,6 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 expTypes.add(expType);
                 entity.setPropertyObject("expTypes", expTypes);
                 entity.setPropertyObject(expType + "fields", fields);
-                List<Integer> compoundRes = new ArrayList<>();
                 List<ResidueInfo> resInfoList = resProp.getResidueValues();
                 Collections.sort(resInfoList, (a, b) -> Integer.compare(a.resNum, b.resNum));
                 if (entity instanceof Polymer) {
@@ -1343,10 +1372,9 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                         }
                     } else if (entity instanceof Compound) {
                         Compound compound = (Compound) entity;
+                        compound.setNumber(String.valueOf(resInfo.resNum));
                         compound.setPropertyObject(expType + String.valueOf(resInfo.resNum) + "fitResults", allFitResults.get(resInfo.resNum));
                         addedRes.add(resInfo.resNum);
-                        compoundRes.add(resInfo.resNum);
-                        compound.setPropertyObject("compRes", compoundRes);
                         break;
                     }
                 }
