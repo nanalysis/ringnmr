@@ -135,9 +135,11 @@ public class ResidueProperties {
         String[] targetElems = target.split(":");
         String[] stateElems = state.split(":");
         for (int i = 0; i < targetElems.length; i++) {
-            if (!targetElems[i].equals("*") && !targetElems[i].equals(stateElems[i])) {
-                match = false;
-                break;
+            if (targetElems.length == stateElems.length) {
+                if (!targetElems[i].equals("*") && !targetElems[i].equals(stateElems[i])) {
+                    match = false;
+                    break;
+                }
             }
         }
         return match;
