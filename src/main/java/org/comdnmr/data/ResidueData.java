@@ -14,12 +14,14 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package org.comdnmr.data;
 
 import java.util.ArrayList;
 import java.util.List;
 import org.comdnmr.util.DataUtil;
+import org.nmrfx.chemistry.Entity;
+import org.nmrfx.chemistry.Residue;
 
 /**
  *
@@ -28,34 +30,24 @@ import org.comdnmr.util.DataUtil;
 public class ResidueData {
 
     ExperimentData expData;
-    String resNum;
-    String resName;
+    DynamicsSource dynSource;
     double[][] xValues;
     double[] errValues;
     double[] yValues;
-    String[] peakRefs;
-    int peakNum;
 
-    public ResidueData(ExperimentData expData, String residueNum, double[][] x, double[] y, double[] err) {
-        this.resNum = residueNum;
+    public ResidueData(ExperimentData expData, DynamicsSource dynSource,
+            double[][] x, double[] y, double[] err) {
         this.expData = expData;
+        this.dynSource = dynSource;
         this.xValues = DataUtil.clone2DArray(x);
         this.yValues = y.clone();
         this.errValues = err.clone();
     }
 
-    public ResidueData(ExperimentData expData, String residueNum, double[][] x, double[] y, double[] err, String[] peakRefs) {
-        this.resNum = residueNum;
+    public ResidueData(ExperimentData expData, DynamicsSource dynSource,
+            List<Double> xValueList, List<Double> yValueList, List<Double> errValueList) {
         this.expData = expData;
-        this.xValues = DataUtil.clone2DArray(x);
-        this.yValues = y.clone();
-        this.errValues = err.clone();
-        this.peakRefs = peakRefs.clone();
-    }
-
-    public ResidueData(ExperimentData expData, String residueNum, List<Double> xValueList, List<Double> yValueList, List<Double> errValueList) {
-        this.expData = expData;
-        this.resNum = residueNum;
+        this.dynSource = dynSource;
         int nValues = xValueList.size();
         this.xValues = new double[1][nValues];
         this.yValues = new double[nValues];
@@ -67,10 +59,11 @@ public class ResidueData {
         }
     }
 
-    public ResidueData(ExperimentData expData, String residueNum, List<Double>[] xValueList, List<Double> yValueList, List<Double> errValueList, int peakNum) {
+    public ResidueData(ExperimentData expData, DynamicsSource dynSource,
+            List<Double>[] xValueList, List<Double> yValueList,
+            List<Double> errValueList) {
         this.expData = expData;
-        this.resNum = residueNum;
-        this.peakNum = peakNum;
+        this.dynSource = dynSource;
         int nValues = yValueList.size();
         int nX = xValueList.length;
 //        System.out.println("make res data " + nX);
@@ -83,23 +76,6 @@ public class ResidueData {
             }
             yValues[i] = yValueList.get(i);
             errValues[i] = errValueList.get(i);
-        }
-    }
-
-    public ResidueData(ExperimentData expData, String residueNum, List<Double> xValueList, List<Double> yValueList, List<Double> errValueList, List<String> peakRefList, int peakNum) {
-        this.expData = expData;
-        this.resNum = residueNum;
-        this.peakNum = peakNum;
-        int nValues = xValueList.size();
-        this.xValues = new double[1][nValues];
-        this.yValues = new double[nValues];
-        this.errValues = new double[nValues];
-        this.peakRefs = new String[nValues];
-        for (int i = 0; i < nValues; i++) {
-            xValues[0][i] = xValueList.get(i);
-            yValues[i] = yValueList.get(i);
-            errValues[i] = errValueList.get(i);
-            peakRefs[i] = peakRefList.get(i);
         }
     }
 
@@ -132,20 +108,20 @@ public class ResidueData {
         public double getX0() {
             return resInfo.xValues[0][index];
         }
-        
+
         public double getX1() {
             double x1 = resInfo.xValues[0][index];
             if (resInfo.xValues.length > 1) {
                 x1 = resInfo.xValues[1][index];
-            } 
+            }
             return x1;
         }
-        
+
         public double getX2() {
             double x2 = resInfo.xValues[0][index];
             if (resInfo.xValues.length > 2) {
                 x2 = resInfo.xValues[2][index];
-            } 
+            }
             return x2;
         }
 
@@ -158,16 +134,11 @@ public class ResidueData {
         }
 
         public String getRefPeak() {
-            String peak = "";
-            if (resInfo.peakRefs != null) {
-                peak = resInfo.peakRefs[index];
-            }
-            return peak;
+            return resInfo.dynSource.peak.getName();
         }
-        
+
         public int getPeak() {
-            int peak = resInfo.peakNum;
-            return peak;
+            return resInfo.dynSource.peak.getIdNum();
         }
 
         public String getName() {
@@ -175,12 +146,24 @@ public class ResidueData {
         }
 
         public String getResidue() {
-            return resInfo.resNum;
+            Entity entity = resInfo.dynSource.atoms[0].getEntity();
+            if (entity instanceof Residue) {
+                Residue residue = (Residue) entity;
+                return residue.getNumber();
+            } else {
+                return "1";
+            }
         }
-        
+
         public String getResName() {
-            return resInfo.resName;
-    }
+            Entity entity = resInfo.dynSource.atoms[0].getEntity();
+            if (entity instanceof Residue) {
+                Residue residue = (Residue) entity;
+                return residue.getName();
+            } else {
+                return entity.getName();
+            }
+        }
     }
 
     public ArrayList<DataValue> getDataValues() {
@@ -197,10 +180,6 @@ public class ResidueData {
 
     public ExperimentData getExperimentData() {
         return expData;
-    }
-    
-    public void setResName(String residueName) {
-        this.resName = residueName;
     }
 
 }

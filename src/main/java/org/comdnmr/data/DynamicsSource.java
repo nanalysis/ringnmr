@@ -120,40 +120,20 @@ public class DynamicsSource {
         return atom;
     }
 
-//    public static DynamicsSource create(String peakSpecifier, String molName,
-//            String resSpecifier, String... atomNames) {
-//
-//        Peak peak = getPeak(peakSpecifier, atomNames.length);
-//        Residue residue = getResidue(molName, resSpecifier);
-//        Atom[] atoms = new Atom[atomNames.length];
-//        int iAtom = 0;
-//        for (String atomName : atomNames) {
-//            Atom atom = residue.getAtom(atomName);
-//            if (atom == null) {
-//                atom = new Atom(atomName);
-//                residue.addAtom(atom);
-//            }
-//            atoms[iAtom++] = atom;
-//        }
-//        return new DynamicsSource(peak, atoms);
-//    }
-//
-//    public static DynamicsSource create(Peak peak, String molName,
-//            String resSpecifier, String... atomNames) {
-//
-//        Residue residue = getResidue(molName, resSpecifier);
-//        Atom[] atoms = new Atom[atomNames.length];
-//        int iAtom = 0;
-//        for (String atomName : atomNames) {
-//            Atom atom = residue.getAtom(atomName);
-//            if (atom == null) {
-//                atom = new Atom(atomName);
-//                residue.addAtom(atom);
-//            }
-//            atoms[iAtom++] = atom;
-//        }
-//        return new DynamicsSource(peak, atoms);
-//    }
+    public static DynamicsSource createFromSpecifiers(String peakSpecifier,
+            String resSpecifier, String... atomNames) {
+
+        Peak peak = getPeak(peakSpecifier, atomNames.length);
+        Atom[] atoms = new Atom[atomNames.length];
+        String molName = null;
+        int iAtom = 0;
+        for (String atomName : atomNames) {
+            Atom atom = getAtom(molName, resSpecifier + "." + atomName, iAtom);
+            atoms[iAtom++] = atom;
+        }
+        return new DynamicsSource(peak, atoms);
+    }
+
     public static DynamicsSource createFromPeak(Peak peak) {
         String molName = null;
         PeakList peakList = peak.getPeakList();

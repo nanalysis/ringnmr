@@ -206,9 +206,7 @@ public class DataIO {
             } else {
                 DynamicsSource dynSource = DynamicsSource.createFromPeak(peak);
                 System.out.println(dynSource.toString());
-                ResidueData residueData = new ResidueData(expData, residueNum, xValueList, yValueList, errValueList, peakRefList, peakNum);
-                resName = getResidueName(Integer.parseInt(residueNum));
-                residueData.setResName(resName);
+                ResidueData residueData = new ResidueData(expData, dynSource, xValueList, yValueList, errValueList);
                 expData.addResidueData(residueNum, residueData);
             }
             boolean ok = true;
@@ -489,9 +487,8 @@ public class DataIO {
                     if (expMode.equals("cest")) {
                         processCESTData(expData, residueNum, xValueList, yValueList, errValueList, peakNum);
                     } else {
-                        ResidueData residueData = new ResidueData(expData, residueNum, xValueList, yValueList, errValueList, peakRefList, peakNum);
-                        resName = getResidueName(Integer.parseInt(residueNum));
-                        residueData.setResName(resName);
+                        DynamicsSource dynSource = DynamicsSource.createFromSpecifiers(expMode + "." + peakNum, residueNum, "H", "N");
+                        ResidueData residueData = new ResidueData(expData, dynSource, xValueList, yValueList, errValueList);
                         expData.addResidueData(residueNum, residueData);
                     }
                     ResidueInfo residueInfo = resProp.getResidueInfo(residueNum);
@@ -538,9 +535,9 @@ public class DataIO {
         xValueLists[0] = xValueList;
         xValueLists[1] = B1fieldList;
         xValueLists[2] = tauList;
-        ResidueData residueData = new ResidueData(expData, residueNum, xValueLists, yValueList, errValueList, peakNum);
-        String resName = getResidueName(Integer.parseInt(residueNum));
-        residueData.setResName(resName);
+        DynamicsSource dynSource = DynamicsSource.createFromSpecifiers("cest." + peakNum, residueNum, "H", "N");
+
+        ResidueData residueData = new ResidueData(expData, dynSource, xValueLists, yValueList, errValueList);
         expData.addResidueData(residueNum, residueData);
         expData.getExtras().clear();
         expData.setExtras(bFieldUniqueValue);
@@ -667,6 +664,7 @@ public class DataIO {
         String[] peakRefs = null;
         double[][] xValues = null;
 //        List<Double> xValues = new ArrayList<>();
+        int peakNum = 0;
         try (BufferedReader fileReader = Files.newBufferedReader(path)) {
             while (true) {
                 String line = fileReader.readLine();
@@ -704,7 +702,9 @@ public class DataIO {
                         errValues[j] = r2EffErr;
                         j++;
                     }
-                    ResidueData residueData = new ResidueData(expData, residueNum, xValues, yValues, errValues);
+
+                    DynamicsSource dynSource = DynamicsSource.createFromSpecifiers(expMode + "." + peakNum, residueNum, "H", "N");
+                    ResidueData residueData = new ResidueData(expData, dynSource, xValues, yValues, errValues);
                     expData.addResidueData(residueNum, residueData);
 
                     ResidueInfo residueInfo = resProp.getResidueInfo(residueNum);
@@ -712,6 +712,7 @@ public class DataIO {
                         residueInfo = new ResidueInfo(resProp, Integer.parseInt(residueNum), 0, 0, 0);
                         resProp.addResidueInfo(residueNum, residueInfo);
                     }
+                    peakNum++;
                 }
             }
         }
@@ -864,7 +865,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                                 default:
                                     break;
                             }
-                        }   
+                        }
                         equationType = CESTEquation.valueOf(equationName);
                         equationNames = CESTFitter.getEquationNames();
                         break;
@@ -874,7 +875,8 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                             equationName = "TROTT_PALMER";
                         } else if (equationName.equals("PERTURBATIONNOEX")) {
                             equationName = "NOEX";
-                        }   equationType = R1RhoEquation.valueOf(equationName);
+                        }
+                        equationType = R1RhoEquation.valueOf(equationName);
                         equationNames = R1RhoFitter.getEquationNames();
                         break;
                     default:
