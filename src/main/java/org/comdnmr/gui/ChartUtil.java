@@ -509,8 +509,6 @@ public class ChartUtil {
                         for (String resNumS : expData.getResidues()) {
                             int resNum = Integer.parseInt(resNumS);
                             ResidueData resData = expData.getResidueData(resNumS);
-                            String resName = DataIO.getResidueName(resNum);
-                            resData.setResName(resName);
                         }
                     }
                 }
