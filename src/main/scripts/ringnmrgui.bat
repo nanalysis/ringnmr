@@ -22,10 +22,10 @@ set javaexe=java
 
 set cp="%dir%ringnmr-gui-%nvjver%.jar;%dir%lib/Manifest.jar"
 
-set testjava=%dir%jre\bin\java.exe
+set testjava="%dir%jre\bin\java.exe"
 
 if exist %testjava% (
-    set javaexe="%testjava%"
+    set javaexe=%testjava%
     set cp="%dir%lib/ringnmr-gui-%comdnmrver%.jar;%dir%lib/%Manifest.jar"
 )
 
