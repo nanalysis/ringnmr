@@ -54,7 +54,7 @@ import org.comdnmr.eqnfit.ExpFitter;
 import org.comdnmr.eqnfit.PlotEquation;
 import org.comdnmr.eqnfit.R1RhoEquation;
 import org.comdnmr.eqnfit.R1RhoFitter;
-import org.nmrfx.chemistry.Compound;
+import org.nmrfx.chemistry.Atom;
 import org.nmrfx.chemistry.Entity;
 import org.nmrfx.chemistry.InvalidMoleculeException;
 import org.nmrfx.chemistry.MoleculeBase;
@@ -1347,8 +1347,6 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             mol.setProperty(expType + "frameName", frameName);
             mol.setProperty(expType + "nucName", nucName);
             Iterator entityIterator = mol.entityLabels.values().iterator();
-            List<Integer> addedRes = new ArrayList<>();
-            int iPolyRes = 0;
             while (entityIterator.hasNext()) {
                 Entity entity = (Entity) entityIterator.next();
                 TreeSet<String> expTypes = (TreeSet<String>) entity.getPropertyObject("expTypes");
@@ -1360,28 +1358,14 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 entity.setPropertyObject(expType + "fields", fields);
                 List<ResidueInfo> resInfoList = resProp.getResidueValues();
                 Collections.sort(resInfoList, (a, b) -> Integer.compare(a.resNum, b.resNum));
-                if (entity instanceof Polymer) {
-                    iPolyRes = 0;
-                }
-                for (ResidueInfo resInfo : resInfoList) {
-                    if (addedRes.contains(resInfo.resNum)) {
-                        continue;
+                resInfoList.forEach((resInfo) -> {
+                    ResidueData resData = expData.getResidueData(String.valueOf(resInfo.resNum));
+                    DynamicsSource dynSource = resData.getDynSource();
+                    Atom[] atoms = dynSource.atoms;
+                    for (Atom atom : atoms) {
+                        atom.setProperty(expType + "fitResults", allFitResults.get(resInfo.resNum));
                     }
-                    if (entity instanceof Polymer) {
-                        Polymer polymer = (Polymer) entity;
-                        if (resInfo.resNum <= Integer.valueOf(polymer.getLastResidue().getNumber())) {
-                            polymer.getResidue(iPolyRes).setPropertyObject(expType + "fitResults", allFitResults.get(resInfo.resNum));
-                            addedRes.add(resInfo.resNum);
-                            iPolyRes++;
-                        }
-                    } else if (entity instanceof Compound) {
-                        Compound compound = (Compound) entity;
-                        compound.setNumber(String.valueOf(resInfo.resNum));
-                        compound.setPropertyObject(expType + String.valueOf(resInfo.resNum) + "fitResults", allFitResults.get(resInfo.resNum));
-                        addedRes.add(resInfo.resNum);
-                        break;
-                    }
-                }
+                });
             }
             System.out.println(expType + " fit results added to molecule " + mol.getName());
         }

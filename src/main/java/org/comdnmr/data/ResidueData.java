@@ -181,5 +181,9 @@ public class ResidueData {
     public ExperimentData getExperimentData() {
         return expData;
     }
+    
+    public DynamicsSource getDynSource() {
+        return dynSource;
+    }
 
 }
