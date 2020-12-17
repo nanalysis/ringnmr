@@ -139,8 +139,6 @@ public class DataIO {
     }
 
     static Pattern resPatter = Pattern.compile("[^0-9]*([0-9]+)[^0-9]*");
-    //Nested Map for T1/T2 fit results: <expType, List<frameName, fields, fitResultsMap <resNum, <field, <parName, parValue>>>>>
-    static Map<String, List<Object>> expFitResults = new TreeMap<>();
 
     public static void loadFromPeakList(PeakList peakList, ExperimentData expData,
             ResidueProperties resProp, String xConvStr, String yConvStr) {
@@ -1308,11 +1306,6 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         String nucName = expData.getNucleusName();
         String expName = "EXPAB";
         double[] fields = resProp.getFields();
-        List<Object> expResults = new ArrayList<>();
-        expResults.add(frameName);
-        expResults.add(nucName);
-        expResults.add(fields);
-//        Collections.sort(fields, (a, b) -> Double.compare(a, b));
         List<Object> states = new ArrayList<>();
         //Nested Map for fit results: <resNum, <field, <parName, parValue>>>
         Map<Integer, Map<Integer, Map<String, Double>>> allFitResults = new TreeMap<>();
@@ -1338,13 +1331,13 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 allFitResults.put(resInfo.resNum, fitResFieldMap);
             }
         }
-        expResults.add(allFitResults);
-        expFitResults.put(expType, expResults);
-        System.out.println(expType + " fit results added to map");
 
         MoleculeBase mol = MoleculeFactory.getActive();
         if (mol != null) {
-            mol.setProperty(expType + "frameName", frameName);
+            for (int f = 0; f < fields.length; f++) {
+                int field = (int) fields[f];
+                mol.setProperty(expType + String.valueOf(field) + "_" + String.valueOf(f+1) + "frameName", frameName);
+            }
             mol.setProperty(expType + "nucName", nucName);
             Iterator entityIterator = mol.entityLabels.values().iterator();
             while (entityIterator.hasNext()) {
@@ -1371,23 +1364,19 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         }
     }
 
-    public static void writeSTAR3File(String fileName, ResidueProperties resProp) throws IOException, ParseException, InvalidMoleculeException, InvalidPeakException {
+    public static void writeSTAR3File(String fileName) throws IOException, ParseException, InvalidMoleculeException, InvalidPeakException {
         try (FileWriter writer = new FileWriter(fileName)) {
-            writeSTAR3File(writer, resProp);
+            writeSTAR3File(writer);
         }
     }
 
-    public static void writeSTAR3File(File file, ResidueProperties resProp) throws IOException, ParseException, InvalidMoleculeException, InvalidPeakException {
+    public static void writeSTAR3File(File file) throws IOException, ParseException, InvalidMoleculeException, InvalidPeakException {
         try (FileWriter writer = new FileWriter(file)) {
-            writeSTAR3File(writer, resProp);
+            writeSTAR3File(writer);
         }
     }
 
-    public static void writeSTAR3File(FileWriter chan, ResidueProperties resProp) throws IOException, ParseException, InvalidMoleculeException, InvalidPeakException {
-        if (MoleculeFactory.getActive() != null) {
-            NMRStarWriter.writeAll(chan);
-        } else {
-            NMRStarWriter.writeAll(chan, expFitResults);
-        }
+    public static void writeSTAR3File(FileWriter chan) throws IOException, ParseException, InvalidMoleculeException, InvalidPeakException {
+        NMRStarWriter.writeAll(chan);
     }
 }
