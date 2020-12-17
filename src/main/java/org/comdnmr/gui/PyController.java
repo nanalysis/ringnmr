@@ -1700,7 +1700,7 @@ public class PyController implements Initializable {
         FileChooser fileChooser = new FileChooser();
         File file = fileChooser.showSaveDialog(MainApp.primaryStage);
         if (file != null) {
-            DataIO.writeSTAR3File(file.getAbsolutePath(), currentResProps);
+            DataIO.writeSTAR3File(file.getAbsolutePath());
             System.out.println("wrote " + file.getAbsolutePath());
         }
     }
