@@ -1336,29 +1336,32 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         if (mol != null) {
             for (int f = 0; f < fields.length; f++) {
                 int field = (int) fields[f];
-                mol.setProperty(expType + String.valueOf(field) + "_" + String.valueOf(f+1) + "frameName", frameName);
-            }
-            mol.setProperty(expType + "nucName", nucName);
-            Iterator entityIterator = mol.entityLabels.values().iterator();
-            while (entityIterator.hasNext()) {
-                Entity entity = (Entity) entityIterator.next();
-                TreeSet<String> expTypes = (TreeSet<String>) entity.getPropertyObject("expTypes");
-                if (expTypes == null) {
-                    expTypes = new TreeSet<>();
-                }
-                expTypes.add(expType);
-                entity.setPropertyObject("expTypes", expTypes);
-                entity.setPropertyObject(expType + "fields", fields);
-                List<ResidueInfo> resInfoList = resProp.getResidueValues();
-                Collections.sort(resInfoList, (a, b) -> Integer.compare(a.resNum, b.resNum));
-                resInfoList.forEach((resInfo) -> {
-                    ResidueData resData = expData.getResidueData(String.valueOf(resInfo.resNum));
-                    DynamicsSource dynSource = resData.getDynSource();
-                    Atom[] atoms = dynSource.atoms;
-                    for (Atom atom : atoms) {
-                        atom.setProperty(expType + "fitResults", allFitResults.get(resInfo.resNum));
+                final int iList = f;
+                Iterator entityIterator = mol.entityLabels.values().iterator();
+                while (entityIterator.hasNext()) {
+                    Entity entity = (Entity) entityIterator.next();
+                    TreeSet<String> expTypes = (TreeSet<String>) entity.getPropertyObject("expTypes");
+                    if (expTypes == null) {
+                        expTypes = new TreeSet<>();
                     }
-                });
+                    expTypes.add(expType);
+                    entity.setPropertyObject("expTypes", expTypes);
+                    List<ResidueInfo> resInfoList = resProp.getResidueValues();
+                    Collections.sort(resInfoList, (a, b) -> Integer.compare(a.resNum, b.resNum));
+                    resInfoList.forEach((resInfo) -> {
+                        ResidueData resData = expData.getResidueData(String.valueOf(resInfo.resNum));
+                        DynamicsSource dynSource = resData.getDynSource();
+                        Atom[] atoms = dynSource.atoms;
+                        for (Atom atom : atoms) {
+                            atom.addT1T2Data(expType, iList, 0, frameName);
+                            atom.addT1T2Data(expType, iList, 1, field);
+                            atom.addT1T2Data(expType, iList, 2, "Sz");
+                            atom.addT1T2Data(expType, iList, 3, "s-1");
+                            atom.addT1T2Data(expType, iList, 4, nucName);
+                            atom.addT1T2Data(expType, iList, 5, allFitResults.get(resInfo.resNum));
+                        }
+                    });
+                }
             }
             System.out.println(expType + " fit results added to molecule " + mol.getName());
         }

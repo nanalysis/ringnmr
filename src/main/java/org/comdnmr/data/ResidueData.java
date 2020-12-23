@@ -177,10 +177,10 @@ public class ResidueData {
             String t1 = "-";
             for (Atom atom : atoms) {
                 String aName = atom.getFullName();
-                if (aName.contains(resInfo.expData.nucleusName) && mol.getAtom(aName) != null) {
-                    Set<String> fields = (Set<String>) mol.getAtom(aName).getProperty("T1fields");
-                    if (fields != null) {
-                        Map<String, String> expVals = (Map<String, String>) mol.getAtom(aName).getProperty("T1" + fields.toArray()[0] + "_1" + "results"); 
+                if (aName.contains(resInfo.expData.nucleusName)) {
+                    List<List<Object>> t1t2DataList = (List<List<Object>>) atom.getT1T2DataList("T1");
+                    if (t1t2DataList != null) {
+                        Map<String, String> expVals = (Map<String, String>) t1t2DataList.get(0).get(5); 
                         if (expVals != null) {
                             t1 = expVals.get("T1Val");
                         }
@@ -197,10 +197,10 @@ public class ResidueData {
             String t2 = "-";
             for (Atom atom : atoms) {
                 String aName = atom.getFullName();
-                if (aName.contains(resInfo.expData.nucleusName) && mol.getAtom(aName) != null) {
-                    Set<String> fields = (Set<String>) mol.getAtom(aName).getProperty("T2fields");
-                    if (fields != null) {
-                        Map<String, String> expVals = (Map<String, String>) mol.getAtom(aName).getProperty("T2" + fields.toArray()[0] + "_1" + "results"); 
+                if (aName.contains(resInfo.expData.nucleusName)) {
+                    List<List<Object>> t1t2DataList = (List<List<Object>>) atom.getT1T2DataList("T2");
+                    if (t1t2DataList != null) {
+                        Map<String, String> expVals = (Map<String, String>) t1t2DataList.get(0).get(5);
                         if (expVals != null) {
                             t2 = expVals.get("T2Val");
                         }
