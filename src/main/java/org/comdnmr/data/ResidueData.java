@@ -19,8 +19,13 @@ package org.comdnmr.data;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.comdnmr.util.DataUtil;
+import org.nmrfx.chemistry.Atom;
 import org.nmrfx.chemistry.Entity;
+import org.nmrfx.chemistry.MoleculeBase;
+import org.nmrfx.chemistry.MoleculeFactory;
 import org.nmrfx.chemistry.Residue;
 
 /**
@@ -163,6 +168,46 @@ public class ResidueData {
             } else {
                 return entity.getName();
             }
+        }
+        
+        public String getT1() {
+            MoleculeBase mol = MoleculeFactory.getActive();
+            mol.getAtomArray();
+            Atom[] atoms = resInfo.dynSource.atoms; 
+            String t1 = "-";
+            for (Atom atom : atoms) {
+                String aName = atom.getFullName();
+                if (aName.contains(resInfo.expData.nucleusName) && mol.getAtom(aName) != null) {
+                    Set<String> fields = (Set<String>) mol.getAtom(aName).getProperty("T1fields");
+                    if (fields != null) {
+                        Map<String, String> expVals = (Map<String, String>) mol.getAtom(aName).getProperty("T1" + fields.toArray()[0] + "_1" + "results"); 
+                        if (expVals != null) {
+                            t1 = expVals.get("T1Val");
+                        }
+                    }
+                }
+            }
+            return t1;
+        }
+
+        public String getT2() {
+            MoleculeBase mol = MoleculeFactory.getActive();
+            mol.getAtomArray();
+            Atom[] atoms = resInfo.dynSource.atoms; 
+            String t2 = "-";
+            for (Atom atom : atoms) {
+                String aName = atom.getFullName();
+                if (aName.contains(resInfo.expData.nucleusName) && mol.getAtom(aName) != null) {
+                    Set<String> fields = (Set<String>) mol.getAtom(aName).getProperty("T2fields");
+                    if (fields != null) {
+                        Map<String, String> expVals = (Map<String, String>) mol.getAtom(aName).getProperty("T2" + fields.toArray()[0] + "_1" + "results"); 
+                        if (expVals != null) {
+                            t2 = expVals.get("T2Val");
+                        }
+                    }
+                }
+            }
+            return t2;
         }
     }
 
