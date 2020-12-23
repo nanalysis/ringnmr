@@ -21,13 +21,13 @@
         <dependency>
             <groupId>org.nmrfx</groupId>
             <artifactId>nmrfx-core</artifactId>
-            <version>11.1.2</version>
+            <version>11.1.3</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.nmrfx</groupId>
             <artifactId>nmrfx-utils</artifactId>
-            <version>11.1.2</version>
+            <version>11.1.3</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -41,9 +41,9 @@
             <version>0.6.10</version>
         </dependency>
         <dependency>
-            <groupId>de.codecentric.centerdevice</groupId>
-            <artifactId>centerdevice-nsmenufx</artifactId>
-            <version>2.1.4</version>
+            <groupId>de.jangassen</groupId>
+            <artifactId>nsmenufx</artifactId>
+            <version>3.0.2</version>
         </dependency>
         <dependency>
             <groupId>de.jensd</groupId>
@@ -126,19 +126,19 @@
                     <mainClass>org.nmrfx.processor.gui.MainApp</mainClass>
                     <options>
                         <option>--add-opens</option>
-                        <option>javafx.graphics/com.sun.javafx.tk=centerdevice.nsmenufx</option>
+                        <option>javafx.graphics/com.sun.javafx.tk=de.jangassen.nsmenufx</option>
                         <option>--add-opens</option>
-                        <option>javafx.graphics/com.sun.javafx.tk.quantum=centerdevice.nsmenufx</option>
+                        <option>javafx.graphics/com.sun.javafx.tk.quantum=de.jangassen.nsmenufx</option>
                         <option>--add-opens</option>
-                        <option>javafx.graphics/com.sun.javafx.tk=centerdevice.nsmenufx</option>
+                        <option>javafx.graphics/com.sun.javafx.tk=de.jangassen.nsmenufx</option>
                         <option>--add-opens</option>
-                        <option>javafx.graphics/com.sun.glass.ui=centerdevice.nsmenufx</option>
+                        <option>javafx.graphics/com.sun.glass.ui=de.jangassen.nsmenufx</option>
                         <option>--add-opens</option>
-                        <option>javafx.graphics/com.sun.glass.ui.mac=centerdevice.nsmenufx</option>
+                        <option>javafx.graphics/com.sun.glass.ui.mac=de.jangassen.nsmenufx</option>
                         <option>--add-opens</option>
-                        <option>javafx.graphics/com.sun.javafx.menu=centerdevice.nsmenufx</option>
+                        <option>javafx.graphics/com.sun.javafx.menu=de.jangassen.nsmenufx</option>
                         <option>--add-opens</option>
-                        <option>javafx.controls/com.sun.javafx.scene.control=centerdevice.nsmenufx</option>
+                        <option>javafx.controls/com.sun.javafx.scene.control=de.jangassen.nsmenufx</option>
                         <option>--add-opens</option>
                         <option>javafx.graphics/com.sun.javafx.scene.traversal=org.controlsfx.controls</option>
                         <option>--add-opens</option>
