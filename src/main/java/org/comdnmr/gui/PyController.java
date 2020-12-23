@@ -1116,12 +1116,16 @@ public class PyController implements Initializable {
         } else if (getFittingMode().equals("exp")) {
             TableColumn<ResidueData.DataValue, Double> xColumn = new TableColumn<>("Delay");
             TableColumn<ResidueData.DataValue, Double> yColumn = new TableColumn<>("Intensity");
+            TableColumn<ResidueData.DataValue, Double> t1Column = new TableColumn<>("T1");
+            TableColumn<ResidueData.DataValue, Double> t2Column = new TableColumn<>("T2");
 
             xColumn.setCellValueFactory(new PropertyValueFactory<>("X0"));
             yColumn.setCellValueFactory(new PropertyValueFactory<>("Y"));
+            t1Column.setCellValueFactory(new PropertyValueFactory<>("T1"));
+            t2Column.setCellValueFactory(new PropertyValueFactory<>("T2"));
 
             resInfoTable.getColumns().clear();
-            resInfoTable.getColumns().addAll(nameColumn, resColumn, resNameColumn, xColumn, yColumn, errColumn, peakColumn);
+            resInfoTable.getColumns().addAll(nameColumn, resColumn, resNameColumn, t1Column, t2Column, xColumn, yColumn, errColumn, peakColumn);
         } else if (getFittingMode().equals("cest")) {
             TableColumn<ResidueData.DataValue, Double> x0Column = new TableColumn<>("Offset");
             TableColumn<ResidueData.DataValue, Double> x1Column = new TableColumn<>("B1 Field");
