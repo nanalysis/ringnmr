@@ -35,6 +35,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -68,6 +69,8 @@ import org.nmrfx.chemistry.io.NMRStarReader;
 import org.nmrfx.chemistry.io.NMRStarWriter;
 import org.nmrfx.chemistry.io.PDBFile;
 import org.nmrfx.datasets.DatasetBase;
+import org.nmrfx.chemistry.RelaxationData;
+import org.nmrfx.chemistry.RelaxationData.relaxTypes;
 import org.nmrfx.peaks.InvalidPeakException;
 import org.nmrfx.peaks.PeakList;
 import org.nmrfx.star.ParseException;
@@ -1298,70 +1301,51 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
      * Add the T1/T2 fit results to a map, and to a molecule, if present.
      *
      * @param resProp ResidueProperties. The residue properties of the fit.
-     * @param expType String. The experiment type, T1 or T2.
+     * @param expType relaxTypes. The experiment type, T1 or T2.
      */
-    public static void addT1T2FitResults(ResidueProperties resProp, String expType) {
-        String frameName = resProp.getName();
+    public static void addRelaxationFitResults(ResidueProperties resProp, relaxTypes expType) {
+        String datasetName = resProp.getName() + "_RING_fit";
         ExperimentData expData = resProp.getExperimentData(resProp.getName());
-        String nucName = expData.getNucleusName();
         String expName = "EXPAB";
         double[] fields = resProp.getFields();
-        List<Object> states = new ArrayList<>();
-        //Nested Map for fit results: <resNum, <field, <parName, parValue>>>
-        Map<Integer, Map<Integer, Map<String, Double>>> allFitResults = new TreeMap<>();
-        for (int f = 0; f < fields.length; f++) {
-            int field = (int) fields[f];
-            List<ResidueInfo> resInfoList = resProp.getResidueValues();
-            for (ResidueInfo resInfo : resInfoList) {
-                Map<Integer, Map<String, Double>> fitResFieldMap;
-                Map<String, CurveFit> parMap = resInfo.curveSets.get(expName);
-                if (resInfoList.indexOf(resInfo) == 0) {
-                    states = Arrays.asList(parMap.keySet().toArray());
-                    Collections.sort(states, (a, b) -> a.toString().compareTo(b.toString()));
-                }
-                CurveFit curveFit = parMap.get(states.get(f).toString());
-                Map<String, Double> fitPars = curveFit.getParMap();
-//                    System.out.println(resInfo.resNum + " " + polymer.getResidue(resInfo.resNum - 1));
-                if (!allFitResults.containsKey(resInfo.resNum)) {
-                    fitResFieldMap = new HashMap<>();
-                } else {
-                    fitResFieldMap = allFitResults.get(resInfo.resNum);
-                }
-                fitResFieldMap.put(field, fitPars);
-                allFitResults.put(resInfo.resNum, fitResFieldMap);
-            }
-        }
 
         MoleculeBase mol = MoleculeFactory.getActive();
         if (mol != null) {
+            double temperature = 25.0;
             for (int f = 0; f < fields.length; f++) {
                 int field = (int) fields[f];
                 final int iList = f;
-                Iterator entityIterator = mol.entityLabels.values().iterator();
-                while (entityIterator.hasNext()) {
-                    Entity entity = (Entity) entityIterator.next();
-                    TreeSet<String> expTypes = (TreeSet<String>) entity.getPropertyObject("expTypes");
-                    if (expTypes == null) {
-                        expTypes = new TreeSet<>();
+                List<ResidueInfo> resInfoList = resProp.getResidueValues();
+                Collections.sort(resInfoList, (a, b) -> Integer.compare(a.resNum, b.resNum));
+                resInfoList.forEach((resInfo) -> {
+                    final Map<String, CurveFit> parMap = resInfo.curveSets.get(expName);
+                    final Object[] states = parMap.keySet().toArray();
+                    if (resInfoList.indexOf(resInfo) == 0) {
+                        Arrays.sort(states, (a, b) -> a.toString().compareTo(b.toString()));
                     }
-                    expTypes.add(expType);
-                    entity.setPropertyObject("expTypes", expTypes);
-                    List<ResidueInfo> resInfoList = resProp.getResidueValues();
-                    Collections.sort(resInfoList, (a, b) -> Integer.compare(a.resNum, b.resNum));
-                    resInfoList.forEach((resInfo) -> {
-                        ResidueData resData = expData.getResidueData(String.valueOf(resInfo.resNum));
-                        DynamicsSource dynSource = resData.getDynSource();
-                        Atom[] atoms = dynSource.atoms;
-                        for (Atom atom : atoms) {
-                            atom.addT1T2Data(expType, iList, 0, frameName);
-                            atom.addT1T2Data(expType, iList, 1, field);
-                            atom.addT1T2Data(expType, iList, 2, "Sz");
-                            atom.addT1T2Data(expType, iList, 3, "s-1");
-                            atom.addT1T2Data(expType, iList, 4, nucName);
-                            atom.addT1T2Data(expType, iList, 5, allFitResults.get(resInfo.resNum));
+                    CurveFit curveFit = parMap.get(states[iList].toString());
+                    Map<String, Double> fitPars = curveFit.getParMap();
+                    ResidueData resData = expData.getResidueData(String.valueOf(resInfo.resNum));
+                    DynamicsSource dynSource = resData.getDynSource();
+                    Atom[] atoms = dynSource.atoms;
+                    for (Atom atom : atoms) {
+                        Map<String, String> extras = new HashMap<>();
+                        String coherenceType = "Sz";
+                        String units = "s-1";
+                        extras.put("coherenceType", coherenceType);
+                        extras.put("units", units);
+                        Map<String, Double> values = new LinkedHashMap<>();
+                        Map<String, Double> errors = new LinkedHashMap<>();
+                        values.put(expType.getName(), fitPars.get("R"));
+                        errors.put(expType.getName(), fitPars.get("R.sd"));
+                        if (expType.equals(relaxTypes.T2) || expType.equals(relaxTypes.T1RHO)) {
+                            values.put("Rex", null);
+                            errors.put("Rex", null);
                         }
-                    });
-                }
+                        RelaxationData relaxData = new RelaxationData(datasetName, expType, field, temperature, values, errors, extras);
+                        atom.relaxData.put(datasetName, relaxData);
+                    }
+                });
             }
             System.out.println(expType + " fit results added to molecule " + mol.getName());
         }

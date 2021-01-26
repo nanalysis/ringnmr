@@ -18,14 +18,17 @@
 package org.comdnmr.data;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.stream.Collectors;
 import org.comdnmr.util.DataUtil;
 import org.nmrfx.chemistry.Atom;
 import org.nmrfx.chemistry.Entity;
 import org.nmrfx.chemistry.MoleculeBase;
 import org.nmrfx.chemistry.MoleculeFactory;
+import org.nmrfx.chemistry.NOEData;
+import org.nmrfx.chemistry.RelaxationData;
+import org.nmrfx.chemistry.RelaxationData.relaxTypes;
 import org.nmrfx.chemistry.Residue;
 
 /**
@@ -178,12 +181,10 @@ public class ResidueData {
             for (Atom atom : atoms) {
                 String aName = atom.getFullName();
                 if (aName.contains(resInfo.expData.nucleusName)) {
-                    List<List<Object>> t1t2DataList = (List<List<Object>>) atom.getT1T2DataList("T1");
-                    if (t1t2DataList != null) {
-                        Map<String, String> expVals = (Map<String, String>) t1t2DataList.get(0).get(5); 
-                        if (expVals != null) {
-                            t1 = expVals.get("T1Val");
-                        }
+                    List<RelaxationData> relaxDataList = atom.getRelaxationData(relaxTypes.T1, resInfo.expData.field, null)
+                            .stream().collect(Collectors.toList());
+                    if (!relaxDataList.isEmpty()) {
+                        t1 = String.valueOf(relaxDataList.get(0).getValues().get(relaxTypes.T1.getName()));
                     }
                 }
             }
@@ -198,17 +199,51 @@ public class ResidueData {
             for (Atom atom : atoms) {
                 String aName = atom.getFullName();
                 if (aName.contains(resInfo.expData.nucleusName)) {
-                    List<List<Object>> t1t2DataList = (List<List<Object>>) atom.getT1T2DataList("T2");
-                    if (t1t2DataList != null) {
-                        Map<String, String> expVals = (Map<String, String>) t1t2DataList.get(0).get(5);
-                        if (expVals != null) {
-                            t2 = expVals.get("T2Val");
-                        }
+                    List<RelaxationData> relaxDataList = atom.getRelaxationData(relaxTypes.T2, resInfo.expData.field, null)
+                            .stream().collect(Collectors.toList());
+                    if (!relaxDataList.isEmpty()) {
+                        t2 = String.valueOf(relaxDataList.get(0).getValues().get(relaxTypes.T2.getName()));
                     }
                 }
             }
             return t2;
         }
+        
+        public String getT1Rho() {
+            MoleculeBase mol = MoleculeFactory.getActive();
+            mol.getAtomArray();
+            Atom[] atoms = resInfo.dynSource.atoms; 
+            String t1rho = "-";
+            for (Atom atom : atoms) {
+                String aName = atom.getFullName();
+                if (aName.contains(resInfo.expData.nucleusName)) {
+                    List<RelaxationData> relaxDataList = atom.getRelaxationData(relaxTypes.T1RHO, resInfo.expData.field, null)
+                            .stream().collect(Collectors.toList());
+                    if (!relaxDataList.isEmpty()) {
+                        t1rho = String.valueOf(relaxDataList.get(0).getValues().get(relaxTypes.T1RHO.getName()));
+                    }
+                }
+            }
+            return t1rho;
+        }
+        
+        public String getNOE() {
+            MoleculeBase mol = MoleculeFactory.getActive();
+            mol.getAtomArray();
+            Atom[] atoms = resInfo.dynSource.atoms; 
+            String noe = "-";
+            for (Atom atom : atoms) {
+                String aName = atom.getFullName();
+                if (aName.contains(resInfo.expData.nucleusName)) {
+                    List<NOEData> noeDataList = atom.getNOEData(resInfo.expData.field, null).stream().collect(Collectors.toList());
+                    if (!noeDataList.isEmpty()) {
+                        noe = String.valueOf(noeDataList.get(0).getValue());
+                    }
+                }
+            }
+            return noe;
+        }
+        
     }
 
     public ArrayList<DataValue> getDataValues() {
