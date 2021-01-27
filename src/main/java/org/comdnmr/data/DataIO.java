@@ -71,6 +71,7 @@ import org.nmrfx.chemistry.io.PDBFile;
 import org.nmrfx.datasets.DatasetBase;
 import org.nmrfx.chemistry.RelaxationData;
 import org.nmrfx.chemistry.RelaxationData.relaxTypes;
+import org.nmrfx.chemistry.T2T1RhoData;
 import org.nmrfx.peaks.InvalidPeakException;
 import org.nmrfx.peaks.PeakList;
 import org.nmrfx.star.ParseException;
@@ -1334,16 +1335,19 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                         String units = "s-1";
                         extras.put("coherenceType", coherenceType);
                         extras.put("units", units);
-                        Map<String, Double> values = new LinkedHashMap<>();
-                        Map<String, Double> errors = new LinkedHashMap<>();
-                        values.put(expType.getName(), fitPars.get("R"));
-                        errors.put(expType.getName(), fitPars.get("R.sd"));
-                        if (expType.equals(relaxTypes.T2) || expType.equals(relaxTypes.T1RHO)) {
-                            values.put("Rex", null);
-                            errors.put("Rex", null);
+                        Double value = fitPars.get("R");
+                        Double error = fitPars.get("R.sd");
+                        if (expType.equals(relaxTypes.T1)) {
+                            RelaxationData relaxData = new RelaxationData(datasetName, expType, new ArrayList<>(), field, temperature, value, error, extras);
+            //                System.out.println("reader " + relaxData);
+                            atom.relaxData.put(datasetName, relaxData);
+            //                System.out.println("reader atom.relaxData = " + atom + " " + atom.relaxData);
+                        } else {
+                            Double RexValue = null;
+                            Double RexError = null;
+                            T2T1RhoData relaxData = new T2T1RhoData(datasetName, expType, new ArrayList<>(), field, temperature, value, error, RexValue, RexError, extras);
+                            atom.relaxData.put(datasetName, relaxData);
                         }
-                        RelaxationData relaxData = new RelaxationData(datasetName, expType, field, temperature, values, errors, extras);
-                        atom.relaxData.put(datasetName, relaxData);
                     }
                 });
             }

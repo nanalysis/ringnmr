@@ -18,7 +18,6 @@
 package org.comdnmr.data;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.comdnmr.util.DataUtil;
@@ -26,7 +25,6 @@ import org.nmrfx.chemistry.Atom;
 import org.nmrfx.chemistry.Entity;
 import org.nmrfx.chemistry.MoleculeBase;
 import org.nmrfx.chemistry.MoleculeFactory;
-import org.nmrfx.chemistry.NOEData;
 import org.nmrfx.chemistry.RelaxationData;
 import org.nmrfx.chemistry.RelaxationData.relaxTypes;
 import org.nmrfx.chemistry.Residue;
@@ -184,7 +182,7 @@ public class ResidueData {
                     List<RelaxationData> relaxDataList = atom.getRelaxationData(relaxTypes.T1, resInfo.expData.field, null)
                             .stream().collect(Collectors.toList());
                     if (!relaxDataList.isEmpty()) {
-                        t1 = String.valueOf(relaxDataList.get(0).getValues().get(relaxTypes.T1.getName()));
+                        t1 = String.valueOf(relaxDataList.get(0).getValue());
                     }
                 }
             }
@@ -202,7 +200,7 @@ public class ResidueData {
                     List<RelaxationData> relaxDataList = atom.getRelaxationData(relaxTypes.T2, resInfo.expData.field, null)
                             .stream().collect(Collectors.toList());
                     if (!relaxDataList.isEmpty()) {
-                        t2 = String.valueOf(relaxDataList.get(0).getValues().get(relaxTypes.T2.getName()));
+                        t2 = String.valueOf(relaxDataList.get(0).getValue());
                     }
                 }
             }
@@ -220,7 +218,7 @@ public class ResidueData {
                     List<RelaxationData> relaxDataList = atom.getRelaxationData(relaxTypes.T1RHO, resInfo.expData.field, null)
                             .stream().collect(Collectors.toList());
                     if (!relaxDataList.isEmpty()) {
-                        t1rho = String.valueOf(relaxDataList.get(0).getValues().get(relaxTypes.T1RHO.getName()));
+                        t1rho = String.valueOf(relaxDataList.get(0).getValue());
                     }
                 }
             }
@@ -234,10 +232,12 @@ public class ResidueData {
             String noe = "-";
             for (Atom atom : atoms) {
                 String aName = atom.getFullName();
-                if (aName.contains(resInfo.expData.nucleusName)) {
-                    List<NOEData> noeDataList = atom.getNOEData(resInfo.expData.field, null).stream().collect(Collectors.toList());
-                    if (!noeDataList.isEmpty()) {
-                        noe = String.valueOf(noeDataList.get(0).getValue());
+                List<RelaxationData> relaxDataList = atom.getRelaxationData(relaxTypes.NOE, resInfo.expData.field, null)
+                            .stream().collect(Collectors.toList());
+                if (!relaxDataList.isEmpty()) {
+                    String pairAtomName = relaxDataList.get(0).getExtraAtoms().get(0).getName();
+                    if (aName.contains(resInfo.expData.nucleusName) || pairAtomName.contains(resInfo.expData.nucleusName)) {
+                        noe = String.valueOf(relaxDataList.get(0).getValue());
                     }
                 }
             }
