@@ -44,6 +44,7 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
+import org.comdnmr.eqnfit.NOEEquation;
 import org.comdnmr.util.CoMDOptions;
 
 /**
@@ -379,6 +380,9 @@ public class ResidueFitter {
                 break;
             case "r1rho":
                 equationType = R1RhoEquation.valueOf(name);
+                break;
+            case "noe":
+                equationType = NOEEquation.valueOf(name);
                 break;
             default:
                 break;

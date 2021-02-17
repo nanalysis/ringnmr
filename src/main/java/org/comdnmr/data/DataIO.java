@@ -35,11 +35,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -71,7 +68,7 @@ import org.nmrfx.chemistry.io.PDBFile;
 import org.nmrfx.datasets.DatasetBase;
 import org.nmrfx.chemistry.RelaxationData;
 import org.nmrfx.chemistry.RelaxationData.relaxTypes;
-import org.nmrfx.chemistry.T2T1RhoData;
+import org.nmrfx.chemistry.RelaxationRex;
 import org.nmrfx.peaks.InvalidPeakException;
 import org.nmrfx.peaks.PeakList;
 import org.nmrfx.star.ParseException;
@@ -191,7 +188,7 @@ public class DataIO {
             List<Double> xValueList = new ArrayList<>();
             List<Double> yValueList = new ArrayList<>();
             List<Double> errValueList = new ArrayList<>();
-            List<String> peakRefList = new ArrayList<>();
+//            List<String> peakRefList = new ArrayList<>();
 
             if (peak.getMeasures().isPresent()) {
                 double[][] v = peak.getMeasures().get();
@@ -199,7 +196,7 @@ public class DataIO {
                     xValueList.add(xValues[i]);
                     yValueList.add(v[0][i]);
                     errValueList.add(v[1][i]);
-                    peakRefList.add(String.valueOf(i));
+//                    peakRefList.add(String.valueOf(i));
 
                 }
             }
@@ -281,13 +278,13 @@ public class DataIO {
 
         boolean gotHeader = false;
         boolean hasErrColumns = false;
-        String[] peakRefs = null;
+        String[] peakRefs;
         double[] xValues = null;
         int offset = 0;
         int residueField = -1;
         int peakField = -1;
         String header = "";
-        List<String> peakRefList = new ArrayList<>();
+//        List<String> peakRefList = new ArrayList<>();
         //  Peak       Residue N       T1      T2      T11     T3      T4      T9      T5      T10     T12     T6      T7      T8
         int fakeRes = 1;
         try (BufferedReader fileReader = Files.newBufferedReader(path)) {
@@ -379,7 +376,7 @@ public class DataIO {
                             xValues[iX] = xVals[iX];
                         }
                         peakRefs[iX] = String.valueOf(iX);
-                        peakRefList.add(peakRefs[iX]);
+//                        peakRefList.add(peakRefs[iX]);
                         iX++;
                     }
                     gotHeader = true;
@@ -521,14 +518,14 @@ public class DataIO {
             List<Double> xValueList, List<Double> yValueList, List<Double> errValueList, int peakNum) {
         Double B1field = expData.getB1Field();
         List<Double> B1fieldList = new ArrayList<>();
-        for (int i = 0; i < xValueList.size(); i++) {
+        xValueList.forEach((_item) -> {
             B1fieldList.add(B1field);
-        }
+        });
         double tau = expData.getTau();
         List<Double> tauList = new ArrayList<>();
-        for (int i = 0; i < xValueList.size(); i++) {
+        xValueList.forEach((_item) -> {
             tauList.add(tau);
-        }
+        });
         List<Double> bFieldUniqueValue = new ArrayList<>();
         bFieldUniqueValue.add(B1fieldList.get(0));
         List<Double> tauList1 = new ArrayList<>();
@@ -634,7 +631,7 @@ public class DataIO {
                         errValueList.add(error);
                     } catch (NumberFormatException nFE) {
                         System.out.println(nFE.getMessage());
-                        continue;
+//                        continue;
                     }
                 }
             }
@@ -663,7 +660,7 @@ public class DataIO {
         ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, null, null, expMode, null, null, null);
         resProp.addExperimentData(fileTail, expData);
         boolean gotHeader = false;
-        String[] peakRefs = null;
+        String[] peakRefs;
         double[][] xValues = null;
 //        List<Double> xValues = new ArrayList<>();
         int peakNum = 0;
@@ -721,13 +718,13 @@ public class DataIO {
     }
 
     public static void setPercentileErrors(ExperimentData expData, double fraction) {
-        for (ResidueData residueData : expData.residueData.values()) {
+        expData.residueData.values().forEach((residueData) -> {
             double[] yValues = residueData.getYValues();
             double[] errValues = residueData.getErrValues();
             for (int i = 0; i < yValues.length; i++) {
                 errValues[i] = yValues[i] * fraction;
             }
-        }
+        });
     }
 
     public static void setErrors(ExperimentData expData, double error) {
@@ -840,7 +837,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 fields[0] = 1.0;
                 int parStart = headerMap.get("Best") + 1;
                 HashMap<String, Double> parMap = new HashMap<>();
-                EquationType equationType = null;
+                EquationType equationType;
                 List<String> equationNames;
                 switch (fitMode) {
                     case "exp":
@@ -1133,7 +1130,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 for (int i = 0; i < vcpmgs.length; i++) {
                     vcpmgs[i] = vcpmgList.get(i).doubleValue();
                 }
-                String fileTail = dataFileName;
+                String fileTail;
                 int dot = dataFileName.lastIndexOf(".");
                 fileTail = dataFileName.substring(0, dot);
 
@@ -1196,12 +1193,17 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         String[] expFields = {"A", "R"};
         String[] cestFields = {"Kex", "Pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B"};
         String[] parFields;
-        if (resProp.getExpMode().equals("cpmg")) {
-            parFields = cpmgFields;
-        } else if (resProp.getExpMode().equals("cest") || resProp.getExpMode().equals("r1rho")) {
-            parFields = cestFields;
-        } else {
-            parFields = expFields;
+        switch (resProp.getExpMode()) {
+            case "cpmg":
+                parFields = cpmgFields;
+                break;
+            case "cest":
+            case "r1rho":
+                parFields = cestFields;
+                break;
+            default:
+                parFields = expFields;
+                break;
         }
 
         for (String field : headerFields) {
@@ -1345,7 +1347,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                         } else {
                             Double RexValue = null;
                             Double RexError = null;
-                            T2T1RhoData relaxData = new T2T1RhoData(datasetName, expType, new ArrayList<>(), field, temperature, value, error, RexValue, RexError, extras);
+                            RelaxationRex relaxData = new RelaxationRex(datasetName, expType, new ArrayList<>(), field, temperature, value, error, RexValue, RexError, extras);
                             atom.relaxData.put(datasetName, relaxData);
                         }
                     }
