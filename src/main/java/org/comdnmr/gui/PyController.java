@@ -124,8 +124,8 @@ import org.nmrfx.chemistry.io.MoleculeIOException;
 import org.nmrfx.graphicsio.GraphicsIOException;
 import org.nmrfx.graphicsio.SVGGraphicsContext;
 import org.nmrfx.peaks.InvalidPeakException;
-import org.nmrfx.peaks.PeakList;
 import org.nmrfx.star.ParseException;
+import org.comdnmr.eqnfit.NOEFit;
 
 public class PyController implements Initializable {
 
@@ -666,7 +666,7 @@ public class PyController implements Initializable {
         } else if (mode.equals("exp")) {
             simControls.updateEquations(equationChoice, ExpFitter.getEquationNames());
         } else if (mode.equals("noe")) {
-            simControls.updateEquations(equationChoice, ExpFitter.getEquationNames());
+            simControls.updateEquations(equationChoice, NOEFit.getEquationNames());
         } else if (mode.equals("cest")) {
             if (!CESTFitter.getEquationNames().isEmpty()) {
                 simControls.updateEquations(equationChoice, CESTFitter.getEquationNames());
