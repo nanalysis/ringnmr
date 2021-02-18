@@ -119,12 +119,13 @@ import org.nmrfx.chart.XYValue;
 import org.nmrfx.chemistry.InvalidMoleculeException;
 import org.nmrfx.chemistry.MoleculeBase;
 import org.nmrfx.chemistry.MoleculeFactory;
+import org.nmrfx.chemistry.RelaxationData.relaxTypes;
 import org.nmrfx.chemistry.io.MoleculeIOException;
 import org.nmrfx.graphicsio.GraphicsIOException;
 import org.nmrfx.graphicsio.SVGGraphicsContext;
 import org.nmrfx.peaks.InvalidPeakException;
-import org.nmrfx.peaks.PeakList;
 import org.nmrfx.star.ParseException;
+import org.comdnmr.eqnfit.NOEFit;
 
 public class PyController implements Initializable {
 
@@ -665,7 +666,7 @@ public class PyController implements Initializable {
         } else if (mode.equals("exp")) {
             simControls.updateEquations(equationChoice, ExpFitter.getEquationNames());
         } else if (mode.equals("noe")) {
-            simControls.updateEquations(equationChoice, ExpFitter.getEquationNames());
+            simControls.updateEquations(equationChoice, NOEFit.getEquationNames());
         } else if (mode.equals("cest")) {
             if (!CESTFitter.getEquationNames().isEmpty()) {
                 simControls.updateEquations(equationChoice, CESTFitter.getEquationNames());
@@ -762,6 +763,7 @@ public class PyController implements Initializable {
 
     public void loadParameterFile(Event e) {
         FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Open YAML File");
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Yaml File", "*.yaml", "*.yml"));
         Stage stage = MainApp.primaryStage;
         File file = fileChooser.showOpenDialog(stage);
@@ -780,6 +782,7 @@ public class PyController implements Initializable {
     @FXML
     public void loadPDBFile(Event e) throws MoleculeIOException, ParseException {
         FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Open PDB File");
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("PDB File", "*.pdb"));
         Stage stage = MainApp.primaryStage;
         File file = fileChooser.showOpenDialog(stage);
@@ -792,6 +795,7 @@ public class PyController implements Initializable {
     @FXML
     public void loadSTARFile(Event e) throws MoleculeIOException, ParseException {
         FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Open STAR File");
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("STAR File", "*.str"));
         Stage stage = MainApp.primaryStage;
         File file = fileChooser.showOpenDialog(stage);
@@ -804,6 +808,7 @@ public class PyController implements Initializable {
     @FXML
     public void loadNEFFile(Event e) throws MoleculeIOException, ParseException {
         FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Open NEF File");
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("NEF File", "*.nef"));
         Stage stage = MainApp.primaryStage;
         File file = fileChooser.showOpenDialog(stage);
@@ -816,6 +821,7 @@ public class PyController implements Initializable {
     @FXML
     public void loadCIFFile(Event e) throws MoleculeIOException, ParseException {
         FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Open CIF File");
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("CIF File", "*.cif"));
         Stage stage = MainApp.primaryStage;
         File file = fileChooser.showOpenDialog(stage);
@@ -1116,12 +1122,18 @@ public class PyController implements Initializable {
         } else if (getFittingMode().equals("exp")) {
             TableColumn<ResidueData.DataValue, Double> xColumn = new TableColumn<>("Delay");
             TableColumn<ResidueData.DataValue, Double> yColumn = new TableColumn<>("Intensity");
+            TableColumn<ResidueData.DataValue, Double> t1Column = new TableColumn<>("T1");
+            TableColumn<ResidueData.DataValue, Double> t2Column = new TableColumn<>("T2");
+            TableColumn<ResidueData.DataValue, Double> t1RhoColumn = new TableColumn<>("T1Rho");
 
             xColumn.setCellValueFactory(new PropertyValueFactory<>("X0"));
             yColumn.setCellValueFactory(new PropertyValueFactory<>("Y"));
+            t1Column.setCellValueFactory(new PropertyValueFactory<>("T1"));
+            t2Column.setCellValueFactory(new PropertyValueFactory<>("T2"));
+            t1RhoColumn.setCellValueFactory(new PropertyValueFactory<>("T1Rho"));
 
             resInfoTable.getColumns().clear();
-            resInfoTable.getColumns().addAll(nameColumn, resColumn, resNameColumn, xColumn, yColumn, errColumn, peakColumn);
+            resInfoTable.getColumns().addAll(nameColumn, resColumn, resNameColumn, t1Column, t2Column, t1RhoColumn, xColumn, yColumn, errColumn, peakColumn);
         } else if (getFittingMode().equals("cest")) {
             TableColumn<ResidueData.DataValue, Double> x0Column = new TableColumn<>("Offset");
             TableColumn<ResidueData.DataValue, Double> x1Column = new TableColumn<>("B1 Field");
@@ -1689,6 +1701,7 @@ public class PyController implements Initializable {
     @FXML
     public void saveParameters(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Parameter File");
         File file = fileChooser.showSaveDialog(MainApp.primaryStage);
         if (file != null) {
             DataIO.saveResultsFile(file.getAbsolutePath(), currentResProps, false);
@@ -1698,9 +1711,10 @@ public class PyController implements Initializable {
     @FXML
     public void saveParametersSTAR(ActionEvent event) throws IOException, InvalidMoleculeException, ParseException, InvalidPeakException {
         FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save STAR File");
         File file = fileChooser.showSaveDialog(MainApp.primaryStage);
         if (file != null) {
-            DataIO.writeSTAR3File(file.getAbsolutePath(), currentResProps);
+            DataIO.writeSTAR3File(file.getAbsolutePath());
             System.out.println("wrote " + file.getAbsolutePath());
         }
     }
@@ -1715,7 +1729,7 @@ public class PyController implements Initializable {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION, alertText);
         Optional<ButtonType> response = alert.showAndWait();
         if (response.isPresent() && response.get().getText().equals("OK")) {
-            DataIO.addT1T2FitResults(currentResProps, "T1");
+            DataIO.addRelaxationFitResults(currentResProps, relaxTypes.T1);
         }
     }
 
@@ -1729,7 +1743,7 @@ public class PyController implements Initializable {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION, alertText);
         Optional<ButtonType> response = alert.showAndWait();
         if (response.isPresent() && response.get().getText().equals("OK")) {
-            DataIO.addT1T2FitResults(currentResProps, "T2");
+            DataIO.addRelaxationFitResults(currentResProps, relaxTypes.T2);
         }
     }
 

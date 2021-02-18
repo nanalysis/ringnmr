@@ -26,12 +26,11 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import org.comdnmr.eqnfit.ExpFitter;
 import org.comdnmr.eqnfit.ParValueInterface;
 import org.comdnmr.data.ResidueInfo;
 import org.comdnmr.data.ResidueProperties;
 import static org.comdnmr.gui.NOEControls.PARS.NOE;
-import org.comdnmr.eqnfit.ExpFitFunction;
+import org.comdnmr.eqnfit.NOEFit;
 
 /**
  *
@@ -113,8 +112,8 @@ public class NOEControls extends EquationControls {
     public VBox makeControls(PyController controller) {
         this.controller = controller;
         VBox vBox = init();
-        equationSelector.getItems().addAll(ExpFitter.getEquationNames());
-        equationSelector.setValue(ExpFitter.getEquationNames().get(0));
+        equationSelector.getItems().addAll(NOEFit.getEquationNames());
+        equationSelector.setValue(NOEFit.getEquationNames().get(0));
         HBox hBox1 = new HBox();
         HBox.setHgrow(hBox1, Priority.ALWAYS);
         hBox1.getChildren().add(equationSelector);
@@ -258,7 +257,6 @@ public class NOEControls extends EquationControls {
             case "NOE":
                 pars = new double[2];
                 pars[0] = noe;
-
                 break;
             default:
                 pars = null;
@@ -287,7 +285,7 @@ public class NOEControls extends EquationControls {
             extras[0] = 1.0;
             GUIPlotEquation plotEquation = new GUIPlotEquation("noe", equationName, pars, errs, extras);
             equations.add(plotEquation);
-        }
+            }
         controller.showEquations(equations);
     }
 }
