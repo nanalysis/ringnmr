@@ -22,83 +22,300 @@
  */
 package org.comdnmr.eqnfit;
 
-import org.comdnmr.eqnfit.ParValueInterface;
-import org.comdnmr.eqnfit.FitResult;
-import org.comdnmr.eqnfit.EquationFitter;
-import org.comdnmr.eqnfit.FitFunction;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import org.comdnmr.data.ResidueProperties;
 import java.util.List;
+import org.apache.commons.math3.optim.PointValuePair;
+import org.comdnmr.data.ExperimentData;
+import org.comdnmr.data.ResidueData;
 import org.comdnmr.util.CoMDOptions;
+import org.comdnmr.util.CoMDPreferences;
 
 /**
  *
  * @author brucejohnson
  */
 public class NOEFit implements EquationFitter {
+    
+    public static final double[] SIMX = {0.0, 0.025, 0.05, 0.1, 0.15, 0.25, 0.35, 0.5, 0.75, 1.0};
+
+    FitFunction noeModel;
+    CoMDOptions options;
+    List<Double> xValues = new ArrayList<>();
+    List<Double> yValues = new ArrayList<>();
+    List<Double> errValues = new ArrayList<>();
+    List<Double> fieldValues = new ArrayList<>();
+    List<Integer> idValues = new ArrayList<>();
+    int nCurves = 1;
+    int nResidues = 1;
+    int[][] states;
+    int[] stateCount;
+    String[] resNums;
+    static List<String> equationNameList = Arrays.asList(NOEEquation.getEquationNames());
+    long errTime;
+    static final String expType = "noe";
+    
+    class StateCount {
+
+        int[][] states;
+        int[] stateCount;
+
+        StateCount(int[][] states, int[] stateCount) {
+            this.states = states;
+            this.stateCount = stateCount;
+        }
+
+        int getResIndex(int i) {
+            return states[i][0];
+        }
+
+        int getTempIndex(int i) {
+            return states[i][2];
+        }
+    }
 
     @Override
     public List<String> getEquationNameList() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return getEquationNames();
+    }
+    
+    public static List<String> getEquationNames() {
+        List<String> activeEquations = CoMDPreferences.getActiveNOEEquations();
+        return activeEquations;
     }
 
     @Override
     public FitFunction getFitModel() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return noeModel;
     }
     
     @Override
     public String getExpType() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return expType;
     }
 
+
     @Override
-    public FitResult doFit(String eqn, double[] sliderGuesses, CoMDOptions options) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public FitResult doFit(String eqn, double[] sliderguesses, CoMDOptions options) {
+        setupFit(eqn);
+
+        int[][] map = noeModel.getMap();
+        double[] guesses;
+        if (sliderguesses != null) {
+            //fixme
+            guesses = sliderguesses;
+        } else {
+            guesses = noeModel.guess();
+        }
+//        System.out.println("dofit guesses = " + guesses);
+        double[][] boundaries = noeModel.boundaries(guesses);
+        double sigma = options.getStartRadius();
+        PointValuePair result = noeModel.refine(guesses, boundaries[0], boundaries[1],
+                sigma, options.getOptimizer());
+        double[] pars = result.getPoint();
+        /*
+        for (int i = 0; i < map.length; i++) {
+            for (int j = 0; j < map[i].length; j++) {
+                System.out.printf(" %3d", map[i][j]);
+            }
+            System.out.println("");
+        }
+
+        System.out.print("Fit pars ");
+        for (int i = 0; i < pars.length; i++) {
+            System.out.printf(" %.3f", pars[i]);
+        }
+        System.out.println("");
+         */
+        double aic = noeModel.getAICc(pars);
+        double rms = noeModel.getRMS(pars);
+        double rChiSq = noeModel.getReducedChiSq(pars);
+
+//        System.out.println("rms " + rms);
+        int nGroupPars = noeModel.getNGroupPars();
+        sigma /= 2.0;
+
+        String[] parNames = noeModel.getParNames();
+        double[] errEstimates;
+        double[][] simPars = null;
+        if (FitFunction.getCalcError()) {
+            long startTime = System.currentTimeMillis();
+            errEstimates = noeModel.simBoundsStream(pars.clone(),
+                    boundaries[0], boundaries[1], sigma, options);
+            long endTime = System.currentTimeMillis();
+            errTime = endTime - startTime;
+            simPars = noeModel.getSimPars();
+        } else {
+            errEstimates = new double[pars.length];
+        }
+        String refineOpt = options.getOptimizer();
+        String bootstrapOpt = options.getBootStrapOptimizer();
+        long fitTime = noeModel.fitTime;
+        long bootTime = errTime;
+        int nSamples = options.getSampleSize();
+        boolean useAbs = options.getAbsValueFit();
+        boolean useNonParametric = options.getNonParametricBootstrap();
+        double sRadius = options.getStartRadius();
+        double fRadius = options.getFinalRadius();
+        double tol = options.getTolerance();
+        boolean useWeight = options.getWeightFit();
+        CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs,
+                useNonParametric, sRadius, fRadius, tol, useWeight);
+        double[] usedFields = getFields(fieldValues, idValues);
+        return getResults(this, eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, true, curveStats);
     }
 
     @Override
     public void setupFit(String eqn) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        double[][] x = new double[1][yValues.size()];
+        double[] y = new double[yValues.size()];
+        double[] err = new double[yValues.size()];
+        int[] idNums = new int[yValues.size()];
+        double[] fields = new double[yValues.size()];
+        for (int i = 0; i < x[0].length; i++) {
+            x[0][i] = xValues.get(i);
+            y[i] = yValues.get(i);
+            err[i] = errValues.get(i);
+            //System.out.println(x[0][i]+", "+x[0][i]+", "+x[0][i]+", "+x[0][i]);
+            fields[i] = fieldValues.get(i);
+            idNums[i] = idValues.get(i);
+        }
+        noeModel.setEquation(eqn);
+        noeModel.setXY(x, y);
+        noeModel.setIds(idNums);
+        noeModel.setErr(err);
+        noeModel.setFieldValues(fields);
+        noeModel.setMap(stateCount, states);
     }
 
     @Override
     public List<ParValueInterface> guessPars(String eqn) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        setupFit(eqn);
+        double[] guesses = noeModel.guess();
+        String[] parNames = noeModel.getParNames();
+        int[][] map = noeModel.getMap();
+        List<ParValueInterface> parValues = new ArrayList<>();
+        for (int i = 0; i < parNames.length; i++) {
+            double guess = guesses[map[0][i]];
+            ParValueInterface parValue = new ParValue(parNames[i], guess);
+            parValues.add(parValue);
+        }
+        return parValues;
     }
 
     @Override
     public double rms(double[] pars) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        double rms = noeModel.getRMS(pars);
+        return rms;
     }
 
     @Override
     public void setData(ResidueProperties resProps, String[] resNums) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        this.resNums = resNums.clone();
+        nResidues = resNums.length;
+        int id = 0;
+        resProps.setupMaps();
+        stateCount = resProps.getStateCount(resNums.length);
+        Collection<ExperimentData> expDataList = resProps.getExperimentData();
+        nCurves = resNums.length * expDataList.size();
+        states = new int[nCurves][];
+        int k = 0;
+        int resIndex = 0;
+        for (String resNum : resNums) {
+            for (ExperimentData expData : expDataList) {
+                states[k++] = resProps.getStateIndices(resIndex, expData);
+                ResidueData resData = expData.getResidueData(resNum);
+                //  need peakRefs
+                double field = expData.getNucleusField();
+                double[][] x = resData.getXValues();
+                double[] y = resData.getYValues();
+                double[] err = resData.getErrValues();
+                for (int i = 0; i < y.length; i++) {
+                    xValues.add(x[0][i]);
+                    yValues.add(y[i]);
+                    errValues.add(err[i]);
+                    fieldValues.add(field);
+                    idValues.add(id);
+                }
+                id++;
+
+            }
+            resIndex++;
+        }
     }
 
     @Override
     public void setData(List<Double>[] allXValues, List<Double> yValues, List<Double> errValues, List<Double> fieldValues) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        xValues.clear();
+        xValues.addAll(allXValues[0]);
+        this.yValues.clear();
+        this.yValues.addAll(yValues);
+        this.errValues.clear();
+        this.errValues.addAll(errValues);
+        this.fieldValues.clear();
+        this.fieldValues.addAll(fieldValues);
+        this.idValues.clear();
+        yValues.forEach((_item) -> {
+            this.idValues.add(0);
+        });
+        resNums = new String[1];
+        resNums[0] = "0";
+        nCurves = 1;
+        stateCount = new int[4];
+        stateCount[0] = nResidues;
+        stateCount[1] = 1;
+        stateCount[2] = 1;
+        stateCount[3] = 1;
+        states = new int[1][4];
     }
 
     @Override
     public int[] getStateCount() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return stateCount;
     }
 
     @Override
     public int[][] getStates() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return states;
     }
 
     @Override
     public double[] getSimX(int nPts, double xLB, double xUB) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        int nPoints = nPts;
+        double[] x = new double[nPoints];
+        double firstValue = xLB;
+        double lastValue = xUB;
+        double delta = (lastValue - firstValue) / (nPoints + 1);
+        double value = firstValue;
+        for (int i = 0; i < nPoints; i++) {
+            x[i] = value;
+            value += delta;
+
+        }
+        return x;
     }
 
     @Override
     public double[] getSimXDefaults() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return SIMX;
+    }
+    
+    public static int getMapIndex(int[] state, int[] stateCount, int... mask) {
+        int index = 0;
+//        System.out.println(state.length + " mask " + mask.length);
+//        for (int i = 0; i < state.length; i++) {
+//            System.out.print(" " + state[i]);
+//        }
+//        System.out.println("");
+        double mult = 1.0;
+        for (int i = 0; i < mask.length; i++) {
+//            System.out.println("mask:" + mask[i] + " state[mask]:" + state[mask[i]] + " count:" + stateCount[mask[i]]);
+            index += mult * state[mask[i]];
+            mult *= stateCount[mask[i]];
+        }
+        return index;
     }
     
 }

@@ -52,9 +52,11 @@ public class CoMDPreferences {
     private static Map<String, Boolean> cestEqnMap = null;
     private static Map<String, Boolean> r1rhoEqnMap = null;
     private static Map<String, Boolean> expEqnMap = null;
+    private static Map<String, Boolean> noeEqnMap = null;
     private static final String DEFAULT_CEST_EQNS = "NOEX;true\nTROTT_PALMER;true";
     private static final String DEFAULT_R1RHO_EQNS = "NOEX;true\nTROTT_PALMER;true";
     private static final String DEFAULT_EXP_EQNS = "EXPAB;true";
+    private static final String DEFAULT_NOE_EQNS = "NOE;true";
     private static Double deltaABdiff = null;
 
     static Preferences getPrefs() {
@@ -343,6 +345,15 @@ public class CoMDPreferences {
         }
         return expEqnMap;
     }
+    
+    static Map<String, Boolean> getNOEEqnMap() {
+        if (noeEqnMap == null) {
+            Preferences prefs = getPrefs();//Preferences.userNodeForPackage(ExperimentData.class);
+            String eqns = prefs.get("NOE_EQNS", DEFAULT_NOE_EQNS);
+            noeEqnMap = stringToMap(eqns);
+        }
+        return noeEqnMap;
+    }
 
     public static void setCESTEqnMap(String eqns) {
         cestEqnMap = stringToMap(eqns);
@@ -440,6 +451,17 @@ public class CoMDPreferences {
             }
         }
         return expEqnList;
+    }
+    
+    public static List<String> getActiveNOEEquations() {
+        Map<String, Boolean> map = getNOEEqnMap();
+        List<String> noeEqnList = new ArrayList<>();
+        for (String eqn : map.keySet()) {
+            if (map.get(eqn)) {
+                noeEqnList.add(eqn);
+            }
+        }
+        return noeEqnList;
     }
 
     public static void setCESTEquationState(String equation, boolean state) {
