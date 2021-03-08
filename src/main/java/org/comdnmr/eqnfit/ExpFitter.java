@@ -103,9 +103,9 @@ public class ExpFitter implements EquationFitter {
         this.fieldValues.clear();
         this.fieldValues.addAll(fieldValues);
         this.idValues.clear();
-        for (Double yValue : yValues) {
+        yValues.forEach((_item) -> {
             this.idValues.add(0);
-        }
+        });
         resNums = new String[1];
         resNums[0] = "0";
         nCurves = 1;
