@@ -287,6 +287,8 @@ public class DataIO {
 //        List<String> peakRefList = new ArrayList<>();
         //  Peak       Residue N       T1      T2      T11     T3      T4      T9      T5      T10     T12     T6      T7      T8
         int fakeRes = 1;
+        Map<String, List<Integer>> xValIndices = new HashMap<>();
+        List<List<Integer>> repIndices = new ArrayList<>();
         try (BufferedReader fileReader = Files.newBufferedReader(path)) {
             while (true) {
                 String line = fileReader.readLine();
@@ -333,6 +335,19 @@ public class DataIO {
                         for (int i = 0; i < nfields; i++) {
                             if (sfields[i].startsWith("err")) {
                                 hasErrColumns = true;
+                                break;
+                            }
+                        }
+                        // find indices of x values, including any replicates
+                        for (int i = 0; i < nfields; i++) {
+                            if (!expMode.equals("noe") && Character.isDigit(sfields[i].charAt(0)) || 
+                                    (expMode.equals("noe") && Character.isDigit(sfields[i].charAt(0)) && sfields[i].contains("1"))) {
+                                xValIndices.computeIfAbsent(sfields[i], s -> new ArrayList<>()).add(i);
+                            }
+                        }
+                        for (List<Integer> indices : xValIndices.values()) {
+                            if (indices.size() > 1) {
+                                repIndices.add(indices);
                                 break;
                             }
                         }
@@ -410,12 +425,26 @@ public class DataIO {
                     }
                     double refIntensity = 1.0;
                     double refError = 0.0;
+                    double avgIntensity = 1.0;
+                    double avgRefIntensity = 1.0;
                     if (expMode.equals("cest") || expMode.equals("cpmg") || expMode.equals("noe")) {
+                        int refOffset = offset - 1;
                         if (hasErrColumns) {
-                            refIntensity = Double.parseDouble(sfields[offset - 2].trim());
+                            refOffset = offset - 2;
                             refError = Double.parseDouble(sfields[offset - 1].trim());
-                        } else {
-                            refIntensity = Double.parseDouble(sfields[offset - 1].trim());
+                        }
+                        refIntensity = Double.parseDouble(sfields[refOffset].trim());
+                        for (List<Integer> list : repIndices) {
+                            if (list.contains(refOffset)) {
+                                double sum = 0.0;
+                                double refSum = 0.0;
+                                for (int index : list) {
+                                    sum += Double.parseDouble(sfields[index].trim());
+                                    refSum += Double.parseDouble(sfields[refOffset].trim());
+                                }
+                                avgIntensity = sum / list.size();
+                                avgRefIntensity = refSum / list.size();
+                            }
                         }
 
                     }
@@ -449,25 +478,59 @@ public class DataIO {
                         if (hasErrColumns) {
                             i++;
                         }
+                        double diffSum = 0.0;
+                        double refDiffSum = 0.0;
+                        int nReps = 0;
+                        for (List<Integer> list : repIndices) {
+                            if (list.contains(i)) {
+                                nReps = list.size();
+                                for (int index : list) {
+                                    diffSum += Double.parseDouble(sfields[index].trim()) - avgIntensity;
+                                    refDiffSum += Double.parseDouble(sfields[index - 1].trim()) - avgRefIntensity;
+                                }
+                            }
+                        }
+                        double normIntensity = diffSum / (nReps - 1);
+                        double normRefIntensity = refDiffSum / (nReps - 1);
                         if (hasErrColumns && errorMode.equals("measured")) {
                             eValue = Double.parseDouble(sfields[i].trim());
                             eSet = true;
                             if (expMode.equals("cpmg")) {
-                                eValue = eValue / (intensity * tau);
+                                if (normIntensity != 0) {
+                                    eValue = eValue / (normIntensity * tau);
+                                } else {
+                                    eValue = eValue / (intensity * tau); 
+                                }
                             } else if (expMode.equals("noe") && (yConv == YCONV.NORMALIZE)) {
                                 double r1 = refError / refIntensity;
                                 double r2 = eValue / intensity;
+                                if (normIntensity != 0 && normRefIntensity != 0) {
+                                    r1 = refError / normRefIntensity;
+                                    r2 = eValue / normIntensity;
+                                }
                                 eValue = Math.abs(yValue) * Math.sqrt(r1 * r1 + r2 * r2);
                             }
                         } else if (expMode.equals("cpmg")) {
                             if (errorMode.equals("noise")) {
-                                eValue = noise / (intensity * tau);
+                                if (normIntensity != 0) {
+                                    eValue = noise / (normIntensity * tau);
+                                } else {
+                                    eValue = noise / (intensity * tau);
+                                }
                             } else if (errorMode.equals("percent")) {
-                                eValue = (errF * refIntensity) / (intensity * tau);
+                                if (normIntensity != 0 && normRefIntensity != 0) {
+                                    eValue = (errF * normRefIntensity) / (normIntensity * tau);
+                                } else {
+                                    eValue = (errF * refIntensity) / (intensity * tau);
+                                }
                             }
                         } else if (expMode.equals("noe") && (yConv == YCONV.NORMALIZE)) {
                             double r1 = noise / refIntensity;
                             double r2 = noise / intensity;
+                            if (normIntensity != 0 && normRefIntensity != 0) {
+                                r1 = noise / normRefIntensity;
+                                r2 = noise / normIntensity;
+                            } 
                             eValue = Math.abs(yValue) * Math.sqrt(r1 * r1 + r2 * r2);
                         } else {
                             if (errorMode.equals("percent")) {
