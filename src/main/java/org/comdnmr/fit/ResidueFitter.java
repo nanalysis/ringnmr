@@ -145,10 +145,10 @@ public class ResidueFitter {
             String[] resNumGroup = new String[resGroup.size()];
             resGroup.toArray(resNumGroup);
             List<ResidueInfo> resInfoList = fitResidues(resProps, resNumGroup, nFit, null);
-            for (ResidueInfo resInfo : resInfoList) {
+            resInfoList.forEach((resInfo) -> {
                 int fitResNum = resInfo.getResNum();
                 resProps.addResidueInfo(String.valueOf(fitResNum), resInfo);
-            }
+            });
             nFit++;
             updateProgress((1.0 * nFit) / nResidues);
         }
@@ -157,11 +157,11 @@ public class ResidueFitter {
     public List<List<String>> getAllResidues() {
         Map<String, ExperimentData> expDataSets = resProps.getExperimentMap();
         Set<Integer> resNums = new TreeSet<>();
-        for (ExperimentData expData : expDataSets.values()) {
-            for (String resNumS : expData.getResidues()) {
+        expDataSets.values().forEach((expData) -> {
+            expData.getResidues().forEach((resNumS) -> {
                 resNums.add(Integer.parseInt(resNumS));
-            }
-        }
+            });
+        });
         List<List<String>> allResidues = new ArrayList<>();
         for (Integer resNum : resNums) {
             int groupIndex = -1;
@@ -201,10 +201,10 @@ public class ResidueFitter {
             String[] resNumGroup = new String[resList.size()];
             resList.toArray(resNumGroup);
             List<ResidueInfo> resInfoList = fitResidues(resProps, resNumGroup, nFit, null);
-            for (ResidueInfo resInfo : resInfoList) {
+            resInfoList.forEach((resInfo) -> {
                 int fitResNum = resInfo.getResNum();
                 resProps.addResidueInfo(String.valueOf(fitResNum), resInfo);
-            }
+            });
             nFit++;
             updateProgress((1.0 * nFit) / nGroups);
 
@@ -298,9 +298,9 @@ public class ResidueFitter {
             ResidueInfo residueInfo = new ResidueInfo(resProps, Integer.parseInt(residueNumber), groupId, resNums.length);
             resInfoList.add(residueInfo);
             resMap.put(residueNumber, residueInfo);
-            for (String equationName : equationNames) {
+            equationNames.forEach((equationName) -> {
                 residueInfo.addFitResult(fitResults.get(equationName));
-            }
+            });
         }
 
         for (String equationName : equationNames) {

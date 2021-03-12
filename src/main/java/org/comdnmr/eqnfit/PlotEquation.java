@@ -95,9 +95,7 @@ public class PlotEquation {
         int[][] map = equationType.makeMap(1);
         double[] ax = new double[extras.length];
         ax[0] = xValue;
-        for (int j = 1; j < extras.length; j++) {
-            ax[j] = extras[j];
-        }
+        System.arraycopy(extras, 1, ax, 1, extras.length - 1);
         double y = calculate(ax, getExtra(0));
         return y;
     }
