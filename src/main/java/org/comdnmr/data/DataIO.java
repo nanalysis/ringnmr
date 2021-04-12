@@ -340,8 +340,8 @@ public class DataIO {
                         }
                         // find indices of x values, including any replicates
                         for (int i = 0; i < nfields; i++) {
-                            if (!expMode.equals("noe") && Character.isDigit(sfields[i].charAt(0)) || 
-                                    (expMode.equals("noe") && Character.isDigit(sfields[i].charAt(0)) && sfields[i].contains("1"))) {
+                            if (!expMode.equals("noe") && Character.isDigit(sfields[i].charAt(0))
+                                    || (expMode.equals("noe") && Character.isDigit(sfields[i].charAt(0)) && sfields[i].contains("1"))) {
                                 xValIndices.computeIfAbsent(sfields[i], s -> new ArrayList<>()).add(i);
                             }
                         }
@@ -499,7 +499,7 @@ public class DataIO {
                                 if (normIntensity != 0) {
                                     eValue = eValue / (normIntensity * tau);
                                 } else {
-                                    eValue = eValue / (intensity * tau); 
+                                    eValue = eValue / (intensity * tau);
                                 }
                             } else if (expMode.equals("noe") && (yConv == YCONV.NORMALIZE)) {
                                 double r1 = refError / refIntensity;
@@ -530,7 +530,7 @@ public class DataIO {
                             if (normIntensity != 0 && normRefIntensity != 0) {
                                 r1 = noise / normRefIntensity;
                                 r2 = noise / normIntensity;
-                            } 
+                            }
                             eValue = Math.abs(yValue) * Math.sqrt(r1 * r1 + r2 * r2);
                         } else {
                             if (errorMode.equals("percent")) {
@@ -1404,14 +1404,14 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                         Double error = fitPars.get("R.sd");
                         if (expType.equals(relaxTypes.T1)) {
                             RelaxationData relaxData = new RelaxationData(datasetName, expType, new ArrayList<>(), field, temperature, value, error, extras);
-            //                System.out.println("reader " + relaxData);
-                            atom.relaxData.put(datasetName, relaxData);
-            //                System.out.println("reader atom.relaxData = " + atom + " " + atom.relaxData);
+                            //                System.out.println("reader " + relaxData);
+                            atom.getRelaxationData().put(datasetName, relaxData);
+                            //                System.out.println("reader atom.relaxData = " + atom + " " + atom.relaxData);
                         } else {
                             Double RexValue = null;
                             Double RexError = null;
                             RelaxationRex relaxData = new RelaxationRex(datasetName, expType, new ArrayList<>(), field, temperature, value, error, RexValue, RexError, extras);
-                            atom.relaxData.put(datasetName, relaxData);
+                            atom.getRelaxationData().put(datasetName, relaxData);
                         }
                     }
                 });
@@ -1434,5 +1434,25 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
 
     public static void writeSTAR3File(FileWriter chan) throws IOException, ParseException, InvalidMoleculeException, InvalidPeakException {
         NMRStarWriter.writeAll(chan);
+    }
+
+    public void getDataFromMolecule(ResidueProperties resProps) {
+        MoleculeBase mol = MoleculeFactory.getActive();
+        Map<String, ExperimentData> expMap = resProps.getExperimentMap();
+        for (Atom atom : mol.getAtomArray()) {
+            Map<String, RelaxationData> relaxData = atom.getRelaxationData();
+            for (Map.Entry<String, RelaxationData> entry : relaxData.entrySet()) {
+                String datasetName = entry.getKey();
+                RelaxationData value = entry.getValue();
+                if (!expMap.containsKey(datasetName)) {
+                    String expMode = "exp";
+                    ExperimentData expData = new ExperimentData(datasetName,
+                            atom.getElementName(), value.getField(), value.getTemperature(),
+                            null, null, expMode,
+                            null, null, null);
+                    expMap.put(datasetName, expData);
+                }
+            }
+        }
     }
 }
