@@ -7,8 +7,10 @@ package org.comdnmr.modelfree;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.comdnmr.data.DynamicsSource;
 import org.comdnmr.modelfree.models.MFModel;
 import org.comdnmr.modelfree.models.MFModelIso;
+import org.nmrfx.chemistry.Atom;
 
 /**
  *
@@ -16,6 +18,7 @@ import org.comdnmr.modelfree.models.MFModelIso;
  */
 public class MolDataValues {
 
+    Atom atom;
     final String specifier;
     final double[] vector = new double[3];
     final List<RelaxDataValue> dataValues = new ArrayList<>();
@@ -23,6 +26,7 @@ public class MolDataValues {
 
     public MolDataValues(String specifier, double[] vector) {
         this.specifier = specifier;
+        atom = DynamicsSource.getAtom(null, specifier, 0);
         System.arraycopy(vector, 0, this.vector, 0, 3);
     }
 
@@ -41,7 +45,7 @@ public class MolDataValues {
     public MFModel getTestModel() {
         return model;
     }
-    
+
     public double[] getVector() {
         return vector;
     }

@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.optim.PointValuePair;
+import org.comdnmr.data.DynamicsSource;
 import org.comdnmr.modelfree.MolDataValues;
 import org.comdnmr.modelfree.RelaxDataValue;
 import org.comdnmr.modelfree.RelaxEquations;
@@ -52,13 +53,13 @@ public class DRefineTest {
             if (fields.length == 5) {
                 int iRes = Integer.valueOf(fields[0]);
                 String chain = "A";
-                String resSpecifier = chain + iRes;
+                String atomSpecifier = chain + ":" + iRes + ".H";
                 double[] v = new double[3];
                 v[0] = Double.valueOf(fields[2]);
                 v[1] = Double.valueOf(fields[3]);
                 v[2] = Double.valueOf(fields[4]);
-                MolDataValues molDataValue = new MolDataValues(resSpecifier, v);
-                molValues.put(resSpecifier, molDataValue);
+                MolDataValues molDataValue = new MolDataValues(atomSpecifier, v);
+                molValues.put(atomSpecifier, molDataValue);
             }
         });
 
@@ -75,7 +76,7 @@ public class DRefineTest {
             if (fields.length == 11) {
                 int iRes = Integer.valueOf(fields[0]);
                 String chain = fields[1];
-                String resSpecifier = chain + iRes;
+                String resSpecifier = chain + ":" + iRes + ".H";
                 MolDataValues molData = molDataValues.get(resSpecifier);
                 if (molData == null) {
                     System.out.println("no res " + resSpecifier);
