@@ -171,17 +171,17 @@ public class ResidueProperties {
         tempMap.clear();
         nucMap.clear();
         for (ExperimentData expData : expMaps.values()) {
-            if (!fieldMap.containsKey(Math.floor(expData.field))) {
-                fieldMap.put(Math.floor(expData.field), fieldMap.size());
-                fieldList.add(expData.field);
+            if (!fieldMap.containsKey(Math.floor(expData.getField()))) {
+                fieldMap.put(Math.floor(expData.getField()), fieldMap.size());
+                fieldList.add(expData.getField());
             }
-            if (!tempMap.containsKey(Math.floor(expData.temperature))) {
-                tempMap.put(Math.floor(expData.temperature), tempMap.size());
-                tempList.add(expData.temperature);
+            if (!tempMap.containsKey(Math.floor(expData.getTemperature()))) {
+                tempMap.put(Math.floor(expData.getTemperature()), tempMap.size());
+                tempList.add(expData.getTemperature());
             }
-            if (!nucMap.containsKey(expData.nucleusName)) {
-                nucMap.put(expData.nucleusName, nucMap.size());
-                nucList.add(expData.nucleusName);
+            if (!nucMap.containsKey(expData.getNucleusName())) {
+                nucMap.put(expData.getNucleusName(), nucMap.size());
+                nucList.add(expData.getNucleusName());
             }
         }
         for (ExperimentData expData : expMaps.values()) {
@@ -196,9 +196,9 @@ public class ResidueProperties {
         }
         int[] state = new int[4];
         state[0] = resIndex;
-        state[1] = fieldMap.get(Math.floor(expData.field));
-        state[2] = tempMap.get(Math.floor(expData.temperature));
-        state[3] = nucMap.get(expData.nucleusName);
+        state[1] = fieldMap.get(Math.floor(expData.getField()));
+        state[2] = tempMap.get(Math.floor(expData.getTemperature()));
+        state[3] = nucMap.get(expData.getNucleusName());
 //        System.out.println(resIndex + " " + expData.field + " " + expData.temperature + " " + expData.nucleus);
 //        System.out.println("state index residue:" + state[0] + " field:" + state[1] + " temp:" + state[2] + " nuc:" + state[3]);
 

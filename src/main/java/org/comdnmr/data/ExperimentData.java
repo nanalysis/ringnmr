@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package org.comdnmr.data;
 
 import java.util.HashMap;
@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.nmrfx.datasets.Nuclei;
 
 /**
  *
@@ -29,58 +30,12 @@ import java.util.Map;
  */
 public class ExperimentData {
 
-    public enum Nuclei {
-
-        H1("H", 1, "1/2", 99.98, 1.00000) {
-        },
-        F19("F", 19, "1/2", 100, 0.94077) {
-        },
-        P31("P", 31, "1/2", 100, 0.40481) {
-        },
-        C13("C", 13, "1/2", 1.108, 0.25144) {
-        },
-        N15("N", 15, "1/2", 0.37, 0.10133) {
-        };
-        String name;
-        int num;
-        int spin;
-        double abundance;
-        double freqRatio;
-
-        public double getRatio() {
-            return freqRatio;
-        }
-
-        Nuclei(final String name, final int num, final String spin, final double abundance, final double freqRatio) {
-            this.name = name;
-            this.num = num;
-            this.spin = Integer.parseInt(spin.substring(0, 1));
-            this.abundance = abundance;
-            this.freqRatio = freqRatio;
-        }
-
-        public static Nuclei get(String name) {
-            Nuclei nuc = null;
-            try {
-                nuc = valueOf(name);
-            } catch (IllegalArgumentException iaE) {
-                for (Nuclei testNuc : values()) {
-                    if (testNuc.name.equals(name)) {
-                        nuc = testNuc;
-                        break;
-                    }
-                }
-            }
-            return nuc;
-        }
-
-    }
-
     String name;
     HashMap<String, ResidueData> residueData;
-    final double field;
-    final double nucleusField;
-    final double temperature;
+    private final double field;
+    private final String nucleusName;
+    private final double nucleusField;
+    private final double temperature;
     final Double tau;
     final double[] xvals;
     final String expMode;
@@ -88,7 +43,6 @@ public class ExperimentData {
     final double[] delayCalc;
     final Double B1field;
     double errFraction = 0.05;
-    final String nucleusName;
     List<Double> extras = new ArrayList<>();
     private String state = "";
     Map<String, List<Double>> constraints = null;
@@ -109,9 +63,9 @@ public class ExperimentData {
         }
         this.nucleusName = nucleus;
         double ratio = 1.0;
-        Nuclei nuc = Nuclei.get(nucleusName);
+        Nuclei nuc = Nuclei.findNuclei(nucleusName);
         if (nuc != null) {
-            ratio = nuc.getRatio();
+            ratio = nuc.getFreqRatio();
         }
         nucleusField = field * ratio;
         residueData = new HashMap<>();
@@ -161,10 +115,14 @@ public class ExperimentData {
         return nucleusName;
     }
 
+    public double getTemperature() {
+        return temperature;
+    }
+
     public void setConstraints(Map<String, List<Double>> constraints) {
         this.constraints = constraints;
     }
-    
+
     public Map<String, List<Double>> getConstraints() {
         return constraints;
     }

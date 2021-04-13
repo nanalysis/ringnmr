@@ -28,6 +28,7 @@ import org.comdnmr.eqnfit.CESTFitter;
 import org.comdnmr.util.CoMDOptions;
 import org.junit.Assert;
 import org.junit.Test;
+import org.nmrfx.datasets.Nuclei;
 
 public class CESTFitTest {
 
@@ -186,8 +187,8 @@ public class CESTFitTest {
     public void testTrottPalmer() {
         CoMDOptions options = new CoMDOptions(false);
         CESTFitter fitting = new CESTFitter(options);
-        ExperimentData.Nuclei nuc = ExperimentData.Nuclei.get("C13");
-        double field = CoMDPreferences.getRefField() * nuc.getRatio();
+        Nuclei nuc = Nuclei.findNuclei("C13");
+        double field = CoMDPreferences.getRefField() * nuc.getFreqRatio();
         List<Double> fieldArray = Collections.nCopies(errarray.size(), field);
         fitting.setData(fixOffset(offset, field), fixOffset(omega, 1.0), Texarray, intenarray, errarray, fieldArray);
 
@@ -227,8 +228,8 @@ public class CESTFitTest {
     public void testSD() {
         CoMDOptions options = new CoMDOptions(false);
         CESTFitter fitting = new CESTFitter(options);
-        ExperimentData.Nuclei nuc = ExperimentData.Nuclei.get("C13");
-        double field = CoMDPreferences.getRefField() * nuc.getRatio();
+        Nuclei nuc = Nuclei.findNuclei("C13");
+        double field = CoMDPreferences.getRefField() * nuc.getFreqRatio();
         List<Double> fieldArray = Collections.nCopies(errarray.size(), field);
         fitting.setData(fixOffset(offset, field), fixOffset(omega, 1.0), Texarray, intenarray, errarray, fieldArray);
 
@@ -265,8 +266,8 @@ public class CESTFitTest {
     public void testBaldwinKay() {
         CoMDOptions options = new CoMDOptions(false);
         CESTFitter fitting = new CESTFitter(options);
-        ExperimentData.Nuclei nuc = ExperimentData.Nuclei.get("C13");
-        double field = CoMDPreferences.getRefField() * nuc.getRatio();
+        Nuclei nuc = Nuclei.findNuclei("C13");
+        double field = CoMDPreferences.getRefField() * nuc.getFreqRatio();
         List<Double> fieldArray = Collections.nCopies(errarray.size(), field);
         fitting.setData(fixOffset(offset, field), fixOffset(omega, 1.0), Texarray, intenarray, errarray, fieldArray);
 
@@ -304,8 +305,8 @@ public class CESTFitTest {
     public void testLaguerre() {
         CoMDOptions options = new CoMDOptions(false);
         CESTFitter fitting = new CESTFitter(options);
-        ExperimentData.Nuclei nuc = ExperimentData.Nuclei.get("C13");
-        double field = CoMDPreferences.getRefField() * nuc.getRatio();
+        Nuclei nuc = Nuclei.findNuclei("C13");
+        double field = CoMDPreferences.getRefField() * nuc.getFreqRatio();
         List<Double> fieldArray = Collections.nCopies(errarray.size(), field);
         fitting.setData(fixOffset(offset, field), fixOffset(omega, 1.0), Texarray, intenarray, errarray, fieldArray);
 

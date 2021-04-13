@@ -37,6 +37,7 @@ public class ResidueData {
 
     ExperimentData expData;
     DynamicsSource dynSource;
+    RelaxationData relaxData;
     double[][] xValues;
     double[] errValues;
     double[] yValues;
@@ -83,6 +84,11 @@ public class ResidueData {
             yValues[i] = yValueList.get(i);
             errValues[i] = errValueList.get(i);
         }
+    }
+
+    public ResidueData(ExperimentData expData, RelaxationData relaxData) {
+        this.expData = expData;
+        this.relaxData = relaxData;
     }
 
     public double[][] getXValues() {
@@ -170,16 +176,16 @@ public class ResidueData {
                 return entity.getName();
             }
         }
-        
+
         public String getT1() {
             MoleculeBase mol = MoleculeFactory.getActive();
             mol.getAtomArray();
-            Atom[] atoms = resInfo.dynSource.atoms; 
+            Atom[] atoms = resInfo.dynSource.atoms;
             String t1 = "-";
             for (Atom atom : atoms) {
                 String aName = atom.getFullName();
-                if (aName.contains(resInfo.expData.nucleusName)) {
-                    List<RelaxationData> relaxDataList = atom.getRelaxationData(relaxTypes.T1, resInfo.expData.field, null)
+                if (aName.contains(resInfo.expData.getNucleusName())) {
+                    List<RelaxationData> relaxDataList = atom.getRelaxationData(relaxTypes.T1, resInfo.expData.getField(), null)
                             .stream().collect(Collectors.toList());
                     if (!relaxDataList.isEmpty()) {
                         t1 = String.valueOf(relaxDataList.get(0).getValue());
@@ -192,12 +198,12 @@ public class ResidueData {
         public String getT2() {
             MoleculeBase mol = MoleculeFactory.getActive();
             mol.getAtomArray();
-            Atom[] atoms = resInfo.dynSource.atoms; 
+            Atom[] atoms = resInfo.dynSource.atoms;
             String t2 = "-";
             for (Atom atom : atoms) {
                 String aName = atom.getFullName();
-                if (aName.contains(resInfo.expData.nucleusName)) {
-                    List<RelaxationData> relaxDataList = atom.getRelaxationData(relaxTypes.T2, resInfo.expData.field, null)
+                if (aName.contains(resInfo.expData.getNucleusName())) {
+                    List<RelaxationData> relaxDataList = atom.getRelaxationData(relaxTypes.T2, resInfo.expData.getField(), null)
                             .stream().collect(Collectors.toList());
                     if (!relaxDataList.isEmpty()) {
                         t2 = String.valueOf(relaxDataList.get(0).getValue());
@@ -206,16 +212,16 @@ public class ResidueData {
             }
             return t2;
         }
-        
+
         public String getT1Rho() {
             MoleculeBase mol = MoleculeFactory.getActive();
             mol.getAtomArray();
-            Atom[] atoms = resInfo.dynSource.atoms; 
+            Atom[] atoms = resInfo.dynSource.atoms;
             String t1rho = "-";
             for (Atom atom : atoms) {
                 String aName = atom.getFullName();
-                if (aName.contains(resInfo.expData.nucleusName)) {
-                    List<RelaxationData> relaxDataList = atom.getRelaxationData(relaxTypes.T1RHO, resInfo.expData.field, null)
+                if (aName.contains(resInfo.expData.getNucleusName())) {
+                    List<RelaxationData> relaxDataList = atom.getRelaxationData(relaxTypes.T1RHO, resInfo.expData.getField(), null)
                             .stream().collect(Collectors.toList());
                     if (!relaxDataList.isEmpty()) {
                         t1rho = String.valueOf(relaxDataList.get(0).getValue());
@@ -224,32 +230,34 @@ public class ResidueData {
             }
             return t1rho;
         }
-        
+
         public String getNOE() {
             MoleculeBase mol = MoleculeFactory.getActive();
             mol.getAtomArray();
-            Atom[] atoms = resInfo.dynSource.atoms; 
+            Atom[] atoms = resInfo.dynSource.atoms;
             String noe = "-";
             for (Atom atom : atoms) {
                 String aName = atom.getFullName();
-                List<RelaxationData> relaxDataList = atom.getRelaxationData(relaxTypes.NOE, resInfo.expData.field, null)
-                            .stream().collect(Collectors.toList());
+                List<RelaxationData> relaxDataList = atom.getRelaxationData(relaxTypes.NOE, resInfo.expData.getField(), null)
+                        .stream().collect(Collectors.toList());
                 if (!relaxDataList.isEmpty()) {
                     String pairAtomName = relaxDataList.get(0).getExtraAtoms().get(0).getName();
-                    if (aName.contains(resInfo.expData.nucleusName) || pairAtomName.contains(resInfo.expData.nucleusName)) {
+                    if (aName.contains(resInfo.expData.getNucleusName()) || pairAtomName.contains(resInfo.expData.getNucleusName())) {
                         noe = String.valueOf(relaxDataList.get(0).getValue());
                     }
                 }
             }
             return noe;
         }
-        
+
     }
 
     public ArrayList<DataValue> getDataValues() {
         ArrayList<DataValue> dataValues = new ArrayList<>();
-        for (int i = 0; i < xValues[0].length; i++) {
-            dataValues.add(new DataValue(this, i));
+        if (xValues != null) {
+            for (int i = 0; i < xValues[0].length; i++) {
+                dataValues.add(new DataValue(this, i));
+            }
         }
         return dataValues;
     }
@@ -261,7 +269,7 @@ public class ResidueData {
     public ExperimentData getExperimentData() {
         return expData;
     }
-    
+
     public DynamicsSource getDynSource() {
         return dynSource;
     }
