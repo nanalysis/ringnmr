@@ -261,15 +261,17 @@ public class ChartUtil {
         if (resData != null) {
             double[][] xValues = resData.getXValues();
             double[] yValues = resData.getYValues();
-            int nValues = yValues.length;
-            double[] errValues = resData.getErrValues();
-            for (int i = 0; i < nValues; i++) {
-                double x = xValues[0][i];
-                double y = yValues[i];
-                double err = errValues[i];
-                XYValue dataPoint = new XYEValue(x, y, err);
-                dataPoint.setExtraValue(resData.getDataValues().get(i));
-                series.add(dataPoint);
+            if ((xValues != null) && (yValues != null)) {
+                int nValues = yValues.length;
+                double[] errValues = resData.getErrValues();
+                for (int i = 0; i < nValues; i++) {
+                    double x = xValues[0][i];
+                    double y = yValues[i];
+                    double err = errValues[i];
+                    XYValue dataPoint = new XYEValue(x, y, err);
+                    dataPoint.setExtraValue(resData.getDataValues().get(i));
+                    series.add(dataPoint);
+                }
             }
         }
         return series;
@@ -492,27 +494,31 @@ public class ChartUtil {
         }
 
         try {
-            DataIO.readMoleculeFile(fileName, type);
-            if (!residueProperties.isEmpty()) {
-                Set<String> keySet = residueProperties.keySet();
-                for (String key : keySet) {
-                    ResidueProperties resProp = residueProperties.get(key);
-                    List<ResidueInfo> resInfoList = resProp.getResidueValues();
-                    for (ResidueInfo resInfo : resInfoList) {
-                        int resNum = resInfo.getResNum();
-                        String resName = DataIO.getResidueName(resNum);
-                        resInfo.setResName(resName);
-//                        System.out.println("chartUtil loadMolFile resName = " + resNum + " " + resInfo.getResName());
-                    }
-                    Collection<ExperimentData> expDataSets = resProp.getExperimentData();
-                    for (ExperimentData expData : expDataSets) {
-                        for (String resNumS : expData.getResidues()) {
-                            int resNum = Integer.parseInt(resNumS);
-                            ResidueData resData = expData.getResidueData(resNumS);
-                        }
-                    }
-                }
+            Map<String, ResidueProperties> resProps = DataIO.readMoleculeFile(fileName, type);
+            if (resProps != null) {
+                residueProperties.putAll(resProps);
+                PyController.mainController.makeAxisMenu();
             }
+//            if (!residueProperties.isEmpty()) {
+//                Set<String> keySet = residueProperties.keySet();
+//                for (String key : keySet) {
+//                    ResidueProperties resProp = residueProperties.get(key);
+//                    List<ResidueInfo> resInfoList = resProp.getResidueValues();
+//                    for (ResidueInfo resInfo : resInfoList) {
+//                        int resNum = resInfo.getResNum();
+//                        String resName = DataIO.getResidueName(resNum);
+//                        resInfo.setResName(resName);
+////                        System.out.println("chartUtil loadMolFile resName = " + resNum + " " + resInfo.getResName());
+//                    }
+//                    Collection<ExperimentData> expDataSets = resProp.getExperimentData();
+//                    for (ExperimentData expData : expDataSets) {
+//                        for (String resNumS : expData.getResidues()) {
+//                            int resNum = Integer.parseInt(resNumS);
+//                            ResidueData resData = expData.getResidueData(resNumS);
+//                        }
+//                    }
+//                }
+//            }
         } catch (IOException ex) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Parameter file error");
