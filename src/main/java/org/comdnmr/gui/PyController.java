@@ -1621,7 +1621,7 @@ public class PyController implements Initializable {
 //System.out.println("extras " + extras[0]);
                 if (simExtras.length > 1) {
                     extras = new double[simExtras.length + 1];
-                    extras[0] = CoMDPreferences.getRefField() * simControls.getNucleus().getRatio();
+                    extras[0] = CoMDPreferences.getRefField() * simControls.getNucleus().getFreqRatio();
 
                     for (int i = 0; i < simExtras.length; i++) {
                         //                    System.out.println("simextras " + i + " " + simExtras[i]);
@@ -1951,6 +1951,8 @@ public class PyController implements Initializable {
     public String[] getParTypes(String mode) {
         String[] cpmgTypes = {"R2", "dPPMmin", "Kex", "pA", "dPPM", "RMS", "AIC", "Equation"};
         String[] expTypes = {"A", "R", "C", "RMS", "AIC", "Equation"};
+        String[] t1Types = {"R1"};
+        String[] t2Types = {"R2"};
         String[] cestTypes = {"kex", "pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B", "RMS", "AIC", "Equation"};
         String[] r1rhoTypes = {"kex", "pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B", "RMS", "AIC", "Equation"};
         String[] nullTypes = {"RMS", "AIC", "Equation"};
@@ -1963,6 +1965,10 @@ public class PyController implements Initializable {
             return cestTypes;
         } else if (mode.equals("r1rho")) {
             return r1rhoTypes;
+        } else if (mode.equals("t1")) {
+            return t1Types;
+        } else if (mode.equals("t2")) {
+            return t2Types;
         } else if (mode.equals("noe")) {
             return noeTypes;
         }
@@ -2145,7 +2151,7 @@ public class PyController implements Initializable {
         allXValues[0] = xValues;
         ArrayList<Double> fieldValues = new ArrayList<>();
         for (int i = 0; i < yValues.size(); i++) {
-            fieldVals[i] = CoMDPreferences.getRefField() * simControls.getNucleus().getRatio();
+            fieldVals[i] = CoMDPreferences.getRefField() * simControls.getNucleus().getFreqRatio();
             fieldValues.add(fieldVals[i]);
         }
         System.out.println("xval len " + xValues.size());

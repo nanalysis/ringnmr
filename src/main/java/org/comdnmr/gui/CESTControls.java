@@ -757,7 +757,7 @@ public class CESTControls extends EquationControls {
                     pars = getPars(equationName)[0];
                     double[] errs = new double[pars.length];
                     double[] extras = new double[1];
-                    extras[0] = CoMDPreferences.getRefField() * getNucleus().getRatio(); // fixme
+                    extras[0] = CoMDPreferences.getRefField() * getNucleus().getFreqRatio(); // fixme
                     GUIPlotEquation plotEquation = new GUIPlotEquation("cest", equationName, pars, errs, extras);
                     //equationCopy.setExtra(extras);
                     //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[0] = " + extras[0]);
@@ -770,7 +770,7 @@ public class CESTControls extends EquationControls {
             extras1 = getPars(equationName)[1];
             double[] errs = new double[pars.length];
             double[] extras = new double[3];
-            extras[0] = CoMDPreferences.getRefField() * getNucleus().getRatio(); // fixme
+            extras[0] = CoMDPreferences.getRefField() * getNucleus().getFreqRatio(); // fixme
             extras[1] = extras1[0]; //17.0 * 2 * Math.PI;
             extras[2] = extras1[1]; //0.3;
             //System.out.println("updateEquations got called without resProps; extras length = "+extras.length);

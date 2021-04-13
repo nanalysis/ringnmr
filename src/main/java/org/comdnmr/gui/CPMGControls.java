@@ -445,7 +445,7 @@ public class CPMGControls extends EquationControls {
             pars = getPars(equationName);
             double[] errs = new double[pars.length];
             double[] extras = new double[1];
-            extras[0] = CoMDPreferences.getRefField() * getNucleus().getRatio();
+            extras[0] = CoMDPreferences.getRefField() * getNucleus().getFreqRatio();
             GUIPlotEquation plotEquation = new GUIPlotEquation("cpmg", equationName, pars, errs, extras);
             equations.add(plotEquation);
         } else {
@@ -459,9 +459,9 @@ public class CPMGControls extends EquationControls {
                     if (state.equals(currentState) || parValues.isEmpty()) {
                         pars = getPars(equationName);
                         if (state.equals(currentState)) {
-                            extras[0] = FIELD2.getValue() * getNucleus().getRatio();
+                            extras[0] = FIELD2.getValue() * getNucleus().getFreqRatio();
                         } else {
-                            extras[0] = fields[iField] * getNucleus().getRatio();
+                            extras[0] = fields[iField] * getNucleus().getFreqRatio();
                         }
                     } else {
                         try {
@@ -473,7 +473,7 @@ public class CPMGControls extends EquationControls {
                         } catch (NullPointerException npEcpmgpar) {
                             continue;
                         }
-                        extras[0] = fields[iField] * getNucleus().getRatio();
+                        extras[0] = fields[iField] * getNucleus().getFreqRatio();
                     }
                     double[] errs = new double[pars.length];
                     GUIPlotEquation plotEquation = new GUIPlotEquation("cpmg", equationName, pars, errs, extras);

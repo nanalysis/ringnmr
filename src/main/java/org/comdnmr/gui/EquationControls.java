@@ -20,9 +20,8 @@ package org.comdnmr.gui;
 import java.util.List;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.layout.VBox;
-import org.comdnmr.data.ExperimentData;
-import org.comdnmr.data.ExperimentData.Nuclei;
 import org.comdnmr.eqnfit.ParValueInterface;
+import org.nmrfx.datasets.Nuclei;
 
 /**
  *
@@ -30,11 +29,11 @@ import org.comdnmr.eqnfit.ParValueInterface;
  */
 public abstract class EquationControls {
 
-    ChoiceBox<ExperimentData.Nuclei> nucleiSelector = new ChoiceBox<>();
+    ChoiceBox<Nuclei> nucleiSelector = new ChoiceBox<>();
     ChoiceBox<String> equationSelector = new ChoiceBox<>();
     ChoiceBox<String> stateSelector = new ChoiceBox<>();
 
-    public ChoiceBox<ExperimentData.Nuclei> getNucChoiceBox() {
+    public ChoiceBox<Nuclei> getNucChoiceBox() {
         return nucleiSelector;
     }
 
@@ -47,10 +46,10 @@ public abstract class EquationControls {
     public VBox init() {
         VBox vBox = new VBox();
         nucleiSelector.getItems().clear();
-        for (ExperimentData.Nuclei nuc : ExperimentData.Nuclei.values()) {
+        for (Nuclei nuc : Nuclei.values()) {
             nucleiSelector.getItems().add(nuc);
         }
-        nucleiSelector.getSelectionModel().select(ExperimentData.Nuclei.N15);
+        nucleiSelector.getSelectionModel().select(Nuclei.N15);
         return vBox;
     }
 
@@ -59,7 +58,7 @@ public abstract class EquationControls {
     }
     
     public void setNucleus(String nucName) {
-        nucleiSelector.getSelectionModel().select(ExperimentData.Nuclei.get(nucName));
+        nucleiSelector.getSelectionModel().select(Nuclei.findNuclei(nucName));
     }
 
     abstract public VBox makeControls(PyController controller);
