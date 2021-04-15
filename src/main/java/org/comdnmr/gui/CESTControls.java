@@ -31,7 +31,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.comdnmr.eqnfit.CESTEquation;
 import org.comdnmr.eqnfit.CESTFitter;
-import org.comdnmr.data.ExperimentData;
+import org.comdnmr.data.Experiment;
 import org.comdnmr.eqnfit.ParValueInterface;
 import org.comdnmr.data.ResidueInfo;
 import org.comdnmr.data.ResidueProperties;
@@ -730,12 +730,12 @@ public class CESTControls extends EquationControls {
         double[] pars;
         double[] extras1;
         String equationName = equationSelector.getValue();
-        Optional<ExperimentData> optionalData = Optional.empty();
+        Optional<Experiment> optionalData = Optional.empty();
         if (resInfo != null) {
             if (resProps != null) {
                 optionalData = resProps.getExperimentData().stream().findFirst();
                 if (optionalData.isPresent() && optionalData.get().getExtras().size() > 0) {
-                    for (ExperimentData expData : resProps.getExperimentData()) {
+                    for (Experiment expData : resProps.getExperimentData()) {
                         pars = getPars(equationName)[0];
                         List<Double> dataExtras = expData.getExtras();
                         double[] errs = new double[pars.length];

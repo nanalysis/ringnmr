@@ -28,8 +28,9 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import org.comdnmr.data.DoubleArrayExperiment;
 import org.comdnmr.eqnfit.R1RhoEquation;
-import org.comdnmr.data.ExperimentData;
+import org.comdnmr.data.Experiment;
 import org.comdnmr.eqnfit.ParValueInterface;
 import org.comdnmr.data.ResidueInfo;
 import org.comdnmr.data.ResidueProperties;
@@ -595,7 +596,10 @@ public class R1RhoControls extends EquationControls {
                 if (control.getName().equals("deltaA0") || control.getName().equals("deltaB0")) {
                     if (controller.currentResProps != null) {
                         if (controller.currentResProps.getExperimentData() != null) {
-                            double[] xVals = controller.currentResProps.getExperimentData().stream().findFirst().get().getXVals();
+                            DoubleArrayExperiment expData = (DoubleArrayExperiment) controller.currentResProps.getExperimentData().
+                                    stream().findFirst().get();
+                            double[] xVals = expData.getXVals();
+
 //                            String resNum = String.valueOf(controller.currentResProps.getResidueValues().get(0).getResNum());
 //                            double[] xVals = controller.currentResProps.getExperimentData().stream().findFirst().get().getResidueData(resNum).getXValues()[0];
                             if (xVals != null) {
@@ -677,12 +681,12 @@ public class R1RhoControls extends EquationControls {
         double[] pars;
         double[] extras1;
         String equationName = equationSelector.getValue();
-        Optional<ExperimentData> optionalData = Optional.empty();
+        Optional<Experiment> optionalData = Optional.empty();
         if (resInfo != null) {
             if (resProps != null) {
                 optionalData = resProps.getExperimentData().stream().findFirst();
                 if (optionalData.isPresent() && optionalData.get().getExtras().size() > 0) {
-                    for (ExperimentData expData : resProps.getExperimentData()) {
+                    for (Experiment expData : resProps.getExperimentData()) {
                         pars = getPars(equationName)[0];
                         List<Double> dataExtras = expData.getExtras();
                         double[] errs = new double[pars.length];

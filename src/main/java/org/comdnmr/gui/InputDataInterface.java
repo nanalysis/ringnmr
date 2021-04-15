@@ -49,7 +49,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.comdnmr.data.DataIO;
-import org.comdnmr.data.ExperimentData;
+import org.comdnmr.data.Experiment;
 import org.comdnmr.data.ResidueProperties;
 import static org.comdnmr.gui.ChartUtil.residueProperties;
 import org.controlsfx.control.textfield.TextFields;
@@ -620,11 +620,12 @@ public class InputDataInterface {
             Double tau = getDouble(tauTextField.getText());
             Double B1field = getDouble(B1TextField.getText());
 
-            ExperimentData expData = new ExperimentData(peakList.getName(),
+            Experiment expData = new Experiment(peakList.getName(),
                     nucChoice.getValue(), Double.parseDouble(B0fieldChoice.getValue()),
-                    temperatureK, tau, null,
-                    fitModeChoice.getValue(),
-                    errorPars, delayCalc, B1field);
+                    temperatureK,expMode);
+//            tau, null,
+//                    fitModeChoice.getValue(),
+//                    errorPars, delayCalc, B1field);
 
             DataIO.loadFromPeakList(peakList, expData, resProp, xConvChoice.getValue(), yConvChoice.getValue());
             if (resProp != null) {
@@ -635,7 +636,9 @@ public class InputDataInterface {
                 }
                 residueProperties.put(resProp.getName(), resProp);
                 String parName = "Kex";
-                if (resProp.getExpMode().equals("exp")) {
+                if (resProp.getExpMode().equals("t1")) {
+                    parName = "R";
+                } else if (resProp.getExpMode().equals("t2")) {
                     parName = "R";
                 } else if (resProp.getExpMode().equals("noe")) {
                     parName = "NOE";
@@ -836,7 +839,9 @@ public class InputDataInterface {
 //            ResidueProperties resProp = DataIO.loadParameters(fileName);
         residueProperties.put(resProp.getName(), resProp);
         String parName = "Kex";
-        if (resProp.getExpMode().equals("exp")) {
+        if (resProp.getExpMode().equals("t1")) {
+            parName = "R";
+        } else if (resProp.getExpMode().equals("t2")) {
             parName = "R";
         }
         ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);

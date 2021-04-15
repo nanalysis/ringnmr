@@ -65,7 +65,7 @@ import org.comdnmr.data.DataIO;
 import org.comdnmr.eqnfit.EquationFitter;
 import org.comdnmr.eqnfit.EquationType;
 import org.comdnmr.eqnfit.ExpFitter;
-import org.comdnmr.data.ExperimentData;
+import org.comdnmr.data.Experiment;
 import org.comdnmr.data.ResidueData;
 import org.controlsfx.control.PropertySheet;
 import org.comdnmr.eqnfit.ParValueInterface;
@@ -102,6 +102,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
+import org.comdnmr.data.DoubleArrayExperiment;
 import org.comdnmr.util.CoMDPreferences;
 import org.comdnmr.modelfree.CorrelationTime;
 import org.comdnmr.eqnfit.FitFunction;
@@ -341,7 +342,9 @@ public class PyController implements Initializable {
             xLowerBoundTextField.setText("-20.0");
             xUpperBoundTextField.setText("20.0");
             if (currentResProps.getExperimentData() != null) {
-                double[] xVals = currentResProps.getExperimentData().stream().findFirst().get().getXVals();
+                DoubleArrayExperiment expData = (DoubleArrayExperiment) currentResProps.getExperimentData().
+                        stream().findFirst().get();
+                double[] xVals = expData.getXVals();
                 xLowerBoundTextField.setText(String.valueOf(Math.floor(xVals[1] / 2) * 2));
                 xUpperBoundTextField.setText(String.valueOf(Math.ceil(xVals[xVals.length - 1] / 2) * 2));
             }
@@ -398,7 +401,9 @@ public class PyController implements Initializable {
             xLowerBoundTextField.setText("-20.0");
             xUpperBoundTextField.setText("20.0");
             if (currentResProps.getExperimentData() != null) {
-                double[] xVals = currentResProps.getExperimentData().stream().findFirst().get().getXVals();
+                DoubleArrayExperiment expData = (DoubleArrayExperiment) currentResProps.getExperimentData().
+                        stream().findFirst().get();
+                double[] xVals = expData.getXVals();
                 xLowerBoundTextField.setText(String.valueOf(Math.floor(xVals[1] / 2) * 2));
                 xUpperBoundTextField.setText(String.valueOf(Math.ceil(xVals[xVals.length - 1] / 2) * 2));
             }
@@ -942,7 +947,9 @@ public class PyController implements Initializable {
             xLowerBoundTextField.setText("-20.0");
             xUpperBoundTextField.setText("20.0");
             if (currentResProps != null) {
-                double[] xVals = currentResProps.getExperimentData().stream().findFirst().get().getXVals();
+                DoubleArrayExperiment expData = (DoubleArrayExperiment) currentResProps.getExperimentData().
+                        stream().findFirst().get();
+                double[] xVals = expData.getXVals();
                 if (xVals != null) {
                     xychart.setBounds(Math.floor(xVals[1] / 2) * 2, Math.ceil(xVals[xVals.length - 1] / 2) * 2, 0.0, 1.0, 1.0, 0.25);
                     xLowerBoundTextField.setText(String.valueOf(Math.floor(xVals[1] / 2) * 2));
@@ -959,7 +966,9 @@ public class PyController implements Initializable {
             xLowerBoundTextField.setText("-20.0");
             xUpperBoundTextField.setText("20.0");
             if (currentResProps != null) {
-                double[] xVals = currentResProps.getExperimentData().stream().findFirst().get().getXVals();
+                DoubleArrayExperiment expData = (DoubleArrayExperiment) currentResProps.getExperimentData().
+                        stream().findFirst().get();
+                double[] xVals = expData.getXVals();
                 if (xVals != null) {
                     xychart.setBounds(Math.floor(xVals[1] / 2) * 2, Math.ceil(xVals[xVals.length - 1] / 2) * 2, 0.0, 1.0, 1.0, 0.25);
                     xLowerBoundTextField.setText(String.valueOf(Math.floor(xVals[1] / 2) * 2));
@@ -1567,13 +1576,13 @@ public class PyController implements Initializable {
             String expType = getFittingMode();
             //System.out.println("Fit button residueProperties = " + residueProperties);
             //System.out.println("Fit button expData = " + residueProps.getExperimentData("cest"));
-            Optional<ExperimentData> optionalData = Optional.empty();
+            Optional<Experiment> optionalData = Optional.empty();
             if (currentResProps != null) {
                 optionalData = currentResProps.getExperimentData().stream().findFirst();
             }
 
             if (optionalData.isPresent() && optionalData.get().getExtras().size() > 0) {
-                for (ExperimentData expData : currentResProps.getExperimentData()) {
+                for (Experiment expData : currentResProps.getExperimentData()) {
                     double[] pars = curveFit.getEquation().getPars(); //pars = getPars(equationName);
                     double[] errs = curveFit.getEquation().getErrs(); //double[] errs = new double[pars.length];
                     double[] extras = new double[3];
@@ -1597,7 +1606,7 @@ public class PyController implements Initializable {
 //                double[] errs = curveFit.getEquation().getErrs(); //double[] errs = new double[pars.length];
 //                double[] extras = new double[3];
 //                for (int j = 0; j < expData.getExtras().size() / 2; j++) {
-//                    extras[0] = expData.getField();
+//                    extras[0] = expData.getB0Field();
 //                    extras[1] = expData.getExtras().get(2 * j);
 //                    extras[2] = expData.getExtras().get(2 * j + 1);
 ////                    System.out.println("Fit button expData extras size = " + expData.getExtras().size() + " extra[1] = " + extras[1]);
@@ -1924,6 +1933,9 @@ public class PyController implements Initializable {
             }
         } else {
             fitMode = currentResProps.getExpMode();
+            if (fitMode.equalsIgnoreCase("t1") || fitMode.equalsIgnoreCase("t2")) {
+                fitMode = "exp";
+            }
         }
         return fitMode.toLowerCase();
     }
@@ -1966,9 +1978,9 @@ public class PyController implements Initializable {
         } else if (mode.equals("r1rho")) {
             return r1rhoTypes;
         } else if (mode.equals("t1")) {
-            return t1Types;
+            return expTypes;
         } else if (mode.equals("t2")) {
-            return t2Types;
+            return expTypes;
         } else if (mode.equals("noe")) {
             return noeTypes;
         }
@@ -2061,7 +2073,7 @@ public class PyController implements Initializable {
             //double maxY = getMaxY(resProps, equationName, mapName, state, residues) / 100.0;
             //System.out.println("max Y " + maxY);
             int iSeries = 0;
-            for (ExperimentData expData : resProps.getExperimentData()) {
+            for (Experiment expData : resProps.getExperimentData()) {
                 if (!ResidueProperties.matchStateString(state, expData.getState())) {
                     continue;
                 }
@@ -2111,7 +2123,7 @@ public class PyController implements Initializable {
     public double getMaxY(ResidueProperties resProps, String equationName, String mapName, String state, String[] residues) {
         double maxValue = Double.NEGATIVE_INFINITY;
         if ((resProps != null) && (residues != null)) {
-            for (ExperimentData expData : resProps.getExperimentData()) {
+            for (Experiment expData : resProps.getExperimentData()) {
                 if (!ResidueProperties.matchStateString(state, expData.getState())) {
                     continue;
                 }

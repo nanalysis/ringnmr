@@ -42,7 +42,7 @@ import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import org.comdnmr.util.CoMDPreferences;
-import org.comdnmr.data.ExperimentData;
+import org.comdnmr.data.Experiment;
 import org.controlsfx.control.PropertySheet;
 import org.nmrfx.utils.properties.DoubleRangeOperationItem;
 import org.nmrfx.utils.properties.NvFxPropertyEditorFactory;
@@ -401,7 +401,7 @@ public class PreferencesController implements Initializable {
      * @param file the file or null to remove the path
      */
     public static void setNProcesses(Integer value) {
-        Preferences prefs = Preferences.userNodeForPackage(ExperimentData.class);
+        Preferences prefs = Preferences.userNodeForPackage(Experiment.class);
         if (value != null) {
             nProcesses = value;
             prefs.put("NPROCESSES", String.valueOf(value));

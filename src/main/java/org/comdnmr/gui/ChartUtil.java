@@ -49,7 +49,7 @@ import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Transform;
 import org.comdnmr.eqnfit.CurveFit;
 import org.comdnmr.data.DataIO;
-import org.comdnmr.data.ExperimentData;
+import org.comdnmr.data.Experiment;
 import org.comdnmr.eqnfit.PlotEquation;
 import org.comdnmr.data.ResidueInfo;
 import org.comdnmr.data.ResidueProperties;
@@ -254,7 +254,10 @@ public class ChartUtil {
 
     public static DataSeries getMapData(String seriesName, String expName, String resNum) {
         ResidueProperties resProps = residueProperties.get(seriesName);
-        ExperimentData expData = resProps.getExperimentData(expName);
+        System.out.println("expname " + expName + " series " + seriesName + " " + resNum);
+        System.out.println(resProps.getExperimentMap().toString());
+        Experiment expData = resProps.getExperimentData(expName);
+        System.out.println("expData " + expName);
         DataSeries series = new DataSeries();
         series.setName(expName + ":" + resNum);
         ResidueData resData = expData.getResidueData(resNum);
@@ -277,7 +280,7 @@ public class ChartUtil {
         return series;
     }
 
-    public static ArrayList<GUIPlotEquation> getEquations(ExperimentData expData, String seriesName, String[] residues, String equationName, String state, double field) {
+    public static ArrayList<GUIPlotEquation> getEquations(Experiment expData, String seriesName, String[] residues, String equationName, String state, double field) {
         //System.out.println(" series name is " + seriesName);
         ArrayList<GUIPlotEquation> equations = new ArrayList<>();
         for (String resNum : residues) {
@@ -289,13 +292,13 @@ public class ChartUtil {
         return equations;
     }
 
-    public static GUIPlotEquation getEquation(ExperimentData expData, String seriesName, String resNum, String equationName, String state, double field) {
+    public static GUIPlotEquation getEquation(Experiment expData, String seriesName, String resNum, String equationName, String state, double field) {
         ResidueProperties residueProps = residueProperties.get(seriesName);
         ResidueInfo resInfo = residueProps.getResidueInfo(resNum);
         GUIPlotEquation equationCopy = null;
         String expType = expData.getExpMode();
 //            ExperimentData expData = residueProps.getExperimentData("cest"); // fixme
-        Optional<ExperimentData> optionalData = Optional.empty();
+        Optional<Experiment> optionalData = Optional.empty();
         optionalData = residueProps.getExperimentData().stream().findFirst();
         if (resInfo != null) {
             final String useEquationName;
@@ -353,8 +356,8 @@ public class ChartUtil {
         data.add(series);
         minRes = Integer.MAX_VALUE;
         maxRes = Integer.MIN_VALUE;
-        Collection<ExperimentData> expDataSets = residueProps.getExperimentData();
-        for (ExperimentData expData : expDataSets) {
+        Collection<Experiment> expDataSets = residueProps.getExperimentData();
+        for (Experiment expData : expDataSets) {
             for (String resNumS : expData.getResidues()) {
                 int resNum = Integer.parseInt(resNumS);
                 minRes = Math.min(resNum, minRes);
@@ -443,7 +446,9 @@ public class ChartUtil {
         }
         residueProperties.put(resProp.getName(), resProp);
         String parName = "Kex";
-        if (resProp.getExpMode().equals("exp")) {
+        if (resProp.getExpMode().equals("t1")) {
+            parName = "R";
+        } else if (resProp.getExpMode().equals("t2")) {
             parName = "R";
         } else if (resProp.getExpMode().equals("noe")) {
             parName = "NOE";
@@ -469,7 +474,9 @@ public class ChartUtil {
         if (resProp != null) {
             residueProperties.put(resProp.getName(), resProp);
             String parName = "Kex";
-            if (resProp.getExpMode().equals("exp")) {
+            if (resProp.getExpMode().equals("t1")) {
+                parName = "R";
+            } else if (resProp.getExpMode().equals("t2")) {
                 parName = "R";
             } else if (resProp.getExpMode().equals("noe")) {
                 parName = "NOE";

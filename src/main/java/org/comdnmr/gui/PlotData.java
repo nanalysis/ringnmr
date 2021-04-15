@@ -36,7 +36,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.MouseEvent;
 
 import javafx.scene.paint.Color;
-import org.comdnmr.data.ExperimentData;
+import org.comdnmr.data.Experiment;
 import org.comdnmr.eqnfit.PlotEquation;
 import org.comdnmr.data.ResidueData;
 import org.comdnmr.data.ResidueProperties;
@@ -353,7 +353,7 @@ public class PlotData extends XYCanvasChart {
 
     protected void seriesAdded(DataSeries series, int seriesIndex) {
         ResidueProperties residueProps = residueProperties.get("cest");
-        ExperimentData expData = null;
+        Experiment expData = null;
         if (residueProps != null) {
             expData = residueProps.getExperimentData("cest"); // fixme
         }
