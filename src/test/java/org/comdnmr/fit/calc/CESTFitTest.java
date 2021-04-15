@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import org.comdnmr.data.ExperimentData;
 import org.comdnmr.eqnfit.CESTFitter;
 import org.comdnmr.util.CoMDOptions;
 import org.junit.Assert;

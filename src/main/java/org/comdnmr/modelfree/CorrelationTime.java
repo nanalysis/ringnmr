@@ -22,6 +22,7 @@
  */
 package org.comdnmr.modelfree;
 
+import java.util.HashMap;
 import org.comdnmr.data.ResidueProperties;
 import java.util.Map;
 import org.apache.commons.math3.analysis.UnivariateFunction;
@@ -32,8 +33,7 @@ import org.apache.commons.math3.optim.univariate.SearchInterval;
 import org.apache.commons.math3.optim.univariate.UnivariateObjectiveFunction;
 import org.apache.commons.math3.optim.univariate.UnivariatePointValuePair;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
-import org.comdnmr.data.ExperimentData;
+import org.comdnmr.data.Experiment;
 
 /**
  *
@@ -41,13 +41,29 @@ import org.comdnmr.data.ExperimentData;
  */
 public class CorrelationTime {
 
+    public static double estimateTau(Map<String, ResidueProperties> residueProps) {
+        Map<String, Experiment> t1Map = new HashMap<>();
+        Map<String, Experiment> t2Map = new HashMap<>();
+        for (ResidueProperties resProp : residueProps.values()) {
+            for (Experiment expData : resProp.getExperimentData()) {
+                String expMode = expData.getExpMode().toLowerCase();
+                if (expMode.equals("t1") || expMode.equals("t2")) {
+                    double b0 = expData.getB0Field();
+                    String state = expData.getState();
+
+                }
+            }
+        }
+        return 0.0;
+    }
+
     public static double estimateTau(Map<String, ResidueProperties> residueProps,
             String r1SetName, String r2SetName, String noeSetName) {
         ResidueProperties resPropsR1 = residueProps.get(r1SetName);
         ResidueProperties resPropsR2 = residueProps.get(r2SetName);
         ResidueProperties resPropsNOE = residueProps.get(noeSetName);
-        ExperimentData r1Data = resPropsR1.getExperimentData().stream().findFirst().get();
-        double b0 = r1Data.getField();
+        Experiment r1Data = resPropsR1.getExperimentData().stream().findFirst().get();
+        double b0 = r1Data.getB0Field();
         String nucName = r1Data.getNucleusName();
         double tau = 0.0;
         if ((resPropsR1 != null) && (resPropsR2 != null)) {
@@ -74,13 +90,15 @@ public class CorrelationTime {
                     }
                 }
             }
-            double ratio = r2Stats.getPercentile(50.0)
-                    / r1Stats.getPercentile(50.0);
+            double r2_50 = r2Stats.getPercentile(50.0);
+            double r1_50 = r1Stats.getPercentile(50.0);
+            double ratio = r2_50 / r1_50;
             double sf = b0 * 1.0e6;
             double sfX = RelaxEquations.getSF(b0 * 1.0e6, nucName);
             tau = fit(sf, ratio);
             double tauEst = 1.0 / (4.0 * Math.PI * sfX) * Math.sqrt(6.0 * ratio - 7.0);
-            System.out.println("tau " + sf + " " + sfX + " " + ratio + " " + perLower + " " + perUpper + " " + tau + " " + tauEst);
+            System.out.printf("sf %7.1f sfX %7.1f ratio %7.1f t2 %7.3f t1 %7.3f tau %7.3f tauEst %7.3f\n",
+                    sf, sfX, r2_50, r1_50, ratio, tau, tauEst);
         }
         return tau;
     }

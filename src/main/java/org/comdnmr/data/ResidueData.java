@@ -35,14 +35,14 @@ import org.nmrfx.chemistry.Residue;
  */
 public class ResidueData {
 
-    ExperimentData expData;
+    Experiment expData;
     DynamicsSource dynSource;
     RelaxationData relaxData;
     double[][] xValues;
     double[] errValues;
     double[] yValues;
 
-    public ResidueData(ExperimentData expData, DynamicsSource dynSource,
+    public ResidueData(Experiment expData, DynamicsSource dynSource,
             double[][] x, double[] y, double[] err) {
         this.expData = expData;
         this.dynSource = dynSource;
@@ -51,7 +51,7 @@ public class ResidueData {
         this.errValues = err.clone();
     }
 
-    public ResidueData(ExperimentData expData, DynamicsSource dynSource,
+    public ResidueData(Experiment expData, DynamicsSource dynSource,
             List<Double> xValueList, List<Double> yValueList, List<Double> errValueList) {
         this.expData = expData;
         this.dynSource = dynSource;
@@ -66,7 +66,7 @@ public class ResidueData {
         }
     }
 
-    public ResidueData(ExperimentData expData, DynamicsSource dynSource,
+    public ResidueData(Experiment expData, DynamicsSource dynSource,
             List<Double>[] xValueList, List<Double> yValueList,
             List<Double> errValueList) {
         this.expData = expData;
@@ -86,7 +86,7 @@ public class ResidueData {
         }
     }
 
-    public ResidueData(ExperimentData expData, RelaxationData relaxData) {
+    public ResidueData(Experiment expData, RelaxationData relaxData) {
         this.expData = expData;
         this.relaxData = relaxData;
     }
@@ -185,7 +185,7 @@ public class ResidueData {
             for (Atom atom : atoms) {
                 String aName = atom.getFullName();
                 if (aName.contains(resInfo.expData.getNucleusName())) {
-                    List<RelaxationData> relaxDataList = atom.getRelaxationData(relaxTypes.T1, resInfo.expData.getField(), null)
+                    List<RelaxationData> relaxDataList = atom.getRelaxationData(relaxTypes.T1, resInfo.expData.getB0Field(), null)
                             .stream().collect(Collectors.toList());
                     if (!relaxDataList.isEmpty()) {
                         t1 = String.valueOf(relaxDataList.get(0).getValue());
@@ -203,7 +203,7 @@ public class ResidueData {
             for (Atom atom : atoms) {
                 String aName = atom.getFullName();
                 if (aName.contains(resInfo.expData.getNucleusName())) {
-                    List<RelaxationData> relaxDataList = atom.getRelaxationData(relaxTypes.T2, resInfo.expData.getField(), null)
+                    List<RelaxationData> relaxDataList = atom.getRelaxationData(relaxTypes.T2, resInfo.expData.getB0Field(), null)
                             .stream().collect(Collectors.toList());
                     if (!relaxDataList.isEmpty()) {
                         t2 = String.valueOf(relaxDataList.get(0).getValue());
@@ -221,7 +221,7 @@ public class ResidueData {
             for (Atom atom : atoms) {
                 String aName = atom.getFullName();
                 if (aName.contains(resInfo.expData.getNucleusName())) {
-                    List<RelaxationData> relaxDataList = atom.getRelaxationData(relaxTypes.T1RHO, resInfo.expData.getField(), null)
+                    List<RelaxationData> relaxDataList = atom.getRelaxationData(relaxTypes.T1RHO, resInfo.expData.getB0Field(), null)
                             .stream().collect(Collectors.toList());
                     if (!relaxDataList.isEmpty()) {
                         t1rho = String.valueOf(relaxDataList.get(0).getValue());
@@ -238,7 +238,7 @@ public class ResidueData {
             String noe = "-";
             for (Atom atom : atoms) {
                 String aName = atom.getFullName();
-                List<RelaxationData> relaxDataList = atom.getRelaxationData(relaxTypes.NOE, resInfo.expData.getField(), null)
+                List<RelaxationData> relaxDataList = atom.getRelaxationData(relaxTypes.NOE, resInfo.expData.getB0Field(), null)
                         .stream().collect(Collectors.toList());
                 if (!relaxDataList.isEmpty()) {
                     String pairAtomName = relaxDataList.get(0).getExtraAtoms().get(0).getName();
@@ -266,7 +266,7 @@ public class ResidueData {
         return expData.getName();
     }
 
-    public ExperimentData getExperimentData() {
+    public Experiment getExperimentData() {
         return expData;
     }
 

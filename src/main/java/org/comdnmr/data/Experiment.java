@@ -17,47 +17,38 @@
  */
 package org.comdnmr.data;
 
-import java.util.HashMap;
-import java.util.Set;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.nmrfx.datasets.Nuclei;
 
 /**
  *
- * @author Bruce Johnson
+ * @author brucejohnson
  */
-public class ExperimentData {
+public class Experiment {
 
     String name;
     HashMap<String, ResidueData> residueData;
-    private final double field;
-    private final String nucleusName;
-    private final double nucleusField;
-    private final double temperature;
-    final Double tau;
-    final double[] xvals;
+    protected final double B0field;
+    protected final String nucleusName;
+    protected final double nucleusField;
+    protected final double temperature;
     final String expMode;
-    final HashMap<String, Object> errorPars;
-    final double[] delayCalc;
-    final Double B1field;
+    HashMap<String, Object> errorPars;
     double errFraction = 0.05;
     List<Double> extras = new ArrayList<>();
-    private String state = "";
+    protected String state = "";
     Map<String, List<Double>> constraints = null;
 
-    public ExperimentData(String name, String nucleus, double field, double temperature, Double tau, double[] xvals,
-            String expMode, HashMap<String, Object> errorPars, double[] delayCalc, Double B1field) {
+    public Experiment(String name, String nucleus, double B0field, double temperature,
+            String expMode) {
         this.name = name;
-        this.field = field;
+        this.B0field = B0field;
         this.temperature = temperature;
-        this.tau = tau;
-        this.xvals = xvals;
         this.expMode = expMode;
-        this.errorPars = errorPars;
-        this.delayCalc = delayCalc;
-        this.B1field = B1field;
         if (nucleus == null) {
             nucleus = "H1";
         }
@@ -67,15 +58,14 @@ public class ExperimentData {
         if (nuc != null) {
             ratio = nuc.getFreqRatio();
         }
-        nucleusField = field * ratio;
+        nucleusField = B0field * ratio;
         residueData = new HashMap<>();
     }
 
     @Override
     public String toString() {
         StringBuilder sBuilder = new StringBuilder();
-        sBuilder.append(name).append(" ").append(field).append(" ").
-                append(B1field).append(" nres ").append(residueData.size());
+        sBuilder.append(name).append(" ").append(B0field).append(" ").append(" nres ").append(residueData.size());
         return sBuilder.toString();
     }
 
@@ -83,12 +73,16 @@ public class ExperimentData {
         return name;
     }
 
+    public double getErrFraction() {
+        return errFraction;
+    }
+
     public void setErrFraction(double errFraction) {
         this.errFraction = errFraction;
     }
 
-    public double getErrFraction() {
-        return (errFraction);
+    public double getTemperature() {
+        return temperature;
     }
 
     public void addResidueData(String resNum, ResidueData data) {
@@ -103,8 +97,8 @@ public class ExperimentData {
         return residueData.keySet();
     }
 
-    public double getField() {
-        return field;
+    public double getB0Field() {
+        return B0field;
     }
 
     public double getNucleusField() {
@@ -113,32 +107,6 @@ public class ExperimentData {
 
     public String getNucleusName() {
         return nucleusName;
-    }
-
-    public double getTemperature() {
-        return temperature;
-    }
-
-    public void setConstraints(Map<String, List<Double>> constraints) {
-        this.constraints = constraints;
-    }
-
-    public Map<String, List<Double>> getConstraints() {
-        return constraints;
-    }
-
-    public double[] getConstraint(String key) {
-        double[] result = null;
-        if (constraints != null) {
-            List<Double> values = constraints.get(key);
-            if (values != null) {
-                result = new double[2];
-                result[0] = values.get(0);
-                result[1] = values.get(1);
-            }
-        }
-        return result;
-
     }
 
     /**
@@ -155,20 +123,8 @@ public class ExperimentData {
         this.state = state;
     }
 
-    public void setExtras(List extravals) {
-        this.extras.addAll(extravals);
-    }
-
     public List<Double> getExtras() {
         return extras;
-    }
-
-    public Double getTau() {
-        return tau;
-    }
-
-    public double[] getXVals() {
-        return xvals;
     }
 
     public String getExpMode() {
@@ -179,11 +135,29 @@ public class ExperimentData {
         return errorPars;
     }
 
-    public double[] getDelayCalc() {
-        return delayCalc;
+    public double[] getConstraint(String key) {
+        double[] result = null;
+        if (constraints != null) {
+            List<Double> values = constraints.get(key);
+            if (values != null) {
+                result = new double[2];
+                result[0] = values.get(0);
+                result[1] = values.get(1);
+            }
+        }
+        return result;
     }
 
-    public Double getB1Field() {
-        return B1field;
+    public Map<String, List<Double>> getConstraints() {
+        return constraints;
     }
+
+    public void setConstraints(Map<String, List<Double>> constraints) {
+        this.constraints = constraints;
+    }
+
+    public void setExtras(List extravals) {
+        this.extras.addAll(extravals);
+    }
+
 }

@@ -28,7 +28,7 @@ import java.util.Collection;
 import org.comdnmr.data.ResidueProperties;
 import java.util.List;
 import org.apache.commons.math3.optim.PointValuePair;
-import org.comdnmr.data.ExperimentData;
+import org.comdnmr.data.Experiment;
 import org.comdnmr.data.ResidueData;
 import org.comdnmr.util.CoMDOptions;
 import org.comdnmr.util.CoMDPreferences;
@@ -218,13 +218,13 @@ public class NOEFit implements EquationFitter {
         int id = 0;
         resProps.setupMaps();
         stateCount = resProps.getStateCount(resNums.length);
-        Collection<ExperimentData> expDataList = resProps.getExperimentData();
+        Collection<Experiment> expDataList = resProps.getExperimentData();
         nCurves = resNums.length * expDataList.size();
         states = new int[nCurves][];
         int k = 0;
         int resIndex = 0;
         for (String resNum : resNums) {
-            for (ExperimentData expData : expDataList) {
+            for (Experiment expData : expDataList) {
                 states[k++] = resProps.getStateIndices(resIndex, expData);
                 ResidueData resData = expData.getResidueData(resNum);
                 //  need peakRefs

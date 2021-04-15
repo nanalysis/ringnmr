@@ -20,7 +20,7 @@ package org.comdnmr.eqnfit;
 import org.comdnmr.util.CoMDPreferences;
 import org.comdnmr.data.ResidueProperties;
 import org.comdnmr.data.ResidueData;
-import org.comdnmr.data.ExperimentData;
+import org.comdnmr.data.Experiment;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -102,7 +102,7 @@ public class R1RhoFitter implements EquationFitter {
         nResidues = resNums.length;
         resProps.setupMaps();
         stateCount = resProps.getStateCount(resNums.length);
-        Collection<ExperimentData> expDataList = resProps.getExperimentData();
+        Collection<Experiment> expDataList = resProps.getExperimentData();
         nCurves = resProps.getDataCount(resNums);
         states = new int[nCurves][];
         int k = 0;
@@ -111,7 +111,7 @@ public class R1RhoFitter implements EquationFitter {
         List<Double> fieldList = new ArrayList<>();
         constraints = new Map[nCurves];
         for (String resNum : resNums) {
-            for (ExperimentData expData : expDataList) {
+            for (Experiment expData : expDataList) {
                 ResidueData resData = expData.getResidueData(resNum);
                 if (resData != null) {
                     constraints[id] = expData.getConstraints();

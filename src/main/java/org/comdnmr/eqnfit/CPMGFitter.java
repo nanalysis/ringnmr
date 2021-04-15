@@ -19,7 +19,6 @@ package org.comdnmr.eqnfit;
 
 import org.comdnmr.data.ResidueProperties;
 import org.comdnmr.data.ResidueData;
-import org.comdnmr.data.ExperimentData;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -27,6 +26,7 @@ import java.util.List;
 import org.apache.commons.math3.optim.PointValuePair;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.stat.inference.TTest;
+import org.comdnmr.data.Experiment;
 import org.comdnmr.util.CoMDOptions;
 
 /**
@@ -125,14 +125,14 @@ public class CPMGFitter implements EquationFitter {
         nResidues = resNums.length;
 
         stateCount = resProps.getStateCount(nResidues);
-        Collection<ExperimentData> expDataList = resProps.getExperimentData();
+        Collection<Experiment> expDataList = resProps.getExperimentData();
         nCurves = resNums.length * expDataList.size();
         states = new int[nCurves][];
         int k = 0;
         int resIndex = 0;
         int id = 0;
         for (String resNum : resNums) {
-            for (ExperimentData expData : expDataList) {
+            for (Experiment expData : expDataList) {
                 ResidueData resData = expData.getResidueData(resNum);
                 if (resData != null) {
 

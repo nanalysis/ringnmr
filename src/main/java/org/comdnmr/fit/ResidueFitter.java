@@ -31,7 +31,6 @@ import org.comdnmr.eqnfit.CPMGFitter;
 import org.comdnmr.eqnfit.CPMGEquation;
 import org.comdnmr.util.ProcessingStatus;
 import org.comdnmr.data.ResidueProperties;
-import org.comdnmr.data.ExperimentData;
 import org.comdnmr.data.ResidueInfo;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,6 +43,7 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
+import org.comdnmr.data.Experiment;
 import org.comdnmr.eqnfit.NOEEquation;
 import org.comdnmr.util.CoMDOptions;
 
@@ -155,7 +155,7 @@ public class ResidueFitter {
     }
 
     public List<List<String>> getAllResidues() {
-        Map<String, ExperimentData> expDataSets = resProps.getExperimentMap();
+        Map<String, Experiment> expDataSets = resProps.getExperimentMap();
         Set<Integer> resNums = new TreeSet<>();
         expDataSets.values().forEach((expData) -> {
             expData.getResidues().forEach((resNumS) -> {
@@ -218,7 +218,10 @@ public class ResidueFitter {
             case "cpmg":
                 fitter = new CPMGFitter(options);
                 break;
-            case "exp":
+            case "t1":
+                fitter = new ExpFitter(options);
+                break;
+            case "t2":
                 fitter = new ExpFitter(options);
                 break;
             case "cest":
@@ -257,7 +260,11 @@ public class ResidueFitter {
             case "cpmg":
                 equationNames = CPMGFitter.getEquationNames();
                 break;
-            case "exp":
+            case "t1":
+                equationNames = ExpFitter.getEquationNames();
+                bestEquation = "EXPAB";
+                break;
+            case "t2":
                 equationNames = ExpFitter.getEquationNames();
                 bestEquation = "EXPAB";
                 break;
@@ -372,7 +379,10 @@ public class ResidueFitter {
             case "cpmg":
                 equationType = CPMGEquation.valueOf(name);
                 break;
-            case "exp":
+            case "t1":
+                equationType = ExpEquation.valueOf(name);
+                break;
+            case "t2":
                 equationType = ExpEquation.valueOf(name);
                 break;
             case "cest":

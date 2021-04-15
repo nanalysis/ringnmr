@@ -85,30 +85,30 @@ public class DataIO {
         },
         TAU2() {
             @Override
-            double convert(double value, double[] pars, ExperimentData expData) {
+            double convert(double value, double[] pars, Experiment expData) {
                 return 1000.0 / (2.0 * value);
             }
         },
         PPMTOHZ() {
             @Override
-            double convert(double value, double[] pars, ExperimentData expData) {
+            double convert(double value, double[] pars, Experiment expData) {
                 return value * expData.getNucleusField();
             }
         },
         HZTOPPM() {
             @Override
-            double convert(double value, double[] pars, ExperimentData expData) {
+            double convert(double value, double[] pars, Experiment expData) {
                 return value / expData.getNucleusField();
             }
         },
         CALC() {
             @Override
-            double convert(double value, double[] pars, ExperimentData expData) {
+            double convert(double value, double[] pars, Experiment expData) {
                 return pars[0] + pars[2] * (value + pars[1]);
             }
         };
 
-        double convert(double value, double[] pars, ExperimentData expData) {
+        double convert(double value, double[] pars, Experiment expData) {
             return value;
         }
     }
@@ -141,14 +141,14 @@ public class DataIO {
 
     static Pattern resPatter = Pattern.compile("[^0-9]*([0-9]+)[^0-9]*");
 
-    public static void loadFromPeakList(PeakList peakList, ExperimentData expData,
+    public static void loadFromPeakList(PeakList peakList, Experiment expData,
             ResidueProperties resProp, String xConvStr, String yConvStr) {
         loadFromPeakList(peakList, expData, resProp, XCONV.valueOf(xConvStr.toUpperCase()),
                 YCONV.valueOf(yConvStr.toUpperCase()));
 
     }
 
-    public static void loadFromPeakList(PeakList peakList, ExperimentData expData,
+    public static void loadFromPeakList(PeakList peakList, Experiment expData,
             ResidueProperties resProp, XCONV xConv, YCONV yConv) {
         String expMode = expData.getExpMode();
         DatasetBase dataset = DatasetBase.getDataset(peakList.fileName);
@@ -201,7 +201,7 @@ public class DataIO {
                 }
             }
             if (expMode.equals("cest")) {
-                processCESTData(expData, residueNum, xValueList, yValueList, errValueList, peakNum);
+                processCESTData((CESTExperiment) expData, residueNum, xValueList, yValueList, errValueList, peakNum);
             } else {
                 DynamicsSource dynSource = DynamicsSource.createFromPeak(peak);
                 System.out.println(dynSource.toString());
@@ -231,27 +231,32 @@ public class DataIO {
 
     }
 
-    public static void loadPeakFile(String fileName, ExperimentData expData,
-            ResidueProperties resProp, XCONV xConv, YCONV yConv)
+    public static void loadPeakFile(String fileName, Experiment expData,
+            ResidueProperties resProp, XCONV xConv, YCONV yConv,
+            HashMap<String, Object> errorPars, double[] delayCalc)
             throws IOException, IllegalArgumentException { //(String fileName, ResidueProperties resProp, String nucleus,
-//            double temperature, double field, double tau, double[] vcpmgs, String expMode,
+//            double temperature, double B0field, double tau, double[] vcpmgs, String expMode,
 //            HashMap<String, Object> errorPars, double[] delayCalc) throws IOException, IllegalArgumentException {
         System.out.println("load peak file");
 //        Path path = Paths.get(fileName);
 //        String fileTail = path.getFileName().toString();
 //        fileTail = fileTail.substring(0, fileTail.indexOf('.'));
 
-//        ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, tau, xvals, expMode, errorPars, delayCalc, B1field);
+//        ExperimentData expData = new ExperimentData(fileTail, nucleus, B0field, temperature, tau, xvals, expMode, errorPars, delayCalc, B1field);
 //        String fileName = expData.getName();
         Path path = Paths.get(fileName);
         if (Files.notExists(path, LinkOption.NOFOLLOW_LINKS)) {
             throw new FileNotFoundException(fileName);
         }
-        HashMap<String, Object> errorPars = expData.getErrorPars();
         String expMode = expData.getExpMode();
-        double[] xVals = expData.getXVals();
-        double[] delayCalc = expData.getDelayCalc();
-        double tau = expData.getTau();
+        double[] xVals = null;
+        double tau = 0.0;
+        if (expData instanceof OffsetExperiment) {
+            tau = ((OffsetExperiment) expData).getTau();
+        }
+        if (expData instanceof DoubleArrayExperiment) {
+            xVals = ((DoubleArrayExperiment) expData).getXVals();
+        }
         resProp.addExperimentData(expData.getName(), expData);
         boolean eSet = false;
         double errF = 0.05;
@@ -307,7 +312,7 @@ public class DataIO {
                 if (!gotHeader) {
                     int nfields = sfields.length;
                     if (fileName.endsWith(".mpk2")) {
-                        // find last field that starts with "lab"
+                        // find last B0field that starts with "lab"
                         //   .mpk2 files have peak labels in columns like "lab1", "lab2"
                         //   intensities start in next column
 
@@ -317,7 +322,7 @@ public class DataIO {
                                 break;
                             }
                         }
-                        // find first lab1,lab2... field to get residue number from
+                        // find first lab1,lab2... B0field to get residue number from
                         for (int i = 0; i < nfields; i++) {
                             if (sfields[i].startsWith("lab")) {
                                 residueField = i;
@@ -396,6 +401,9 @@ public class DataIO {
                     }
                     gotHeader = true;
                     header = sline;
+                    if (expData instanceof DoubleArrayExperiment) {
+                        ((DoubleArrayExperiment) expData).setXVals(xValues);
+                    }
                 } else {
                     String residueNum = "";
                     int peakNum = -1;
@@ -547,7 +555,7 @@ public class DataIO {
                     }
                     String resName = "";
                     if (expMode.equals("cest")) {
-                        processCESTData(expData, residueNum, xValueList, yValueList, errValueList, peakNum);
+                        processCESTData((CESTExperiment) expData, residueNum, xValueList, yValueList, errValueList, peakNum);
                     } else {
                         DynamicsSource dynSource = DynamicsSource.createFromSpecifiers(expMode + "." + peakNum, residueNum, "H", "N");
                         ResidueData residueData = new ResidueData(expData, dynSource, xValueList, yValueList, errValueList);
@@ -577,7 +585,7 @@ public class DataIO {
         }
     }
 
-    public static void processCESTData(ExperimentData expData, String residueNum,
+    public static void processCESTData(OffsetExperiment expData, String residueNum,
             List<Double> xValueList, List<Double> yValueList, List<Double> errValueList, int peakNum) {
         Double B1field = expData.getB1Field();
         List<Double> B1fieldList = new ArrayList<>();
@@ -636,7 +644,7 @@ public class DataIO {
         return name;
     }
 
-    public static void loadResidueDataFile(String fileName, ExperimentData expData,
+    public static void loadResidueDataFile(String fileName, Experiment expData,
             String residueNum, ResidueProperties resProp, String nucleus,
             double temperature, double field,
             HashMap<String, Object> errorPars, XCONV xConv, YCONV yConv, double refIntensity)
@@ -703,7 +711,7 @@ public class DataIO {
 
             Logger.getLogger(DataIO.class.getName()).log(Level.SEVERE, null, ex);
         }
-        processCESTData(expData, residueNum, xValueList, yValueList, errValueList, 0);
+        processCESTData((OffsetExperiment) expData, residueNum, xValueList, yValueList, errValueList, 0);
         ResidueInfo residueInfo = resProp.getResidueInfo(residueNum);
         if (residueInfo == null) {
             residueInfo = new ResidueInfo(resProp, Integer.parseInt(residueNum), 0, 0, 0);
@@ -712,15 +720,14 @@ public class DataIO {
 
     }
 
-    public static void loadTextFile(String fileName, ResidueProperties resProp,
+    public static void loadTextFile(Experiment expData, String fileName, ResidueProperties resProp,
             String nucleus, double temperature, double field, XCONV xConv, String expMode)
             throws IOException, IllegalArgumentException {
         Path path = Paths.get(fileName);
         String fileTail = path.getFileName().toString();
         fileTail = fileTail.substring(0, fileTail.indexOf('.'));
 
-//        ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature);
-        ExperimentData expData = new ExperimentData(fileTail, nucleus, field, temperature, null, null, expMode, null, null, null);
+//        ExperimentData expData = new ExperimentData(fileTail, nucleus, B0field, temperature);
         resProp.addExperimentData(fileTail, expData);
         boolean gotHeader = false;
         String[] peakRefs;
@@ -780,7 +787,7 @@ public class DataIO {
         }
     }
 
-    public static void setPercentileErrors(ExperimentData expData, double fraction) {
+    public static void setPercentileErrors(Experiment expData, double fraction) {
         expData.residueData.values().forEach((residueData) -> {
             double[] yValues = residueData.getYValues();
             double[] errValues = residueData.getErrValues();
@@ -790,7 +797,7 @@ public class DataIO {
         });
     }
 
-    public static void setErrors(ExperimentData expData, double error) {
+    public static void setErrors(Experiment expData, double error) {
         for (ResidueData residueData : expData.residueData.values()) {
             double[] errValues = residueData.getErrValues();
             Arrays.fill(errValues, error);
@@ -798,7 +805,7 @@ public class DataIO {
 
     }
 
-    public static double estimateErrors(ExperimentData expData) {
+    public static double estimateErrors(Experiment expData) {
         int nDups = 0;
         double sumDelta2 = 0.0;
         double sumAbs = 0.0;
@@ -1049,9 +1056,37 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 Double B1field = null;
                 double[] delayCalc = {0.0, 0.0, 1.0};
                 HashMap<String, Object> errorPars = new HashMap<>();
-                ExperimentData expData = new ExperimentData(peakListName,
-                        nucleus, B0field, temperature, tau, null, expMode,
-                        errorPars, delayCalc, B1field);
+                Experiment expData = null;
+                String expName = peakListName;
+                switch (expMode) {
+                    case "t1":
+                        expData = new T1Experiment(expName, nucleus, B0field, temperature);
+                        break;
+                    case "t2":
+                        expData = new T2Experiment(expName, nucleus, B0field, temperature);
+                        break;
+                    case "cest":
+                        expData = new CESTExperiment(expName, nucleus, B0field, temperature, tau, B1field);
+                        break;
+                    case "r1rho":
+                        expData = new R1rhoOffsetExperiment(expName, nucleus, B0field, temperature, tau, B1field);
+                        break;
+                    case "cpmg":
+                        expData = new CPMGExperiment(expName, nucleus, B0field, temperature);
+                        if (vcpmgList != null) {
+                            double[] vcpmgs = new double[vcpmgList.size()];
+                            for (int i = 0; i < vcpmgs.length; i++) {
+                                vcpmgs[i] = vcpmgList.get(i).doubleValue();
+                            }
+                            CPMGExperiment cpmgExp = (CPMGExperiment) expData;
+                            cpmgExp.setXVals(vcpmgs);
+                        }
+                        break;
+                    case "noe":
+                        expData = new NOEExperiment(expName, nucleus, B0field, temperature);
+                        break;
+                    default:
+                }
 
                 loadFromPeakList(peakList, expData, resProp, XCONV.IDENTITY, YCONV.IDENTITY);
             }
@@ -1123,84 +1158,97 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 delayCalc[2] = getDoubleValue(delayMap, "delta", 1.0);
             }
             System.out.println("err " + errorPars);
+            String dataFileName = (String) dataMap3.get("file");
+            File dataFile = null;
+            String fileTail = null;
+            if (dataFileName != null) {
+                dataFile = new File(dataFileName);
+                fileTail = dataFile.getName();
+                int dot = fileTail.lastIndexOf(".");
+                if (dot != -1) {
+                    fileTail = fileTail.substring(0, dot);
+                }
+            }
+            String expName = (String) dataMap3.get("name");
+            if ((expName == null) && (fileTail != null)) {
+                expName = fileTail;
+            }
+
+            if (expName == null) {
+                throw new IOException("No file or name entry in yaml file");
+            }
+
+            Experiment expData = null;
+            switch (expMode) {
+                case "t1":
+                    expData = new T1Experiment(expName, nucleus, B0field, temperature);
+                    break;
+                case "t2":
+                    expData = new T2Experiment(expName, nucleus, B0field, temperature);
+                    break;
+                case "cest":
+                    expData = new CESTExperiment(expName, nucleus, B0field, temperature, tau, B1field);
+                    break;
+                case "r1rho":
+                    expData = new R1rhoOffsetExperiment(expName, nucleus, B0field, temperature, tau, B1field);
+                    break;
+                case "cpmg":
+                    expData = new CPMGExperiment(expName, nucleus, B0field, temperature);
+                    if (vcpmgList != null) {
+                        double[] vcpmgs = new double[vcpmgList.size()];
+                        for (int i = 0; i < vcpmgs.length; i++) {
+                            vcpmgs[i] = vcpmgList.get(i).doubleValue();
+                        }
+                        CPMGExperiment cpmgExp = (CPMGExperiment) expData;
+                        cpmgExp.setXVals(vcpmgs);
+                    }
+                    break;
+                case "noe":
+                    expData = new NOEExperiment(expName, nucleus, B0field, temperature);
+                    break;
+                default:
+                    throw new IOException("Invalid expMode in .yaml file " + expMode);
+            }
 
             if ((fileFormat != null) && fileFormat.equals("mpk2")) {
-
-                String dataFileName = (String) dataMap3.get("file");
-                File dataFile = new File(dataFileName);
-                String fileTail = dataFile.getName();
-                int dot = fileTail.lastIndexOf(".");
-                fileTail = fileTail.substring(0, dot);
                 if (!dataFile.isAbsolute()) {
                     dataFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
                 }
-                if (vcpmgList == null) {
-                    ExperimentData expData = new ExperimentData(fileTail,
-                            nucleus, B0field, temperature, tau, null, expMode,
-                            errorPars, delayCalc, B1field);
-//                    loadPeakFile(textFileName, resProp, nucleus, temperature, field, tau, null, expMode, errorPars, delayCalc);
-                    loadPeakFile(dataFileName, expData, resProp, xConv, yConv);
-                } else {
-                    double[] vcpmgs = new double[vcpmgList.size()];
-                    for (int i = 0; i < vcpmgs.length; i++) {
-                        vcpmgs[i] = vcpmgList.get(i).doubleValue();
-                    }
-                    ExperimentData expData;
-                    try {
-                        expData = new ExperimentData(fileTail,
-                                nucleus, B0field, temperature, tau, vcpmgs, expMode,
-                                errorPars, delayCalc, B1field);
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                        return;
-                    }
-//                    loadPeakFile(textFileName, resProp, nucleus, temperature, field, tau, vcpmgs, expMode, errorPars, delayCalc);
-                    loadPeakFile(dataFileName, expData, resProp, xConv, yConv);
-                }
+                loadPeakFile(dataFileName, expData, resProp, xConv, yConv, errorPars, delayCalc);
 
             } else if ((fileFormat != null) && fileFormat.equals("ires")) {
                 List<Map<String, Object>> filesMaps = (List<Map<String, Object>>) dataMap3.get("files");
-                String expName = (String) dataMap3.get("name").toString();
-                ExperimentData expData = new ExperimentData(expName,
-                        nucleus, B0field, temperature, tau, null, expMode,
-                        errorPars, delayCalc, B1field);
                 for (Map<String, Object> filesMap : filesMaps) {
                     Map<String, List<Double>> constraintMap = getConstraints(dataMap3, filesMap);
                     expData.setConstraints(constraintMap);
+                    if (!filesMap.containsKey("residue")) {
+                        throw new IOException("No residue key in ires section");
+                    }
                     String residueNum = filesMap.get("residue").toString();
-                    String dataFileName = (String) filesMap.get("file");
+                    String dataFileName2 = (String) filesMap.get("file");
                     double refIntensity = 1.0;
                     if (filesMap.containsKey("refIntensity")) {
                         refIntensity = ((Number) filesMap.get("refIntensity")).doubleValue();
                     }
-                    File file = new File(dataFileName).getAbsoluteFile();
-                    dataFileName = file.getName();
-                    String fileTail = dataFileName.substring(0, dataFileName.indexOf('.'));
-                    String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
+                    File file = new File(dataFileName2).getAbsoluteFile();
+                    dataFileName2 = file.getName();
+                    String fileTail2 = dataFileName2.substring(0, dataFileName2.indexOf('.'));
+                    String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName2).toString();
                     loadResidueDataFile(textFileName, expData, residueNum, resProp, nucleus,
                             temperature, B0field, errorPars, xConv, yConv, refIntensity);
                 }
             } else if (vcpmgList == null) {
-                String dataFileName = (String) dataMap3.get("file");
                 File file = new File(dataFileName).getAbsoluteFile();
                 dataFileName = file.getName();
                 String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
-                loadTextFile(textFileName, resProp, nucleus, temperature, B0field, xConv, expMode);
+                loadTextFile(expData, textFileName, resProp, nucleus, temperature, B0field, xConv, expMode);
             } else {
-                String dataFileName = (String) dataMap3.get("file");
                 String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
                 double[] vcpmgs = new double[vcpmgList.size()];
                 for (int i = 0; i < vcpmgs.length; i++) {
                     vcpmgs[i] = vcpmgList.get(i).doubleValue();
                 }
-                String fileTail;
-                int dot = dataFileName.lastIndexOf(".");
-                fileTail = dataFileName.substring(0, dot);
-
-                ExperimentData expData = new ExperimentData(fileTail,
-                        nucleus, B0field, temperature, tau, vcpmgs, expMode,
-                        errorPars, delayCalc, B1field);
-                loadPeakFile(textFileName, expData, resProp, xConv, yConv);
+                loadPeakFile(dataFileName, expData, resProp, xConv, yConv, errorPars, delayCalc);
             }
         }
 
@@ -1218,8 +1266,11 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 Map dataMap = (HashMap<String, Object>) data;
                 Map dataMap2 = (HashMap<String, Object>) dataMap.get("fit");
                 if (dataMap2 != null) {
+                    System.out.println(dataMap2.toString());
                     String expMode = (String) dataMap2.get("mode");
-                    expMode = expMode == null ? "cpmg" : expMode;
+                    if (expMode == null) {
+                        throw new IOException("No mode value in .yaml file");
+                    }
                     String parName = (String) dataMap2.get("file");
                     if (parName == null) {
                         String yamlName = yamlFile.getName();
@@ -1373,7 +1424,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
      */
     public static void addRelaxationFitResults(ResidueProperties resProp, relaxTypes expType) {
         String datasetName = resProp.getName() + "_RING_fit";
-        ExperimentData expData = resProp.getExperimentData(resProp.getName());
+        Experiment expData = resProp.getExperimentData(resProp.getName());
         String expName = "EXPAB";
         double[] fields = resProp.getFields();
 
@@ -1458,17 +1509,15 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     resProp = resProps.get(resPropName);
                 }
                 resProp.setExpMode(expType.toLowerCase());
-                Map<String, ExperimentData> expMap = resProp.getExperimentMap();
+                Map<String, Experiment> expMap = resProp.getExperimentMap();
                 if (!expMap.containsKey(datasetName)) {
                     String expMode = "exp";
-                    ExperimentData expData = new ExperimentData(datasetName,
-                            atom.getElementName(), value.getField(), value.getTemperature(),
-                            null, null, expMode,
-                            null, null, null);
+                    Experiment expData = new Experiment(datasetName,
+                            atom.getElementName(), value.getField(), value.getTemperature(), expType);
                     System.out.println("ExpData " + datasetName + " " + expData.toString());
                     expMap.put(datasetName, expData);
                 }
-                ExperimentData expData = expMap.get(datasetName);
+                Experiment expData = expMap.get(datasetName);
                 Entity entity = atom.getEntity();
                 if (entity instanceof Residue) {
                     Residue residue = (Residue) entity;

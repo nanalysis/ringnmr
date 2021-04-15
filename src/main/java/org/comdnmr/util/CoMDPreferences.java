@@ -22,7 +22,7 @@
  */
 package org.comdnmr.util;
 
-import org.comdnmr.data.ExperimentData;
+import org.comdnmr.data.Experiment;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

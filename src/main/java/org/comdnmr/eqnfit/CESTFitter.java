@@ -14,18 +14,18 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package org.comdnmr.eqnfit;
 
 import org.comdnmr.util.CoMDPreferences;
 import org.comdnmr.data.ResidueProperties;
 import org.comdnmr.data.ResidueData;
-import org.comdnmr.data.ExperimentData;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import org.apache.commons.math3.optim.PointValuePair;
+import org.comdnmr.data.Experiment;
 import org.comdnmr.util.CoMDOptions;
 
 /**
@@ -69,6 +69,7 @@ public class CESTFitter implements EquationFitter {
             return states[i][2];
         }
     }
+
     public CESTFitter(CoMDOptions options) {
         calcCEST = new CESTFitFunction(options);
         this.options = options;
@@ -101,7 +102,7 @@ public class CESTFitter implements EquationFitter {
         nResidues = resNums.length;
         resProps.setupMaps();
         stateCount = resProps.getStateCount(resNums.length);
-        Collection<ExperimentData> expDataList = resProps.getExperimentData();
+        Collection<Experiment> expDataList = resProps.getExperimentData();
         nCurves = resProps.getDataCount(resNums);
         states = new int[nCurves][];
         int k = 0;
@@ -109,7 +110,7 @@ public class CESTFitter implements EquationFitter {
         int id = 0;
         List<Double> fieldList = new ArrayList<>();
         for (String resNum : resNums) {
-            for (ExperimentData expData : expDataList) {
+            for (Experiment expData : expDataList) {
                 ResidueData resData = expData.getResidueData(resNum);
                 if (resData != null) {
                     states[k++] = resProps.getStateIndices(resIndex, expData);
@@ -205,7 +206,7 @@ public class CESTFitter implements EquationFitter {
     public List<String> getEquationNameList() {
         return getEquationNames();
     }
-    
+
     @Override
     public String getExpType() {
         return expType;

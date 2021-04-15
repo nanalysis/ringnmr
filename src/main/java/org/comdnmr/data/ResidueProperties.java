@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
  */
 public class ResidueProperties {
 
-    Map<String, ExperimentData> expMaps = new HashMap<>();
+    Map<String, Experiment> expMaps = new HashMap<>();
     private final HashMap<String, ResidueInfo> residueMap = new HashMap<>();
     final String name;
     String fileName = null;
@@ -105,19 +105,19 @@ public class ResidueProperties {
         this.expMode = expMode;
     }
 
-    public void addExperimentData(String name, ExperimentData data) {
+    public void addExperimentData(String name, Experiment data) {
         expMaps.put(name, data);
     }
 
-    public ExperimentData getExperimentData(String name) {
+    public Experiment getExperimentData(String name) {
         return expMaps.get(name);
     }
 
-    public Collection<ExperimentData> getExperimentData() {
+    public Collection<Experiment> getExperimentData() {
         return expMaps.values();
     }
 
-    public Map<String, ExperimentData> getExperimentMap() {
+    public Map<String, Experiment> getExperimentMap() {
         return expMaps;
     }
 
@@ -170,10 +170,10 @@ public class ResidueProperties {
         fieldMap.clear();
         tempMap.clear();
         nucMap.clear();
-        for (ExperimentData expData : expMaps.values()) {
-            if (!fieldMap.containsKey(Math.floor(expData.getField()))) {
-                fieldMap.put(Math.floor(expData.getField()), fieldMap.size());
-                fieldList.add(expData.getField());
+        for (Experiment expData : expMaps.values()) {
+            if (!fieldMap.containsKey(Math.floor(expData.getB0Field()))) {
+                fieldMap.put(Math.floor(expData.getB0Field()), fieldMap.size());
+                fieldList.add(expData.getB0Field());
             }
             if (!tempMap.containsKey(Math.floor(expData.getTemperature()))) {
                 tempMap.put(Math.floor(expData.getTemperature()), tempMap.size());
@@ -184,19 +184,19 @@ public class ResidueProperties {
                 nucList.add(expData.getNucleusName());
             }
         }
-        for (ExperimentData expData : expMaps.values()) {
+        for (Experiment expData : expMaps.values()) {
             int[] state = getStateIndices(0, expData);
             expData.setState(getStateString(state));
         }
     }
 
-    public int[] getStateIndices(int resIndex, ExperimentData expData) {
+    public int[] getStateIndices(int resIndex, Experiment expData) {
         if (fieldMap.isEmpty()) {
             setupMaps();
         }
         int[] state = new int[4];
         state[0] = resIndex;
-        state[1] = fieldMap.get(Math.floor(expData.getField()));
+        state[1] = fieldMap.get(Math.floor(expData.getB0Field()));
         state[2] = tempMap.get(Math.floor(expData.getTemperature()));
         state[3] = nucMap.get(expData.getNucleusName());
 //        System.out.println(resIndex + " " + expData.field + " " + expData.temperature + " " + expData.nucleus);
@@ -239,7 +239,7 @@ public class ResidueProperties {
     public int getDataCount(String[] resNums) {
         int n = 0;
         for (String resNum : resNums) {
-            for (ExperimentData expData : expMaps.values()) {
+            for (Experiment expData : expMaps.values()) {
                 ResidueData resData = expData.getResidueData(resNum);
                 if (resData != null) {
                     n++;
