@@ -1285,11 +1285,6 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 }
             }
         }
-        //        residueProperties.put(resProp.getName(), resProp);
-        //        residueProperties.put(resProp.getName(), resProp);
-        //        residueProperties.put(resProp.getName(), resProp);
-        //        residueProperties.put(resProp.getName(), resProp);
-
         return resProp;
 
     }
@@ -1400,7 +1395,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             case "star":
                 File starFile = new File(fileName).getAbsoluteFile();
                 NMRStarReader.read(starFile);
-                resProps = getDataFromMolecule(starFile.getName());
+                resProps = getDataFromMolecule();
                 break;
             case "nef":
                 NMRNEFReader.read(fileName);
@@ -1489,54 +1484,57 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         NMRStarWriter.writeAll(chan);
     }
 
-    public static Map<String, ResidueProperties> getDataFromMolecule(String fileName) {
+    public static Map<String, ResidueProperties> getDataFromMolecule() {
         Map<String, ResidueProperties> resProps = new HashMap<>();
 
         MoleculeBase mol = MoleculeFactory.getActive();
-        for (Atom atom : mol.getAtomArray()) {
-            Map<String, RelaxationData> relaxData = atom.getRelaxationData();
-            for (Map.Entry<String, RelaxationData> entry : relaxData.entrySet()) {
-                String datasetName = entry.getKey();
-                RelaxationData value = entry.getValue();
-                String expType = value.expType.getName();
-                String resPropName = fileName + "_" + expType;
-                ResidueProperties resProp;
+        if (mol != null) {
+            String resPropRootName = mol.getName();
+            for (Atom atom : mol.getAtomArray()) {
+                Map<String, RelaxationData> relaxData = atom.getRelaxationData();
+                for (Map.Entry<String, RelaxationData> entry : relaxData.entrySet()) {
+                    String datasetName = entry.getKey();
+                    RelaxationData value = entry.getValue();
+                    String expType = value.expType.getName();
+                    String resPropName = resPropRootName + "_" + expType;
+                    ResidueProperties resProp;
 
-                if (!resProps.containsKey(resPropName)) {
-                    resProp = new ResidueProperties(resPropName, fileName);
-                    resProps.put(resPropName, resProp);
-                } else {
-                    resProp = resProps.get(resPropName);
-                }
-                resProp.setExpMode(expType.toLowerCase());
-                Map<String, Experiment> expMap = resProp.getExperimentMap();
-                if (!expMap.containsKey(datasetName)) {
-                    String expMode = "exp";
-                    Experiment expData = new Experiment(datasetName,
-                            atom.getElementName(), value.getField(), value.getTemperature(), expType);
-                    System.out.println("ExpData " + datasetName + " " + expData.toString());
-                    expMap.put(datasetName, expData);
-                }
-                Experiment expData = expMap.get(datasetName);
-                Entity entity = atom.getEntity();
-                if (entity instanceof Residue) {
-                    Residue residue = (Residue) entity;
-                    String resNum = residue.getNumber();
-                    String resName = residue.getName();
-                    int residueNumInt = Integer.parseInt(resNum);
-                    ResidueData resData = new ResidueData(expData, value);
-                    expData.addResidueData(resNum, resData);
-                    ResidueInfo residueInfo = resProp.getResidueInfo(resNum);
-                    if (residueInfo == null) {
-                        residueInfo = new ResidueInfo(resProp, residueNumInt, 0, 0, 0);
-                        residueInfo.setResName(resName);
-                        resProp.addResidueInfo(resNum, residueInfo);
+                    if (!resProps.containsKey(resPropName)) {
+                        resProp = new ResidueProperties(resPropName, resPropRootName);
+                        resProps.put(resPropName, resProp);
                     } else {
-                        residueInfo.setResName(resName);
+                        resProp = resProps.get(resPropName);
                     }
-                    residueInfo.value = value.getValue();
-                    residueInfo.err = value.getError();
-                    //System.out.println(residueInfo.toString());
+                    resProp.setExpMode(expType.toLowerCase());
+                    Map<String, Experiment> expMap = resProp.getExperimentMap();
+                    if (!expMap.containsKey(datasetName)) {
+                        String expMode = "exp";
+                        Experiment expData = new Experiment(datasetName,
+                                atom.getElementName(), value.getField(), value.getTemperature(), expType);
+                        System.out.println("ExpData " + datasetName + " " + expData.toString());
+                        expMap.put(datasetName, expData);
+                    }
+                    Experiment expData = expMap.get(datasetName);
+                    Entity entity = atom.getEntity();
+                    if (entity instanceof Residue) {
+                        Residue residue = (Residue) entity;
+                        String resNum = residue.getNumber();
+                        String resName = residue.getName();
+                        int residueNumInt = Integer.parseInt(resNum);
+                        ResidueData resData = new ResidueData(expData, value);
+                        expData.addResidueData(resNum, resData);
+                        ResidueInfo residueInfo = resProp.getResidueInfo(resNum);
+                        if (residueInfo == null) {
+                            residueInfo = new ResidueInfo(resProp, residueNumInt, 0, 0, 0);
+                            residueInfo.setResName(resName);
+                            resProp.addResidueInfo(resNum, residueInfo);
+                        } else {
+                            residueInfo.setResName(resName);
+                        }
+                        residueInfo.value = value.getValue();
+                        residueInfo.err = value.getError();
+                        //System.out.println(residueInfo.toString());
+                    }
                 }
             }
         }
