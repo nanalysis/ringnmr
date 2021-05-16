@@ -57,15 +57,15 @@ public class CorrelationTime {
         return 0.0;
     }
 
-    public static double estimateTau(Map<String, ResidueProperties> residueProps,
-            String r1SetName, String r2SetName, String noeSetName) {
+    public static Map<String, Double> estimateTau(Map<String, ResidueProperties> residueProps,
+            String r1SetName, String r2SetName) {
         ResidueProperties resPropsR1 = residueProps.get(r1SetName);
         ResidueProperties resPropsR2 = residueProps.get(r2SetName);
-        ResidueProperties resPropsNOE = residueProps.get(noeSetName);
         Experiment r1Data = resPropsR1.getExperimentData().stream().findFirst().get();
         double b0 = r1Data.getB0Field();
         String nucName = r1Data.getNucleusName();
         double tau = 0.0;
+        var result = new HashMap<String, Double>();
         if ((resPropsR1 != null) && (resPropsR2 != null)) {
             Map<Integer, Double> r1Map = resPropsR1.getParMapData(
                     "best", "0:0:0", "R");
@@ -90,6 +90,8 @@ public class CorrelationTime {
                     }
                 }
             }
+            System.out.println(r1Stats.getMin() + " " + r1Stats.getMax() + " " + r1Stats.getMean() + " "
+                    + r1Stats.getPercentile(50.0));
             double r2_50 = r2Stats.getPercentile(50.0);
             double r1_50 = r1Stats.getPercentile(50.0);
             double ratio = r2_50 / r1_50;
@@ -97,10 +99,15 @@ public class CorrelationTime {
             double sfX = RelaxEquations.getSF(b0 * 1.0e6, nucName);
             tau = fit(sf, ratio);
             double tauEst = 1.0 / (4.0 * Math.PI * sfX) * Math.sqrt(6.0 * ratio - 7.0);
-            System.out.printf("sf %7.1f sfX %7.1f ratio %7.1f t2 %7.3f t1 %7.3f tau %7.3f tauEst %7.3f\n",
-                    sf, sfX, r2_50, r1_50, ratio, tau, tauEst);
+            System.out.printf("sf %7.1f sfX %7.1f t2 %7.1f t1 %7.3f ratio %7.3f tau %7.3f tauEst %7.3f\n",
+                    sf, sfX, r2_50, r1_50, ratio, tau * 1.0e9, tauEst * 1.0e9);
+            result.put("R1", r1_50);
+            result.put("R2", r2_50);
+            result.put("tau", tau * 1.0e9);
+            result.put("tauEst", tauEst);
+
         }
-        return tau;
+        return result;
     }
 
     static class MatchFunction implements UnivariateFunction {
