@@ -169,6 +169,8 @@ public class PyController implements Initializable {
     StatusBar statusBar;
     Circle statusCircle;
     @FXML
+    Menu chartMenu;
+    @FXML
     Menu axisMenu;
     @FXML
     BorderPane simPane;
@@ -228,7 +230,9 @@ public class PyController implements Initializable {
     @FXML
     ChoiceBox<String> t2Choice;
     @FXML
-    ChoiceBox<String> noeChoice;
+    TextField r1MedianField;
+    @FXML
+    TextField r2MedianField;
     @FXML
     TextField tauCalcField;
 
@@ -471,6 +475,9 @@ public class PyController implements Initializable {
         PauseTransition logoTransition = new PauseTransition(Duration.seconds(5));
         logoTransition.setOnFinished(e -> removeLogo());
         logoTransition.play();
+        chartMenu.setOnShowing(e -> {
+            makeAxisMenu();
+        });
     }
 
     public Stage getStage() {
@@ -1063,18 +1070,21 @@ public class PyController implements Initializable {
     public void estimateCorrelationTime() {
         String r1SetName = t1Choice.getValue();
         String r2SetName = t2Choice.getValue();
-        String noeSetName = noeChoice.getValue();
-        double tau = CorrelationTime.estimateTau(ChartUtil.residueProperties,
-                r1SetName, r2SetName, noeSetName);
-        tauCalcField.setText(String.format("%.1f ns", tau * 1.0e9));
+        Map<String, Double> result = CorrelationTime.estimateTau(ChartUtil.residueProperties,
+                r1SetName, r2SetName);
+        if (!result.isEmpty()) {
+            r1MedianField.setText(String.format("%.3f ns", result.get("R1")));
+            r2MedianField.setText(String.format("%.3f ns", result.get("R2")));
+            tauCalcField.setText(String.format("%.2f ns", result.get("tau")));
+        }
     }
 
     public void model1Order() {
-        String r1SetName = t1Choice.getValue();
-        String r2SetName = t2Choice.getValue();
-        String noeSetName = noeChoice.getValue();
-        CorrelationTime.fitS(ChartUtil.residueProperties,
-                r1SetName, r2SetName, noeSetName);
+//        String r1SetName = t1Choice.getValue();
+//        String r2SetName = t2Choice.getValue();
+//        String noeSetName = noeChoice.getValue();
+//        CorrelationTime.fitS(ChartUtil.residueProperties,
+//                r1SetName, r2SetName, noeSetName);
     }
 
     public ResidueChart getActiveChart() {
@@ -1398,17 +1408,17 @@ public class PyController implements Initializable {
     void makeT1T2Menu() {
         t1Choice.getItems().clear();
         t2Choice.getItems().clear();
-        noeChoice.getItems().clear();
+        // noeChoice.getItems().clear();
         t1Choice.getItems().add("");
         t2Choice.getItems().add("");
-        noeChoice.getItems().add("");
+        //noeChoice.getItems().add("");
 
         Map<String, ResidueProperties> residueProps = ChartUtil.residueProperties;
         for (ResidueProperties residueProp : residueProps.values()) {
             String setName = residueProp.getName();
             t1Choice.getItems().add(setName);
             t2Choice.getItems().add(setName);
-            noeChoice.getItems().add(setName);
+            //  noeChoice.getItems().add(setName);
         }
     }
 
@@ -1416,7 +1426,9 @@ public class PyController implements Initializable {
         makeT1T2Menu();
         axisMenu.getItems().clear();
         //Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 Rex.sd	    Kex	 Kex.sd	     pA	  pA.sd	     dW	  dW.sd
-
+        Map<String, ResidueProperties> molResProps = DataIO.getDataFromMolecule();
+        System.out.println(molResProps.toString());
+        ChartUtil.residueProperties.putAll(molResProps);
         Map<String, ResidueProperties> residueProps = ChartUtil.residueProperties;
         // MenuItem clearItem = new MenuItem("Clear");
         // clearItem.setOnAction(e -> clearChart());

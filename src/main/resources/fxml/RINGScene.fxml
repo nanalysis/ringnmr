@@ -76,7 +76,7 @@
 
                         </items>
                     </Menu>
-                    <Menu text="Chart">
+                    <Menu text="Chart" fx:id="chartMenu">
                         <items>
                             <MenuItem text="New Chart" onAction="#addChart" fx:id="addChart"/>
                             <MenuItem text="Remove Active Chart" onAction="#removeChart" fx:id="removeChart"/>
@@ -264,25 +264,36 @@
                                         <children>
                                             <HBox>
                                                 <children>
-                                                    <Label text="R1:"/>
+                                                    <Label text="R1:  " prefWidth="80"/>
                                                     <ChoiceBox  fx:id="t1Choice" prefWidth="150"/>
                                                 </children>
                                             </HBox>
                                             <HBox>
                                                 <children>
-                                                    <Label text="R2:"/>
+                                                    <Label text="R2:  " prefWidth="80"/>
                                                     <ChoiceBox  fx:id="t2Choice" prefWidth="150"/>
                                                 </children>
                                             </HBox>
                                             <HBox>
                                                 <children>
-                                                    <Label text="NOE:"/>
-                                                    <ChoiceBox  fx:id="noeChoice" prefWidth="150"/>
+                                                    <Button text="Estimate Tau" onAction="#estimateCorrelationTime" fx:id="calcDiffusionButton"/>
                                                 </children>
                                             </HBox>
                                             <HBox>
                                                 <children>
-                                                    <Button text="Estimate" onAction="#estimateCorrelationTime" fx:id="calcDiffusionButton"/>
+                                                    <Label text="R1:  " prefWidth="80"/>
+                                                    <TextField fx:id="r1MedianField" prefWidth="80"/>
+                                                </children>
+                                            </HBox>
+                                            <HBox>
+                                                <children>
+                                                    <Label text="R2:  " prefWidth="80"/>
+                                                    <TextField fx:id="r2MedianField" prefWidth="80"/>
+                                                </children>
+                                            </HBox>
+                                            <HBox>
+                                                <children>
+                                                    <Label text="Tau:  " prefWidth="80"/>
                                                     <TextField fx:id="tauCalcField" prefWidth="80"/>
                                                 </children>
                                             </HBox>
