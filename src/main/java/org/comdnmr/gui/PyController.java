@@ -1360,7 +1360,7 @@ public class PyController implements Initializable {
         activeChart.getData().clear();
     }
 
-    public void setYAxisType(String setName, String eqnName, String state, String typeName) {
+    public void setYAxisType(String expMode, String setName, String eqnName, String state, String typeName) {
         ObservableList<DataSeries> data = ChartUtil.getParMapData(setName, eqnName, state, typeName);
         ResidueChart chart = activeChart;
 
@@ -1385,14 +1385,10 @@ public class PyController implements Initializable {
 //        xAxis.setMinorTickCount(5);
 //        yAxis.setMinWidth(75.0);
 //        yAxis.setPrefWidth(75.0);
+        String yLabel = expMode.equalsIgnoreCase(typeName) ? typeName
+                : expMode.toUpperCase() + ": " + typeName;
+        chart.yAxis.setLabel(yLabel);
 
-        if (typeName.equals("Kex")) {
-            chart.yAxis.setLabel("Kex");
-//            chart.setUnifyYAxes(true); // fixme
-        } else {
-            chart.yAxis.setLabel(typeName);
-//            chart.setUnifyYAxes(false); // fixme
-        }
         chart.setTitle(setName);
         if (chart.getData().size() > 1) {
 //            chart.setLegendVisible(true); // fixme
@@ -1437,6 +1433,7 @@ public class PyController implements Initializable {
             String setName = residueProp.getName();
             Menu cascade = new Menu(setName);
             axisMenu.getItems().add(cascade);
+            String expMode = residueProp.getExpMode();
             String[] parTypes = getParTypes(residueProp.getExpMode());
             for (String parType : parTypes) {
                 Menu cascade2 = new Menu(parType);
@@ -1449,7 +1446,7 @@ public class PyController implements Initializable {
                 for (String equationName : equationNames) {
                     if ((stateStrings.size() < 2) || parType.equals("RMS") || parType.equals("AIC") || parType.equals("Equation")) {
                         MenuItem cmItem1 = new MenuItem(equationName);
-                        cmItem1.setOnAction(e -> setYAxisType(setName, equationName, "0:0:0", parType));
+                        cmItem1.setOnAction(e -> setYAxisType(expMode, setName, equationName, "0:0:0", parType));
                         cascade2.getItems().add(cmItem1);
                     } else {
                         boolean isValidPar = false;
@@ -1469,7 +1466,7 @@ public class PyController implements Initializable {
                             cascade2.getItems().add(cascade3);
                             residueProp.getStateStrings().stream().forEach(state -> {
                                 MenuItem cmItem1 = new MenuItem(state);
-                                cmItem1.setOnAction(e -> setYAxisType(setName, equationName, state, parType));
+                                cmItem1.setOnAction(e -> setYAxisType(expMode, setName, equationName, state, parType));
                                 cascade3.getItems().add(cmItem1);
 
                             });
@@ -1784,13 +1781,13 @@ public class PyController implements Initializable {
         if (Platform.isFxApplicationThread()) {
             clearChart();
             statusBar.setProgress(f);
-            setYAxisType(sParts[0], sParts[1], sParts[2], sParts[3]);
+            setYAxisType(currentResProps.getExpMode(), sParts[0], sParts[1], sParts[2], sParts[3]);
             currentResProps = ChartUtil.residueProperties.get(currentResProps.getName());
 
         } else {
             Platform.runLater(() -> {
                 clearChart();
-                setYAxisType(sParts[0], sParts[1], sParts[2], sParts[3]);
+                setYAxisType(currentResProps.getExpMode(), sParts[0], sParts[1], sParts[2], sParts[3]);
                 statusBar.setProgress(f);
                 currentResProps = ChartUtil.residueProperties.get(currentResProps.getName());
 

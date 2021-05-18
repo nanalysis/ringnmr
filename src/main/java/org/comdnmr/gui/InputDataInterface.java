@@ -215,7 +215,7 @@ public class InputDataInterface {
         }
 
         fitModeChoice.getItems().clear();
-        fitModeChoice.getItems().addAll(Arrays.asList("Select", "EXP", "NOE", "CPMG", "CEST", "R1RHO"));
+        fitModeChoice.getItems().addAll(Arrays.asList("Select", "R1", "R2", "NOE", "CPMG", "CEST", "R1RHO"));
         fitModeChoice.setValue("Select");
 
         fitModeChoice.valueProperty().addListener(x -> {
@@ -622,7 +622,7 @@ public class InputDataInterface {
 
             Experiment expData = new Experiment(peakList.getName(),
                     nucChoice.getValue(), Double.parseDouble(B0fieldChoice.getValue()),
-                    temperatureK,expMode);
+                    temperatureK, expMode);
 //            tau, null,
 //                    fitModeChoice.getValue(),
 //                    errorPars, delayCalc, B1field);
@@ -646,7 +646,7 @@ public class InputDataInterface {
                 ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
                 PyController.mainController.currentResProps = resProp;
                 PyController.mainController.makeAxisMenu();
-                PyController.mainController.setYAxisType(resProp.getName(), "best", "0:0:0", parName);
+                PyController.mainController.setYAxisType(resProp.getExpMode(), resProp.getName(), "best", "0:0:0", parName);
                 reschartNode.setResProps(resProp);
                 PyController.mainController.setControls();
             }
@@ -847,7 +847,7 @@ public class InputDataInterface {
         ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
         PyController.mainController.currentResProps = resProp;
         PyController.mainController.makeAxisMenu();
-        PyController.mainController.setYAxisType(resProp.getName(), "best", "0:0:0", parName);
+        PyController.mainController.setYAxisType(resProp.getExpMode(), resProp.getName(), "best", "0:0:0", parName);
         reschartNode.setResProps(resProp);
         PyController.mainController.setControls();
 

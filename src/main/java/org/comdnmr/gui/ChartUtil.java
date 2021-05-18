@@ -456,7 +456,7 @@ public class ChartUtil {
         ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
         PyController.mainController.currentResProps = resProp;
         PyController.mainController.makeAxisMenu();
-        PyController.mainController.setYAxisType(resProp.getName(), "best", "0:0:0", parName);
+        PyController.mainController.setYAxisType(resProp.getExpMode(), resProp.getName(), "best", "0:0:0", parName);
         reschartNode.setResProps(resProp);
         PyController.mainController.setControls();
     }
@@ -484,7 +484,7 @@ public class ChartUtil {
             ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
             PyController.mainController.currentResProps = resProp;
             PyController.mainController.makeAxisMenu();
-            PyController.mainController.setYAxisType(resProp.getName(), "best", "0:0:0", parName);
+            PyController.mainController.setYAxisType(resProp.getExpMode(), resProp.getName(), "best", "0:0:0", parName);
             reschartNode.setResProps(resProp);
             PyController.mainController.setControls();
         }
