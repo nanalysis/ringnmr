@@ -23,6 +23,7 @@
 package org.comdnmr.modelfree;
 
 import java.util.HashMap;
+import java.util.List;
 import org.comdnmr.data.ResidueProperties;
 import java.util.Map;
 import org.apache.commons.math3.analysis.UnivariateFunction;
@@ -65,49 +66,90 @@ public class CorrelationTime {
         double b0 = r1Data.getB0Field();
         String nucName = r1Data.getNucleusName();
         double tau = 0.0;
-        var result = new HashMap<String, Double>();
+        Map<String, Double> result = new HashMap<>();
         if ((resPropsR1 != null) && (resPropsR2 != null)) {
             Map<Integer, Double> r1Map = resPropsR1.getParMapData(
                     "best", "0:0:0", "R");
             Map<Integer, Double> r2Map = resPropsR2.getParMapData(
                     "best", "0:0:0", "R");
-
-            DescriptiveStatistics stats = new DescriptiveStatistics();
-            r2Map.values().stream().forEach(v -> stats.addValue(v));
-            double perLower = stats.getPercentile(25.0);
-            double perUpper = stats.getPercentile(75.0);
-
-            stats.clear();
-            DescriptiveStatistics r1Stats = new DescriptiveStatistics();
-            DescriptiveStatistics r2Stats = new DescriptiveStatistics();
-            for (Integer res : r1Map.keySet()) {
-                Double r1 = r1Map.get(res);
-                Double r2 = r2Map.get(res);
-                if ((r1 != null) && (r2 != null)) {
-                    if ((r2 > perLower) && (r2 < perUpper)) {
-                        r1Stats.addValue(r1);
-                        r2Stats.addValue(r2);
-                    }
-                }
-            }
-            System.out.println(r1Stats.getMin() + " " + r1Stats.getMax() + " " + r1Stats.getMean() + " "
-                    + r1Stats.getPercentile(50.0));
-            double r2_50 = r2Stats.getPercentile(50.0);
-            double r1_50 = r1Stats.getPercentile(50.0);
-            double ratio = r2_50 / r1_50;
-            double sf = b0 * 1.0e6;
-            double sfX = RelaxEquations.getSF(b0 * 1.0e6, nucName);
-            tau = fit(sf, ratio);
-            double tauEst = 1.0 / (4.0 * Math.PI * sfX) * Math.sqrt(6.0 * ratio - 7.0);
-            System.out.printf("sf %7.1f sfX %7.1f t2 %7.1f t1 %7.3f ratio %7.3f tau %7.3f tauEst %7.3f\n",
-                    sf, sfX, r2_50, r1_50, ratio, tau * 1.0e9, tauEst * 1.0e9);
-            result.put("R1", r1_50);
-            result.put("R2", r2_50);
-            result.put("tau", tau * 1.0e9);
-            result.put("tauEst", tauEst);
-
+            result = estimateTau(b0, nucName, r1Map, r2Map);
         }
         return result;
+    }
+
+    public static Map<String, Double> estimateTau(double b0, String nucName,
+            Map<Integer, Double> r1Map, Map<Integer, Double> r2Map) {
+        DescriptiveStatistics stats = new DescriptiveStatistics();
+        r2Map.values().stream().forEach(v -> stats.addValue(v));
+        double perLower = stats.getPercentile(25.0);
+        double perUpper = stats.getPercentile(75.0);
+
+        stats.clear();
+        DescriptiveStatistics r1Stats = new DescriptiveStatistics();
+        DescriptiveStatistics r2Stats = new DescriptiveStatistics();
+        for (Integer res : r1Map.keySet()) {
+            Double r1 = r1Map.get(res);
+            Double r2 = r2Map.get(res);
+            if ((r1 != null) && (r2 != null)) {
+                if ((r2 > perLower) && (r2 < perUpper)) {
+                    r1Stats.addValue(r1);
+                    r2Stats.addValue(r2);
+                }
+            }
+        }
+        System.out.println(r1Stats.getMin() + " " + r1Stats.getMax() + " " + r1Stats.getMean() + " "
+                + r1Stats.getPercentile(50.0));
+        double r2_50 = r2Stats.getPercentile(50.0);
+        double r1_50 = r1Stats.getPercentile(50.0);
+        Map<String, Double> result = estimateTau(b0, nucName, r1_50, r2_50);
+
+        return result;
+    }
+
+    public static Map<String, Double> estimateTau(double b0, String nucName,
+            List<RelaxDataValue> values) {
+        DescriptiveStatistics stats = new DescriptiveStatistics();
+        values.stream().forEach(v -> stats.addValue(v.R2)
+        );
+        double perLower = stats.getPercentile(25.0);
+        double perUpper = stats.getPercentile(75.0);
+
+        stats.clear();
+        DescriptiveStatistics r1Stats = new DescriptiveStatistics();
+        DescriptiveStatistics r2Stats = new DescriptiveStatistics();
+        for (var value : values) {
+            var r1 = value.R1;
+            var r2 = value.R2;
+            if ((r2 > perLower) && (r2 < perUpper)) {
+                r1Stats.addValue(r1);
+                r2Stats.addValue(r2);
+            }
+
+        }
+        System.out.println(r1Stats.getMin() + " " + r1Stats.getMax() + " " + r1Stats.getMean() + " "
+                + r1Stats.getPercentile(50.0));
+        double r2_50 = r2Stats.getPercentile(50.0);
+        double r1_50 = r1Stats.getPercentile(50.0);
+        Map<String, Double> result = estimateTau(b0, nucName, r1_50, r2_50);
+
+        return result;
+    }
+
+    public static Map<String, Double> estimateTau(double b0, String nucName, double r1, double r2) {
+        double ratio = r2 / r1;
+        double sf = b0 * 1.0e6;
+        double sfX = RelaxEquations.getSF(b0 * 1.0e6, nucName);
+        double tau = fit(sf, ratio);
+        double tauEst = 1.0 / (4.0 * Math.PI * sfX) * Math.sqrt(6.0 * ratio - 7.0);
+        System.out.printf("sf %7.1f sfX %7.1f t2 %7.1f t1 %7.3f ratio %7.3f tau %7.3f tauEst %7.3f\n",
+                sf, sfX, r2, r1, ratio, tau * 1.0e9, tauEst * 1.0e9);
+        var result = new HashMap<String, Double>();
+        result.put("R1", r1);
+        result.put("R2", r2);
+        result.put("tau", tau * 1.0e9);
+        result.put("tauEst", tauEst);
+        return result;
+
     }
 
     static class MatchFunction implements UnivariateFunction {
