@@ -1069,7 +1069,6 @@ public class PyController implements Initializable {
     }
 
     public void calcModel1() {
-        System.out.println("calc model");
         FitModel fitModel = new FitModel();
         fitModel.testIsoModel();
 
@@ -1982,7 +1981,7 @@ public class PyController implements Initializable {
         String[] expTypes = {"A", "R", "C", "RMS", "AIC", "Equation"};
         String[] t1Types = {"R1"};
         String[] t2Types = {"R2"};
-        String[] sTypes = {"S","Rex"};
+        String[] sTypes = {"S", "Rex"};
         String[] cestTypes = {"kex", "pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B", "RMS", "AIC", "Equation"};
         String[] r1rhoTypes = {"kex", "pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B", "RMS", "AIC", "Equation"};
         String[] nullTypes = {"RMS", "AIC", "Equation"};
@@ -1999,7 +1998,7 @@ public class PyController implements Initializable {
             return expTypes;
         } else if (mode.equals("t2")) {
             return expTypes;
-        } else if (mode.equals("s")) {
+        } else if (mode.equals("s2")) {
             return sTypes;
         } else if (mode.equals("noe")) {
             return noeTypes;
