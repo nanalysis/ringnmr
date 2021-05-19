@@ -365,6 +365,9 @@ public class RelaxFit {
                 double[] J = testModel.calc(relaxObj.wValues, resPars);
                 double r1 = relaxObj.R1(J);
                 double r2 = relaxObj.R2(J, 0.0);
+                if (testModel.includesEx()) {
+                    r2 += resPars[resPars.length - 1];
+                }
                 double noe = relaxObj.NOE(J);
                 double delta2 = dValue.score2(r1, r2, noe);
                 sumSq += delta2;

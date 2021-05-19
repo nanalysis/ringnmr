@@ -29,6 +29,7 @@ package org.comdnmr.modelfree.models;
 public abstract class MFModel {
 
     int nPars;
+    boolean includeEx;
 
     public abstract double[] calc(double[] omegas, double[] pars);
 
@@ -51,6 +52,10 @@ public abstract class MFModel {
 
     public boolean checkParConstraints() {
         return true;
+    }
+
+    public boolean includesEx() {
+        return includeEx;
     }
 
     public int getNPars() {

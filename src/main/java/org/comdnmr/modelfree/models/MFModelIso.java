@@ -29,10 +29,16 @@ package org.comdnmr.modelfree.models;
 public abstract class MFModelIso extends MFModel {
 
     double tauM;
+    double rEX;
     final boolean hasTau;
 
     public MFModelIso(boolean hasTau) {
+        this(hasTau, false);
+    }
+
+    public MFModelIso(boolean hasTau, boolean includeEx) {
         this.hasTau = hasTau;
+        this.includeEx = includeEx;
     }
 
 }

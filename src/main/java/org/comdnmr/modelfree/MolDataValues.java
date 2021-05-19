@@ -30,6 +30,12 @@ public class MolDataValues {
         System.arraycopy(vector, 0, this.vector, 0, 3);
     }
 
+    public MolDataValues(Atom atom, double[] vector) {
+        this.atom = atom;
+        this.specifier = atom.getFullName();
+        System.arraycopy(vector, 0, this.vector, 0, 3);
+    }
+
     public void addData(RelaxDataValue value) {
         dataValues.add(value);
     }
