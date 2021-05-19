@@ -109,6 +109,10 @@ public class RelaxEquations {
         return relaxMap.get(key);
     }
 
+    public double getSF() {
+        return sf;
+    }
+    
     public double getGammaS() {
         return gammaS;
     }
