@@ -127,6 +127,7 @@ import org.nmrfx.graphicsio.SVGGraphicsContext;
 import org.nmrfx.peaks.InvalidPeakException;
 import org.nmrfx.star.ParseException;
 import org.comdnmr.eqnfit.NOEFit;
+import org.comdnmr.modelfree.FitModel;
 
 public class PyController implements Initializable {
 
@@ -1067,14 +1068,21 @@ public class PyController implements Initializable {
 
     }
 
+    public void calcModel1() {
+        System.out.println("calc model");
+        FitModel fitModel = new FitModel();
+        fitModel.testIsoModel();
+
+    }
+
     public void estimateCorrelationTime() {
         String r1SetName = t1Choice.getValue();
         String r2SetName = t2Choice.getValue();
         Map<String, Double> result = CorrelationTime.estimateTau(ChartUtil.residueProperties,
                 r1SetName, r2SetName);
         if (!result.isEmpty()) {
-            r1MedianField.setText(String.format("%.3f ns", result.get("R1")));
-            r2MedianField.setText(String.format("%.3f ns", result.get("R2")));
+            r1MedianField.setText(String.format("%.3f 1/s", result.get("R1")));
+            r2MedianField.setText(String.format("%.3f 1/s", result.get("R2")));
             tauCalcField.setText(String.format("%.2f ns", result.get("tau")));
         }
     }
@@ -1974,6 +1982,7 @@ public class PyController implements Initializable {
         String[] expTypes = {"A", "R", "C", "RMS", "AIC", "Equation"};
         String[] t1Types = {"R1"};
         String[] t2Types = {"R2"};
+        String[] sTypes = {"S","Rex"};
         String[] cestTypes = {"kex", "pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B", "RMS", "AIC", "Equation"};
         String[] r1rhoTypes = {"kex", "pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B", "RMS", "AIC", "Equation"};
         String[] nullTypes = {"RMS", "AIC", "Equation"};
@@ -1990,6 +1999,8 @@ public class PyController implements Initializable {
             return expTypes;
         } else if (mode.equals("t2")) {
             return expTypes;
+        } else if (mode.equals("s")) {
+            return sTypes;
         } else if (mode.equals("noe")) {
             return noeTypes;
         }

@@ -277,6 +277,7 @@
                                             <HBox>
                                                 <children>
                                                     <Button text="Estimate Tau" onAction="#estimateCorrelationTime" fx:id="calcDiffusionButton"/>
+                                                    <Button text="Model" onAction="#calcModel1"/>
                                                 </children>
                                             </HBox>
                                             <HBox>
