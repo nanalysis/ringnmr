@@ -8,6 +8,7 @@ package org.comdnmr.modelfree;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -107,16 +108,48 @@ public class FitModel {
     public void testIsoModel() {
         Map<String, MolDataValues> molData = getData();
         if (!molData.isEmpty()) {
-            double tau = 37.5e-9;
+            double tau = estimateTau(molData);
             MFModelIso model = new MFModelIso1(tau, true);
             testIsoModel(model, molData, null);
+        }
+    }
+
+    double estimateTau(Map<String, MolDataValues> molData) {
+        Map<Long, List<RelaxDataValue>> map = new HashMap<>();
+        for (var entry : molData.entrySet()) {
+            MolDataValues value = entry.getValue();
+            for (RelaxDataValue rlxValue : value.getData()) {
+                long sfMHz = Math.round(rlxValue.relaxObj.getSF() / 1.0e6);
+                List<RelaxDataValue> values = map.get(sfMHz);
+                if (values == null) {
+                    values = new ArrayList<>();
+                    map.put(sfMHz, values);
+                }
+                values.add(rlxValue);
+            }
+        }
+        int max = 0;
+        long maxMHz = 0;
+        for (long sfMHz : map.keySet()) {
+            int size = map.get(sfMHz).size();
+            if (size > max) {
+                maxMHz = sfMHz;
+                max = size;
+            }
+        }
+        if (max > 0) {
+            Map<String, Double> tauData = CorrelationTime.estimateTau(maxMHz, "N", map.get(maxMHz));
+            return tauData.get("tau") * 1.0e-9;
+        } else {
+            return 5.0e-9;
         }
     }
 
     public void testIsoModel(MFModelIso model, Map<String, MolDataValues> molData, String matchSpec) {
         RelaxFit relaxFit = new RelaxFit();
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
-        double tau = 36.0e-9;
+        double tau = estimateTau(molData);
+        System.out.println("tau " + tau);
         Map<String, String> extras = new HashMap<>();
         MoleculeBase mol = MoleculeFactory.getActive();
 
