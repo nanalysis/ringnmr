@@ -1981,7 +1981,7 @@ public class PyController implements Initializable {
         String[] expTypes = {"A", "R", "C", "RMS", "AIC", "Equation"};
         String[] t1Types = {"R1"};
         String[] t2Types = {"R2"};
-        String[] sTypes = {"S", "Rex"};
+        String[] sTypes = {"S2", "Rex"};
         String[] cestTypes = {"kex", "pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B", "RMS", "AIC", "Equation"};
         String[] r1rhoTypes = {"kex", "pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B", "RMS", "AIC", "Equation"};
         String[] nullTypes = {"RMS", "AIC", "Equation"};
