@@ -172,8 +172,10 @@ public class ResidueData {
             if (entity instanceof Residue) {
                 Residue residue = (Residue) entity;
                 return residue.getName();
-            } else {
+            } else if (entity != null) {
                 return entity.getName();
+            } else {
+                return "";
             }
         }
 
