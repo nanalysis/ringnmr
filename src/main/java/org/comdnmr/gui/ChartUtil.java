@@ -53,7 +53,7 @@ import org.comdnmr.data.Experiment;
 import org.comdnmr.eqnfit.PlotEquation;
 import org.comdnmr.data.ResidueInfo;
 import org.comdnmr.data.ResidueProperties;
-import org.comdnmr.data.ResidueData;
+import org.comdnmr.data.ExperimentalData;
 import org.nmrfx.chart.DataSeries;
 import org.nmrfx.chart.XYEValue;
 import org.nmrfx.chart.XYValue;
@@ -260,19 +260,19 @@ public class ChartUtil {
         System.out.println("expData " + expName);
         DataSeries series = new DataSeries();
         series.setName(expName + ":" + resNum);
-        ResidueData resData = expData.getResidueData(resNum);
-        if (resData != null) {
-            double[][] xValues = resData.getXValues();
-            double[] yValues = resData.getYValues();
+        ExperimentalData experimentalData = expData.getResidueData(resNum);
+        if (experimentalData != null) {
+            double[][] xValues = experimentalData.getXValues();
+            double[] yValues = experimentalData.getYValues();
             if ((xValues != null) && (yValues != null)) {
                 int nValues = yValues.length;
-                double[] errValues = resData.getErrValues();
+                double[] errValues = experimentalData.getErrValues();
                 for (int i = 0; i < nValues; i++) {
                     double x = xValues[0][i];
                     double y = yValues[i];
                     double err = errValues[i];
                     XYValue dataPoint = new XYEValue(x, y, err);
-                    dataPoint.setExtraValue(resData.getDataValues().get(i));
+                    dataPoint.setExtraValue(experimentalData.getDataValues().get(i));
                     series.add(dataPoint);
                 }
             }
@@ -521,7 +521,7 @@ public class ChartUtil {
 //                    for (ExperimentData expData : expDataSets) {
 //                        for (String resNumS : expData.getResidues()) {
 //                            int resNum = Integer.parseInt(resNumS);
-//                            ResidueData resData = expData.getResidueData(resNumS);
+//                            ExperimentalData experimentalData = expData.getResidueData(resNumS);
 //                        }
 //                    }
 //                }

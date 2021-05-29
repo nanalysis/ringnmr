@@ -66,7 +66,7 @@ import org.comdnmr.eqnfit.EquationFitter;
 import org.comdnmr.eqnfit.EquationType;
 import org.comdnmr.eqnfit.ExpFitter;
 import org.comdnmr.data.Experiment;
-import org.comdnmr.data.ResidueData;
+import org.comdnmr.data.ExperimentalData;
 import org.controlsfx.control.PropertySheet;
 import org.comdnmr.eqnfit.ParValueInterface;
 import org.comdnmr.eqnfit.PlotEquation;
@@ -1114,18 +1114,18 @@ public class PyController implements Initializable {
         }
     }
 
-    public void updateTable(List<ResidueData> resDatas) {
-        ObservableList<ResidueData.DataValue> data = FXCollections.observableArrayList();
-        for (ResidueData resData : resDatas) {
-            data.addAll(resData.getDataValues());
+    public void updateTable(List<ExperimentalData> experimentalDataSets) {
+        ObservableList<ExperimentalData.DataValue> data = FXCollections.observableArrayList();
+        for (ExperimentalData experimentalData : experimentalDataSets) {
+            data.addAll(experimentalData.getDataValues());
         }
         resInfoTable.itemsProperty().setValue(data);
 
-        TableColumn<ResidueData.DataValue, String> nameColumn = new TableColumn<>("Name");
-        TableColumn<ResidueData.DataValue, String> resColumn = new TableColumn<>("Residue");
-        TableColumn<ResidueData.DataValue, String> resNameColumn = new TableColumn<>("ResName");
-        TableColumn<ResidueData.DataValue, String> errColumn = new TableColumn<>("Error");
-        TableColumn<ResidueData.DataValue, String> peakColumn = new TableColumn<>("Peak");
+        TableColumn<ExperimentalData.DataValue, String> nameColumn = new TableColumn<>("Name");
+        TableColumn<ExperimentalData.DataValue, String> resColumn = new TableColumn<>("Residue");
+        TableColumn<ExperimentalData.DataValue, String> resNameColumn = new TableColumn<>("ResName");
+        TableColumn<ExperimentalData.DataValue, String> errColumn = new TableColumn<>("Error");
+        TableColumn<ExperimentalData.DataValue, String> peakColumn = new TableColumn<>("Peak");
 
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("Name"));
         resColumn.setCellValueFactory(new PropertyValueFactory<>("Residue"));
@@ -1137,8 +1137,8 @@ public class PyController implements Initializable {
         resInfoTable.getColumns().addAll(nameColumn, resColumn, resNameColumn, errColumn, peakColumn);
 
         if (getFittingMode().equals("cpmg")) {
-            TableColumn<ResidueData.DataValue, Double> xColumn = new TableColumn<>("Vcpmg");
-            TableColumn<ResidueData.DataValue, Double> yColumn = new TableColumn<>("Reff");
+            TableColumn<ExperimentalData.DataValue, Double> xColumn = new TableColumn<>("Vcpmg");
+            TableColumn<ExperimentalData.DataValue, Double> yColumn = new TableColumn<>("Reff");
 
             xColumn.setCellValueFactory(new PropertyValueFactory<>("X0"));
             yColumn.setCellValueFactory(new PropertyValueFactory<>("Y"));
@@ -1146,11 +1146,11 @@ public class PyController implements Initializable {
             resInfoTable.getColumns().clear();
             resInfoTable.getColumns().addAll(nameColumn, resColumn, resNameColumn, xColumn, yColumn, errColumn, peakColumn);
         } else if (getFittingMode().equals("exp")) {
-            TableColumn<ResidueData.DataValue, Double> xColumn = new TableColumn<>("Delay");
-            TableColumn<ResidueData.DataValue, Double> yColumn = new TableColumn<>("Intensity");
-            TableColumn<ResidueData.DataValue, Double> t1Column = new TableColumn<>("T1");
-            TableColumn<ResidueData.DataValue, Double> t2Column = new TableColumn<>("T2");
-            TableColumn<ResidueData.DataValue, Double> t1RhoColumn = new TableColumn<>("T1Rho");
+            TableColumn<ExperimentalData.DataValue, Double> xColumn = new TableColumn<>("Delay");
+            TableColumn<ExperimentalData.DataValue, Double> yColumn = new TableColumn<>("Intensity");
+            TableColumn<ExperimentalData.DataValue, Double> t1Column = new TableColumn<>("T1");
+            TableColumn<ExperimentalData.DataValue, Double> t2Column = new TableColumn<>("T2");
+            TableColumn<ExperimentalData.DataValue, Double> t1RhoColumn = new TableColumn<>("T1Rho");
 
             xColumn.setCellValueFactory(new PropertyValueFactory<>("X0"));
             yColumn.setCellValueFactory(new PropertyValueFactory<>("Y"));
@@ -1161,9 +1161,9 @@ public class PyController implements Initializable {
             resInfoTable.getColumns().clear();
             resInfoTable.getColumns().addAll(nameColumn, resColumn, resNameColumn, t1Column, t2Column, t1RhoColumn, xColumn, yColumn, errColumn, peakColumn);
         } else if (getFittingMode().equals("cest")) {
-            TableColumn<ResidueData.DataValue, Double> x0Column = new TableColumn<>("Offset");
-            TableColumn<ResidueData.DataValue, Double> x1Column = new TableColumn<>("B1 Field");
-            TableColumn<ResidueData.DataValue, Double> yColumn = new TableColumn<>("Intensity");
+            TableColumn<ExperimentalData.DataValue, Double> x0Column = new TableColumn<>("Offset");
+            TableColumn<ExperimentalData.DataValue, Double> x1Column = new TableColumn<>("B1 Field");
+            TableColumn<ExperimentalData.DataValue, Double> yColumn = new TableColumn<>("Intensity");
 
             x0Column.setCellValueFactory(new PropertyValueFactory<>("X0"));
             x1Column.setCellValueFactory(new PropertyValueFactory<>("X1"));
@@ -1172,9 +1172,9 @@ public class PyController implements Initializable {
             resInfoTable.getColumns().clear();
             resInfoTable.getColumns().addAll(nameColumn, resColumn, resNameColumn, x0Column, x1Column, yColumn, errColumn, peakColumn);
         } else if (getFittingMode().equals("r1rho")) {
-            TableColumn<ResidueData.DataValue, Double> x0Column = new TableColumn<>("Offset");
-            TableColumn<ResidueData.DataValue, Double> x1Column = new TableColumn<>("B1 Field");
-            TableColumn<ResidueData.DataValue, Double> yColumn = new TableColumn<>("Intensity");
+            TableColumn<ExperimentalData.DataValue, Double> x0Column = new TableColumn<>("Offset");
+            TableColumn<ExperimentalData.DataValue, Double> x1Column = new TableColumn<>("B1 Field");
+            TableColumn<ExperimentalData.DataValue, Double> yColumn = new TableColumn<>("Intensity");
 
             x0Column.setCellValueFactory(new PropertyValueFactory<>("X0"));
             x1Column.setCellValueFactory(new PropertyValueFactory<>("X1"));
@@ -1323,9 +1323,9 @@ public class PyController implements Initializable {
 
     public void selectTableRow(String seriesName, int index) {
         parTabPane.getSelectionModel().select(1);
-        List<ResidueData.DataValue> data = resInfoTable.getItems();
+        List<ExperimentalData.DataValue> data = resInfoTable.getItems();
         int iRow = 0;
-        for (ResidueData.DataValue dValue : data) {
+        for (ExperimentalData.DataValue dValue : data) {
             if ((dValue.getIndex() == index) && ((dValue.getName() + ":" + dValue.getResidue()).equals(seriesName))) {
                 resInfoTable.getSelectionModel().clearAndSelect(iRow);
                 resInfoTable.scrollTo(iRow);
@@ -1339,11 +1339,11 @@ public class PyController implements Initializable {
 
     public String getPeakNumFromTable() { //getPeakNumFromTable(String seriesName, int index)
         parTabPane.getSelectionModel().select(1);
-        List<ResidueData.DataValue> data = resInfoTable.getItems();
+        List<ExperimentalData.DataValue> data = resInfoTable.getItems();
         int iRow = 0;
         int peakNum = 0;
         String name = "";
-//        for (ResidueData.DataValue dValue : data) {
+//        for (ExperimentalData.DataValue dValue : data) {
 //            if ((dValue.getIndex() == index) && ((dValue.getName() + ":" + dValue.getResidue()).equals(seriesName))) {
 //                resInfoTable.getSelectionModel().clearAndSelect(iRow);
 //                resInfoTable.scrollTo(iRow);
@@ -2085,7 +2085,7 @@ public class PyController implements Initializable {
     void showInfo(ResidueProperties resProps, String equationName, String mapName, String state, String[] residues, PlotData plotData) {
         ArrayList<GUIPlotEquation> equations = new ArrayList<>();
         ObservableList<DataSeries> allData = FXCollections.observableArrayList();
-        List<ResidueData> resDatas = new ArrayList<>();
+        List<ExperimentalData> experimentalDataSets = new ArrayList<>();
         List<int[]> allStates = new ArrayList<>();
         boolean calcScale = scalePlot.isSelected();
         if ((resProps != null) && (residues != null)) {
@@ -2100,7 +2100,7 @@ public class PyController implements Initializable {
                 for (String resNum : residues) {
                     if (expData.getResidueData(resNum) != null) {
 //                        System.out.println(expData.getResidueData(resNum));
-                        resDatas.add(expData.getResidueData(resNum));
+                        experimentalDataSets.add(expData.getResidueData(resNum));
                         DataSeries series = ChartUtil.getMapData(mapName, expName, resNum);
                         series.setStroke(PlotData.colors[iSeries % 8]);
                         series.setFill(PlotData.colors[iSeries % 8]);
@@ -2128,7 +2128,7 @@ public class PyController implements Initializable {
                 allStates.add(states);
             }
         }
-        updateTable(resDatas);
+        updateTable(experimentalDataSets);
         if (residues != null) {
             updateTableWithPars(mapName, residues, equationName, state, allStates);
             updateEquation(mapName, residues, equationName);
