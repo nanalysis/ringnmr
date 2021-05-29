@@ -14,8 +14,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/*
+ */
+ /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
@@ -107,7 +107,7 @@ public class ResidueInfo {
         public String getResidue() {
             return String.valueOf(resInfo.resNum);
         }
-        
+
         @Override
         public String getResName() {
             return String.valueOf(resInfo.resName);
@@ -190,11 +190,11 @@ public class ResidueInfo {
     public int getResNum() {
         return resNum;
     }
-    
+
     public String getResName() {
         return resName;
     }
-    
+
     public void setResName(String name) {
         this.resName = name;
     }
@@ -253,16 +253,16 @@ public class ResidueInfo {
         double[] xValues = null;
         double[] yValues = null;
         if (xValues != null) {
-            for (double value : xValues) {
-                sBuilder.append(value);
+            for (double xValue : xValues) {
+                sBuilder.append(xValue);
                 sBuilder.append(" ");
             }
 
             sBuilder.append('\n');
         }
         if (yValues != null) {
-            for (double value : yValues) {
-                sBuilder.append(value);
+            for (double yValue : yValues) {
+                sBuilder.append(yValue);
                 sBuilder.append(" ");
             }
         }
@@ -270,7 +270,8 @@ public class ResidueInfo {
             for (CurveFit curveFit : fitMap.values()) {
                 if (curveFit.getParMap() != null) {
                     sBuilder.append('\n');
-                    sBuilder.append(" eqn " + curveFit.getEquation().getName() + " " + curveFit.getState());
+                    sBuilder.append(" eqn ").append(curveFit.getEquation().
+                            getName()).append(" ").append(curveFit.getState());
                     sBuilder.append(curveFit.getParMap().toString());
                 }
             }
