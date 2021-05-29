@@ -31,7 +31,7 @@ import org.nmrfx.datasets.Nuclei;
 public class Experiment {
 
     String name;
-    HashMap<String, ResidueData> residueData;
+    HashMap<String, ExperimentalData> experimentalDataSets;
     protected final double B0field;
     protected final String nucleusName;
     protected final double nucleusField;
@@ -59,13 +59,13 @@ public class Experiment {
             ratio = nuc.getFreqRatio();
         }
         nucleusField = B0field * ratio;
-        residueData = new HashMap<>();
+        experimentalDataSets = new HashMap<>();
     }
 
     @Override
     public String toString() {
         StringBuilder sBuilder = new StringBuilder();
-        sBuilder.append(name).append(" ").append(B0field).append(" ").append(" nres ").append(residueData.size());
+        sBuilder.append(name).append(" ").append(B0field).append(" ").append(" nres ").append(experimentalDataSets.size());
         return sBuilder.toString();
     }
 
@@ -85,16 +85,16 @@ public class Experiment {
         return temperature;
     }
 
-    public void addResidueData(String resNum, ResidueData data) {
-        residueData.put(resNum, data);
+    public void addResidueData(String resNum, ExperimentalData data) {
+        experimentalDataSets.put(resNum, data);
     }
 
-    public ResidueData getResidueData(String resNum) {
-        return residueData.get(resNum);
+    public ExperimentalData getResidueData(String resNum) {
+        return experimentalDataSets.get(resNum);
     }
 
     public Set<String> getResidues() {
-        return residueData.keySet();
+        return experimentalDataSets.keySet();
     }
 
     public double getB0Field() {

@@ -19,7 +19,7 @@ package org.comdnmr.eqnfit;
 
 import org.comdnmr.util.CoMDPreferences;
 import org.comdnmr.data.ResidueProperties;
-import org.comdnmr.data.ResidueData;
+import org.comdnmr.data.ExperimentalData;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -133,12 +133,12 @@ public class ExpFitter implements EquationFitter {
         for (String resNum : resNums) {
             for (Experiment expData : expDataList) {
                 states[k++] = resProps.getStateIndices(resIndex, expData);
-                ResidueData resData = expData.getResidueData(resNum);
+                ExperimentalData experimentalData = expData.getResidueData(resNum);
                 //  need peakRefs
                 double field = expData.getNucleusField();
-                double[][] x = resData.getXValues();
-                double[] y = resData.getYValues();
-                double[] err = resData.getErrValues();
+                double[][] x = experimentalData.getXValues();
+                double[] y = experimentalData.getYValues();
+                double[] err = experimentalData.getErrValues();
                 for (int i = 0; i < y.length; i++) {
                     xValues.add(x[0][i]);
                     yValues.add(y[i]);

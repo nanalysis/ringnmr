@@ -205,7 +205,7 @@ public class DataIO {
             } else {
                 DynamicsSource dynSource = DynamicsSource.createFromPeak(peak);
                 System.out.println(dynSource.toString());
-                ResidueData residueData = new ResidueData(expData, dynSource, xValueList, yValueList, errValueList);
+                ExperimentalData residueData = new ExperimentalData(expData, dynSource, xValueList, yValueList, errValueList);
                 expData.addResidueData(residueNum, residueData);
             }
             boolean ok = true;
@@ -558,7 +558,7 @@ public class DataIO {
                         processCESTData((CESTExperiment) expData, residueNum, xValueList, yValueList, errValueList, peakNum);
                     } else {
                         DynamicsSource dynSource = DynamicsSource.createFromSpecifiers(expMode + "." + peakNum, residueNum, "H", "N");
-                        ResidueData residueData = new ResidueData(expData, dynSource, xValueList, yValueList, errValueList);
+                        ExperimentalData residueData = new ExperimentalData(expData, dynSource, xValueList, yValueList, errValueList);
                         expData.addResidueData(residueNum, residueData);
                     }
                     ResidueInfo residueInfo = resProp.getResidueInfo(residueNum);
@@ -607,7 +607,7 @@ public class DataIO {
         xValueLists[2] = tauList;
         DynamicsSource dynSource = DynamicsSource.createFromSpecifiers("cest." + peakNum, residueNum, "H", "N");
 
-        ResidueData residueData = new ResidueData(expData, dynSource, xValueLists, yValueList, errValueList);
+        ExperimentalData residueData = new ExperimentalData(expData, dynSource, xValueLists, yValueList, errValueList);
         expData.addResidueData(residueNum, residueData);
         expData.getExtras().clear();
         expData.setExtras(bFieldUniqueValue);
@@ -773,7 +773,7 @@ public class DataIO {
                     }
 
                     DynamicsSource dynSource = DynamicsSource.createFromSpecifiers(expMode + "." + peakNum, residueNum, "H", "N");
-                    ResidueData residueData = new ResidueData(expData, dynSource, xValues, yValues, errValues);
+                    ExperimentalData residueData = new ExperimentalData(expData, dynSource, xValues, yValues, errValues);
                     expData.addResidueData(residueNum, residueData);
 
                     ResidueInfo residueInfo = resProp.getResidueInfo(residueNum);
@@ -788,7 +788,7 @@ public class DataIO {
     }
 
     public static void setPercentileErrors(Experiment expData, double fraction) {
-        expData.residueData.values().forEach((residueData) -> {
+        expData.experimentalDataSets.values().forEach((residueData) -> {
             double[] yValues = residueData.getYValues();
             double[] errValues = residueData.getErrValues();
             for (int i = 0; i < yValues.length; i++) {
@@ -798,7 +798,7 @@ public class DataIO {
     }
 
     public static void setErrors(Experiment expData, double error) {
-        for (ResidueData residueData : expData.residueData.values()) {
+        for (ExperimentalData residueData : expData.experimentalDataSets.values()) {
             double[] errValues = residueData.getErrValues();
             Arrays.fill(errValues, error);
         }
@@ -809,7 +809,7 @@ public class DataIO {
         int nDups = 0;
         double sumDelta2 = 0.0;
         double sumAbs = 0.0;
-        for (ResidueData residueData : expData.residueData.values()) {
+        for (ExperimentalData residueData : expData.experimentalDataSets.values()) {
             double[][] xValues = residueData.getXValues();
             double[] yValues = residueData.getYValues();
             for (int i = 0; i < yValues.length - 1; i++) {
@@ -1439,8 +1439,8 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     }
                     CurveFit curveFit = parMap.get(states[iList].toString());
                     Map<String, Double> fitPars = curveFit.getParMap();
-                    ResidueData resData = expData.getResidueData(String.valueOf(resInfo.resNum));
-                    DynamicsSource dynSource = resData.getDynSource();
+                    ExperimentalData experimentalData = expData.getResidueData(String.valueOf(resInfo.resNum));
+                    DynamicsSource dynSource = experimentalData.getDynSource();
                     Atom[] atoms = dynSource.atoms;
                     for (Atom atom : atoms) {
                         Map<String, String> extras = new HashMap<>();
@@ -1521,8 +1521,8 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                         String resNum = residue.getNumber();
                         String resName = residue.getName();
                         int residueNumInt = Integer.parseInt(resNum);
-                        ResidueData resData = new ResidueData(expData, value);
-                        expData.addResidueData(resNum, resData);
+                        ExperimentalData experimentalData = new ExperimentalData(expData, value);
+                        expData.addResidueData(resNum, experimentalData);
                         ResidueInfo residueInfo = resProp.getResidueInfo(resNum);
                         if (residueInfo == null) {
                             residueInfo = new ResidueInfo(resProp, residueNumInt, 0, 0, 0);

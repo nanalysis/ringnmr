@@ -175,7 +175,7 @@ public class FitModel {
                         new ArrayList<>(), 700.0, 298, orderPar, 0.0,
                         rexValue, 0.0, extras);
                 Atom atom = mol.findAtom(key);
-                atom.relaxData.put("order", relaxData);
+                atom.addRelaxationData("order", relaxData);
 
             }
         }

@@ -33,27 +33,27 @@ import org.nmrfx.chemistry.Residue;
  *
  * @author Bruce Johnson
  */
-public class ResidueData {
+public class ExperimentalData {
 
-    Experiment expData;
+    Experiment experiment;
     DynamicsSource dynSource;
     RelaxationData relaxData;
     double[][] xValues;
     double[] errValues;
     double[] yValues;
 
-    public ResidueData(Experiment expData, DynamicsSource dynSource,
+    public ExperimentalData(Experiment experiment, DynamicsSource dynSource,
             double[][] x, double[] y, double[] err) {
-        this.expData = expData;
+        this.experiment = experiment;
         this.dynSource = dynSource;
         this.xValues = DataUtil.clone2DArray(x);
         this.yValues = y.clone();
         this.errValues = err.clone();
     }
 
-    public ResidueData(Experiment expData, DynamicsSource dynSource,
+    public ExperimentalData(Experiment experiment, DynamicsSource dynSource,
             List<Double> xValueList, List<Double> yValueList, List<Double> errValueList) {
-        this.expData = expData;
+        this.experiment = experiment;
         this.dynSource = dynSource;
         int nValues = xValueList.size();
         this.xValues = new double[1][nValues];
@@ -66,10 +66,10 @@ public class ResidueData {
         }
     }
 
-    public ResidueData(Experiment expData, DynamicsSource dynSource,
+    public ExperimentalData(Experiment experiment, DynamicsSource dynSource,
             List<Double>[] xValueList, List<Double> yValueList,
             List<Double> errValueList) {
-        this.expData = expData;
+        this.experiment = experiment;
         this.dynSource = dynSource;
         int nValues = yValueList.size();
         int nX = xValueList.length;
@@ -86,8 +86,8 @@ public class ResidueData {
         }
     }
 
-    public ResidueData(Experiment expData, RelaxationData relaxData) {
-        this.expData = expData;
+    public ExperimentalData(Experiment expData, RelaxationData relaxData) {
+        this.experiment = expData;
         this.relaxData = relaxData;
     }
 
@@ -106,9 +106,9 @@ public class ResidueData {
     public class DataValue {
 
         int index;
-        ResidueData resInfo;
+        ExperimentalData resInfo;
 
-        public DataValue(ResidueData resInfo, int index) {
+        public DataValue(ExperimentalData resInfo, int index) {
             this.resInfo = resInfo;
             this.index = index;
         }
@@ -178,80 +178,6 @@ public class ResidueData {
                 return "";
             }
         }
-
-        public String getT1() {
-            MoleculeBase mol = MoleculeFactory.getActive();
-            mol.getAtomArray();
-            Atom[] atoms = resInfo.dynSource.atoms;
-            String t1 = "-";
-            for (Atom atom : atoms) {
-                String aName = atom.getFullName();
-                if (aName.contains(resInfo.expData.getNucleusName())) {
-                    List<RelaxationData> relaxDataList = atom.getRelaxationData(relaxTypes.T1, resInfo.expData.getB0Field(), null)
-                            .stream().collect(Collectors.toList());
-                    if (!relaxDataList.isEmpty()) {
-                        t1 = String.valueOf(relaxDataList.get(0).getValue());
-                    }
-                }
-            }
-            return t1;
-        }
-
-        public String getT2() {
-            MoleculeBase mol = MoleculeFactory.getActive();
-            mol.getAtomArray();
-            Atom[] atoms = resInfo.dynSource.atoms;
-            String t2 = "-";
-            for (Atom atom : atoms) {
-                String aName = atom.getFullName();
-                if (aName.contains(resInfo.expData.getNucleusName())) {
-                    List<RelaxationData> relaxDataList = atom.getRelaxationData(relaxTypes.T2, resInfo.expData.getB0Field(), null)
-                            .stream().collect(Collectors.toList());
-                    if (!relaxDataList.isEmpty()) {
-                        t2 = String.valueOf(relaxDataList.get(0).getValue());
-                    }
-                }
-            }
-            return t2;
-        }
-
-        public String getT1Rho() {
-            MoleculeBase mol = MoleculeFactory.getActive();
-            mol.getAtomArray();
-            Atom[] atoms = resInfo.dynSource.atoms;
-            String t1rho = "-";
-            for (Atom atom : atoms) {
-                String aName = atom.getFullName();
-                if (aName.contains(resInfo.expData.getNucleusName())) {
-                    List<RelaxationData> relaxDataList = atom.getRelaxationData(relaxTypes.T1RHO, resInfo.expData.getB0Field(), null)
-                            .stream().collect(Collectors.toList());
-                    if (!relaxDataList.isEmpty()) {
-                        t1rho = String.valueOf(relaxDataList.get(0).getValue());
-                    }
-                }
-            }
-            return t1rho;
-        }
-
-        public String getNOE() {
-            MoleculeBase mol = MoleculeFactory.getActive();
-            mol.getAtomArray();
-            Atom[] atoms = resInfo.dynSource.atoms;
-            String noe = "-";
-            for (Atom atom : atoms) {
-                String aName = atom.getFullName();
-                List<RelaxationData> relaxDataList = atom.getRelaxationData(relaxTypes.NOE, resInfo.expData.getB0Field(), null)
-                        .stream().collect(Collectors.toList());
-                if (!relaxDataList.isEmpty()) {
-                    String pairAtomName = relaxDataList.get(0).getExtraAtoms().get(0).getName();
-                    if (aName.contains(resInfo.expData.getNucleusName()) || pairAtomName.contains(resInfo.expData.getNucleusName())) {
-                        noe = String.valueOf(relaxDataList.get(0).getValue());
-                    }
-                }
-            }
-            return noe;
-        }
-
     }
 
     public ArrayList<DataValue> getDataValues() {
@@ -265,11 +191,11 @@ public class ResidueData {
     }
 
     public String getDataName() {
-        return expData.getName();
+        return experiment.getName();
     }
 
     public Experiment getExperimentData() {
-        return expData;
+        return experiment;
     }
 
     public DynamicsSource getDynSource() {

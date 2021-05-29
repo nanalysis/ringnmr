@@ -240,8 +240,8 @@ public class ResidueProperties {
         int n = 0;
         for (String resNum : resNums) {
             for (Experiment expData : expMaps.values()) {
-                ResidueData resData = expData.getResidueData(resNum);
-                if (resData != null) {
+                ExperimentalData experimentalData = expData.getResidueData(resNum);
+                if (experimentalData != null) {
                     n++;
                 }
             }
