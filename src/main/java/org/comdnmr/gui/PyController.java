@@ -1158,18 +1158,20 @@ public class PyController implements Initializable {
         } else if (getFittingMode().equals("exp")) {
             TableColumn<ExperimentalData.DataValue, Double> xColumn = new TableColumn<>("Delay");
             TableColumn<ExperimentalData.DataValue, Double> yColumn = new TableColumn<>("Intensity");
-            TableColumn<ExperimentalData.DataValue, Double> t1Column = new TableColumn<>("T1");
-            TableColumn<ExperimentalData.DataValue, Double> t2Column = new TableColumn<>("T2");
-            TableColumn<ExperimentalData.DataValue, Double> t1RhoColumn = new TableColumn<>("T1Rho");
+//            TableColumn<ExperimentalData.DataValue, Double> t1Column = new TableColumn<>("T1");
+//            TableColumn<ExperimentalData.DataValue, Double> t2Column = new TableColumn<>("T2");
+//            TableColumn<ExperimentalData.DataValue, Double> t1RhoColumn = new TableColumn<>("T1Rho");
 
             xColumn.setCellValueFactory(new PropertyValueFactory<>("X0"));
             yColumn.setCellValueFactory(new PropertyValueFactory<>("Y"));
-            t1Column.setCellValueFactory(new PropertyValueFactory<>("T1"));
-            t2Column.setCellValueFactory(new PropertyValueFactory<>("T2"));
-            t1RhoColumn.setCellValueFactory(new PropertyValueFactory<>("T1Rho"));
+//            t1Column.setCellValueFactory(new PropertyValueFactory<>("T1"));
+//            t2Column.setCellValueFactory(new PropertyValueFactory<>("T2"));
+//            t1RhoColumn.setCellValueFactory(new PropertyValueFactory<>("T1Rho"));
 
             resInfoTable.getColumns().clear();
-            resInfoTable.getColumns().addAll(nameColumn, resColumn, resNameColumn, t1Column, t2Column, t1RhoColumn, xColumn, yColumn, errColumn, peakColumn);
+            resInfoTable.getColumns().addAll(nameColumn, resColumn, resNameColumn,
+//                    t1Column, t2Column, t1RhoColumn,
+                    xColumn, yColumn, errColumn, peakColumn);
         } else if (getFittingMode().equals("cest")) {
             TableColumn<ExperimentalData.DataValue, Double> x0Column = new TableColumn<>("Offset");
             TableColumn<ExperimentalData.DataValue, Double> x1Column = new TableColumn<>("B1 Field");
