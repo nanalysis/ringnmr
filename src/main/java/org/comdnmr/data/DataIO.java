@@ -212,10 +212,10 @@ public class DataIO {
             }
             boolean ok = true;
 
-            ResidueInfo residueInfo = resProp.getResidueInfo(residueNum);
+            ExperimentResult residueInfo = resProp.getResidueInfo(residueNum);
 
             if (residueInfo == null) {
-                residueInfo = new ResidueInfo(resProp, residueNumInt, 0, 0, 0);
+                residueInfo = new ExperimentResult(resProp, residueNumInt, 0, 0, 0);
                 residueInfo.setResName(resName);
                 resProp.addResidueInfo(residueNum, residueInfo);
             } else {
@@ -563,10 +563,10 @@ public class DataIO {
                         ExperimentalData residueData = new ExperimentalData(expData, dynSource, xValueList, yValueList, errValueList);
                         expData.addResidueData(residueNum, residueData);
                     }
-                    ResidueInfo residueInfo = resProp.getResidueInfo(residueNum);
+                    ExperimentResult residueInfo = resProp.getResidueInfo(residueNum);
 
                     if (residueInfo == null) {
-                        residueInfo = new ResidueInfo(resProp, residueNumInt, 0, 0, 0);
+                        residueInfo = new ExperimentResult(resProp, residueNumInt, 0, 0, 0);
                         residueInfo.setResName(resName);
                         resProp.addResidueInfo(residueNum, residueInfo);
                     } else {
@@ -714,9 +714,9 @@ public class DataIO {
             Logger.getLogger(DataIO.class.getName()).log(Level.SEVERE, null, ex);
         }
         processCESTData((OffsetExperiment) expData, residueNum, xValueList, yValueList, errValueList, 0);
-        ResidueInfo residueInfo = resProp.getResidueInfo(residueNum);
+        ExperimentResult residueInfo = resProp.getResidueInfo(residueNum);
         if (residueInfo == null) {
-            residueInfo = new ResidueInfo(resProp, Integer.parseInt(residueNum), 0, 0, 0);
+            residueInfo = new ExperimentResult(resProp, Integer.parseInt(residueNum), 0, 0, 0);
             resProp.addResidueInfo(residueNum, residueInfo);
         }
 
@@ -778,9 +778,9 @@ public class DataIO {
                     ExperimentalData residueData = new ExperimentalData(expData, dynSource, xValues, yValues, errValues);
                     expData.addResidueData(residueNum, residueData);
 
-                    ResidueInfo residueInfo = resProp.getResidueInfo(residueNum);
+                    ExperimentResult residueInfo = resProp.getResidueInfo(residueNum);
                     if (residueInfo == null) {
-                        residueInfo = new ResidueInfo(resProp, Integer.parseInt(residueNum), 0, 0, 0);
+                        residueInfo = new ExperimentResult(resProp, Integer.parseInt(residueNum), 0, 0, 0);
                         resProp.addResidueInfo(residueNum, residueInfo);
                     }
                     peakNum++;
@@ -899,10 +899,10 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 String peakIdStr = sfields[headerMap.get("Peak")].trim();
                 int peakNum = Integer.parseInt(peakIdStr);
                 String stateString = sfields[headerMap.get("State")].trim();
-                ResidueInfo residueInfo = resProp.getResidueInfo(residueNumber);
+                ExperimentResult residueInfo = resProp.getResidueInfo(residueNumber);
 
                 if (residueInfo == null) {
-                    residueInfo = new ResidueInfo(resProp, Integer.parseInt(residueNumber), groupId, groupSize, peakNum);
+                    residueInfo = new ExperimentResult(resProp, Integer.parseInt(residueNumber), groupId, groupSize, peakNum);
                     resProp.addResidueInfo(residueNumber, residueInfo);
                 }
                 double[] fields = new double[1];
@@ -1428,7 +1428,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             for (int f = 0; f < fields.length; f++) {
                 int field = (int) fields[f];
                 final int iList = f;
-                List<ResidueInfo> resInfoList = resProp.getResidueValues();
+                List<ExperimentResult> resInfoList = resProp.getResidueValues();
                 Collections.sort(resInfoList, (a, b) -> Integer.compare(a.resNum, b.resNum));
                 resInfoList.forEach((resInfo) -> {
                     final Map<String, CurveFit> parMap = resInfo.curveSets.get(expName);

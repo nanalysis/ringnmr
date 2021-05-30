@@ -37,7 +37,7 @@ import org.comdnmr.eqnfit.PlotEquation;
  *
  * @author Bruce Johnson
  */
-public class ResidueInfo {
+public class ExperimentResult {
 
     ExperimentSet experimentSet;
 
@@ -57,11 +57,11 @@ public class ResidueInfo {
     public class ParValue implements ParValueInterface {
 
         String parName;
-        ResidueInfo resInfo;
+        ExperimentResult resInfo;
         String equationName;
         String state;
 
-        public ParValue(ResidueInfo resInfo, String parName, String equationName, String state) {
+        public ParValue(ExperimentResult resInfo, String parName, String equationName, String state) {
             this.parName = parName;
             this.resInfo = resInfo;
             this.parName = parName;
@@ -119,11 +119,11 @@ public class ResidueInfo {
         }
     }
 
-    public ResidueInfo(ExperimentSet experimentSet, int resNum, int groupId, int groupSize) {
+    public ExperimentResult(ExperimentSet experimentSet, int resNum, int groupId, int groupSize) {
         this(experimentSet, resNum, groupId, groupSize, 0);
     }
 
-    public ResidueInfo(ExperimentSet experimentSet, int resNum, int groupId, int groupSize, int peakNum) {
+    public ExperimentResult(ExperimentSet experimentSet, int resNum, int groupId, int groupSize, int peakNum) {
         this.experimentSet = experimentSet;
         this.resNum = resNum;
         this.groupId = groupId;

@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 public class ExperimentSet {
 
     Map<String, Experiment> expMaps = new HashMap<>();
-    private final HashMap<String, ResidueInfo> residueMap = new HashMap<>();
+    private final HashMap<String, ExperimentResult> residueMap = new HashMap<>();
     final String name;
     String fileName = null;
     Map<Double, Integer> fieldMap = new LinkedHashMap();
@@ -218,7 +218,7 @@ public class ExperimentSet {
         return state;
     }
 
-    public void addResidueInfo(String resNum, ResidueInfo value) {
+    public void addResidueInfo(String resNum, ExperimentResult value) {
         residueMap.put(resNum, value);
     }
 
@@ -226,13 +226,13 @@ public class ExperimentSet {
         residueMap.clear();
     }
 
-    public List<ResidueInfo> getResidueValues() {
-        List<ResidueInfo> values = new ArrayList<>();
+    public List<ExperimentResult> getResidueValues() {
+        List<ExperimentResult> values = new ArrayList<>();
         values.addAll(residueMap.values());
         return values;
     }
 
-    public ResidueInfo getResidueInfo(String resNum) {
+    public ExperimentResult getResidueInfo(String resNum) {
         return residueMap.get(resNum);
     }
 
@@ -278,10 +278,10 @@ public class ExperimentSet {
 
     public Map<Integer, Double> getParMapData(String eqnName, String state, String parName) {
 
-        List<ResidueInfo> resValues = getResidueValues();
+        List<ExperimentResult> resValues = getResidueValues();
         Map<Integer, Double> resultMap = new HashMap<>();
 
-        for (ResidueInfo resInfo : resValues) {
+        for (ExperimentResult resInfo : resValues) {
             if (resInfo == null) {
                 continue;
             }

@@ -31,7 +31,7 @@ import org.comdnmr.eqnfit.CPMGFitter;
 import org.comdnmr.eqnfit.CPMGEquation;
 import org.comdnmr.util.ProcessingStatus;
 import org.comdnmr.data.ExperimentSet;
-import org.comdnmr.data.ResidueInfo;
+import org.comdnmr.data.ExperimentResult;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -144,7 +144,7 @@ public class ResidueFitter {
             }
             String[] resNumGroup = new String[resGroup.size()];
             resGroup.toArray(resNumGroup);
-            List<ResidueInfo> resInfoList = fitResidues(experimentSet, resNumGroup, nFit, null);
+            List<ExperimentResult> resInfoList = fitResidues(experimentSet, resNumGroup, nFit, null);
             resInfoList.forEach((resInfo) -> {
                 int fitResNum = resInfo.getResNum();
                 experimentSet.addResidueInfo(String.valueOf(fitResNum), resInfo);
@@ -200,7 +200,7 @@ public class ResidueFitter {
             }
             String[] resNumGroup = new String[resList.size()];
             resList.toArray(resNumGroup);
-            List<ResidueInfo> resInfoList = fitResidues(experimentSet, resNumGroup, nFit, null);
+            List<ExperimentResult> resInfoList = fitResidues(experimentSet, resNumGroup, nFit, null);
             resInfoList.forEach((resInfo) -> {
                 int fitResNum = resInfo.getResNum();
                 experimentSet.addResidueInfo(String.valueOf(fitResNum), resInfo);
@@ -236,11 +236,11 @@ public class ResidueFitter {
         return fitter;
     }
 
-    public List<ResidueInfo> doNOE(ExperimentSet experimentSet, String[] resNums, int groupId, String useEquation) {
-        List<ResidueInfo> resInfoList = new ArrayList<>();
-        Map<String, ResidueInfo> resMap = new HashMap<>();
+    public List<ExperimentResult> doNOE(ExperimentSet experimentSet, String[] resNums, int groupId, String useEquation) {
+        List<ExperimentResult> resInfoList = new ArrayList<>();
+        Map<String, ExperimentResult> resMap = new HashMap<>();
         for (String residueNumber : resNums) {
-            ResidueInfo residueInfo = new ResidueInfo(experimentSet, Integer.parseInt(residueNumber), groupId, resNums.length);
+            ExperimentResult residueInfo = new ExperimentResult(experimentSet, Integer.parseInt(residueNumber), groupId, resNums.length);
             resInfoList.add(residueInfo);
             resMap.put(residueNumber, residueInfo);
             residueInfo.addFitResult(null);
@@ -249,7 +249,7 @@ public class ResidueFitter {
 
     }
 
-    public List<ResidueInfo> fitResidues(ExperimentSet experimentSet, String[] resNums, int groupId, String useEquation) {
+    public List<ExperimentResult> fitResidues(ExperimentSet experimentSet, String[] resNums, int groupId, String useEquation) {
         this.experimentSet = experimentSet;
         experimentSet.setupMaps();
         Map<String, FitResult> fitResults = new HashMap<>();
@@ -299,10 +299,10 @@ public class ResidueFitter {
             }
 //            System.out.println("fit " + fitResult.getAicc() + " " + aicMin + " " + bestEquation);
         }
-        List<ResidueInfo> resInfoList = new ArrayList<>();
-        Map<String, ResidueInfo> resMap = new HashMap<>();
+        List<ExperimentResult> resInfoList = new ArrayList<>();
+        Map<String, ExperimentResult> resMap = new HashMap<>();
         for (String residueNumber : resNums) {
-            ResidueInfo residueInfo = new ResidueInfo(experimentSet, Integer.parseInt(residueNumber), groupId, resNums.length);
+            ExperimentResult residueInfo = new ExperimentResult(experimentSet, Integer.parseInt(residueNumber), groupId, resNums.length);
             resInfoList.add(residueInfo);
             resMap.put(residueNumber, residueInfo);
             equationNames.forEach((equationName) -> {
@@ -320,7 +320,7 @@ public class ResidueFitter {
             for (int iCurve = 0; iCurve < nCurves; iCurve++) {
                 CurveFit curveFit = fitResult.getCurveFit(iCurve);
                 String residueNumber = curveFit.getResNum();
-                ResidueInfo residueInfo = resMap.get(residueNumber);
+                ExperimentResult residueInfo = resMap.get(residueNumber);
                 residueInfo.addCurveSet(curveFit, bestEquation.equals(equationName));
             }
         }
