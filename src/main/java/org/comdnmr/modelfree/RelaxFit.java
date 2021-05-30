@@ -344,7 +344,59 @@ public class RelaxFit {
         return new Array2DRowRealMatrix(rot.getMatrix()).transpose().getData();
     }
 
-    public double value(double[] pars, double[][] values) {
+    public class Score {
+
+        final double rss;
+        final int nValues;
+        final int nPars;
+        final boolean parsOK;
+        final double[] pars;
+
+        public Score(double rss, int nValues, int nPars, boolean parsOK) {
+            this(rss, nValues, nPars, parsOK, null);
+        }
+
+        public Score(double rss, int nValues, int nPars, boolean parsOK, double[] pars) {
+            this.rss = rss;
+            this.nValues = nValues;
+            this.nPars = nPars;
+            this.parsOK = parsOK;
+            this.pars = pars;
+        }
+
+        public double[] getPars() {
+            return pars;
+        }
+
+        public double rms() {
+            double rms = Math.sqrt(rss / nValues);
+            return rms;
+        }
+
+        public double value() {
+            double score = rms();
+            if (!parsOK) {
+                score += nValues * 10.0;
+            }
+            return score;
+        }
+
+        public double aic() {
+            int k = nPars;
+            int n = nValues;
+            double aic = 2 * k + n * Math.log(rss);
+            return aic;
+        }
+
+        public double aicc() {
+            int k = nPars;
+            int n = nValues;
+            double aicc = aic() + 2 * k * (k + 1) / (n - k - 1);
+            return aicc;
+        }
+    }
+
+    public Score score(double[] pars, boolean keepPars) {
         double sumSq = 0.0;
         int n = 0;
         boolean parsOK = true;
@@ -377,11 +429,18 @@ public class RelaxFit {
                 parsOK = false;
             }
         }
-        double rms = Math.sqrt(sumSq / n);
-        if (!parsOK) {
-            rms += n * 10.0;
+        Score score;
+        if (keepPars) {
+            score = new Score(sumSq, n, pars.length, parsOK, pars.clone());
+        } else {
+            score = new Score(sumSq, n, pars.length, parsOK);
         }
-        return rms;
+        return score;
+    }
+
+    public double value(double[] pars, double[][] values) {
+        var score = score(pars, false);
+        return score.value();
     }
 
     public double valueMultiResidue(double[] pars, double[][] values) {
@@ -606,7 +665,7 @@ public class RelaxFit {
                     ub = Math.toDegrees(ub);
                     guess = Math.toDegrees(guess);
                 }
-//                System.out.printf("guess %7.3f LB %7.3f UB %7.3f\n", guess, lb, ub);
+//                System.out.printf("guess %7.3f LB %7.3f UB %7.3f\nValues", guess, lb, ub);
             }
             bestPars = result.getPoint();
             bestChiSq = result.getValue();

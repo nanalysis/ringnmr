@@ -14,15 +14,17 @@ import java.util.Set;
 import java.util.TreeMap;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.apache.commons.math3.optim.PointValuePair;
+import org.comdnmr.modelfree.RelaxFit.Score;
 import org.comdnmr.modelfree.models.MFModelIso;
 import org.comdnmr.modelfree.models.MFModelIso1;
 import org.nmrfx.chemistry.Atom;
 import org.nmrfx.chemistry.MoleculeBase;
 import org.nmrfx.chemistry.MoleculeFactory;
 import org.nmrfx.chemistry.Polymer;
-import org.nmrfx.chemistry.RelaxationData;
-import org.nmrfx.chemistry.RelaxationRex;
+import org.nmrfx.chemistry.relax.RelaxationData;
+import org.nmrfx.chemistry.relax.RelaxationRex;
 import org.nmrfx.chemistry.Residue;
+import org.nmrfx.chemistry.relax.OrderPar;
 
 /**
  *
@@ -109,8 +111,13 @@ public class FitModel {
         Map<String, MolDataValues> molData = getData();
         if (!molData.isEmpty()) {
             double tau = estimateTau(molData);
-            MFModelIso model = new MFModelIso1(tau, true);
-            testIsoModel(model, molData, null);
+            MFModelIso model1e = new MFModelIso1(tau, true);
+            MFModelIso model1 = new MFModelIso1(tau, false);
+//            MFModelIso model2 = new MFModelIso2(tau, true);
+//            MFModelIso model5 = new MFModelIso5(tau, true);
+//            MFModelIso model6 = new MFModelIso6(tau, true);
+            var models = List.of(model1, model1e);
+            testModels(molData, models);
         }
     }
 
@@ -146,7 +153,6 @@ public class FitModel {
     }
 
     public void testIsoModel(MFModelIso model, Map<String, MolDataValues> molData, String matchSpec) {
-        RelaxFit relaxFit = new RelaxFit();
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
         double tau = estimateTau(molData);
         System.out.println("tau " + tau);
@@ -162,23 +168,66 @@ public class FitModel {
             if (!resData.getData().isEmpty()) {
                 resData.setTestModel(model);
                 molDataRes.put(key, molData.get(key));
-                relaxFit.setRelaxData(molDataRes);
-                double[] start = model.getStart(tau, false);
-                double[] lower = model.getLower(tau, false);
-                double[] upper = model.getUpper(tau, false);
-                PointValuePair fitResult = relaxFit.fitResidueToModel(start, lower, upper);
-                double[] values = fitResult.getPoint();
-                double score = fitResult.getValue();
-                double orderPar = values[0];
-                double rexValue = values[1];
+                Score score = tryModel(molDataRes, model, tau);
+                double[] pars = score.getPars();
+                double orderPar = pars[0];
+                double rexValue = pars[1];
                 RelaxationRex relaxData = new RelaxationRex("order", RelaxationData.relaxTypes.S2,
-                        new ArrayList<>(), 700.0, 298, orderPar, 0.0,
+                        resData.atom, new ArrayList<>(), 700.0, 298, orderPar, 0.0,
                         rexValue, 0.0, extras);
                 Atom atom = mol.findAtom(key);
                 atom.addRelaxationData("order", relaxData);
-
             }
         }
+    }
+
+    public void testModels(Map<String, MolDataValues> molData, List<MFModelIso> models) {
+        Map<String, MolDataValues> molDataRes = new TreeMap<>();
+        double tau = estimateTau(molData);
+        System.out.println("tau " + tau);
+        MoleculeBase mol = MoleculeFactory.getActive();
+
+        for (String key : molData.keySet()) {
+            molDataRes.clear();
+            MolDataValues resData = molData.get(key);
+
+            if (!resData.getData().isEmpty()) {
+                MFModelIso bestModel = null;
+                Score bestScore = null;
+                double lowestAIC = Double.MAX_VALUE;
+                for (var model : models) {
+                    resData.setTestModel(model);
+                    molDataRes.put(key, molData.get(key));
+                    Score score = tryModel(molDataRes, model, tau);
+                    if (score.aic() < lowestAIC) {
+                        lowestAIC = score.aic();
+                        bestModel = model;
+                        bestScore = score;
+                    }
+                }
+                if (bestScore != null) {
+                    Atom atom = resData.atom;
+                    double[] pars = bestScore.getPars();
+                    double orderValue = pars[0];
+                    Double rexValue = pars.length > 1 ? pars[1] : null;
+                    Double rexError = pars.length > 1 ? 0.0 : null;
+                    OrderPar orderPar = new OrderPar(atom, orderValue, 0.0, bestScore.rss, "model1");
+                    orderPar = orderPar.rEx(rexValue, rexError);
+                    atom.addOrderPar("order", orderPar);
+                }
+            }
+        }
+    }
+
+    Score tryModel(Map<String, MolDataValues> molDataRes, MFModelIso model, double tau) {
+        RelaxFit relaxFit = new RelaxFit();
+        relaxFit.setRelaxData(molDataRes);
+        double[] start = model.getStart(tau, false);
+        double[] lower = model.getLower(tau, false);
+        double[] upper = model.getUpper(tau, false);
+        PointValuePair fitResult = relaxFit.fitResidueToModel(start, lower, upper);
+        var score = relaxFit.score(fitResult.getPoint(), true);
+        return score;
     }
 
 }

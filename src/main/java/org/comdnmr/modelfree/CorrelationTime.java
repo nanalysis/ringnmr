@@ -62,6 +62,10 @@ public class CorrelationTime {
             String r1SetName, String r2SetName) {
         ResidueProperties resPropsR1 = residueProps.get(r1SetName);
         ResidueProperties resPropsR2 = residueProps.get(r2SetName);
+        return estimateTau(resPropsR1, resPropsR2);
+    }
+
+    public static Map<String, Double> estimateTau(ResidueProperties resPropsR1, ResidueProperties resPropsR2) {
         Experiment r1Data = resPropsR1.getExperimentData().stream().findFirst().get();
         double b0 = r1Data.getB0Field();
         String nucName = r1Data.getNucleusName();
