@@ -38,7 +38,16 @@ public class MFModelIso2 extends MFModelIso1 {
     public MFModelIso2(double tauM) {
         super(tauM);
         nPars = 2;
+    }
 
+    public MFModelIso2(boolean includeEx) {
+        super(includeEx);
+        nPars = includeEx ? 3 : 2;
+    }
+
+    public MFModelIso2(double tauM, boolean includeEx) {
+        super(tauM, includeEx);
+        nPars = includeEx ? 3 : 2;
     }
 
     @Override
@@ -81,17 +90,30 @@ public class MFModelIso2 extends MFModelIso1 {
 
     @Override
     public double[] getStart(double tau, boolean includeTau) {
-        return getParValues(includeTau, tau, 0.9, tau / 40.0);
+        if (includeEx) {
+            return getParValues(includeTau, tau, 0.9, tau / 40.0, 2.0);
+        } else {
+            return getParValues(includeTau, tau, 0.9, tau / 40.0);
+        }
     }
 
     @Override
     public double[] getLower(double tau, boolean includeTau) {
-        return getParValues(includeTau, tau / 10., 0.0, tau / 1000.0);
+        if (includeEx) {
+            return getParValues(includeTau, tau / 10., 0.0, tau / 1000.0, 0.0);
+        } else {
+            return getParValues(includeTau, tau / 10., 0.0, tau / 1000.0);
+        }
     }
 
     @Override
     public double[] getUpper(double tau, boolean includeTau) {
-        return getParValues(includeTau, tau * 10., 1.0, tau / 10.0);
+        if (includeEx) {
+            return getParValues(includeTau, tau * 10., 1.0, tau / 10.0, 100.0);
+        } else {
+            return getParValues(includeTau, tau * 10., 1.0, tau / 10.0);
+
+        }
     }
 
 }

@@ -42,6 +42,16 @@ public class MFModelIso5 extends MFModelIso2 {
         nPars = 3;
     }
 
+    public MFModelIso5(boolean includeEx) {
+        super(includeEx);
+        nPars = includeEx ? 4 : 2;
+    }
+
+    public MFModelIso5(double tauM, boolean includeEx) {
+        super(tauM, includeEx);
+        nPars = includeEx ? 4 : 3;
+    }
+
     @Override
     public double[] calc(double[] omegas) {
         double[] J = new double[omegas.length];
@@ -84,17 +94,30 @@ public class MFModelIso5 extends MFModelIso2 {
 
     @Override
     public double[] getStart(double tau, boolean includeTau) {
-        return getParValues(includeTau, tau, 0.9, tau / 40.0, 0.9);
+        if (includeEx) {
+            return getParValues(includeTau, tau, 0.9, tau / 40.0, 0.9, 2.0);
+        } else {
+            return getParValues(includeTau, tau, 0.9, tau / 40.0, 0.9);
+        }
     }
 
     @Override
     public double[] getLower(double tau, boolean includeTau) {
-        return getParValues(includeTau, tau / 10., 0.0, tau / 1000.0, 0.0);
+        if (includeEx) {
+            return getParValues(includeTau, tau / 10., 0.0, tau / 1000.0, 0.0, 0.0);
+        } else {
+            return getParValues(includeTau, tau / 10., 0.0, tau / 1000.0, 0.0);
+        }
     }
 
     @Override
     public double[] getUpper(double tau, boolean includeTau) {
-        return getParValues(includeTau, tau * 10., 1.0, tau / 10.0, 1.0);
+        if (includeEx) {
+            return getParValues(includeTau, tau * 10., 1.0, tau / 10.0, 1.0, 100.0);
+        } else {
+            return getParValues(includeTau, tau * 10., 1.0, tau / 10.0, 1.0);
+
+        }
     }
 
 }

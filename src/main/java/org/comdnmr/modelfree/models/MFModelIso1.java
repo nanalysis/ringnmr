@@ -95,7 +95,7 @@ public class MFModelIso1 extends MFModelIso {
         if (includeEx) {
             return getParValues(includeTau, tau / 10., 0.0, 0.0);
         } else {
-            return getParValues(includeTau, tau / 10.);
+            return getParValues(includeTau, tau / 10., 0.0);
         }
     }
 
