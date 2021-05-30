@@ -379,15 +379,19 @@ public class ChartUtil {
 
     public static ResidueInfo getResInfo(String seriesName, String residue) {
         ResidueProperties residueProps = residueProperties.get(seriesName);
-        ResidueInfo resInfo = residueProps.getResidueInfo(residue);
-        return resInfo;
+        if (residueProps != null) {
+            ResidueInfo resInfo = residueProps.getResidueInfo(residue);
+            return resInfo;
+        } else {
+            return null;
+        }
     }
 
     public static ObservableList<DataSeries> getRelaxationDataSeries(List<RelaxationValues> values, String valueName, String setName, String parName) {
         ObservableList<DataSeries> data = FXCollections.observableArrayList();
 
         DataSeries series = new DataSeries();
-        series.setName(valueName + '|' + setName + "|" + parName);
+        series.setName(setName + '|' + valueName + "|" + parName);
         data.add(series);
         minRes = Integer.MAX_VALUE;
         maxRes = Integer.MIN_VALUE;
