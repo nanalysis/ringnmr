@@ -633,13 +633,13 @@ public class CESTControls extends EquationControls {
             if (control != null) {
                 control.setValue(parValue.getValue());
                 if (control.getName().equals("deltaA0") || control.getName().equals("deltaB0")) {
-                    if (controller.currentResProps != null) {
-                        if (controller.currentResProps.getExperimentData() != null) {
+                    if (controller.getCurrentResProps() != null) {
+                        if (controller.getCurrentResProps().getExperimentData() != null) {
 //                            double[] xVals = controller.currentResProps.getExperimentData().stream().findFirst().get().getXVals();
-                            List<ResidueInfo> resVals = controller.currentResProps.getResidueValues();
+                            List<ResidueInfo> resVals = controller.getCurrentResProps().getResidueValues();
                             Collections.sort(resVals, (a,b) -> Integer.compare(a.getResNum(), b.getResNum()));
                             String resNum = String.valueOf(resVals.get(0).getResNum());
-                            double[] xVals = controller.currentResProps.getExperimentData().stream().findFirst().get().getResidueData(resNum).getXValues()[0];
+                            double[] xVals = controller.getCurrentResProps().getExperimentData().stream().findFirst().get().getResidueData(resNum).getXValues()[0];
                             if (xVals != null) {
                                 double min = Math.floor(xVals[1] / 2) * 2;
                                 double max = Math.ceil(xVals[xVals.length - 1] / 2) * 2;
@@ -650,7 +650,7 @@ public class CESTControls extends EquationControls {
                 }
             }
         }
-        ResidueProperties resProps = controller.currentResProps;
+        ResidueProperties resProps = controller.getCurrentResProps();
 //        if (resProps != null) {
 //            double[] fields = resProps.getFields();
 //            int iField = Integer.parseInt(stateSelector.getValue().substring(0, 1));
@@ -725,7 +725,7 @@ public class CESTControls extends EquationControls {
     void updateEquations() {
 //        System.out.println("CEST Controls updateEqns called.");
         ResidueInfo resInfo = controller.currentResInfo;
-        ResidueProperties resProps = controller.currentResProps;
+        ResidueProperties resProps = controller.getCurrentResProps();
         List<GUIPlotEquation> equations = new ArrayList<>();
         double[] pars;
         double[] extras1;

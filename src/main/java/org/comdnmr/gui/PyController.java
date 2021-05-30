@@ -244,7 +244,7 @@ public class PyController implements Initializable {
     NMRFxClient cl;
 
     ResidueInfo currentResInfo = null;
-    ResidueProperties currentResProps = null;
+    private ResidueProperties currentResProps = null;
     ResidueFitter residueFitter;
     String currentMapName = "";
     String[] currentResidues;
@@ -347,12 +347,14 @@ public class PyController implements Initializable {
             simControls = new CESTControls();
             xLowerBoundTextField.setText("-20.0");
             xUpperBoundTextField.setText("20.0");
-            if (currentResProps.getExperimentData() != null) {
-                DoubleArrayExperiment expData = (DoubleArrayExperiment) currentResProps.getExperimentData().
-                        stream().findFirst().get();
-                double[] xVals = expData.getXVals();
-                xLowerBoundTextField.setText(String.valueOf(Math.floor(xVals[1] / 2) * 2));
-                xUpperBoundTextField.setText(String.valueOf(Math.ceil(xVals[xVals.length - 1] / 2) * 2));
+            if (hasResProps()) {
+                if (getCurrentResProps().getExperimentData() != null) {
+                    DoubleArrayExperiment expData = (DoubleArrayExperiment) getCurrentResProps().getExperimentData().
+                            stream().findFirst().get();
+                    double[] xVals = expData.getXVals();
+                    xLowerBoundTextField.setText(String.valueOf(Math.floor(xVals[1] / 2) * 2));
+                    xUpperBoundTextField.setText(String.valueOf(Math.ceil(xVals[xVals.length - 1] / 2) * 2));
+                }
             }
             yLowerBoundTextField.setText("0.0");
             yUpperBoundTextField.setText("1.0");
@@ -406,12 +408,14 @@ public class PyController implements Initializable {
             simControls = new R1RhoControls();
             xLowerBoundTextField.setText("-20.0");
             xUpperBoundTextField.setText("20.0");
-            if (currentResProps.getExperimentData() != null) {
-                DoubleArrayExperiment expData = (DoubleArrayExperiment) currentResProps.getExperimentData().
-                        stream().findFirst().get();
-                double[] xVals = expData.getXVals();
-                xLowerBoundTextField.setText(String.valueOf(Math.floor(xVals[1] / 2) * 2));
-                xUpperBoundTextField.setText(String.valueOf(Math.ceil(xVals[xVals.length - 1] / 2) * 2));
+            if (hasResProps()) {
+                if (getCurrentResProps().getExperimentData() != null) {
+                    DoubleArrayExperiment expData = (DoubleArrayExperiment) getCurrentResProps().getExperimentData().
+                            stream().findFirst().get();
+                    double[] xVals = expData.getXVals();
+                    xLowerBoundTextField.setText(String.valueOf(Math.floor(xVals[1] / 2) * 2));
+                    xUpperBoundTextField.setText(String.valueOf(Math.ceil(xVals[xVals.length - 1] / 2) * 2));
+                }
             }
             yLowerBoundTextField.setText("0.0");
             yUpperBoundTextField.setText("50.0");
@@ -592,9 +596,12 @@ public class PyController implements Initializable {
             simPane.centerProperty().set(vBox);
             updateEquationChoices(getFittingMode());
         }
-        String nucleus = currentResProps.getExperimentData().stream().findFirst().get().getNucleusName();
-        simControls.setNucleus(nucleus);
-        updateXYChartLabels();
+        if (hasResProps()) {
+
+            String nucleus = getCurrentResProps().getExperimentData().stream().findFirst().get().getNucleusName();
+            simControls.setNucleus(nucleus);
+            updateXYChartLabels();
+        }
     }
 
     public void setSimControls() {
@@ -722,7 +729,7 @@ public class PyController implements Initializable {
     }
 
     public void previousResidue(ActionEvent event) {
-        List<ResidueInfo> resInfo = currentResProps.getResidueValues();
+        List<ResidueInfo> resInfo = getCurrentResProps().getResidueValues();
         List resNums = new ArrayList<>();
         for (int i = 0; i < resInfo.size(); i++) {
             resNums.add(resInfo.get(i).getResNum());
@@ -749,7 +756,7 @@ public class PyController implements Initializable {
     }
 
     public void nextResidue(ActionEvent event) {
-        List<ResidueInfo> resInfo = currentResProps.getResidueValues();
+        List<ResidueInfo> resInfo = getCurrentResProps().getResidueValues();
         List resNums = new ArrayList<>();
         for (int i = 0; i < resInfo.size(); i++) {
             resNums.add(resInfo.get(i).getResNum());
@@ -955,8 +962,8 @@ public class PyController implements Initializable {
             xychart.setBounds(-20, 20, 0.0, 1.0, 2.0, 0.25);
             xLowerBoundTextField.setText("-20.0");
             xUpperBoundTextField.setText("20.0");
-            if (currentResProps != null) {
-                DoubleArrayExperiment expData = (DoubleArrayExperiment) currentResProps.getExperimentData().
+            if (hasResProps()) {
+                DoubleArrayExperiment expData = (DoubleArrayExperiment) getCurrentResProps().getExperimentData().
                         stream().findFirst().get();
                 double[] xVals = expData.getXVals();
                 if (xVals != null) {
@@ -974,8 +981,8 @@ public class PyController implements Initializable {
             xychart.setBounds(-20, 20, 0.0, 50.0, 2.0, 5.0);
             xLowerBoundTextField.setText("-20.0");
             xUpperBoundTextField.setText("20.0");
-            if (currentResProps != null) {
-                DoubleArrayExperiment expData = (DoubleArrayExperiment) currentResProps.getExperimentData().
+            if (hasResProps()) {
+                DoubleArrayExperiment expData = (DoubleArrayExperiment) getCurrentResProps().getExperimentData().
                         stream().findFirst().get();
                 double[] xVals = expData.getXVals();
                 if (xVals != null) {
@@ -1370,7 +1377,7 @@ public class PyController implements Initializable {
         activeChart.getData().clear();
     }
 
-    public void showRelaxationValues(String setName, String valueName,  String parName) {
+    public void showRelaxationValues(String setName, String valueName, String parName) {
         List<RelaxationValues> values = ChartUtil.getMolRelaxationValues(setName);
         ObservableList<DataSeries> data = ChartUtil.getRelaxationDataSeries(values, valueName, setName, parName);
         String yLabel = valueName.equalsIgnoreCase(parName) ? parName
@@ -1420,8 +1427,8 @@ public class PyController implements Initializable {
         } else {
             // chart.setLegendVisible(false); //fixme
         }
-        currentResProps = ChartUtil.getResidueProperty(setName);
-        chart.setResProps(currentResProps);
+        setCurrentResProps(ChartUtil.getResidueProperty(setName));
+        chart.setResProps(getCurrentResProps());
         refreshResidueCharts();
     }
 
@@ -1525,13 +1532,13 @@ public class PyController implements Initializable {
 
     @FXML
     public void guesses(ActionEvent event) {
-        if (currentResProps == null) {
+        if (!hasResProps()) {
             guessSimData();
         } else {
             try {
                 EquationFitter equationFitter = getFitter();
                 String[] resNums = {String.valueOf(currentResInfo.getResNum())};
-                equationFitter.setData(currentResProps, resNums);
+                equationFitter.setData(getCurrentResProps(), resNums);
                 String equationName = simControls.getEquation();
 //        System.out.println("guesses eqnFitter = " + equationFitter);
 //        System.out.println("guesses resNums = " + resNums);
@@ -1551,22 +1558,24 @@ public class PyController implements Initializable {
     }
 
     public Optional<Double> rms() {
-        Optional<Double> rms;
-        try {
-            EquationFitter equationFitter = getFitter();
-            if (currentResInfo != null) {
-                String[] resNums = {String.valueOf(currentResInfo.getResNum())};
-                equationFitter.setData(currentResProps, resNums);
-                String equationName = simControls.getEquation();
-                equationFitter.setupFit(equationName);
-                int[][] map = equationFitter.getFitModel().getMap();
-                double[] sliderGuesses = simControls.sliderGuess(equationName, map);
-                rms = Optional.of(equationFitter.rms(sliderGuesses));
-            } else {
+        Optional<Double> rms = Optional.empty();
+        if (hasResProps()) {
+            try {
+                EquationFitter equationFitter = getFitter();
+                if (currentResInfo != null) {
+                    String[] resNums = {String.valueOf(currentResInfo.getResNum())};
+                    equationFitter.setData(getCurrentResProps(), resNums);
+                    String equationName = simControls.getEquation();
+                    equationFitter.setupFit(equationName);
+                    int[][] map = equationFitter.getFitModel().getMap();
+                    double[] sliderGuesses = simControls.sliderGuess(equationName, map);
+                    rms = Optional.of(equationFitter.rms(sliderGuesses));
+                } else {
+                    rms = Optional.empty();
+                }
+            } catch (NullPointerException npE2) {
                 rms = Optional.empty();
             }
-        } catch (NullPointerException npE2) {
-            rms = Optional.empty();
         }
         return rms;
     }
@@ -1577,11 +1586,11 @@ public class PyController implements Initializable {
         fitResult = null;
         try {
             EquationFitter equationFitter = getFitter();
-            if (currentResProps == null) {
+            if (!hasResProps()) {
                 fitSimData();
             } else {
                 String[] resNums = {String.valueOf(currentResInfo.getResNum())};
-                equationFitter.setData(currentResProps, resNums);
+                equationFitter.setData(getCurrentResProps(), resNums);
                 String equationName = simControls.getEquation();
                 equationFitter.setupFit(equationName);
                 int[][] map = equationFitter.getFitModel().getMap();
@@ -1631,12 +1640,12 @@ public class PyController implements Initializable {
             //System.out.println("Fit button residueProperties = " + residueProperties);
             //System.out.println("Fit button expData = " + residueProps.getExperimentData("cest"));
             Optional<Experiment> optionalData = Optional.empty();
-            if (currentResProps != null) {
-                optionalData = currentResProps.getExperimentData().stream().findFirst();
+            if (hasResProps()) {
+                optionalData = getCurrentResProps().getExperimentData().stream().findFirst();
             }
 
             if (optionalData.isPresent() && optionalData.get().getExtras().size() > 0) {
-                for (Experiment expData : currentResProps.getExperimentData()) {
+                for (Experiment expData : getCurrentResProps().getExperimentData()) {
                     double[] pars = curveFit.getEquation().getPars(); //pars = getPars(equationName);
                     double[] errs = curveFit.getEquation().getErrs(); //double[] errs = new double[pars.length];
                     double[] extras = new double[3];
@@ -1723,7 +1732,9 @@ public class PyController implements Initializable {
 //            ChooseCESTFitEquations.create();
 //        } else {
         fitResult = null;
-        residueFitter.fitResidues(currentResProps);
+        if (hasResProps()) {
+            residueFitter.fitResidues(getCurrentResProps());
+        }
 //        }
     }
 
@@ -1733,15 +1744,18 @@ public class PyController implements Initializable {
 //            ChooseCESTFitEquations.allRes = false;
 //            ChooseCESTFitEquations.create();
 //        } else {
-        fitResult = null;
-        List<List<String>> allResidues = new ArrayList<>();
-        List<String> groupResidues = new ArrayList<>();
-        fittingResidues.clear();
-        fittingResidues.addAll(ResidueChart.selectedResidues);
-        groupResidues.addAll(ResidueChart.selectedResidues);
-        if (!groupResidues.isEmpty()) {
-            allResidues.add(groupResidues);
-            residueFitter.fitResidues(currentResProps, allResidues);
+        if (hasResProps()) {
+
+            fitResult = null;
+            List<List<String>> allResidues = new ArrayList<>();
+            List<String> groupResidues = new ArrayList<>();
+            fittingResidues.clear();
+            fittingResidues.addAll(ResidueChart.selectedResidues);
+            groupResidues.addAll(ResidueChart.selectedResidues);
+            if (!groupResidues.isEmpty()) {
+                allResidues.add(groupResidues);
+                residueFitter.fitResidues(getCurrentResProps(), allResidues);
+            }
         }
 //        }
     }
@@ -1767,7 +1781,7 @@ public class PyController implements Initializable {
         fileChooser.setTitle("Save Parameter File");
         File file = fileChooser.showSaveDialog(MainApp.primaryStage);
         if (file != null) {
-            DataIO.saveResultsFile(file.getAbsolutePath(), currentResProps, false);
+            DataIO.saveResultsFile(file.getAbsolutePath(), getCurrentResProps(), false);
         }
     }
 
@@ -1792,7 +1806,7 @@ public class PyController implements Initializable {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION, alertText);
         Optional<ButtonType> response = alert.showAndWait();
         if (response.isPresent() && response.get().getText().equals("OK")) {
-            DataIO.addRelaxationFitResults(currentResProps, relaxTypes.T1);
+            DataIO.addRelaxationFitResults(getCurrentResProps(), relaxTypes.T1);
         }
     }
 
@@ -1806,37 +1820,39 @@ public class PyController implements Initializable {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION, alertText);
         Optional<ButtonType> response = alert.showAndWait();
         if (response.isPresent() && response.get().getText().equals("OK")) {
-            DataIO.addRelaxationFitResults(currentResProps, relaxTypes.T2);
+            DataIO.addRelaxationFitResults(getCurrentResProps(), relaxTypes.T2);
         }
     }
 
     public Double updateFitProgress(Double f) {
-        ResidueChart chart = getActiveChart();
-        String seriesName = chart.currentSeriesName;
-        String[] sParts;
-        if (seriesName.length() == 0) {
-            sParts = new String[4];
-            sParts[0] = currentResProps.getName();
-            sParts[1] = "best";
-            sParts[2] = "0:0:0";
-            sParts[3] = "RMS";
-        } else {
-            sParts = seriesName.split("\\|");
-        }
-        if (Platform.isFxApplicationThread()) {
-            clearChart();
-            statusBar.setProgress(f);
-            setYAxisType(currentResProps.getExpMode(), sParts[0], sParts[1], sParts[2], sParts[3]);
-            currentResProps = ChartUtil.getResidueProperty(currentResProps.getName());
-
-        } else {
-            Platform.runLater(() -> {
+        if (hasResProps()) {
+            ResidueChart chart = getActiveChart();
+            String seriesName = chart.currentSeriesName;
+            String[] sParts;
+            if (seriesName.length() == 0) {
+                sParts = new String[4];
+                sParts[0] = getCurrentResProps().getName();
+                sParts[1] = "best";
+                sParts[2] = "0:0:0";
+                sParts[3] = "RMS";
+            } else {
+                sParts = seriesName.split("\\|");
+            }
+            if (Platform.isFxApplicationThread()) {
                 clearChart();
-                setYAxisType(currentResProps.getExpMode(), sParts[0], sParts[1], sParts[2], sParts[3]);
                 statusBar.setProgress(f);
-                currentResProps = ChartUtil.getResidueProperty(currentResProps.getName());
+                setYAxisType(getCurrentResProps().getExpMode(), sParts[0], sParts[1], sParts[2], sParts[3]);
+                setCurrentResProps(ChartUtil.getResidueProperty(getCurrentResProps().getName()));
 
-            });
+            } else {
+                Platform.runLater(() -> {
+                    clearChart();
+                    setYAxisType(getCurrentResProps().getExpMode(), sParts[0], sParts[1], sParts[2], sParts[3]);
+                    statusBar.setProgress(f);
+                    setCurrentResProps(ChartUtil.getResidueProperty(getCurrentResProps().getName()));
+
+                });
+            }
         }
         return null;
 
@@ -1863,7 +1879,6 @@ public class PyController implements Initializable {
         if (s == null) {
             statusBar.setText("");
         } else {
-            System.out.println("setatus " + s);
             statusBar.setText(s);
             if (s.equals("Done")) {
                 refreshFit();
@@ -1981,13 +1996,13 @@ public class PyController implements Initializable {
 
     public String getFittingMode() {
         String fitMode = "cpmg";
-        if (currentResProps == null) {
+        if (!hasResProps()) {
             String simMode = getSimMode();
             if (simMode != null) {
                 fitMode = simMode;
             }
         } else {
-            fitMode = currentResProps.getExpMode();
+            fitMode = getCurrentResProps().getExpMode();
             if (fitMode.equalsIgnoreCase("t1") || fitMode.equalsIgnoreCase("t2")) {
                 fitMode = "exp";
             }
@@ -2100,7 +2115,7 @@ public class PyController implements Initializable {
     void clearProject(boolean clearXY) {
         currentResidues = null;
         currentResInfo = null;
-        currentResProps = null;
+        setCurrentResProps(null);
         fitResult = null;
         ChartUtil.clearResidueProperties();
         if (clearXY) {
@@ -2118,7 +2133,9 @@ public class PyController implements Initializable {
     void showInfo(String equationName) {
         String mapName = currentMapName;
         String state = currentState;
-        showInfo(currentResProps, equationName, mapName, state, currentResidues, xychart);
+        if (hasResProps()) {
+            showInfo(getCurrentResProps(), equationName, mapName, state, currentResidues, xychart);
+        }
     }
 
     void showInfo(ResidueProperties resProps, String equationName, String mapName, String state, String[] residues, PlotData plotData) {
@@ -2521,6 +2538,24 @@ public class PyController implements Initializable {
                     axis.getWidth(),
                     axis.getLowerBound(), axis.getUpperBound());
         }
+    }
+
+    public boolean hasResProps() {
+        return (currentResProps != null) && (currentResProps instanceof ResidueProperties);
+    }
+
+    /**
+     * @return the currentResProps
+     */
+    public ResidueProperties getCurrentResProps() {
+        return currentResProps;
+    }
+
+    /**
+     * @param currentResProps the currentResProps to set
+     */
+    public void setCurrentResProps(ResidueProperties currentResProps) {
+        this.currentResProps = currentResProps;
     }
 
 }

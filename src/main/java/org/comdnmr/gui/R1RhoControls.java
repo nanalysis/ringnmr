@@ -594,9 +594,9 @@ public class R1RhoControls extends EquationControls {
             if (control != null) {
                 control.setValue(parValue.getValue());
                 if (control.getName().equals("deltaA0") || control.getName().equals("deltaB0")) {
-                    if (controller.currentResProps != null) {
-                        if (controller.currentResProps.getExperimentData() != null) {
-                            DoubleArrayExperiment expData = (DoubleArrayExperiment) controller.currentResProps.getExperimentData().
+                    if (controller.getCurrentResProps() != null) {
+                        if (controller.getCurrentResProps().getExperimentData() != null) {
+                            DoubleArrayExperiment expData = (DoubleArrayExperiment) controller.getCurrentResProps().getExperimentData().
                                     stream().findFirst().get();
                             double[] xVals = expData.getXVals();
 
@@ -612,7 +612,7 @@ public class R1RhoControls extends EquationControls {
                 }
             }
         }
-        ResidueProperties resProps = controller.currentResProps;
+        ResidueProperties resProps = controller.getCurrentResProps();
 //        if (resProps != null) {
 //            double[] fields = resProps.getFields();
 //            int iField = Integer.parseInt(stateSelector.getValue().substring(0, 1));
@@ -676,7 +676,7 @@ public class R1RhoControls extends EquationControls {
     void updateEquations() {
 //        System.out.println("R1Rho Controls updateEqns called.");
         ResidueInfo resInfo = controller.currentResInfo;
-        ResidueProperties resProps = controller.currentResProps;
+        ResidueProperties resProps = controller.getCurrentResProps();
         List<GUIPlotEquation> equations = new ArrayList<>();
         double[] pars;
         double[] extras1;

@@ -643,7 +643,7 @@ public class InputDataInterface {
                     parName = "NOE";
                 }
                 ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
-                PyController.mainController.currentResProps = resProp;
+                PyController.mainController.setCurrentResProps(resProp);
                 PyController.mainController.makeAxisMenu();
                 PyController.mainController.setYAxisType(resProp.getExpMode(), resProp.getName(), "best", "0:0:0", parName);
                 reschartNode.setResProps(resProp);
@@ -844,7 +844,7 @@ public class InputDataInterface {
             parName = "R";
         }
         ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
-        PyController.mainController.currentResProps = resProp;
+        PyController.mainController.setCurrentResProps(resProp);
         PyController.mainController.makeAxisMenu();
         PyController.mainController.setYAxisType(resProp.getExpMode(), resProp.getName(), "best", "0:0:0", parName);
         reschartNode.setResProps(resProp);

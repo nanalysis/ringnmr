@@ -267,7 +267,7 @@ public class NOEControls extends EquationControls {
 
     void updateEquations() {
         ResidueInfo resInfo = controller.currentResInfo;
-        ResidueProperties resProps = controller.currentResProps;
+        ResidueProperties resProps = controller.getCurrentResProps();
         List<GUIPlotEquation> equations = new ArrayList<>();
         double[] pars;
         String equationName = getEquation(); //equationSelector.getValue();

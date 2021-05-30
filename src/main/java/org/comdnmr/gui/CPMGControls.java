@@ -393,7 +393,7 @@ public class CPMGControls extends EquationControls {
                 control.setValue(parValue.getValue());
             }
         }
-        ResidueProperties resProps = controller.currentResProps;
+        ResidueProperties resProps = controller.getCurrentResProps();
         if (resProps != null) {
             double[] fields = resProps.getFields();
             int iField = Integer.parseInt(stateSelector.getValue().substring(0, 1));
@@ -437,7 +437,7 @@ public class CPMGControls extends EquationControls {
 
     void updateEquations() {
         ResidueInfo resInfo = controller.currentResInfo;
-        ResidueProperties resProps = controller.currentResProps;
+        ResidueProperties resProps = controller.getCurrentResProps();
         List<GUIPlotEquation> equations = new ArrayList<>();
         double[] pars;
         String equationName = equationSelector.getValue();
