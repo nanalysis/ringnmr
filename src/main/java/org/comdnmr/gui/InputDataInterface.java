@@ -50,7 +50,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.comdnmr.data.DataIO;
 import org.comdnmr.data.Experiment;
-import org.comdnmr.data.ResidueProperties;
+import org.comdnmr.data.ExperimentSet;
 import org.controlsfx.control.textfield.TextFields;
 import org.controlsfx.dialog.ExceptionDialog;
 import org.nmrfx.chart.DataSeries;
@@ -610,7 +610,7 @@ public class InputDataInterface {
         PeakList peakList = PeakList.get(peakListChoice.getValue());
         if (peakList != null) {
             String peakListName = peakList.getName();
-            ResidueProperties resProp = new ResidueProperties(peakListName, peakListName);
+            ExperimentSet resProp = new ExperimentSet(peakListName, peakListName);
             String expMode = fitModeChoice.getValue().toLowerCase();
             resProp.setExpMode(expMode);
             double[] delayCalc = {0.0, 0.0, 1.0};
@@ -809,9 +809,9 @@ public class InputDataInterface {
         File projectDirFile = new File(chosenDirLabel.getText().trim());
         dirPath = projectDirFile.toPath();
 
-        ResidueProperties resProp = null;
+        ExperimentSet resProp = null;
         String expMode = fitModeChoice.getSelectionModel().getSelectedItem().toLowerCase();
-        resProp = new ResidueProperties(projectName, projectDirFile.toString());
+        resProp = new ExperimentSet(projectName, projectDirFile.toString());
         expMode = expMode.toLowerCase();
         resProp.setExpMode(expMode);
 
@@ -835,7 +835,7 @@ public class InputDataInterface {
             reschartNode = PyController.mainController.addChart();
 
         }
-//            ResidueProperties resProp = DataIO.loadParameters(fileName);
+//            ExperimentSet resProp = DataIO.loadParameters(fileName);
         ChartUtil.addResidueProperty(resProp.getName(), resProp);
         String parName = "Kex";
         if (resProp.getExpMode().equals("t1")) {

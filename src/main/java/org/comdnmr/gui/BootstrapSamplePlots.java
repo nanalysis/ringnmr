@@ -40,7 +40,7 @@ import javafx.scene.layout.Priority;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.comdnmr.eqnfit.FitResult;
-import org.comdnmr.data.ResidueInfo;
+import org.comdnmr.data.ExperimentResult;
 import org.controlsfx.dialog.ExceptionDialog;
 import org.nmrfx.chart.Axis;
 import org.nmrfx.chart.DataSeries;
@@ -201,7 +201,7 @@ public class BootstrapSamplePlots {
     Map<String, double[]> getMCSimsMap() {
         Map<String, double[]> simsMap = null;
         FitResult showFitResult = null;
-        ResidueInfo currentResInfo = pyController.getResidueInfo();
+        ExperimentResult currentResInfo = pyController.getResidueInfo();
         String currentEquationName = "";
         if (currentResInfo != null) {
             currentEquationName = pyController.getParametersEquation();

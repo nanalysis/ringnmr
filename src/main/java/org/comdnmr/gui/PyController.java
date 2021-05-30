@@ -72,8 +72,8 @@ import org.comdnmr.eqnfit.ParValueInterface;
 import org.comdnmr.eqnfit.PlotEquation;
 import org.comdnmr.util.ProcessingStatus;
 import org.comdnmr.fit.ResidueFitter;
-import org.comdnmr.data.ResidueInfo;
-import org.comdnmr.data.ResidueProperties;
+import org.comdnmr.data.ExperimentResult;
+import org.comdnmr.data.ExperimentSet;
 import org.controlsfx.control.StatusBar;
 import org.comdnmr.eqnfit.CESTFitter;
 import java.text.DecimalFormat;
@@ -243,8 +243,8 @@ public class PyController implements Initializable {
     InputDataInterface inputDataInterface = null;
     NMRFxClient cl;
 
-    ResidueInfo currentResInfo = null;
-    private ResidueProperties currentResProps = null;
+    ExperimentResult currentResInfo = null;
+    private ExperimentSet currentResProps = null;
     ResidueFitter residueFitter;
     String currentMapName = "";
     String[] currentResidues;
@@ -729,7 +729,7 @@ public class PyController implements Initializable {
     }
 
     public void previousResidue(ActionEvent event) {
-        List<ResidueInfo> resInfo = getCurrentResProps().getResidueValues();
+        List<ExperimentResult> resInfo = getCurrentResProps().getResidueValues();
         List resNums = new ArrayList<>();
         for (int i = 0; i < resInfo.size(); i++) {
             resNums.add(resInfo.get(i).getResNum());
@@ -756,7 +756,7 @@ public class PyController implements Initializable {
     }
 
     public void nextResidue(ActionEvent event) {
-        List<ResidueInfo> resInfo = getCurrentResProps().getResidueValues();
+        List<ExperimentResult> resInfo = getCurrentResProps().getResidueValues();
         List resNums = new ArrayList<>();
         for (int i = 0; i < resInfo.size(); i++) {
             resNums.add(resInfo.get(i).getResNum());
@@ -1085,8 +1085,8 @@ public class PyController implements Initializable {
     public void estimateCorrelationTime() {
         String r1SetName = t1Choice.getValue();
         String r2SetName = t2Choice.getValue();
-        ResidueProperties r1Set = ChartUtil.getResidueProperty(r1SetName);
-        ResidueProperties r2Set = ChartUtil.getResidueProperty(r2SetName);
+        ExperimentSet r1Set = ChartUtil.getResidueProperty(r1SetName);
+        ExperimentSet r2Set = ChartUtil.getResidueProperty(r2SetName);
 
         Map<String, Double> result = CorrelationTime.estimateTau(r1Set, r2Set);
         if (!result.isEmpty()) {
@@ -1205,7 +1205,7 @@ public class PyController implements Initializable {
         List<ParValueInterface> allParValues = new ArrayList<>();
         if (residues != null) {
             for (String resNum : residues) {
-                ResidueInfo resInfo = ChartUtil.getResInfo(mapName, String.valueOf(resNum));
+                ExperimentResult resInfo = ChartUtil.getResInfo(mapName, String.valueOf(resNum));
                 if (resInfo != null) {
                     currentResInfo = resInfo;
                     final String useEquationName;
@@ -1253,7 +1253,7 @@ public class PyController implements Initializable {
         String setEquation = "";
         for (String resNum : residues) {
             final String useEquationName;
-            ResidueInfo resInfo = ChartUtil.getResInfo(mapName, resNum);
+            ExperimentResult resInfo = ChartUtil.getResInfo(mapName, resNum);
             if (resInfo != null) {
                 if (equationName.equals("best")) {
                     useEquationName = resInfo.getBestEquationName();
@@ -1988,7 +1988,7 @@ public class PyController implements Initializable {
         return fitResult;
     }
 
-    public ResidueInfo getResidueInfo() {
+    public ExperimentResult getResidueInfo() {
         return currentResInfo;
     }
 
@@ -2065,7 +2065,7 @@ public class PyController implements Initializable {
     @FXML
     void setBestEquation(ActionEvent e) {
         for (String resNum : currentResidues) {
-            ResidueInfo resInfo = ChartUtil.getResInfo(currentMapName, String.valueOf(resNum));
+            ExperimentResult resInfo = ChartUtil.getResInfo(currentMapName, String.valueOf(resNum));
             if (resInfo != null) {
                 String equationName = equationChoice.getValue();
                 resInfo.setBestEquationName(equationName);
@@ -2140,18 +2140,18 @@ public class PyController implements Initializable {
         }
     }
 
-    void showInfo(ResidueProperties resProps, String equationName, String mapName, String state, String[] residues, PlotData plotData) {
+    void showInfo(ExperimentSet experimentSet, String equationName, String mapName, String state, String[] residues, PlotData plotData) {
         ArrayList<GUIPlotEquation> equations = new ArrayList<>();
         ObservableList<DataSeries> allData = FXCollections.observableArrayList();
         List<ExperimentalData> experimentalDataSets = new ArrayList<>();
         List<int[]> allStates = new ArrayList<>();
         boolean calcScale = scalePlot.isSelected();
-        if ((resProps != null) && (residues != null)) {
-            //double maxY = getMaxY(resProps, equationName, mapName, state, residues) / 100.0;
+        if ((experimentSet != null) && (residues != null)) {
+            //double maxY = getMaxY(experimentSet, equationName, mapName, state, residues) / 100.0;
             //System.out.println("max Y " + maxY);
             int iSeries = 0;
-            for (Experiment expData : resProps.getExperimentData()) {
-                if (!ResidueProperties.matchStateString(state, expData.getState())) {
+            for (Experiment expData : experimentSet.getExperimentData()) {
+                if (!ExperimentSet.matchStateString(state, expData.getState())) {
                     continue;
                 }
                 String expName = expData.getName();
@@ -2182,7 +2182,7 @@ public class PyController implements Initializable {
                     }
                 }
 
-                int[] states = resProps.getStateIndices(0, expData);
+                int[] states = experimentSet.getStateIndices(0, expData);
                 allStates.add(states);
             }
         }
@@ -2197,11 +2197,11 @@ public class PyController implements Initializable {
         plotData.setEquations(equations);
     }
 
-    public double getMaxY(ResidueProperties resProps, String equationName, String mapName, String state, String[] residues) {
+    public double getMaxY(ExperimentSet experimentSet, String equationName, String mapName, String state, String[] residues) {
         double maxValue = Double.NEGATIVE_INFINITY;
-        if ((resProps != null) && (residues != null)) {
-            for (Experiment expData : resProps.getExperimentData()) {
-                if (!ResidueProperties.matchStateString(state, expData.getState())) {
+        if ((experimentSet != null) && (residues != null)) {
+            for (Experiment expData : experimentSet.getExperimentData()) {
+                if (!ExperimentSet.matchStateString(state, expData.getState())) {
                     continue;
                 }
                 String expName = expData.getName();
@@ -2543,20 +2543,20 @@ public class PyController implements Initializable {
     }
 
     public boolean hasResProps() {
-        return (currentResProps != null) && (currentResProps instanceof ResidueProperties);
+        return (currentResProps != null) && (currentResProps instanceof ExperimentSet);
     }
 
     /**
      * @return the currentResProps
      */
-    public ResidueProperties getCurrentResProps() {
+    public ExperimentSet getCurrentResProps() {
         return currentResProps;
     }
 
     /**
      * @param currentResProps the currentResProps to set
      */
-    public void setCurrentResProps(ResidueProperties currentResProps) {
+    public void setCurrentResProps(ExperimentSet currentResProps) {
         this.currentResProps = currentResProps;
     }
 

@@ -28,8 +28,8 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.comdnmr.eqnfit.ExpFitter;
 import org.comdnmr.eqnfit.ParValueInterface;
-import org.comdnmr.data.ResidueInfo;
-import org.comdnmr.data.ResidueProperties;
+import org.comdnmr.data.ExperimentResult;
+import org.comdnmr.data.ExperimentSet;
 import static org.comdnmr.gui.ExpControls.PARS.A;
 import static org.comdnmr.gui.ExpControls.PARS.C;
 import static org.comdnmr.gui.ExpControls.PARS.R;
@@ -301,12 +301,12 @@ public class ExpControls extends EquationControls {
     }
 
     void updateEquations() {
-        ResidueInfo resInfo = controller.currentResInfo;
-        ResidueProperties resProps = controller.getCurrentResProps();
+        ExperimentResult resInfo = controller.currentResInfo;
+        ExperimentSet experimentSet = controller.getCurrentResProps();
         List<GUIPlotEquation> equations = new ArrayList<>();
         double[] pars;
         String equationName = getEquation(); //equationSelector.getValue();
-        if (resProps == null) {
+        if (experimentSet == null) {
             pars = getPars(equationName);
             double[] errs = new double[pars.length];
             double[] extras = new double[1];

@@ -33,8 +33,8 @@ import org.comdnmr.eqnfit.CESTEquation;
 import org.comdnmr.eqnfit.CESTFitter;
 import org.comdnmr.data.Experiment;
 import org.comdnmr.eqnfit.ParValueInterface;
-import org.comdnmr.data.ResidueInfo;
-import org.comdnmr.data.ResidueProperties;
+import org.comdnmr.data.ExperimentResult;
+import org.comdnmr.data.ExperimentSet;
 import static org.comdnmr.gui.CESTControls.PARS.KEX;
 import static org.comdnmr.gui.CESTControls.PARS.PB;
 import static org.comdnmr.gui.CESTControls.PARS.DELTAA0;
@@ -219,7 +219,7 @@ public class CESTControls extends EquationControls {
             equationName = equationSelector.getItems().get(0);
         }
         //System.out.println("eqnAction eqnName = " + equationName);
-        ResidueInfo resInfo = controller.currentResInfo;
+        ExperimentResult resInfo = controller.currentResInfo;
         if (resInfo != null) {
             updatingTable = true;
             String state = stateSelector.getValue();
@@ -326,7 +326,7 @@ public class CESTControls extends EquationControls {
     }
 
     void stateAction() {
-        ResidueInfo resInfo = controller.currentResInfo;
+        ExperimentResult resInfo = controller.currentResInfo;
         if (resInfo != null) {
             String state = stateSelector.getValue();
             if (state != null) {
@@ -636,7 +636,7 @@ public class CESTControls extends EquationControls {
                     if (controller.getCurrentResProps() != null) {
                         if (controller.getCurrentResProps().getExperimentData() != null) {
 //                            double[] xVals = controller.currentResProps.getExperimentData().stream().findFirst().get().getXVals();
-                            List<ResidueInfo> resVals = controller.getCurrentResProps().getResidueValues();
+                            List<ExperimentResult> resVals = controller.getCurrentResProps().getResidueValues();
                             Collections.sort(resVals, (a,b) -> Integer.compare(a.getResNum(), b.getResNum()));
                             String resNum = String.valueOf(resVals.get(0).getResNum());
                             double[] xVals = controller.getCurrentResProps().getExperimentData().stream().findFirst().get().getResidueData(resNum).getXValues()[0];
@@ -650,9 +650,9 @@ public class CESTControls extends EquationControls {
                 }
             }
         }
-        ResidueProperties resProps = controller.getCurrentResProps();
-//        if (resProps != null) {
-//            double[] fields = resProps.getFields();
+        ExperimentSet experimentSet = controller.getCurrentResProps();
+//        if (experimentSet != null) {
+//            double[] fields = experimentSet.getFields();
 //            int iField = Integer.parseInt(stateSelector.getValue().substring(0, 1));
 //            FIELD2.setValue(fields[iField]);
 //            FIELD2.setText();
@@ -724,18 +724,18 @@ public class CESTControls extends EquationControls {
 
     void updateEquations() {
 //        System.out.println("CEST Controls updateEqns called.");
-        ResidueInfo resInfo = controller.currentResInfo;
-        ResidueProperties resProps = controller.getCurrentResProps();
+        ExperimentResult resInfo = controller.currentResInfo;
+        ExperimentSet experimentSet = controller.getCurrentResProps();
         List<GUIPlotEquation> equations = new ArrayList<>();
         double[] pars;
         double[] extras1;
         String equationName = equationSelector.getValue();
         Optional<Experiment> optionalData = Optional.empty();
         if (resInfo != null) {
-            if (resProps != null) {
-                optionalData = resProps.getExperimentData().stream().findFirst();
+            if (experimentSet != null) {
+                optionalData = experimentSet.getExperimentData().stream().findFirst();
                 if (optionalData.isPresent() && optionalData.get().getExtras().size() > 0) {
-                    for (Experiment expData : resProps.getExperimentData()) {
+                    for (Experiment expData : experimentSet.getExperimentData()) {
                         pars = getPars(equationName)[0];
                         List<Double> dataExtras = expData.getExtras();
                         double[] errs = new double[pars.length];
@@ -773,7 +773,7 @@ public class CESTControls extends EquationControls {
             extras[0] = CoMDPreferences.getRefField() * getNucleus().getFreqRatio(); // fixme
             extras[1] = extras1[0]; //17.0 * 2 * Math.PI;
             extras[2] = extras1[1]; //0.3;
-            //System.out.println("updateEquations got called without resProps; extras length = "+extras.length);
+            //System.out.println("updateEquations got called without experimentSet; extras length = "+extras.length);
             GUIPlotEquation plotEquation = new GUIPlotEquation("cest", equationName, pars, errs, extras);
             equations.add(plotEquation);
         }

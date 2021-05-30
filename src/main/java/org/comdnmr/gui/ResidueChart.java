@@ -26,8 +26,8 @@ import javafx.geometry.Orientation;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
-import org.comdnmr.data.ResidueInfo;
-import org.comdnmr.data.ResidueProperties;
+import org.comdnmr.data.ExperimentResult;
+import org.comdnmr.data.ExperimentSet;
 import org.nmrfx.chart.Axis;
 import org.nmrfx.chart.XYCanvasBarChart;
 import org.nmrfx.chart.XYValue;
@@ -42,7 +42,7 @@ public class ResidueChart extends XYCanvasBarChart {
 
     static Set<String> selectedResidues = new HashSet<>();
     public String currentSeriesName = "";
-    ResidueProperties resProps = null;
+    ExperimentSet experimentSet = null;
 
     public static ResidueChart buildChart(Canvas canvas) {
         Axis xAxis = new Axis(Orientation.HORIZONTAL, 0, 100, 400, 100.0);
@@ -108,8 +108,8 @@ public class ResidueChart extends XYCanvasBarChart {
 
     }
 
-    public void setResProps(ResidueProperties resProps) {
-        this.resProps = resProps;
+    public void setResProps(ExperimentSet experimentSet) {
+        this.experimentSet = experimentSet;
     }
 
     void showInfo(String seriesName, int seriesIndex, int resNum, boolean appendMode) {
@@ -123,19 +123,19 @@ public class ResidueChart extends XYCanvasBarChart {
         currentSeriesName = seriesName;
         String[] seriesNameParts = seriesName.split("\\|");
         String mapName = seriesNameParts[0];
-        ResidueProperties resProps = ChartUtil.getResidueProperty(mapName);
-        showInfo(resProps, seriesName);
+        ExperimentSet experimentSet = ChartUtil.getResidueProperty(mapName);
+        showInfo(experimentSet, seriesName);
         drawChart();
     }
 
     void showInfo() {
         String[] seriesNameParts = currentSeriesName.split("\\|");
         String mapName = seriesNameParts[0];
-        ResidueProperties resProps = ChartUtil.getResidueProperty(mapName);
-        showInfo(resProps, currentSeriesName);
+        ExperimentSet experimentSet = ChartUtil.getResidueProperty(mapName);
+        showInfo(experimentSet, currentSeriesName);
     }
 
-    void showInfo(ResidueProperties resProps, String seriesName) {
+    void showInfo(ExperimentSet experimentSet, String seriesName) {
         PyController controller = PyController.mainController;
         PlotData xyCanvasChart = controller.xychart;
         String[] seriesNameParts = seriesName.split("\\|");
@@ -149,14 +149,14 @@ public class ResidueChart extends XYCanvasBarChart {
 //        System.out.println("series " + seriesName + " map " + mapName + " eqn " + equationName + " state " + state);
         String[] residues = new String[selectedResidues.size()];
         selectedResidues.toArray(residues);
-        controller.showInfo(resProps, equationName, mapName, state, residues, xyCanvasChart);
+        controller.showInfo(experimentSet, equationName, mapName, state, residues, xyCanvasChart);
     }
 
     Optional<Integer> pickPresenceIndicators(double mouseX, double mouseY) {
         Optional<Integer> result = Optional.empty();
-        if (resProps != null) {
-            List<ResidueInfo> resValues = resProps.getResidueValues();
-            for (ResidueInfo resInfo : resValues) {
+        if (experimentSet != null) {
+            List<ExperimentResult> resValues = experimentSet.getResidueValues();
+            for (ExperimentResult resInfo : resValues) {
                 if (resInfo == null) {
                     continue;
                 }
@@ -177,9 +177,9 @@ public class ResidueChart extends XYCanvasBarChart {
     }
 
     void drawPresenceIndicators(GraphicsContextInterface gC) throws GraphicsIOException {
-        if (resProps != null) {
-            List<ResidueInfo> resValues = resProps.getResidueValues();
-            for (ResidueInfo resInfo : resValues) {
+        if (experimentSet != null) {
+            List<ExperimentResult> resValues = experimentSet.getResidueValues();
+            for (ExperimentResult resInfo : resValues) {
                 if (resInfo == null) {
                     continue;
                 }

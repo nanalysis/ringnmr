@@ -51,8 +51,8 @@ import org.comdnmr.eqnfit.CurveFit;
 import org.comdnmr.data.DataIO;
 import org.comdnmr.data.Experiment;
 import org.comdnmr.eqnfit.PlotEquation;
-import org.comdnmr.data.ResidueInfo;
-import org.comdnmr.data.ResidueProperties;
+import org.comdnmr.data.ExperimentResult;
+import org.comdnmr.data.ExperimentSet;
 import org.comdnmr.data.ExperimentalData;
 import org.nmrfx.chart.DataSeries;
 import org.nmrfx.chart.XYEValue;
@@ -68,7 +68,7 @@ public class ChartUtil {
 
     public static int minRes = 0;
     public static int maxRes = 100;
-    private static final Map<String, ResidueProperties> residueProperties = new HashMap<>();
+    private static final Map<String, ExperimentSet> residueProperties = new HashMap<>();
     private static final Map<String, List<RelaxationValues>> molResProps = new HashMap<>();
 
     public static Node findNode(Scene scene, String target) {
@@ -96,11 +96,11 @@ public class ChartUtil {
         return residueProperties.size();
     }
 
-    public static void addResidueProperty(String name, ResidueProperties resProp) {
+    public static void addResidueProperty(String name, ExperimentSet resProp) {
         residueProperties.put(name, resProp);
     }
 
-    public static ResidueProperties getResidueProperty(String name) {
+    public static ExperimentSet getResidueProperty(String name) {
         return residueProperties.get(name);
     }
 
@@ -289,10 +289,10 @@ public class ChartUtil {
     }
 
     public static DataSeries getMapData(String seriesName, String expName, String resNum) {
-        ResidueProperties resProps = residueProperties.get(seriesName);
+        ExperimentSet experimentSet = residueProperties.get(seriesName);
         System.out.println("expname " + expName + " series " + seriesName + " " + resNum);
-        System.out.println(resProps.getExperimentMap().toString());
-        Experiment expData = resProps.getExperimentData(expName);
+        System.out.println(experimentSet.getExperimentMap().toString());
+        Experiment expData = experimentSet.getExperimentData(expName);
         System.out.println("expData " + expName);
         DataSeries series = new DataSeries();
         series.setName(expName + ":" + resNum);
@@ -329,8 +329,8 @@ public class ChartUtil {
     }
 
     public static GUIPlotEquation getEquation(Experiment expData, String seriesName, String resNum, String equationName, String state, double field) {
-        ResidueProperties residueProps = residueProperties.get(seriesName);
-        ResidueInfo resInfo = residueProps.getResidueInfo(resNum);
+        ExperimentSet residueProps = residueProperties.get(seriesName);
+        ExperimentResult resInfo = residueProps.getResidueInfo(resNum);
         GUIPlotEquation equationCopy = null;
         String expType = expData.getExpMode();
 //            ExperimentData expData = residueProps.getExperimentData("cest"); // fixme
@@ -377,10 +377,10 @@ public class ChartUtil {
         return equationCopy;
     }
 
-    public static ResidueInfo getResInfo(String seriesName, String residue) {
-        ResidueProperties residueProps = residueProperties.get(seriesName);
+    public static ExperimentResult getResInfo(String seriesName, String residue) {
+        ExperimentSet residueProps = residueProperties.get(seriesName);
         if (residueProps != null) {
-            ResidueInfo resInfo = residueProps.getResidueInfo(residue);
+            ExperimentResult resInfo = residueProps.getResidueInfo(residue);
             return resInfo;
         } else {
             return null;
@@ -437,7 +437,7 @@ public class ChartUtil {
     }
 
     public static ObservableList<DataSeries> getParMapData(String mapName, String eqnName, String state, String parName) {
-        ResidueProperties residueProps = residueProperties.get(mapName);
+        ExperimentSet residueProps = residueProperties.get(mapName);
         ObservableList<DataSeries> data = FXCollections.observableArrayList();
 
         DataSeries series = new DataSeries();
@@ -454,9 +454,9 @@ public class ChartUtil {
             }
         }
 
-        List<ResidueInfo> resValues = residueProps.getResidueValues();
+        List<ExperimentResult> resValues = residueProps.getResidueValues();
 
-        for (ResidueInfo resInfo : resValues) {
+        for (ExperimentResult resInfo : resValues) {
             String useEquName = eqnName;
             if (resInfo == null) {
                 continue;
@@ -523,7 +523,7 @@ public class ChartUtil {
             alert.showAndWait();
             return;
         }
-        ResidueProperties resProp = null;
+        ExperimentSet resProp = null;
         try {
             resProp = DataIO.loadYAMLFile(fileName);
         } catch (IOException ex) {
@@ -559,7 +559,7 @@ public class ChartUtil {
             reschartNode = PyController.mainController.addChart();
 
         }
-        ResidueProperties resProp = DataIO.processPeakList(peakList);
+        ExperimentSet resProp = DataIO.processPeakList(peakList);
         if (resProp != null) {
             residueProperties.put(resProp.getName(), resProp);
             String parName = "Kex";
@@ -594,9 +594,9 @@ public class ChartUtil {
 //            if (!residueProperties.isEmpty()) {
 //                Set<String> keySet = residueProperties.keySet();
 //                for (String key : keySet) {
-//                    ResidueProperties resProp = residueProperties.get(key);
-//                    List<ResidueInfo> resInfoList = resProp.getResidueValues();
-//                    for (ResidueInfo resInfo : resInfoList) {
+//                    ExperimentSet resProp = residueProperties.get(key);
+//                    List<ExperimentResult> resInfoList = resProp.getResidueValues();
+//                    for (ExperimentResult resInfo : resInfoList) {
 //                        int resNum = resInfo.getResNum();
 //                        String resName = DataIO.getResidueName(resNum);
 //                        resInfo.setResName(resName);
