@@ -57,7 +57,10 @@ import org.comdnmr.data.ExperimentalData;
 import org.nmrfx.chart.DataSeries;
 import org.nmrfx.chart.XYEValue;
 import org.nmrfx.chart.XYValue;
+import org.nmrfx.chemistry.Atom;
+import org.nmrfx.chemistry.Residue;
 import org.nmrfx.chemistry.io.MoleculeIOException;
+import org.nmrfx.chemistry.relax.RelaxationValues;
 import org.nmrfx.peaks.PeakList;
 import org.nmrfx.star.ParseException;
 
@@ -65,7 +68,8 @@ public class ChartUtil {
 
     public static int minRes = 0;
     public static int maxRes = 100;
-    public static Map<String, ResidueProperties> residueProperties = new HashMap<>();
+    private static final Map<String, ResidueProperties> residueProperties = new HashMap<>();
+    private static final Map<String, List<RelaxationValues>> molResProps = new HashMap<>();
 
     public static Node findNode(Scene scene, String target) {
         Parent parent = scene.getRoot();
@@ -90,6 +94,38 @@ public class ChartUtil {
 
     public static int getNMaps() {
         return residueProperties.size();
+    }
+
+    public static void addResidueProperty(String name, ResidueProperties resProp) {
+        residueProperties.put(name, resProp);
+    }
+
+    public static ResidueProperties getResidueProperty(String name) {
+        return residueProperties.get(name);
+    }
+
+    public static Collection<String> getResiduePropertyNames() {
+        return residueProperties.keySet();
+    }
+
+    public static void clearResidueProperties() {
+        residueProperties.clear();
+    }
+
+    public static void addMolRelaxationValues(String name, List<RelaxationValues> values) {
+        molResProps.put(name, values);
+    }
+
+    public static List<RelaxationValues> getMolRelaxationValues(String name) {
+        return molResProps.get(name);
+    }
+
+    public static Collection<String> getMolRelaxationNames() {
+        return molResProps.keySet();
+    }
+
+    public static void clearMolRelaxationValues() {
+        molResProps.clear();
     }
 
     public static ObservableList<XYChart.Series<Double, Double>> makeChartSeries(double[] xValues, double[] yValues) {
@@ -347,6 +383,55 @@ public class ChartUtil {
         return resInfo;
     }
 
+    public static ObservableList<DataSeries> getRelaxationDataSeries(List<RelaxationValues> values, String valueName, String setName, String parName) {
+        ObservableList<DataSeries> data = FXCollections.observableArrayList();
+
+        DataSeries series = new DataSeries();
+        series.setName(valueName + '|' + setName + "|" + parName);
+        data.add(series);
+        minRes = Integer.MAX_VALUE;
+        maxRes = Integer.MIN_VALUE;
+
+        for (RelaxationValues value : values) {
+            Atom atom = value.getAtom();
+            Residue residue = (Residue) atom.getEntity();
+            int resNum = residue.getResNum();
+            minRes = Math.min(resNum, minRes);
+            maxRes = Math.max(resNum, maxRes);
+        }
+
+        for (RelaxationValues value : values) {
+            Atom atom = value.getAtom();
+            Residue residue = (Residue) atom.getEntity();
+            int resNum = residue.getResNum();
+            double x = resNum;
+            Double errUp = null;
+            Double y = value.getValue(parName);
+            if (y == null) {
+                continue;
+            }
+            errUp = value.getError(parName);
+            Double errLow = errUp;
+            if (errUp == null) {
+                errUp = 0.0;
+                errLow = 0.0;
+            }
+            // fixme  this all needs to be replaced with logarithmic axis
+            double yOrig = y;
+            double errUpOrig = errUp;
+            ErrorExtraValues extra;
+            if (errUp != null) {
+                extra = new ErrorExtraValues(25, -errLow, errUp);
+            } else {
+                extra = new ErrorExtraValues(25, 0.0, 0.0);
+            }
+
+            XYEValue dataPoint = new XYEValue(x, y, errUp);
+            series.getData().add(dataPoint);
+        }
+        return data;
+    }
+
     public static ObservableList<DataSeries> getParMapData(String mapName, String eqnName, String state, String parName) {
         ResidueProperties residueProps = residueProperties.get(mapName);
         ObservableList<DataSeries> data = FXCollections.observableArrayList();
@@ -501,11 +586,7 @@ public class ChartUtil {
         }
 
         try {
-            Map<String, ResidueProperties> resProps = DataIO.readMoleculeFile(fileName, type);
-            if (resProps != null) {
-                residueProperties.putAll(resProps);
-                PyController.mainController.makeAxisMenu();
-            }
+            DataIO.readMoleculeFile(fileName, type);
 //            if (!residueProperties.isEmpty()) {
 //                Set<String> keySet = residueProperties.keySet();
 //                for (String key : keySet) {

@@ -51,7 +51,6 @@ import javafx.stage.Stage;
 import org.comdnmr.data.DataIO;
 import org.comdnmr.data.Experiment;
 import org.comdnmr.data.ResidueProperties;
-import static org.comdnmr.gui.ChartUtil.residueProperties;
 import org.controlsfx.control.textfield.TextFields;
 import org.controlsfx.dialog.ExceptionDialog;
 import org.nmrfx.chart.DataSeries;
@@ -634,7 +633,7 @@ public class InputDataInterface {
                     reschartNode = PyController.mainController.addChart();
 
                 }
-                residueProperties.put(resProp.getName(), resProp);
+                ChartUtil.addResidueProperty(resProp.getName(), resProp);
                 String parName = "Kex";
                 if (resProp.getExpMode().equals("t1")) {
                     parName = "R";
@@ -837,7 +836,7 @@ public class InputDataInterface {
 
         }
 //            ResidueProperties resProp = DataIO.loadParameters(fileName);
-        residueProperties.put(resProp.getName(), resProp);
+        ChartUtil.addResidueProperty(resProp.getName(), resProp);
         String parName = "Kex";
         if (resProp.getExpMode().equals("t1")) {
             parName = "R";

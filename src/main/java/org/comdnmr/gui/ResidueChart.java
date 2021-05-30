@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package org.comdnmr.gui;
 
 import java.util.HashSet;
@@ -122,7 +122,7 @@ public class ResidueChart extends XYCanvasBarChart {
         currentSeriesName = seriesName;
         String[] seriesNameParts = seriesName.split("\\|");
         String mapName = seriesNameParts[0];
-        ResidueProperties resProps = ChartUtil.residueProperties.get(mapName);
+        ResidueProperties resProps = ChartUtil.getResidueProperty(mapName);
         showInfo(resProps, seriesName);
         drawChart();
     }
@@ -130,7 +130,7 @@ public class ResidueChart extends XYCanvasBarChart {
     void showInfo() {
         String[] seriesNameParts = currentSeriesName.split("\\|");
         String mapName = seriesNameParts[0];
-        ResidueProperties resProps = ChartUtil.residueProperties.get(mapName);
+        ResidueProperties resProps = ChartUtil.getResidueProperty(mapName);
         showInfo(resProps, currentSeriesName);
     }
 

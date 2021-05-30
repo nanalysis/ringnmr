@@ -77,6 +77,7 @@ import org.comdnmr.data.ResidueProperties;
 import org.controlsfx.control.StatusBar;
 import org.comdnmr.eqnfit.CESTFitter;
 import java.text.DecimalFormat;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Optional;
@@ -120,7 +121,7 @@ import org.nmrfx.chart.XYValue;
 import org.nmrfx.chemistry.InvalidMoleculeException;
 import org.nmrfx.chemistry.MoleculeBase;
 import org.nmrfx.chemistry.MoleculeFactory;
-import org.nmrfx.chemistry.RelaxationData.relaxTypes;
+import org.nmrfx.chemistry.relax.RelaxationData.relaxTypes;
 import org.nmrfx.chemistry.io.MoleculeIOException;
 import org.nmrfx.graphicsio.GraphicsIOException;
 import org.nmrfx.graphicsio.SVGGraphicsContext;
@@ -128,6 +129,7 @@ import org.nmrfx.peaks.InvalidPeakException;
 import org.nmrfx.star.ParseException;
 import org.comdnmr.eqnfit.NOEFit;
 import org.comdnmr.modelfree.FitModel;
+import org.nmrfx.chemistry.relax.RelaxationValues;
 
 public class PyController implements Initializable {
 
@@ -250,7 +252,6 @@ public class PyController implements Initializable {
     String currentState = "";
     String currentEquationName;
     List<int[]> currentStates = new ArrayList<>();
-
     boolean simulate = true;
 
     FitResult fitResult;
@@ -1077,8 +1078,10 @@ public class PyController implements Initializable {
     public void estimateCorrelationTime() {
         String r1SetName = t1Choice.getValue();
         String r2SetName = t2Choice.getValue();
-        Map<String, Double> result = CorrelationTime.estimateTau(ChartUtil.residueProperties,
-                r1SetName, r2SetName);
+        ResidueProperties r1Set = ChartUtil.getResidueProperty(r1SetName);
+        ResidueProperties r2Set = ChartUtil.getResidueProperty(r2SetName);
+
+        Map<String, Double> result = CorrelationTime.estimateTau(r1Set, r2Set);
         if (!result.isEmpty()) {
             r1MedianField.setText(String.format("%.3f 1/s", result.get("R1")));
             r2MedianField.setText(String.format("%.3f 1/s", result.get("R2")));
@@ -1367,8 +1370,21 @@ public class PyController implements Initializable {
         activeChart.getData().clear();
     }
 
+    public void showRelaxationValues(String valueName, String setName, String parName) {
+        List<RelaxationValues> values = ChartUtil.getMolRelaxationValues(setName);
+        ObservableList<DataSeries> data = ChartUtil.getRelaxationDataSeries(values, valueName, setName, parName);
+        addSeries(data, setName, valueName);
+
+    }
+
     public void setYAxisType(String expMode, String setName, String eqnName, String state, String typeName) {
         ObservableList<DataSeries> data = ChartUtil.getParMapData(setName, eqnName, state, typeName);
+        String yLabel = expMode.equalsIgnoreCase(typeName) ? typeName
+                : expMode.toUpperCase() + ": " + typeName;
+        addSeries(data, setName, yLabel);
+    }
+
+    public void addSeries(ObservableList<DataSeries> data, String setName, String yLabel) {
         ResidueChart chart = activeChart;
 
         chart.getData().addAll(data);
@@ -1392,8 +1408,6 @@ public class PyController implements Initializable {
 //        xAxis.setMinorTickCount(5);
 //        yAxis.setMinWidth(75.0);
 //        yAxis.setPrefWidth(75.0);
-        String yLabel = expMode.equalsIgnoreCase(typeName) ? typeName
-                : expMode.toUpperCase() + ": " + typeName;
         chart.yAxis.setLabel(yLabel);
 
         chart.setTitle(setName);
@@ -1403,7 +1417,7 @@ public class PyController implements Initializable {
         } else {
             // chart.setLegendVisible(false); //fixme
         }
-        currentResProps = ChartUtil.residueProperties.get(setName);
+        currentResProps = ChartUtil.getResidueProperty(setName);
         chart.setResProps(currentResProps);
         refreshResidueCharts();
     }
@@ -1416,9 +1430,8 @@ public class PyController implements Initializable {
         t2Choice.getItems().add("");
         //noeChoice.getItems().add("");
 
-        Map<String, ResidueProperties> residueProps = ChartUtil.residueProperties;
-        for (ResidueProperties residueProp : residueProps.values()) {
-            String setName = residueProp.getName();
+        Collection<String> setNames = ChartUtil.getMolRelaxationNames();
+        for (var setName : setNames) {
             t1Choice.getItems().add(setName);
             t2Choice.getItems().add(setName);
             //  noeChoice.getItems().add(setName);
@@ -1428,16 +1441,38 @@ public class PyController implements Initializable {
     void makeAxisMenu() {
         makeT1T2Menu();
         axisMenu.getItems().clear();
-        //Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 Rex.sd	    Kex	 Kex.sd	     pA	  pA.sd	     dW	  dW.sd
-        Map<String, ResidueProperties> molResProps = DataIO.getDataFromMolecule();
-        System.out.println(molResProps.toString());
-        ChartUtil.residueProperties.putAll(molResProps);
-        Map<String, ResidueProperties> residueProps = ChartUtil.residueProperties;
-        // MenuItem clearItem = new MenuItem("Clear");
-        // clearItem.setOnAction(e -> clearChart());
-        // axisMenu.getItems().add(clearItem);
-        for (ResidueProperties residueProp : residueProps.values()) {
-            String setName = residueProp.getName();
+        addMoleculeDataToAxisMenu();
+        addResiduePropertiesToAxisMenu();
+    }
+
+    void addMoleculeDataToAxisMenu() {
+        var molResProps = DataIO.getDataFromMolecule();
+        ChartUtil.clearMolRelaxationValues();
+        for (var entry : molResProps.entrySet()) {
+            String setName = entry.getKey();
+            ChartUtil.addMolRelaxationValues(setName, molResProps.get(setName));
+
+            Menu cascade = new Menu(setName);
+            var values = entry.getValue();
+            if (!values.isEmpty()) {
+                RelaxationValues value = values.get(0);
+                axisMenu.getItems().add(cascade);
+                String[] parNames = value.getParNames();
+                for (var parName : parNames) {
+                    MenuItem cmItem1 = new MenuItem(parName);
+                    cmItem1.setOnAction(e -> showRelaxationValues(value.getName(), setName, parName));
+                    cascade.getItems().add(cmItem1);
+                }
+
+            }
+
+        }
+    }
+
+    void addResiduePropertiesToAxisMenu() {
+        Collection<String> setNames = ChartUtil.getResiduePropertyNames();
+        for (var setName : setNames) {
+            var residueProp = ChartUtil.getResidueProperty(setName);
             Menu cascade = new Menu(setName);
             axisMenu.getItems().add(cascade);
             String expMode = residueProp.getExpMode();
@@ -1789,14 +1824,14 @@ public class PyController implements Initializable {
             clearChart();
             statusBar.setProgress(f);
             setYAxisType(currentResProps.getExpMode(), sParts[0], sParts[1], sParts[2], sParts[3]);
-            currentResProps = ChartUtil.residueProperties.get(currentResProps.getName());
+            currentResProps = ChartUtil.getResidueProperty(currentResProps.getName());
 
         } else {
             Platform.runLater(() -> {
                 clearChart();
                 setYAxisType(currentResProps.getExpMode(), sParts[0], sParts[1], sParts[2], sParts[3]);
                 statusBar.setProgress(f);
-                currentResProps = ChartUtil.residueProperties.get(currentResProps.getName());
+                currentResProps = ChartUtil.getResidueProperty(currentResProps.getName());
 
             });
         }
@@ -2063,7 +2098,7 @@ public class PyController implements Initializable {
         currentResInfo = null;
         currentResProps = null;
         fitResult = null;
-        ChartUtil.residueProperties = new HashMap<>();
+        ChartUtil.clearResidueProperties();
         if (clearXY) {
             xychart.clear();
         } else {

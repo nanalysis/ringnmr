@@ -40,7 +40,6 @@ import org.comdnmr.data.Experiment;
 import org.comdnmr.eqnfit.PlotEquation;
 import org.comdnmr.data.ExperimentalData;
 import org.comdnmr.data.ResidueProperties;
-import static org.comdnmr.gui.ChartUtil.residueProperties;
 import org.nmrfx.chart.Axis;
 import org.nmrfx.chart.DataSeries;
 
@@ -352,7 +351,8 @@ public class PlotData extends XYCanvasChart {
     }
 
     protected void seriesAdded(DataSeries series, int seriesIndex) {
-        ResidueProperties residueProps = residueProperties.get("cest");
+        // fixme  why cest
+        ResidueProperties residueProps = ChartUtil.getResidueProperty("cest");
         Experiment expData = null;
         if (residueProps != null) {
             expData = residueProps.getExperimentData("cest"); // fixme
