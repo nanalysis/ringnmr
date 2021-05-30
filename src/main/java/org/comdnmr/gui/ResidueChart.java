@@ -72,10 +72,11 @@ public class ResidueChart extends XYCanvasBarChart {
             hitChart = true;
             Hit hit = hitOpt.get();
             System.out.println(hit.toString());
-            PyController.mainController.statusBar.setText(hit.toString());
             boolean appendMode = e.isShiftDown();
             XYValue value = hit.getValue();
             int resNum = (int) Math.round(value.getXValue());
+            String statusMessage = hit.getSeries().getName() + " " + resNum + " " + String.format("%.2f",value.getYValue());
+            PyController.mainController.statusBar.setText(statusMessage);
             showInfo(hit.getSeries().getName(), hit.getIndex(), resNum, appendMode);
         } else {
             Optional<Integer> intOpt = pickPresenceIndicators(e.getX(), e.getY());
