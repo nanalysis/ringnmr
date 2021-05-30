@@ -30,8 +30,8 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.comdnmr.eqnfit.CPMGFitter;
 import org.comdnmr.eqnfit.ParValueInterface;
-import org.comdnmr.data.ResidueInfo;
-import org.comdnmr.data.ResidueProperties;
+import org.comdnmr.data.ExperimentResult;
+import org.comdnmr.data.ExperimentSet;
 import static org.comdnmr.gui.CPMGControls.PARS.FIELD2;
 import static org.comdnmr.gui.CPMGControls.PARS.KEX;
 import static org.comdnmr.gui.CPMGControls.PARS.PA;
@@ -186,7 +186,7 @@ public class CPMGControls extends EquationControls {
         if (equationName == "") {
             equationName = equationSelector.getItems().get(0);
         }
-        ResidueInfo resInfo = controller.currentResInfo;
+        ExperimentResult resInfo = controller.currentResInfo;
         if (resInfo != null) {
             updatingTable = true;
             String state = stateSelector.getValue();
@@ -237,7 +237,7 @@ public class CPMGControls extends EquationControls {
     }
 
     void stateAction() {
-        ResidueInfo resInfo = controller.currentResInfo;
+        ExperimentResult resInfo = controller.currentResInfo;
         if (resInfo != null) {
             String state = stateSelector.getValue();
             if (state != null) {
@@ -393,9 +393,9 @@ public class CPMGControls extends EquationControls {
                 control.setValue(parValue.getValue());
             }
         }
-        ResidueProperties resProps = controller.getCurrentResProps();
-        if (resProps != null) {
-            double[] fields = resProps.getFields();
+        ExperimentSet experimentSet = controller.getCurrentResProps();
+        if (experimentSet != null) {
+            double[] fields = experimentSet.getFields();
             int iField = Integer.parseInt(stateSelector.getValue().substring(0, 1));
             FIELD2.setValue(fields[iField]);
             FIELD2.setText();
@@ -436,12 +436,12 @@ public class CPMGControls extends EquationControls {
     }
 
     void updateEquations() {
-        ResidueInfo resInfo = controller.currentResInfo;
-        ResidueProperties resProps = controller.getCurrentResProps();
+        ExperimentResult resInfo = controller.currentResInfo;
+        ExperimentSet experimentSet = controller.getCurrentResProps();
         List<GUIPlotEquation> equations = new ArrayList<>();
         double[] pars;
         String equationName = equationSelector.getValue();
-        if (resProps == null) {
+        if (experimentSet == null) {
             pars = getPars(equationName);
             double[] errs = new double[pars.length];
             double[] extras = new double[1];
@@ -449,7 +449,7 @@ public class CPMGControls extends EquationControls {
             GUIPlotEquation plotEquation = new GUIPlotEquation("cpmg", equationName, pars, errs, extras);
             equations.add(plotEquation);
         } else {
-            double[] fields = resProps.getFields();
+            double[] fields = experimentSet.getFields();
             double[] extras = new double[1];
             String currentState = stateSelector.getValue();
             if (resInfo != null) {
