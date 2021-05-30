@@ -65,10 +65,12 @@ import org.nmrfx.chemistry.io.NMRNEFReader;
 import org.nmrfx.chemistry.io.NMRStarReader;
 import org.nmrfx.chemistry.io.NMRStarWriter;
 import org.nmrfx.chemistry.io.PDBFile;
+import org.nmrfx.chemistry.relax.OrderPar;
 import org.nmrfx.datasets.DatasetBase;
-import org.nmrfx.chemistry.RelaxationData;
-import org.nmrfx.chemistry.RelaxationData.relaxTypes;
-import org.nmrfx.chemistry.RelaxationRex;
+import org.nmrfx.chemistry.relax.RelaxationData;
+import org.nmrfx.chemistry.relax.RelaxationData.relaxTypes;
+import org.nmrfx.chemistry.relax.RelaxationRex;
+import org.nmrfx.chemistry.relax.RelaxationValues;
 import org.nmrfx.peaks.InvalidPeakException;
 import org.nmrfx.peaks.PeakList;
 import org.nmrfx.star.ParseException;
@@ -1384,8 +1386,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
      * @throws MoleculeIOException
      * @throws IOException
      */
-    public static Map<String, ResidueProperties> readMoleculeFile(String fileName, String type) throws ParseException, MoleculeIOException, IOException {
-        Map<String, ResidueProperties> resProps = null;
+    public static void readMoleculeFile(String fileName, String type) throws ParseException, MoleculeIOException, IOException {
         switch (type) {
             case "pdb":
                 PDBFile pdb = new PDBFile();
@@ -1395,7 +1396,6 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             case "star":
                 File starFile = new File(fileName).getAbsoluteFile();
                 NMRStarReader.read(starFile);
-                resProps = getDataFromMolecule();
                 break;
             case "nef":
                 NMRNEFReader.read(fileName);
@@ -1408,7 +1408,6 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 break;
         }
         System.out.println("loaded molecule " + MoleculeFactory.getActive().getName() + " from " + fileName);
-        return resProps;
     }
 
     /**
@@ -1451,14 +1450,14 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                         Double value = fitPars.get("R");
                         Double error = fitPars.get("R.sd");
                         if (expType.equals(relaxTypes.T1)) {
-                            RelaxationData relaxData = new RelaxationData(datasetName, expType, new ArrayList<>(), field, temperature, value, error, extras);
+                            RelaxationData relaxData = new RelaxationData(datasetName, expType, atom, new ArrayList<>(), field, temperature, value, error, extras);
                             //                System.out.println("reader " + relaxData);
                             atom.getRelaxationData().put(datasetName, relaxData);
                             //                System.out.println("reader atom.relaxData = " + atom + " " + atom.relaxData);
                         } else {
                             Double RexValue = null;
                             Double RexError = null;
-                            RelaxationRex relaxData = new RelaxationRex(datasetName, expType, new ArrayList<>(), field, temperature, value, error, RexValue, RexError, extras);
+                            RelaxationRex relaxData = new RelaxationRex(datasetName, expType, atom, new ArrayList<>(), field, temperature, value, error, RexValue, RexError, extras);
                             atom.getRelaxationData().put(datasetName, relaxData);
                         }
                     }
@@ -1484,60 +1483,40 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         NMRStarWriter.writeAll(chan);
     }
 
-    public static Map<String, ResidueProperties> getDataFromMolecule() {
-        Map<String, ResidueProperties> resProps = new HashMap<>();
+    public static Map<String, List<RelaxationValues>> getDataFromMolecule() {
+        Map<String, List<RelaxationValues>> relaxValueMap = new HashMap<>();
 
         MoleculeBase mol = MoleculeFactory.getActive();
         if (mol != null) {
-            String resPropRootName = mol.getName();
+            String molName = mol.getName();
             for (Atom atom : mol.getAtomArray()) {
+                Map<String, RelaxationValues> valuesMap = new HashMap<>();
                 Map<String, RelaxationData> relaxData = atom.getRelaxationData();
-                for (Map.Entry<String, RelaxationData> entry : relaxData.entrySet()) {
-                    String datasetName = entry.getKey();
-                    RelaxationData value = entry.getValue();
-                    String expType = value.expType.getName();
-                    String resPropName = resPropRootName + "_" + expType;
-                    ResidueProperties resProp;
+                Map<String, OrderPar> orderData = atom.getOrderPars();
+                valuesMap.putAll(relaxData);
+                valuesMap.putAll(orderData);
+                if (!valuesMap.isEmpty()) {
+                    for (Map.Entry<String, RelaxationValues> entry : valuesMap.entrySet()) {
+                        RelaxationValues relaxValue = entry.getValue();
+                        String entryName = entry.getKey();
+                        String expType = relaxValue.getName();
+                        String relaxSetName = molName + "_" + entryName + "_" + expType;
+                        List<RelaxationValues> relaxValues;
 
-                    if (!resProps.containsKey(resPropName)) {
-                        resProp = new ResidueProperties(resPropName, resPropRootName);
-                        resProps.put(resPropName, resProp);
-                    } else {
-                        resProp = resProps.get(resPropName);
-                    }
-                    resProp.setExpMode(expType.toLowerCase());
-                    Map<String, Experiment> expMap = resProp.getExperimentMap();
-                    if (!expMap.containsKey(datasetName)) {
-                        String expMode = "exp";
-                        Experiment expData = new Experiment(datasetName,
-                                atom.getElementName(), value.getField(), value.getTemperature(), expType);
-                        System.out.println("ExpData " + datasetName + " " + expData.toString());
-                        expMap.put(datasetName, expData);
-                    }
-                    Experiment expData = expMap.get(datasetName);
-                    Entity entity = atom.getEntity();
-                    if (entity instanceof Residue) {
-                        Residue residue = (Residue) entity;
-                        String resNum = residue.getNumber();
-                        String resName = residue.getName();
-                        int residueNumInt = Integer.parseInt(resNum);
-                        ExperimentalData experimentalData = new ExperimentalData(expData, value);
-                        expData.addResidueData(resNum, experimentalData);
-                        ResidueInfo residueInfo = resProp.getResidueInfo(resNum);
-                        if (residueInfo == null) {
-                            residueInfo = new ResidueInfo(resProp, residueNumInt, 0, 0, 0);
-                            residueInfo.setResName(resName);
-                            resProp.addResidueInfo(resNum, residueInfo);
+                        if (!relaxValueMap.containsKey(relaxSetName)) {
+                            relaxValues = new ArrayList<>();
+                            relaxValueMap.put(relaxSetName, relaxValues);
                         } else {
-                            residueInfo.setResName(resName);
+                            relaxValues = relaxValueMap.get(relaxSetName);
                         }
-                        residueInfo.value = value.getValue();
-                        residueInfo.err = value.getError();
-                        //System.out.println(residueInfo.toString());
+                        Entity entity = atom.getEntity();
+                        if (entity instanceof Residue) {
+                            relaxValues.add(relaxValue);
+                        }
                     }
                 }
             }
         }
-        return resProps;
+        return relaxValueMap;
     }
 }

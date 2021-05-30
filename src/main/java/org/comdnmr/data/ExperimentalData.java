@@ -25,8 +25,8 @@ import org.nmrfx.chemistry.Atom;
 import org.nmrfx.chemistry.Entity;
 import org.nmrfx.chemistry.MoleculeBase;
 import org.nmrfx.chemistry.MoleculeFactory;
-import org.nmrfx.chemistry.RelaxationData;
-import org.nmrfx.chemistry.RelaxationData.relaxTypes;
+import org.nmrfx.chemistry.relax.RelaxationData;
+import org.nmrfx.chemistry.relax.RelaxationData.relaxTypes;
 import org.nmrfx.chemistry.Residue;
 
 /**
