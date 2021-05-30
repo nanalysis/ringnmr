@@ -1370,10 +1370,13 @@ public class PyController implements Initializable {
         activeChart.getData().clear();
     }
 
-    public void showRelaxationValues(String valueName, String setName, String parName) {
+    public void showRelaxationValues(String setName, String valueName,  String parName) {
         List<RelaxationValues> values = ChartUtil.getMolRelaxationValues(setName);
         ObservableList<DataSeries> data = ChartUtil.getRelaxationDataSeries(values, valueName, setName, parName);
-        addSeries(data, setName, valueName);
+        String yLabel = valueName.equalsIgnoreCase(parName) ? parName
+                : valueName.toUpperCase() + ": " + parName;
+
+        addSeries(data, setName, yLabel);
 
     }
 
@@ -1460,7 +1463,7 @@ public class PyController implements Initializable {
                 String[] parNames = value.getParNames();
                 for (var parName : parNames) {
                     MenuItem cmItem1 = new MenuItem(parName);
-                    cmItem1.setOnAction(e -> showRelaxationValues(value.getName(), setName, parName));
+                    cmItem1.setOnAction(e -> showRelaxationValues(setName, value.getName(), parName));
                     cascade.getItems().add(cmItem1);
                 }
 
@@ -1860,6 +1863,7 @@ public class PyController implements Initializable {
         if (s == null) {
             statusBar.setText("");
         } else {
+            System.out.println("setatus " + s);
             statusBar.setText(s);
             if (s.equals("Done")) {
                 refreshFit();
