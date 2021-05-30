@@ -18,7 +18,7 @@
 package org.comdnmr.eqnfit;
 
 import org.comdnmr.util.CoMDPreferences;
-import org.comdnmr.data.ResidueProperties;
+import org.comdnmr.data.ExperimentSet;
 import org.comdnmr.data.ExperimentalData;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -119,20 +119,20 @@ public class ExpFitter implements EquationFitter {
 
     // public void setData(Collection<ExperimentData> expDataList, String[] resNums) {
     @Override
-    public void setData(ResidueProperties resProps, String[] resNums) {
+    public void setData(ExperimentSet experimentSet, String[] resNums) {
         this.resNums = resNums.clone();
         nResidues = resNums.length;
         int id = 0;
-        resProps.setupMaps();
-        stateCount = resProps.getStateCount(resNums.length);
-        Collection<Experiment> expDataList = resProps.getExperimentData();
+        experimentSet.setupMaps();
+        stateCount = experimentSet.getStateCount(resNums.length);
+        Collection<Experiment> expDataList = experimentSet.getExperimentData();
         nCurves = resNums.length * expDataList.size();
         states = new int[nCurves][];
         int k = 0;
         int resIndex = 0;
         for (String resNum : resNums) {
             for (Experiment expData : expDataList) {
-                states[k++] = resProps.getStateIndices(resIndex, expData);
+                states[k++] = experimentSet.getStateIndices(resIndex, expData);
                 ExperimentalData experimentalData = expData.getResidueData(resNum);
                 //  need peakRefs
                 double field = expData.getNucleusField();

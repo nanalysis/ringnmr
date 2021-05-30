@@ -22,7 +22,7 @@
  */
 package org.comdnmr.eqnfit;
 
-import org.comdnmr.data.ResidueProperties;
+import org.comdnmr.data.ExperimentSet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -49,7 +49,7 @@ public interface EquationFitter {
 
     public double rms(double[] pars);
 
-    public void setData(ResidueProperties resProps, String[] resNums);
+    public void setData(ExperimentSet experimentSet, String[] resNums);
 
     public void setData(List<Double>[] allXValues, List<Double> yValues, List<Double> errValues, List<Double> fieldValues);
 
@@ -94,7 +94,7 @@ public interface EquationFitter {
         simsMap.put("fit", simPars[simPars.length - 1]);
         int nCurves = states.length;
         for (int iCurve = 0; iCurve < nCurves; iCurve++) {
-            String stateString = ResidueProperties.getStateString(states[iCurve]);
+            String stateString = ExperimentSet.getStateString(states[iCurve]);
             double[] parArray = new double[parNames.length];
             double[] errArray = new double[parNames.length];
             List<ParValueInterface> parValues = new ArrayList<>();

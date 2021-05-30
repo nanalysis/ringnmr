@@ -18,7 +18,7 @@
 package org.comdnmr.eqnfit;
 
 import org.comdnmr.util.CoMDPreferences;
-import org.comdnmr.data.ResidueProperties;
+import org.comdnmr.data.ExperimentSet;
 import org.comdnmr.data.ExperimentalData;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -93,17 +93,17 @@ public class CESTFitter implements EquationFitter {
 
     // public void setData(Collection<ExperimentData> expDataList, String[] resNums) {
     @Override
-    public void setData(ResidueProperties resProps, String[] resNums) {
+    public void setData(ExperimentSet experimentSet, String[] resNums) {
         xValues = new ArrayList[3];
         xValues[0] = new ArrayList<>();
         xValues[1] = new ArrayList<>();
         xValues[2] = new ArrayList<>();
         this.resNums = resNums.clone();
         nResidues = resNums.length;
-        resProps.setupMaps();
-        stateCount = resProps.getStateCount(resNums.length);
-        Collection<Experiment> expDataList = resProps.getExperimentData();
-        nCurves = resProps.getDataCount(resNums);
+        experimentSet.setupMaps();
+        stateCount = experimentSet.getStateCount(resNums.length);
+        Collection<Experiment> expDataList = experimentSet.getExperimentData();
+        nCurves = experimentSet.getDataCount(resNums);
         states = new int[nCurves][];
         int k = 0;
         int resIndex = 0;
@@ -113,7 +113,7 @@ public class CESTFitter implements EquationFitter {
             for (Experiment expData : expDataList) {
                 ExperimentalData experimentalData = expData.getResidueData(resNum);
                 if (experimentalData != null) {
-                    states[k++] = resProps.getStateIndices(resIndex, expData);
+                    states[k++] = experimentSet.getStateIndices(resIndex, expData);
                     //  need peakRefs
                     double field = expData.getNucleusField();
                     fieldList.add(field);

@@ -24,7 +24,7 @@ package org.comdnmr.modelfree;
 
 import java.util.HashMap;
 import java.util.List;
-import org.comdnmr.data.ResidueProperties;
+import org.comdnmr.data.ExperimentSet;
 import java.util.Map;
 import org.apache.commons.math3.analysis.UnivariateFunction;
 import org.apache.commons.math3.optim.MaxEval;
@@ -42,10 +42,10 @@ import org.comdnmr.data.Experiment;
  */
 public class CorrelationTime {
 
-    public static double estimateTau(Map<String, ResidueProperties> residueProps) {
+    public static double estimateTau(Map<String, ExperimentSet> residueProps) {
         Map<String, Experiment> t1Map = new HashMap<>();
         Map<String, Experiment> t2Map = new HashMap<>();
-        for (ResidueProperties resProp : residueProps.values()) {
+        for (ExperimentSet resProp : residueProps.values()) {
             for (Experiment expData : resProp.getExperimentData()) {
                 String expMode = expData.getExpMode().toLowerCase();
                 if (expMode.equals("t1") || expMode.equals("t2")) {
@@ -58,14 +58,14 @@ public class CorrelationTime {
         return 0.0;
     }
 
-    public static Map<String, Double> estimateTau(Map<String, ResidueProperties> residueProps,
+    public static Map<String, Double> estimateTau(Map<String, ExperimentSet> residueProps,
             String r1SetName, String r2SetName) {
-        ResidueProperties resPropsR1 = residueProps.get(r1SetName);
-        ResidueProperties resPropsR2 = residueProps.get(r2SetName);
+        ExperimentSet resPropsR1 = residueProps.get(r1SetName);
+        ExperimentSet resPropsR2 = residueProps.get(r2SetName);
         return estimateTau(resPropsR1, resPropsR2);
     }
 
-    public static Map<String, Double> estimateTau(ResidueProperties resPropsR1, ResidueProperties resPropsR2) {
+    public static Map<String, Double> estimateTau(ExperimentSet resPropsR1, ExperimentSet resPropsR2) {
         Experiment r1Data = resPropsR1.getExperimentData().stream().findFirst().get();
         double b0 = r1Data.getB0Field();
         String nucName = r1Data.getNucleusName();
@@ -246,11 +246,11 @@ public class CorrelationTime {
         return best;
     }
 
-    public static double fitS(Map<String, ResidueProperties> residueProps,
+    public static double fitS(Map<String, ExperimentSet> residueProps,
             String r1SetName, String r2SetName, String noeSetName) {
-        ResidueProperties resPropsR1 = residueProps.get(r1SetName);
-        ResidueProperties resPropsR2 = residueProps.get(r2SetName);
-        ResidueProperties resPropsNOE = residueProps.get(noeSetName);
+        ExperimentSet resPropsR1 = residueProps.get(r1SetName);
+        ExperimentSet resPropsR2 = residueProps.get(r2SetName);
+        ExperimentSet resPropsNOE = residueProps.get(noeSetName);
         System.out.println("fit S " + resPropsR1 + " " + resPropsR2 + " "
                 + resPropsNOE);
         double tau = 0.0;

@@ -144,14 +144,14 @@ public class DataIO {
     static Pattern resPatter = Pattern.compile("[^0-9]*([0-9]+)[^0-9]*");
 
     public static void loadFromPeakList(PeakList peakList, Experiment expData,
-            ResidueProperties resProp, String xConvStr, String yConvStr) {
+            ExperimentSet resProp, String xConvStr, String yConvStr) {
         loadFromPeakList(peakList, expData, resProp, XCONV.valueOf(xConvStr.toUpperCase()),
                 YCONV.valueOf(yConvStr.toUpperCase()));
 
     }
 
     public static void loadFromPeakList(PeakList peakList, Experiment expData,
-            ResidueProperties resProp, XCONV xConv, YCONV yConv) {
+            ExperimentSet resProp, XCONV xConv, YCONV yConv) {
         String expMode = expData.getExpMode();
         DatasetBase dataset = DatasetBase.getDataset(peakList.fileName);
         final double[] xValues;
@@ -234,9 +234,9 @@ public class DataIO {
     }
 
     public static void loadPeakFile(String fileName, Experiment expData,
-            ResidueProperties resProp, XCONV xConv, YCONV yConv,
+            ExperimentSet resProp, XCONV xConv, YCONV yConv,
             HashMap<String, Object> errorPars, double[] delayCalc)
-            throws IOException, IllegalArgumentException { //(String fileName, ResidueProperties resProp, String nucleus,
+            throws IOException, IllegalArgumentException { //(String fileName, ExperimentSet resProp, String nucleus,
 //            double temperature, double B0field, double tau, double[] vcpmgs, String expMode,
 //            HashMap<String, Object> errorPars, double[] delayCalc) throws IOException, IllegalArgumentException {
         System.out.println("load peak file");
@@ -647,7 +647,7 @@ public class DataIO {
     }
 
     public static void loadResidueDataFile(String fileName, Experiment expData,
-            String residueNum, ResidueProperties resProp, String nucleus,
+            String residueNum, ExperimentSet resProp, String nucleus,
             double temperature, double field,
             HashMap<String, Object> errorPars, XCONV xConv, YCONV yConv, double refIntensity)
             throws IOException, IllegalArgumentException {
@@ -722,7 +722,7 @@ public class DataIO {
 
     }
 
-    public static void loadTextFile(Experiment expData, String fileName, ResidueProperties resProp,
+    public static void loadTextFile(Experiment expData, String fileName, ExperimentSet resProp,
             String nucleus, double temperature, double field, XCONV xConv, String expMode)
             throws IOException, IllegalArgumentException {
         Path path = Paths.get(fileName);
@@ -836,11 +836,11 @@ public class DataIO {
         return error2;
     }
 
-    public static ResidueProperties loadResultsFile(String fitMode, String fileName) throws IOException {
+    public static ExperimentSet loadResultsFile(String fitMode, String fileName) throws IOException {
         Path path = Paths.get(fileName);
         String fileTail = path.getFileName().toString();
         fileTail = fileTail.substring(0, fileTail.indexOf('.'));
-        ResidueProperties resProp = new ResidueProperties(fileTail, fileName);
+        ExperimentSet resProp = new ExperimentSet(fileTail, fileName);
         File file = new File(fileName);
         if (!file.exists()) {
             return resProp;
@@ -993,7 +993,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         return resProp;
     }
 
-    static void getFitParameters(ResidueProperties resProp, Map<String, Object> dataMap2) {
+    static void getFitParameters(ExperimentSet resProp, Map<String, Object> dataMap2) {
         HashMap<String, Object> fitParMap = (HashMap<String, Object>) dataMap2.get("parameters");
         if (fitParMap != null) {
             Boolean absValueMode = (Boolean) fitParMap.get("absValue");
@@ -1009,7 +1009,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         }
     }
 
-    static void processYAMLDataSections(ResidueProperties resProp, Map<String, Object> dataMap2, Path dirPath, String expMode) throws IOException {
+    static void processYAMLDataSections(ExperimentSet resProp, Map<String, Object> dataMap2, Path dirPath, String expMode) throws IOException {
 
         ArrayList<HashMap<String, Object>> dataList = (ArrayList<HashMap<String, Object>>) dataMap2.get("data");
         DataIO.processYAMLDataSections(resProp, dirPath, expMode, dataList);
@@ -1040,14 +1040,14 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         return value;
     }
 
-    public static ResidueProperties processPeakList(PeakList peakList) {
-        ResidueProperties resProp = null;
+    public static ExperimentSet processPeakList(PeakList peakList) {
+        ExperimentSet resProp = null;
         if (peakList != null) {
             String peakListName = peakList.getName();
             List<Number> vcpmgList = null;
             DatasetBase dataset = DatasetBase.getDataset(peakList.fileName);
             String expMode = "exp";
-            resProp = new ResidueProperties(peakListName, peakListName);
+            resProp = new ExperimentSet(peakListName, peakListName);
             expMode = expMode.toLowerCase();
             resProp.setExpMode(expMode);
             if (vcpmgList == null) {
@@ -1097,7 +1097,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
 
     }
 
-    public static void processYAMLDataSections(ResidueProperties resProp, Path dirPath, String expMode, ArrayList<HashMap<String, Object>> dataList) throws IOException {
+    public static void processYAMLDataSections(ExperimentSet resProp, Path dirPath, String expMode, ArrayList<HashMap<String, Object>> dataList) throws IOException {
         for (HashMap<String, Object> dataMap3 : dataList) {
             Double temperature = getDoubleValue(dataMap3, "temperature", null);
             if (temperature != null) {
@@ -1256,9 +1256,9 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
 
     }
 
-    public static ResidueProperties loadYAMLFile(String fileName) throws FileNotFoundException, IOException {
+    public static ExperimentSet loadYAMLFile(String fileName) throws FileNotFoundException, IOException {
         File yamlFile = new File(fileName).getAbsoluteFile();
-        ResidueProperties resProp = null;
+        ExperimentSet resProp = null;
         try (InputStream input = new FileInputStream(yamlFile)) {
             Path path = yamlFile.toPath();
             Path dirPath = path.getParent();
@@ -1291,7 +1291,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
 
     }
 
-    public static void saveResultsFile(String fileName, ResidueProperties resProp, boolean saveStats) {
+    public static void saveResultsFile(String fileName, ExperimentSet resProp, boolean saveStats) {
         String[] headerFields = {"Residue", "Peak", "GrpSz", "Group", "State", "Equation", "RMS", "AIC", "Best"};
         String[] headerFields2 = {"Residue", "Peak", "GrpSz", "Group", "State", "RefineOpt", "RefineTime",
             "BootstrapOpt", "BootstrapTime", "Samples", "AbsMode", "NonParametricMode", "StartRadius", "FinalRadius",
@@ -1413,10 +1413,10 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
     /**
      * Add the T1/T2 fit results to a map, and to a molecule, if present.
      *
-     * @param resProp ResidueProperties. The residue properties of the fit.
+     * @param resProp ExperimentSet. The residue properties of the fit.
      * @param expType relaxTypes. The experiment type, T1 or T2.
      */
-    public static void addRelaxationFitResults(ResidueProperties resProp, relaxTypes expType) {
+    public static void addRelaxationFitResults(ExperimentSet resProp, relaxTypes expType) {
         String datasetName = resProp.getName() + "_RING_fit";
         Experiment expData = resProp.getExperimentData(resProp.getName());
         String expName = "EXPAB";

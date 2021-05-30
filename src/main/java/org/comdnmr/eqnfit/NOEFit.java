@@ -25,7 +25,7 @@ package org.comdnmr.eqnfit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import org.comdnmr.data.ResidueProperties;
+import org.comdnmr.data.ExperimentSet;
 import java.util.List;
 import org.apache.commons.math3.optim.PointValuePair;
 import org.comdnmr.data.Experiment;
@@ -212,20 +212,20 @@ public class NOEFit implements EquationFitter {
     }
 
     @Override
-    public void setData(ResidueProperties resProps, String[] resNums) {
+    public void setData(ExperimentSet experimentSet, String[] resNums) {
         this.resNums = resNums.clone();
         nResidues = resNums.length;
         int id = 0;
-        resProps.setupMaps();
-        stateCount = resProps.getStateCount(resNums.length);
-        Collection<Experiment> expDataList = resProps.getExperimentData();
+        experimentSet.setupMaps();
+        stateCount = experimentSet.getStateCount(resNums.length);
+        Collection<Experiment> expDataList = experimentSet.getExperimentData();
         nCurves = resNums.length * expDataList.size();
         states = new int[nCurves][];
         int k = 0;
         int resIndex = 0;
         for (String resNum : resNums) {
             for (Experiment expData : expDataList) {
-                states[k++] = resProps.getStateIndices(resIndex, expData);
+                states[k++] = experimentSet.getStateIndices(resIndex, expData);
                 ExperimentalData experimentalData = expData.getResidueData(resNum);
                 //  need peakRefs
                 double field = expData.getNucleusField();

@@ -30,7 +30,7 @@ import org.comdnmr.eqnfit.EquationFitter;
 import org.comdnmr.eqnfit.CPMGFitter;
 import org.comdnmr.eqnfit.CPMGEquation;
 import org.comdnmr.util.ProcessingStatus;
-import org.comdnmr.data.ResidueProperties;
+import org.comdnmr.data.ExperimentSet;
 import org.comdnmr.data.ResidueInfo;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -57,7 +57,7 @@ public class ResidueFitter {
     private final FitResidues processDataset = new FitResidues();
     final ReadOnlyObjectProperty<Worker.State> stateProperty = processDataset.worker.stateProperty();
     private boolean isProcessing = false;
-    ResidueProperties resProps;
+    ExperimentSet experimentSet;
     Function<Double, Double> updaterFunction;
     Function<ProcessingStatus, Double> statusFunction;
     List<List<String>> residueFitGroups = null;
@@ -73,18 +73,18 @@ public class ResidueFitter {
         this.options = options;
     }
 
-    public void fitResidues(ResidueProperties resProps) {
-        fitResidues(resProps, null);
+    public void fitResidues(ExperimentSet experimentSet) {
+        fitResidues(experimentSet, null);
     }
 
-    public void fitResidues(ResidueProperties resProps, List<List<String>> residueFitGroups) {
-        this.resProps = resProps;
-        resProps.setupMaps();
+    public void fitResidues(ExperimentSet experimentSet, List<List<String>> residueFitGroups) {
+        this.experimentSet = experimentSet;
+        experimentSet.setupMaps();
         this.residueFitGroups = residueFitGroups;
         setProcessingOn();
         updateProgress(0.0);
         if (residueFitGroups == null) {
-            resProps.clearResidueMap();
+            experimentSet.clearResidueMap();
         }
         ((Service) processDataset.worker).restart();
     }
@@ -144,10 +144,10 @@ public class ResidueFitter {
             }
             String[] resNumGroup = new String[resGroup.size()];
             resGroup.toArray(resNumGroup);
-            List<ResidueInfo> resInfoList = fitResidues(resProps, resNumGroup, nFit, null);
+            List<ResidueInfo> resInfoList = fitResidues(experimentSet, resNumGroup, nFit, null);
             resInfoList.forEach((resInfo) -> {
                 int fitResNum = resInfo.getResNum();
-                resProps.addResidueInfo(String.valueOf(fitResNum), resInfo);
+                experimentSet.addResidueInfo(String.valueOf(fitResNum), resInfo);
             });
             nFit++;
             updateProgress((1.0 * nFit) / nResidues);
@@ -155,7 +155,7 @@ public class ResidueFitter {
     }
 
     public List<List<String>> getAllResidues() {
-        Map<String, Experiment> expDataSets = resProps.getExperimentMap();
+        Map<String, Experiment> expDataSets = experimentSet.getExperimentMap();
         Set<Integer> resNums = new TreeSet<>();
         expDataSets.values().forEach((expData) -> {
             expData.getResidues().forEach((resNumS) -> {
@@ -200,10 +200,10 @@ public class ResidueFitter {
             }
             String[] resNumGroup = new String[resList.size()];
             resList.toArray(resNumGroup);
-            List<ResidueInfo> resInfoList = fitResidues(resProps, resNumGroup, nFit, null);
+            List<ResidueInfo> resInfoList = fitResidues(experimentSet, resNumGroup, nFit, null);
             resInfoList.forEach((resInfo) -> {
                 int fitResNum = resInfo.getResNum();
-                resProps.addResidueInfo(String.valueOf(fitResNum), resInfo);
+                experimentSet.addResidueInfo(String.valueOf(fitResNum), resInfo);
             });
             nFit++;
             updateProgress((1.0 * nFit) / nGroups);
@@ -214,7 +214,7 @@ public class ResidueFitter {
 
     EquationFitter getFitter(CoMDOptions options) {
         EquationFitter fitter;
-        switch (resProps.getExpMode()) {
+        switch (experimentSet.getExpMode()) {
             case "cpmg":
                 fitter = new CPMGFitter(options);
                 break;
@@ -231,16 +231,16 @@ public class ResidueFitter {
                 fitter = new R1RhoFitter(options);
                 break;
             default:
-                throw new IllegalArgumentException("Invalid mode " + resProps.getExpMode());
+                throw new IllegalArgumentException("Invalid mode " + experimentSet.getExpMode());
         }
         return fitter;
     }
 
-    public List<ResidueInfo> doNOE(ResidueProperties resProps, String[] resNums, int groupId, String useEquation) {
+    public List<ResidueInfo> doNOE(ExperimentSet experimentSet, String[] resNums, int groupId, String useEquation) {
         List<ResidueInfo> resInfoList = new ArrayList<>();
         Map<String, ResidueInfo> resMap = new HashMap<>();
         for (String residueNumber : resNums) {
-            ResidueInfo residueInfo = new ResidueInfo(resProps, Integer.parseInt(residueNumber), groupId, resNums.length);
+            ResidueInfo residueInfo = new ResidueInfo(experimentSet, Integer.parseInt(residueNumber), groupId, resNums.length);
             resInfoList.add(residueInfo);
             resMap.put(residueNumber, residueInfo);
             residueInfo.addFitResult(null);
@@ -249,14 +249,14 @@ public class ResidueFitter {
 
     }
 
-    public List<ResidueInfo> fitResidues(ResidueProperties resProps, String[] resNums, int groupId, String useEquation) {
-        this.resProps = resProps;
-        resProps.setupMaps();
+    public List<ResidueInfo> fitResidues(ExperimentSet experimentSet, String[] resNums, int groupId, String useEquation) {
+        this.experimentSet = experimentSet;
+        experimentSet.setupMaps();
         Map<String, FitResult> fitResults = new HashMap<>();
         double aicMin = Double.MAX_VALUE;
         String bestEquation = "NOEX";
         List<String> equationNames;
-        switch (resProps.getExpMode()) {
+        switch (experimentSet.getExpMode()) {
             case "cpmg":
                 equationNames = CPMGFitter.getEquationNames();
                 break;
@@ -277,9 +277,9 @@ public class ResidueFitter {
                 bestEquation = "NOEX";
                 break;
             case "noe":
-                return doNOE(resProps, resNums, groupId, useEquation);
+                return doNOE(experimentSet, resNums, groupId, useEquation);
             default:
-                throw new IllegalArgumentException("Invalid mode " + resProps.getExpMode());
+                throw new IllegalArgumentException("Invalid mode " + experimentSet.getExpMode());
         }
         for (String equationName : equationNames) {
             if ((useEquation != null) && !equationName.equals(useEquation)) {
@@ -287,7 +287,7 @@ public class ResidueFitter {
             }
 
             EquationFitter equationFitter = getFitter(options);
-            equationFitter.setData(resProps, resNums);
+            equationFitter.setData(experimentSet, resNums);
             CoMDOptions options = new CoMDOptions(true);
             fitResult = equationFitter.doFit(equationName, null, options);
             fitResults.put(equationName, fitResult);
@@ -302,7 +302,7 @@ public class ResidueFitter {
         List<ResidueInfo> resInfoList = new ArrayList<>();
         Map<String, ResidueInfo> resMap = new HashMap<>();
         for (String residueNumber : resNums) {
-            ResidueInfo residueInfo = new ResidueInfo(resProps, Integer.parseInt(residueNumber), groupId, resNums.length);
+            ResidueInfo residueInfo = new ResidueInfo(experimentSet, Integer.parseInt(residueNumber), groupId, resNums.length);
             resInfoList.add(residueInfo);
             resMap.put(residueNumber, residueInfo);
             equationNames.forEach((equationName) -> {

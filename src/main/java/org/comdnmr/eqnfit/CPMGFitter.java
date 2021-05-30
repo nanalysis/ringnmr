@@ -17,7 +17,7 @@
  */
 package org.comdnmr.eqnfit;
 
-import org.comdnmr.data.ResidueProperties;
+import org.comdnmr.data.ExperimentSet;
 import org.comdnmr.data.ExperimentalData;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -119,13 +119,13 @@ public class CPMGFitter implements EquationFitter {
     }
 
     @Override
-    public void setData(ResidueProperties resProps, String[] resNums) {
+    public void setData(ExperimentSet experimentSet, String[] resNums) {
         xValues.clear();
         this.resNums = resNums.clone();
         nResidues = resNums.length;
 
-        stateCount = resProps.getStateCount(nResidues);
-        Collection<Experiment> expDataList = resProps.getExperimentData();
+        stateCount = experimentSet.getStateCount(nResidues);
+        Collection<Experiment> expDataList = experimentSet.getExperimentData();
         nCurves = resNums.length * expDataList.size();
         states = new int[nCurves][];
         int k = 0;
@@ -136,7 +136,7 @@ public class CPMGFitter implements EquationFitter {
                 ExperimentalData experimentalData = expData.getResidueData(resNum);
                 if (experimentalData != null) {
 
-                    states[k++] = resProps.getStateIndices(resIndex, expData);
+                    states[k++] = experimentSet.getStateIndices(resIndex, expData);
                     //  need peakRefs
                     double field = expData.getNucleusField();
                     double[][] x = experimentalData.getXValues();

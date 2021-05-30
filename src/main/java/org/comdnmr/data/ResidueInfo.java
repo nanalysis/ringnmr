@@ -39,7 +39,7 @@ import org.comdnmr.eqnfit.PlotEquation;
  */
 public class ResidueInfo {
 
-    ResidueProperties resProps;
+    ExperimentSet experimentSet;
 
     int resNum;
     String resName;
@@ -119,12 +119,12 @@ public class ResidueInfo {
         }
     }
 
-    public ResidueInfo(ResidueProperties resProps, int resNum, int groupId, int groupSize) {
-        this(resProps, resNum, groupId, groupSize, 0);
+    public ResidueInfo(ExperimentSet experimentSet, int resNum, int groupId, int groupSize) {
+        this(experimentSet, resNum, groupId, groupSize, 0);
     }
 
-    public ResidueInfo(ResidueProperties resProps, int resNum, int groupId, int groupSize, int peakNum) {
-        this.resProps = resProps;
+    public ResidueInfo(ExperimentSet experimentSet, int resNum, int groupId, int groupSize, int peakNum) {
+        this.experimentSet = experimentSet;
         this.resNum = resNum;
         this.groupId = groupId;
         this.groupSize = groupSize;
@@ -227,7 +227,7 @@ public class ResidueInfo {
         Map<String, CurveFit> curveFits = curveSets.get(useEquationName);
         if (curveFits != null) {
             curveFits.values().stream().forEach(cf -> {
-                if (ResidueProperties.matchStateString(state, cf.getState())) {
+                if (ExperimentSet.matchStateString(state, cf.getState())) {
                     Map<String, Double> parMap = cf.getParMap();
                     parMap.keySet().stream().sorted().filter((parName) -> (parMap.containsKey(parName + ".sd"))).forEachOrdered((parName) -> {
                         dataValues.add(new ParValue(this, parName, useEquationName, cf.getState()));

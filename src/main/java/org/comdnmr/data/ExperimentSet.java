@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
  *
  * @author Bruce Johnson
  */
-public class ResidueProperties {
+public class ExperimentSet {
 
     Map<String, Experiment> expMaps = new HashMap<>();
     private final HashMap<String, ResidueInfo> residueMap = new HashMap<>();
@@ -47,7 +47,7 @@ public class ResidueProperties {
     private String bootStrapMode = "parametric";
     private String expMode = "cpmg";
 
-    public ResidueProperties(String name, String fileName) {
+    public ExperimentSet(String name, String fileName) {
         this.name = name;
         this.fileName = fileName;
     }
