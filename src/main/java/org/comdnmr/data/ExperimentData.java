@@ -168,15 +168,20 @@ public class ExperimentData {
         }
 
         public String getResName() {
+            String result;
             Entity entity = resInfo.dynSource.atoms[0].getEntity();
             if (entity instanceof Residue) {
                 Residue residue = (Residue) entity;
-                return residue.getName();
+                result = residue.getName();
             } else if (entity != null) {
-                return entity.getName();
+                result = entity.getName();
             } else {
-                return "";
+                result = "";
             }
+            if (result == null) {
+                result = "";
+            }
+            return result;
         }
     }
 
