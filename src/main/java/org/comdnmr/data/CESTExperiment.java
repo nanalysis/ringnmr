@@ -23,9 +23,9 @@ package org.comdnmr.data;
  */
 public class CESTExperiment extends OffsetExperiment {
 
-    public CESTExperiment(String name, String nucleus, double field,
+    public CESTExperiment(ExperimentSet experimentSet, String name, String nucleus, double field,
             double temperature, double tau, double B1field) {
-        super(name, nucleus, field, temperature, "CEST", tau, B1field);
+        super(experimentSet, name, nucleus, field, temperature, "CEST", tau, B1field);
     }
 
 }

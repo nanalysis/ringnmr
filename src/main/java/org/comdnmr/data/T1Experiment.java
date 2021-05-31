@@ -23,8 +23,8 @@ package org.comdnmr.data;
  */
 public class T1Experiment extends T1orT2Experiment {
 
-    public T1Experiment(String name, String nucleus, double field, double temperature) {
-        super(name, nucleus, field, temperature, "T1");
+    public T1Experiment(ExperimentSet experimentSet, String name, String nucleus, double field, double temperature) {
+        super(experimentSet, name, nucleus, field, temperature, "T1");
 
     }
 }

@@ -25,8 +25,8 @@ public class NOEExperiment extends Experiment {
 
     boolean[] satMode;
 
-    public NOEExperiment(String name, String nucleus, double field, double temperature) {
-        super(name, nucleus, field, temperature, "NOE");
+    public NOEExperiment(ExperimentSet experimentSet, String name, String nucleus, double field, double temperature) {
+        super(experimentSet, name, nucleus, field, temperature, "NOE");
     }
 
     public void setSatMode(boolean[] values) {

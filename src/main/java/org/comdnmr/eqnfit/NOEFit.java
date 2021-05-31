@@ -29,7 +29,7 @@ import org.comdnmr.data.ExperimentSet;
 import java.util.List;
 import org.apache.commons.math3.optim.PointValuePair;
 import org.comdnmr.data.Experiment;
-import org.comdnmr.data.ExperimentalData;
+import org.comdnmr.data.ExperimentData;
 import org.comdnmr.util.CoMDOptions;
 import org.comdnmr.util.CoMDPreferences;
 
@@ -226,7 +226,7 @@ public class NOEFit implements EquationFitter {
         for (String resNum : resNums) {
             for (Experiment expData : expDataList) {
                 states[k++] = experimentSet.getStateIndices(resIndex, expData);
-                ExperimentalData experimentalData = expData.getResidueData(resNum);
+                ExperimentData experimentalData = expData.getResidueData(resNum);
                 //  need peakRefs
                 double field = expData.getNucleusField();
                 double[][] x = experimentalData.getXValues();

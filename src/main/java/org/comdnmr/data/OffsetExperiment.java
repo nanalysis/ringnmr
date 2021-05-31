@@ -17,9 +17,9 @@ public class OffsetExperiment extends DoubleArrayExperiment {
     double tau;
     double B1field;
 
-    public OffsetExperiment(String name, String nucleus, double field,
+    public OffsetExperiment(ExperimentSet experimentSet, String name, String nucleus, double field,
             double temperature, String expMode, double tau, double B1field) {
-        super(name, nucleus, field, temperature, expMode);
+        super(experimentSet, name, nucleus, field, temperature, expMode);
         this.tau = tau;
         this.B1field = B1field;
     }

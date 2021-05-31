@@ -147,7 +147,7 @@ public class ResidueFitter {
             List<ExperimentResult> resInfoList = fitResidues(experimentSet, resNumGroup, nFit, null);
             resInfoList.forEach((resInfo) -> {
                 int fitResNum = resInfo.getResNum();
-                experimentSet.addResidueInfo(String.valueOf(fitResNum), resInfo);
+                experimentSet.addExperimentResult(String.valueOf(fitResNum), resInfo);
             });
             nFit++;
             updateProgress((1.0 * nFit) / nResidues);
@@ -203,7 +203,7 @@ public class ResidueFitter {
             List<ExperimentResult> resInfoList = fitResidues(experimentSet, resNumGroup, nFit, null);
             resInfoList.forEach((resInfo) -> {
                 int fitResNum = resInfo.getResNum();
-                experimentSet.addResidueInfo(String.valueOf(fitResNum), resInfo);
+                experimentSet.addExperimentResult(String.valueOf(fitResNum), resInfo);
             });
             nFit++;
             updateProgress((1.0 * nFit) / nGroups);

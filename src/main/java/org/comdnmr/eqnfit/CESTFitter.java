@@ -19,7 +19,7 @@ package org.comdnmr.eqnfit;
 
 import org.comdnmr.util.CoMDPreferences;
 import org.comdnmr.data.ExperimentSet;
-import org.comdnmr.data.ExperimentalData;
+import org.comdnmr.data.ExperimentData;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -111,7 +111,7 @@ public class CESTFitter implements EquationFitter {
         List<Double> fieldList = new ArrayList<>();
         for (String resNum : resNums) {
             for (Experiment expData : expDataList) {
-                ExperimentalData experimentalData = expData.getResidueData(resNum);
+                ExperimentData experimentalData = expData.getResidueData(resNum);
                 if (experimentalData != null) {
                     states[k++] = experimentSet.getStateIndices(resIndex, expData);
                     //  need peakRefs

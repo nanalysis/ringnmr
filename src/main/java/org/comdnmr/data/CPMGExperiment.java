@@ -24,11 +24,11 @@ import java.util.HashMap;
  * @author Bruce Johnson
  */
 public class CPMGExperiment extends Experiment {
-    
+
     double[] fieldStrengths;
 
-    public CPMGExperiment(String name, String nucleus, double field, double temperature) {
-        super(name, nucleus, field, temperature, "CPMG");
+    public CPMGExperiment(ExperimentSet experimentSet, String name, String nucleus, double field, double temperature) {
+        super(experimentSet, name, nucleus, field, temperature, "CPMG");
         this.fieldStrengths = fieldStrengths;
     }
 

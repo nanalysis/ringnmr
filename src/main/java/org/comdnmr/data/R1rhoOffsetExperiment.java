@@ -25,9 +25,9 @@ import java.util.HashMap;
  */
 public class R1rhoOffsetExperiment extends OffsetExperiment {
 
-    public R1rhoOffsetExperiment(String name, String nucleus, double field,
+    public R1rhoOffsetExperiment(ExperimentSet experimentSet, String name, String nucleus, double field,
             double temperature, double tau, double B1field) {
-        super(name, nucleus, field, temperature, "R1rho", tau, B1field);
+        super(experimentSet, name, nucleus, field, temperature, "R1rho", tau, B1field);
     }
 
 }

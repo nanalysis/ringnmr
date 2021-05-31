@@ -11,8 +11,8 @@ package org.comdnmr.data;
  */
 public class DoubleArrayExperiment extends Experiment {
 
-    public DoubleArrayExperiment(String name, String nucleus, double field, double temperature, String expMode) {
-        super(name, nucleus, field, temperature, expMode);
+    public DoubleArrayExperiment(ExperimentSet experimentSet, String name, String nucleus, double field, double temperature, String expMode) {
+        super(experimentSet, name, nucleus, field, temperature, expMode);
     }
 
     public void setXVals(double[] xVals) {

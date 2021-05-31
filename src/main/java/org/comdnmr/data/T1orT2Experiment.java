@@ -25,8 +25,8 @@ public class T1orT2Experiment extends DoubleArrayExperiment {
 
     double[] relaxTimes;
 
-    public T1orT2Experiment(String name, String nucleus, double field, double temperature, String expMode) {
-        super(name, nucleus, field, temperature, expMode);
+    public T1orT2Experiment(ExperimentSet experimentSet, String name, String nucleus, double field, double temperature, String expMode) {
+        super(experimentSet, name, nucleus, field, temperature, expMode);
     }
 
     public void setXVals(double[] xVals) {

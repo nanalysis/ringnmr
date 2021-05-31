@@ -33,7 +33,7 @@ import org.nmrfx.chemistry.Residue;
  *
  * @author Bruce Johnson
  */
-public class ExperimentalData {
+public class ExperimentData {
 
     Experiment experiment;
     DynamicsSource dynSource;
@@ -42,7 +42,7 @@ public class ExperimentalData {
     double[] errValues;
     double[] yValues;
 
-    public ExperimentalData(Experiment experiment, DynamicsSource dynSource,
+    public ExperimentData(Experiment experiment, DynamicsSource dynSource,
             double[][] x, double[] y, double[] err) {
         this.experiment = experiment;
         this.dynSource = dynSource;
@@ -51,7 +51,7 @@ public class ExperimentalData {
         this.errValues = err.clone();
     }
 
-    public ExperimentalData(Experiment experiment, DynamicsSource dynSource,
+    public ExperimentData(Experiment experiment, DynamicsSource dynSource,
             List<Double> xValueList, List<Double> yValueList, List<Double> errValueList) {
         this.experiment = experiment;
         this.dynSource = dynSource;
@@ -66,7 +66,7 @@ public class ExperimentalData {
         }
     }
 
-    public ExperimentalData(Experiment experiment, DynamicsSource dynSource,
+    public ExperimentData(Experiment experiment, DynamicsSource dynSource,
             List<Double>[] xValueList, List<Double> yValueList,
             List<Double> errValueList) {
         this.experiment = experiment;
@@ -86,7 +86,7 @@ public class ExperimentalData {
         }
     }
 
-    public ExperimentalData(Experiment expData, RelaxationData relaxData) {
+    public ExperimentData(Experiment expData, RelaxationData relaxData) {
         this.experiment = expData;
         this.relaxData = relaxData;
     }
@@ -106,9 +106,9 @@ public class ExperimentalData {
     public class DataValue {
 
         int index;
-        ExperimentalData resInfo;
+        ExperimentData resInfo;
 
-        public DataValue(ExperimentalData resInfo, int index) {
+        public DataValue(ExperimentData resInfo, int index) {
             this.resInfo = resInfo;
             this.index = index;
         }

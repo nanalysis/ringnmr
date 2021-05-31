@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 public class ExperimentSet {
 
     Map<String, Experiment> expMaps = new HashMap<>();
-    private final HashMap<String, ExperimentResult> residueMap = new HashMap<>();
+    private final HashMap<String, ExperimentResult> resultMap = new HashMap<>();
     final String name;
     String fileName = null;
     Map<Double, Integer> fieldMap = new LinkedHashMap();
@@ -55,7 +55,7 @@ public class ExperimentSet {
     @Override
     public String toString() {
         StringBuilder sBuilder = new StringBuilder();
-        sBuilder.append(name).append(" ").append(fileName).append(" resmap ").append(residueMap.size());
+        sBuilder.append(name).append(" ").append(fileName).append(" resmap ").append(resultMap.size());
         return sBuilder.toString();
     }
 
@@ -123,7 +123,7 @@ public class ExperimentSet {
 
     public List<String> getEquationNames() {
         Set<String> equationSet = new HashSet<>();
-        residueMap.values().stream().forEach(rInfo -> {
+        resultMap.values().stream().forEach(rInfo -> {
             equationSet.addAll(rInfo.curveSets.keySet());
         });
         List<String> equationNames = equationSet.stream().sorted().collect(Collectors.toList());
@@ -218,29 +218,29 @@ public class ExperimentSet {
         return state;
     }
 
-    public void addResidueInfo(String resNum, ExperimentResult value) {
-        residueMap.put(resNum, value);
+    public void addExperimentResult(String resNum, ExperimentResult value) {
+        resultMap.put(resNum, value);
     }
 
     public void clearResidueMap() {
-        residueMap.clear();
+        resultMap.clear();
     }
 
-    public List<ExperimentResult> getResidueValues() {
+    public List<ExperimentResult> getExperimentResults() {
         List<ExperimentResult> values = new ArrayList<>();
-        values.addAll(residueMap.values());
+        values.addAll(resultMap.values());
         return values;
     }
 
-    public ExperimentResult getResidueInfo(String resNum) {
-        return residueMap.get(resNum);
+    public ExperimentResult getExperimentResult(String resNum) {
+        return resultMap.get(resNum);
     }
 
     public int getDataCount(String[] resNums) {
         int n = 0;
         for (String resNum : resNums) {
             for (Experiment expData : expMaps.values()) {
-                ExperimentalData experimentalData = expData.getResidueData(resNum);
+                ExperimentData experimentalData = expData.getResidueData(resNum);
                 if (experimentalData != null) {
                     n++;
                 }
@@ -278,7 +278,7 @@ public class ExperimentSet {
 
     public Map<Integer, Double> getParMapData(String eqnName, String state, String parName) {
 
-        List<ExperimentResult> resValues = getResidueValues();
+        List<ExperimentResult> resValues = getExperimentResults();
         Map<Integer, Double> resultMap = new HashMap<>();
 
         for (ExperimentResult resInfo : resValues) {

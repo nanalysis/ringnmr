@@ -18,7 +18,7 @@
 package org.comdnmr.eqnfit;
 
 import org.comdnmr.data.ExperimentSet;
-import org.comdnmr.data.ExperimentalData;
+import org.comdnmr.data.ExperimentData;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -133,7 +133,7 @@ public class CPMGFitter implements EquationFitter {
         int id = 0;
         for (String resNum : resNums) {
             for (Experiment expData : expDataList) {
-                ExperimentalData experimentalData = expData.getResidueData(resNum);
+                ExperimentData experimentalData = expData.getResidueData(resNum);
                 if (experimentalData != null) {
 
                     states[k++] = experimentSet.getStateIndices(resIndex, expData);

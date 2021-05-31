@@ -207,17 +207,17 @@ public class DataIO {
             } else {
                 DynamicsSource dynSource = DynamicsSource.createFromPeak(peak);
                 System.out.println(dynSource.toString());
-                ExperimentalData residueData = new ExperimentalData(expData, dynSource, xValueList, yValueList, errValueList);
+                ExperimentData residueData = new ExperimentData(expData, dynSource, xValueList, yValueList, errValueList);
                 expData.addResidueData(residueNum, residueData);
             }
             boolean ok = true;
 
-            ExperimentResult residueInfo = resProp.getResidueInfo(residueNum);
+            ExperimentResult residueInfo = resProp.getExperimentResult(residueNum);
 
             if (residueInfo == null) {
                 residueInfo = new ExperimentResult(resProp, residueNumInt, 0, 0, 0);
                 residueInfo.setResName(resName);
-                resProp.addResidueInfo(residueNum, residueInfo);
+                resProp.addExperimentResult(residueNum, residueInfo);
             } else {
                 residueInfo.setResName(resName);
             }
@@ -560,15 +560,15 @@ public class DataIO {
                         processCESTData((CESTExperiment) expData, residueNum, xValueList, yValueList, errValueList, peakNum);
                     } else {
                         DynamicsSource dynSource = DynamicsSource.createFromSpecifiers(expMode + "." + peakNum, residueNum, "H", "N");
-                        ExperimentalData residueData = new ExperimentalData(expData, dynSource, xValueList, yValueList, errValueList);
+                        ExperimentData residueData = new ExperimentData(expData, dynSource, xValueList, yValueList, errValueList);
                         expData.addResidueData(residueNum, residueData);
                     }
-                    ExperimentResult residueInfo = resProp.getResidueInfo(residueNum);
+                    ExperimentResult residueInfo = resProp.getExperimentResult(residueNum);
 
                     if (residueInfo == null) {
                         residueInfo = new ExperimentResult(resProp, residueNumInt, 0, 0, 0);
                         residueInfo.setResName(resName);
-                        resProp.addResidueInfo(residueNum, residueInfo);
+                        resProp.addExperimentResult(residueNum, residueInfo);
                     } else {
                         residueInfo.setResName(resName);
                     }
@@ -609,7 +609,7 @@ public class DataIO {
         xValueLists[2] = tauList;
         DynamicsSource dynSource = DynamicsSource.createFromSpecifiers("cest." + peakNum, residueNum, "H", "N");
 
-        ExperimentalData residueData = new ExperimentalData(expData, dynSource, xValueLists, yValueList, errValueList);
+        ExperimentData residueData = new ExperimentData(expData, dynSource, xValueLists, yValueList, errValueList);
         expData.addResidueData(residueNum, residueData);
         expData.getExtras().clear();
         expData.setExtras(bFieldUniqueValue);
@@ -714,10 +714,10 @@ public class DataIO {
             Logger.getLogger(DataIO.class.getName()).log(Level.SEVERE, null, ex);
         }
         processCESTData((OffsetExperiment) expData, residueNum, xValueList, yValueList, errValueList, 0);
-        ExperimentResult residueInfo = resProp.getResidueInfo(residueNum);
+        ExperimentResult residueInfo = resProp.getExperimentResult(residueNum);
         if (residueInfo == null) {
             residueInfo = new ExperimentResult(resProp, Integer.parseInt(residueNum), 0, 0, 0);
-            resProp.addResidueInfo(residueNum, residueInfo);
+            resProp.addExperimentResult(residueNum, residueInfo);
         }
 
     }
@@ -775,13 +775,13 @@ public class DataIO {
                     }
 
                     DynamicsSource dynSource = DynamicsSource.createFromSpecifiers(expMode + "." + peakNum, residueNum, "H", "N");
-                    ExperimentalData residueData = new ExperimentalData(expData, dynSource, xValues, yValues, errValues);
+                    ExperimentData residueData = new ExperimentData(expData, dynSource, xValues, yValues, errValues);
                     expData.addResidueData(residueNum, residueData);
 
-                    ExperimentResult residueInfo = resProp.getResidueInfo(residueNum);
+                    ExperimentResult residueInfo = resProp.getExperimentResult(residueNum);
                     if (residueInfo == null) {
                         residueInfo = new ExperimentResult(resProp, Integer.parseInt(residueNum), 0, 0, 0);
-                        resProp.addResidueInfo(residueNum, residueInfo);
+                        resProp.addExperimentResult(residueNum, residueInfo);
                     }
                     peakNum++;
                 }
@@ -800,7 +800,7 @@ public class DataIO {
     }
 
     public static void setErrors(Experiment expData, double error) {
-        for (ExperimentalData residueData : expData.experimentalDataSets.values()) {
+        for (ExperimentData residueData : expData.experimentalDataSets.values()) {
             double[] errValues = residueData.getErrValues();
             Arrays.fill(errValues, error);
         }
@@ -811,7 +811,7 @@ public class DataIO {
         int nDups = 0;
         double sumDelta2 = 0.0;
         double sumAbs = 0.0;
-        for (ExperimentalData residueData : expData.experimentalDataSets.values()) {
+        for (ExperimentData residueData : expData.experimentalDataSets.values()) {
             double[][] xValues = residueData.getXValues();
             double[] yValues = residueData.getYValues();
             for (int i = 0; i < yValues.length - 1; i++) {
@@ -899,11 +899,11 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 String peakIdStr = sfields[headerMap.get("Peak")].trim();
                 int peakNum = Integer.parseInt(peakIdStr);
                 String stateString = sfields[headerMap.get("State")].trim();
-                ExperimentResult residueInfo = resProp.getResidueInfo(residueNumber);
+                ExperimentResult residueInfo = resProp.getExperimentResult(residueNumber);
 
                 if (residueInfo == null) {
                     residueInfo = new ExperimentResult(resProp, Integer.parseInt(residueNumber), groupId, groupSize, peakNum);
-                    resProp.addResidueInfo(residueNumber, residueInfo);
+                    resProp.addExperimentResult(residueNumber, residueInfo);
                 }
                 double[] fields = new double[1];
                 fields[0] = 1.0;
@@ -1041,15 +1041,15 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
     }
 
     public static ExperimentSet processPeakList(PeakList peakList) {
-        ExperimentSet resProp = null;
+        ExperimentSet experimentSet = null;
         if (peakList != null) {
             String peakListName = peakList.getName();
             List<Number> vcpmgList = null;
             DatasetBase dataset = DatasetBase.getDataset(peakList.fileName);
             String expMode = "exp";
-            resProp = new ExperimentSet(peakListName, peakListName);
+            experimentSet = new ExperimentSet(peakListName, peakListName);
             expMode = expMode.toLowerCase();
-            resProp.setExpMode(expMode);
+            experimentSet.setExpMode(expMode);
             if (vcpmgList == null) {
                 String nucleus = dataset.getNucleus(1).getName();
                 double B0field = dataset.getSf(1);
@@ -1062,19 +1062,19 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 String expName = peakListName;
                 switch (expMode) {
                     case "t1":
-                        expData = new T1Experiment(expName, nucleus, B0field, temperature);
+                        expData = new T1Experiment(experimentSet, expName, nucleus, B0field, temperature);
                         break;
                     case "t2":
-                        expData = new T2Experiment(expName, nucleus, B0field, temperature);
+                        expData = new T2Experiment(experimentSet, expName, nucleus, B0field, temperature);
                         break;
                     case "cest":
-                        expData = new CESTExperiment(expName, nucleus, B0field, temperature, tau, B1field);
+                        expData = new CESTExperiment(experimentSet, expName, nucleus, B0field, temperature, tau, B1field);
                         break;
                     case "r1rho":
-                        expData = new R1rhoOffsetExperiment(expName, nucleus, B0field, temperature, tau, B1field);
+                        expData = new R1rhoOffsetExperiment(experimentSet, expName, nucleus, B0field, temperature, tau, B1field);
                         break;
                     case "cpmg":
-                        expData = new CPMGExperiment(expName, nucleus, B0field, temperature);
+                        expData = new CPMGExperiment(experimentSet, expName, nucleus, B0field, temperature);
                         if (vcpmgList != null) {
                             double[] vcpmgs = new double[vcpmgList.size()];
                             for (int i = 0; i < vcpmgs.length; i++) {
@@ -1085,19 +1085,19 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                         }
                         break;
                     case "noe":
-                        expData = new NOEExperiment(expName, nucleus, B0field, temperature);
+                        expData = new NOEExperiment(experimentSet, expName, nucleus, B0field, temperature);
                         break;
                     default:
                 }
 
-                loadFromPeakList(peakList, expData, resProp, XCONV.IDENTITY, YCONV.IDENTITY);
+                loadFromPeakList(peakList, expData, experimentSet, XCONV.IDENTITY, YCONV.IDENTITY);
             }
         }
-        return resProp;
+        return experimentSet;
 
     }
 
-    public static void processYAMLDataSections(ExperimentSet resProp, Path dirPath, String expMode, ArrayList<HashMap<String, Object>> dataList) throws IOException {
+    public static void processYAMLDataSections(ExperimentSet experimentSet, Path dirPath, String expMode, ArrayList<HashMap<String, Object>> dataList) throws IOException {
         for (HashMap<String, Object> dataMap3 : dataList) {
             Double temperature = getDoubleValue(dataMap3, "temperature", null);
             if (temperature != null) {
@@ -1183,19 +1183,19 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             Experiment expData = null;
             switch (expMode) {
                 case "t1":
-                    expData = new T1Experiment(expName, nucleus, B0field, temperature);
+                    expData = new T1Experiment(experimentSet, expName, nucleus, B0field, temperature);
                     break;
                 case "t2":
-                    expData = new T2Experiment(expName, nucleus, B0field, temperature);
+                    expData = new T2Experiment(experimentSet, expName, nucleus, B0field, temperature);
                     break;
                 case "cest":
-                    expData = new CESTExperiment(expName, nucleus, B0field, temperature, tau, B1field);
+                    expData = new CESTExperiment(experimentSet, expName, nucleus, B0field, temperature, tau, B1field);
                     break;
                 case "r1rho":
-                    expData = new R1rhoOffsetExperiment(expName, nucleus, B0field, temperature, tau, B1field);
+                    expData = new R1rhoOffsetExperiment(experimentSet, expName, nucleus, B0field, temperature, tau, B1field);
                     break;
                 case "cpmg":
-                    expData = new CPMGExperiment(expName, nucleus, B0field, temperature);
+                    expData = new CPMGExperiment(experimentSet, expName, nucleus, B0field, temperature);
                     if (vcpmgList != null) {
                         double[] vcpmgs = new double[vcpmgList.size()];
                         for (int i = 0; i < vcpmgs.length; i++) {
@@ -1206,7 +1206,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     }
                     break;
                 case "noe":
-                    expData = new NOEExperiment(expName, nucleus, B0field, temperature);
+                    expData = new NOEExperiment(experimentSet, expName, nucleus, B0field, temperature);
                     break;
                 default:
                     throw new IOException("Invalid expMode in .yaml file " + expMode);
@@ -1216,7 +1216,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 if (!dataFile.isAbsolute()) {
                     dataFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
                 }
-                loadPeakFile(dataFileName, expData, resProp, xConv, yConv, errorPars, delayCalc);
+                loadPeakFile(dataFileName, expData, experimentSet, xConv, yConv, errorPars, delayCalc);
 
             } else if ((fileFormat != null) && fileFormat.equals("ires")) {
                 List<Map<String, Object>> filesMaps = (List<Map<String, Object>>) dataMap3.get("files");
@@ -1236,21 +1236,21 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     dataFileName2 = file.getName();
                     String fileTail2 = dataFileName2.substring(0, dataFileName2.indexOf('.'));
                     String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName2).toString();
-                    loadResidueDataFile(textFileName, expData, residueNum, resProp, nucleus,
+                    loadResidueDataFile(textFileName, expData, residueNum, experimentSet, nucleus,
                             temperature, B0field, errorPars, xConv, yConv, refIntensity);
                 }
             } else if (vcpmgList == null) {
                 File file = new File(dataFileName).getAbsoluteFile();
                 dataFileName = file.getName();
                 String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
-                loadTextFile(expData, textFileName, resProp, nucleus, temperature, B0field, xConv, expMode);
+                loadTextFile(expData, textFileName, experimentSet, nucleus, temperature, B0field, xConv, expMode);
             } else {
                 String textFileName = FileSystems.getDefault().getPath(dirPath.toString(), dataFileName).toString();
                 double[] vcpmgs = new double[vcpmgList.size()];
                 for (int i = 0; i < vcpmgs.length; i++) {
                     vcpmgs[i] = vcpmgList.get(i).doubleValue();
                 }
-                loadPeakFile(dataFileName, expData, resProp, xConv, yConv, errorPars, delayCalc);
+                loadPeakFile(dataFileName, expData, experimentSet, xConv, yConv, errorPars, delayCalc);
             }
         }
 
@@ -1329,7 +1329,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
 
         try (FileWriter writer = new FileWriter(fileName)) {
             writer.write(headerBuilder.toString());
-            resProp.getResidueValues().stream().
+            resProp.getExperimentResults().stream().
                     sorted((a, b) -> Integer.compare(a.getResNum(), b.getResNum())).
                     forEach(resInfo -> {
                         String outputLine = resInfo.toOutputString(parFields, saveStats);
@@ -1428,7 +1428,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             for (int f = 0; f < fields.length; f++) {
                 int field = (int) fields[f];
                 final int iList = f;
-                List<ExperimentResult> resInfoList = resProp.getResidueValues();
+                List<ExperimentResult> resInfoList = resProp.getExperimentResults();
                 Collections.sort(resInfoList, (a, b) -> Integer.compare(a.resNum, b.resNum));
                 resInfoList.forEach((resInfo) -> {
                     final Map<String, CurveFit> parMap = resInfo.curveSets.get(expName);
@@ -1438,7 +1438,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     }
                     CurveFit curveFit = parMap.get(states[iList].toString());
                     Map<String, Double> fitPars = curveFit.getParMap();
-                    ExperimentalData experimentalData = expData.getResidueData(String.valueOf(resInfo.resNum));
+                    ExperimentData experimentalData = expData.getResidueData(String.valueOf(resInfo.resNum));
                     DynamicsSource dynSource = experimentalData.getDynSource();
                     Atom[] atoms = dynSource.atoms;
                     for (Atom atom : atoms) {

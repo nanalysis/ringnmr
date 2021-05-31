@@ -30,8 +30,9 @@ import org.nmrfx.datasets.Nuclei;
  */
 public class Experiment {
 
+    ExperimentSet experimentSet;
     String name;
-    HashMap<String, ExperimentalData> experimentalDataSets;
+    HashMap<String, ExperimentData> experimentalDataSets;
     protected final double B0field;
     protected final String nucleusName;
     protected final double nucleusField;
@@ -43,8 +44,9 @@ public class Experiment {
     protected String state = "";
     Map<String, List<Double>> constraints = null;
 
-    public Experiment(String name, String nucleus, double B0field, double temperature,
+    public Experiment(ExperimentSet experimentSet, String name, String nucleus, double B0field, double temperature,
             String expMode) {
+        this.experimentSet = experimentSet;
         this.name = name;
         this.B0field = B0field;
         this.temperature = temperature;
@@ -85,11 +87,11 @@ public class Experiment {
         return temperature;
     }
 
-    public void addResidueData(String resNum, ExperimentalData data) {
+    public void addResidueData(String resNum, ExperimentData data) {
         experimentalDataSets.put(resNum, data);
     }
 
-    public ExperimentalData getResidueData(String resNum) {
+    public ExperimentData getResidueData(String resNum) {
         return experimentalDataSets.get(resNum);
     }
 

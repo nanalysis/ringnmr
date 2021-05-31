@@ -19,7 +19,7 @@ package org.comdnmr.eqnfit;
 
 import org.comdnmr.util.CoMDPreferences;
 import org.comdnmr.data.ExperimentSet;
-import org.comdnmr.data.ExperimentalData;
+import org.comdnmr.data.ExperimentData;
 import org.comdnmr.data.Experiment;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -112,7 +112,7 @@ public class R1RhoFitter implements EquationFitter {
         constraints = new Map[nCurves];
         for (String resNum : resNums) {
             for (Experiment expData : expDataList) {
-                ExperimentalData experimentalData = expData.getResidueData(resNum);
+                ExperimentData experimentalData = expData.getResidueData(resNum);
                 if (experimentalData != null) {
                     constraints[id] = expData.getConstraints();
                     states[k++] = experimentSet.getStateIndices(resIndex, expData);
