@@ -743,7 +743,7 @@ public class CESTControls extends EquationControls {
                         extras[0] = expData.getNucleusField();
                         extras[1] = dataExtras.get(0);
                         extras[2] = dataExtras.get(1);
-//                        System.out.println("resInfo Res Num = " + resInfo.getResNum());
+//                        System.out.println("resInfo Res Num = " + resInfo.getResNumStr());
 //                        System.out.println("extras size = " + expData.getExtras().size());
                         //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[1] = " + extras[1]);
 //                        System.out.println("extras[1] = " + extras[1]);
