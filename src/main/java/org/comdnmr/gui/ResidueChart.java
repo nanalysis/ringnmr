@@ -75,7 +75,7 @@ public class ResidueChart extends XYCanvasBarChart {
             boolean appendMode = e.isShiftDown();
             XYValue value = hit.getValue();
             int resNum = (int) Math.round(value.getXValue());
-            String statusMessage = hit.getSeries().getName() + " " + resNum + " " + String.format("%.2f",value.getYValue());
+            String statusMessage = hit.getSeries().getName() + " " + resNum + " " + String.format("%.2f", value.getYValue());
             PyController.mainController.statusBar.setText(statusMessage);
             showInfo(hit.getSeries().getName(), hit.getIndex(), resNum, appendMode);
         } else {
@@ -151,10 +151,13 @@ public class ResidueChart extends XYCanvasBarChart {
         selectedResidues.toArray(residues);
         controller.chartInfo.currentExperimentSet = experimentSet;
         controller.chartInfo.setResidues(residues);
-        controller.chartInfo.state =state;
+        controller.chartInfo.state = state;
         controller.chartInfo.mapName = mapName;
         controller.chartInfo.equationName = equationName;
-        controller.showInfo(controller.chartInfo,xyCanvasChart);
+        if (!selectedResidues.isEmpty()) {
+            controller.chartInfo.experimentalResult = experimentSet.getExperimentResult(residues[0]);
+        }
+        controller.showInfo(controller.chartInfo, xyCanvasChart);
     }
 
     Optional<Integer> pickPresenceIndicators(double mouseX, double mouseY) {

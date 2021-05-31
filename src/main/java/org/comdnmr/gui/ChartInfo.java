@@ -43,8 +43,12 @@ public class ChartInfo {
     public boolean hasResidues() {
         return currentResidues != null;
     }
+    
+    public int getResNum() {
+        return experimentalResult.getResNum();
+    }
 
-    public String getResNum() {
+    public String getResNumStr() {
         return String.valueOf(experimentalResult.getResNum());
     }
 
