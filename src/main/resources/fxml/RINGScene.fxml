@@ -305,8 +305,8 @@
                         </VBox>
                     </items>
                 </SplitPane>
-                <Pane fx:id="chartBox" VBox.vgrow="ALWAYS">
-                </Pane>
+                <ScrollPane fx:id="chartBox" VBox.vgrow="ALWAYS">
+                </ScrollPane>
 
             </items>
         </SplitPane>
@@ -320,6 +320,7 @@
         <HBox>
             <children>
                 <ToolBar fx:id="navigatorToolBar" orientation="HORIZONTAL" BorderPane.alignment="CENTER"/>
+                <Slider fx:id="barScaleSlider"/>
                 <StatusBar fx:id="statusBar" HBox.hgrow="ALWAYS"/>
             </children>
         </HBox>

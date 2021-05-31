@@ -96,6 +96,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Slider;
 import javafx.scene.control.ToolBar;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
@@ -145,6 +147,8 @@ public class PyController implements Initializable {
     StackPane stackPane;
     @FXML
     XYPlotDataPane chartPane;
+    @FXML
+    Slider barScaleSlider;
 
     @FXML
     Button nmrFxPeakButton;
@@ -166,7 +170,7 @@ public class PyController implements Initializable {
     Label rChiSqLabel;
 
     @FXML
-    Pane chartBox;
+    ScrollPane chartBox;
     @FXML
     StatusBar statusBar;
     Circle statusCircle;
@@ -250,6 +254,8 @@ public class PyController implements Initializable {
     FitResult fitResult;
     PlotData xychart;
     Canvas barPlotCanvas = new Canvas();
+    Optional<Double> barChartXMin = Optional.empty();
+    Optional<Double> barChartXMax = Optional.empty();
 
     @FXML
     ToolBar navigatorToolBar = new ToolBar();
@@ -467,7 +473,7 @@ public class PyController implements Initializable {
         chartPane.heightProperty().addListener(e -> resizeXYPlotCanvas());
         chartBox.widthProperty().addListener(e -> resizeBarPlotCanvas());
         chartBox.heightProperty().addListener(e -> resizeBarPlotCanvas());
-        chartBox.getChildren().add(barPlotCanvas);
+        chartBox.setContent(barPlotCanvas);
         addChart();
         barPlotCanvas.setOnMouseClicked(e -> mouseClickedOnBarCanvas(e));
 //        mainController.setOnHidden(e -> Platform.exit());
@@ -477,6 +483,12 @@ public class PyController implements Initializable {
         chartMenu.setOnShowing(e -> {
             makeAxisMenu();
         });
+        barScaleSlider.setMin(5.0);
+        barScaleSlider.setMax(55.0);
+        barScaleSlider.setValue(10.0);
+        barScaleSlider.setShowTickLabels(true);
+        barScaleSlider.setShowTickMarks(true);
+        barScaleSlider.valueProperty().addListener(e -> resizeBarPlotCanvas());
     }
 
     public Stage getStage() {
@@ -497,9 +509,21 @@ public class PyController implements Initializable {
         xychart.setHeight(canvas.getHeight());
     }
 
+    void calcChartScale() {
+        double width = chartBox.getWidth();
+        double nRes = barChartXMax.get() - barChartXMin.get();
+        double scale = (width - 75.0) / nRes;
+        barScaleSlider.setValue(scale);
+        resizeBarPlotCanvas();
+    }
+
     void resizeBarPlotCanvas() {
         double width = chartBox.getWidth();
         double height = chartBox.getHeight();
+        if (barChartXMax.isPresent()) {
+            double nRes = barChartXMax.get() - barChartXMin.get();
+            width = nRes * barScaleSlider.getValue()+75.0;
+        }
         barPlotCanvas.setWidth(width);
         barPlotCanvas.setHeight(height);
         GraphicsContext gC = barPlotCanvas.getGraphicsContext2D();
@@ -723,7 +747,7 @@ public class PyController implements Initializable {
 
     public void previousResidue(ActionEvent event) {
         List<ExperimentResult> resInfo = getCurrentExperimentSet().getExperimentResults();
-        List resNums = new ArrayList<>();
+        List<Integer> resNums = new ArrayList<>();
         for (int i = 0; i < resInfo.size(); i++) {
             resNums.add(resInfo.get(i).getResNum());
         }
@@ -750,12 +774,13 @@ public class PyController implements Initializable {
 
     public void nextResidue(ActionEvent event) {
         List<ExperimentResult> resInfo = getCurrentExperimentSet().getExperimentResults();
-        List resNums = new ArrayList<>();
+        List<Integer> resNums = new ArrayList<>();
         for (int i = 0; i < resInfo.size(); i++) {
             resNums.add(resInfo.get(i).getResNum());
         }
         Collections.sort(resNums);
         if (chartInfo.hasResidue()) {
+            
             int resIndex = resNums.indexOf(chartInfo.getResNum());
             resIndex++;
             if (resIndex >= resNums.size()) {
@@ -1407,6 +1432,9 @@ public class PyController implements Initializable {
         chart.autoScale(false);
         double xMin = Math.floor((ChartUtil.minRes - 2) / 5.0) * 5.0;
         double xMax = Math.ceil((ChartUtil.maxRes + 2) / 5.0) * 5.0;
+        boolean calcScale = barChartXMin.isEmpty() || barChartXMin.get() != xMin;
+        barChartXMin = Optional.of(xMin);
+        barChartXMax = Optional.of(xMax);
         xAxis.setLowerBound(xMin);
         xAxis.setUpperBound(xMax);
 //        xAxis.setTickUnit(10);
@@ -1424,6 +1452,9 @@ public class PyController implements Initializable {
         }
         setCurrentExperimentSet(ChartUtil.getResidueProperty(setName));
         chart.setResProps(getCurrentExperimentSet());
+//        if (calcScale) {
+//            calcChartScale();
+//        }
         refreshResidueCharts();
     }
 
@@ -1538,7 +1569,7 @@ public class PyController implements Initializable {
         } else {
             try {
                 EquationFitter equationFitter = getFitter();
-                String[] resNums = {chartInfo.getResNum()};
+                String[] resNums = {chartInfo.getResNumStr()};
                 equationFitter.setData(getCurrentExperimentSet(), resNums);
                 String equationName = simControls.getEquation();
 //        System.out.println("guesses eqnFitter = " + equationFitter);
@@ -1564,7 +1595,7 @@ public class PyController implements Initializable {
             try {
                 EquationFitter equationFitter = getFitter();
                 if (chartInfo.hasResult()) {
-                    String[] resNums = {String.valueOf(chartInfo.getResNum())};
+                    String[] resNums = {String.valueOf(chartInfo.getResNumStr())};
                     equationFitter.setData(getCurrentExperimentSet(), resNums);
                     String equationName = simControls.getEquation();
                     equationFitter.setupFit(equationName);
@@ -1590,7 +1621,7 @@ public class PyController implements Initializable {
             if (!hasExperimentSet()) {
                 fitSimData();
             } else {
-                String[] resNums = {chartInfo.getResNum()};
+                String[] resNums = {chartInfo.getResNumStr()};
                 equationFitter.setData(getCurrentExperimentSet(), resNums);
                 String equationName = simControls.getEquation();
                 equationFitter.setupFit(equationName);
@@ -1929,16 +1960,14 @@ public class PyController implements Initializable {
             graphData.put("exportType", exportType);
             ArrayList<Object> barChartData;
             if (!"grace".equals(exportType) && saveBar) {
-                ObservableList<Node> barNodes = chartBox.getChildren();
-                barChartData = new ArrayList<>(barNodes.size());
-                barNodes.forEach(node -> {
+                Node barNode = chartBox.getContent();
+                barChartData = new ArrayList<>(1);
 //                    if (node instanceof XYBarChart) {
 //                        XYBarChart barChart = (XYBarChart) node;
 //                        String barChartName = barChart.toString();
 //                        HashMap<String, Object> chartData = barChart.getChartData();
 //                        barChartData.add(chartData);
 //                    }
-                });
             } else {
                 barChartData = new ArrayList<>(0);
             }
@@ -2124,8 +2153,6 @@ public class PyController implements Initializable {
         }
         clearSecondaryStructure();
         barCharts.remove(activeChart);
-        chartBox.getChildren().remove(0, chartBox.getChildren().size());
-        chartBox.getChildren().add(barPlotCanvas);
         addChart();
     }
 
