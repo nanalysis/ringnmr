@@ -393,7 +393,7 @@ public class CPMGControls extends EquationControls {
                 control.setValue(parValue.getValue());
             }
         }
-        ExperimentSet experimentSet = controller.getCurrentResProps();
+        ExperimentSet experimentSet = controller.getCurrentExperimentSet();
         if (experimentSet != null) {
             double[] fields = experimentSet.getFields();
             int iField = Integer.parseInt(stateSelector.getValue().substring(0, 1));
@@ -437,7 +437,7 @@ public class CPMGControls extends EquationControls {
 
     void updateEquations() {
         ExperimentResult resInfo = controller.currentResInfo;
-        ExperimentSet experimentSet = controller.getCurrentResProps();
+        ExperimentSet experimentSet = controller.getCurrentExperimentSet();
         List<GUIPlotEquation> equations = new ArrayList<>();
         double[] pars;
         String equationName = equationSelector.getValue();

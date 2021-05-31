@@ -66,7 +66,7 @@ import org.comdnmr.eqnfit.EquationFitter;
 import org.comdnmr.eqnfit.EquationType;
 import org.comdnmr.eqnfit.ExpFitter;
 import org.comdnmr.data.Experiment;
-import org.comdnmr.data.ExperimentalData;
+import org.comdnmr.data.ExperimentData;
 import org.controlsfx.control.PropertySheet;
 import org.comdnmr.eqnfit.ParValueInterface;
 import org.comdnmr.eqnfit.PlotEquation;
@@ -244,7 +244,7 @@ public class PyController implements Initializable {
     NMRFxClient cl;
 
     ExperimentResult currentResInfo = null;
-    private ExperimentSet currentResProps = null;
+    private ExperimentSet currentExperimentSet = null;
     ResidueFitter residueFitter;
     String currentMapName = "";
     String[] currentResidues;
@@ -347,9 +347,9 @@ public class PyController implements Initializable {
             simControls = new CESTControls();
             xLowerBoundTextField.setText("-20.0");
             xUpperBoundTextField.setText("20.0");
-            if (hasResProps()) {
-                if (getCurrentResProps().getExperimentData() != null) {
-                    DoubleArrayExperiment expData = (DoubleArrayExperiment) getCurrentResProps().getExperimentData().
+            if (hasExperimentSet()) {
+                if (getCurrentExperimentSet().getExperimentData() != null) {
+                    DoubleArrayExperiment expData = (DoubleArrayExperiment) getCurrentExperimentSet().getExperimentData().
                             stream().findFirst().get();
                     double[] xVals = expData.getXVals();
                     xLowerBoundTextField.setText(String.valueOf(Math.floor(xVals[1] / 2) * 2));
@@ -408,9 +408,9 @@ public class PyController implements Initializable {
             simControls = new R1RhoControls();
             xLowerBoundTextField.setText("-20.0");
             xUpperBoundTextField.setText("20.0");
-            if (hasResProps()) {
-                if (getCurrentResProps().getExperimentData() != null) {
-                    DoubleArrayExperiment expData = (DoubleArrayExperiment) getCurrentResProps().getExperimentData().
+            if (hasExperimentSet()) {
+                if (getCurrentExperimentSet().getExperimentData() != null) {
+                    DoubleArrayExperiment expData = (DoubleArrayExperiment) getCurrentExperimentSet().getExperimentData().
                             stream().findFirst().get();
                     double[] xVals = expData.getXVals();
                     xLowerBoundTextField.setText(String.valueOf(Math.floor(xVals[1] / 2) * 2));
@@ -596,9 +596,9 @@ public class PyController implements Initializable {
             simPane.centerProperty().set(vBox);
             updateEquationChoices(getFittingMode());
         }
-        if (hasResProps()) {
+        if (hasExperimentSet()) {
 
-            String nucleus = getCurrentResProps().getExperimentData().stream().findFirst().get().getNucleusName();
+            String nucleus = getCurrentExperimentSet().getExperimentData().stream().findFirst().get().getNucleusName();
             simControls.setNucleus(nucleus);
             updateXYChartLabels();
         }
@@ -729,7 +729,7 @@ public class PyController implements Initializable {
     }
 
     public void previousResidue(ActionEvent event) {
-        List<ExperimentResult> resInfo = getCurrentResProps().getResidueValues();
+        List<ExperimentResult> resInfo = getCurrentExperimentSet().getExperimentResults();
         List resNums = new ArrayList<>();
         for (int i = 0; i < resInfo.size(); i++) {
             resNums.add(resInfo.get(i).getResNum());
@@ -756,7 +756,7 @@ public class PyController implements Initializable {
     }
 
     public void nextResidue(ActionEvent event) {
-        List<ExperimentResult> resInfo = getCurrentResProps().getResidueValues();
+        List<ExperimentResult> resInfo = getCurrentExperimentSet().getExperimentResults();
         List resNums = new ArrayList<>();
         for (int i = 0; i < resInfo.size(); i++) {
             resNums.add(resInfo.get(i).getResNum());
@@ -962,8 +962,8 @@ public class PyController implements Initializable {
             xychart.setBounds(-20, 20, 0.0, 1.0, 2.0, 0.25);
             xLowerBoundTextField.setText("-20.0");
             xUpperBoundTextField.setText("20.0");
-            if (hasResProps()) {
-                DoubleArrayExperiment expData = (DoubleArrayExperiment) getCurrentResProps().getExperimentData().
+            if (hasExperimentSet()) {
+                DoubleArrayExperiment expData = (DoubleArrayExperiment) getCurrentExperimentSet().getExperimentData().
                         stream().findFirst().get();
                 double[] xVals = expData.getXVals();
                 if (xVals != null) {
@@ -981,8 +981,8 @@ public class PyController implements Initializable {
             xychart.setBounds(-20, 20, 0.0, 50.0, 2.0, 5.0);
             xLowerBoundTextField.setText("-20.0");
             xUpperBoundTextField.setText("20.0");
-            if (hasResProps()) {
-                DoubleArrayExperiment expData = (DoubleArrayExperiment) getCurrentResProps().getExperimentData().
+            if (hasExperimentSet()) {
+                DoubleArrayExperiment expData = (DoubleArrayExperiment) getCurrentExperimentSet().getExperimentData().
                         stream().findFirst().get();
                 double[] xVals = expData.getXVals();
                 if (xVals != null) {
@@ -1124,18 +1124,18 @@ public class PyController implements Initializable {
         }
     }
 
-    public void updateTable(List<ExperimentalData> experimentalDataSets) {
-        ObservableList<ExperimentalData.DataValue> data = FXCollections.observableArrayList();
-        for (ExperimentalData experimentalData : experimentalDataSets) {
+    public void updateTable(List<ExperimentData> experimentalDataSets) {
+        ObservableList<ExperimentData.DataValue> data = FXCollections.observableArrayList();
+        for (ExperimentData experimentalData : experimentalDataSets) {
             data.addAll(experimentalData.getDataValues());
         }
         resInfoTable.itemsProperty().setValue(data);
 
-        TableColumn<ExperimentalData.DataValue, String> nameColumn = new TableColumn<>("Name");
-        TableColumn<ExperimentalData.DataValue, String> resColumn = new TableColumn<>("Residue");
-        TableColumn<ExperimentalData.DataValue, String> resNameColumn = new TableColumn<>("ResName");
-        TableColumn<ExperimentalData.DataValue, String> errColumn = new TableColumn<>("Error");
-        TableColumn<ExperimentalData.DataValue, String> peakColumn = new TableColumn<>("Peak");
+        TableColumn<ExperimentData.DataValue, String> nameColumn = new TableColumn<>("Name");
+        TableColumn<ExperimentData.DataValue, String> resColumn = new TableColumn<>("Residue");
+        TableColumn<ExperimentData.DataValue, String> resNameColumn = new TableColumn<>("ResName");
+        TableColumn<ExperimentData.DataValue, String> errColumn = new TableColumn<>("Error");
+        TableColumn<ExperimentData.DataValue, String> peakColumn = new TableColumn<>("Peak");
 
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("Name"));
         resColumn.setCellValueFactory(new PropertyValueFactory<>("Residue"));
@@ -1147,8 +1147,8 @@ public class PyController implements Initializable {
         resInfoTable.getColumns().addAll(nameColumn, resColumn, resNameColumn, errColumn, peakColumn);
 
         if (getFittingMode().equals("cpmg")) {
-            TableColumn<ExperimentalData.DataValue, Double> xColumn = new TableColumn<>("Vcpmg");
-            TableColumn<ExperimentalData.DataValue, Double> yColumn = new TableColumn<>("Reff");
+            TableColumn<ExperimentData.DataValue, Double> xColumn = new TableColumn<>("Vcpmg");
+            TableColumn<ExperimentData.DataValue, Double> yColumn = new TableColumn<>("Reff");
 
             xColumn.setCellValueFactory(new PropertyValueFactory<>("X0"));
             yColumn.setCellValueFactory(new PropertyValueFactory<>("Y"));
@@ -1156,11 +1156,11 @@ public class PyController implements Initializable {
             resInfoTable.getColumns().clear();
             resInfoTable.getColumns().addAll(nameColumn, resColumn, resNameColumn, xColumn, yColumn, errColumn, peakColumn);
         } else if (getFittingMode().equals("exp")) {
-            TableColumn<ExperimentalData.DataValue, Double> xColumn = new TableColumn<>("Delay");
-            TableColumn<ExperimentalData.DataValue, Double> yColumn = new TableColumn<>("Intensity");
-//            TableColumn<ExperimentalData.DataValue, Double> t1Column = new TableColumn<>("T1");
-//            TableColumn<ExperimentalData.DataValue, Double> t2Column = new TableColumn<>("T2");
-//            TableColumn<ExperimentalData.DataValue, Double> t1RhoColumn = new TableColumn<>("T1Rho");
+            TableColumn<ExperimentData.DataValue, Double> xColumn = new TableColumn<>("Delay");
+            TableColumn<ExperimentData.DataValue, Double> yColumn = new TableColumn<>("Intensity");
+//            TableColumn<ExperimentData.DataValue, Double> t1Column = new TableColumn<>("T1");
+//            TableColumn<ExperimentData.DataValue, Double> t2Column = new TableColumn<>("T2");
+//            TableColumn<ExperimentData.DataValue, Double> t1RhoColumn = new TableColumn<>("T1Rho");
 
             xColumn.setCellValueFactory(new PropertyValueFactory<>("X0"));
             yColumn.setCellValueFactory(new PropertyValueFactory<>("Y"));
@@ -1170,12 +1170,12 @@ public class PyController implements Initializable {
 
             resInfoTable.getColumns().clear();
             resInfoTable.getColumns().addAll(nameColumn, resColumn, resNameColumn,
-//                    t1Column, t2Column, t1RhoColumn,
+                    //                    t1Column, t2Column, t1RhoColumn,
                     xColumn, yColumn, errColumn, peakColumn);
         } else if (getFittingMode().equals("cest")) {
-            TableColumn<ExperimentalData.DataValue, Double> x0Column = new TableColumn<>("Offset");
-            TableColumn<ExperimentalData.DataValue, Double> x1Column = new TableColumn<>("B1 Field");
-            TableColumn<ExperimentalData.DataValue, Double> yColumn = new TableColumn<>("Intensity");
+            TableColumn<ExperimentData.DataValue, Double> x0Column = new TableColumn<>("Offset");
+            TableColumn<ExperimentData.DataValue, Double> x1Column = new TableColumn<>("B1 Field");
+            TableColumn<ExperimentData.DataValue, Double> yColumn = new TableColumn<>("Intensity");
 
             x0Column.setCellValueFactory(new PropertyValueFactory<>("X0"));
             x1Column.setCellValueFactory(new PropertyValueFactory<>("X1"));
@@ -1184,9 +1184,9 @@ public class PyController implements Initializable {
             resInfoTable.getColumns().clear();
             resInfoTable.getColumns().addAll(nameColumn, resColumn, resNameColumn, x0Column, x1Column, yColumn, errColumn, peakColumn);
         } else if (getFittingMode().equals("r1rho")) {
-            TableColumn<ExperimentalData.DataValue, Double> x0Column = new TableColumn<>("Offset");
-            TableColumn<ExperimentalData.DataValue, Double> x1Column = new TableColumn<>("B1 Field");
-            TableColumn<ExperimentalData.DataValue, Double> yColumn = new TableColumn<>("Intensity");
+            TableColumn<ExperimentData.DataValue, Double> x0Column = new TableColumn<>("Offset");
+            TableColumn<ExperimentData.DataValue, Double> x1Column = new TableColumn<>("B1 Field");
+            TableColumn<ExperimentData.DataValue, Double> yColumn = new TableColumn<>("Intensity");
 
             x0Column.setCellValueFactory(new PropertyValueFactory<>("X0"));
             x1Column.setCellValueFactory(new PropertyValueFactory<>("X1"));
@@ -1335,9 +1335,9 @@ public class PyController implements Initializable {
 
     public void selectTableRow(String seriesName, int index) {
         parTabPane.getSelectionModel().select(1);
-        List<ExperimentalData.DataValue> data = resInfoTable.getItems();
+        List<ExperimentData.DataValue> data = resInfoTable.getItems();
         int iRow = 0;
-        for (ExperimentalData.DataValue dValue : data) {
+        for (ExperimentData.DataValue dValue : data) {
             if ((dValue.getIndex() == index) && ((dValue.getName() + ":" + dValue.getResidue()).equals(seriesName))) {
                 resInfoTable.getSelectionModel().clearAndSelect(iRow);
                 resInfoTable.scrollTo(iRow);
@@ -1351,11 +1351,11 @@ public class PyController implements Initializable {
 
     public String getPeakNumFromTable() { //getPeakNumFromTable(String seriesName, int index)
         parTabPane.getSelectionModel().select(1);
-        List<ExperimentalData.DataValue> data = resInfoTable.getItems();
+        List<ExperimentData.DataValue> data = resInfoTable.getItems();
         int iRow = 0;
         int peakNum = 0;
         String name = "";
-//        for (ExperimentalData.DataValue dValue : data) {
+//        for (ExperimentData.DataValue dValue : data) {
 //            if ((dValue.getIndex() == index) && ((dValue.getName() + ":" + dValue.getResidue()).equals(seriesName))) {
 //                resInfoTable.getSelectionModel().clearAndSelect(iRow);
 //                resInfoTable.scrollTo(iRow);
@@ -1429,8 +1429,8 @@ public class PyController implements Initializable {
         } else {
             // chart.setLegendVisible(false); //fixme
         }
-        setCurrentResProps(ChartUtil.getResidueProperty(setName));
-        chart.setResProps(getCurrentResProps());
+        setCurrentExperimentSet(ChartUtil.getResidueProperty(setName));
+        chart.setResProps(getCurrentExperimentSet());
         refreshResidueCharts();
     }
 
@@ -1534,13 +1534,13 @@ public class PyController implements Initializable {
 
     @FXML
     public void guesses(ActionEvent event) {
-        if (!hasResProps()) {
+        if (!hasExperimentSet()) {
             guessSimData();
         } else {
             try {
                 EquationFitter equationFitter = getFitter();
                 String[] resNums = {String.valueOf(currentResInfo.getResNum())};
-                equationFitter.setData(getCurrentResProps(), resNums);
+                equationFitter.setData(getCurrentExperimentSet(), resNums);
                 String equationName = simControls.getEquation();
 //        System.out.println("guesses eqnFitter = " + equationFitter);
 //        System.out.println("guesses resNums = " + resNums);
@@ -1561,12 +1561,12 @@ public class PyController implements Initializable {
 
     public Optional<Double> rms() {
         Optional<Double> rms = Optional.empty();
-        if (hasResProps()) {
+        if (hasExperimentSet()) {
             try {
                 EquationFitter equationFitter = getFitter();
                 if (currentResInfo != null) {
                     String[] resNums = {String.valueOf(currentResInfo.getResNum())};
-                    equationFitter.setData(getCurrentResProps(), resNums);
+                    equationFitter.setData(getCurrentExperimentSet(), resNums);
                     String equationName = simControls.getEquation();
                     equationFitter.setupFit(equationName);
                     int[][] map = equationFitter.getFitModel().getMap();
@@ -1588,11 +1588,11 @@ public class PyController implements Initializable {
         fitResult = null;
         try {
             EquationFitter equationFitter = getFitter();
-            if (!hasResProps()) {
+            if (!hasExperimentSet()) {
                 fitSimData();
             } else {
                 String[] resNums = {String.valueOf(currentResInfo.getResNum())};
-                equationFitter.setData(getCurrentResProps(), resNums);
+                equationFitter.setData(getCurrentExperimentSet(), resNums);
                 String equationName = simControls.getEquation();
                 equationFitter.setupFit(equationName);
                 int[][] map = equationFitter.getFitModel().getMap();
@@ -1642,12 +1642,12 @@ public class PyController implements Initializable {
             //System.out.println("Fit button residueProperties = " + residueProperties);
             //System.out.println("Fit button expData = " + residueProps.getExperimentData("cest"));
             Optional<Experiment> optionalData = Optional.empty();
-            if (hasResProps()) {
-                optionalData = getCurrentResProps().getExperimentData().stream().findFirst();
+            if (hasExperimentSet()) {
+                optionalData = getCurrentExperimentSet().getExperimentData().stream().findFirst();
             }
 
             if (optionalData.isPresent() && optionalData.get().getExtras().size() > 0) {
-                for (Experiment expData : getCurrentResProps().getExperimentData()) {
+                for (Experiment expData : getCurrentExperimentSet().getExperimentData()) {
                     double[] pars = curveFit.getEquation().getPars(); //pars = getPars(equationName);
                     double[] errs = curveFit.getEquation().getErrs(); //double[] errs = new double[pars.length];
                     double[] extras = new double[3];
@@ -1734,8 +1734,8 @@ public class PyController implements Initializable {
 //            ChooseCESTFitEquations.create();
 //        } else {
         fitResult = null;
-        if (hasResProps()) {
-            residueFitter.fitResidues(getCurrentResProps());
+        if (hasExperimentSet()) {
+            residueFitter.fitResidues(getCurrentExperimentSet());
         }
 //        }
     }
@@ -1746,7 +1746,7 @@ public class PyController implements Initializable {
 //            ChooseCESTFitEquations.allRes = false;
 //            ChooseCESTFitEquations.create();
 //        } else {
-        if (hasResProps()) {
+        if (hasExperimentSet()) {
 
             fitResult = null;
             List<List<String>> allResidues = new ArrayList<>();
@@ -1756,7 +1756,7 @@ public class PyController implements Initializable {
             groupResidues.addAll(ResidueChart.selectedResidues);
             if (!groupResidues.isEmpty()) {
                 allResidues.add(groupResidues);
-                residueFitter.fitResidues(getCurrentResProps(), allResidues);
+                residueFitter.fitResidues(getCurrentExperimentSet(), allResidues);
             }
         }
 //        }
@@ -1783,7 +1783,7 @@ public class PyController implements Initializable {
         fileChooser.setTitle("Save Parameter File");
         File file = fileChooser.showSaveDialog(MainApp.primaryStage);
         if (file != null) {
-            DataIO.saveResultsFile(file.getAbsolutePath(), getCurrentResProps(), false);
+            DataIO.saveResultsFile(file.getAbsolutePath(), getCurrentExperimentSet(), false);
         }
     }
 
@@ -1808,7 +1808,7 @@ public class PyController implements Initializable {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION, alertText);
         Optional<ButtonType> response = alert.showAndWait();
         if (response.isPresent() && response.get().getText().equals("OK")) {
-            DataIO.addRelaxationFitResults(getCurrentResProps(), relaxTypes.T1);
+            DataIO.addRelaxationFitResults(getCurrentExperimentSet(), relaxTypes.T1);
         }
     }
 
@@ -1822,18 +1822,18 @@ public class PyController implements Initializable {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION, alertText);
         Optional<ButtonType> response = alert.showAndWait();
         if (response.isPresent() && response.get().getText().equals("OK")) {
-            DataIO.addRelaxationFitResults(getCurrentResProps(), relaxTypes.T2);
+            DataIO.addRelaxationFitResults(getCurrentExperimentSet(), relaxTypes.T2);
         }
     }
 
     public Double updateFitProgress(Double f) {
-        if (hasResProps()) {
+        if (hasExperimentSet()) {
             ResidueChart chart = getActiveChart();
             String seriesName = chart.currentSeriesName;
             String[] sParts;
             if (seriesName.length() == 0) {
                 sParts = new String[4];
-                sParts[0] = getCurrentResProps().getName();
+                sParts[0] = getCurrentExperimentSet().getName();
                 sParts[1] = "best";
                 sParts[2] = "0:0:0";
                 sParts[3] = "RMS";
@@ -1843,15 +1843,15 @@ public class PyController implements Initializable {
             if (Platform.isFxApplicationThread()) {
                 clearChart();
                 statusBar.setProgress(f);
-                setYAxisType(getCurrentResProps().getExpMode(), sParts[0], sParts[1], sParts[2], sParts[3]);
-                setCurrentResProps(ChartUtil.getResidueProperty(getCurrentResProps().getName()));
+                setYAxisType(getCurrentExperimentSet().getExpMode(), sParts[0], sParts[1], sParts[2], sParts[3]);
+                setCurrentExperimentSet(ChartUtil.getResidueProperty(getCurrentExperimentSet().getName()));
 
             } else {
                 Platform.runLater(() -> {
                     clearChart();
-                    setYAxisType(getCurrentResProps().getExpMode(), sParts[0], sParts[1], sParts[2], sParts[3]);
+                    setYAxisType(getCurrentExperimentSet().getExpMode(), sParts[0], sParts[1], sParts[2], sParts[3]);
                     statusBar.setProgress(f);
-                    setCurrentResProps(ChartUtil.getResidueProperty(getCurrentResProps().getName()));
+                    setCurrentExperimentSet(ChartUtil.getResidueProperty(getCurrentExperimentSet().getName()));
 
                 });
             }
@@ -1998,13 +1998,13 @@ public class PyController implements Initializable {
 
     public String getFittingMode() {
         String fitMode = "cpmg";
-        if (!hasResProps()) {
+        if (!hasExperimentSet()) {
             String simMode = getSimMode();
             if (simMode != null) {
                 fitMode = simMode;
             }
         } else {
-            fitMode = getCurrentResProps().getExpMode();
+            fitMode = getCurrentExperimentSet().getExpMode();
             if (fitMode.equalsIgnoreCase("t1") || fitMode.equalsIgnoreCase("t2")) {
                 fitMode = "exp";
             }
@@ -2117,7 +2117,7 @@ public class PyController implements Initializable {
     void clearProject(boolean clearXY) {
         currentResidues = null;
         currentResInfo = null;
-        setCurrentResProps(null);
+        setCurrentExperimentSet(null);
         fitResult = null;
         ChartUtil.clearResidueProperties();
         if (clearXY) {
@@ -2135,15 +2135,15 @@ public class PyController implements Initializable {
     void showInfo(String equationName) {
         String mapName = currentMapName;
         String state = currentState;
-        if (hasResProps()) {
-            showInfo(getCurrentResProps(), equationName, mapName, state, currentResidues, xychart);
+        if (hasExperimentSet()) {
+            showInfo(getCurrentExperimentSet(), equationName, mapName, state, currentResidues, xychart);
         }
     }
 
     void showInfo(ExperimentSet experimentSet, String equationName, String mapName, String state, String[] residues, PlotData plotData) {
         ArrayList<GUIPlotEquation> equations = new ArrayList<>();
         ObservableList<DataSeries> allData = FXCollections.observableArrayList();
-        List<ExperimentalData> experimentalDataSets = new ArrayList<>();
+        List<ExperimentData> experimentalDataSets = new ArrayList<>();
         List<int[]> allStates = new ArrayList<>();
         boolean calcScale = scalePlot.isSelected();
         if ((experimentSet != null) && (residues != null)) {
@@ -2542,22 +2542,22 @@ public class PyController implements Initializable {
         }
     }
 
-    public boolean hasResProps() {
-        return (currentResProps != null) && (currentResProps instanceof ExperimentSet);
+    public boolean hasExperimentSet() {
+        return (currentExperimentSet != null) && (currentExperimentSet instanceof ExperimentSet);
     }
 
     /**
-     * @return the currentResProps
+     * @return the currentExperimentSet
      */
-    public ExperimentSet getCurrentResProps() {
-        return currentResProps;
+    public ExperimentSet getCurrentExperimentSet() {
+        return currentExperimentSet;
     }
 
     /**
-     * @param currentResProps the currentResProps to set
+     * @param currentResProps the currentExperimentSet to set
      */
-    public void setCurrentResProps(ExperimentSet currentResProps) {
-        this.currentResProps = currentResProps;
+    public void setCurrentExperimentSet(ExperimentSet currentResProps) {
+        this.currentExperimentSet = currentResProps;
     }
 
 }

@@ -610,43 +610,43 @@ public class InputDataInterface {
         PeakList peakList = PeakList.get(peakListChoice.getValue());
         if (peakList != null) {
             String peakListName = peakList.getName();
-            ExperimentSet resProp = new ExperimentSet(peakListName, peakListName);
+            ExperimentSet experimentSet = new ExperimentSet(peakListName, peakListName);
             String expMode = fitModeChoice.getValue().toLowerCase();
-            resProp.setExpMode(expMode);
+            experimentSet.setExpMode(expMode);
             double[] delayCalc = {0.0, 0.0, 1.0};
             HashMap<String, Object> errorPars = new HashMap<>();
             Double temperatureK = getDouble(tempTextField.getText());
             Double tau = getDouble(tauTextField.getText());
             Double B1field = getDouble(B1TextField.getText());
 
-            Experiment expData = new Experiment(peakList.getName(),
+            Experiment expData = new Experiment(experimentSet, peakList.getName(),
                     nucChoice.getValue(), Double.parseDouble(B0fieldChoice.getValue()),
                     temperatureK, expMode);
 //            tau, null,
 //                    fitModeChoice.getValue(),
 //                    errorPars, delayCalc, B1field);
 
-            DataIO.loadFromPeakList(peakList, expData, resProp, xConvChoice.getValue(), yConvChoice.getValue());
-            if (resProp != null) {
+            DataIO.loadFromPeakList(peakList, expData, experimentSet, xConvChoice.getValue(), yConvChoice.getValue());
+            if (experimentSet != null) {
                 ResidueChart reschartNode = PyController.mainController.getActiveChart();
                 if (reschartNode == null) {
                     reschartNode = PyController.mainController.addChart();
 
                 }
-                ChartUtil.addResidueProperty(resProp.getName(), resProp);
+                ChartUtil.addResidueProperty(experimentSet.getName(), experimentSet);
                 String parName = "Kex";
-                if (resProp.getExpMode().equals("t1")) {
+                if (experimentSet.getExpMode().equals("t1")) {
                     parName = "R";
-                } else if (resProp.getExpMode().equals("t2")) {
+                } else if (experimentSet.getExpMode().equals("t2")) {
                     parName = "R";
-                } else if (resProp.getExpMode().equals("noe")) {
+                } else if (experimentSet.getExpMode().equals("noe")) {
                     parName = "NOE";
                 }
-                ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
-                PyController.mainController.setCurrentResProps(resProp);
+                ObservableList<DataSeries> data = ChartUtil.getParMapData(experimentSet.getName(), "best", "0:0:0", parName);
+                PyController.mainController.setCurrentExperimentSet(experimentSet);
                 PyController.mainController.makeAxisMenu();
-                PyController.mainController.setYAxisType(resProp.getExpMode(), resProp.getName(), "best", "0:0:0", parName);
-                reschartNode.setResProps(resProp);
+                PyController.mainController.setYAxisType(experimentSet.getExpMode(), experimentSet.getName(), "best", "0:0:0", parName);
+                reschartNode.setResProps(experimentSet);
                 PyController.mainController.setControls();
             }
         }
@@ -844,7 +844,7 @@ public class InputDataInterface {
             parName = "R";
         }
         ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
-        PyController.mainController.setCurrentResProps(resProp);
+        PyController.mainController.setCurrentExperimentSet(resProp);
         PyController.mainController.makeAxisMenu();
         PyController.mainController.setYAxisType(resProp.getExpMode(), resProp.getName(), "best", "0:0:0", parName);
         reschartNode.setResProps(resProp);

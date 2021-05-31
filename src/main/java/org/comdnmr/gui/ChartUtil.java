@@ -53,7 +53,7 @@ import org.comdnmr.data.Experiment;
 import org.comdnmr.eqnfit.PlotEquation;
 import org.comdnmr.data.ExperimentResult;
 import org.comdnmr.data.ExperimentSet;
-import org.comdnmr.data.ExperimentalData;
+import org.comdnmr.data.ExperimentData;
 import org.nmrfx.chart.DataSeries;
 import org.nmrfx.chart.XYEValue;
 import org.nmrfx.chart.XYValue;
@@ -296,7 +296,7 @@ public class ChartUtil {
         System.out.println("expData " + expName);
         DataSeries series = new DataSeries();
         series.setName(expName + ":" + resNum);
-        ExperimentalData experimentalData = expData.getResidueData(resNum);
+        ExperimentData experimentalData = expData.getResidueData(resNum);
         if (experimentalData != null) {
             double[][] xValues = experimentalData.getXValues();
             double[] yValues = experimentalData.getYValues();
@@ -330,7 +330,7 @@ public class ChartUtil {
 
     public static GUIPlotEquation getEquation(Experiment expData, String seriesName, String resNum, String equationName, String state, double field) {
         ExperimentSet residueProps = residueProperties.get(seriesName);
-        ExperimentResult resInfo = residueProps.getResidueInfo(resNum);
+        ExperimentResult resInfo = residueProps.getExperimentResult(resNum);
         GUIPlotEquation equationCopy = null;
         String expType = expData.getExpMode();
 //            ExperimentData expData = residueProps.getExperimentData("cest"); // fixme
@@ -380,7 +380,7 @@ public class ChartUtil {
     public static ExperimentResult getResInfo(String seriesName, String residue) {
         ExperimentSet residueProps = residueProperties.get(seriesName);
         if (residueProps != null) {
-            ExperimentResult resInfo = residueProps.getResidueInfo(residue);
+            ExperimentResult resInfo = residueProps.getExperimentResult(residue);
             return resInfo;
         } else {
             return null;
@@ -454,25 +454,25 @@ public class ChartUtil {
             }
         }
 
-        List<ExperimentResult> resValues = residueProps.getResidueValues();
+        List<ExperimentResult> resValues = residueProps.getExperimentResults();
 
-        for (ExperimentResult resInfo : resValues) {
+        for (ExperimentResult experimentResult : resValues) {
             String useEquName = eqnName;
-            if (resInfo == null) {
+            if (experimentResult == null) {
                 continue;
             }
 
             if (eqnName.equals("best")) {
-                useEquName = resInfo.getBestEquationName();
+                useEquName = experimentResult.getBestEquationName();
             }
-            int resNum = resInfo.getResNum();
+            int resNum = experimentResult.getResNum();
             double x = resNum;
             Double errUp = null;
-            Double y = resInfo.getParValue(useEquName, state, parName);
+            Double y = experimentResult.getParValue(useEquName, state, parName);
             if (y == null) {
                 continue;
             }
-            errUp = resInfo.getParValue(useEquName, state, parName + ".sd");
+            errUp = experimentResult.getParValue(useEquName, state, parName + ".sd");
             Double errLow = errUp;
             if (errUp == null) {
                 errUp = 0.0;
@@ -543,7 +543,7 @@ public class ChartUtil {
             parName = "NOE";
         }
         ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
-        PyController.mainController.setCurrentResProps(resProp);
+        PyController.mainController.setCurrentExperimentSet(resProp);
         PyController.mainController.makeAxisMenu();
         PyController.mainController.setYAxisType(resProp.getExpMode(), resProp.getName(), "best", "0:0:0", parName);
         reschartNode.setResProps(resProp);
@@ -571,7 +571,7 @@ public class ChartUtil {
                 parName = "NOE";
             }
             ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
-            PyController.mainController.setCurrentResProps(resProp);
+            PyController.mainController.setCurrentExperimentSet(resProp);
             PyController.mainController.makeAxisMenu();
             PyController.mainController.setYAxisType(resProp.getExpMode(), resProp.getName(), "best", "0:0:0", parName);
             reschartNode.setResProps(resProp);
@@ -595,7 +595,7 @@ public class ChartUtil {
 //                Set<String> keySet = residueProperties.keySet();
 //                for (String key : keySet) {
 //                    ExperimentSet resProp = residueProperties.get(key);
-//                    List<ExperimentResult> resInfoList = resProp.getResidueValues();
+//                    List<ExperimentResult> resInfoList = resProp.getExperimentResults();
 //                    for (ExperimentResult resInfo : resInfoList) {
 //                        int resNum = resInfo.getResNum();
 //                        String resName = DataIO.getResidueName(resNum);
@@ -606,7 +606,7 @@ public class ChartUtil {
 //                    for (ExperimentData expData : expDataSets) {
 //                        for (String resNumS : expData.getResidues()) {
 //                            int resNum = Integer.parseInt(resNumS);
-//                            ExperimentalData experimentalData = expData.getResidueData(resNumS);
+//                            ExperimentData experimentalData = expData.getResidueData(resNumS);
 //                        }
 //                    }
 //                }

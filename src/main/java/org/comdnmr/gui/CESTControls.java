@@ -633,13 +633,13 @@ public class CESTControls extends EquationControls {
             if (control != null) {
                 control.setValue(parValue.getValue());
                 if (control.getName().equals("deltaA0") || control.getName().equals("deltaB0")) {
-                    if (controller.getCurrentResProps() != null) {
-                        if (controller.getCurrentResProps().getExperimentData() != null) {
+                    if (controller.getCurrentExperimentSet() != null) {
+                        if (controller.getCurrentExperimentSet().getExperimentData() != null) {
 //                            double[] xVals = controller.currentResProps.getExperimentData().stream().findFirst().get().getXVals();
-                            List<ExperimentResult> resVals = controller.getCurrentResProps().getResidueValues();
+                            List<ExperimentResult> resVals = controller.getCurrentExperimentSet().getExperimentResults();
                             Collections.sort(resVals, (a,b) -> Integer.compare(a.getResNum(), b.getResNum()));
                             String resNum = String.valueOf(resVals.get(0).getResNum());
-                            double[] xVals = controller.getCurrentResProps().getExperimentData().stream().findFirst().get().getResidueData(resNum).getXValues()[0];
+                            double[] xVals = controller.getCurrentExperimentSet().getExperimentData().stream().findFirst().get().getResidueData(resNum).getXValues()[0];
                             if (xVals != null) {
                                 double min = Math.floor(xVals[1] / 2) * 2;
                                 double max = Math.ceil(xVals[xVals.length - 1] / 2) * 2;
@@ -650,7 +650,7 @@ public class CESTControls extends EquationControls {
                 }
             }
         }
-        ExperimentSet experimentSet = controller.getCurrentResProps();
+        ExperimentSet experimentSet = controller.getCurrentExperimentSet();
 //        if (experimentSet != null) {
 //            double[] fields = experimentSet.getFields();
 //            int iField = Integer.parseInt(stateSelector.getValue().substring(0, 1));
@@ -725,7 +725,7 @@ public class CESTControls extends EquationControls {
     void updateEquations() {
 //        System.out.println("CEST Controls updateEqns called.");
         ExperimentResult resInfo = controller.currentResInfo;
-        ExperimentSet experimentSet = controller.getCurrentResProps();
+        ExperimentSet experimentSet = controller.getCurrentExperimentSet();
         List<GUIPlotEquation> equations = new ArrayList<>();
         double[] pars;
         double[] extras1;

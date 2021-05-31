@@ -302,7 +302,7 @@ public class ExpControls extends EquationControls {
 
     void updateEquations() {
         ExperimentResult resInfo = controller.currentResInfo;
-        ExperimentSet experimentSet = controller.getCurrentResProps();
+        ExperimentSet experimentSet = controller.getCurrentExperimentSet();
         List<GUIPlotEquation> equations = new ArrayList<>();
         double[] pars;
         String equationName = getEquation(); //equationSelector.getValue();

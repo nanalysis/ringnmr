@@ -38,7 +38,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import org.comdnmr.data.Experiment;
 import org.comdnmr.eqnfit.PlotEquation;
-import org.comdnmr.data.ExperimentalData;
+import org.comdnmr.data.ExperimentData;
 import org.comdnmr.data.ExperimentSet;
 import org.nmrfx.chart.Axis;
 import org.nmrfx.chart.DataSeries;
@@ -173,8 +173,8 @@ public class PlotData extends XYCanvasChart {
 
     void dumpNode(String seriesName, XYValue value) {
         Object extraValue = value.getExtraValue();
-        if (extraValue instanceof ExperimentalData.DataValue) {
-            ExperimentalData.DataValue dataValue = (ExperimentalData.DataValue) extraValue;
+        if (extraValue instanceof ExperimentData.DataValue) {
+            ExperimentData.DataValue dataValue = (ExperimentData.DataValue) extraValue;
             PyController.mainController.selectTableRow(seriesName, dataValue.getIndex());
         }
     }
@@ -332,8 +332,8 @@ public class PlotData extends XYCanvasChart {
     private double getScaledError(XYValue item) {
         Object extraValue = item.getExtraValue();
         double errorY = 0.0;
-        if (extraValue instanceof ExperimentalData.DataValue) {
-            ExperimentalData.DataValue dataValue = (ExperimentalData.DataValue) extraValue;
+        if (extraValue instanceof ExperimentData.DataValue) {
+            ExperimentData.DataValue dataValue = (ExperimentData.DataValue) extraValue;
             double error = dataValue.getError();
             double yValue = dataValue.getY();
             double errorY2 = yAxis.getDisplayPosition(yValue + error);
@@ -400,8 +400,8 @@ public class PlotData extends XYCanvasChart {
             Double x = value.getXValue();
             Double y = value.getYValue();
             Object extraValue = value.getExtraValue();
-            if (extraValue instanceof ExperimentalData.DataValue) {
-                Double error = ((ExperimentalData.DataValue) extraValue).getError();
+            if (extraValue instanceof ExperimentData.DataValue) {
+                Double error = ((ExperimentData.DataValue) extraValue).getError();
                 ArrayList<Double> pointData = new ArrayList<>(3);
                 pointData.add(x);
                 pointData.add(y);

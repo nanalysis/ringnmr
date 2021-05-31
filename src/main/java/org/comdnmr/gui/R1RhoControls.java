@@ -594,13 +594,13 @@ public class R1RhoControls extends EquationControls {
             if (control != null) {
                 control.setValue(parValue.getValue());
                 if (control.getName().equals("deltaA0") || control.getName().equals("deltaB0")) {
-                    if (controller.getCurrentResProps() != null) {
-                        if (controller.getCurrentResProps().getExperimentData() != null) {
-                            DoubleArrayExperiment expData = (DoubleArrayExperiment) controller.getCurrentResProps().getExperimentData().
+                    if (controller.getCurrentExperimentSet() != null) {
+                        if (controller.getCurrentExperimentSet().getExperimentData() != null) {
+                            DoubleArrayExperiment expData = (DoubleArrayExperiment) controller.getCurrentExperimentSet().getExperimentData().
                                     stream().findFirst().get();
                             double[] xVals = expData.getXVals();
 
-//                            String resNum = String.valueOf(controller.currentResProps.getResidueValues().get(0).getResNum());
+//                            String resNum = String.valueOf(controller.currentResProps.getExperimentResults().get(0).getResNum());
 //                            double[] xVals = controller.currentResProps.getExperimentData().stream().findFirst().get().getResidueData(resNum).getXValues()[0];
                             if (xVals != null) {
                                 double min = Math.round(xVals[1] / 2.0) * 2.0;
@@ -612,7 +612,7 @@ public class R1RhoControls extends EquationControls {
                 }
             }
         }
-        ExperimentSet experimentSet = controller.getCurrentResProps();
+        ExperimentSet experimentSet = controller.getCurrentExperimentSet();
 //        if (experimentSet != null) {
 //            double[] fields = experimentSet.getFields();
 //            int iField = Integer.parseInt(stateSelector.getValue().substring(0, 1));
@@ -676,7 +676,7 @@ public class R1RhoControls extends EquationControls {
     void updateEquations() {
 //        System.out.println("R1Rho Controls updateEqns called.");
         ExperimentResult resInfo = controller.currentResInfo;
-        ExperimentSet experimentSet = controller.getCurrentResProps();
+        ExperimentSet experimentSet = controller.getCurrentExperimentSet();
         List<GUIPlotEquation> equations = new ArrayList<>();
         double[] pars;
         double[] extras1;

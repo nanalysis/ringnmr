@@ -155,7 +155,7 @@ public class ResidueChart extends XYCanvasBarChart {
     Optional<Integer> pickPresenceIndicators(double mouseX, double mouseY) {
         Optional<Integer> result = Optional.empty();
         if (experimentSet != null) {
-            List<ExperimentResult> resValues = experimentSet.getResidueValues();
+            List<ExperimentResult> resValues = experimentSet.getExperimentResults();
             for (ExperimentResult resInfo : resValues) {
                 if (resInfo == null) {
                     continue;
@@ -178,7 +178,7 @@ public class ResidueChart extends XYCanvasBarChart {
 
     void drawPresenceIndicators(GraphicsContextInterface gC) throws GraphicsIOException {
         if (experimentSet != null) {
-            List<ExperimentResult> resValues = experimentSet.getResidueValues();
+            List<ExperimentResult> resValues = experimentSet.getExperimentResults();
             for (ExperimentResult resInfo : resValues) {
                 if (resInfo == null) {
                     continue;
