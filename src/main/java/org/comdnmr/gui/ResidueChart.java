@@ -149,7 +149,12 @@ public class ResidueChart extends XYCanvasBarChart {
 //        System.out.println("series " + seriesName + " map " + mapName + " eqn " + equationName + " state " + state);
         String[] residues = new String[selectedResidues.size()];
         selectedResidues.toArray(residues);
-        controller.showInfo(experimentSet, equationName, mapName, state, residues, xyCanvasChart);
+        controller.chartInfo.currentExperimentSet = experimentSet;
+        controller.chartInfo.setResidues(residues);
+        controller.chartInfo.state =state;
+        controller.chartInfo.mapName = mapName;
+        controller.chartInfo.equationName = equationName;
+        controller.showInfo(controller.chartInfo,xyCanvasChart);
     }
 
     Optional<Integer> pickPresenceIndicators(double mouseX, double mouseY) {

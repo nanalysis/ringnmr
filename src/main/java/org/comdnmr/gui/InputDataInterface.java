@@ -826,7 +826,7 @@ public class InputDataInterface {
         PyController.mainController.clearSecondaryStructure();
         if (PyController.mainController.activeChart != null) {
             PyController.mainController.clearChart();
-            PyController.mainController.currentResidues = null;
+            PyController.mainController.chartInfo.clear();
             PyController.mainController.simulate = false;
             PyController.mainController.fitResult = null;
         }

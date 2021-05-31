@@ -266,7 +266,7 @@ public class NOEControls extends EquationControls {
     }
 
     void updateEquations() {
-        ExperimentResult resInfo = controller.currentResInfo;
+        ExperimentResult resInfo = controller.chartInfo.getResult();
         ExperimentSet experimentSet = controller.getCurrentExperimentSet();
         List<GUIPlotEquation> equations = new ArrayList<>();
         double[] pars;

@@ -79,7 +79,6 @@ import org.comdnmr.eqnfit.CESTFitter;
 import java.text.DecimalFormat;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Optional;
 import javafx.beans.property.SimpleStringProperty;
 import java.util.Random;
@@ -243,16 +242,10 @@ public class PyController implements Initializable {
     InputDataInterface inputDataInterface = null;
     NMRFxClient cl;
 
-    ExperimentResult currentResInfo = null;
-    private ExperimentSet currentExperimentSet = null;
     ResidueFitter residueFitter;
-    String currentMapName = "";
-    String[] currentResidues;
     List<String> fittingResidues = new ArrayList<>();
-    String currentState = "";
-    String currentEquationName;
-    List<int[]> currentStates = new ArrayList<>();
     boolean simulate = true;
+    ChartInfo chartInfo = new ChartInfo();
 
     FitResult fitResult;
     PlotData xychart;
@@ -735,8 +728,8 @@ public class PyController implements Initializable {
             resNums.add(resInfo.get(i).getResNum());
         }
         Collections.sort(resNums);
-        if (currentResInfo != null) {
-            int resIndex = resNums.indexOf(currentResInfo.getResNum());
+        if (chartInfo.hasResidue()) {
+            int resIndex = resNums.indexOf(chartInfo.getResNum());
             resIndex--;
             if (resIndex <= 0) {
                 resIndex = 0;
@@ -748,7 +741,7 @@ public class PyController implements Initializable {
     }
 
     public void firstResidue(ActionEvent event) {
-        if (currentResidues != null) {
+        if (chartInfo.hasResidue()) {
             int res = ChartUtil.minRes;
             ResidueChart chart = getActiveChart();
             chart.showInfo(chart.currentSeriesName, 0, res, false);
@@ -762,8 +755,8 @@ public class PyController implements Initializable {
             resNums.add(resInfo.get(i).getResNum());
         }
         Collections.sort(resNums);
-        if (currentResInfo != null) {
-            int resIndex = resNums.indexOf(currentResInfo.getResNum());
+        if (chartInfo.hasResidue()) {
+            int resIndex = resNums.indexOf(chartInfo.getResNum());
             resIndex++;
             if (resIndex >= resNums.size()) {
                 resIndex = resNums.size() - 1;
@@ -775,7 +768,7 @@ public class PyController implements Initializable {
     }
 
     public void lastResidue(ActionEvent event) {
-        if (currentResidues != null) {
+        if (chartInfo.hasResidue()) {
             int res = ChartUtil.maxRes;
             ResidueChart chart = getActiveChart();
             chart.showInfo(chart.currentSeriesName, 0, res, false);
@@ -791,7 +784,7 @@ public class PyController implements Initializable {
         if (file != null) {
             if (activeChart != null) {
                 clearChart();
-                currentResidues = null;
+                chartInfo.clear();
                 simulate = false;
                 fitResult = null;
             }
@@ -1197,31 +1190,31 @@ public class PyController implements Initializable {
         }
     }
 
-    public void updateTableWithPars(String mapName, String[] residues, String equationName, String state, List<int[]> allStates) {
-        updateTableWithPars(mapName, residues, equationName, state, allStates, true);
-    }
-
-    public void updateTableWithPars(String mapName, String[] residues, String equationName, String state, List<int[]> allStates, boolean savePars) {
+//    public void updateTableWithPars(String mapName, String[] residues, String equationName, String state, List<int[]> allStates) {
+//        updateTableWithPars(mapName, residues, equationName, state, allStates, true);
+//    }
+//                updateTableWithPars(currentMapName, currentResidues, equationName, currentState, useStates, false);
+    public void updateTableWithPars(ChartInfo chartInfo, boolean savePars) {
         List<ParValueInterface> allParValues = new ArrayList<>();
-        if (residues != null) {
-            for (String resNum : residues) {
-                ExperimentResult resInfo = ChartUtil.getResInfo(mapName, String.valueOf(resNum));
+        if (chartInfo.hasResidues()) {
+            for (String resNum : chartInfo.getResidues()) {
+                ExperimentResult resInfo = ChartUtil.getResInfo(chartInfo.mapName, String.valueOf(resNum));
                 if (resInfo != null) {
-                    currentResInfo = resInfo;
+                    chartInfo.experimentalResult = resInfo;
                     final String useEquationName;
-                    if (equationName.equals("best")) {
+                    if (chartInfo.equationName.equals("best")) {
                         useEquationName = resInfo.getBestEquationName();
                     } else {
-                        useEquationName = equationName;
+                        useEquationName = chartInfo.equationName;
                     }
-                    List<ParValueInterface> parValues = resInfo.getParValues(useEquationName, state);
-                    if (resNum.equals(residues[0])) {
-                        simControls.updateStates(allStates);
+                    List<ParValueInterface> parValues = resInfo.getParValues(useEquationName, chartInfo.state);
+                    if (resNum.equals(chartInfo.currentResidues[0])) {
+                        simControls.updateStates(chartInfo.currentStates);
                         simControls.updateSliders(parValues, useEquationName);
                     }
 
                     allParValues.addAll(parValues);
-                    CurveFit curveSet = currentResInfo.getCurveSet(useEquationName, state.replace("*", "0"));
+                    CurveFit curveSet = chartInfo.experimentalResult.getCurveSet(useEquationName, chartInfo.state.replace("*", "0"));
 //                    System.out.println("curv " + useEquationName + " " + state + " " + curveSet);
                     try {
                         String aic = String.format("%.2f", curveSet.getParMap().get("AIC"));
@@ -1236,13 +1229,13 @@ public class PyController implements Initializable {
                 }
             }
             if (savePars) {
-                currentMapName = mapName;
-                currentResidues = new String[residues.length];
-                System.arraycopy(residues, 0, currentResidues, 0, residues.length);
-                currentState = state;
-                currentEquationName = equationName;
-                currentStates.clear();
-                currentStates.addAll(allStates);
+//                chartInfo.mapName = mapName;
+//                chartInfo.currentResidues = new String[residues.length];
+//                System.arraycopy(residues, 0, chartInfo.currentResidues, 0, residues.length);
+//                chartInfo.state = state;
+//                chartInfo.equationName = equationName;
+//                chartInfo.currentStates.clear();
+//                chartInfo.currentStates.addAll(allStates);
             }
 
             updateTableWithPars(allParValues);
@@ -1448,6 +1441,12 @@ public class PyController implements Initializable {
             t2Choice.getItems().add(setName);
             //  noeChoice.getItems().add(setName);
         }
+        setNames = ChartUtil.getResiduePropertyNames();
+        for (var setName : setNames) {
+            t1Choice.getItems().add(setName);
+            t2Choice.getItems().add(setName);
+            //  noeChoice.getItems().add(setName);
+        }
     }
 
     void makeAxisMenu() {
@@ -1539,7 +1538,7 @@ public class PyController implements Initializable {
         } else {
             try {
                 EquationFitter equationFitter = getFitter();
-                String[] resNums = {String.valueOf(currentResInfo.getResNum())};
+                String[] resNums = {chartInfo.getResNum()};
                 equationFitter.setData(getCurrentExperimentSet(), resNums);
                 String equationName = simControls.getEquation();
 //        System.out.println("guesses eqnFitter = " + equationFitter);
@@ -1564,8 +1563,8 @@ public class PyController implements Initializable {
         if (hasExperimentSet()) {
             try {
                 EquationFitter equationFitter = getFitter();
-                if (currentResInfo != null) {
-                    String[] resNums = {String.valueOf(currentResInfo.getResNum())};
+                if (chartInfo.hasResult()) {
+                    String[] resNums = {String.valueOf(chartInfo.getResNum())};
                     equationFitter.setData(getCurrentExperimentSet(), resNums);
                     String equationName = simControls.getEquation();
                     equationFitter.setupFit(equationName);
@@ -1591,7 +1590,7 @@ public class PyController implements Initializable {
             if (!hasExperimentSet()) {
                 fitSimData();
             } else {
-                String[] resNums = {String.valueOf(currentResInfo.getResNum())};
+                String[] resNums = {chartInfo.getResNum()};
                 equationFitter.setData(getCurrentExperimentSet(), resNums);
                 String equationName = simControls.getEquation();
                 equationFitter.setupFit(equationName);
@@ -1989,11 +1988,11 @@ public class PyController implements Initializable {
     }
 
     public ExperimentResult getResidueInfo() {
-        return currentResInfo;
+        return chartInfo.getResult();
     }
 
     public String getEquationName() {
-        return currentEquationName;
+        return chartInfo.getEquationName();
     }
 
     public String getFittingMode() {
@@ -2064,8 +2063,8 @@ public class PyController implements Initializable {
 
     @FXML
     void setBestEquation(ActionEvent e) {
-        for (String resNum : currentResidues) {
-            ExperimentResult resInfo = ChartUtil.getResInfo(currentMapName, String.valueOf(resNum));
+        for (String resNum : chartInfo.currentResidues) {
+            ExperimentResult resInfo = ChartUtil.getResInfo(chartInfo.mapName, String.valueOf(resNum));
             if (resInfo != null) {
                 String equationName = equationChoice.getValue();
                 resInfo.setBestEquationName(equationName);
@@ -2078,10 +2077,9 @@ public class PyController implements Initializable {
     void equationAction() {
         if (equationChoice.getUserData() == null) {
             String equationName = equationChoice.getValue();
-            if (!currentStates.isEmpty() && equationName != null) {
+            if (!chartInfo.currentStates.isEmpty() && equationName != null) {
                 // copy it so it doesn't get cleared by clear call in updateTableWithPars
-                List<int[]> useStates = new ArrayList<>(currentStates);
-                updateTableWithPars(currentMapName, currentResidues, equationName, currentState, useStates, false);
+                updateTableWithPars(chartInfo, false);
                 showInfo(equationName);
             }
         }
@@ -2115,8 +2113,7 @@ public class PyController implements Initializable {
     }
 
     void clearProject(boolean clearXY) {
-        currentResidues = null;
-        currentResInfo = null;
+        chartInfo.clear();
         setCurrentExperimentSet(null);
         fitResult = null;
         ChartUtil.clearResidueProperties();
@@ -2133,38 +2130,37 @@ public class PyController implements Initializable {
     }
 
     void showInfo(String equationName) {
-        String mapName = currentMapName;
-        String state = currentState;
         if (hasExperimentSet()) {
-            showInfo(getCurrentExperimentSet(), equationName, mapName, state, currentResidues, xychart);
+            showInfo(chartInfo, xychart);
         }
     }
 
-    void showInfo(ExperimentSet experimentSet, String equationName, String mapName, String state, String[] residues, PlotData plotData) {
+    void showInfo(ChartInfo chartInfo, PlotData plotData) {
         ArrayList<GUIPlotEquation> equations = new ArrayList<>();
         ObservableList<DataSeries> allData = FXCollections.observableArrayList();
         List<ExperimentData> experimentalDataSets = new ArrayList<>();
         List<int[]> allStates = new ArrayList<>();
         boolean calcScale = scalePlot.isSelected();
-        if ((experimentSet != null) && (residues != null)) {
+        System.out.println("showinfo " + chartInfo.hasExperiments() + " " + chartInfo.hasResidues());
+        if (chartInfo.hasExperiments() && chartInfo.hasResidues()) {
             //double maxY = getMaxY(experimentSet, equationName, mapName, state, residues) / 100.0;
             //System.out.println("max Y " + maxY);
             int iSeries = 0;
-            for (Experiment expData : experimentSet.getExperimentData()) {
-                if (!ExperimentSet.matchStateString(state, expData.getState())) {
+            for (Experiment expData : chartInfo.getExperiments().getExperimentData()) {
+                if (!ExperimentSet.matchStateString(chartInfo.state, expData.getState())) {
                     continue;
                 }
                 String expName = expData.getName();
-                for (String resNum : residues) {
+                for (String resNum : chartInfo.getResidues()) {
                     if (expData.getResidueData(resNum) != null) {
 //                        System.out.println(expData.getResidueData(resNum));
                         experimentalDataSets.add(expData.getResidueData(resNum));
-                        DataSeries series = ChartUtil.getMapData(mapName, expName, resNum);
+                        DataSeries series = ChartUtil.getMapData(chartInfo.mapName, expName, resNum);
                         series.setStroke(PlotData.colors[iSeries % 8]);
                         series.setFill(PlotData.colors[iSeries % 8]);
                         allData.add(series);
                         GUIPlotEquation equation = ChartUtil.getEquation(expData,
-                                mapName, resNum, equationName, expData.getState(),
+                                chartInfo.mapName, resNum, chartInfo.equationName, expData.getState(),
                                 expData.getNucleusField());
                         double maxY = 1.0;
                         if (equation != null) {
@@ -2182,14 +2178,15 @@ public class PyController implements Initializable {
                     }
                 }
 
-                int[] states = experimentSet.getStateIndices(0, expData);
+                int[] states = chartInfo.currentExperimentSet.getStateIndices(0, expData);
                 allStates.add(states);
             }
         }
+        chartInfo.setStates(allStates);
         updateTable(experimentalDataSets);
-        if (residues != null) {
-            updateTableWithPars(mapName, residues, equationName, state, allStates);
-            updateEquation(mapName, residues, equationName);
+        if (chartInfo.getResidues() != null) {
+            updateTableWithPars(chartInfo, true);
+            updateEquation(chartInfo.mapName, chartInfo.getResidues(), chartInfo.equationName);
         }
         plotData.setData(allData);
         setBounds();
@@ -2543,21 +2540,21 @@ public class PyController implements Initializable {
     }
 
     public boolean hasExperimentSet() {
-        return (currentExperimentSet != null) && (currentExperimentSet instanceof ExperimentSet);
+        return (chartInfo.currentExperimentSet != null) && (chartInfo.currentExperimentSet instanceof ExperimentSet);
     }
 
     /**
      * @return the currentExperimentSet
      */
     public ExperimentSet getCurrentExperimentSet() {
-        return currentExperimentSet;
+        return chartInfo.currentExperimentSet;
     }
 
     /**
      * @param currentResProps the currentExperimentSet to set
      */
     public void setCurrentExperimentSet(ExperimentSet currentResProps) {
-        this.currentExperimentSet = currentResProps;
+        this.chartInfo.currentExperimentSet = currentResProps;
     }
 
 }

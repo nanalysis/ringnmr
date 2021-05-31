@@ -186,7 +186,7 @@ public class CPMGControls extends EquationControls {
         if (equationName == "") {
             equationName = equationSelector.getItems().get(0);
         }
-        ExperimentResult resInfo = controller.currentResInfo;
+        ExperimentResult resInfo = controller.chartInfo.getResult();
         if (resInfo != null) {
             updatingTable = true;
             String state = stateSelector.getValue();
@@ -237,7 +237,7 @@ public class CPMGControls extends EquationControls {
     }
 
     void stateAction() {
-        ExperimentResult resInfo = controller.currentResInfo;
+        ExperimentResult resInfo = controller.chartInfo.getResult();
         if (resInfo != null) {
             String state = stateSelector.getValue();
             if (state != null) {
@@ -436,7 +436,7 @@ public class CPMGControls extends EquationControls {
     }
 
     void updateEquations() {
-        ExperimentResult resInfo = controller.currentResInfo;
+        ExperimentResult resInfo = controller.chartInfo.getResult();
         ExperimentSet experimentSet = controller.getCurrentExperimentSet();
         List<GUIPlotEquation> equations = new ArrayList<>();
         double[] pars;
