@@ -225,6 +225,10 @@ public class ExperimentSet implements ValueSet {
     public void clearResidueMap() {
         resultMap.clear();
     }
+    
+    public Set<String> getResidueNumberStrs() {
+        return resultMap.keySet();
+    }
 
     public List<ExperimentResult> getExperimentResults() {
         List<ExperimentResult> values = new ArrayList<>();

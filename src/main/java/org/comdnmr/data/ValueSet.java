@@ -5,10 +5,14 @@
  */
 package org.comdnmr.data;
 
+import java.util.Set;
+
 /**
  *
  * @author brucejohnson
  */
 public interface ValueSet {
-    
+
+    public Set<String> getResidueNumberStrs();
+
 }
