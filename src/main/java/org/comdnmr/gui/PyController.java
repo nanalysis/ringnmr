@@ -1100,16 +1100,29 @@ public class PyController implements Initializable {
     public void calcModel1() {
         FitModel fitModel = new FitModel();
         fitModel.testIsoModel();
-
+        Double tau = fitModel.getTau();
+        if (tau != null) {
+            tauCalcField.setText(String.format("%.2f ns", tau * 1.0e9));
+        }
     }
 
     public void estimateCorrelationTime() {
         String r1SetName = t1Choice.getValue();
         String r2SetName = t2Choice.getValue();
-        ExperimentSet r1Set = (ExperimentSet) ChartUtil.getResidueProperty(r1SetName);
-        ExperimentSet r2Set = (ExperimentSet) ChartUtil.getResidueProperty(r2SetName);
+        ValueSet valueSet1 = ChartUtil.getResidueProperty(r1SetName);
+        ValueSet valueSet2 = ChartUtil.getResidueProperty(r2SetName);
+        Map<String, Double> result = Collections.EMPTY_MAP;
+        if (valueSet1 instanceof ExperimentSet) {
+            if (valueSet2 instanceof ExperimentSet) {
+                ExperimentSet r1Set = (ExperimentSet) valueSet1;
+                ExperimentSet r2Set = (ExperimentSet) valueSet2;
+                result = CorrelationTime.estimateTau(r1Set, r2Set);
+            }
+        } else {
+            FitModel fitModel = new FitModel();
+            result = fitModel.estimateTau();
+        }
 
-        Map<String, Double> result = CorrelationTime.estimateTau(r1Set, r2Set);
         if (!result.isEmpty()) {
             r1MedianField.setText(String.format("%.3f 1/s", result.get("R1")));
             r2MedianField.setText(String.format("%.3f 1/s", result.get("R2")));
@@ -1224,7 +1237,7 @@ public class PyController implements Initializable {
 //                updateTableWithPars(currentMapName, currentResidues, equationName, currentState, useStates, false);
     public void updateTableWithPars(ChartInfo chartInfo, boolean savePars) {
         List<ParValueInterface> allParValues = new ArrayList<>();
-        if (chartInfo.hasResidues()  && chartInfo.hasExperiments()) {
+        if (chartInfo.hasResidues() && chartInfo.hasExperiments()) {
             for (String resNum : chartInfo.getResidues()) {
                 ExperimentResult resInfo = ChartUtil.getResInfo(chartInfo.mapName, String.valueOf(resNum));
                 if (resInfo != null) {
@@ -1471,18 +1484,15 @@ public class PyController implements Initializable {
         t1Choice.getItems().add("");
         t2Choice.getItems().add("");
         //noeChoice.getItems().add("");
-
         Collection<String> setNames = ChartUtil.getResiduePropertyNames();
         for (var setName : setNames) {
-            t1Choice.getItems().add(setName);
-            t2Choice.getItems().add(setName);
-            //  noeChoice.getItems().add(setName);
-        }
-        setNames = ChartUtil.getResiduePropertyNames();
-        for (var setName : setNames) {
-            t1Choice.getItems().add(setName);
-            t2Choice.getItems().add(setName);
-            //  noeChoice.getItems().add(setName);
+            ValueSet valueSet = ChartUtil.getResidueProperty(setName);
+            if (valueSet instanceof ExperimentSet) {
+                t1Choice.getItems().add(setName);
+                t2Choice.getItems().add(setName);
+            } else if (valueSet instanceof ExperimentSet) {
+
+            }
         }
     }
 
@@ -2180,7 +2190,6 @@ public class PyController implements Initializable {
         List<ExperimentData> experimentalDataSets = new ArrayList<>();
         List<int[]> allStates = new ArrayList<>();
         boolean calcScale = scalePlot.isSelected();
-        System.out.println("showinfo " + chartInfo.hasExperiments() + " " + chartInfo.hasResidues());
         if (chartInfo.hasExperiments() && chartInfo.hasResidues()) {
             //double maxY = getMaxY(valueSet, equationName, mapName, state, residues) / 100.0;
             //System.out.println("max Y " + maxY);
