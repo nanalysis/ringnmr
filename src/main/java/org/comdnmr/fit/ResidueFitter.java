@@ -43,6 +43,7 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
+import org.comdnmr.data.DynamicsSource;
 import org.comdnmr.data.Experiment;
 import org.comdnmr.eqnfit.NOEEquation;
 import org.comdnmr.util.CoMDOptions;
@@ -240,7 +241,9 @@ public class ResidueFitter {
         List<ExperimentResult> resInfoList = new ArrayList<>();
         Map<String, ExperimentResult> resMap = new HashMap<>();
         for (String residueNumber : resNums) {
-            ExperimentResult residueInfo = new ExperimentResult(experimentSet, Integer.parseInt(residueNumber), groupId, resNums.length);
+            String expName = experimentSet.getName();
+            DynamicsSource dynSource = DynamicsSource.createFromSpecifiers(expName + ".0", residueNumber, "H");
+            ExperimentResult residueInfo = new ExperimentResult(experimentSet, dynSource, groupId, resNums.length);
             resInfoList.add(residueInfo);
             resMap.put(residueNumber, residueInfo);
             residueInfo.addFitResult(null);
@@ -302,7 +305,9 @@ public class ResidueFitter {
         List<ExperimentResult> resInfoList = new ArrayList<>();
         Map<String, ExperimentResult> resMap = new HashMap<>();
         for (String residueNumber : resNums) {
-            ExperimentResult residueInfo = new ExperimentResult(experimentSet, Integer.parseInt(residueNumber), groupId, resNums.length);
+            DynamicsSource dynSource = DynamicsSource.createFromSpecifiers(experimentSet.getName() + ".0", residueNumber, "H");
+
+            ExperimentResult residueInfo = new ExperimentResult(experimentSet, dynSource, groupId, resNums.length);
             resInfoList.add(residueInfo);
             resMap.put(residueNumber, residueInfo);
             equationNames.forEach((equationName) -> {

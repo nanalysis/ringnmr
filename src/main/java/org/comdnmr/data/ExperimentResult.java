@@ -32,6 +32,7 @@ import org.comdnmr.eqnfit.FitResult;
 import org.comdnmr.eqnfit.CurveFit;
 import org.comdnmr.eqnfit.ParValueInterface;
 import org.comdnmr.eqnfit.PlotEquation;
+import org.nmrfx.chemistry.Residue;
 
 /**
  *
@@ -40,9 +41,7 @@ import org.comdnmr.eqnfit.PlotEquation;
 public class ExperimentResult {
 
     ExperimentSet experimentSet;
-
-    int resNum;
-    String resName;
+    DynamicsSource dynSource;
     Map<String, Map<String, CurveFit>> curveSets = new LinkedHashMap<>();
     Map<String, FitResult> fitResults = new LinkedHashMap<>();
     PlotEquation bestEquation = null;
@@ -105,12 +104,12 @@ public class ExperimentResult {
 
         @Override
         public String getResidue() {
-            return String.valueOf(resInfo.resNum);
+            return String.valueOf(resInfo.getResNum());
         }
 
         @Override
         public String getResName() {
-            return String.valueOf(resInfo.resName);
+            return resInfo.getResName();
         }
 
         @Override
@@ -119,16 +118,30 @@ public class ExperimentResult {
         }
     }
 
-    public ExperimentResult(ExperimentSet experimentSet, int resNum, int groupId, int groupSize) {
-        this(experimentSet, resNum, groupId, groupSize, 0);
+    public ExperimentResult(ExperimentSet experimentSet, DynamicsSource dynSource, int groupId, int groupSize) {
+        this(experimentSet, dynSource, groupId, groupSize, 0);
     }
 
-    public ExperimentResult(ExperimentSet experimentSet, int resNum, int groupId, int groupSize, int peakNum) {
+    public ExperimentResult(ExperimentSet experimentSet, DynamicsSource dynSource, int groupId, int groupSize, int peakNum) {
         this.experimentSet = experimentSet;
-        this.resNum = resNum;
+        this.dynSource = dynSource;
         this.groupId = groupId;
         this.groupSize = groupSize;
         this.peakNum = peakNum;
+    }
+    
+    public DynamicsSource getSource() {
+        return dynSource;
+    }
+
+    public int getResNum() {
+        Residue residue = dynSource.getResidue();
+        return residue != null ? residue.getResNum() : 1;
+    }
+
+    public String getResName() {
+        Residue residue = dynSource.getResidue();
+        return residue != null ? residue.getName() : "";
     }
 
     public void addFitResult(FitResult fitResult) {
@@ -187,18 +200,6 @@ public class ExperimentResult {
         }
     }
 
-    public int getResNum() {
-        return resNum;
-    }
-
-    public String getResName() {
-        return resName;
-    }
-
-    public void setResName(String name) {
-        this.resName = name;
-    }
-
     public Double getParValue(String equationName, String state, String parName) {
         Map<String, CurveFit> curveFits = curveSets.get(equationName);
         if (curveFits == null) {
@@ -248,7 +249,7 @@ public class ExperimentResult {
         }
         sBuilder.append(plotEquation.getName());
         sBuilder.append(" ");
-        sBuilder.append(resNum);
+        sBuilder.append(getResNum());
         sBuilder.append('\n');
         double[] xValues = null;
         double[] yValues = null;
@@ -283,7 +284,7 @@ public class ExperimentResult {
     public String toOutputString(String[] parNames, boolean saveStats) {
         char sep = '\t';
         StringBuilder sBuilder = new StringBuilder();
-        sBuilder.append(resNum).append(sep);
+        sBuilder.append(getResNum()).append(sep);
         sBuilder.append(peakNum).append(sep);
         sBuilder.append(groupSize).append(sep);
         sBuilder.append(groupId).append(sep);

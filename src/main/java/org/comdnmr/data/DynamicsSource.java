@@ -5,9 +5,12 @@
  */
 package org.comdnmr.data;
 
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.nmrfx.chemistry.Atom;
+import org.nmrfx.chemistry.Entity;
 import org.nmrfx.chemistry.MoleculeBase;
 import org.nmrfx.chemistry.MoleculeFactory;
 import org.nmrfx.chemistry.Polymer;
@@ -28,6 +31,35 @@ public class DynamicsSource {
     private static final Pattern RESIDUE_PATTERN = Pattern.compile(RESIDUE_STR);
     private static final Pattern PEAK_PATTERN = Pattern.compile(PEAK_STR);
 
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 13 * hash + Objects.hashCode(this.peak);
+        hash = 13 * hash + Objects.hash(atoms);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final DynamicsSource other = (DynamicsSource) obj;
+        if (!Objects.equals(this.peak, other.peak)) {
+            return false;
+        }
+        if (!Arrays.deepEquals(this.atoms, other.atoms)) {
+            return false;
+        }
+        return true;
+    }
+
     final Peak peak;
     final Atom[] atoms;
 
@@ -45,6 +77,15 @@ public class DynamicsSource {
             sBuilder.append(atom.getFullName());
         }
         return sBuilder.toString();
+    }
+
+    public Residue getResidue() {
+        Residue residue = null;
+        Entity entity = atoms[0].getEntity();
+        if (entity instanceof Residue) {
+            residue = (Residue) entity;
+        }
+        return residue;
     }
 
     public static Peak getPeak(String peakSpecifier, int nDim) {

@@ -19,14 +19,9 @@ package org.comdnmr.data;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.comdnmr.util.DataUtil;
-import org.nmrfx.chemistry.Atom;
 import org.nmrfx.chemistry.Entity;
-import org.nmrfx.chemistry.MoleculeBase;
-import org.nmrfx.chemistry.MoleculeFactory;
 import org.nmrfx.chemistry.relax.RelaxationData;
-import org.nmrfx.chemistry.relax.RelaxationData.relaxTypes;
 import org.nmrfx.chemistry.Residue;
 
 /**
@@ -37,7 +32,6 @@ public class ExperimentData {
 
     Experiment experiment;
     DynamicsSource dynSource;
-    RelaxationData relaxData;
     double[][] xValues;
     double[] errValues;
     double[] yValues;
@@ -85,10 +79,9 @@ public class ExperimentData {
             errValues[i] = errValueList.get(i);
         }
     }
-
-    public ExperimentData(Experiment expData, RelaxationData relaxData) {
-        this.experiment = expData;
-        this.relaxData = relaxData;
+    
+    public DynamicsSource getSource() {
+        return dynSource;
     }
 
     public double[][] getXValues() {

@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
  *
  * @author Bruce Johnson
  */
-public class ExperimentSet {
+public class ExperimentSet implements ValueSet {
 
     Map<String, Experiment> expMaps = new HashMap<>();
     private final HashMap<String, ExperimentResult> resultMap = new HashMap<>();
