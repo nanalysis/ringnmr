@@ -485,9 +485,10 @@ public class PyController implements Initializable {
         chartMenu.setOnShowing(e -> {
             makeAxisMenu();
         });
-        barScaleSlider.setMin(5.0);
-        barScaleSlider.setMax(55.0);
+        barScaleSlider.setMin(2.0);
+        barScaleSlider.setMax(22.0);
         barScaleSlider.setValue(10.0);
+        barScaleSlider.setBlockIncrement(1.0);
         barScaleSlider.setShowTickLabels(true);
         barScaleSlider.setShowTickMarks(true);
         barScaleSlider.valueProperty().addListener(e -> resizeBarPlotCanvas());
@@ -1223,7 +1224,7 @@ public class PyController implements Initializable {
 //                updateTableWithPars(currentMapName, currentResidues, equationName, currentState, useStates, false);
     public void updateTableWithPars(ChartInfo chartInfo, boolean savePars) {
         List<ParValueInterface> allParValues = new ArrayList<>();
-        if (chartInfo.hasResidues()) {
+        if (chartInfo.hasResidues()  && chartInfo.hasExperiments()) {
             for (String resNum : chartInfo.getResidues()) {
                 ExperimentResult resInfo = ChartUtil.getResInfo(chartInfo.mapName, String.valueOf(resNum));
                 if (resInfo != null) {
@@ -2181,7 +2182,7 @@ public class PyController implements Initializable {
         boolean calcScale = scalePlot.isSelected();
         System.out.println("showinfo " + chartInfo.hasExperiments() + " " + chartInfo.hasResidues());
         if (chartInfo.hasExperiments() && chartInfo.hasResidues()) {
-            //double maxY = getMaxY(experimentSet, equationName, mapName, state, residues) / 100.0;
+            //double maxY = getMaxY(valueSet, equationName, mapName, state, residues) / 100.0;
             //System.out.println("max Y " + maxY);
             int iSeries = 0;
             for (Experiment expData : ((ExperimentSet) chartInfo.getExperiments()).getExperimentData()) {

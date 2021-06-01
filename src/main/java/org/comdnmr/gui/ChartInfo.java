@@ -26,7 +26,7 @@ public class ChartInfo {
     List<int[]> currentStates = new ArrayList<>();
 
     public boolean hasExperiments() {
-        return valueSet != null;
+        return valueSet != null && (valueSet instanceof ExperimentSet);
     }
 
     public ValueSet getExperiments() {

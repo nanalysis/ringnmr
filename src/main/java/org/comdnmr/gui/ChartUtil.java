@@ -366,10 +366,14 @@ public class ChartUtil {
     }
 
     public static ExperimentResult getResInfo(String seriesName, String residue) {
-        ExperimentSet residueProps = (ExperimentSet) valueSets.get(seriesName);
-        if (residueProps != null) {
-            ExperimentResult resInfo = residueProps.getExperimentResult(residue);
-            return resInfo;
+        if (valueSets instanceof ExperimentSet) {
+            ExperimentSet residueProps = (ExperimentSet) valueSets.get(seriesName);
+            if (residueProps != null) {
+                ExperimentResult resInfo = residueProps.getExperimentResult(residue);
+                return resInfo;
+            } else {
+                return null;
+            }
         } else {
             return null;
         }
@@ -432,8 +436,8 @@ public class ChartUtil {
         System.out.println("get Par map " + valueSet);
         if (valueSet instanceof ExperimentSet) {
             experimentSet = (ExperimentSet) valueSet;
-           System.out.println("get exp map " + experimentSet);
-     } else {
+            System.out.println("get exp map " + experimentSet);
+        } else {
             return data;
         }
 
