@@ -366,14 +366,12 @@ public class ChartUtil {
     }
 
     public static ExperimentResult getResInfo(String seriesName, String residue) {
-        if (valueSets instanceof ExperimentSet) {
-            ExperimentSet residueProps = (ExperimentSet) valueSets.get(seriesName);
-            if (residueProps != null) {
-                ExperimentResult resInfo = residueProps.getExperimentResult(residue);
-                return resInfo;
-            } else {
-                return null;
-            }
+        ValueSet valueSet = valueSets.get(seriesName);
+        if (valueSet instanceof ExperimentSet) {
+            ExperimentSet experimentSet = (ExperimentSet) valueSet;
+            ExperimentResult resInfo = experimentSet.getExperimentResult(residue);
+            return resInfo;
+
         } else {
             return null;
         }

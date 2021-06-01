@@ -2232,7 +2232,7 @@ public class PyController implements Initializable {
         }
         chartInfo.setStates(allStates);
         updateTable(experimentalDataSets);
-        if (chartInfo.getResidues() != null) {
+        if (chartInfo.hasResidues()) {
             updateTableWithPars(chartInfo, true);
             updateEquation(chartInfo.mapName, chartInfo.getResidues(), chartInfo.equationName);
         }
