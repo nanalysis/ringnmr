@@ -6,6 +6,7 @@
 package org.comdnmr.modelfree;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -32,7 +33,9 @@ import org.nmrfx.chemistry.relax.OrderPar;
  */
 public class FitModel {
 
-    Map<String, MolDataValues> getData() {
+    Double tau;
+
+    Map<String, MolDataValues> getData(boolean requireCoords) {
         Map<String, MolDataValues> molDataValues = new HashMap<>();
         MoleculeBase mol = MoleculeFactory.getActive();
         if (mol != null) {
@@ -43,60 +46,67 @@ public class FitModel {
                     if ((hAtom != null) && (nAtom != null)) {
                         var hPoint = hAtom.getPoint();
                         var nPoint = nAtom.getPoint();
-                        if ((hPoint != null) && (nPoint != null)) {
-                            var relaxData = hAtom.getRelaxationData();
-                            if ((relaxData == null) || relaxData.isEmpty()) {
-                                relaxData = nAtom.getRelaxationData();
+                        Vector3D vec = null;
+                        if ((hPoint == null) || (nPoint == null)) {
+                            if (requireCoords) {
+                                continue;
                             }
-                            if (relaxData != null) {
-                                Vector3D vec = hPoint.subtract(nPoint);
-                                MolDataValues molData = new MolDataValues(nAtom, vec.toArray());
-                                Set<Long> fields = new HashSet<>();
+                        } else {
+                            vec = hPoint.subtract(nPoint);
+                        }
+                        var relaxData = hAtom.getRelaxationData();
+                        if ((relaxData == null) || relaxData.isEmpty()) {
+                            relaxData = nAtom.getRelaxationData();
+                        }
+                        if (relaxData != null) {
+                            MolDataValues molData = vec == null
+                                    ? new MolDataValues(nAtom)
+                                    : new MolDataValues(nAtom, vec.toArray());
+                            Set<Long> fields = new HashSet<>();
+                            for (var entry : relaxData.entrySet()) {
+                                RelaxationData data = entry.getValue();
+                                fields.add(Math.round(data.getField()));
+                            }
+                            for (var field : fields) {
+                                Double r1 = null;
+                                Double r1Error = null;
+
+                                Double r2 = null;
+                                Double r2Error = null;
+
+                                Double noe = null;
+                                Double noeError = null;
+
                                 for (var entry : relaxData.entrySet()) {
                                     RelaxationData data = entry.getValue();
-                                    fields.add(Math.round(data.getField()));
-                                }
-                                for (var field : fields) {
-                                    Double r1 = null;
-                                    Double r1Error = null;
-
-                                    Double r2 = null;
-                                    Double r2Error = null;
-
-                                    Double noe = null;
-                                    Double noeError = null;
-
-                                    for (var entry : relaxData.entrySet()) {
-                                        RelaxationData data = entry.getValue();
-                                        if (Math.round(data.getField()) == field) {
-                                            switch (data.getExpType()) {
-                                                case T1:
-                                                    r1 = data.getValue();
-                                                    r1Error = data.getError();
-                                                    break;
-                                                case T2:
-                                                    r2 = data.getValue();
-                                                    r2Error = data.getError();
-                                                    break;
-                                                case NOE:
-                                                    noe = data.getValue();
-                                                    noeError = data.getError();
-                                                    break;
-                                            }
+                                    if (Math.round(data.getField()) == field) {
+                                        switch (data.getExpType()) {
+                                            case T1:
+                                                r1 = data.getValue();
+                                                r1Error = data.getError();
+                                                break;
+                                            case T2:
+                                                r2 = data.getValue();
+                                                r2Error = data.getError();
+                                                break;
+                                            case NOE:
+                                                noe = data.getValue();
+                                                noeError = data.getError();
+                                                break;
                                         }
                                     }
-                                    if ((r1 != null) && (r2 != null) && (noe != null)) {
-                                        String e1 = hAtom.getElementName();
-                                        String e2 = nAtom.getElementName();
-                                        RelaxEquations relaxObj = RelaxEquations.getRelaxEquations(field * 1e6, "H", "N");
+                                }
+                                if ((r1 != null) && (r2 != null) && (noe != null)) {
+                                    String e1 = hAtom.getElementName();
+                                    String e2 = nAtom.getElementName();
+                                    RelaxEquations relaxObj = RelaxEquations.getRelaxEquations(field * 1e6, "H", "N");
 
-                                        RelaxDataValue dValue = new RelaxDataValue(molData, r1, r1Error, r2, r2Error, noe, noeError, relaxObj);
-                                        molData.addData(dValue);
-                                    }
+                                    RelaxDataValue dValue = new RelaxDataValue(molData, r1, r1Error, r2, r2Error, noe, noeError, relaxObj);
+                                    molData.addData(dValue);
                                 }
-                                if (!molData.dataValues.isEmpty()) {
-                                    molDataValues.put(molData.specifier, molData);
-                                }
+                            }
+                            if (!molData.dataValues.isEmpty()) {
+                                molDataValues.put(molData.specifier, molData);
                             }
                         }
                     }
@@ -108,9 +118,10 @@ public class FitModel {
     }
 
     public void testIsoModel() {
-        Map<String, MolDataValues> molData = getData();
+        Map<String, MolDataValues> molData = getData(false);
+        System.out.println("moldata " + molData);
         if (!molData.isEmpty()) {
-            double tau = estimateTau(molData);
+            tau = estimateTau(molData).get("tau") * 1.0e-9;
             MFModelIso model1e = new MFModelIso1(tau, true);
             MFModelIso model1 = new MFModelIso1(tau, false);
 //            MFModelIso model2 = new MFModelIso2(tau, true);
@@ -121,7 +132,12 @@ public class FitModel {
         }
     }
 
-    double estimateTau(Map<String, MolDataValues> molData) {
+    public Map<String, Double> estimateTau() {
+        Map<String, MolDataValues> molData = getData(false);
+        return estimateTau(molData);
+    }
+
+    Map<String, Double> estimateTau(Map<String, MolDataValues> molData) {
         Map<Long, List<RelaxDataValue>> map = new HashMap<>();
         for (var entry : molData.entrySet()) {
             MolDataValues value = entry.getValue();
@@ -146,15 +162,15 @@ public class FitModel {
         }
         if (max > 0) {
             Map<String, Double> tauData = CorrelationTime.estimateTau(maxMHz, "N", map.get(maxMHz));
-            return tauData.get("tau") * 1.0e-9;
+            return tauData;
         } else {
-            return 5.0e-9;
+            return Collections.EMPTY_MAP;
         }
     }
 
     public void testIsoModel(MFModelIso model, Map<String, MolDataValues> molData, String matchSpec) {
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
-        double tau = estimateTau(molData);
+        tau = estimateTau(molData).get("tau") * 1e-9;
         System.out.println("tau " + tau);
         Map<String, String> extras = new HashMap<>();
         MoleculeBase mol = MoleculeFactory.getActive();
@@ -183,7 +199,7 @@ public class FitModel {
 
     public void testModels(Map<String, MolDataValues> molData, List<MFModelIso> models) {
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
-        double tau = estimateTau(molData);
+        tau = estimateTau(molData).get("tau") * 1e-9;
         System.out.println("tau " + tau);
         MoleculeBase mol = MoleculeFactory.getActive();
 
@@ -228,6 +244,10 @@ public class FitModel {
         PointValuePair fitResult = relaxFit.fitResidueToModel(start, lower, upper);
         var score = relaxFit.score(fitResult.getPoint(), true);
         return score;
+    }
+
+    public double getTau() {
+        return tau;
     }
 
 }
