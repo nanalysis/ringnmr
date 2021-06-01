@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.comdnmr.data.ExperimentResult;
 import org.comdnmr.data.ExperimentSet;
+import org.comdnmr.data.ValueSet;
 
 /**
  *
@@ -21,15 +22,15 @@ public class ChartInfo {
     String equationName;
     String[] currentResidues;
     ExperimentResult experimentalResult;
-    ExperimentSet currentExperimentSet;
+    ValueSet valueSet;
     List<int[]> currentStates = new ArrayList<>();
 
     public boolean hasExperiments() {
-        return currentExperimentSet != null;
+        return valueSet != null;
     }
 
-    public ExperimentSet getExperiments() {
-        return currentExperimentSet;
+    public ValueSet getExperiments() {
+        return valueSet;
     }
 
     public boolean hasResult() {
@@ -76,7 +77,7 @@ public class ChartInfo {
     public void clear() {
         currentResidues = null;
         experimentalResult = null;
-        currentExperimentSet = null;
+        valueSet = null;
         currentStates = new ArrayList<>();
     }
 

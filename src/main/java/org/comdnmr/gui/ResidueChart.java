@@ -28,6 +28,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import org.comdnmr.data.ExperimentResult;
 import org.comdnmr.data.ExperimentSet;
+import org.comdnmr.data.ValueSet;
 import org.nmrfx.chart.Axis;
 import org.nmrfx.chart.XYCanvasBarChart;
 import org.nmrfx.chart.XYValue;
@@ -123,7 +124,7 @@ public class ResidueChart extends XYCanvasBarChart {
         currentSeriesName = seriesName;
         String[] seriesNameParts = seriesName.split("\\|");
         String mapName = seriesNameParts[0];
-        ExperimentSet experimentSet = ChartUtil.getResidueProperty(mapName);
+        ValueSet experimentSet = ChartUtil.getResidueProperty(mapName);
         showInfo(experimentSet, seriesName);
         drawChart();
     }
@@ -131,11 +132,17 @@ public class ResidueChart extends XYCanvasBarChart {
     void showInfo() {
         String[] seriesNameParts = currentSeriesName.split("\\|");
         String mapName = seriesNameParts[0];
-        ExperimentSet experimentSet = ChartUtil.getResidueProperty(mapName);
+        ValueSet experimentSet = ChartUtil.getResidueProperty(mapName);
         showInfo(experimentSet, currentSeriesName);
     }
 
-    void showInfo(ExperimentSet experimentSet, String seriesName) {
+    void showInfo(ValueSet valueSet, String seriesName) {
+        ExperimentSet experimentSet = null;
+        if (!(valueSet instanceof ExperimentSet)) {
+            return;
+        } else {
+            experimentSet = (ExperimentSet) valueSet;
+        }
         PyController controller = PyController.mainController;
         PlotData xyCanvasChart = controller.xychart;
         String[] seriesNameParts = seriesName.split("\\|");
@@ -149,7 +156,7 @@ public class ResidueChart extends XYCanvasBarChart {
 //        System.out.println("series " + seriesName + " map " + mapName + " eqn " + equationName + " state " + state);
         String[] residues = new String[selectedResidues.size()];
         selectedResidues.toArray(residues);
-        controller.chartInfo.currentExperimentSet = experimentSet;
+        controller.chartInfo.valueSet = valueSet;
         controller.chartInfo.setResidues(residues);
         controller.chartInfo.state = state;
         controller.chartInfo.mapName = mapName;

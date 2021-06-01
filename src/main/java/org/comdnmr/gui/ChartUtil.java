@@ -54,6 +54,7 @@ import org.comdnmr.eqnfit.PlotEquation;
 import org.comdnmr.data.ExperimentResult;
 import org.comdnmr.data.ExperimentSet;
 import org.comdnmr.data.ExperimentData;
+import org.comdnmr.data.ValueSet;
 import org.nmrfx.chart.DataSeries;
 import org.nmrfx.chart.XYEValue;
 import org.nmrfx.chart.XYValue;
@@ -68,8 +69,7 @@ public class ChartUtil {
 
     public static int minRes = 0;
     public static int maxRes = 100;
-    private static final Map<String, ExperimentSet> residueProperties = new HashMap<>();
-    private static final Map<String, List<RelaxationValues>> molResProps = new HashMap<>();
+    private static final Map<String, ValueSet> valueSets = new HashMap<>();
 
     public static Node findNode(Scene scene, String target) {
         Parent parent = scene.getRoot();
@@ -93,39 +93,23 @@ public class ChartUtil {
     }
 
     public static int getNMaps() {
-        return residueProperties.size();
+        return valueSets.size();
     }
 
-    public static void addResidueProperty(String name, ExperimentSet resProp) {
-        residueProperties.put(name, resProp);
+    public static void addResidueProperty(String name, ValueSet resProp) {
+        valueSets.put(name, resProp);
     }
 
-    public static ExperimentSet getResidueProperty(String name) {
-        return residueProperties.get(name);
+    public static ValueSet getResidueProperty(String name) {
+        return valueSets.get(name);
     }
 
     public static Collection<String> getResiduePropertyNames() {
-        return residueProperties.keySet();
+        return valueSets.keySet();
     }
 
     public static void clearResidueProperties() {
-        residueProperties.clear();
-    }
-
-    public static void addMolRelaxationValues(String name, List<RelaxationValues> values) {
-        molResProps.put(name, values);
-    }
-
-    public static List<RelaxationValues> getMolRelaxationValues(String name) {
-        return molResProps.get(name);
-    }
-
-    public static Collection<String> getMolRelaxationNames() {
-        return molResProps.keySet();
-    }
-
-    public static void clearMolRelaxationValues() {
-        molResProps.clear();
+        valueSets.clear();
     }
 
     public static ObservableList<XYChart.Series<Double, Double>> makeChartSeries(double[] xValues, double[] yValues) {
@@ -289,12 +273,16 @@ public class ChartUtil {
     }
 
     public static DataSeries getMapData(String seriesName, String expName, String resNum) {
-        ExperimentSet experimentSet = residueProperties.get(seriesName);
-        System.out.println("expname " + expName + " series " + seriesName + " " + resNum);
-        System.out.println(experimentSet.getExperimentMap().toString());
-        Experiment expData = experimentSet.getExperimentData(expName);
-        System.out.println("expData " + expName);
         DataSeries series = new DataSeries();
+        ValueSet valueSet = valueSets.get(seriesName);
+        ExperimentSet experimentSet;
+        if (valueSet instanceof ExperimentSet) {
+            experimentSet = (ExperimentSet) valueSet;
+        } else {
+            return series;
+        }
+
+        Experiment expData = experimentSet.getExperimentData(expName);
         series.setName(expName + ":" + resNum);
         ExperimentData experimentalData = expData.getResidueData(resNum);
         if (experimentalData != null) {
@@ -329,7 +317,7 @@ public class ChartUtil {
     }
 
     public static GUIPlotEquation getEquation(Experiment expData, String seriesName, String resNum, String equationName, String state, double field) {
-        ExperimentSet residueProps = residueProperties.get(seriesName);
+        ExperimentSet residueProps = (ExperimentSet) valueSets.get(seriesName);
         ExperimentResult resInfo = residueProps.getExperimentResult(resNum);
         GUIPlotEquation equationCopy = null;
         String expType = expData.getExpMode();
@@ -378,7 +366,7 @@ public class ChartUtil {
     }
 
     public static ExperimentResult getResInfo(String seriesName, String residue) {
-        ExperimentSet residueProps = residueProperties.get(seriesName);
+        ExperimentSet residueProps = (ExperimentSet) valueSets.get(seriesName);
         if (residueProps != null) {
             ExperimentResult resInfo = residueProps.getExperimentResult(residue);
             return resInfo;
@@ -437,15 +425,24 @@ public class ChartUtil {
     }
 
     public static ObservableList<DataSeries> getParMapData(String mapName, String eqnName, String state, String parName) {
-        ExperimentSet residueProps = residueProperties.get(mapName);
         ObservableList<DataSeries> data = FXCollections.observableArrayList();
+        ValueSet valueSet = valueSets.get(mapName);
+        ExperimentSet experimentSet;
+        System.out.println("map name " + mapName + " " + valueSets.toString());
+        System.out.println("get Par map " + valueSet);
+        if (valueSet instanceof ExperimentSet) {
+            experimentSet = (ExperimentSet) valueSet;
+           System.out.println("get exp map " + experimentSet);
+     } else {
+            return data;
+        }
 
         DataSeries series = new DataSeries();
         series.setName(mapName + '|' + eqnName + "|" + state + "|" + parName);
         data.add(series);
         minRes = Integer.MAX_VALUE;
         maxRes = Integer.MIN_VALUE;
-        Collection<Experiment> expDataSets = residueProps.getExperimentData();
+        Collection<Experiment> expDataSets = experimentSet.getExperimentData();
         for (Experiment expData : expDataSets) {
             for (String resNumS : expData.getResidues()) {
                 int resNum = Integer.parseInt(resNumS);
@@ -454,7 +451,7 @@ public class ChartUtil {
             }
         }
 
-        List<ExperimentResult> resValues = residueProps.getExperimentResults();
+        List<ExperimentResult> resValues = experimentSet.getExperimentResults();
 
         for (ExperimentResult experimentResult : resValues) {
             String useEquName = eqnName;
@@ -533,7 +530,7 @@ public class ChartUtil {
             alert.showAndWait();
             return;
         }
-        residueProperties.put(resProp.getName(), resProp);
+        valueSets.put(resProp.getName(), resProp);
         String parName = "Kex";
         if (resProp.getExpMode().equals("t1")) {
             parName = "R";
@@ -561,7 +558,7 @@ public class ChartUtil {
         }
         ExperimentSet resProp = DataIO.processPeakList(peakList);
         if (resProp != null) {
-            residueProperties.put(resProp.getName(), resProp);
+            valueSets.put(resProp.getName(), resProp);
             String parName = "Kex";
             if (resProp.getExpMode().equals("t1")) {
                 parName = "R";
@@ -591,10 +588,10 @@ public class ChartUtil {
 
         try {
             DataIO.readMoleculeFile(fileName, type);
-//            if (!residueProperties.isEmpty()) {
-//                Set<String> keySet = residueProperties.keySet();
+//            if (!valueSets.isEmpty()) {
+//                Set<String> keySet = valueSets.keySet();
 //                for (String key : keySet) {
-//                    ExperimentSet resProp = residueProperties.get(key);
+//                    ExperimentSet resProp = valueSets.get(key);
 //                    List<ExperimentResult> resInfoList = resProp.getExperimentResults();
 //                    for (ExperimentResult resInfo : resInfoList) {
 //                        int resNum = resInfo.getResNum();

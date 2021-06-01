@@ -105,6 +105,8 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
 import org.comdnmr.data.DoubleArrayExperiment;
+import org.comdnmr.data.RelaxSet;
+import org.comdnmr.data.ValueSet;
 import org.comdnmr.util.CoMDPreferences;
 import org.comdnmr.modelfree.CorrelationTime;
 import org.comdnmr.eqnfit.FitFunction;
@@ -522,7 +524,7 @@ public class PyController implements Initializable {
         double height = chartBox.getHeight();
         if (barChartXMax.isPresent()) {
             double nRes = barChartXMax.get() - barChartXMin.get();
-            width = nRes * barScaleSlider.getValue()+75.0;
+            width = nRes * barScaleSlider.getValue() + 75.0;
         }
         barPlotCanvas.setWidth(width);
         barPlotCanvas.setHeight(height);
@@ -780,7 +782,7 @@ public class PyController implements Initializable {
         }
         Collections.sort(resNums);
         if (chartInfo.hasResidue()) {
-            
+
             int resIndex = resNums.indexOf(chartInfo.getResNum());
             resIndex++;
             if (resIndex >= resNums.size()) {
@@ -1103,8 +1105,8 @@ public class PyController implements Initializable {
     public void estimateCorrelationTime() {
         String r1SetName = t1Choice.getValue();
         String r2SetName = t2Choice.getValue();
-        ExperimentSet r1Set = ChartUtil.getResidueProperty(r1SetName);
-        ExperimentSet r2Set = ChartUtil.getResidueProperty(r2SetName);
+        ExperimentSet r1Set = (ExperimentSet) ChartUtil.getResidueProperty(r1SetName);
+        ExperimentSet r2Set = (ExperimentSet) ChartUtil.getResidueProperty(r2SetName);
 
         Map<String, Double> result = CorrelationTime.estimateTau(r1Set, r2Set);
         if (!result.isEmpty()) {
@@ -1398,12 +1400,15 @@ public class PyController implements Initializable {
     }
 
     public void showRelaxationValues(String setName, String valueName, String parName) {
-        List<RelaxationValues> values = ChartUtil.getMolRelaxationValues(setName);
-        ObservableList<DataSeries> data = ChartUtil.getRelaxationDataSeries(values, valueName, setName, parName);
-        String yLabel = valueName.equalsIgnoreCase(parName) ? parName
-                : valueName.toUpperCase() + ": " + parName;
+        RelaxSet relaxSet = (RelaxSet) ChartUtil.getResidueProperty(setName);
+        if (relaxSet != null) {
+            List<RelaxationValues> values = relaxSet.getValues();
+            ObservableList<DataSeries> data = ChartUtil.getRelaxationDataSeries(values, valueName, setName, parName);
+            String yLabel = valueName.equalsIgnoreCase(parName) ? parName
+                    : valueName.toUpperCase() + ": " + parName;
 
-        addSeries(data, setName, yLabel);
+            addSeries(data, setName, yLabel);
+        }
 
     }
 
@@ -1466,7 +1471,7 @@ public class PyController implements Initializable {
         t2Choice.getItems().add("");
         //noeChoice.getItems().add("");
 
-        Collection<String> setNames = ChartUtil.getMolRelaxationNames();
+        Collection<String> setNames = ChartUtil.getResiduePropertyNames();
         for (var setName : setNames) {
             t1Choice.getItems().add(setName);
             t2Choice.getItems().add(setName);
@@ -1489,13 +1494,13 @@ public class PyController implements Initializable {
 
     void addMoleculeDataToAxisMenu() {
         var molResProps = DataIO.getDataFromMolecule();
-        ChartUtil.clearMolRelaxationValues();
+        //ChartUtil.clearResidueProperties();
         for (var entry : molResProps.entrySet()) {
             String setName = entry.getKey();
-            ChartUtil.addMolRelaxationValues(setName, molResProps.get(setName));
-
+            ChartUtil.addResidueProperty(setName, molResProps.get(setName));
+            RelaxSet relaxSet = (RelaxSet) entry.getValue();
             Menu cascade = new Menu(setName);
-            var values = entry.getValue();
+            var values = relaxSet.getValues();
             if (!values.isEmpty()) {
                 RelaxationValues value = values.get(0);
                 axisMenu.getItems().add(cascade);
@@ -1514,18 +1519,24 @@ public class PyController implements Initializable {
     void addResiduePropertiesToAxisMenu() {
         Collection<String> setNames = ChartUtil.getResiduePropertyNames();
         for (var setName : setNames) {
-            var residueProp = ChartUtil.getResidueProperty(setName);
+            var valueSet = ChartUtil.getResidueProperty(setName);
+            ExperimentSet experimentSet;
+            if (!(valueSet instanceof ExperimentSet)) {
+                continue;
+            } else {
+                experimentSet = (ExperimentSet) valueSet;
+            }
             Menu cascade = new Menu(setName);
             axisMenu.getItems().add(cascade);
-            String expMode = residueProp.getExpMode();
-            String[] parTypes = getParTypes(residueProp.getExpMode());
+            String expMode = experimentSet.getExpMode();
+            String[] parTypes = getParTypes(experimentSet.getExpMode());
             for (String parType : parTypes) {
                 Menu cascade2 = new Menu(parType);
                 cascade.getItems().add(cascade2);
                 ArrayList<String> equationNames = new ArrayList<>();
                 equationNames.add("best");
-                equationNames.addAll(residueProp.getEquationNames());
-                List<String> stateStrings = residueProp.getStateStrings();
+                equationNames.addAll(experimentSet.getEquationNames());
+                List<String> stateStrings = experimentSet.getStateStrings();
 
                 for (String equationName : equationNames) {
                     if ((stateStrings.size() < 2) || parType.equals("RMS") || parType.equals("AIC") || parType.equals("Equation")) {
@@ -1548,7 +1559,7 @@ public class PyController implements Initializable {
                         if (isValidPar) {
                             Menu cascade3 = new Menu(equationName);
                             cascade2.getItems().add(cascade3);
-                            residueProp.getStateStrings().stream().forEach(state -> {
+                            experimentSet.getStateStrings().stream().forEach(state -> {
                                 MenuItem cmItem1 = new MenuItem(state);
                                 cmItem1.setOnAction(e -> setYAxisType(expMode, setName, equationName, state, parType));
                                 cascade3.getItems().add(cmItem1);
@@ -1874,14 +1885,14 @@ public class PyController implements Initializable {
                 clearChart();
                 statusBar.setProgress(f);
                 setYAxisType(getCurrentExperimentSet().getExpMode(), sParts[0], sParts[1], sParts[2], sParts[3]);
-                setCurrentExperimentSet(ChartUtil.getResidueProperty(getCurrentExperimentSet().getName()));
+                setCurrentExperimentSet((ExperimentSet) ChartUtil.getResidueProperty(getCurrentExperimentSet().getName()));
 
             } else {
                 Platform.runLater(() -> {
                     clearChart();
                     setYAxisType(getCurrentExperimentSet().getExpMode(), sParts[0], sParts[1], sParts[2], sParts[3]);
                     statusBar.setProgress(f);
-                    setCurrentExperimentSet(ChartUtil.getResidueProperty(getCurrentExperimentSet().getName()));
+                    setCurrentExperimentSet((ExperimentSet) ChartUtil.getResidueProperty(getCurrentExperimentSet().getName()));
 
                 });
             }
@@ -2173,7 +2184,7 @@ public class PyController implements Initializable {
             //double maxY = getMaxY(experimentSet, equationName, mapName, state, residues) / 100.0;
             //System.out.println("max Y " + maxY);
             int iSeries = 0;
-            for (Experiment expData : chartInfo.getExperiments().getExperimentData()) {
+            for (Experiment expData : ((ExperimentSet) chartInfo.getExperiments()).getExperimentData()) {
                 if (!ExperimentSet.matchStateString(chartInfo.state, expData.getState())) {
                     continue;
                 }
@@ -2204,8 +2215,8 @@ public class PyController implements Initializable {
                         iSeries++;
                     }
                 }
-
-                int[] states = chartInfo.currentExperimentSet.getStateIndices(0, expData);
+                ExperimentSet expSet = (ExperimentSet) chartInfo.getExperiments();
+                int[] states = expSet.getStateIndices(0, expData);
                 allStates.add(states);
             }
         }
@@ -2567,21 +2578,25 @@ public class PyController implements Initializable {
     }
 
     public boolean hasExperimentSet() {
-        return (chartInfo.currentExperimentSet != null) && (chartInfo.currentExperimentSet instanceof ExperimentSet);
+        return (chartInfo.valueSet != null) && (chartInfo.valueSet instanceof ExperimentSet);
     }
 
     /**
-     * @return the currentExperimentSet
+     * @return the valueSet
      */
     public ExperimentSet getCurrentExperimentSet() {
-        return chartInfo.currentExperimentSet;
+        if (chartInfo.valueSet instanceof ExperimentSet) {
+            return (ExperimentSet) chartInfo.valueSet;
+        } else {
+            return null;
+        }
     }
 
     /**
-     * @param currentResProps the currentExperimentSet to set
+     * @param valueSet the valueSet to set
      */
-    public void setCurrentExperimentSet(ExperimentSet currentResProps) {
-        this.chartInfo.currentExperimentSet = currentResProps;
+    public void setCurrentExperimentSet(ValueSet valueSet) {
+        this.chartInfo.valueSet = valueSet;
     }
 
 }

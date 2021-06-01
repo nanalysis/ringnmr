@@ -352,11 +352,11 @@ public class PlotData extends XYCanvasChart {
 
     protected void seriesAdded(DataSeries series, int seriesIndex) {
         // fixme  why cest
-        ExperimentSet residueProps = ChartUtil.getResidueProperty("cest");
-        Experiment expData = null;
-        if (residueProps != null) {
-            expData = residueProps.getExperimentData("cest"); // fixme
-        }
+//        ExperimentSet experimentSet = ChartUtil.getResidueProperty("cest");
+//        Experiment expData = null;
+//        if (experimentSet != null) {
+//            expData = experimentSet.getExperimentData("cest"); // fixme
+//        }
         for (int j = 0; j < series.getData().size(); j++) {
             XYValue item = (XYValue) series.getData().get(j);
         }
