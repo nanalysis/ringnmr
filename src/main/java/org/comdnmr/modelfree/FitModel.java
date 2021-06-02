@@ -119,7 +119,6 @@ public class FitModel {
 
     public void testIsoModel() {
         Map<String, MolDataValues> molData = getData(false);
-        System.out.println("moldata " + molData);
         if (!molData.isEmpty()) {
             tau = estimateTau(molData).get("tau") * 1.0e-9;
             MFModelIso model1e = new MFModelIso1(tau, true);
@@ -127,7 +126,7 @@ public class FitModel {
 //            MFModelIso model2 = new MFModelIso2(tau, true);
 //            MFModelIso model5 = new MFModelIso5(tau, true);
 //            MFModelIso model6 = new MFModelIso6(tau, true);
-            var models = List.of(model1, model1e);
+            var models = List.of(model1);
             testModels(molData, models);
         }
     }
@@ -171,7 +170,6 @@ public class FitModel {
     public void testIsoModel(MFModelIso model, Map<String, MolDataValues> molData, String matchSpec) {
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
         tau = estimateTau(molData).get("tau") * 1e-9;
-        System.out.println("tau " + tau);
         Map<String, String> extras = new HashMap<>();
         MoleculeBase mol = MoleculeFactory.getActive();
 
@@ -200,7 +198,6 @@ public class FitModel {
     public void testModels(Map<String, MolDataValues> molData, List<MFModelIso> models) {
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
         tau = estimateTau(molData).get("tau") * 1e-9;
-        System.out.println("tau " + tau);
         MoleculeBase mol = MoleculeFactory.getActive();
 
         for (String key : molData.keySet()) {
