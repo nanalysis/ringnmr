@@ -85,8 +85,8 @@ public class CorrelationTime {
             Map<Integer, Double> r1Map, Map<Integer, Double> r2Map) {
         DescriptiveStatistics stats = new DescriptiveStatistics();
         r2Map.values().stream().forEach(v -> stats.addValue(v));
-        double perLower = stats.getPercentile(25.0);
-        double perUpper = stats.getPercentile(75.0);
+        double perLower = stats.getPercentile(40.0);
+        double perUpper = stats.getPercentile(90.0);
 
         stats.clear();
         DescriptiveStatistics r1Stats = new DescriptiveStatistics();
@@ -115,8 +115,8 @@ public class CorrelationTime {
         DescriptiveStatistics stats = new DescriptiveStatistics();
         values.stream().forEach(v -> stats.addValue(v.R2)
         );
-        double perLower = stats.getPercentile(25.0);
-        double perUpper = stats.getPercentile(75.0);
+        double perLower = stats.getPercentile(40.0);
+        double perUpper = stats.getPercentile(90.0);
 
         stats.clear();
         DescriptiveStatistics r1Stats = new DescriptiveStatistics();
