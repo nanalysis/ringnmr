@@ -874,6 +874,22 @@ public class PyController implements Initializable {
     }
 
     @FXML
+    public void loadRelaxValues(Event e) throws MoleculeIOException, ParseException {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Open Relaxation Values File");
+        Stage stage = MainApp.primaryStage;
+        File file = fileChooser.showOpenDialog(stage);
+        if (file != null) {
+            try {
+                DataIO.loadRelaxationTextFile(file);
+            } catch (IOException ioE) {
+                ExceptionDialog dialog = new ExceptionDialog(ioE);
+                dialog.showAndWait();
+            }
+        }
+    }
+
+    @FXML
     public void loadSecondaryStructure() {
         List<SecondaryStructure> ssValues = SecondaryStructure.loadFromFile();
         if (!ssValues.isEmpty()) {
@@ -892,7 +908,8 @@ public class PyController implements Initializable {
     }
 
     @FXML
-    public void inputParameters(ActionEvent event) {
+    public void inputParameters(ActionEvent event
+    ) {
         if (inputDataInterface == null) {
             inputDataInterface = new InputDataInterface(this);
         }
@@ -900,7 +917,8 @@ public class PyController implements Initializable {
     }
 
     @FXML
-    public void startServer(ActionEvent event) {
+    public void startServer(ActionEvent event
+    ) {
         String tempDir = System.getProperty("java.io.tmpdir");
         String userName = System.getProperty("user.name");
         Path path = FileSystems.getDefault().getPath(tempDir, "NMRFx_" + userName + "_port.txt");
