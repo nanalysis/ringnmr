@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -71,6 +72,7 @@ import org.nmrfx.chemistry.relax.RelaxationData;
 import org.nmrfx.chemistry.relax.RelaxationData.relaxTypes;
 import org.nmrfx.chemistry.relax.RelaxationRex;
 import org.nmrfx.chemistry.relax.RelaxationValues;
+import org.nmrfx.chemistry.utilities.CSVRE;
 import org.nmrfx.peaks.InvalidPeakException;
 import org.nmrfx.peaks.PeakList;
 import org.nmrfx.star.ParseException;
@@ -1483,7 +1485,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
     }
 
     public static Map<String, RelaxSet> getDataFromMolecule() {
-        Map<String,RelaxSet> relaxValueMap = new HashMap<>();
+        Map<String, RelaxSet> relaxValueMap = new HashMap<>();
 
         MoleculeBase mol = MoleculeFactory.getActive();
         if (mol != null) {
@@ -1517,5 +1519,74 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             }
         }
         return relaxValueMap;
+    }
+
+    public static void loadRelaxationTextFile(File file) throws IOException, IllegalArgumentException {
+        Path path = file.toPath();
+        String[] types = {"R1", "R2", "NOE"};
+        String fileName = file.getName();
+        int dotIndex = fileName.lastIndexOf(".");
+        if (dotIndex != -1) {
+            fileName = fileName.substring(0, dotIndex);
+        }
+
+        try (BufferedReader fileReader = Files.newBufferedReader(path)) {
+            Optional<String> sepStr = Optional.empty();
+            int iField = -1;
+            int iRes = -1;
+            Map<String, Integer> fieldMap = new HashMap<>();
+            List<String> header;
+            while (true) {
+                String line = fileReader.readLine();
+                if (line == null) {
+                    break;
+                }
+                line = line.strip();
+                if (sepStr.isEmpty()) {
+                    if (line.contains("\t")) {
+                        sepStr = Optional.of("\t");
+                    } else if (line.contains(",")) {
+                        sepStr = Optional.of(",");
+                    } else {
+                        sepStr = Optional.of(" ");
+                    }
+                    if (line.startsWith("#")) {
+                        line = line.substring(1);
+
+                    }
+                    line = line.strip();
+                    String[] fields = CSVRE.parseLine(sepStr.get(), line);
+
+                    header = new ArrayList<>();
+                    for (var field : fields) {
+                        header.add(field.toUpperCase());
+                    }
+                    iField = header.indexOf("FIELD");
+                    iRes = header.indexOf("RESIDUE");
+                    if (iRes == -1) {
+                        iRes = header.indexOf("RESI");
+                    }
+                    if (iRes == -1) {
+                        iRes = 0;
+                    }
+                    for (var type : types) {
+                        fieldMap.put(type, header.indexOf(type));
+                    }
+                } else {
+                    String[] fields = CSVRE.parseLine(sepStr.get(), line);
+                    String residue = fields[iRes];
+                    double field = Double.parseDouble(fields[iField]);
+                    for (var type : types) {
+                        int index = fieldMap.get(type);
+                        double value = Double.parseDouble(fields[index]);
+                        double error = Double.parseDouble(fields[index + 1]);
+                        String id = fileName + "_" + type + "_" + Math.round(field);
+                        DynamicsSource dynSource = DynamicsSource.
+                                createFromSpecifiers(fileName + "." + residue, residue, "N", "H");
+                        RelaxationData.add(id, type, dynSource.atoms[0], field, value, error);
+                    }
+                }
+            }
+        }
     }
 }
