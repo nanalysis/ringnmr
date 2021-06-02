@@ -115,6 +115,9 @@ public class DynamicsSource {
             molecule = MoleculeFactory.getMolecule(molName);
         }
         if (molecule == null) {
+            if (molName == null) {
+                molName = "noname";
+            }
             molecule = MoleculeFactory.newMolecule(molName);
         }
         Matcher matcher = RESIDUE_PATTERN.matcher(atomSpecifier);
