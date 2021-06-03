@@ -416,6 +416,7 @@ public class RelaxFit {
                 RelaxEquations relaxObj = dValue.relaxObj;
                 double[] J = testModel.calc(relaxObj.wValues, resPars);
                 double r1 = relaxObj.R1(J);
+                // fixme rEx should be field dependent
                 double rEx = testModel.includesEx() ? resPars[resPars.length - 1] : 0.0;
                 double r2 = relaxObj.R2(J, rEx);
                 double noe = relaxObj.NOE(J);
