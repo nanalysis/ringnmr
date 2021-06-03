@@ -2,6 +2,7 @@
 
 JREHOME='/Users/brucejohnson/Development/mkjre'
 jversion='jdk-11.0.9.1+1-jre'
+jversion='jdk-16.0.51-jre'
 PRGSCRIPT=ringnmr-gui
 
 dir=`pwd`
@@ -30,6 +31,8 @@ do
     sdir=`ls -d ${PRG}-*`
     cd $sdir
     echo $sdir
+
+    rm lib/javafx*
 
     if [[ $os == "linux-amd64" ]]
     then
