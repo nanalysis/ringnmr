@@ -811,10 +811,10 @@ public class PyController implements Initializable {
         if (file != null) {
             if (activeChart != null) {
                 clearChart();
-                chartInfo.clear();
                 simulate = false;
                 fitResult = null;
             }
+            chartInfo.clear();
             ChartUtil.loadParameters(file.toString());
         }
         clearSecondaryStructure();
@@ -1458,9 +1458,7 @@ public class PyController implements Initializable {
         for (DataSeries series : chart.getData()) {
             series.setFill(PlotData.colors[i++ % PlotData.colors.length]);
         }
-        if (chart.currentSeriesName.equals("")) {
-            chart.currentSeriesName = data.get(0).getName();
-        }
+        chart.currentSeriesName = data.get(0).getName();
         Axis xAxis = chart.xAxis;
         Axis yAxis = chart.yAxis;
         xAxis.setAutoRanging(false);
@@ -2256,6 +2254,7 @@ public class PyController implements Initializable {
         chartInfo.setStates(allStates);
         updateTable(experimentalDataSets);
         if (chartInfo.hasResidues()) {
+            setControls();
             updateTableWithPars(chartInfo, true);
             updateEquation(chartInfo.mapName, chartInfo.getResidues(), chartInfo.equationName);
         }
