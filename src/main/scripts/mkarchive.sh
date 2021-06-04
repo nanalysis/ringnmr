@@ -15,8 +15,8 @@ then
 fi
 
 #for os in "linux-amd64"
-#for os in "macosx-amd64" "linux-amd64" "windows-amd64"
-for os in "macosx_x64"
+for os in "macosx_x64" "linux_x64" "win_x64"
+#for os in "macosx_x64"
 do
     #jreFileName=${jversion}_${os}
     jreFileName=${jversion}-${os}
@@ -37,13 +37,13 @@ do
 
     rm lib/javafx*
 
-    if [[ $os == "linux-amd64" ]]
+    if [[ $os == "linux_x64" ]]
     then
         rm lib/*-mac*
         rm lib/*-win*
     fi
 
-    if [[ $os == "windows-amd64" ]]
+    if [[ $os == "win_x64" ]]
     then
         rm lib/*-linux*
         rm lib/*-mac*
@@ -60,7 +60,7 @@ do
     cd ..
 
     fname=`echo $sdir | tr '.' '_'`
-    if [[ $os == "linux-amd64" ]]
+    if [[ $os == "linux_x64" ]]
     then
         tar czf ${fname}_${os}.tar.gz $sdir
     elif [[ $os == "macosx_x64" ]]
