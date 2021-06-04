@@ -231,7 +231,6 @@ public abstract class FitFunction implements MultivariateFunction {
     }
 
     public static void setCalcError(boolean state) {
-        System.out.println("set calc " + state);
         calcError = state;
     }
 
@@ -276,10 +275,10 @@ public abstract class FitFunction implements MultivariateFunction {
     public void setIds(int[] idNums) throws IllegalArgumentException {
         this.idNums = idNums;
         if (setNID()) {
-            for (int id : idNums) {
-                System.out.print(id + " ");
-            }
-            System.out.println("");
+            //for (int id : idNums) {
+                //System.out.print(id + " ");
+            //}
+            //System.out.println("");
             throw new IllegalArgumentException("Invalid idNums, some values not used in setIds");
         }
     }
@@ -375,28 +374,28 @@ public abstract class FitFunction implements MultivariateFunction {
     }
 
     public void setMap(int[] stateCount, int[][] states) {
-        System.out.println("states ");
-        for (int i = 0; i < states.length; i++) {
-            for (int j = 0; j < states[i].length; j++) {
-                System.out.print(states[i][j] + " ");
-            }
-            System.out.println("");
-        }
-        System.out.println(" stateCount");
-        for (int j = 0; j < stateCount.length; j++) {
-            System.out.print(stateCount[j] + " ");
-        }
-        System.out.println(" ");
+//        System.out.println("states ");
+        //for (int i = 0; i < states.length; i++) {
+            //for (int j = 0; j < states[i].length; j++) {
+                //System.out.print(states[i][j] + " ");
+            //}
+            //System.out.println("");
+        //}
+//        System.out.println(" stateCount");
+//        for (int j = 0; j < stateCount.length; j++) {
+//            System.out.print(stateCount[j] + " ");
+//        }
+//        System.out.println(" ");
         this.map = new int[states.length][stateCount.length];
         this.map = equation.makeMap(stateCount, states, getMask());
-        System.out.println("map ");
-        for (int i = 0; i < map.length; i++) {
-            for (int j = 0; j < map[i].length; j++) {
-                System.out.print(map[i][j] + " ");
-            }
-            System.out.println("");
-        }
-        System.out.println("done ");
+//        System.out.println("map ");
+//        for (int i = 0; i < map.length; i++) {
+//            for (int j = 0; j < map[i].length; j++) {
+//                System.out.print(map[i][j] + " ");
+//            }
+//            System.out.println("");
+//        }
+//        System.out.println("done ");
     }
 
     public int[][] getMap() {

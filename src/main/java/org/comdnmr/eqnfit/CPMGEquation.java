@@ -475,7 +475,7 @@ public enum CPMGEquation implements EquationType {
     }
 
     public static double[] annCPMGGuesser(String exchangeType, double[] xValues, double[] yValues, double[] fields) throws Exception {
-        System.out.println("Using Neural Network!");
+        //System.out.println("Using Neural Network!");
         double[] trainingX = {10.0, 20.0, 50.0, 100.0, 200.0, 400.0, 600.0, 800.0, 1000.0, 1100.0};
         double[] yANNInput = DataUtil.getInterpolation(trainingX, xValues, yValues);
         if (yANNInput != null) {
@@ -511,7 +511,7 @@ public enum CPMGEquation implements EquationType {
                 if ((scaleTracker.containsKey("fields")) && (scaleTracker.containsKey("r2eff"))) {
                     for (int i = 0; i < nFields; i++) {
                         annInput[i] = Utilities.scale(fields[i], (double[]) scaleTracker.get("fields"), true);
-                        System.out.println("field " + fields[i] + " " + annInput[i]);
+                        //System.out.println("field " + fields[i] + " " + annInput[i]);
                     }
                     for (int j = 0; j < yANNInput.length; j++) {
                         annInput[j + nFields] = Utilities.scale(yANNInput[j], (double[]) scaleTracker.get("r2eff"), true);
@@ -526,7 +526,7 @@ public enum CPMGEquation implements EquationType {
                 for (String label : outputLabels) {
                     if (scaleTracker.containsKey(label)) {
                         guesses[l] = Utilities.scale(resultArr[l], (double[]) scaleTracker.get(label), false);
-                        System.out.println("guess " + guesses[l]);
+                        //System.out.println("guess " + guesses[l]);
                         l++;
                     }
                 }
