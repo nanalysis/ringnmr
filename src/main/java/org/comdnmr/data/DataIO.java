@@ -1505,7 +1505,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                         RelaxSet relaxSet;
 
                         if (!relaxValueMap.containsKey(relaxSetName)) {
-                            relaxSet = new RelaxSet();
+                            relaxSet = new RelaxSet(relaxSetName);
                             relaxValueMap.put(relaxSetName, relaxSet);
                         } else {
                             relaxSet = relaxValueMap.get(relaxSetName);

@@ -13,6 +13,7 @@ import java.util.Set;
  */
 public interface ValueSet {
 
+    public String getName();
     public Set<String> getResidueNumberStrs();
 
 }

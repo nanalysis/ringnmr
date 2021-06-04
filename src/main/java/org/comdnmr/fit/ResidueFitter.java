@@ -390,6 +390,9 @@ public class ResidueFitter {
             case "t2":
                 equationType = ExpEquation.valueOf(name);
                 break;
+            case "exp":
+                equationType = ExpEquation.valueOf(name);
+                break;
             case "cest":
                 equationType = CESTEquation.valueOf(name);
                 break;

@@ -13,6 +13,16 @@ import org.nmrfx.chemistry.relax.RelaxationValues;
  */
 public class RelaxSet implements ValueSet {
 
+    final String name;
+
+    public RelaxSet(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
     Map<String, RelaxationValues> map = new HashMap<>();
     List<RelaxationValues> relaxValueList = new ArrayList<>();
 
