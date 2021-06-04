@@ -430,11 +430,8 @@ public class ChartUtil {
         ObservableList<DataSeries> data = FXCollections.observableArrayList();
         ValueSet valueSet = valueSets.get(mapName);
         ExperimentSet experimentSet;
-        System.out.println("map name " + mapName + " " + valueSets.toString());
-        System.out.println("get Par map " + valueSet);
         if (valueSet instanceof ExperimentSet) {
             experimentSet = (ExperimentSet) valueSet;
-            System.out.println("get exp map " + experimentSet);
         } else {
             return data;
         }
