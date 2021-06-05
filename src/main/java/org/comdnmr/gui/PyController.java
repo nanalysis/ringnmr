@@ -112,7 +112,6 @@ import org.comdnmr.modelfree.CorrelationTime;
 import org.comdnmr.eqnfit.FitFunction;
 import org.comdnmr.eqnfit.R1RhoFitter;
 import static org.comdnmr.gui.MainApp.preferencesController;
-import static org.comdnmr.gui.MainApp.console;
 import static org.comdnmr.gui.MainApp.primaryStage;
 import org.comdnmr.util.CoMDOptions;
 import org.comdnmr.utils.NMRFxClient;
@@ -133,6 +132,7 @@ import org.nmrfx.star.ParseException;
 import org.comdnmr.eqnfit.NOEFit;
 import org.comdnmr.modelfree.FitModel;
 import org.nmrfx.chemistry.relax.RelaxationValues;
+import org.nmrfx.console.ConsoleController;
 
 public class PyController implements Initializable {
 
@@ -2507,14 +2507,7 @@ public class PyController implements Initializable {
 
     @FXML
     private void showConsole(ActionEvent event) {
-        if (console == null) {
-            console = ConsoleRedirect.create();
-        }
-        if (console != null) {
-            console.show();
-        } else {
-            System.out.println("Coudn't make console");
-        }
+        ConsoleController.getConsoleController().show();
     }
 
     @FXML

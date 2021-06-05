@@ -26,6 +26,7 @@ import javafx.stage.Stage;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import org.nmrfx.console.ConsoleController;
 import org.python.util.InteractiveInterpreter;
 
 public class MainApp extends Application {
@@ -34,7 +35,6 @@ public class MainApp extends Application {
     public static ScriptEngine engine;
     public static InteractiveInterpreter interpreter = new InteractiveInterpreter();
     public static PreferencesController preferencesController;
-    public static ConsoleRedirect console;
     public static HostServices hostServices;
     public static final String APP_NAME = "RING NMR Dynamics";
 
@@ -54,6 +54,10 @@ public class MainApp extends Application {
 
         Parameters parameters = getParameters();
         System.out.println(parameters.getRaw());
+        interpreter.exec("import os");
+        interpreter.exec("import glob");
+
+        ConsoleController.create(interpreter,"RING NMR Dynamics Console");
 
 //        interpreter.exec("from pyproc import *\ninitLocal()\nfrom gscript import *\nnw=NMRFxWindowScripting()\nfrom dscript import *\nfrom pscript import *\nimport os");
 //        interpreter.set("argv", parameters.getRaw());
@@ -68,8 +72,8 @@ public class MainApp extends Application {
         return interpreter;
     }
 
-    public static void setConsoleController(ConsoleRedirect controller) {
-        console = controller;
+    public static ConsoleController getConsoleController() {
+        return ConsoleController.getConsoleController();
     }
 
     public static void checkExit() {
