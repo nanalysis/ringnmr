@@ -243,7 +243,7 @@ public class FitModel {
         return score;
     }
 
-    public double getTau() {
+    public Double getTau() {
         return tau;
     }
 
