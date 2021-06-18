@@ -133,6 +133,7 @@ import org.comdnmr.eqnfit.NOEFit;
 import org.comdnmr.modelfree.FitModel;
 import org.nmrfx.chemistry.relax.RelaxationValues;
 import org.nmrfx.console.ConsoleController;
+import org.nmrfx.utils.GUIUtils;
 
 public class PyController implements Initializable {
 
@@ -1116,7 +1117,12 @@ public class PyController implements Initializable {
 
     public void calcModel1() {
         FitModel fitModel = new FitModel();
-        fitModel.testIsoModel();
+        try {
+            fitModel.testIsoModel();
+        } catch (IllegalStateException iaE) {
+            GUIUtils.warn("Model Fit Error", iaE.getMessage());
+            return;
+        }
         Double tau = fitModel.getTau();
         if (tau != null) {
             tauCalcField.setText(String.format("%.2f ns", tau * 1.0e9));
