@@ -128,6 +128,8 @@ public class FitModel {
 //            MFModelIso model6 = new MFModelIso6(tau, true);
             var models = List.of(model1);
             testModels(molData, models);
+        } else {
+            throw new IllegalStateException("No relaxation data to analyze.  Need T1,T2 and NOE");
         }
     }
 
