@@ -22,6 +22,8 @@
  */
 package org.comdnmr.modelfree.models;
 
+import java.util.List;
+
 /**
  *
  * @author brucejohnson
@@ -41,8 +43,9 @@ public abstract class MFModel {
         double[] values = new double[n];
         System.arraycopy(parValues, start, values, 0, n);
         return values;
-
     }
+
+    public abstract List<String> getParNames();
 
     public abstract double[] getStart(double tau, boolean includeTau);
 
@@ -52,6 +55,10 @@ public abstract class MFModel {
 
     public boolean checkParConstraints() {
         return true;
+    }
+
+    public double calcWeight() {
+        return 0.0;
     }
 
     public boolean includesEx() {

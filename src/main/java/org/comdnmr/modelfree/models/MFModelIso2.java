@@ -22,6 +22,8 @@
  */
 package org.comdnmr.modelfree.models;
 
+import java.util.List;
+
 /**
  *
  * @author brucejohnson
@@ -48,6 +50,11 @@ public class MFModelIso2 extends MFModelIso1 {
     public MFModelIso2(double tauM, boolean includeEx) {
         super(tauM, includeEx);
         nPars = includeEx ? 3 : 2;
+    }
+
+    @Override
+    public List<String> getParNames() {
+        return getAllParNames("S2", "Tau_f");
     }
 
     @Override

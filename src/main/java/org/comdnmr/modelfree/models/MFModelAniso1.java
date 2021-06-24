@@ -22,6 +22,7 @@
  */
 package org.comdnmr.modelfree.models;
 
+import java.util.List;
 import org.comdnmr.modelfree.RelaxFit;
 
 /**
@@ -40,6 +41,11 @@ public class MFModelAniso1 extends MFModelAniso {
     public MFModelAniso1(RelaxFit.DiffusionType diffType, double[] v) {
         super(diffType, v);
         nPars = 1;
+    }
+
+    @Override
+    public List<String> getParNames() {
+        return getAllParNames("S2");
     }
 
     @Override

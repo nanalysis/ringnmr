@@ -22,6 +22,8 @@
  */
 package org.comdnmr.modelfree.models;
 
+import java.util.List;
+
 /**
  *
  * @author brucejohnson
@@ -48,6 +50,11 @@ public class MFModelIso6 extends MFModelIso5 {
     public MFModelIso6(double tauM, boolean includeEx) {
         super(tauM, includeEx);
         nPars = includeEx ? 5 : 4;
+    }
+
+    @Override
+    public List<String> getParNames() {
+        return getAllParNames("S2", "Tau_f", "Sf2", "Tau_s");
     }
 
     @Override
@@ -92,6 +99,11 @@ public class MFModelIso6 extends MFModelIso5 {
     @Override
     public boolean checkParConstraints() {
         return tauF < tauM && tauS < tauM;
+    }
+
+    @Override
+    public double calcWeight() {
+        return 0.0;
     }
 
     @Override

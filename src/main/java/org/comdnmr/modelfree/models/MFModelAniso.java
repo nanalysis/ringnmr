@@ -22,6 +22,8 @@
  */
 package org.comdnmr.modelfree.models;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.comdnmr.modelfree.DiffusionPars;
 import org.comdnmr.modelfree.RelaxFit;
 
@@ -46,6 +48,17 @@ public abstract class MFModelAniso extends MFModel {
         diffPars = new DiffusionPars(diffType, D, VT, v);
         dDiff = diffPars.dDiff;
         a = diffPars.a;
+    }
+
+    public List<String> getAllParNames(String... pars) {
+        var parNames = new ArrayList<String>();
+        for (var par : pars) {
+            parNames.add(par);
+        }
+        if (includeEx) {
+            parNames.add("Rex");
+        }
+        return parNames;
     }
 
     public void update(double[][] D, double[][] VT) {

@@ -22,6 +22,7 @@
  */
 package org.comdnmr.modelfree.models;
 
+import java.util.List;
 import org.comdnmr.modelfree.RelaxFit;
 
 /**
@@ -50,6 +51,11 @@ public class MFModelIso5 extends MFModelIso2 {
     public MFModelIso5(double tauM, boolean includeEx) {
         super(tauM, includeEx);
         nPars = includeEx ? 4 : 3;
+    }
+
+    @Override
+    public List<String> getParNames() {
+        return getAllParNames("S2", "Tau_f", "Sf2");
     }
 
     @Override

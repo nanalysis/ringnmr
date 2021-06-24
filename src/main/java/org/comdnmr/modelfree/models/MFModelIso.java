@@ -22,6 +22,9 @@
  */
 package org.comdnmr.modelfree.models;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  *
  * @author brucejohnson
@@ -39,6 +42,20 @@ public abstract class MFModelIso extends MFModel {
     public MFModelIso(boolean hasTau, boolean includeEx) {
         this.hasTau = hasTau;
         this.includeEx = includeEx;
+    }
+
+    public List<String> getAllParNames(String... pars) {
+        var parNames = new ArrayList<String>();
+        if (!hasTau) {
+            parNames.add("TauM");
+        }
+        for (var par : pars) {
+            parNames.add(par);
+        }
+        if (includeEx) {
+            parNames.add("Rex");
+        }
+        return parNames;
     }
 
 }
