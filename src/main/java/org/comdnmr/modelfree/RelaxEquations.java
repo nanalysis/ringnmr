@@ -112,13 +112,25 @@ public class RelaxEquations {
     public double getSF() {
         return sf;
     }
-    
+
     public double getGammaS() {
         return gammaS;
     }
 
     public double getGammaI() {
         return gammaI;
+    }
+
+    public double getD() {
+        return d;
+    }
+
+    public double getR() {
+        return r;
+    }
+
+    public double[] getW() {
+        return wValues;
     }
 
     public static double getSF(double sf, String elemX) {
