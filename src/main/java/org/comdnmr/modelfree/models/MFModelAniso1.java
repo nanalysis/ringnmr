@@ -79,4 +79,9 @@ public class MFModelAniso1 extends MFModelAniso {
         return getParValues(includeTau, tau * 10., 1.0);
     }
 
+    @Override
+    public int getNumber() {
+        return 1;
+    }
+
 }

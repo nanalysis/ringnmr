@@ -59,7 +59,7 @@ public class MFModelAniso2 extends MFModelAniso1 {
         return calc(omegas);
     }
 
-      @Override
+    @Override
     public double[] getStart(double tau, boolean includeTau) {
         return getParValues(includeTau, tau, 0.9, tau / 40.0);
     }
@@ -74,5 +74,9 @@ public class MFModelAniso2 extends MFModelAniso1 {
         return getParValues(includeTau, tau * 10., 1.0, tau / 10.0);
     }
 
+    @Override
+    public int getNumber() {
+        return 2;
+    }
 
 }

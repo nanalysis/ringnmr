@@ -18,6 +18,9 @@ import org.apache.commons.math3.optim.PointValuePair;
 import org.comdnmr.modelfree.RelaxFit.Score;
 import org.comdnmr.modelfree.models.MFModelIso;
 import org.comdnmr.modelfree.models.MFModelIso1;
+import org.comdnmr.modelfree.models.MFModelIso2;
+import org.comdnmr.modelfree.models.MFModelIso5;
+import org.comdnmr.modelfree.models.MFModelIso6;
 import org.nmrfx.chemistry.Atom;
 import org.nmrfx.chemistry.MoleculeBase;
 import org.nmrfx.chemistry.MoleculeFactory;
@@ -123,10 +126,10 @@ public class FitModel {
             tau = estimateTau(molData).get("tau") * 1.0e-9;
             MFModelIso model1e = new MFModelIso1(tau, true);
             MFModelIso model1 = new MFModelIso1(tau, false);
-//            MFModelIso model2 = new MFModelIso2(tau, true);
-//            MFModelIso model5 = new MFModelIso5(tau, true);
-//            MFModelIso model6 = new MFModelIso6(tau, true);
-            var models = List.of(model1);
+            MFModelIso model2 = new MFModelIso2(tau, false);
+            MFModelIso model5 = new MFModelIso5(tau, false);
+            MFModelIso model6 = new MFModelIso6(tau, false);
+            var models = List.of(model1, model2, model5, model6);
             testModels(molData, models);
         } else {
             throw new IllegalStateException("No relaxation data to analyze.  Need T1,T2 and NOE");
@@ -223,11 +226,17 @@ public class FitModel {
                 if (bestScore != null) {
                     Atom atom = resData.atom;
                     double[] pars = bestScore.getPars();
-                    double orderValue = pars[0];
-                    Double rexValue = pars.length > 1 ? pars[1] : null;
-                    Double rexError = pars.length > 1 ? 0.0 : null;
-                    OrderPar orderPar = new OrderPar(atom, orderValue, 0.0, bestScore.rss, "model1");
-                    orderPar = orderPar.rEx(rexValue, rexError);
+                    var parNames = bestModel.getParNames();
+                    OrderPar orderPar = new OrderPar(atom, bestScore.rss, "model1");
+                    for (int iPar = 0; iPar < parNames.size(); iPar++) {
+                        String parName = parNames.get(iPar);
+                        double parValue = pars[iPar];
+                        Double parError = null;
+                        System.out.println(iPar + " " + parName + " " + parValue);
+                        orderPar = orderPar.set(parName, parValue, parError);
+                    }
+                    orderPar = orderPar.set("model", (double) bestModel.getNumber(), null);
+                    System.out.println("order par " + orderPar.toString());
                     atom.addOrderPar("order", orderPar);
                 }
             }

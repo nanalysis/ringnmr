@@ -68,5 +68,6 @@ public abstract class MFModel {
     public int getNPars() {
         return nPars;
     }
-
+    
+    public abstract int getNumber();
 }

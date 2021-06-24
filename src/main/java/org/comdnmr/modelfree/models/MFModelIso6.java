@@ -134,4 +134,9 @@ public class MFModelIso6 extends MFModelIso5 {
         }
     }
 
+    @Override
+    public int getNumber() {
+        return 6;
+    }
+
 }
