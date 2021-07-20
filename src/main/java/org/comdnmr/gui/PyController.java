@@ -244,6 +244,10 @@ public class PyController implements Initializable {
     TextField r2MedianField;
     @FXML
     TextField tauCalcField;
+    @FXML
+    TextField lambdaField;
+    @FXML
+    CheckBox constrainTauMCheckBox;
 
     BootstrapSamplePlots bootstrapSamplePlots = null;
     InputDataInterface inputDataInterface = null;
@@ -1116,16 +1120,39 @@ public class PyController implements Initializable {
     }
 
     public void calcModel1() {
+        String lambdaText = lambdaField.getText();
+        double lambda = 1.0;
+        if (!lambdaText.isBlank()) {
+            try {
+                lambda = Double.parseDouble(lambdaText);
+            } catch (NumberFormatException nfE) {
+                lambda = 1.0;
+            }
+        }
+        String tauText = tauCalcField.getText();
+        Double tau = null;
+        if (!tauText.isBlank()) {
+            try {
+                tau = Double.parseDouble(tauText);
+            } catch (NumberFormatException nfE) {
+                tau = null;
+            }
+        }
+        boolean constrainTauM = constrainTauMCheckBox.isSelected();
+        System.out.println(lambdaText + " lambda " + lambda);
         FitModel fitModel = new FitModel();
+        fitModel.setLambda(lambda);
+        fitModel.setTau(tau);
+        fitModel.setFitTau(!constrainTauM);
         try {
             fitModel.testIsoModel();
         } catch (IllegalStateException iaE) {
             GUIUtils.warn("Model Fit Error", iaE.getMessage());
             return;
         }
-        Double tau = fitModel.getTau();
-        if (tau != null) {
-            tauCalcField.setText(String.format("%.2f ns", tau * 1.0e9));
+        Double tauFit = fitModel.getTau();
+        if (tauFit != null) {
+            tauCalcField.setText(String.format("%.2f", tauFit * 1.0e9));
         }
     }
 
@@ -1149,7 +1176,7 @@ public class PyController implements Initializable {
         if (!result.isEmpty()) {
             r1MedianField.setText(String.format("%.3f 1/s", result.get("R1")));
             r2MedianField.setText(String.format("%.3f 1/s", result.get("R2")));
-            tauCalcField.setText(String.format("%.2f ns", result.get("tau")));
+            tauCalcField.setText(String.format("%.2f", result.get("tau")));
         }
     }
 

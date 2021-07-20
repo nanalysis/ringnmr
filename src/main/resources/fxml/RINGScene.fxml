@@ -278,24 +278,26 @@
                                             <HBox>
                                                 <children>
                                                     <Button text="Estimate Tau" onAction="#estimateCorrelationTime" fx:id="calcDiffusionButton"/>
-                                                    <Button text="Model-Iso-1" onAction="#calcModel1"/>
+                                                    <Button text="Model-Iso" onAction="#calcModel1"/>
+                                                    <TextField fx:id="lambdaField" prefWidth="80"/>
+                                                    <CheckBox text="Constrain TauM" fx:id="constrainTauMCheckBox"/>
                                                 </children>
                                             </HBox>
                                             <HBox>
                                                 <children>
-                                                    <Label text="R1:  " prefWidth="80"/>
+                                                    <Label text="R1 (1/s):  " prefWidth="80"/>
                                                     <TextField fx:id="r1MedianField" prefWidth="80"/>
                                                 </children>
                                             </HBox>
                                             <HBox>
                                                 <children>
-                                                    <Label text="R2:  " prefWidth="80"/>
+                                                    <Label text="R2 (1/s):  " prefWidth="80"/>
                                                     <TextField fx:id="r2MedianField" prefWidth="80"/>
                                                 </children>
                                             </HBox>
                                             <HBox>
                                                 <children>
-                                                    <Label text="Tau:  " prefWidth="80"/>
+                                                    <Label text="Tau (ns):  " prefWidth="80"/>
                                                     <TextField fx:id="tauCalcField" prefWidth="80"/>
                                                 </children>
                                             </HBox>
