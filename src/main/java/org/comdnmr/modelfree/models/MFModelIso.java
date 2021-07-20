@@ -47,7 +47,7 @@ public abstract class MFModelIso extends MFModel {
     public List<String> getAllParNames(String... pars) {
         var parNames = new ArrayList<String>();
         if (!hasTau) {
-            parNames.add("TauM");
+            parNames.add("Tau_e");
         }
         for (var par : pars) {
             parNames.add(par);

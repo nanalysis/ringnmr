@@ -37,6 +37,9 @@ import org.nmrfx.chemistry.relax.OrderPar;
 public class FitModel {
 
     Double tau;
+    boolean fitTau = false;
+    boolean fitExchange = false;
+    double lambda = 1.0;
 
     Map<String, MolDataValues> getData(boolean requireCoords) {
         Map<String, MolDataValues> molDataValues = new HashMap<>();
@@ -123,14 +126,21 @@ public class FitModel {
     public void testIsoModel() {
         Map<String, MolDataValues> molData = getData(false);
         if (!molData.isEmpty()) {
-            tau = estimateTau(molData).get("tau") * 1.0e-9;
-            MFModelIso model1e = new MFModelIso1(tau, true);
-            MFModelIso model1 = new MFModelIso1(tau, false);
-            MFModelIso model2 = new MFModelIso2(tau, false);
-            MFModelIso model5 = new MFModelIso5(tau, false);
-            MFModelIso model6 = new MFModelIso6(tau, false);
-            var models = List.of(model1, model2, model5, model6);
-            testModels(molData, models);
+            if (tau == null) {
+                tau = estimateTau(molData).get("tau");
+            }
+            MFModelIso model1 = new MFModelIso1(tau, fitExchange);
+            MFModelIso model2 = new MFModelIso2(tau, fitExchange);
+            MFModelIso model5 = new MFModelIso5(tau, fitExchange);
+            MFModelIso model6;
+            if (fitTau) {
+                model6 = new MFModelIso6(fitExchange);
+            } else {
+                model6 = new MFModelIso6(tau * 1.0e-9, fitExchange);
+            }
+            var models = List.of(model6);
+            // testModels(molData, models);
+            testModel(molData, model6);
         } else {
             throw new IllegalStateException("No relaxation data to analyze.  Need T1,T2 and NOE");
         }
@@ -187,7 +197,7 @@ public class FitModel {
             if (!resData.getData().isEmpty()) {
                 resData.setTestModel(model);
                 molDataRes.put(key, molData.get(key));
-                Score score = tryModel(molDataRes, model, tau);
+                Score score = tryModel(molDataRes, model);
                 double[] pars = score.getPars();
                 double orderPar = pars[0];
                 double rexValue = pars[1];
@@ -216,7 +226,7 @@ public class FitModel {
                 for (var model : models) {
                     resData.setTestModel(model);
                     molDataRes.put(key, molData.get(key));
-                    Score score = tryModel(molDataRes, model, tau);
+                    Score score = tryModel(molDataRes, model);
                     if (score.aic() < lowestAIC) {
                         lowestAIC = score.aic();
                         bestModel = model;
@@ -227,7 +237,7 @@ public class FitModel {
                     Atom atom = resData.atom;
                     double[] pars = bestScore.getPars();
                     var parNames = bestModel.getParNames();
-                    OrderPar orderPar = new OrderPar(atom, bestScore.rss, "model1");
+                    OrderPar orderPar = new OrderPar(atom, bestScore.rss, bestScore.nValues, "model1");
                     for (int iPar = 0; iPar < parNames.size(); iPar++) {
                         String parName = parNames.get(iPar);
                         double parValue = pars[iPar];
@@ -243,19 +253,64 @@ public class FitModel {
         }
     }
 
-    Score tryModel(Map<String, MolDataValues> molDataRes, MFModelIso model, double tau) {
+    public void testModel(Map<String, MolDataValues> molData, MFModelIso model) {
+        Map<String, MolDataValues> molDataRes = new TreeMap<>();
+        MoleculeBase mol = MoleculeFactory.getActive();
+
+        for (String key : molData.keySet()) {
+            molDataRes.clear();
+            MolDataValues resData = molData.get(key);
+
+            if (!resData.getData().isEmpty()) {
+                double lowestAIC = Double.MAX_VALUE;
+                resData.setTestModel(model);
+                molDataRes.put(key, molData.get(key));
+                Score score = tryModel(molDataRes, model);
+                Atom atom = resData.atom;
+                double[] pars = score.getPars();
+                var parNames = model.getParNames();
+                OrderPar orderPar = new OrderPar(atom, score.rss, score.getN(), "model1");
+                for (int iPar = 0; iPar < parNames.size(); iPar++) {
+                    String parName = parNames.get(iPar);
+                    double parValue = pars[iPar];
+                    Double parError = null;
+                    System.out.println(iPar + " " + parName + " " + parValue);
+                    orderPar = orderPar.set(parName, parValue, parError);
+                }
+                orderPar = orderPar.setModel();
+                System.out.println("order par " + orderPar.toString());
+                atom.addOrderPar("order", orderPar);
+            }
+        }
+    }
+
+    Score tryModel(Map<String, MolDataValues> molDataRes, MFModelIso model) {
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setRelaxData(molDataRes);
-        double[] start = model.getStart(tau, false);
-        double[] lower = model.getLower(tau, false);
-        double[] upper = model.getUpper(tau, false);
+        relaxFit.setLambda(lambda);
+        System.out.println(tau + " tau " + fitTau);
+        double[] start = model.getStart(tau, fitTau);
+        double[] lower = model.getLower(tau, fitTau);
+        double[] upper = model.getUpper(tau, fitTau);
         PointValuePair fitResult = relaxFit.fitResidueToModel(start, lower, upper);
         var score = relaxFit.score(fitResult.getPoint(), true);
         return score;
     }
 
     public Double getTau() {
-        return tau;
+        return tau * 1.0e-9;
+    }
+
+    public void setTau(Double value) {
+        tau = value;
+    }
+
+    public void setFitTau(boolean value) {
+        fitTau = value;
+    }
+
+    public void setLambda(double value) {
+        this.lambda = value;
     }
 
 }

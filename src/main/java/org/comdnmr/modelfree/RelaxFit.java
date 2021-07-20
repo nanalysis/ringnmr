@@ -31,6 +31,7 @@ import org.comdnmr.modelfree.models.MFModelIso6;
 public class RelaxFit {
 
     boolean reportFitness = true;
+    double lambda = 0.1;
     int reportAt = 10;
     long startTime = 0;
     double B0;
@@ -76,6 +77,14 @@ public class RelaxFit {
 
     public void setUseGlobalTau(boolean useGlobalTau) {
         this.useGlobalTau = useGlobalTau;
+    }
+
+    public double getLambda() {
+        return lambda;
+    }
+
+    public void setLambda(double value) {
+        this.lambda = value;
     }
 
     public static double[] getDValues(double isoD) {
@@ -350,17 +359,19 @@ public class RelaxFit {
         final int nValues;
         final int nPars;
         final boolean parsOK;
+        final double complexity;
         final double[] pars;
 
-        public Score(double rss, int nValues, int nPars, boolean parsOK) {
-            this(rss, nValues, nPars, parsOK, null);
+        public Score(double rss, int nValues, int nPars, boolean parsOK, double complexity) {
+            this(rss, nValues, nPars, parsOK, complexity, null);
         }
 
-        public Score(double rss, int nValues, int nPars, boolean parsOK, double[] pars) {
+        public Score(double rss, int nValues, int nPars, boolean parsOK, double complexity, double[] pars) {
             this.rss = rss;
             this.nValues = nValues;
             this.nPars = nPars;
             this.parsOK = parsOK;
+            this.complexity = complexity;
             this.pars = pars;
         }
 
@@ -373,11 +384,16 @@ public class RelaxFit {
             return rms;
         }
 
+        public int getN() {
+            return nValues;
+        }
+
         public double value() {
             double score = rms();
             if (!parsOK) {
                 score += nValues * 10.0;
             }
+            score += complexity * lambda;
             return score;
         }
 
@@ -400,6 +416,7 @@ public class RelaxFit {
         double sumSq = 0.0;
         int n = 0;
         boolean parsOK = true;
+        double sumComplexity = 0.0;
         for (MolDataValues molData : molDataValues.values()) {
             MFModel testModel = molData.getTestModel();
             double[] resPars;
@@ -415,12 +432,13 @@ public class RelaxFit {
             for (RelaxDataValue dValue : molData.getData()) {
                 RelaxEquations relaxObj = dValue.relaxObj;
                 double[] J = testModel.calc(relaxObj.wValues, resPars);
+                sumComplexity += testModel.getComplexity();
                 double r1 = relaxObj.R1(J);
                 // fixme rEx should be field dependent
                 double rEx = testModel.includesEx() ? resPars[resPars.length - 1] : 0.0;
                 double r2 = relaxObj.R2(J, rEx);
                 double noe = relaxObj.NOE(J);
-                double delta2 = dValue.score2(r1, r2, noe);
+                double delta2 = dValue.scoreAbs(r1, r2, noe);
                 sumSq += delta2;
                 n += 3;
             }
@@ -430,9 +448,9 @@ public class RelaxFit {
         }
         Score score;
         if (keepPars) {
-            score = new Score(sumSq, n, pars.length, parsOK, pars.clone());
+            score = new Score(sumSq, n, pars.length, parsOK, sumComplexity, pars.clone());
         } else {
-            score = new Score(sumSq, n, pars.length, parsOK);
+            score = new Score(sumSq, n, pars.length, parsOK, sumComplexity);
         }
         return score;
     }

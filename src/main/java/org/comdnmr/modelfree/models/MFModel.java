@@ -61,6 +61,10 @@ public abstract class MFModel {
         return 0.0;
     }
 
+    public double getComplexity() {
+        return 0.0;
+    }
+
     public boolean includesEx() {
         return includeEx;
     }
@@ -68,6 +72,6 @@ public abstract class MFModel {
     public int getNPars() {
         return nPars;
     }
-    
+
     public abstract int getNumber();
 }
