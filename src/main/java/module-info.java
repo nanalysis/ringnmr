@@ -15,7 +15,7 @@ module org.comdnmr.gui {
     requires java.scripting;
     requires java.prefs;
     requires ojalgo;
-    requires snakeyaml;
+    requires org.yaml.snakeyaml;
     requires org.nmrfx.core;
     requires ejml.fat;
     requires org.nmrfx.utils;
