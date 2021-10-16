@@ -531,9 +531,9 @@ public class ChartUtil {
         }
         valueSets.put(resProp.getName(), resProp);
         String parName = "Kex";
-        if (resProp.getExpMode().equals("t1")) {
+        if (resProp.getExpMode().equals("r1")) {
             parName = "R";
-        } else if (resProp.getExpMode().equals("t2")) {
+        } else if (resProp.getExpMode().equals("r2")) {
             parName = "R";
         } else if (resProp.getExpMode().equals("noe")) {
             parName = "NOE";
@@ -559,9 +559,9 @@ public class ChartUtil {
         if (resProp != null) {
             valueSets.put(resProp.getName(), resProp);
             String parName = "Kex";
-            if (resProp.getExpMode().equals("t1")) {
+            if (resProp.getExpMode().equals("r1")) {
                 parName = "R";
-            } else if (resProp.getExpMode().equals("t2")) {
+            } else if (resProp.getExpMode().equals("r2")) {
                 parName = "R";
             } else if (resProp.getExpMode().equals("noe")) {
                 parName = "NOE";

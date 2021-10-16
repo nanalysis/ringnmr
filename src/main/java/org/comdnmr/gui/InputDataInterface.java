@@ -635,9 +635,9 @@ public class InputDataInterface {
                 }
                 ChartUtil.addResidueProperty(experimentSet.getName(), experimentSet);
                 String parName = "Kex";
-                if (experimentSet.getExpMode().equals("t1")) {
+                if (experimentSet.getExpMode().equals("r1")) {
                     parName = "R";
-                } else if (experimentSet.getExpMode().equals("t2")) {
+                } else if (experimentSet.getExpMode().equals("r2")) {
                     parName = "R";
                 } else if (experimentSet.getExpMode().equals("noe")) {
                     parName = "NOE";
@@ -838,9 +838,9 @@ public class InputDataInterface {
 //            ExperimentSet resProp = DataIO.loadParameters(fileName);
         ChartUtil.addResidueProperty(resProp.getName(), resProp);
         String parName = "Kex";
-        if (resProp.getExpMode().equals("t1")) {
+        if (resProp.getExpMode().equals("r1")) {
             parName = "R";
-        } else if (resProp.getExpMode().equals("t2")) {
+        } else if (resProp.getExpMode().equals("r2")) {
             parName = "R";
         }
         ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);

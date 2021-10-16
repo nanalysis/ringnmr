@@ -1242,14 +1242,14 @@ public class PyController implements Initializable {
         } else if (getFittingMode().equals("exp")) {
             TableColumn<ExperimentData.DataValue, Double> xColumn = new TableColumn<>("Delay");
             TableColumn<ExperimentData.DataValue, Double> yColumn = new TableColumn<>("Intensity");
-//            TableColumn<ExperimentData.DataValue, Double> t1Column = new TableColumn<>("T1");
-//            TableColumn<ExperimentData.DataValue, Double> t2Column = new TableColumn<>("T2");
+//            TableColumn<ExperimentData.DataValue, Double> t1Column = new TableColumn<>("R1");
+//            TableColumn<ExperimentData.DataValue, Double> t2Column = new TableColumn<>("R2");
 //            TableColumn<ExperimentData.DataValue, Double> t1RhoColumn = new TableColumn<>("T1Rho");
 
             xColumn.setCellValueFactory(new PropertyValueFactory<>("X0"));
             yColumn.setCellValueFactory(new PropertyValueFactory<>("Y"));
-//            t1Column.setCellValueFactory(new PropertyValueFactory<>("T1"));
-//            t2Column.setCellValueFactory(new PropertyValueFactory<>("T2"));
+//            t1Column.setCellValueFactory(new PropertyValueFactory<>("R1"));
+//            t2Column.setCellValueFactory(new PropertyValueFactory<>("R2"));
 //            t1RhoColumn.setCellValueFactory(new PropertyValueFactory<>("T1Rho"));
 
             resInfoTable.getColumns().clear();
@@ -1914,7 +1914,7 @@ public class PyController implements Initializable {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION, alertText);
         Optional<ButtonType> response = alert.showAndWait();
         if (response.isPresent() && response.get().getText().equals("OK")) {
-            DataIO.addRelaxationFitResults(getCurrentExperimentSet(), relaxTypes.T1);
+            DataIO.addRelaxationFitResults(getCurrentExperimentSet(), relaxTypes.R1);
         }
     }
 
@@ -1928,7 +1928,7 @@ public class PyController implements Initializable {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION, alertText);
         Optional<ButtonType> response = alert.showAndWait();
         if (response.isPresent() && response.get().getText().equals("OK")) {
-            DataIO.addRelaxationFitResults(getCurrentExperimentSet(), relaxTypes.T2);
+            DataIO.addRelaxationFitResults(getCurrentExperimentSet(), relaxTypes.R2);
         }
     }
 
@@ -2109,7 +2109,7 @@ public class PyController implements Initializable {
             }
         } else {
             fitMode = getCurrentExperimentSet().getExpMode();
-            if (fitMode.equalsIgnoreCase("t1") || fitMode.equalsIgnoreCase("t2")) {
+            if (fitMode.equalsIgnoreCase("r1") || fitMode.equalsIgnoreCase("r2")) {
                 fitMode = "exp";
             }
         }
@@ -2154,9 +2154,9 @@ public class PyController implements Initializable {
             return cestTypes;
         } else if (mode.equals("r1rho")) {
             return r1rhoTypes;
-        } else if (mode.equals("t1")) {
+        } else if (mode.equals("r1")) {
             return expTypes;
-        } else if (mode.equals("t2")) {
+        } else if (mode.equals("r2")) {
             return expTypes;
         } else if (mode.equals("s2")) {
             return sTypes;
