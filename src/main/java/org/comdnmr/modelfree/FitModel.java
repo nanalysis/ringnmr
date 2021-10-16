@@ -87,11 +87,11 @@ public class FitModel {
                                     RelaxationData data = entry.getValue();
                                     if (Math.round(data.getField()) == field) {
                                         switch (data.getExpType()) {
-                                            case T1:
+                                            case R1:
                                                 r1 = data.getValue();
                                                 r1Error = data.getError();
                                                 break;
-                                            case T2:
+                                            case R2:
                                                 r2 = data.getValue();
                                                 r2Error = data.getError();
                                                 break;

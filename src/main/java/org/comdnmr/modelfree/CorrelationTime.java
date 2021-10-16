@@ -48,7 +48,7 @@ public class CorrelationTime {
         for (ExperimentSet resProp : residueProps.values()) {
             for (Experiment expData : resProp.getExperimentData()) {
                 String expMode = expData.getExpMode().toLowerCase();
-                if (expMode.equals("t1") || expMode.equals("t2")) {
+                if (expMode.equals("r1") || expMode.equals("r2")) {
                     double b0 = expData.getB0Field();
                     String state = expData.getState();
 

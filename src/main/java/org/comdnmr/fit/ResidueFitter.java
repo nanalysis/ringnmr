@@ -219,10 +219,10 @@ public class ResidueFitter {
             case "cpmg":
                 fitter = new CPMGFitter(options);
                 break;
-            case "t1":
+            case "r1":
                 fitter = new ExpFitter(options);
                 break;
-            case "t2":
+            case "r2":
                 fitter = new ExpFitter(options);
                 break;
             case "cest":
@@ -263,11 +263,11 @@ public class ResidueFitter {
             case "cpmg":
                 equationNames = CPMGFitter.getEquationNames();
                 break;
-            case "t1":
+            case "r1":
                 equationNames = ExpFitter.getEquationNames();
                 bestEquation = "EXPAB";
                 break;
-            case "t2":
+            case "r2":
                 equationNames = ExpFitter.getEquationNames();
                 bestEquation = "EXPAB";
                 break;
@@ -384,10 +384,10 @@ public class ResidueFitter {
             case "cpmg":
                 equationType = CPMGEquation.valueOf(name);
                 break;
-            case "t1":
+            case "r1":
                 equationType = ExpEquation.valueOf(name);
                 break;
-            case "t2":
+            case "r2":
                 equationType = ExpEquation.valueOf(name);
                 break;
             case "exp":

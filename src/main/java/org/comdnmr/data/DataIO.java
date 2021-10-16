@@ -291,7 +291,7 @@ public class DataIO {
         int peakField = -1;
         String header = "";
 //        List<String> peakRefList = new ArrayList<>();
-        //  Peak       Residue N       T1      T2      T11     T3      T4      T9      T5      T10     T12     T6      T7      T8
+        //  Peak       Residue N       R1      R2      T11     T3      T4      T9      T5      T10     T12     T6      T7      T8
         int fakeRes = 1;
         Map<String, List<Integer>> xValIndices = new HashMap<>();
         List<List<Integer>> repIndices = new ArrayList<>();
@@ -1062,10 +1062,10 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 Experiment expData = null;
                 String expName = peakListName;
                 switch (expMode) {
-                    case "t1":
+                    case "r1":
                         expData = new T1Experiment(experimentSet, expName, nucleus, B0field, temperature);
                         break;
-                    case "t2":
+                    case "r2":
                         expData = new T2Experiment(experimentSet, expName, nucleus, B0field, temperature);
                         break;
                     case "cest":
@@ -1183,10 +1183,10 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
 
             Experiment expData = null;
             switch (expMode) {
-                case "t1":
+                case "r1":
                     expData = new T1Experiment(experimentSet, expName, nucleus, B0field, temperature);
                     break;
-                case "t2":
+                case "r2":
                     expData = new T2Experiment(experimentSet, expName, nucleus, B0field, temperature);
                     break;
                 case "cest":
@@ -1273,6 +1273,11 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     String expMode = (String) dataMap2.get("mode");
                     if (expMode == null) {
                         throw new IOException("No mode value in .yaml file");
+                    }
+                    if (expMode.equalsIgnoreCase("t1")) {
+                        expMode = "r1";
+                    } else if (expMode.equalsIgnoreCase("t2")) {
+                        expMode = "r2";
                     }
                     String parName = (String) dataMap2.get("file");
                     if (parName == null) {
@@ -1412,10 +1417,10 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
     }
 
     /**
-     * Add the T1/T2 fit results to a map, and to a molecule, if present.
+     * Add the R1/R2 fit results to a map, and to a molecule, if present.
      *
      * @param resProp ExperimentSet. The residue properties of the fit.
-     * @param expType relaxTypes. The experiment type, T1 or T2.
+     * @param expType relaxTypes. The experiment type, R1 or R2.
      */
     public static void addRelaxationFitResults(ExperimentSet resProp, relaxTypes expType) {
         String datasetName = resProp.getName() + "_RING_fit";
@@ -1450,7 +1455,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                         extras.put("units", units);
                         Double value = fitPars.get("R");
                         Double error = fitPars.get("R.sd");
-                        if (expType.equals(relaxTypes.T1)) {
+                        if (expType.equals(relaxTypes.R1)) {
                             RelaxationData relaxData = new RelaxationData(datasetName, expType, atom, new ArrayList<>(), field, temperature, value, error, extras);
                             //                System.out.println("reader " + relaxData);
                             atom.getRelaxationData().put(datasetName, relaxData);
