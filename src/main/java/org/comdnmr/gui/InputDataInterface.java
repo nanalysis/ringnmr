@@ -234,8 +234,8 @@ public class InputDataInterface {
         formatChoice.setValue("mpk2");
 
         nucChoice.getItems().clear();
-        nucChoice.getItems().addAll(Arrays.asList("H1", "F19", "P31", "C13", "N15"));
-        nucChoice.setValue("H1");
+        nucChoice.getItems().addAll(Arrays.asList("H", "F", "P", "C", "N"));
+        nucChoice.setValue("H");
 
         B0fieldChoice.getItems().clear();
         B0fieldChoice.getItems().addAll(Arrays.asList("400", "500", "600", "700", "750", "800", "900", "950", "1000", "1200"));
@@ -571,7 +571,7 @@ public class InputDataInterface {
         String nuc = Arrays.asList(head.get(4)).get(codeInd);
         String nuc1 = nuc.replaceAll("[^a-zA-Z]", "");
         String nuc2 = nuc.replaceAll("[a-zA-Z]", "");
-        nucChoice.setValue(nuc1 + nuc2);
+        nucChoice.setValue(nuc1);
         B0fieldChoice.getSelectionModel().select(field);
     }
 
@@ -584,7 +584,7 @@ public class InputDataInterface {
             List<Number> vcpmgList = null;
             DatasetBase dataset = DatasetBase.getDataset(peakList.fileName);
 
-            String nucleus = dataset.getNucleus(peakDim).getNameNumber();
+            String nucleus = dataset.getNucleus(peakDim).getName();
             double B0field = dataset.getSf(0);
             double temperature = dataset.getTempK();
             System.out.println(temperature);
