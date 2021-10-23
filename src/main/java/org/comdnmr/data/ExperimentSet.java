@@ -170,6 +170,9 @@ public class ExperimentSet implements ValueSet {
         fieldMap.clear();
         tempMap.clear();
         nucMap.clear();
+        fieldList.clear();
+        tempList.clear();
+        nucList.clear();
         for (Experiment expData : expMaps.values()) {
             if (!fieldMap.containsKey(Math.floor(expData.getB0Field()))) {
                 fieldMap.put(Math.floor(expData.getB0Field()), fieldMap.size());
