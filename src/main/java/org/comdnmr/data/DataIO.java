@@ -42,6 +42,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.comdnmr.eqnfit.CESTEquation;
 import org.comdnmr.eqnfit.CESTFitter;
 import org.comdnmr.eqnfit.CPMGEquation;
@@ -157,13 +158,19 @@ public class DataIO {
         String expMode = expData.getExpMode();
         DatasetBase dataset = DatasetBase.getDataset(peakList.fileName);
         final double[] xValues;
-        if (dataset != null) {
+        double[] measureX = peakList.getMeasureValues();
+        if (measureX != null) {
+            xValues = measureX;
+        } else if (dataset != null) {
             xValues = dataset.getValues(2);
         } else {
             xValues = null;
         }
         resProp.addExperimentData(expData.getName(), expData);
         boolean eSet = false;
+        if (expMode.equals("noe")) {
+            eSet = true;
+        }
         peakList.peaks().stream().filter(peak -> peak.getStatus() >= 0).forEach(peak -> {
             String resName = "";
             int peakField = -1;
@@ -187,8 +194,6 @@ public class DataIO {
                     }
                 }
             }
-            double refIntensity = 1.0;
-            double refError = 0.0;
             List<Double> xValueList = new ArrayList<>();
             List<Double> yValueList = new ArrayList<>();
             List<Double> errValueList = new ArrayList<>();
@@ -196,12 +201,43 @@ public class DataIO {
 
             if (peak.getMeasures().isPresent()) {
                 double[][] v = peak.getMeasures().get();
-                for (int i = 0; i < v[0].length; i++) {
-                    xValueList.add(xValues[i]);
-                    yValueList.add(v[0][i]);
-                    errValueList.add(v[1][i]);
-//                    peakRefList.add(String.valueOf(i));
+                int offset = 0;
+                double refIntensity = 1.0;
+                double refNoise = 0.0;
+                if (expMode.equals("noe")) {
+                    offset = 1;
+                    refIntensity = v[0][0];
+                    refNoise = v[1][0];
+                }
+                if (expMode.equals("noe") && (xValues.length > 3)) {
+                    double noes[] = new double[xValues.length / 2];
+                    for (int i = 0; i < noes.length; i++) {
+                        if (xValues[i * 2] > 0.5) {
+                            noes[i] = v[0][i * 2] / v[0][i * 2 + 1];
+                        } else {
+                            noes[i] = v[0][i * 2 + 1] / v[0][i * 2];
+                        }
+                    }
+                    DescriptiveStatistics dStat = new DescriptiveStatistics(noes);
+                    xValueList.add(1.0);
+                    yValueList.add(dStat.getMean());
+                    errValueList.add(dStat.getStandardDeviation());
 
+                } else {
+                    for (int i = offset; i < v[0].length; i++) {
+                        xValueList.add(xValues[i]);
+                        double expIntensity = v[0][i];
+                        yValueList.add(expIntensity / refIntensity);
+                        if (expMode.equals("noe")) {
+                            double expNoise = v[1][i];
+                            double r1 = refNoise / refIntensity;
+                            double r2 = expNoise / expIntensity;
+                            double eValue = Math.abs(expIntensity / refIntensity) * Math.sqrt(r1 * r1 + r2 * r2);
+                            errValueList.add(eValue);
+                        } else {
+                            errValueList.add(0.0);
+                        }
+                    }
                 }
             }
             DynamicsSource dynSource = DynamicsSource.createFromPeak(peak);
@@ -1419,14 +1455,14 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
     /**
      * Add the R1/R2 fit results to a map, and to a molecule, if present.
      *
-     * @param resProp ExperimentSet. The residue properties of the fit.
+     * @param expSet ExperimentSet. The set pf experimental results.
      * @param expType relaxTypes. The experiment type, R1 or R2.
      */
-    public static void addRelaxationFitResults(ExperimentSet resProp, relaxTypes expType) {
-        String datasetName = resProp.getName() + "_RING_fit";
-        Experiment expData = resProp.getExperimentData(resProp.getName());
+    public static void addRelaxationFitResults(ExperimentSet expSet, relaxTypes expType) {
+        String datasetName = expSet.getName() + "_RING_fit";
+        Experiment expData = expSet.getExperimentData(expSet.getName());
         String expName = "EXPAB";
-        double[] fields = resProp.getFields();
+        double[] fields = expSet.getFields();
 
         MoleculeBase mol = MoleculeFactory.getActive();
         if (mol != null) {
@@ -1434,16 +1470,26 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             for (int f = 0; f < fields.length; f++) {
                 int field = (int) fields[f];
                 final int iList = f;
-                List<ExperimentResult> expResults = resProp.getExperimentResults();
+                List<ExperimentResult> expResults = expSet.getExperimentResults();
                 Collections.sort(expResults, (a, b) -> Integer.compare(a.getResNum(), b.getResNum()));
                 expResults.forEach((expResult) -> {
-                    final Map<String, CurveFit> parMap = expResult.curveSets.get(expName);
-                    final Object[] states = parMap.keySet().toArray();
-                    if (expResults.indexOf(expResult) == 0) {
-                        Arrays.sort(states, (a, b) -> a.toString().compareTo(b.toString()));
+                    Double value;
+                    Double error;
+                    if (expType == relaxTypes.NOE) {
+                        value = expResult.value;
+                        error = expResult.err;
+                    } else {
+                        final Map<String, CurveFit> parMap = expResult.curveSets.get(expName);
+                        final Object[] states = parMap.keySet().toArray();
+                        if (expResults.indexOf(expResult) == 0) {
+                            Arrays.sort(states, (a, b) -> a.toString().compareTo(b.toString()));
+                        }
+                        CurveFit curveFit = parMap.get(states[iList].toString());
+                        Map<String, Double> fitPars = curveFit.getParMap();
+                        value = fitPars.get("R");
+                        error = fitPars.get("R.sd");
                     }
-                    CurveFit curveFit = parMap.get(states[iList].toString());
-                    Map<String, Double> fitPars = curveFit.getParMap();
+
                     ExperimentData experimentalData = expData.getResidueData(String.valueOf(expResult.getResNum()));
                     DynamicsSource dynSource = expResult.getSource();
                     Atom[] atoms = dynSource.atoms;
@@ -1453,10 +1499,19 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                         String units = "s-1";
                         extras.put("coherenceType", coherenceType);
                         extras.put("units", units);
-                        Double value = fitPars.get("R");
-                        Double error = fitPars.get("R.sd");
                         if (expType.equals(relaxTypes.R1)) {
                             RelaxationData relaxData = new RelaxationData(datasetName, expType, atom, new ArrayList<>(), field, temperature, value, error, extras);
+                            //                System.out.println("reader " + relaxData);
+                            atom.getRelaxationData().put(datasetName, relaxData);
+                            //                System.out.println("reader atom.relaxData = " + atom + " " + atom.relaxData);
+                        } else if (expType.equals(relaxTypes.NOE)) {
+                            List<Atom> extraAtoms = new ArrayList<>();
+                            if (atom.getElementName().equals("N")) {
+                                extraAtoms.add(atoms[0]);
+                            } else {
+                                extraAtoms.add(atoms[1]);
+                            }
+                            RelaxationData relaxData = new RelaxationData(datasetName, expType, atom, extraAtoms, field, temperature, value, error, extras);
                             //                System.out.println("reader " + relaxData);
                             atom.getRelaxationData().put(datasetName, relaxData);
                             //                System.out.println("reader atom.relaxData = " + atom + " " + atom.relaxData);
@@ -1465,6 +1520,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                             Double RexError = null;
                             RelaxationRex relaxData = new RelaxationRex(datasetName, expType, atom, new ArrayList<>(), field, temperature, value, error, RexValue, RexError, extras);
                             atom.getRelaxationData().put(datasetName, relaxData);
+
                         }
                     }
                 });
