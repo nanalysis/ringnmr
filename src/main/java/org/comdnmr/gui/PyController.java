@@ -1893,7 +1893,6 @@ public class PyController implements Initializable {
         }
     }
 
-    @FXML
     public void saveParametersSTAR(ActionEvent event) throws IOException, InvalidMoleculeException, ParseException, InvalidPeakException {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Save STAR File");
@@ -1904,31 +1903,25 @@ public class PyController implements Initializable {
         }
     }
 
-    @FXML
-    public void addT1Results(ActionEvent event) {
+    public void addRelaxResultsToMol(ActionEvent event) {
         MoleculeBase mol = MoleculeFactory.getActive();
-        String alertText = "Add T1 results to map?";
+        String alertText = "Add Relax results to map?";
         if (mol != null) {
-            alertText = "Add T1 results to molecule " + mol.getName() + "?";
+            alertText = "Add relax results to molecule " + mol.getName() + "?";
         }
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION, alertText);
         Optional<ButtonType> response = alert.showAndWait();
         if (response.isPresent() && response.get().getText().equals("OK")) {
-            DataIO.addRelaxationFitResults(getCurrentExperimentSet(), relaxTypes.R1);
-        }
-    }
-
-    @FXML
-    public void addT2Results(ActionEvent event) {
-        MoleculeBase mol = MoleculeFactory.getActive();
-        String alertText = "Add T2 results to map?";
-        if (mol != null) {
-            alertText = "Add T2 results to molecule " + mol.getName() + "?";
-        }
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, alertText);
-        Optional<ButtonType> response = alert.showAndWait();
-        if (response.isPresent() && response.get().getText().equals("OK")) {
-            DataIO.addRelaxationFitResults(getCurrentExperimentSet(), relaxTypes.R2);
+            Collection<String> setNames = ChartUtil.getResiduePropertyNames();
+            setNames.stream().sorted().forEach(setName -> {
+                var valueSet = ChartUtil.getResidueProperty(setName);
+                if (valueSet instanceof ExperimentSet) {
+                    ExperimentSet experimentSet = (ExperimentSet) valueSet;
+                    relaxTypes expMode = relaxTypes.valueOf(experimentSet.getExpMode().toUpperCase());
+                    System.out.println("add " + experimentSet.toString() + " " + expMode);
+                    DataIO.addRelaxationFitResults(experimentSet, expMode);
+                }
+            });
         }
     }
 

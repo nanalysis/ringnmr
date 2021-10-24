@@ -46,9 +46,8 @@
                             <MenuItem text="Save Analysis..." onAction="#saveParameters" fx:id="savePars"/>
                             <Menu text="Prep/Save STAR3 File...">
                                 <items>
-                                    <MenuItem text="Add T1 Results to Molecule" onAction="#addT1Results" fx:id="addT1MenuItem"/>
-                                    <MenuItem text="Add T2 Results to Molecule" onAction="#addT2Results" fx:id="addT2MenuItem"/>
-                                    <MenuItem text="Save STAR3 File..." onAction="#saveParametersSTAR" fx:id="saveParsSTARMenuItem"/>
+                                    <MenuItem text="Add Results to Mol" onAction="#addRelaxResultsToMol"/>
+                                    <MenuItem text="Save STAR3 File..." onAction="#saveParametersSTAR" />
                                 </items>
                             </Menu>
                             <Menu text="Export Graphics">
