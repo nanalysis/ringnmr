@@ -124,23 +124,34 @@ public class FitModel {
     }
 
     public void testIsoModel() {
+        testIsoModel(null);
+    }
+
+    public void testIsoModel(String searchKey) {
         Map<String, MolDataValues> molData = getData(false);
+        if (searchKey != null) {
+            if (molData.containsKey(searchKey)) {
+                var keepVal = molData.get(searchKey);
+                molData.clear();
+                molData.put(searchKey, keepVal);
+            }
+        }
+
         if (!molData.isEmpty()) {
             if (tau == null) {
                 tau = estimateTau(molData).get("tau");
             }
-            MFModelIso model1 = new MFModelIso1(tau, fitExchange);
-            MFModelIso model2 = new MFModelIso2(tau, fitExchange);
-            MFModelIso model5 = new MFModelIso5(tau, fitExchange);
-            MFModelIso model6;
-            if (fitTau) {
-                model6 = new MFModelIso6(fitExchange);
-            } else {
-                model6 = new MFModelIso6(tau * 1.0e-9, fitExchange);
-            }
+            MFModelIso model1 = fitTau ? new MFModelIso1(fitExchange)
+                    : new MFModelIso1(tau, fitExchange);
+            MFModelIso model2 = fitTau ? new MFModelIso2(fitExchange)
+                    : new MFModelIso2(tau, fitExchange);
+            MFModelIso model5 = fitTau ? new MFModelIso5(fitExchange)
+                    : new MFModelIso5(tau, fitExchange);
+            MFModelIso model6 = fitTau ? new MFModelIso6(fitExchange)
+                    : new MFModelIso6(tau, fitExchange);
+
             var models = List.of(model6);
-            // testModels(molData, models);
-            testModel(molData, model6);
+            testModels(molData, models);
         } else {
             throw new IllegalStateException("No relaxation data to analyze.  Need T1,T2 and NOE");
         }
@@ -213,6 +224,7 @@ public class FitModel {
     public void testModels(Map<String, MolDataValues> molData, List<MFModelIso> models) {
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
         tau = estimateTau(molData).get("tau") * 1e-9;
+        tau = 17.5e-9;
         MoleculeBase mol = MoleculeFactory.getActive();
 
         for (String key : molData.keySet()) {
@@ -288,7 +300,6 @@ public class FitModel {
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setRelaxData(molDataRes);
         relaxFit.setLambda(lambda);
-        System.out.println(tau + " tau " + fitTau);
         double[] start = model.getStart(tau, fitTau);
         double[] lower = model.getLower(tau, fitTau);
         double[] upper = model.getUpper(tau, fitTau);
