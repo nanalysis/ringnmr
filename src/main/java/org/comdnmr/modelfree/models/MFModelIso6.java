@@ -91,7 +91,7 @@ public class MFModelIso6 extends MFModelIso5 {
     public double[] calc(double[] omegas, double[] pars) {
         int parStart = 0;
         if (!hasTau) {
-            tauM = pars[0] * 1.0e-9;
+            tauM = pars[0];
             parStart = 1;
         }
 
@@ -117,7 +117,7 @@ public class MFModelIso6 extends MFModelIso5 {
 
     @Override
     public boolean checkParConstraints() {
-        return tauS < tauM && tauF < tauS;
+        return tauS * 1.0e-9 < tauM && tauF < tauS;
     }
 
     @Override
@@ -130,7 +130,7 @@ public class MFModelIso6 extends MFModelIso5 {
         if (includeEx) {
             return getParValues(includeTau, tau, 0.9, 0.05, 0.9, 0.3, 2.0);
         } else {
-            return getParValues(includeTau, tau, 0.9, 0.05, 0.9, 0.3);
+            return getParValues(includeTau, tau, 0.9, 0.05, 0.9, 0.5);
         }
     }
 
@@ -139,16 +139,16 @@ public class MFModelIso6 extends MFModelIso5 {
         if (includeEx) {
             return getParValues(includeTau, tau / 5., 0.0, 1.0e-3, 0.0, 1.0e-3, 0.0);
         } else {
-            return getParValues(includeTau, tau / 5., 0.0, 1.0e-3, 0.0, 1.0e-3);
+            return getParValues(includeTau, tau / 5., 0.0, 1.0e-3, 0.0, 0.15);
         }
     }
 
     @Override
     public double[] getUpper(double tau, boolean includeTau) {
         if (includeEx) {
-            return getParValues(includeTau, tau * 5., 1.0, 0.15, 1.0, tau / 2.0, 100.0);
+            return getParValues(includeTau, tau * 5., 1.0, 0.15, 1.0, tau * 1.0e9 / 2.0, 100.0);
         } else {
-            return getParValues(includeTau, tau * 5., 1.0, 0.15, 1.0, tau / 2.0);
+            return getParValues(includeTau, tau * 5., 1.0, 0.15, 1.0, tau * 1.0e9 / 2.0);
 
         }
     }
