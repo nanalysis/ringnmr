@@ -242,7 +242,7 @@ public class ResidueFitter {
         Map<String, ExperimentResult> resMap = new HashMap<>();
         for (String residueNumber : resNums) {
             String expName = experimentSet.getName();
-            DynamicsSource dynSource = DynamicsSource.createFromSpecifiers(expName + ".0", residueNumber, "H");
+            DynamicsSource dynSource = DynamicsSource.createFromSpecifiers(expName + ".0", residueNumber, "N");
             ExperimentResult residueInfo = new ExperimentResult(experimentSet, dynSource, groupId, resNums.length);
             resInfoList.add(residueInfo);
             resMap.put(residueNumber, residueInfo);
@@ -305,7 +305,7 @@ public class ResidueFitter {
         List<ExperimentResult> resInfoList = new ArrayList<>();
         Map<String, ExperimentResult> resMap = new HashMap<>();
         for (String residueNumber : resNums) {
-            DynamicsSource dynSource = DynamicsSource.createFromSpecifiers(experimentSet.getName() + ".0", residueNumber, "H");
+            DynamicsSource dynSource = DynamicsSource.createFromSpecifiers(experimentSet.getName() + ".0", residueNumber, "N");
 
             ExperimentResult residueInfo = new ExperimentResult(experimentSet, dynSource, groupId, resNums.length);
             resInfoList.add(residueInfo);
