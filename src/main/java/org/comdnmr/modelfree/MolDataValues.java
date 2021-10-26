@@ -41,6 +41,16 @@ public class MolDataValues {
         this.specifier = atom.getFullName();
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sBuilder = new StringBuilder();
+        for (var dataValue : dataValues) {
+            sBuilder.append(dataValue.toString());
+            sBuilder.append("\n");
+        }
+        return sBuilder.toString();
+    }
+
     public void addData(RelaxDataValue value) {
         dataValues.add(value);
     }
