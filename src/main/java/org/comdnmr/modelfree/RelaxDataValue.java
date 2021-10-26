@@ -38,6 +38,17 @@ public class RelaxDataValue {
         this.relaxObj = relaxObj;
     }
 
+    @Override
+    public String toString() {
+        return String.format("R1 %.2f +/- %.2f R2 %.2f +/- %.2f NOE %.2f +/- %.2f",
+                R1, R1err, R2, R2err, NOE, NOEerr);
+    }
+
+    public String deltaString(double r1P, double r2P, double noeP) {
+        return String.format("R1 %.2f +/- %.2f R2 %.2f +/- %.2f NOE %.2f +/- %.2f",
+                r1P, (r1P - R1), r2P, (r2P - R2), noeP, (noeP - NOE));
+    }
+
     public void updateRhoError(double[] J) {
         double gammaS = relaxObj.getGammaS();
         double gammaI = relaxObj.getGammaI();
