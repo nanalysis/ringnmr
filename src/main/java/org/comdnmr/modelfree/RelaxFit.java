@@ -456,9 +456,9 @@ public class RelaxFit {
     }
 
     public double value(double[] pars, double[][] values) {
-        for (var par:pars) {
-            System.out.println(par);
-        }
+//        for (var par:pars) {
+//            System.out.println(par);
+//        }
         var score = score(pars, false);
         System.out.println(score.value());
         return score.value();
