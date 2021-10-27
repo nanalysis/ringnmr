@@ -139,18 +139,18 @@ public class MFModelIso6 extends MFModelIso5 {
     @Override
     public double[] getLower(double tau, boolean includeTau) {
         if (includeEx) {
-            return getParValues(includeTau, tau / 5., 0.0, 0.001, 0.0, 0.001, 0.0);
+            return getParValues(includeTau, tauLower(tau), 0.0, 0.001, 0.0, 0.001, 0.0);
         } else {
-            return getParValues(includeTau, tau / 5., 0.0, 0.001, 0.0, 0.001);
+            return getParValues(includeTau, tauLower(tau), 0.0, 0.001, 0.0, 0.001);
         }
     }
 
     @Override
     public double[] getUpper(double tau, boolean includeTau) {
         if (includeEx) {
-            return getParValues(includeTau, tau * 5., 1.0, 0.5, 1.0, 0.5, 100.0);
+            return getParValues(includeTau, tauUpper(tau), 1.0, 0.5, 1.0, 0.5, 100.0);
         } else {
-            return getParValues(includeTau, tau * 5., 1.0, 0.5, 1.0, 0.5);
+            return getParValues(includeTau, tauUpper(tau), 1.0, 0.5, 1.0, 0.5);
 
         }
     }

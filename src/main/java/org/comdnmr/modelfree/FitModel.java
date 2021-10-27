@@ -35,6 +35,7 @@ public class FitModel {
     Double tau;
     boolean fitTau = false;
     boolean fitExchange = false;
+    double tauFraction = 0.25;
     double lambda = 1.0;
 
     Map<String, MolDataValues> getData(boolean requireCoords) {
@@ -296,6 +297,7 @@ public class FitModel {
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setRelaxData(molDataRes);
         relaxFit.setLambda(lambda);
+        model.setTauFraction(tauFraction);
         double[] start = model.getStart(tau, fitTau);
         double[] lower = model.getLower(tau, fitTau);
         double[] upper = model.getUpper(tau, fitTau);
@@ -318,6 +320,10 @@ public class FitModel {
 
     public void setLambda(double value) {
         this.lambda = value;
+    }
+
+    public void setTauFraction(double value) {
+        this.tauFraction = value;
     }
 
 }

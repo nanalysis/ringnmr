@@ -33,6 +33,7 @@ public abstract class MFModelIso extends MFModel {
 
     double tauM;
     double rEX;
+    double tauFrac = 0.25;
     final boolean hasTau;
 
     public MFModelIso(boolean hasTau) {
@@ -56,6 +57,18 @@ public abstract class MFModelIso extends MFModel {
             parNames.add("Rex");
         }
         return parNames;
+    }
+
+    public void setTauFraction(double value) {
+        tauFrac = value;
+    }
+
+    public double tauLower(double tau) {
+        return tau - tau * tauFrac;
+    }
+
+    public double tauUpper(double tau) {
+        return tau + tau * tauFrac;
     }
 
     public static MFModelIso buildModel(int modelNum, boolean fitTau, double tau,

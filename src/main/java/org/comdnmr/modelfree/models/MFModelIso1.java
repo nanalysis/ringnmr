@@ -100,18 +100,18 @@ public class MFModelIso1 extends MFModelIso {
     @Override
     public double[] getLower(double tau, boolean includeTau) {
         if (includeEx) {
-            return getParValues(includeTau, tau / 10., 0.0, 0.0);
+            return getParValues(includeTau, tauLower(tau), 0.0, 0.0);
         } else {
-            return getParValues(includeTau, tau / 10., 0.0);
+            return getParValues(includeTau, tauLower(tau), 0.0);
         }
     }
 
     @Override
     public double[] getUpper(double tau, boolean includeTau) {
         if (includeEx) {
-            return getParValues(includeTau, tau * 10., 1.0, 100.0);
+            return getParValues(includeTau, tauUpper(tau), 1.0, 100.0);
         } else {
-            return getParValues(includeTau, tau * 10.0, 1.0);
+            return getParValues(includeTau, tauUpper(tau), 1.0);
 
         }
     }
