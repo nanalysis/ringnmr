@@ -79,9 +79,11 @@ public class MFModelIso6 extends MFModelIso5 {
                     += Math.abs(1.0 - sf2)
                     + Math.abs(1.0 - ss2)
                     + 0.1 * Math.abs(1.0 - s2)
-                    + Math.abs(7.75 + Math.log10(tauM))
-                    + Math.abs(9.825 + Math.log10(tauS))
-                    + Math.abs(12.0 + Math.log10(tauF));
+                    + tauS
+                    + tauF;
+            if (hasTau) {
+                //   complexity += Math.abs(7.75 + Math.log10(tauM))
+            }
             J[j++] = 0.4 * (vM + vMS + vMF + vMFS);
         }
         return J;
@@ -96,9 +98,9 @@ public class MFModelIso6 extends MFModelIso5 {
         }
 
         this.s2 = pars[parStart];
-        this.tauF = pars[parStart + 1] * 1.0e-9;
+        this.tauS = pars[parStart + 3] * tauM;
+        this.tauF = pars[parStart + 1] * this.tauS;
         this.sf2 = pars[parStart + 2];
-        this.tauS = pars[parStart + 3] * 1.0e-9;
         return calc(omegas);
     }
 
@@ -128,27 +130,27 @@ public class MFModelIso6 extends MFModelIso5 {
     @Override
     public double[] getStart(double tau, boolean includeTau) {
         if (includeEx) {
-            return getParValues(includeTau, tau, 0.9, 0.05, 0.9, 0.3, 2.0);
+            return getParValues(includeTau, tau, 0.9, 0.1, 0.9, 0.1, 2.0);
         } else {
-            return getParValues(includeTau, tau, 0.9, 0.05, 0.9, 0.5);
+            return getParValues(includeTau, tau, 0.9, 0.1, 0.9, 0.1);
         }
     }
 
     @Override
     public double[] getLower(double tau, boolean includeTau) {
         if (includeEx) {
-            return getParValues(includeTau, tau / 5., 0.0, 1.0e-3, 0.0, 1.0e-3, 0.0);
+            return getParValues(includeTau, tau / 5., 0.0, 0.001, 0.0, 0.001, 0.0);
         } else {
-            return getParValues(includeTau, tau / 5., 0.0, 1.0e-3, 0.0, 0.15);
+            return getParValues(includeTau, tau / 5., 0.0, 0.001, 0.0, 0.001);
         }
     }
 
     @Override
     public double[] getUpper(double tau, boolean includeTau) {
         if (includeEx) {
-            return getParValues(includeTau, tau * 5., 1.0, 0.15, 1.0, tau * 1.0e9 / 2.0, 100.0);
+            return getParValues(includeTau, tau * 5., 1.0, 0.5, 1.0, 0.5, 100.0);
         } else {
-            return getParValues(includeTau, tau * 5., 1.0, 0.15, 1.0, tau * 1.0e9 / 2.0);
+            return getParValues(includeTau, tau * 5., 1.0, 0.5, 1.0, 0.5);
 
         }
     }
