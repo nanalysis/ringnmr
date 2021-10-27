@@ -266,38 +266,46 @@
                                                 <children>
                                                     <Label text="R1:  " prefWidth="80"/>
                                                     <ChoiceBox  fx:id="t1Choice" prefWidth="150"/>
+                                                    <TextField fx:id="r1MedianField" prefWidth="80"/>
+                                                    <Label text="(1/s):" prefWidth="30"/>
                                                 </children>
                                             </HBox>
                                             <HBox>
                                                 <children>
                                                     <Label text="R2:  " prefWidth="80"/>
                                                     <ChoiceBox  fx:id="t2Choice" prefWidth="150"/>
-                                                </children>
-                                            </HBox>
-                                            <HBox>
-                                                <children>
-                                                    <Button text="Estimate Tau" onAction="#estimateCorrelationTime" fx:id="calcDiffusionButton"/>
-                                                    <Button text="Model-Iso" onAction="#calcModel1"/>
-                                                    <TextField fx:id="lambdaField" prefWidth="80"/>
-                                                    <CheckBox text="Constrain TauM" fx:id="constrainTauMCheckBox"/>
-                                                </children>
-                                            </HBox>
-                                            <HBox>
-                                                <children>
-                                                    <Label text="R1 (1/s):  " prefWidth="80"/>
-                                                    <TextField fx:id="r1MedianField" prefWidth="80"/>
-                                                </children>
-                                            </HBox>
-                                            <HBox>
-                                                <children>
-                                                    <Label text="R2 (1/s):  " prefWidth="80"/>
                                                     <TextField fx:id="r2MedianField" prefWidth="80"/>
+                                                    <Label text="(1/s):" prefWidth="30"/>
                                                 </children>
                                             </HBox>
                                             <HBox>
                                                 <children>
-                                                    <Label text="Tau (ns):  " prefWidth="80"/>
+                                                    <Label text="Tau:  " prefWidth="80"/>
+                                                    <Button text="Estimate Tau" onAction="#estimateCorrelationTime" fx:id="calcDiffusionButton" prefWidth="150"/>
                                                     <TextField fx:id="tauCalcField" prefWidth="80"/>
+                                                    <Label text="(ns)" prefWidth="30"/>
+                                                </children>
+                                            </HBox>
+                                            <HBox fx:id="modelBox">
+                                                <children>
+                                                    <Label text="Models:  " prefWidth="80"/>
+                                                </children>
+                                            </HBox>
+                                            <HBox>
+                                                <children>
+                                                    <Label text="Lambda  " prefWidth="80"/>
+                                                    <TextField fx:id="lambdaField" prefWidth="80"/>
+                                                </children>
+                                            </HBox>
+                                            <HBox>
+                                                <children>
+                                                    <Label text="Tau Fraction" prefWidth="80"/>
+                                                    <Slider fx:id="tauFractionSlider" prefWidth="150"/>
+                                                </children>
+                                            </HBox>
+                                            <HBox>
+                                                <children>
+                                                    <Button text="Model-Iso" onAction="#calcModel1"/>
                                                 </children>
                                             </HBox>
                                         </children>

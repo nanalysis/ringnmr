@@ -100,6 +100,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ToolBar;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.StageStyle;
@@ -247,7 +248,10 @@ public class PyController implements Initializable {
     @FXML
     TextField lambdaField;
     @FXML
-    CheckBox constrainTauMCheckBox;
+    Slider tauFractionSlider;
+    @FXML
+    HBox modelBox;
+    List<CheckBox> modelCheckBoxes = new ArrayList<>();
 
     BootstrapSamplePlots bootstrapSamplePlots = null;
     InputDataInterface inputDataInterface = null;
@@ -491,11 +495,27 @@ public class PyController implements Initializable {
             makeAxisMenu();
         });
         barScaleSlider.setMin(1.0);
-        barScaleSlider.setMax(25.0);
+        barScaleSlider.setMax(50.0);
         barScaleSlider.setValue(10.0);
         barScaleSlider.setBlockIncrement(1.0);
         barScaleSlider.setShowTickMarks(true);
         barScaleSlider.valueProperty().addListener(e -> resizeBarPlotCanvas());
+
+        tauFractionSlider.setMin(0.0);
+        tauFractionSlider.setMax(0.5);
+        tauFractionSlider.setValue(0.1);
+        tauFractionSlider.setBlockIncrement(0.1);
+        tauFractionSlider.setMinorTickCount(5);
+        tauFractionSlider.setShowTickMarks(true);
+        tauFractionSlider.setShowTickLabels(true);
+
+        int[] modelNums = {1, 2, 5, 6};
+        for (int modelNum : modelNums) {
+            var checkBox = new CheckBox(String.valueOf(modelNum));
+            checkBox.setMinWidth(40.0);
+            modelBox.getChildren().add(checkBox);
+            modelCheckBoxes.add(checkBox);
+        }
     }
 
     public Stage getStage() {
@@ -1134,18 +1154,26 @@ public class PyController implements Initializable {
         if (!tauText.isBlank()) {
             try {
                 tau = Double.parseDouble(tauText);
+                tau *= 1.0e-9;
             } catch (NumberFormatException nfE) {
                 tau = null;
             }
         }
-        boolean constrainTauM = constrainTauMCheckBox.isSelected();
         System.out.println(lambdaText + " lambda " + lambda);
         FitModel fitModel = new FitModel();
         fitModel.setLambda(lambda);
         fitModel.setTau(tau);
-        fitModel.setFitTau(!constrainTauM);
+        double tauFraction = tauFractionSlider.getValue();
+        boolean constrainTauM = tauFraction < 0.001;
+        fitModel.setFitTau(constrainTauM);
+        var modelNums = new ArrayList<Integer>();
+        for (var modelCheckBox : modelCheckBoxes) {
+            if (modelCheckBox.isSelected()) {
+                modelNums.add(Integer.parseInt(modelCheckBox.getText()));
+            }
+        }
         try {
-            fitModel.testIsoModel();
+            fitModel.testIsoModel(null, modelNums);
         } catch (IllegalStateException iaE) {
             GUIUtils.warn("Model Fit Error", iaE.getMessage());
             return;
