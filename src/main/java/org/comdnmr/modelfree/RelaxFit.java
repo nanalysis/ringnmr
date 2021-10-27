@@ -444,7 +444,6 @@ public class RelaxFit {
             }
             if (!testModel.checkParConstraints()) {
                 parsOK = false;
-                System.out.println("pars ok " + parsOK);
             }
         }
         Score score;
