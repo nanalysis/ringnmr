@@ -456,11 +456,7 @@ public class RelaxFit {
     }
 
     public double value(double[] pars, double[][] values) {
-//        for (var par:pars) {
-//            System.out.println(par);
-//        }
         var score = score(pars, false);
-        System.out.println(score.value());
         return score.value();
     }
 
@@ -634,9 +630,6 @@ public class RelaxFit {
 
     public PointValuePair fitResidueToModel(double[] start, double[] lower, double[] upper) {
         Fitter fitter = Fitter.getArrayFitter(this::value);
-        for (var d:start) {
-            System.out.println("par " + d);
-        }
         try {
             PointValuePair result = fitter.fit(start, lower, upper, 10.0);
             return result;
