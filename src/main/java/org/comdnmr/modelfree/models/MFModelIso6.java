@@ -80,7 +80,7 @@ public class MFModelIso6 extends MFModelIso5 {
                     + Math.abs(1.0 - ss2)
                     + 0.1 * Math.abs(1.0 - s2)
                     + Math.abs(7.75 + Math.log10(tauM))
-                    + Math.abs(12.0 + Math.log10(tauS))
+                    + Math.abs(9.825 + Math.log10(tauS))
                     + Math.abs(12.0 + Math.log10(tauF));
             J[j++] = 0.4 * (vM + vMS + vMF + vMFS);
         }
