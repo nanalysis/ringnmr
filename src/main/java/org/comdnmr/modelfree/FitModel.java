@@ -136,7 +136,7 @@ public class FitModel {
 
         if (!molData.isEmpty()) {
             if (tau == null) {
-                tau = estimateTau(molData).get("tau");
+                tau = estimateTau(molData).get("tau") * 1e-9;
             }
 
             var models = new ArrayList<MFModelIso>();
@@ -219,8 +219,9 @@ public class FitModel {
 
     public void testModels(Map<String, MolDataValues> molData, List<MFModelIso> models) {
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
-        tau = estimateTau(molData).get("tau") * 1e-9;
-        tau = 17.5e-9;
+        if (tau == null) {
+            tau = estimateTau(molData).get("tau") * 1e-9;
+        }
         MoleculeBase mol = MoleculeFactory.getActive();
 
         for (String key : molData.keySet()) {
@@ -307,7 +308,7 @@ public class FitModel {
     }
 
     public Double getTau() {
-        return tau * 1.0e-9;
+        return tau;
     }
 
     public void setTau(Double value) {
