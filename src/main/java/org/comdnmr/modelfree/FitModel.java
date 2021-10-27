@@ -17,10 +17,6 @@ import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.apache.commons.math3.optim.PointValuePair;
 import org.comdnmr.modelfree.RelaxFit.Score;
 import org.comdnmr.modelfree.models.MFModelIso;
-import org.comdnmr.modelfree.models.MFModelIso1;
-import org.comdnmr.modelfree.models.MFModelIso2;
-import org.comdnmr.modelfree.models.MFModelIso5;
-import org.comdnmr.modelfree.models.MFModelIso6;
 import org.nmrfx.chemistry.Atom;
 import org.nmrfx.chemistry.MoleculeBase;
 import org.nmrfx.chemistry.MoleculeFactory;
@@ -124,10 +120,10 @@ public class FitModel {
     }
 
     public void testIsoModel() {
-        testIsoModel(null);
+        testIsoModel(null, List.of(1));
     }
 
-    public void testIsoModel(String searchKey) {
+    public void testIsoModel(String searchKey, List<Integer> modelNums) {
         Map<String, MolDataValues> molData = getData(false);
         if (searchKey != null) {
             if (molData.containsKey(searchKey)) {
@@ -141,16 +137,15 @@ public class FitModel {
             if (tau == null) {
                 tau = estimateTau(molData).get("tau");
             }
-            MFModelIso model1 = fitTau ? new MFModelIso1(fitExchange)
-                    : new MFModelIso1(tau, fitExchange);
-            MFModelIso model2 = fitTau ? new MFModelIso2(fitExchange)
-                    : new MFModelIso2(tau, fitExchange);
-            MFModelIso model5 = fitTau ? new MFModelIso5(fitExchange)
-                    : new MFModelIso5(tau, fitExchange);
-            MFModelIso model6 = fitTau ? new MFModelIso6(fitExchange)
-                    : new MFModelIso6(tau, fitExchange);
 
-            var models = List.of(model6);
+            var models = new ArrayList<MFModelIso>();
+            for (var useModel : modelNums) {
+                MFModelIso model = MFModelIso.buildModel(useModel, fitTau, tau,
+                        fitExchange);
+                if (model != null) {
+                    models.add(model);
+                }
+            }
             testModels(molData, models);
         } else {
             throw new IllegalStateException("No relaxation data to analyze.  Need T1,T2 and NOE");
@@ -249,7 +244,7 @@ public class FitModel {
                     Atom atom = resData.atom;
                     double[] pars = bestScore.getPars();
                     var parNames = bestModel.getParNames();
-                    OrderPar orderPar = new OrderPar(atom, bestScore.rss, bestScore.nValues, "model1");
+                    OrderPar orderPar = new OrderPar(atom, bestScore.rss, bestScore.nValues, "model" + bestModel.getNumber());
                     for (int iPar = 0; iPar < parNames.size(); iPar++) {
                         String parName = parNames.get(iPar);
                         double parValue = pars[iPar];
@@ -258,6 +253,7 @@ public class FitModel {
                         orderPar = orderPar.set(parName, parValue, parError);
                     }
                     orderPar = orderPar.set("model", (double) bestModel.getNumber(), null);
+                    orderPar = orderPar.setModel();
                     System.out.println("order par " + orderPar.toString());
                     atom.addOrderPar("order", orderPar);
                 }

@@ -58,4 +58,31 @@ public abstract class MFModelIso extends MFModel {
         return parNames;
     }
 
+    public static MFModelIso buildModel(int modelNum, boolean fitTau, double tau,
+            boolean fitExchange) {
+        MFModelIso model;
+        switch (modelNum) {
+            case 1:
+                model = fitTau ? new MFModelIso1(fitExchange)
+                        : new MFModelIso1(tau, fitExchange);
+                break;
+            case 2:
+                model = fitTau ? new MFModelIso2(fitExchange)
+                        : new MFModelIso2(tau, fitExchange);
+                break;
+            case 5:
+                model = fitTau ? new MFModelIso5(fitExchange)
+                        : new MFModelIso5(tau, fitExchange);
+                break;
+            case 6:
+                model = fitTau ? new MFModelIso6(fitExchange)
+                        : new MFModelIso6(tau, fitExchange);
+                break;
+            default:
+                model = null;
+        }
+        return model;
+
+    }
+
 }
