@@ -79,6 +79,7 @@ import org.comdnmr.eqnfit.CESTFitter;
 import java.text.DecimalFormat;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Optional;
 import javafx.beans.property.SimpleStringProperty;
 import java.util.Random;
@@ -132,6 +133,8 @@ import org.nmrfx.peaks.InvalidPeakException;
 import org.nmrfx.star.ParseException;
 import org.comdnmr.eqnfit.NOEFit;
 import org.comdnmr.modelfree.FitModel;
+import org.nmrfx.chemistry.relax.OrderPar;
+import org.nmrfx.chemistry.relax.RelaxationData;
 import org.nmrfx.chemistry.relax.RelaxationValues;
 import org.nmrfx.console.ConsoleController;
 import org.nmrfx.utils.GUIUtils;
@@ -249,6 +252,8 @@ public class PyController implements Initializable {
     TextField lambdaField;
     @FXML
     Slider tauFractionSlider;
+    @FXML
+    Slider t2LimitSlider;
     @FXML
     HBox modelBox;
     List<CheckBox> modelCheckBoxes = new ArrayList<>();
@@ -505,9 +510,19 @@ public class PyController implements Initializable {
         tauFractionSlider.setMax(0.5);
         tauFractionSlider.setValue(0.1);
         tauFractionSlider.setBlockIncrement(0.1);
-        tauFractionSlider.setMinorTickCount(5);
+        tauFractionSlider.setMinorTickCount(4);
+        tauFractionSlider.setMajorTickUnit(0.1);
         tauFractionSlider.setShowTickMarks(true);
         tauFractionSlider.setShowTickLabels(true);
+
+        t2LimitSlider.setMin(0.0);
+        t2LimitSlider.setMax(100.0);
+        t2LimitSlider.setValue(0.0);
+        t2LimitSlider.setBlockIncrement(1.0);
+        t2LimitSlider.setMajorTickUnit(25.0);
+        t2LimitSlider.setMinorTickCount(4);
+        t2LimitSlider.setShowTickMarks(true);
+        t2LimitSlider.setShowTickLabels(true);
 
         int[] modelNums = {1, 2, 5, 6};
         for (int modelNum : modelNums) {
@@ -1141,14 +1156,18 @@ public class PyController implements Initializable {
 
     public void calcModel1() {
         String lambdaText = lambdaField.getText();
-        double lambda = 1.0;
+        double lambda = 0.0;
         if (!lambdaText.isBlank()) {
             try {
                 lambda = Double.parseDouble(lambdaText);
             } catch (NumberFormatException nfE) {
-                lambda = 1.0;
+                lambda = 0.0;
             }
+        } else {
+            lambdaField.setText("0.0");
+            lambda = 0.0;
         }
+
         String tauText = tauCalcField.getText();
         Double tau = null;
         if (!tauText.isBlank()) {
@@ -1164,8 +1183,10 @@ public class PyController implements Initializable {
         fitModel.setLambda(lambda);
         fitModel.setTau(tau);
         double tauFraction = tauFractionSlider.getValue();
-        boolean constrainTauM = tauFraction < 0.001;
-        fitModel.setFitTau(constrainTauM);
+        double t2Limit = t2LimitSlider.getValue();
+        boolean fitTau = tauFraction > 0.001;
+        fitModel.setFitTau(fitTau);
+        fitModel.setT2Limit(t2Limit);
         var modelNums = new ArrayList<Integer>();
         for (var modelCheckBox : modelCheckBoxes) {
             if (modelCheckBox.isSelected()) {
@@ -1599,8 +1620,76 @@ public class PyController implements Initializable {
                 }
 
             }
-
         }
+    }
+
+    public Map<String, ResidueChart> setupCharts(String[] chartNames) {
+        int nNewCharts = chartNames.length;
+        int nCharts = barCharts.size();
+        for (int iChart = nCharts - 1; iChart >= nNewCharts; iChart--) {
+            barCharts.remove(iChart);
+        }
+        nCharts = barCharts.size();
+        for (int iChart = nCharts; iChart < nNewCharts; iChart++) {
+            addChart();
+        }
+        int iChart = 0;
+        var chartMap = new HashMap<String, ResidueChart>();
+        for (ResidueChart residueChart : barCharts) {
+            activeChart = residueChart;
+            clearChart();
+            chartMap.put(chartNames[iChart], residueChart);
+            iChart++;
+        }
+        return chartMap;
+
+    }
+
+    public void showT1T2NoeData(Event e) {
+        String[] chartNames = {"R1", "R2", "NOE"};
+        var chartMap = setupCharts(chartNames);
+
+        var molResProps = DataIO.getDataFromMolecule();
+        molResProps.values().stream().
+                filter(v -> v.getValues().get(0) instanceof RelaxationData).
+                sorted((a, b) -> {
+                    var ra = (RelaxationData) a.getValues().get(0);
+                    var rb = (RelaxationData) b.getValues().get(0);
+                    return Double.compare(ra.getField(), rb.getField());
+                }).
+                forEach(v -> {
+                    var setName = v.getName();
+                    var rData = (RelaxationData) v.getValues().get(0);
+                    String[] parNames = rData.getParNames();
+                    activeChart = chartMap.get(rData.getName());
+                    showRelaxationValues(setName, rData.getName(), parNames[0]);
+                });
+
+    }
+
+    public void showModelFreeData(Event e) {
+        String[] chartNames = {"S2", "Sf2", "Ss2", "Tau_e", "Tau_f", "Tau_s", "Rex", "model", "rms"};
+        var chartMap = setupCharts(chartNames);
+
+        var molResProps = DataIO.getDataFromMolecule();
+        molResProps.values().stream().
+                filter(v -> v.getValues().get(0) instanceof OrderPar).
+                forEach(v -> {
+                    var values = v.getValues();
+                    boolean hasNull = values.stream().anyMatch(value -> value.getValue() == null);
+                    if (!hasNull) {
+                        boolean hasValue = values.stream().anyMatch(value -> value.getValue() > 1.0e-6);
+                        if (hasValue) {
+                            var setName = v.getName();
+                            var rData = (OrderPar) v.getValues().get(0);
+                            for (var parName : chartNames) {
+                                activeChart = chartMap.get(parName);
+                                showRelaxationValues(setName, rData.getName(), parName);
+                            }
+                        }
+                    }
+                });
+
     }
 
     void addResiduePropertiesToAxisMenu() {

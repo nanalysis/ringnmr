@@ -82,6 +82,12 @@
                             <MenuItem text="Remove Active Chart" onAction="#removeChart" fx:id="removeChart"/>
                             <MenuItem text="Clear Active Chart" onAction="#clearChart" fx:id="clearChart"/>
                             <Menu text="Add Data" fx:id="axisMenu"/>
+                            <Menu text="Groups">
+                                <items>
+                                    <MenuItem text="T1/T2/NOE" onAction="#showT1T2NoeData"/>
+                                    <MenuItem text="ModelFree Pars" onAction="#showModelFreeData"/>
+                                </items>
+                            </Menu>
                         </items>
                     </Menu>
                     <Menu text="Fitting">
@@ -295,6 +301,12 @@
                                                 <children>
                                                     <Label text="Lambda  " prefWidth="80"/>
                                                     <TextField fx:id="lambdaField" prefWidth="80"/>
+                                                </children>
+                                            </HBox>
+                                            <HBox>
+                                                <children>
+                                                    <Label text="T2 Limit  " prefWidth="80"/>
+                                                    <Slider fx:id="t2LimitSlider" prefWidth="150"/>
                                                 </children>
                                             </HBox>
                                             <HBox>
