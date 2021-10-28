@@ -58,6 +58,14 @@ public abstract class MFModelIso extends MFModel {
         }
         return parNames;
     }
+    
+    public boolean hasTau() {
+        return hasTau;
+    }
+    
+    public double getTau() {
+        return tauM;
+    }
 
     public void setTauFraction(double value) {
         tauFrac = value;

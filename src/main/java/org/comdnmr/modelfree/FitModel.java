@@ -36,7 +36,8 @@ public class FitModel {
     boolean fitTau = false;
     boolean fitExchange = false;
     double tauFraction = 0.25;
-    double lambda = 1.0;
+    double lambda = 0.0;
+    double t2Limit = 0.0;
 
     Map<String, MolDataValues> getData(boolean requireCoords) {
         Map<String, MolDataValues> molDataValues = new HashMap<>();
@@ -139,15 +140,7 @@ public class FitModel {
                 tau = estimateTau(molData).get("tau") * 1e-9;
             }
 
-            var models = new ArrayList<MFModelIso>();
-            for (var useModel : modelNums) {
-                MFModelIso model = MFModelIso.buildModel(useModel, fitTau, tau,
-                        fitExchange);
-                if (model != null) {
-                    models.add(model);
-                }
-            }
-            testModels(molData, models);
+            testModels(molData, modelNums);
         } else {
             throw new IllegalStateException("No relaxation data to analyze.  Need T1,T2 and NOE");
         }
@@ -204,7 +197,7 @@ public class FitModel {
             if (!resData.getData().isEmpty()) {
                 resData.setTestModel(model);
                 molDataRes.put(key, molData.get(key));
-                Score score = tryModel(molDataRes, model);
+                Score score = tryModel(molDataRes, model, tauFraction, fitTau);
                 double[] pars = score.getPars();
                 double orderPar = pars[0];
                 double rexValue = pars[1];
@@ -217,7 +210,7 @@ public class FitModel {
         }
     }
 
-    public void testModels(Map<String, MolDataValues> molData, List<MFModelIso> models) {
+    public void testModels(Map<String, MolDataValues> molData, List<Integer> modelNums) {
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
         if (tau == null) {
             tau = estimateTau(molData).get("tau") * 1e-9;
@@ -229,13 +222,27 @@ public class FitModel {
             MolDataValues resData = molData.get(key);
 
             if (!resData.getData().isEmpty()) {
+                molDataRes.put(key, resData);
                 MFModelIso bestModel = null;
                 Score bestScore = null;
                 double lowestAIC = Double.MAX_VALUE;
-                for (var model : models) {
+                for (var modelNum : modelNums) {
+
+                    boolean localFitTau;
+                    double localTauFraction;
+                    if (overT2Limit(molDataRes, t2Limit)) {
+                        localTauFraction = tauFraction;
+                        localFitTau = fitTau;
+                    } else {
+                        localTauFraction = 0.0;
+                        localFitTau = false;
+                    }
+                    System.out.println(localFitTau + " " + localTauFraction);
+                    MFModelIso model = MFModelIso.buildModel(modelNum, localFitTau, tau,
+                            fitExchange);
+
                     resData.setTestModel(model);
-                    molDataRes.put(key, molData.get(key));
-                    Score score = tryModel(molDataRes, model);
+                    Score score = tryModel(molDataRes, model, localTauFraction, localFitTau);
                     if (score.aic() < lowestAIC) {
                         lowestAIC = score.aic();
                         bestModel = model;
@@ -250,13 +257,22 @@ public class FitModel {
                     for (int iPar = 0; iPar < parNames.size(); iPar++) {
                         String parName = parNames.get(iPar);
                         double parValue = pars[iPar];
+                        if (parName.startsWith("Tau")) {
+                            if ((parValue > 1.0e-12) && (parValue < 1.0e-6)) {
+                                parValue *= 1.0e9;
+                            }
+                        }
                         Double parError = null;
                         System.out.println(iPar + " " + parName + " " + parValue);
                         orderPar = orderPar.set(parName, parValue, parError);
                     }
+                    if (bestModel.hasTau()) {
+                        orderPar = orderPar.set("Tau_e", bestModel.getTau() * 1.0e9, 0.0);
+                    }
+
                     orderPar = orderPar.set("model", (double) bestModel.getNumber(), null);
                     orderPar = orderPar.setModel();
-                    System.out.println("order par " + orderPar.toString());
+                    System.out.println("order par " + orderPar.toString() + " " + bestScore.rms());
                     atom.addOrderPar("order", orderPar);
                 }
             }
@@ -275,7 +291,7 @@ public class FitModel {
                 double lowestAIC = Double.MAX_VALUE;
                 resData.setTestModel(model);
                 molDataRes.put(key, molData.get(key));
-                Score score = tryModel(molDataRes, model);
+                Score score = tryModel(molDataRes, model, tauFraction, fitTau);
                 Atom atom = resData.atom;
                 double[] pars = score.getPars();
                 var parNames = model.getParNames();
@@ -287,6 +303,9 @@ public class FitModel {
                     System.out.println(iPar + " " + parName + " " + parValue);
                     orderPar = orderPar.set(parName, parValue, parError);
                 }
+                if (!fitTau) {
+                    orderPar = orderPar.set("Tau_e", tau * 1.0e9, 0.0);
+                }
                 orderPar = orderPar.setModel();
                 System.out.println("order par " + orderPar.toString());
                 atom.addOrderPar("order", orderPar);
@@ -294,14 +313,20 @@ public class FitModel {
         }
     }
 
-    Score tryModel(Map<String, MolDataValues> molDataRes, MFModelIso model) {
+    boolean overT2Limit(Map<String, MolDataValues> molDataRes, double limit) {
+        return molDataRes.values().stream().anyMatch(v -> {
+            return v.getData().stream().anyMatch(d -> d.R2 > limit);
+        });
+    }
+
+    Score tryModel(Map<String, MolDataValues> molDataRes, MFModelIso model, double localTauFraction, boolean localFitTau) {
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setRelaxData(molDataRes);
         relaxFit.setLambda(lambda);
-        model.setTauFraction(tauFraction);
-        double[] start = model.getStart(tau, fitTau);
-        double[] lower = model.getLower(tau, fitTau);
-        double[] upper = model.getUpper(tau, fitTau);
+        model.setTauFraction(localTauFraction);
+        double[] start = model.getStart(tau, localFitTau);
+        double[] lower = model.getLower(tau, localFitTau);
+        double[] upper = model.getUpper(tau, localFitTau);
         PointValuePair fitResult = relaxFit.fitResidueToModel(start, lower, upper);
         var score = relaxFit.score(fitResult.getPoint(), true);
         return score;
@@ -321,6 +346,10 @@ public class FitModel {
 
     public void setLambda(double value) {
         this.lambda = value;
+    }
+
+    public void setT2Limit(double value) {
+        this.t2Limit = value;
     }
 
     public void setTauFraction(double value) {
