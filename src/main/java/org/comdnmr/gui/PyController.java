@@ -83,6 +83,7 @@ import java.util.HashMap;
 import java.util.Optional;
 import javafx.beans.property.SimpleStringProperty;
 import java.util.Random;
+import java.util.TreeSet;
 import javafx.animation.PauseTransition;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXMLLoader;
@@ -1664,13 +1665,13 @@ public class PyController implements Initializable {
                     activeChart = chartMap.get(rData.getName());
                     showRelaxationValues(setName, rData.getName(), parNames[0]);
                 });
-
+        resizeBarPlotCanvas();
     }
 
     public void showModelFreeData(Event e) {
         String[] chartNames = {"S2", "Sf2", "Ss2", "Tau_e", "Tau_f", "Tau_s", "Rex", "model", "rms"};
         var chartMap = setupCharts(chartNames);
-
+        var usedSet = new TreeSet<String>();
         var molResProps = DataIO.getDataFromMolecule();
         molResProps.values().stream().
                 filter(v -> v.getValues().get(0) instanceof OrderPar).
@@ -1678,18 +1679,26 @@ public class PyController implements Initializable {
                     var values = v.getValues();
                     boolean hasNull = values.stream().anyMatch(value -> value.getValue() == null);
                     if (!hasNull) {
-                        boolean hasValue = values.stream().anyMatch(value -> value.getValue() > 1.0e-6);
-                        if (hasValue) {
-                            var setName = v.getName();
-                            var rData = (OrderPar) v.getValues().get(0);
-                            for (var parName : chartNames) {
+                        var setName = v.getName();
+                        var rData = (OrderPar) v.getValues().get(0);
+                        for (var parName : chartNames) {
+                            boolean hasValue = values.stream().anyMatch(value
+                                    -> (value.getValue(parName) != null) && (value.getValue(parName) > 1.0e-6));
+                            if (hasValue) {
                                 activeChart = chartMap.get(parName);
                                 showRelaxationValues(setName, rData.getName(), parName);
+                                usedSet.add(parName);
                             }
                         }
                     }
                 });
-
+        for (String chartName : chartNames) {
+            if (!usedSet.contains(chartName)) {
+                ResidueChart resChart = chartMap.get(chartName);
+                barCharts.remove(resChart);
+            }
+        }
+        resizeBarPlotCanvas();
     }
 
     void addResiduePropertiesToAxisMenu() {
