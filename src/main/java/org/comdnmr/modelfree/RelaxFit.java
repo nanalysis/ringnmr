@@ -21,8 +21,8 @@ import org.comdnmr.modelfree.models.MFModelAniso6;
 import org.comdnmr.modelfree.models.MFModelIso;
 import org.comdnmr.modelfree.models.MFModelIso1;
 import org.comdnmr.modelfree.models.MFModelIso2;
+import org.comdnmr.modelfree.models.MFModelIso4;
 import org.comdnmr.modelfree.models.MFModelIso5;
-import org.comdnmr.modelfree.models.MFModelIso6;
 
 /**
  *
@@ -204,14 +204,14 @@ public class RelaxFit {
             case 5:
                 tau = pars[2];
                 double sf2 = pars[3];
-                MFModelIso5 model5 = new MFModelIso5(tauM);
+                MFModelIso4 model5 = new MFModelIso4(tauM);
                 J = model5.calc(relaxObj.wValues, s2, tau, sf2);
                 break;
             case 6:
                 tau = pars[2];
                 sf2 = pars[3];
                 double tauS = pars[4];
-                MFModelIso6 model6 = new MFModelIso6(tauM);
+                MFModelIso5 model6 = new MFModelIso5(tauM);
                 J = model6.calc(relaxObj.wValues, s2, tau, sf2, tauS);
                 break;
             default:

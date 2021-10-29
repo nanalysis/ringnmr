@@ -91,13 +91,13 @@ public abstract class MFModelIso extends MFModel {
                 model = fitTau ? new MFModelIso2(fitExchange)
                         : new MFModelIso2(tau, fitExchange);
                 break;
+            case 4:
+                model = fitTau ? new MFModelIso4(fitExchange)
+                        : new MFModelIso4(tau, fitExchange);
+                break;
             case 5:
                 model = fitTau ? new MFModelIso5(fitExchange)
                         : new MFModelIso5(tau, fitExchange);
-                break;
-            case 6:
-                model = fitTau ? new MFModelIso6(fitExchange)
-                        : new MFModelIso6(tau, fitExchange);
                 break;
             default:
                 model = null;

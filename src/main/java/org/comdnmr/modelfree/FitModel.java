@@ -271,7 +271,9 @@ public class FitModel {
                     }
 
                     orderPar = orderPar.set("model", (double) bestModel.getNumber(), null);
-                    orderPar = orderPar.setModel();
+                    if ((bestModel.getNumber() == 5) && (lambda > 1.0e-6)) {
+                        orderPar = orderPar.setModel();
+                    }
                     System.out.println("order par " + orderPar.toString() + " " + bestScore.rms());
                     atom.addOrderPar("order", orderPar);
                 }
