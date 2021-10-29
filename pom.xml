@@ -4,7 +4,7 @@
 
         <groupId>org.comdnmr</groupId>
     <artifactId>ringnmr-gui</artifactId>
-    <version>1.04</version>
+    <version>1.05</version>
     <name>ringnmr-gui</name>
     <packaging>jar</packaging>
     <properties>
@@ -16,18 +16,18 @@
         <dependency>
             <groupId>org.comdnmr</groupId>
             <artifactId>ringnmr</artifactId>
-            <version>1.04</version>
+            <version>1.05</version>
         </dependency>
         <dependency>
             <groupId>org.nmrfx</groupId>
             <artifactId>nmrfx-core</artifactId>
-            <version>11.1.40</version>
+            <version>11.1.41</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.nmrfx</groupId>
             <artifactId>nmrfx-utils</artifactId>
-            <version>11.1.40</version>
+            <version>11.1.41</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
