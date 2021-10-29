@@ -45,7 +45,7 @@ public class MFModelIso5 extends MFModelIso2 {
 
     public MFModelIso5(boolean includeEx) {
         super(includeEx);
-        nPars = includeEx ? 4 : 2;
+        nPars = includeEx ? 4 : 3;
     }
 
     public MFModelIso5(double tauM, boolean includeEx) {
