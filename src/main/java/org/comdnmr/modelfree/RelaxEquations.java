@@ -50,7 +50,7 @@ public class RelaxEquations {
     public final static double PLANCK = 1.054e-34;
     public final static double R_HN = 1.02e-10;
     public final static double R_HC = 1.09e-10;
-    public final static double SIGMA = 160.0e-6;
+    public final static double SIGMA = -172.0e-6;
     public final static Map<String, Double> GAMMA_MAP = new HashMap<>();
     public final static Map<String, Double> R_MAP = new HashMap<>();
 

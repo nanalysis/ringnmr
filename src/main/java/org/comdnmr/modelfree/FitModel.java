@@ -137,7 +137,7 @@ public class FitModel {
 
         if (!molData.isEmpty()) {
             if (tau == null) {
-                tau = estimateTau(molData).get("tau") * 1e-9;
+                tau = estimateTau(molData).get("tau");
             }
 
             testModels(molData, modelNums);
@@ -184,7 +184,7 @@ public class FitModel {
 
     public void testIsoModel(MFModelIso model, Map<String, MolDataValues> molData, String matchSpec) {
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
-        tau = estimateTau(molData).get("tau") * 1e-9;
+        tau = estimateTau(molData).get("tau");
         Map<String, String> extras = new HashMap<>();
         MoleculeBase mol = MoleculeFactory.getActive();
 
@@ -213,7 +213,7 @@ public class FitModel {
     public void testModels(Map<String, MolDataValues> molData, List<Integer> modelNums) {
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
         if (tau == null) {
-            tau = estimateTau(molData).get("tau") * 1e-9;
+            tau = estimateTau(molData).get("tau");
         }
         MoleculeBase mol = MoleculeFactory.getActive();
 
@@ -257,17 +257,12 @@ public class FitModel {
                     for (int iPar = 0; iPar < parNames.size(); iPar++) {
                         String parName = parNames.get(iPar);
                         double parValue = pars[iPar];
-                        if (parName.startsWith("Tau")) {
-                            if ((parValue > 1.0e-12) && (parValue < 1.0e-6)) {
-                                parValue *= 1.0e9;
-                            }
-                        }
                         Double parError = null;
                         System.out.println(iPar + " " + parName + " " + parValue);
                         orderPar = orderPar.set(parName, parValue, parError);
                     }
                     if (bestModel.hasTau()) {
-                        orderPar = orderPar.set("Tau_e", bestModel.getTau() * 1.0e9, 0.0);
+                        orderPar = orderPar.set("Tau_e", bestModel.getTau(), 0.0);
                     }
 
                     orderPar = orderPar.set("model", (double) bestModel.getNumber(), null);
@@ -306,7 +301,7 @@ public class FitModel {
                     orderPar = orderPar.set(parName, parValue, parError);
                 }
                 if (!fitTau) {
-                    orderPar = orderPar.set("Tau_e", tau * 1.0e9, 0.0);
+                    orderPar = orderPar.set("Tau_e", tau, 0.0);
                 }
                 orderPar = orderPar.setModel();
                 System.out.println("order par " + orderPar.toString());
