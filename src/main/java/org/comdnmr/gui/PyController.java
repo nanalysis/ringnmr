@@ -525,9 +525,9 @@ public class PyController implements Initializable {
         t2LimitSlider.setShowTickMarks(true);
         t2LimitSlider.setShowTickLabels(true);
 
-        int[] modelNums = {1, 2, 5, 6};
-        for (int modelNum : modelNums) {
-            var checkBox = new CheckBox(String.valueOf(modelNum));
+        String[] modelNames = {"1", "1f", "1s", "2f", "2s", "2sf"};
+        for (var modelName : modelNames) {
+            var checkBox = new CheckBox(modelName);
             checkBox.setMinWidth(40.0);
             modelBox.getChildren().add(checkBox);
             modelCheckBoxes.add(checkBox);
@@ -1174,7 +1174,6 @@ public class PyController implements Initializable {
         if (!tauText.isBlank()) {
             try {
                 tau = Double.parseDouble(tauText);
-                tau *= 1.0e-9;
             } catch (NumberFormatException nfE) {
                 tau = null;
             }
@@ -1188,21 +1187,21 @@ public class PyController implements Initializable {
         boolean fitTau = tauFraction > 0.001;
         fitModel.setFitTau(fitTau);
         fitModel.setT2Limit(t2Limit);
-        var modelNums = new ArrayList<Integer>();
+        var modelNames = new ArrayList<String>();
         for (var modelCheckBox : modelCheckBoxes) {
             if (modelCheckBox.isSelected()) {
-                modelNums.add(Integer.parseInt(modelCheckBox.getText()));
+                modelNames.add(modelCheckBox.getText());
             }
         }
         try {
-            fitModel.testIsoModel(null, modelNums);
+            fitModel.testIsoModel(null, modelNames);
         } catch (IllegalStateException iaE) {
             GUIUtils.warn("Model Fit Error", iaE.getMessage());
             return;
         }
         Double tauFit = fitModel.getTau();
         if (tauFit != null) {
-            tauCalcField.setText(String.format("%.2f", tauFit * 1.0e9));
+            tauCalcField.setText(String.format("%.2f", tauFit));
         }
     }
 
@@ -1224,8 +1223,8 @@ public class PyController implements Initializable {
         }
 
         if (!result.isEmpty()) {
-            r1MedianField.setText(String.format("%.3f 1/s", result.get("R1")));
-            r2MedianField.setText(String.format("%.3f 1/s", result.get("R2")));
+            r1MedianField.setText(String.format("%.3f", result.get("R1")));
+            r2MedianField.setText(String.format("%.3f", result.get("R2")));
             tauCalcField.setText(String.format("%.2f", result.get("tau")));
         }
     }
