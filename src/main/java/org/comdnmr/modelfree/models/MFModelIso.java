@@ -58,11 +58,11 @@ public abstract class MFModelIso extends MFModel {
         }
         return parNames;
     }
-    
+
     public boolean hasTau() {
         return hasTau;
     }
-    
+
     public double getTau() {
         return tauM;
     }
@@ -79,25 +79,33 @@ public abstract class MFModelIso extends MFModel {
         return tau + tau * tauFrac;
     }
 
-    public static MFModelIso buildModel(int modelNum, boolean fitTau, double tau,
+    public static MFModelIso buildModel(String modelName, boolean fitTau, double tau,
             boolean fitExchange) {
         MFModelIso model;
-        switch (modelNum) {
-            case 1:
+        switch (modelName) {
+            case "1":
                 model = fitTau ? new MFModelIso1(fitExchange)
                         : new MFModelIso1(tau, fitExchange);
                 break;
-            case 2:
-                model = fitTau ? new MFModelIso2(fitExchange)
-                        : new MFModelIso2(tau, fitExchange);
+            case "1f":
+                model = fitTau ? new MFModelIso1f(fitExchange)
+                        : new MFModelIso1f(tau, fitExchange);
                 break;
-            case 4:
-                model = fitTau ? new MFModelIso4(fitExchange)
-                        : new MFModelIso4(tau, fitExchange);
+            case "1s":
+                model = fitTau ? new MFModelIso1s(fitExchange)
+                        : new MFModelIso1s(tau, fitExchange);
                 break;
-            case 5:
-                model = fitTau ? new MFModelIso5(fitExchange)
-                        : new MFModelIso5(tau, fitExchange);
+            case "2s":
+                model = fitTau ? new MFModelIso2s(fitExchange)
+                        : new MFModelIso2s(tau, fitExchange);
+                break;
+            case "2f":
+                model = fitTau ? new MFModelIso2f(fitExchange)
+                        : new MFModelIso2f(tau, fitExchange);
+                break;
+            case "2sf":
+                model = fitTau ? new MFModelIso2sf(fitExchange)
+                        : new MFModelIso2sf(tau, fitExchange);
                 break;
             default:
                 model = null;

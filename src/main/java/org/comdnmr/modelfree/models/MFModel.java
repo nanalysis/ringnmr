@@ -29,7 +29,7 @@ import java.util.List;
  * @author brucejohnson
  */
 public abstract class MFModel {
-
+    public final static double SLOW_LIMIT = 0.15;
     int nPars;
     boolean includeEx;
 

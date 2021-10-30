@@ -28,46 +28,47 @@ import java.util.List;
  *
  * @author brucejohnson
  */
-public class MFModelIso2 extends MFModelIso1 {
+public class MFModelIso2s extends MFModelIso1s {
 
-    double tauF;
+    double sf2;
 
-    public MFModelIso2() {
+    public MFModelIso2s() {
         super();
-        nPars = 2;
+        nPars = 3;
     }
 
-    public MFModelIso2(double tauM) {
+    public MFModelIso2s(double tauM) {
         super(tauM);
-        nPars = 2;
+        nPars = 3;
     }
 
-    public MFModelIso2(boolean includeEx) {
+    public MFModelIso2s(boolean includeEx) {
         super(includeEx);
-        nPars = includeEx ? 3 : 2;
+        nPars = includeEx ? 4 : 3;
     }
 
-    public MFModelIso2(double tauM, boolean includeEx) {
+    public MFModelIso2s(double tauM, boolean includeEx) {
         super(tauM, includeEx);
-        nPars = includeEx ? 3 : 2;
+        nPars = includeEx ? 4 : 3;
     }
 
     @Override
     public List<String> getParNames() {
-        return getAllParNames("Sf2", "Tau_f");
+        return getAllParNames("Sf2", "Tau_s", "Ss2");
     }
 
     @Override
     public double[] calc(double[] omegas) {
         double tauMx = tauM * 1.0e-9;
-        double tauFx = tauF * 1.0e-9;
+        double tauSx = tauS * 1.0e-9;
         double[] J = new double[omegas.length];
         int j = 0;
+        double s2 = sf2 * ss2;
         for (double omega : omegas) {
             double omega2 = omega * omega;
-            double tauf = tauMx * tauFx / (tauMx + tauFx);
-            double value1 = sf2 * tauMx / (1.0 + omega2 * tauMx * tauMx);
-            double value2 = (1.0 - sf2) * (tauf) / (1.0 + omega2 * tauf * tauf);
+            double taus = tauMx * tauSx / (tauMx + tauSx);
+            double value1 = s2 * tauMx / (1.0 + omega2 * tauMx * tauMx);
+            double value2 = (sf2 - s2) * (taus) / (1.0 + omega2 * taus * taus);
             J[j++] = 0.4 * (value1 + value2);
         }
         return J;
@@ -82,52 +83,54 @@ public class MFModelIso2 extends MFModelIso1 {
         }
 
         this.sf2 = pars[parStart];
-        this.tauF = pars[parStart + 1];
+        this.tauS = pars[parStart + 1];
+        this.ss2 = pars[parStart + 2];
         return calc(omegas);
     }
 
-    public double[] calc(double[] omegas, double s2, double tauF) {
+    public double[] calc(double[] omegas, double s2, double tauS, double sf2) {
         this.sf2 = s2;
-        this.tauF = tauF;
+        this.tauS = tauS;
+        this.ss2 = sf2;
         return calc(omegas);
     }
 
     @Override
     public boolean checkParConstraints() {
-        return tauF < tauM;
+        return tauS < tauM;
     }
 
     @Override
     public double[] getStart(double tau, boolean includeTau) {
         if (includeEx) {
-            return getParValues(includeTau, tau, 0.9, tau / 40.0, 2.0);
+            return getParValues(includeTau, tau, 0.9, tau / 5.0, 0.9, 2.0);
         } else {
-            return getParValues(includeTau, tau, 0.9, tau / 40.0);
+            return getParValues(includeTau, tau, 0.9, tau / 5.0, 0.9);
         }
     }
 
     @Override
     public double[] getLower(double tau, boolean includeTau) {
         if (includeEx) {
-            return getParValues(includeTau, tauLower(tau), 0.0, tau / 1000.0, 0.0);
+            return getParValues(includeTau, tauLower(tau), 0.0, SLOW_LIMIT, 0.0, 0.0);
         } else {
-            return getParValues(includeTau, tauLower(tau), 0.0, tau / 1000.0);
+            return getParValues(includeTau, tauLower(tau), 0.0, SLOW_LIMIT, 0.0);
         }
     }
 
     @Override
     public double[] getUpper(double tau, boolean includeTau) {
         if (includeEx) {
-            return getParValues(includeTau, tauUpper(tau), 1.0, tau / 10.0, 100.0);
+            return getParValues(includeTau, tauUpper(tau), 1.0, tau / 2.0, 1.0, 100.0);
         } else {
-            return getParValues(includeTau, tauUpper(tau), 1.0, tau / 10.0);
+            return getParValues(includeTau, tauUpper(tau), 1.0, tau / 2.0, 1.0);
 
         }
     }
 
     @Override
     public int getNumber() {
-        return 2;
+        return 5;
     }
 
 }

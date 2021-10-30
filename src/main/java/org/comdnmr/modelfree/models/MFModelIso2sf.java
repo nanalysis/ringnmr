@@ -28,27 +28,27 @@ import java.util.List;
  *
  * @author brucejohnson
  */
-public class MFModelIso5 extends MFModelIso4 {
+public class MFModelIso2sf extends MFModelIso2f {
 
     double tauS;
     double complexity = 0.0;
 
-    public MFModelIso5() {
+    public MFModelIso2sf() {
         super();
         nPars = 4;
     }
 
-    public MFModelIso5(double tauM) {
+    public MFModelIso2sf(double tauM) {
         super(tauM);
         nPars = 4;
     }
 
-    public MFModelIso5(boolean includeEx) {
+    public MFModelIso2sf(boolean includeEx) {
         super(includeEx);
         nPars = includeEx ? 5 : 4;
     }
 
-    public MFModelIso5(double tauM, boolean includeEx) {
+    public MFModelIso2sf(double tauM, boolean includeEx) {
         super(tauM, includeEx);
         nPars = includeEx ? 5 : 4;
     }
@@ -81,7 +81,7 @@ public class MFModelIso5 extends MFModelIso4 {
             complexity
                     += Math.abs(1.0 - sf2)
                     + Math.abs(1.0 - ss2)
-                    + tauSx * 1.0e9
+                    + ((tauSx * 1.0e9) - SLOW_LIMIT)
                     + tauFx * 1.0e9;
             if (hasTau) {
                 //   complexity += Math.abs(7.75 + Math.log10(tauM))
@@ -141,25 +141,25 @@ public class MFModelIso5 extends MFModelIso4 {
     @Override
     public double[] getLower(double tau, boolean includeTau) {
         if (includeEx) {
-            return getParValues(includeTau, tauLower(tau), 0.0, 0.001, 0.0, 0.15, 0.0);
+            return getParValues(includeTau, tauLower(tau), 0.0, 0.001, 0.0, SLOW_LIMIT, 0.0);
         } else {
-            return getParValues(includeTau, tauLower(tau), 0.0, 0.001, 0.0, 0.15);
+            return getParValues(includeTau, tauLower(tau), 0.0, 0.001, 0.0, SLOW_LIMIT);
         }
     }
 
     @Override
     public double[] getUpper(double tau, boolean includeTau) {
         if (includeEx) {
-            return getParValues(includeTau, tauUpper(tau), 1.0, 0.15, 1.0, tau / 2.0, 100.0);
+            return getParValues(includeTau, tauUpper(tau), 1.0, SLOW_LIMIT, 1.0, tau / 2.0, 100.0);
         } else {
-            return getParValues(includeTau, tauUpper(tau), 1.0, 0.15, 1.0, tau / 2.0);
+            return getParValues(includeTau, tauUpper(tau), 1.0, SLOW_LIMIT, 1.0, tau / 2.0);
 
         }
     }
 
     @Override
     public int getNumber() {
-        return 5;
+        return 6;
     }
 
 }

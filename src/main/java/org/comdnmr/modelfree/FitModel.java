@@ -17,6 +17,7 @@ import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.apache.commons.math3.optim.PointValuePair;
 import org.comdnmr.modelfree.RelaxFit.Score;
 import org.comdnmr.modelfree.models.MFModelIso;
+import org.comdnmr.modelfree.models.MFModelIso2sf;
 import org.nmrfx.chemistry.Atom;
 import org.nmrfx.chemistry.MoleculeBase;
 import org.nmrfx.chemistry.MoleculeFactory;
@@ -122,10 +123,10 @@ public class FitModel {
     }
 
     public void testIsoModel() {
-        testIsoModel(null, List.of(1));
+        testIsoModel(null, List.of("1"));
     }
 
-    public void testIsoModel(String searchKey, List<Integer> modelNums) {
+    public void testIsoModel(String searchKey, List<String> modelNames) {
         Map<String, MolDataValues> molData = getData(false);
         if (searchKey != null) {
             if (molData.containsKey(searchKey)) {
@@ -140,7 +141,7 @@ public class FitModel {
                 tau = estimateTau(molData).get("tau");
             }
 
-            testModels(molData, modelNums);
+            testModels(molData, modelNames);
         } else {
             throw new IllegalStateException("No relaxation data to analyze.  Need T1,T2 and NOE");
         }
@@ -210,7 +211,7 @@ public class FitModel {
         }
     }
 
-    public void testModels(Map<String, MolDataValues> molData, List<Integer> modelNums) {
+    public void testModels(Map<String, MolDataValues> molData, List<String> modelNames) {
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
         if (tau == null) {
             tau = estimateTau(molData).get("tau");
@@ -226,7 +227,7 @@ public class FitModel {
                 MFModelIso bestModel = null;
                 Score bestScore = null;
                 double lowestAIC = Double.MAX_VALUE;
-                for (var modelNum : modelNums) {
+                for (var modelName : modelNames) {
 
                     boolean localFitTau;
                     double localTauFraction;
@@ -237,8 +238,7 @@ public class FitModel {
                         localTauFraction = 0.0;
                         localFitTau = false;
                     }
-                    System.out.println(localFitTau + " " + localTauFraction);
-                    MFModelIso model = MFModelIso.buildModel(modelNum, localFitTau, tau,
+                    MFModelIso model = MFModelIso.buildModel(modelName, localFitTau, tau,
                             fitExchange);
 
                     resData.setTestModel(model);
@@ -266,7 +266,7 @@ public class FitModel {
                     }
 
                     orderPar = orderPar.set("model", (double) bestModel.getNumber(), null);
-                    if ((bestModel.getNumber() == 5) && (lambda > 1.0e-6)) {
+                    if ((bestModel instanceof MFModelIso2sf) && (lambda > 1.0e-6)) {
                         orderPar = orderPar.setModel();
                     }
                     System.out.println("order par " + orderPar.toString() + " " + bestScore.rms());

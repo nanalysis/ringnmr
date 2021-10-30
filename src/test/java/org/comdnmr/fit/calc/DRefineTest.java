@@ -26,9 +26,9 @@ import org.comdnmr.modelfree.models.MFModel;
 import org.comdnmr.modelfree.models.MFModelAniso1;
 import org.comdnmr.modelfree.models.MFModelIso;
 import org.comdnmr.modelfree.models.MFModelIso1;
-import org.comdnmr.modelfree.models.MFModelIso2;
-import org.comdnmr.modelfree.models.MFModelIso4;
-import org.comdnmr.modelfree.models.MFModelIso5;
+import org.comdnmr.modelfree.models.MFModelIso1f;
+import org.comdnmr.modelfree.models.MFModelIso2s;
+import org.comdnmr.modelfree.models.MFModelIso2sf;
 import org.junit.Test;
 import org.junit.Assert;
 
@@ -145,13 +145,13 @@ public class DRefineTest {
                 model = new MFModelIso1();
                 break;
             case 2:
-                model = new MFModelIso2();
+                model = new MFModelIso1f();
                 break;
             case 5:
-                model = new MFModelIso4();
+                model = new MFModelIso2s();
                 break;
             case 6:
-                model = new MFModelIso5();
+                model = new MFModelIso2sf();
                 break;
             default:
                 model = new MFModelIso1();

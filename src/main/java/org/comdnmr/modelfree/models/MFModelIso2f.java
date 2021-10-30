@@ -28,26 +28,26 @@ import java.util.List;
  *
  * @author brucejohnson
  */
-public class MFModelIso4 extends MFModelIso2 {
+public class MFModelIso2f extends MFModelIso1f {
 
     double ss2;
 
-    public MFModelIso4() {
+    public MFModelIso2f() {
         super();
         nPars = 3;
     }
 
-    public MFModelIso4(double tauM) {
+    public MFModelIso2f(double tauM) {
         super(tauM);
         nPars = 3;
     }
 
-    public MFModelIso4(boolean includeEx) {
+    public MFModelIso2f(boolean includeEx) {
         super(includeEx);
         nPars = includeEx ? 4 : 3;
     }
 
-    public MFModelIso4(double tauM, boolean includeEx) {
+    public MFModelIso2f(double tauM, boolean includeEx) {
         super(tauM, includeEx);
         nPars = includeEx ? 4 : 3;
     }
@@ -63,7 +63,7 @@ public class MFModelIso4 extends MFModelIso2 {
         double tauFx = tauF * 1.0e-9;
         double[] J = new double[omegas.length];
         int j = 0;
-        double s2 = sf2*ss2;
+        double s2 = sf2 * ss2;
         for (double omega : omegas) {
             double omega2 = omega * omega;
             double tauf = tauMx * tauFx / (tauMx + tauFx);
@@ -103,27 +103,27 @@ public class MFModelIso4 extends MFModelIso2 {
     @Override
     public double[] getStart(double tau, boolean includeTau) {
         if (includeEx) {
-            return getParValues(includeTau, tau, 0.9, tau / 40.0, 0.9, 2.0);
+            return getParValues(includeTau, tau, 0.9, 0.015, 0.9, 2.0);
         } else {
-            return getParValues(includeTau, tau, 0.9, tau / 40.0, 0.9);
+            return getParValues(includeTau, tau, 0.9, 0.015, 0.9);
         }
     }
 
     @Override
     public double[] getLower(double tau, boolean includeTau) {
         if (includeEx) {
-            return getParValues(includeTau, tauLower(tau), 0.0, tau / 1000.0, 0.0, 0.0);
+            return getParValues(includeTau, tauLower(tau), 0.0, 0.001, 0.0, 0.0);
         } else {
-            return getParValues(includeTau, tauLower(tau), 0.0, tau / 1000.0, 0.0);
+            return getParValues(includeTau, tauLower(tau), 0.0, 0.001, 0.0);
         }
     }
 
     @Override
     public double[] getUpper(double tau, boolean includeTau) {
         if (includeEx) {
-            return getParValues(includeTau, tauUpper(tau), 1.0, tau / 10.0, 1.0, 100.0);
+            return getParValues(includeTau, tauUpper(tau), 1.0, SLOW_LIMIT, 1.0, 100.0);
         } else {
-            return getParValues(includeTau, tauUpper(tau), 1.0, tau / 10.0, 1.0);
+            return getParValues(includeTau, tauUpper(tau), 1.0, SLOW_LIMIT, 1.0);
 
         }
     }
