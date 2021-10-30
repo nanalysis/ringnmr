@@ -22,9 +22,7 @@
  */
 package org.comdnmr.modelfree.models;
 
-import java.util.ArrayList;
 import java.util.List;
-import org.comdnmr.modelfree.RelaxFit;
 
 /**
  *
@@ -32,7 +30,7 @@ import org.comdnmr.modelfree.RelaxFit;
  */
 public class MFModelIso1 extends MFModelIso {
 
-    double s2;
+    double sf2;
 
     public MFModelIso1() {
         super(false);
@@ -58,7 +56,7 @@ public class MFModelIso1 extends MFModelIso {
 
     @Override
     public List<String> getParNames() {
-        return getAllParNames("S2");
+        return getAllParNames("Sf2");
     }
 
     @Override
@@ -68,7 +66,7 @@ public class MFModelIso1 extends MFModelIso {
         int j = 0;
         for (double omega : omegas) {
             double omega2 = omega * omega;
-            J[j++] = 0.4 * s2 * tauMx / (1.0 + omega2 * tauMx * tauMx);
+            J[j++] = 0.4 * sf2 * tauMx / (1.0 + omega2 * tauMx * tauMx);
         }
         return J;
     }
@@ -80,12 +78,12 @@ public class MFModelIso1 extends MFModelIso {
             tauM = pars[0];
             parStart = 1;
         }
-        this.s2 = pars[parStart];
+        this.sf2 = pars[parStart];
         return calc(omegas);
     }
 
     public double[] calc(double[] omegas, double s2) {
-        this.s2 = s2;
+        this.sf2 = s2;
         return calc(omegas);
     }
 

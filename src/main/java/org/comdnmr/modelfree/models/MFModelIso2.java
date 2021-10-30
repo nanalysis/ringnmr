@@ -54,7 +54,7 @@ public class MFModelIso2 extends MFModelIso1 {
 
     @Override
     public List<String> getParNames() {
-        return getAllParNames("S2", "Tau_f");
+        return getAllParNames("Sf2", "Tau_f");
     }
 
     @Override
@@ -66,8 +66,8 @@ public class MFModelIso2 extends MFModelIso1 {
         for (double omega : omegas) {
             double omega2 = omega * omega;
             double tauf = tauMx * tauFx / (tauMx + tauFx);
-            double value1 = s2 * tauMx / (1.0 + omega2 * tauMx * tauMx);
-            double value2 = (1.0 - s2) * (tauf) / (1.0 + omega2 * tauf * tauf);
+            double value1 = sf2 * tauMx / (1.0 + omega2 * tauMx * tauMx);
+            double value2 = (1.0 - sf2) * (tauf) / (1.0 + omega2 * tauf * tauf);
             J[j++] = 0.4 * (value1 + value2);
         }
         return J;
@@ -81,13 +81,13 @@ public class MFModelIso2 extends MFModelIso1 {
             parStart = 1;
         }
 
-        this.s2 = pars[parStart];
+        this.sf2 = pars[parStart];
         this.tauF = pars[parStart + 1];
         return calc(omegas);
     }
 
     public double[] calc(double[] omegas, double s2, double tauF) {
-        this.s2 = s2;
+        this.sf2 = s2;
         this.tauF = tauF;
         return calc(omegas);
     }

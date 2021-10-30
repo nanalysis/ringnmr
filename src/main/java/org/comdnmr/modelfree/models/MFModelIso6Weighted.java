@@ -50,6 +50,7 @@ public class MFModelIso6Weighted extends MFModelIso5 {
     public double[] calc(double[] omegas) {
         double[] J = new double[omegas.length];
         int j = 0;
+        double s2 = sf2 * ss2;
         for (double omega : omegas) {
             double omega2 = omega * omega;
             double taue = tauM * tauS / (tauM + tauS);
@@ -70,15 +71,15 @@ public class MFModelIso6Weighted extends MFModelIso5 {
             parStart = 1;
         }
 
-        this.s2 = pars[parStart];
+        this.sf2 = pars[parStart];
         this.tauF = pars[parStart + 1];
-        this.sf2 = pars[parStart + 2];
+        this.ss2 = pars[parStart + 2];
         this.tauS = pars[parStart + 3];
         return calc(omegas);
     }
 
-    public double[] calc(double[] omegas, double s2, double tauF, double sf2, double tauS) {
-        this.s2 = s2;
+    public double[] calc(double[] omegas, double sf2, double tauF, double ss2, double tauS) {
+        this.sf2 = sf2;
         this.tauF = tauF;
         this.sf2 = sf2;
         this.tauS = tauS;
