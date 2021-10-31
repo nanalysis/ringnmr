@@ -11,10 +11,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.apache.commons.math3.optim.PointValuePair;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.comdnmr.modelfree.RelaxFit.Score;
 import org.comdnmr.modelfree.models.MFModelIso;
 import org.comdnmr.modelfree.models.MFModelIso2sf;
@@ -212,6 +214,7 @@ public class FitModel {
     }
 
     public void testModels(Map<String, MolDataValues> molData, List<String> modelNames) {
+        Random random = new Random();
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
         if (tau == null) {
             tau = estimateTau(molData).get("tau");
@@ -227,19 +230,19 @@ public class FitModel {
                 MFModelIso bestModel = null;
                 Score bestScore = null;
                 double lowestAIC = Double.MAX_VALUE;
+                boolean localFitTau;
+                double localTauFraction;
+                if (overT2Limit(molDataRes, t2Limit)) {
+                    localTauFraction = tauFraction;
+                    localFitTau = fitTau;
+                } else {
+                    localTauFraction = 0.0;
+                    localFitTau = false;
+                }
                 for (var modelName : modelNames) {
 
-                    boolean localFitTau;
-                    double localTauFraction;
-                    if (overT2Limit(molDataRes, t2Limit)) {
-                        localTauFraction = tauFraction;
-                        localFitTau = fitTau;
-                    } else {
-                        localTauFraction = 0.0;
-                        localFitTau = false;
-                    }
-                    MFModelIso model = MFModelIso.buildModel(modelName, localFitTau, tau,
-                            fitExchange);
+                    MFModelIso model = MFModelIso.buildModel(modelName,
+                            localFitTau, tau, fitExchange);
 
                     resData.setTestModel(model);
                     Score score = tryModel(molDataRes, model, localTauFraction, localFitTau);
@@ -253,12 +256,14 @@ public class FitModel {
                     Atom atom = resData.atom;
                     double[] pars = bestScore.getPars();
                     var parNames = bestModel.getParNames();
+                    var repData = replicates(molDataRes, bestModel, localTauFraction, localFitTau, pars, random);
                     OrderPar orderPar = new OrderPar(atom, bestScore.rss, bestScore.nValues, "model" + bestModel.getNumber());
                     for (int iPar = 0; iPar < parNames.size(); iPar++) {
                         String parName = parNames.get(iPar);
                         double parValue = pars[iPar];
-                        Double parError = null;
-                        System.out.println(iPar + " " + parName + " " + parValue);
+                        DescriptiveStatistics sumStat = new DescriptiveStatistics(repData[iPar]);
+                        Double parError = sumStat.getStandardDeviation();
+                        System.out.println(iPar + " " + parName + " " + parValue + " " + parError);
                         orderPar = orderPar.set(parName, parValue, parError);
                     }
                     if (bestModel.hasTau()) {
@@ -274,6 +279,21 @@ public class FitModel {
                 }
             }
         }
+    }
+
+    double[][] replicates(Map<String, MolDataValues> molDataRes,
+            MFModelIso bestModel, double localTauFraction,
+            boolean localFitTau, double[] pars, Random random) {
+        int nRep = 100;
+        double[][] repData = new double[pars.length][nRep];
+        for (int iRep = 0; iRep < nRep; iRep++) {
+            Score score2 = fitReplicate(molDataRes, bestModel, localTauFraction, localFitTau, pars, random);
+            double[] repPars = score2.getPars();
+            for (int iPar = 0; iPar < pars.length; iPar++) {
+                repData[iPar][iRep] = repPars[iPar];
+            }
+        }
+        return repData;
     }
 
     public void testModel(Map<String, MolDataValues> molData, MFModelIso model) {
@@ -325,6 +345,22 @@ public class FitModel {
         double[] lower = model.getLower(tau, localFitTau);
         double[] upper = model.getUpper(tau, localFitTau);
         PointValuePair fitResult = relaxFit.fitResidueToModel(start, lower, upper);
+        var score = relaxFit.score(fitResult.getPoint(), true);
+        return score;
+    }
+
+    Score fitReplicate(Map<String, MolDataValues> molDataRes, MFModelIso model,
+            double localTauFraction, boolean localFitTau, double[] pars, Random random) {
+        RelaxFit relaxFit = new RelaxFit();
+        relaxFit.setRelaxData(molDataRes);
+        relaxFit.setLambda(lambda);
+        Map<String, MolDataValues> molDataMap = relaxFit.genBootstrap(random, model, pars);
+        relaxFit.setRelaxData(molDataMap);
+
+        model.setTauFraction(localTauFraction);
+        double[] lower = model.getLower(tau, localFitTau);
+        double[] upper = model.getUpper(tau, localFitTau);
+        PointValuePair fitResult = relaxFit.fitResidueToModel(pars, lower, upper);
         var score = relaxFit.score(fitResult.getPoint(), true);
         return score;
     }

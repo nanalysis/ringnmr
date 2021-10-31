@@ -5,6 +5,7 @@
  */
 package org.comdnmr.modelfree;
 
+import java.util.Random;
 import static org.comdnmr.modelfree.RelaxEquations.I;
 import static org.comdnmr.modelfree.RelaxEquations.ImS;
 import static org.comdnmr.modelfree.RelaxEquations.IpS;
@@ -36,6 +37,16 @@ public class RelaxDataValue {
         this.NOE = noe;
         this.NOEerr = noeError;
         this.relaxObj = relaxObj;
+    }
+
+    public void randomize(MolDataValues molData, double r1, double r2,
+            double noe, Random random, double scale) {
+        double newR1 = r1 + random.nextGaussian() * scale * R1err;
+        double newR2 = r2 + random.nextGaussian() * scale * R2err;
+        double newNOE = noe + random.nextGaussian() * scale * NOEerr;
+        RelaxDataValue newValue = new RelaxDataValue(molData, newR1, R1err,
+                newR2, R2err, newNOE, NOEerr, relaxObj);
+        molData.addData(newValue);
     }
 
     @Override

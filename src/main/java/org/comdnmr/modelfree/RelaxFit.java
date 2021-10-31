@@ -1,7 +1,9 @@
 package org.comdnmr.modelfree;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import org.apache.commons.math3.geometry.euclidean.threed.NotARotationMatrixException;
 import org.apache.commons.math3.geometry.euclidean.threed.Rotation;
 import org.apache.commons.math3.geometry.euclidean.threed.RotationConvention;
@@ -453,6 +455,39 @@ public class RelaxFit {
             score = new Score(sumSq, n, pars.length, parsOK, sumComplexity);
         }
         return score;
+    }
+
+    public Map<String, MolDataValues> genBootstrap(Random random, MFModel model, double[] pars) {
+        var newMolDataValues = new HashMap<String, MolDataValues>();
+
+        for (var entry : molDataValues.entrySet()) {
+            MolDataValues molData = entry.getValue();
+            MolDataValues newMolData = new MolDataValues(molData.atom, molData.vector);
+            newMolData.setTestModel(model);
+            newMolDataValues.put(entry.getKey(), newMolData);
+            MFModel testModel = newMolData.getTestModel();
+            double[] resPars;
+            if (useGlobalTau) {
+                int nResPars = testModel.getNPars();
+                resPars = new double[nResPars + 1];
+                resPars[0] = globalTau;
+                System.arraycopy(pars, 0, resPars, 1, nResPars);
+            } else {
+                resPars = pars;
+            }
+
+            for (RelaxDataValue dValue : molData.getData()) {
+                RelaxEquations relaxObj = dValue.relaxObj;
+                double[] J = testModel.calc(relaxObj.wValues, resPars);
+                double r1 = relaxObj.R1(J);
+                double rEx = testModel.includesEx() ? resPars[resPars.length - 1] : 0.0;
+
+                double r2 = relaxObj.R2(J, rEx);
+                double noe = relaxObj.NOE(J);
+                dValue.randomize(newMolData, r1, r2, noe, random, 1.0);
+            }
+        }
+        return newMolDataValues;
     }
 
     public double value(double[] pars, double[][] values) {
