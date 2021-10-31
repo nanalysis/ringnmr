@@ -256,6 +256,8 @@ public class PyController implements Initializable {
     @FXML
     Slider t2LimitSlider;
     @FXML
+    Slider nReplicatesSlider;
+    @FXML
     HBox modelBox;
     List<CheckBox> modelCheckBoxes = new ArrayList<>();
 
@@ -524,6 +526,15 @@ public class PyController implements Initializable {
         t2LimitSlider.setMinorTickCount(4);
         t2LimitSlider.setShowTickMarks(true);
         t2LimitSlider.setShowTickLabels(true);
+
+        nReplicatesSlider.setMin(0.0);
+        nReplicatesSlider.setMax(500.0);
+        nReplicatesSlider.setValue(0.0);
+        nReplicatesSlider.setBlockIncrement(10);
+        nReplicatesSlider.setMajorTickUnit(50);
+        nReplicatesSlider.setMinorTickCount(4);
+        nReplicatesSlider.setShowTickMarks(true);
+        nReplicatesSlider.setShowTickLabels(true);
 
         String[] modelNames = {"1", "1f", "1s", "2f", "2s", "2sf"};
         for (var modelName : modelNames) {
@@ -1187,6 +1198,7 @@ public class PyController implements Initializable {
         boolean fitTau = tauFraction > 0.001;
         fitModel.setFitTau(fitTau);
         fitModel.setT2Limit(t2Limit);
+        fitModel.setNReplicates((int) nReplicatesSlider.getValue());
         var modelNames = new ArrayList<String>();
         for (var modelCheckBox : modelCheckBoxes) {
             if (modelCheckBox.isSelected()) {

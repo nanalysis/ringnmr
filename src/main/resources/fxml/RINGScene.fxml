@@ -317,6 +317,12 @@
                                             </HBox>
                                             <HBox>
                                                 <children>
+                                                    <Label text="Bootstrap N" prefWidth="80"/>
+                                                    <Slider fx:id="nReplicatesSlider" prefWidth="150"/>
+                                                </children>
+                                            </HBox>
+                                            <HBox>
+                                                <children>
                                                     <Button text="Model-Iso" onAction="#calcModel1"/>
                                                 </children>
                                             </HBox>
