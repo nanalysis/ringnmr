@@ -41,6 +41,7 @@ public class FitModel {
     double tauFraction = 0.25;
     double lambda = 0.0;
     double t2Limit = 0.0;
+    int nReplicates = 0;
 
     Map<String, MolDataValues> getData(boolean requireCoords) {
         Map<String, MolDataValues> molDataValues = new HashMap<>();
@@ -256,13 +257,19 @@ public class FitModel {
                     Atom atom = resData.atom;
                     double[] pars = bestScore.getPars();
                     var parNames = bestModel.getParNames();
-                    var repData = replicates(molDataRes, bestModel, localTauFraction, localFitTau, pars, random);
-                    OrderPar orderPar = new OrderPar(atom, bestScore.rss, bestScore.nValues, "model" + bestModel.getNumber());
+                    double[][] repData = null;
+                    if (nReplicates > 2) {
+                        repData = replicates(molDataRes, bestModel, localTauFraction, localFitTau, pars, random);
+                    }
+                    OrderPar orderPar = new OrderPar(atom, bestScore.rss, bestScore.nValues,  bestScore.nPars, "model" + bestModel.getNumber());
                     for (int iPar = 0; iPar < parNames.size(); iPar++) {
                         String parName = parNames.get(iPar);
                         double parValue = pars[iPar];
-                        DescriptiveStatistics sumStat = new DescriptiveStatistics(repData[iPar]);
-                        Double parError = sumStat.getStandardDeviation();
+                        Double parError = null;
+                        if (repData != null) {
+                            DescriptiveStatistics sumStat = new DescriptiveStatistics(repData[iPar]);
+                            parError = sumStat.getStandardDeviation();
+                        }
                         System.out.println(iPar + " " + parName + " " + parValue + " " + parError);
                         orderPar = orderPar.set(parName, parValue, parError);
                     }
@@ -284,9 +291,8 @@ public class FitModel {
     double[][] replicates(Map<String, MolDataValues> molDataRes,
             MFModelIso bestModel, double localTauFraction,
             boolean localFitTau, double[] pars, Random random) {
-        int nRep = 100;
-        double[][] repData = new double[pars.length][nRep];
-        for (int iRep = 0; iRep < nRep; iRep++) {
+        double[][] repData = new double[pars.length][nReplicates];
+        for (int iRep = 0; iRep < nReplicates; iRep++) {
             Score score2 = fitReplicate(molDataRes, bestModel, localTauFraction, localFitTau, pars, random);
             double[] repPars = score2.getPars();
             for (int iPar = 0; iPar < pars.length; iPar++) {
@@ -312,7 +318,7 @@ public class FitModel {
                 Atom atom = resData.atom;
                 double[] pars = score.getPars();
                 var parNames = model.getParNames();
-                OrderPar orderPar = new OrderPar(atom, score.rss, score.getN(), "model1");
+                OrderPar orderPar = new OrderPar(atom, score.rss, score.getN(), score.nPars, "model1");
                 for (int iPar = 0; iPar < parNames.size(); iPar++) {
                     String parName = parNames.get(iPar);
                     double parValue = pars[iPar];
@@ -379,6 +385,10 @@ public class FitModel {
 
     public void setLambda(double value) {
         this.lambda = value;
+    }
+
+    public void setNReplicates(int value) {
+        this.nReplicates = value;
     }
 
     public void setT2Limit(double value) {
