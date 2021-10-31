@@ -925,7 +925,10 @@ public class PyController implements Initializable {
             } catch (IOException ioE) {
                 ExceptionDialog dialog = new ExceptionDialog(ioE);
                 dialog.showAndWait();
+                return;
             }
+            addMoleculeDataToAxisMenu();
+            showT1T2NoeData();
         }
     }
 
@@ -1203,6 +1206,8 @@ public class PyController implements Initializable {
         if (tauFit != null) {
             tauCalcField.setText(String.format("%.2f", tauFit));
         }
+        addMoleculeDataToAxisMenu();
+        showModelFreeData();
     }
 
     public void estimateCorrelationTime() {
@@ -1645,7 +1650,7 @@ public class PyController implements Initializable {
 
     }
 
-    public void showT1T2NoeData(Event e) {
+    public void showT1T2NoeData() {
         String[] chartNames = {"R1", "R2", "NOE"};
         var chartMap = setupCharts(chartNames);
 
@@ -1667,7 +1672,7 @@ public class PyController implements Initializable {
         resizeBarPlotCanvas();
     }
 
-    public void showModelFreeData(Event e) {
+    public void showModelFreeData() {
         String[] chartNames = {"S2", "Sf2", "Ss2", "Tau_e", "Tau_f", "Tau_s", "Rex", "model", "rms"};
         var chartMap = setupCharts(chartNames);
         var usedSet = new TreeSet<String>();
