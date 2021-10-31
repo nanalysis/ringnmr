@@ -501,9 +501,9 @@ public class PyController implements Initializable {
             makeAxisMenu();
         });
         barScaleSlider.setMin(1.0);
-        barScaleSlider.setMax(50.0);
-        barScaleSlider.setValue(10.0);
-        barScaleSlider.setBlockIncrement(1.0);
+        barScaleSlider.setMax(3.0);
+        barScaleSlider.setValue(1.0);
+        barScaleSlider.setBlockIncrement(0.25);
         barScaleSlider.setShowTickMarks(true);
         barScaleSlider.valueProperty().addListener(e -> resizeBarPlotCanvas());
 
@@ -563,10 +563,7 @@ public class PyController implements Initializable {
     void resizeBarPlotCanvas() {
         double width = chartBox.getWidth();
         double height = chartBox.getHeight();
-        if (barChartXMax.isPresent()) {
-            double nRes = barChartXMax.get() - barChartXMin.get();
-            width = nRes * barScaleSlider.getValue() + 75.0;
-        }
+        width *= barScaleSlider.getValue();
         barPlotCanvas.setWidth(width);
         barPlotCanvas.setHeight(height);
         GraphicsContext gC = barPlotCanvas.getGraphicsContext2D();
