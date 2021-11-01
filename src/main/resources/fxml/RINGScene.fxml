@@ -86,6 +86,8 @@
                                 <items>
                                     <MenuItem text="T1/T2/NOE" onAction="#showT1T2NoeData"/>
                                     <MenuItem text="ModelFree Pars" onAction="#showModelFreeData"/>
+                                    <MenuItem text="ModelFree Pars - S2" onAction="#showModelFreeDataS2"/>
+                                    <MenuItem text="ModelFree Pars - Tau" onAction="#showModelFreeDataTau"/>
                                 </items>
                             </Menu>
                         </items>
@@ -307,18 +309,21 @@
                                                 <children>
                                                     <Label text="T2 Limit  " prefWidth="80"/>
                                                     <Slider fx:id="t2LimitSlider" prefWidth="150"/>
+                                                    <Label fx:id="t2LimitLabel" prefWidth="80"/>
                                                 </children>
                                             </HBox>
                                             <HBox>
                                                 <children>
                                                     <Label text="Tau Fraction" prefWidth="80"/>
                                                     <Slider fx:id="tauFractionSlider" prefWidth="150"/>
+                                                    <Label fx:id="tauFractionLabel" prefWidth="80"/>
                                                 </children>
                                             </HBox>
                                             <HBox>
                                                 <children>
                                                     <Label text="Bootstrap N" prefWidth="80"/>
                                                     <Slider fx:id="nReplicatesSlider" prefWidth="150"/>
+                                                    <Label fx:id="bootstrapNLabel" prefWidth="80"/>
                                                 </children>
                                             </HBox>
                                             <HBox>

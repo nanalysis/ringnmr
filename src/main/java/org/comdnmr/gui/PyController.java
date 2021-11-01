@@ -254,9 +254,15 @@ public class PyController implements Initializable {
     @FXML
     Slider tauFractionSlider;
     @FXML
+    Label tauFractionLabel;
+    @FXML
     Slider t2LimitSlider;
     @FXML
+    Label t2LimitLabel;
+    @FXML
     Slider nReplicatesSlider;
+    @FXML
+    Label bootstrapNLabel;
     @FXML
     HBox modelBox;
     List<CheckBox> modelCheckBoxes = new ArrayList<>();
@@ -512,29 +518,38 @@ public class PyController implements Initializable {
         tauFractionSlider.setMin(0.0);
         tauFractionSlider.setMax(0.5);
         tauFractionSlider.setValue(0.1);
+        tauFractionLabel.setText("0.1");
         tauFractionSlider.setBlockIncrement(0.1);
         tauFractionSlider.setMinorTickCount(4);
         tauFractionSlider.setMajorTickUnit(0.1);
         tauFractionSlider.setShowTickMarks(true);
         tauFractionSlider.setShowTickLabels(true);
+        tauFractionSlider.valueProperty().addListener(v
+                -> tauFractionLabel.setText(String.format("%.2f", tauFractionSlider.getValue())));
 
         t2LimitSlider.setMin(0.0);
         t2LimitSlider.setMax(100.0);
         t2LimitSlider.setValue(0.0);
+        t2LimitLabel.setText("0.0");
         t2LimitSlider.setBlockIncrement(1.0);
         t2LimitSlider.setMajorTickUnit(25.0);
         t2LimitSlider.setMinorTickCount(4);
         t2LimitSlider.setShowTickMarks(true);
         t2LimitSlider.setShowTickLabels(true);
+        t2LimitSlider.valueProperty().addListener(v
+                -> t2LimitLabel.setText(String.format("%.1f", t2LimitSlider.getValue())));
 
         nReplicatesSlider.setMin(0.0);
-        nReplicatesSlider.setMax(500.0);
+        nReplicatesSlider.setMax(200.0);
         nReplicatesSlider.setValue(0.0);
+        bootstrapNLabel.setText("0");
         nReplicatesSlider.setBlockIncrement(10);
         nReplicatesSlider.setMajorTickUnit(50);
         nReplicatesSlider.setMinorTickCount(4);
         nReplicatesSlider.setShowTickMarks(true);
         nReplicatesSlider.setShowTickLabels(true);
+        nReplicatesSlider.valueProperty().addListener(v
+                -> bootstrapNLabel.setText(String.format("%d", (int) nReplicatesSlider.getValue())));
 
         String[] modelNames = {"1", "1f", "1s", "2f", "2s", "2sf"};
         for (var modelName : modelNames) {
@@ -1682,7 +1697,21 @@ public class PyController implements Initializable {
     }
 
     public void showModelFreeData() {
-        String[] chartNames = {"S2", "Sf2", "Ss2", "Tau_e", "Tau_f", "Tau_s", "Rex", "model", "rms"};
+        String[] chartNames = {"S2", "Sf2", "Ss2", "Tau_e", "Tau_f", "Tau_s", "Rex", "model", "rchisq"};
+        showModelFreeData(chartNames);
+    }
+
+    public void showModelFreeDataS2() {
+        String[] chartNames = {"S2", "Sf2", "Ss2"};
+        showModelFreeData(chartNames);
+    }
+
+    public void showModelFreeDataTau() {
+        String[] chartNames = {"Tau_e", "Tau_f", "Tau_s"};
+        showModelFreeData(chartNames);
+    }
+
+    public void showModelFreeData(String[] chartNames) {
         var chartMap = setupCharts(chartNames);
         var usedSet = new TreeSet<String>();
         var molResProps = DataIO.getDataFromMolecule();
