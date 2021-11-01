@@ -25,7 +25,7 @@
         <dependency>
             <groupId>org.nmrfx</groupId>
             <artifactId>nmrfx-core</artifactId>
-            <version>11.1.41</version>
+            <version>11.1.42</version>
             <scope>compile</scope>
         </dependency>
               <dependency>
