@@ -63,18 +63,19 @@ public class MFModelAniso5 extends MFModelAniso2 {
     }
 
     @Override
-    public double[] getStart(double tau, boolean includeTau) {
-        return getParValues(includeTau, tau, 0.9, tau / 40.0, 0.9);
+    public double[] getStart(double targetTau) {
+        this.targetTau = targetTau;
+        return getParValues(targetTau, 0.9, targetTau / 40.0, 0.9);
     }
 
     @Override
-    public double[] getLower(double tau, boolean includeTau) {
-        return getParValues(includeTau, tau / 10., 0.0, tau / 1000.0, 0.0);
+    public double[] getLower() {
+        return getParValues(targetTau / 10., 0.0, targetTau / 1000.0, 0.0);
     }
 
     @Override
-    public double[] getUpper(double tau, boolean includeTau) {
-        return getParValues(includeTau, tau * 10., 1.0, tau / 10.0, 1.0);
+    public double[] getUpper() {
+        return getParValues(targetTau * 10., 1.0, targetTau / 10.0, 1.0);
     }
 
     @Override

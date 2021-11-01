@@ -84,4 +84,6 @@ public abstract class MFModelAniso extends MFModel {
         return J;
     }
 
+    public abstract double[] getStart(double targetTau);
+
 }

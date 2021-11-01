@@ -29,17 +29,20 @@ import java.util.List;
  * @author brucejohnson
  */
 public abstract class MFModel {
+
     public final static double SLOW_LIMIT = 0.15;
     int nPars;
+    boolean fitTau;
     boolean includeEx;
+    double targetTau;
 
     public abstract double[] calc(double[] omegas, double[] pars);
 
     public abstract double[] calc(double[] omega);
 
-    public double[] getParValues(boolean includeTau, double... parValues) {
-        int n = includeTau ? nPars + 1 : nPars;
-        int start = includeTau ? 0 : 1;
+    public double[] getParValues(double... parValues) {
+        int n = fitTau ? nPars + 1 : nPars;
+        int start = fitTau ? 0 : 1;
         double[] values = new double[n];
         System.arraycopy(parValues, start, values, 0, n);
         return values;
@@ -47,11 +50,9 @@ public abstract class MFModel {
 
     public abstract List<String> getParNames();
 
-    public abstract double[] getStart(double tau, boolean includeTau);
+    public abstract double[] getLower();
 
-    public abstract double[] getLower(double tau, boolean includeTau);
-
-    public abstract double[] getUpper(double tau, boolean includeTau);
+    public abstract double[] getUpper();
 
     public boolean checkParConstraints() {
         return true;

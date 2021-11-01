@@ -34,20 +34,29 @@ public abstract class MFModelIso extends MFModel {
     double tauM;
     double rEX;
     double tauFrac = 0.25;
-    final boolean hasTau;
 
-    public MFModelIso(boolean hasTau) {
-        this(hasTau, false);
+    public MFModelIso(boolean fitTau, double targetTau, double tauFraction,
+            boolean includeEx) {
+        this.fitTau = fitTau;
+        this.targetTau = targetTau;
+        this.tauFrac = tauFrac;
+        this.includeEx = includeEx;
+        if (!fitTau) {
+            tauM = targetTau;
+        }
     }
 
-    public MFModelIso(boolean hasTau, boolean includeEx) {
-        this.hasTau = hasTau;
-        this.includeEx = includeEx;
+    public MFModelIso(double targetTau) {
+        this(false, targetTau, 0.0, false);
+    }
+
+    public MFModelIso() {
+        this(false, 0.1, 0.0, false);
     }
 
     public List<String> getAllParNames(String... pars) {
         var parNames = new ArrayList<String>();
-        if (!hasTau) {
+        if (fitTau) {
             parNames.add("Tau_e");
         }
         for (var par : pars) {
@@ -59,8 +68,8 @@ public abstract class MFModelIso extends MFModel {
         return parNames;
     }
 
-    public boolean hasTau() {
-        return hasTau;
+    public boolean fitTau() {
+        return fitTau;
     }
 
     public double getTau() {
@@ -71,41 +80,38 @@ public abstract class MFModelIso extends MFModel {
         tauFrac = value;
     }
 
-    public double tauLower(double tau) {
-        return tau - tau * tauFrac;
+    public double tauLower() {
+        return targetTau - targetTau * tauFrac;
     }
 
-    public double tauUpper(double tau) {
-        return tau + tau * tauFrac;
+    public double tauUpper() {
+        return targetTau + targetTau * tauFrac;
     }
 
-    public static MFModelIso buildModel(String modelName, boolean fitTau, double tau,
+    public abstract double[] getStart();
+
+    public static MFModelIso buildModel(String modelName, boolean fitTau,
+            double tau, double tauFrac,
             boolean fitExchange) {
         MFModelIso model;
         switch (modelName) {
             case "1":
-                model = fitTau ? new MFModelIso1(fitExchange)
-                        : new MFModelIso1(tau, fitExchange);
+                model = new MFModelIso1(fitTau, tau, tauFrac, fitExchange);
                 break;
             case "1f":
-                model = fitTau ? new MFModelIso1f(fitExchange)
-                        : new MFModelIso1f(tau, fitExchange);
+                model = new MFModelIso1f(fitTau, tau, tauFrac, fitExchange);
                 break;
             case "1s":
-                model = fitTau ? new MFModelIso1s(fitExchange)
-                        : new MFModelIso1s(tau, fitExchange);
+                model = new MFModelIso1s(fitTau, tau, tauFrac, fitExchange);
                 break;
             case "2s":
-                model = fitTau ? new MFModelIso2s(fitExchange)
-                        : new MFModelIso2s(tau, fitExchange);
+                model = new MFModelIso2s(fitTau, tau, tauFrac, fitExchange);
                 break;
             case "2f":
-                model = fitTau ? new MFModelIso2f(fitExchange)
-                        : new MFModelIso2f(tau, fitExchange);
+                model = new MFModelIso2f(fitTau, tau, tauFrac, fitExchange);
                 break;
             case "2sf":
-                model = fitTau ? new MFModelIso2sf(fitExchange)
-                        : new MFModelIso2sf(tau, fitExchange);
+                model = new MFModelIso2sf(fitTau, tau, tauFrac, fitExchange);
                 break;
             default:
                 model = null;

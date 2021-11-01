@@ -243,7 +243,7 @@ public class FitModel {
                 for (var modelName : modelNames) {
 
                     MFModelIso model = MFModelIso.buildModel(modelName,
-                            localFitTau, tau, fitExchange);
+                            localFitTau, tau, localTauFraction, fitExchange);
 
                     resData.setTestModel(model);
                     Score score = tryModel(molDataRes, model, localTauFraction, localFitTau);
@@ -261,7 +261,7 @@ public class FitModel {
                     if (nReplicates > 2) {
                         repData = replicates(molDataRes, bestModel, localTauFraction, localFitTau, pars, random);
                     }
-                    OrderPar orderPar = new OrderPar(atom, bestScore.rss, bestScore.nValues,  bestScore.nPars, "model" + bestModel.getNumber());
+                    OrderPar orderPar = new OrderPar(atom, bestScore.rss, bestScore.nValues, bestScore.nPars, "model" + bestModel.getNumber());
                     for (int iPar = 0; iPar < parNames.size(); iPar++) {
                         String parName = parNames.get(iPar);
                         double parValue = pars[iPar];
@@ -273,7 +273,7 @@ public class FitModel {
                         System.out.println(iPar + " " + parName + " " + parValue + " " + parError);
                         orderPar = orderPar.set(parName, parValue, parError);
                     }
-                    if (bestModel.hasTau()) {
+                    if (!bestModel.fitTau()) {
                         orderPar = orderPar.set("Tau_e", bestModel.getTau(), 0.0);
                     }
 
@@ -347,9 +347,9 @@ public class FitModel {
         relaxFit.setRelaxData(molDataRes);
         relaxFit.setLambda(lambda);
         model.setTauFraction(localTauFraction);
-        double[] start = model.getStart(tau, localFitTau);
-        double[] lower = model.getLower(tau, localFitTau);
-        double[] upper = model.getUpper(tau, localFitTau);
+        double[] start = model.getStart();
+        double[] lower = model.getLower();
+        double[] upper = model.getUpper();
         PointValuePair fitResult = relaxFit.fitResidueToModel(start, lower, upper);
         var score = relaxFit.score(fitResult.getPoint(), true);
         return score;
@@ -364,8 +364,8 @@ public class FitModel {
         relaxFit.setRelaxData(molDataMap);
 
         model.setTauFraction(localTauFraction);
-        double[] lower = model.getLower(tau, localFitTau);
-        double[] upper = model.getUpper(tau, localFitTau);
+        double[] lower = model.getLower();
+        double[] upper = model.getUpper();
         PointValuePair fitResult = relaxFit.fitResidueToModel(pars, lower, upper);
         var score = relaxFit.score(fitResult.getPoint(), true);
         return score;

@@ -99,6 +99,14 @@ public class RelaxDataValue {
         return score;
     }
 
+    public double score2(double r1P, double r2P, double noeP, double[] counts) {
+        double r1D = (r1P - R1) / R1err;
+        double r2D = (r2P - R2) / R2err;
+        double noeD = (noeP - NOE) / NOEerr;
+        double score = counts[0] * r1D * r1D + counts[1] * r2D * r2D + counts[2] * noeD * noeD;
+        return score;
+    }
+
     public double scoreAbs(double r1P, double r2P, double noeP) {
         double r1D = (r1P - R1) / R1err;
         double r2D = (r2P - R2) / R2err;

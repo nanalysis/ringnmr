@@ -14,9 +14,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
-import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.optim.PointValuePair;
-import org.comdnmr.data.DynamicsSource;
 import org.comdnmr.modelfree.MolDataValues;
 import org.comdnmr.modelfree.RelaxDataValue;
 import org.comdnmr.modelfree.RelaxEquations;
@@ -139,22 +137,26 @@ public class DRefineTest {
     }
 
     public void testIsoModel(RelaxFit relaxFit, int modelNum, String matchSpec) {
+        double tau = 5.0e-9;
         MFModelIso model;
+//            public MFModelIso1(boolean fitTau, double targetTau, double tauFraction,
+//            boolean includeEx) {
+
         switch (modelNum) {
             case 1:
-                model = new MFModelIso1();
+                model = new MFModelIso1(!relaxFit.isUseGlobalTau(), tau, 0.1, false);
                 break;
             case 2:
-                model = new MFModelIso1f();
+                model = new MFModelIso1f(!relaxFit.isUseGlobalTau(), tau, 0.1, false);
                 break;
             case 5:
-                model = new MFModelIso2s();
+                model = new MFModelIso2s(!relaxFit.isUseGlobalTau(), tau, 0.1, false);
                 break;
             case 6:
-                model = new MFModelIso2sf();
+                model = new MFModelIso2sf(!relaxFit.isUseGlobalTau(), tau, 0.1, false);
                 break;
             default:
-                model = new MFModelIso1();
+                model = new MFModelIso1(!relaxFit.isUseGlobalTau(), tau, 0.1, false);
         }
         DRefineTest.this.testIsoModel(relaxFit, model, matchSpec);
     }
@@ -162,7 +164,6 @@ public class DRefineTest {
     public void testIsoModel(RelaxFit relaxFit, MFModelIso model, String matchSpec) {
         Map<String, MolDataValues> molData = loadTestData();
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
-        double tau = 5.0e-9;
         for (String key : molData.keySet()) {
             if ((matchSpec != null) && !key.equals(matchSpec)) {
                 continue;
@@ -173,9 +174,9 @@ public class DRefineTest {
                 resData.setTestModel(model);
                 molDataRes.put(key, molData.get(key));
                 relaxFit.setRelaxData(molDataRes);
-                double[] start = model.getStart(tau, !relaxFit.isUseGlobalTau());
-                double[] lower = model.getLower(tau, !relaxFit.isUseGlobalTau());
-                double[] upper = model.getUpper(tau, !relaxFit.isUseGlobalTau());
+                double[] start = model.getStart();
+                double[] lower = model.getLower();
+                double[] upper = model.getUpper();
                 PointValuePair fitResult = relaxFit.fitResidueToModel(start, lower, upper);
                 double[] values = fitResult.getPoint();
                 double score = fitResult.getValue();
@@ -263,10 +264,10 @@ public class DRefineTest {
         int start = 1;
         for (String key : molDataRes.keySet()) {
             MolDataValues resData = molData.get(key);
-            MFModel model = resData.getTestModel();
-            double[] resStart = model.getStart(tau, !relaxFit.isUseGlobalTau());
-            double[] resLower = model.getLower(tau, !relaxFit.isUseGlobalTau());
-            double[] resUpper = model.getUpper(tau, !relaxFit.isUseGlobalTau());
+            MFModelIso model = (MFModelIso) resData.getTestModel();
+            double[] resStart = model.getStart();
+            double[] resLower = model.getLower();
+            double[] resUpper = model.getUpper();
 
             System.arraycopy(resStart, 0, guesses, start, resStart.length);
             System.arraycopy(resLower, 0, lower, start, resStart.length);
