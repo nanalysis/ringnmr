@@ -1595,7 +1595,7 @@ public class PyController implements Initializable {
         } else {
             // chart.setLegendVisible(false); //fixme
         }
-        setCurrentExperimentSet(ChartUtil.getResidueProperty(setName));
+        chart.setResProps(ChartUtil.getResidueProperty(setName));
         chart.setResProps(getCurrentExperimentSet());
 //        if (calcScale) {
 //            calcChartScale();
