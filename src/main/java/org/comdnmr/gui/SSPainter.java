@@ -83,9 +83,11 @@ public class SSPainter {
             double labelCenterY = center - height;
             System.out.println(center + " " + start + " " + end + " " + ss.mode);
             if (ss.isCoil()) {
+                gC.setLineWidth(4.0);
                 gC.setFill(color);
                 gC.setStroke(color);
                 gC.strokeLine(start, center, end, center);
+                gC.setLineWidth(1.0);
             } else if (ss.isDisulfide()) {
                 gC.setFill(color);
                 gC.setStroke(color);
