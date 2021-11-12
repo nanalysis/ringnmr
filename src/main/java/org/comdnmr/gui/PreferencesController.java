@@ -112,7 +112,7 @@ public class PreferencesController implements Initializable {
         optimizers.add("BOBYQA");
         maxFreqItem = new DoubleRangeOperationItem((obs, oldV, newV) -> {
             CoMDPreferences.setCPMGMaxFreq((Double) newV);
-        }, CoMDPreferences.getCPMGMaxFreq(), 100.0, 5000.0, "Limits", "CPMG Max Freq", "Max Frequency");
+        }, CoMDPreferences.getCPMGMaxFreq(), 100.0, 5000.0, 100.0, 20000.0, "Limits", "CPMG Max Freq", "Max Frequency");
         DoubleRangeOperationItem rexRatioItem = new DoubleRangeOperationItem((obs, oldV, newV) -> {
             CoMDPreferences.setRexRatio((Double) newV);
         }, CoMDPreferences.getRexRatio(), 0.0, 10.0, "Limits", "CPMG Rex Ratio", "Rex must be this many times rmsd");
