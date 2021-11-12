@@ -56,7 +56,6 @@ public class MFModelIso2sf extends MFModelIso2f {
         double[] J = new double[omegas.length];
         int j = 0;
         double s2 = ss2 * sf2;
-        complexity = 0.0;
         for (double omega : omegas) {
             double omega2 = omega * omega;
             double vM = s2 * tauMx / (1.0 + omega2 * tauMx * tauMx);
@@ -68,16 +67,18 @@ public class MFModelIso2sf extends MFModelIso2f {
                     / (tauFx * tauFx * tauMx * tauMx * tauSx * tauSx * omega2
                     + (tauFx * (tauMx + tauSx) + tauMx * tauSx) * (tauFx * (tauMx + tauSx) + tauMx * tauSx));
             // complexity += Math.abs(vMS / vM) + Math.abs(vMF / vM) + Math.abs(vMFS / vM);
-            complexity
-                    += Math.abs(1.0 - sf2)
-                    + Math.abs(1.0 - ss2)
-                    + ((tauSx * 1.0e9) - SLOW_LIMIT)
-                    + tauFx * 1.0e9;
             if (fitTau) {
                 //   complexity += Math.abs(7.75 + Math.log10(tauM))
             }
             J[j++] = 0.4 * (vM + vMS + vMF + vMFS);
         }
+        complexity
+                = Math.abs(1.0 - sf2)
+                + Math.abs(1.0 - ss2)
+                + (Math.log10(tauSx * 1.0e9) + 3.0)
+                + (Math.log10(tauFx*1.0e9) + 3.0);
+//                + ((tauSx * 1.0e9) - SLOW_LIMIT)
+//                + tauFx * 1.0e9;
         return J;
     }
 
