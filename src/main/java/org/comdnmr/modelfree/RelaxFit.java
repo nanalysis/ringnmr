@@ -398,6 +398,14 @@ public class RelaxFit {
             score += complexity * lambda;
             return score;
         }
+        
+        public double complexity() {
+            return complexity;
+        }
+        
+        public boolean parsOK() {
+            return parsOK;
+        }
 
         public double aic() {
             int k = nPars;
@@ -666,7 +674,7 @@ public class RelaxFit {
     public PointValuePair fitResidueToModel(double[] start, double[] lower, double[] upper) {
         Fitter fitter = Fitter.getArrayFitter(this::value);
         try {
-            PointValuePair result = fitter.fit(start, lower, upper, 10.0);
+                PointValuePair result = fitter.fit(start, lower, upper, 10.0);
             return result;
         } catch (Exception ex) {
             ex.printStackTrace();
