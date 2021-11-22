@@ -582,12 +582,20 @@ public class InputDataInterface {
             int peakDim = 1;
             String peakListName = peakList.getName();
             List<Number> vcpmgList = null;
+            String nucleus;
+            double B0field;
+            double temperature;
             DatasetBase dataset = DatasetBase.getDataset(peakList.fileName);
-
-            String nucleus = dataset.getNucleus(peakDim).getName();
-            double B0field = dataset.getSf(0);
-            double temperature = dataset.getTempK();
-            System.out.println(temperature);
+            if (dataset == null) {
+                nucleus = peakList.getSpectralDim(0).getNucleus();
+                B0field = peakList.getSpectralDim(0).getSf();
+                temperature = 298.14;
+            } else {
+                nucleus = dataset.getNucleus(peakDim).getName();
+                B0field = dataset.getSf(0);
+                temperature = dataset.getTempK();
+                System.out.println(temperature);
+            }
 
             nucChoice.setValue(nucleus);
             B0fieldChoice.setValue(String.valueOf(B0field));
