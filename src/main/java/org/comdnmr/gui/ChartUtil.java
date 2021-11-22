@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -380,23 +381,34 @@ public class ChartUtil {
     public static ObservableList<DataSeries> getRelaxationDataSeries(List<RelaxationValues> values, String valueName, String setName, String parName) {
         ObservableList<DataSeries> data = FXCollections.observableArrayList();
 
-        DataSeries series = new DataSeries();
-        series.setName(setName + '|' + valueName + "|" + parName);
-        data.add(series);
         minRes = Integer.MAX_VALUE;
         maxRes = Integer.MIN_VALUE;
-
+        var map = new HashMap<Residue, HashMap<String, Integer>>();
+        int maxAtoms = 0;
         for (RelaxationValues value : values) {
             Atom atom = value.getAtom();
             Residue residue = (Residue) atom.getEntity();
+            if (!map.containsKey(residue)) {
+                map.put(residue, new HashMap<>());
+            }
+            var anameSet = map.get(residue);
+            anameSet.put(atom.getName(), anameSet.size());
+            maxAtoms = Math.max(maxAtoms, anameSet.size());
             int resNum = residue.getResNum();
             minRes = Math.min(resNum, minRes);
             maxRes = Math.max(resNum, maxRes);
+        }
+        for (int i = 0; i < maxAtoms; i++) {
+            DataSeries series = new DataSeries();
+            series.setName(setName + '|' + valueName + "|" + parName + "|" + i);
+            data.add(series);
         }
 
         for (RelaxationValues value : values) {
             Atom atom = value.getAtom();
             Residue residue = (Residue) atom.getEntity();
+            int iSeries = map.get(residue).get(atom.getName());
+            var series = data.get(iSeries);
             int resNum = residue.getResNum();
             double x = resNum;
             Double errUp = null;
