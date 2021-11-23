@@ -17,15 +17,21 @@
 */
 package org.comdnmr.eqnfit;
 
+import org.nmrfx.chemistry.relax.ResonanceSource;
+
 /**
  *
  * @author Bruce Johnson
  */
 public interface ParValueInterface {
 
+    public ResonanceSource getDynamicsSource();
+
     public String getResidue();
     
     public String getResName();
+    
+    public String getAtomName();
 
     public String getState();
 

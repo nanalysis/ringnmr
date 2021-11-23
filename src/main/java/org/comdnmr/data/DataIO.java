@@ -73,6 +73,7 @@ import org.nmrfx.chemistry.relax.RelaxationData;
 import org.nmrfx.chemistry.relax.RelaxationData.relaxTypes;
 import org.nmrfx.chemistry.relax.RelaxationRex;
 import org.nmrfx.chemistry.relax.RelaxationValues;
+import org.nmrfx.chemistry.relax.ResonanceSource;
 import org.nmrfx.chemistry.utilities.CSVRE;
 import org.nmrfx.peaks.InvalidPeakException;
 import org.nmrfx.peaks.PeakList;
@@ -153,9 +154,9 @@ public class DataIO {
 
     }
 
-    public static void loadFromPeakList(PeakList peakList, Experiment expData,
-            ExperimentSet resProp, XCONV xConv, YCONV yConv) {
-        String expMode = expData.getExpMode();
+    public static void loadFromPeakList(PeakList peakList, Experiment experiment,
+            ExperimentSet experimentSet, XCONV xConv, YCONV yConv) {
+        String expMode = experiment.getExpMode();
         DatasetBase dataset = DatasetBase.getDataset(peakList.fileName);
         final double[] xValues;
         double[] measureX = peakList.getMeasureValues();
@@ -166,7 +167,7 @@ public class DataIO {
         } else {
             xValues = null;
         }
-        resProp.addExperimentData(expData.getName(), expData);
+        experimentSet.addExperimentData(experiment.getName(), experiment);
         boolean eSet = false;
         if (expMode.equals("noe")) {
             eSet = true;
@@ -240,21 +241,20 @@ public class DataIO {
                     }
                 }
             }
-            DynamicsSource dynSource = DynamicsSource.createFromPeak(peak);
+            ResonanceSource dynSource = DynamicsSource.createFromPeak(peak);
             if (expMode.equals("cest")) {
-                processCESTData((CESTExperiment) expData, residueNum, xValueList, yValueList, errValueList, peakNum);
+                processCESTData((CESTExperiment) experiment, residueNum, xValueList, yValueList, errValueList, peakNum);
             } else {
-                System.out.println(dynSource.toString());
-                ExperimentData residueData = new ExperimentData(expData, dynSource, xValueList, yValueList, errValueList);
-                expData.addResidueData(residueNum, residueData);
+                ExperimentData residueData = new ExperimentData(experiment, dynSource, xValueList, yValueList, errValueList);
+                experiment.addResidueData(dynSource, residueData);
             }
             boolean ok = true;
 
-            ExperimentResult residueInfo = resProp.getExperimentResult(residueNum);
+            ExperimentResult residueInfo = experimentSet.getExperimentResult(dynSource);
 
             if (residueInfo == null) {
-                residueInfo = new ExperimentResult(resProp, dynSource, 0, 0, 0);
-                resProp.addExperimentResult(residueNum, residueInfo);
+                residueInfo = new ExperimentResult(experimentSet, dynSource, 0, 0, 0);
+                experimentSet.addExperimentResult(dynSource, residueInfo);
             }
             if (expMode.equals("noe")) {
                 residueInfo.value = yValueList.get(0);
@@ -262,14 +262,14 @@ public class DataIO {
             }
         });
         if (!eSet) {
-            double errValue = estimateErrors(expData);
-            setErrors(expData, errValue);
+            double errValue = estimateErrors(experiment);
+            setErrors(experiment, errValue);
         }
 
     }
 
     public static void loadPeakFile(String fileName, Experiment experiment,
-            ExperimentSet resProp, XCONV xConv, YCONV yConv,
+            ExperimentSet experimientSet, XCONV xConv, YCONV yConv,
             HashMap<String, Object> errorPars, double[] delayCalc)
             throws IOException, IllegalArgumentException { //(String fileName, ExperimentSet resProp, String nucleus,
 //            double temperature, double B0field, double tau, double[] vcpmgs, String expMode,
@@ -294,7 +294,7 @@ public class DataIO {
         if (experiment instanceof DoubleArrayExperiment) {
             xVals = ((DoubleArrayExperiment) experiment).getXVals();
         }
-        resProp.addExperimentData(experiment.getName(), experiment);
+        experimientSet.addExperimentData(experiment.getName(), experiment);
         boolean eSet = false;
         double errF = 0.05;
         double noise = 1.0;
@@ -591,19 +591,19 @@ public class DataIO {
                         continue;
                     }
                     String resName = "";
-                    DynamicsSource dynSource = DynamicsSource.createFromSpecifiers(expMode + "." + peakNum, residueNum, "H", "N");
+                    ResonanceSource dynSource = DynamicsSource.createFromSpecifiers(expMode + "." + peakNum, residueNum, "H", "N");
                     if (expMode.equals("cest")) {
                         processCESTData((CESTExperiment) experiment, residueNum, xValueList, yValueList, errValueList, peakNum);
                     } else {
                         ExperimentData residueData = new ExperimentData(experiment, dynSource, xValueList, yValueList, errValueList);
-                        experiment.addResidueData(residueNum, residueData);
+                        experiment.addResidueData(dynSource, residueData);
                     }
-                    ExperimentResult residueInfo = resProp.getExperimentResult(residueNum);
+                    ExperimentResult residueInfo = experimientSet.getExperimentResult(dynSource);
                     // DynamicsSource dynSource = expData.getSource();
 
                     if (residueInfo == null) {
-                        residueInfo = new ExperimentResult(resProp, dynSource, 0, 0, 0);
-                        resProp.addExperimentResult(residueNum, residueInfo);
+                        residueInfo = new ExperimentResult(experimientSet, dynSource, 0, 0, 0);
+                        experimientSet.addExperimentResult(dynSource, residueInfo);
                     }
                     if (expMode.equals("noe")) {
                         residueInfo.value = yValueList.get(0);
@@ -640,10 +640,10 @@ public class DataIO {
         xValueLists[0] = xValueList;
         xValueLists[1] = B1fieldList;
         xValueLists[2] = tauList;
-        DynamicsSource dynSource = DynamicsSource.createFromSpecifiers("cest." + peakNum, residueNum, "H", "N");
+        ResonanceSource dynSource = DynamicsSource.createFromSpecifiers("cest." + peakNum, residueNum, "H", "N");
 
         ExperimentData residueData = new ExperimentData(expData, dynSource, xValueLists, yValueList, errValueList);
-        expData.addResidueData(residueNum, residueData);
+        expData.addResidueData(dynSource, residueData);
         expData.getExtras().clear();
         expData.setExtras(bFieldUniqueValue);
         expData.setExtras(tauList1);
@@ -680,7 +680,7 @@ public class DataIO {
     }
 
     public static void loadResidueDataFile(String fileName, Experiment expData,
-            String residueNum, ExperimentSet resProp, String nucleus,
+            String residueNum, ExperimentSet experimentSet, String nucleus,
             double temperature, double field,
             HashMap<String, Object> errorPars, XCONV xConv, YCONV yConv, double refIntensity)
             throws IOException, IllegalArgumentException {
@@ -691,7 +691,7 @@ public class DataIO {
         List<Double> errValueList = new ArrayList<>();
         System.out.println("Load XY file " + fileName);
 
-        resProp.addExperimentData(expData.getName(), expData);
+        experimentSet.addExperimentData(expData.getName(), expData);
         String splitPattern = "\t";
         String[] sfields;
 
@@ -748,17 +748,17 @@ public class DataIO {
             Logger.getLogger(DataIO.class.getName()).log(Level.SEVERE, null, ex);
         }
         processCESTData((OffsetExperiment) expData, residueNum, xValueList, yValueList, errValueList, 0);
-        ExperimentResult expResult = resProp.getExperimentResult(residueNum);
+        ResonanceSource dynSource = DynamicsSource.createFromSpecifiers(expData.getName() + "." + 0, residueNum, "H");
+        ExperimentResult expResult = experimentSet.getExperimentResult(dynSource);
         if (expResult == null) {
-            DynamicsSource dynSource = DynamicsSource.createFromSpecifiers(expData.getName() + "." + 0, residueNum, "H");
 
-            expResult = new ExperimentResult(resProp, dynSource, 0, 0, 0);
-            resProp.addExperimentResult(residueNum, expResult);
+            expResult = new ExperimentResult(experimentSet, dynSource, 0, 0, 0);
+            experimentSet.addExperimentResult(dynSource, expResult);
         }
 
     }
 
-    public static void loadTextFile(Experiment expData, String fileName, ExperimentSet resProp,
+    public static void loadTextFile(Experiment expData, String fileName, ExperimentSet experimentSet,
             String nucleus, double temperature, double field, XCONV xConv, String expMode)
             throws IOException, IllegalArgumentException {
         Path path = Paths.get(fileName);
@@ -766,7 +766,7 @@ public class DataIO {
         fileTail = fileTail.substring(0, fileTail.indexOf('.'));
 
 //        ExperimentData expData = new ExperimentData(fileTail, nucleus, B0field, temperature);
-        resProp.addExperimentData(fileTail, expData);
+        experimentSet.addExperimentData(fileTail, expData);
         boolean gotHeader = false;
         String[] peakRefs;
         double[][] xValues = null;
@@ -810,14 +810,14 @@ public class DataIO {
                         j++;
                     }
 
-                    DynamicsSource dynSource = DynamicsSource.createFromSpecifiers(expMode + "." + peakNum, residueNum, "H", "N");
+                    ResonanceSource dynSource = DynamicsSource.createFromSpecifiers(expMode + "." + peakNum, residueNum, "H", "N");
                     ExperimentData residueData = new ExperimentData(expData, dynSource, xValues, yValues, errValues);
-                    expData.addResidueData(residueNum, residueData);
+                    expData.addResidueData(dynSource, residueData);
 
-                    ExperimentResult residueInfo = resProp.getExperimentResult(residueNum);
+                    ExperimentResult residueInfo = experimentSet.getExperimentResult(dynSource);
                     if (residueInfo == null) {
-                        residueInfo = new ExperimentResult(resProp, dynSource, 0, 0, 0);
-                        resProp.addExperimentResult(residueNum, residueInfo);
+                        residueInfo = new ExperimentResult(experimentSet, dynSource, 0, 0, 0);
+                        experimentSet.addExperimentResult(dynSource, residueInfo);
                     }
                     peakNum++;
                 }
@@ -935,12 +935,12 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 String peakIdStr = sfields[headerMap.get("Peak")].trim();
                 int peakNum = Integer.parseInt(peakIdStr);
                 String stateString = sfields[headerMap.get("State")].trim();
-                ExperimentResult expResult = experimentSet.getExperimentResult(residueNumber);
+                ResonanceSource dynSource = DynamicsSource.createFromAtomSpecifiers(fileTail + "." + peakNum, residueNumber + ".H");
+                ExperimentResult expResult = experimentSet.getExperimentResult(dynSource);
 
                 if (expResult == null) {
-                    DynamicsSource dynSource = DynamicsSource.createFromSpecifiers(fileTail + "." + peakNum, residueNumber, "H");
                     expResult = new ExperimentResult(experimentSet, dynSource, groupId, groupSize, peakNum);
-                    experimentSet.addExperimentResult(residueNumber, expResult);
+                    experimentSet.addExperimentResult(dynSource, expResult);
                 }
                 double[] fields = new double[1];
                 fields[0] = 1.0;
@@ -1022,7 +1022,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 }
                 parMap.put("Equation", 1.0 + equationNames.indexOf(equationName));
                 PlotEquation plotEquation = new PlotEquation(fitMode, equationName, pars, errs, fields);
-                CurveFit curveSet = new CurveFit(stateString, residueNumber, parMap, plotEquation);
+                CurveFit curveSet = new CurveFit(stateString, dynSource, parMap, plotEquation);
                 expResult.addCurveSet(curveSet, bestValue.equals("best"));
             }
 
@@ -1372,7 +1372,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         try (FileWriter writer = new FileWriter(fileName)) {
             writer.write(headerBuilder.toString());
             resProp.getExperimentResults().stream().
-                    sorted((a, b) -> Integer.compare(a.getResNum(), b.getResNum())).
+                    sorted((a, b) -> Integer.compare(a.getAtom().getIndex(), b.getAtom().getIndex())).
                     forEach(resInfo -> {
                         String outputLine = resInfo.toOutputString(parFields, saveStats);
                         try {
@@ -1471,7 +1471,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 int field = (int) fields[f];
                 final int iList = f;
                 List<ExperimentResult> expResults = expSet.getExperimentResults();
-                Collections.sort(expResults, (a, b) -> Integer.compare(a.getResNum(), b.getResNum()));
+                Collections.sort(expResults, (a, b) -> Integer.compare(a.getAtom().getIndex(), b.getAtom().getIndex()));
                 expResults.forEach((expResult) -> {
                     Double value;
                     Double error;
@@ -1490,9 +1490,9 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                         error = fitPars.get("R.sd");
                     }
 
-                    ExperimentData experimentalData = expData.getResidueData(String.valueOf(expResult.getResNum()));
-                    DynamicsSource dynSource = expResult.getSource();
-                    Atom[] atoms = dynSource.atoms;
+                    ResonanceSource dynSource = expResult.getSource();
+                    ExperimentData experimentalData = expData.getResidueData(dynSource);
+                    Atom[] atoms = dynSource.getAtoms();
                     for (Atom atom : atoms) {
                         Map<String, String> extras = new HashMap<>();
                         String coherenceType = "Sz";
@@ -1500,7 +1500,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                         extras.put("coherenceType", coherenceType);
                         extras.put("units", units);
                         if (expType.equals(relaxTypes.R1)) {
-                            RelaxationData relaxData = new RelaxationData(datasetName, expType, atom, new ArrayList<>(), field, temperature, value, error, extras);
+                            RelaxationData relaxData = new RelaxationData(datasetName, expType, dynSource, field, temperature, value, error, extras);
                             //                System.out.println("reader " + relaxData);
                             atom.getRelaxationData().put(datasetName, relaxData);
                             //                System.out.println("reader atom.relaxData = " + atom + " " + atom.relaxData);
@@ -1511,14 +1511,14 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                             } else {
                                 extraAtoms.add(atoms[1]);
                             }
-                            RelaxationData relaxData = new RelaxationData(datasetName, expType, atom, extraAtoms, field, temperature, value, error, extras);
+                            RelaxationData relaxData = new RelaxationData(datasetName, expType, dynSource, field, temperature, value, error, extras);
                             //                System.out.println("reader " + relaxData);
                             atom.getRelaxationData().put(datasetName, relaxData);
                             //                System.out.println("reader atom.relaxData = " + atom + " " + atom.relaxData);
                         } else {
                             Double RexValue = null;
                             Double RexError = null;
-                            RelaxationRex relaxData = new RelaxationRex(datasetName, expType, atom, new ArrayList<>(), field, temperature, value, error, RexValue, RexError, extras);
+                            RelaxationRex relaxData = new RelaxationRex(datasetName, expType, dynSource, field, temperature, value, error, RexValue, RexError, extras);
                             atom.getRelaxationData().put(datasetName, relaxData);
 
                         }
@@ -1642,9 +1642,9 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                         double value = Double.parseDouble(fields[index]);
                         double error = Double.parseDouble(fields[index + 1]);
                         String id = fileName + "_" + type + "_" + Math.round(field);
-                        DynamicsSource dynSource = DynamicsSource.
+                        ResonanceSource dynSource = DynamicsSource.
                                 createFromSpecifiers(fileName + "." + residue, residue, "N", "H");
-                        RelaxationData.add(id, type, dynSource.atoms[0], field, value, error);
+                        RelaxationData.add(id, type, dynSource, field, value, error);
                     }
                 }
             }

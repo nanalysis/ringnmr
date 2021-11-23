@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.nmrfx.chemistry.relax.ResonanceSource;
 import org.nmrfx.datasets.Nuclei;
 
 /**
@@ -32,7 +33,7 @@ public class Experiment {
 
     ExperimentSet experimentSet;
     String name;
-    HashMap<String, ExperimentData> experimentalDataSets;
+    HashMap<ResonanceSource, ExperimentData> experimentalDataSets;
     protected final double B0field;
     protected final String nucleusName;
     protected final double nucleusField;
@@ -87,15 +88,15 @@ public class Experiment {
         return temperature;
     }
 
-    public void addResidueData(String resNum, ExperimentData data) {
-        experimentalDataSets.put(resNum, data);
+    public void addResidueData(ResonanceSource src, ExperimentData data) {
+        experimentalDataSets.put(src, data);
     }
 
-    public ExperimentData getResidueData(String resNum) {
-        return experimentalDataSets.get(resNum);
+    public ExperimentData getResidueData(ResonanceSource src) {
+        return experimentalDataSets.get(src);
     }
 
-    public Set<String> getResidues() {
+    public Set<ResonanceSource> getDynamicsSources() {
         return experimentalDataSets.keySet();
     }
 

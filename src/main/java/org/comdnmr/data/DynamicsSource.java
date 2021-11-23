@@ -16,6 +16,7 @@ import org.nmrfx.chemistry.MoleculeFactory;
 import org.nmrfx.chemistry.Polymer;
 import org.nmrfx.chemistry.Residue;
 import org.nmrfx.chemistry.io.PDBAtomParser;
+import org.nmrfx.chemistry.relax.ResonanceSource;
 import org.nmrfx.peaks.Peak;
 import org.nmrfx.peaks.PeakList;
 import org.nmrfx.peaks.SpectralDim;
@@ -24,69 +25,13 @@ import org.nmrfx.peaks.SpectralDim;
  *
  * @author brucejohnson
  */
-public class DynamicsSource {
+public class DynamicsSource  {
 
     private static final String RESIDUE_STR = "^(([a-zA-Z]+):)?(([a-zA-Z])?(-?[0-9]+)|([ij]))(\\.([a-zA-Z].*))";
     private static final String PEAK_STR = "^([a-zA-Z].*)\\.([0-9]+)";
     private static final Pattern RESIDUE_PATTERN = Pattern.compile(RESIDUE_STR);
     private static final Pattern PEAK_PATTERN = Pattern.compile(PEAK_STR);
 
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 13 * hash + Objects.hashCode(this.peak);
-        hash = 13 * hash + Objects.hash(atoms);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final DynamicsSource other = (DynamicsSource) obj;
-        if (!Objects.equals(this.peak, other.peak)) {
-            return false;
-        }
-        if (!Arrays.deepEquals(this.atoms, other.atoms)) {
-            return false;
-        }
-        return true;
-    }
-
-    final Peak peak;
-    final Atom[] atoms;
-
-    private DynamicsSource(Peak peak, Atom[] atoms) {
-        this.atoms = atoms;
-        this.peak = peak;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sBuilder = new StringBuilder();
-        sBuilder.append(peak.getName());
-        for (Atom atom : atoms) {
-            sBuilder.append(" ");
-            sBuilder.append(atom.getFullName());
-        }
-        return sBuilder.toString();
-    }
-
-    public Residue getResidue() {
-        Residue residue = null;
-        Entity entity = atoms[0].getEntity();
-        if (entity instanceof Residue) {
-            residue = (Residue) entity;
-        }
-        return residue;
-    }
 
     public static Peak getPeak(String peakSpecifier, int nDim) {
         Matcher matcher = PEAK_PATTERN.matcher(peakSpecifier);
@@ -164,7 +109,7 @@ public class DynamicsSource {
         return atom;
     }
 
-    public static DynamicsSource createFromSpecifiers(String peakSpecifier,
+    public static ResonanceSource createFromSpecifiers(String peakSpecifier,
             String resSpecifier, String... atomNames) {
 
         Peak peak = getPeak(peakSpecifier, atomNames.length);
@@ -175,10 +120,31 @@ public class DynamicsSource {
             Atom atom = getAtom(molName, resSpecifier + "." + atomName, iAtom);
             atoms[iAtom++] = atom;
         }
-        return new DynamicsSource(peak, atoms);
+        return new ResonanceSource(peak, atoms);
     }
 
-    public static DynamicsSource createFromPeak(Peak peak) {
+    public static ResonanceSource createFromAtom(String peakSpecifier,
+            Atom atom) {
+        Atom[] atoms = {atom};
+        Peak peak = getPeak(peakSpecifier, atoms.length);
+        return new ResonanceSource(peak, atoms);
+    }
+
+    public static ResonanceSource createFromAtomSpecifiers(String peakSpecifier,
+            String... atomSpecifiers) {
+
+        Peak peak = getPeak(peakSpecifier, atomSpecifiers.length);
+        Atom[] atoms = new Atom[atomSpecifiers.length];
+        String molName = null;
+        int iAtom = 0;
+        for (String atomSpecifier : atomSpecifiers) {
+            Atom atom = getAtom(molName, atomSpecifier, iAtom);
+            atoms[iAtom++] = atom;
+        }
+        return new ResonanceSource(peak, atoms);
+    }
+
+    public static ResonanceSource createFromPeak(Peak peak) {
         String molName = null;
         PeakList peakList = peak.getPeakList();
         int nDim = peakList.getNDim();
@@ -201,7 +167,7 @@ public class DynamicsSource {
             Atom atom = getAtom(molName, label, peak.getIdNum());
             atoms[i] = atom;
         }
-        return new DynamicsSource(peak, atoms);
+        return new ResonanceSource(peak, atoms);
     }
 
 }

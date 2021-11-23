@@ -21,8 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 import org.comdnmr.util.DataUtil;
 import org.nmrfx.chemistry.Entity;
-import org.nmrfx.chemistry.relax.RelaxationData;
 import org.nmrfx.chemistry.Residue;
+import org.nmrfx.chemistry.relax.ResonanceSource;
 
 /**
  *
@@ -31,12 +31,12 @@ import org.nmrfx.chemistry.Residue;
 public class ExperimentData {
 
     Experiment experiment;
-    DynamicsSource dynSource;
+    ResonanceSource dynSource;
     double[][] xValues;
     double[] errValues;
     double[] yValues;
 
-    public ExperimentData(Experiment experiment, DynamicsSource dynSource,
+    public ExperimentData(Experiment experiment, ResonanceSource dynSource,
             double[][] x, double[] y, double[] err) {
         this.experiment = experiment;
         this.dynSource = dynSource;
@@ -45,7 +45,7 @@ public class ExperimentData {
         this.errValues = err.clone();
     }
 
-    public ExperimentData(Experiment experiment, DynamicsSource dynSource,
+    public ExperimentData(Experiment experiment, ResonanceSource dynSource,
             List<Double> xValueList, List<Double> yValueList, List<Double> errValueList) {
         this.experiment = experiment;
         this.dynSource = dynSource;
@@ -60,7 +60,7 @@ public class ExperimentData {
         }
     }
 
-    public ExperimentData(Experiment experiment, DynamicsSource dynSource,
+    public ExperimentData(Experiment experiment, ResonanceSource dynSource,
             List<Double>[] xValueList, List<Double> yValueList,
             List<Double> errValueList) {
         this.experiment = experiment;
@@ -79,8 +79,8 @@ public class ExperimentData {
             errValues[i] = errValueList.get(i);
         }
     }
-    
-    public DynamicsSource getSource() {
+
+    public ResonanceSource getSource() {
         return dynSource;
     }
 
@@ -139,11 +139,11 @@ public class ExperimentData {
         }
 
         public String getRefPeak() {
-            return resInfo.dynSource.peak.getName();
+            return resInfo.dynSource.getPeak().getName();
         }
 
         public int getPeak() {
-            return resInfo.dynSource.peak.getIdNum();
+            return resInfo.dynSource.getPeak().getIdNum();
         }
 
         public String getName() {
@@ -151,7 +151,7 @@ public class ExperimentData {
         }
 
         public String getResidue() {
-            Entity entity = resInfo.dynSource.atoms[0].getEntity();
+            Entity entity = resInfo.dynSource.getAtoms()[0].getEntity();
             if (entity instanceof Residue) {
                 Residue residue = (Residue) entity;
                 return residue.getNumber();
@@ -161,20 +161,11 @@ public class ExperimentData {
         }
 
         public String getResName() {
-            String result;
-            Entity entity = resInfo.dynSource.atoms[0].getEntity();
-            if (entity instanceof Residue) {
-                Residue residue = (Residue) entity;
-                result = residue.getName();
-            } else if (entity != null) {
-                result = entity.getName();
-            } else {
-                result = "";
-            }
-            if (result == null) {
-                result = "";
-            }
-            return result;
+            return resInfo.dynSource.getAtoms()[0].getResidueName();
+        }
+
+        public String getAtomName() {
+            return resInfo.dynSource.getAtoms()[0].getName();
         }
     }
 
@@ -196,7 +187,7 @@ public class ExperimentData {
         return experiment;
     }
 
-    public DynamicsSource getDynSource() {
+    public ResonanceSource getDynSource() {
         return dynSource;
     }
 

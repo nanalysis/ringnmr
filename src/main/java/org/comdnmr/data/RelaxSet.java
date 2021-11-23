@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.nmrfx.chemistry.relax.RelaxationValues;
+import org.nmrfx.chemistry.relax.ResonanceSource;
 
 /**
  *
@@ -23,19 +24,20 @@ public class RelaxSet implements ValueSet {
         return name;
     }
 
-    Map<String, RelaxationValues> map = new HashMap<>();
+    Map<ResonanceSource, RelaxationValues> map = new HashMap<>();
     List<RelaxationValues> relaxValueList = new ArrayList<>();
 
     public void addValue(RelaxationValues relaxValues) {
         relaxValueList.add(relaxValues);
-        map.put(String.valueOf(relaxValues.getAtom().getResidueNumber()), relaxValues);
+        map.put(relaxValues.getResonanceSource(), relaxValues);
     }
 
     public List<RelaxationValues> getValues() {
         return relaxValueList;
     }
 
-    public Set<String> getResidueNumberStrs() {
+    @Override
+    public Set<ResonanceSource> getDynamicsSources() {
         return map.keySet();
     }
 

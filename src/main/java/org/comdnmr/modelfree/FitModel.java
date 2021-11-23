@@ -29,6 +29,7 @@ import org.nmrfx.chemistry.relax.RelaxationData;
 import org.nmrfx.chemistry.relax.RelaxationRex;
 import org.nmrfx.chemistry.Residue;
 import org.nmrfx.chemistry.relax.OrderPar;
+import org.nmrfx.chemistry.relax.ResonanceSource;
 
 /**
  *
@@ -214,8 +215,9 @@ public class FitModel {
                 double[] pars = score.getPars();
                 double orderPar = pars[0];
                 double rexValue = pars[1];
+                ResonanceSource resSource = new ResonanceSource(resData.atom);
                 RelaxationRex relaxData = new RelaxationRex("order", RelaxationData.relaxTypes.S2,
-                        resData.atom, new ArrayList<>(), 700.0, 298, orderPar, 0.0,
+                        resSource, 700.0, 298, orderPar, 0.0,
                         rexValue, 0.0, extras);
                 Atom atom = mol.findAtom(key);
                 atom.addRelaxationData("order", relaxData);
@@ -278,7 +280,9 @@ public class FitModel {
             if (nReplicates > 2) {
                 repData = replicates(molDataRes, bestModel, localTauFraction, localFitTau, pars, random);
             }
-            OrderPar orderPar = new OrderPar(atom, bestScore.rss, bestScore.nValues, bestScore.nPars, "model" + bestModel.getNumber());
+            ResonanceSource resSource = new ResonanceSource(resData.atom);
+
+            OrderPar orderPar = new OrderPar(resSource, bestScore.rss, bestScore.nValues, bestScore.nPars, "model" + bestModel.getNumber());
             for (int iPar = 0; iPar < parNames.size(); iPar++) {
                 String parName = parNames.get(iPar);
                 double parValue = pars[iPar];
@@ -334,7 +338,9 @@ public class FitModel {
                 Atom atom = resData.atom;
                 double[] pars = score.getPars();
                 var parNames = model.getParNames();
-                OrderPar orderPar = new OrderPar(atom, score.rss, score.getN(), score.nPars, "model1");
+                ResonanceSource resSource = new ResonanceSource(resData.atom);
+
+                OrderPar orderPar = new OrderPar(resSource, score.rss, score.getN(), score.nPars, "model1");
                 for (int iPar = 0; iPar < parNames.size(); iPar++) {
                     String parName = parNames.get(iPar);
                     double parValue = pars[iPar];
@@ -379,8 +385,8 @@ public class FitModel {
         }
         var score = relaxFit.score(best.getPoint(), true);
         System.out.println(score.rms() + " " + score.value() + " " + score.complexity() + " " + score.parsOK());
-        for (var d:score.getPars()) {
-            System.out.print(d + " " );
+        for (var d : score.getPars()) {
+            System.out.print(d + " ");
         }
         System.out.println("");
         return score;

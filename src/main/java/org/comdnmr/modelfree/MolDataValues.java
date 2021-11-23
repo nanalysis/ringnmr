@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import org.comdnmr.data.DynamicsSource;
 import org.comdnmr.modelfree.models.MFModel;
-import org.comdnmr.modelfree.models.MFModelIso;
 import org.nmrfx.chemistry.Atom;
 
 /**

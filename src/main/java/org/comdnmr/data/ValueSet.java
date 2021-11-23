@@ -6,6 +6,7 @@
 package org.comdnmr.data;
 
 import java.util.Set;
+import org.nmrfx.chemistry.relax.ResonanceSource;
 
 /**
  *
@@ -14,6 +15,7 @@ import java.util.Set;
 public interface ValueSet {
 
     public String getName();
-    public Set<String> getResidueNumberStrs();
+
+    public Set<ResonanceSource> getDynamicsSources();
 
 }

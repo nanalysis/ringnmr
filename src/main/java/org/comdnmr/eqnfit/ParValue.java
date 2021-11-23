@@ -14,13 +14,15 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/*
+ */
+ /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
 package org.comdnmr.eqnfit;
+
+import org.nmrfx.chemistry.relax.ResonanceSource;
 
 /**
  *
@@ -29,8 +31,8 @@ package org.comdnmr.eqnfit;
 public class ParValue implements ParValueInterface {
 
     String state;
-    String residue;
     String resName;
+    ResonanceSource dynSource;
     String name;
     double value;
     double err;
@@ -44,8 +46,9 @@ public class ParValue implements ParValueInterface {
         this.value = value;
     }
 
-    public ParValue(String residue, String state, String parName, double value, double err) {
+    public ParValue(ResonanceSource dynSource, String state, String parName, double value, double err) {
         this.name = parName;
+        this.dynSource = dynSource;
         this.value = value;
         this.err = err;
     }
@@ -66,13 +69,23 @@ public class ParValue implements ParValueInterface {
     }
 
     @Override
-    public String getResidue() {
-        return residue;
+    public ResonanceSource getDynamicsSource() {
+        return dynSource;
     }
-    
+
+    @Override
+    public String getAtomName() {
+        return dynSource.getAtom().getName();
+    }
+
+    @Override
+    public String getResidue() {
+        return String.valueOf(dynSource.getAtom().getResidueNumber());
+    }
+
     @Override
     public String getResName() {
-        return resName;
+        return dynSource.getAtom().getResidueName();
     }
 
     @Override

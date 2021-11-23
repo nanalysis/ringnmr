@@ -27,6 +27,7 @@ import java.util.List;
 import org.apache.commons.math3.optim.PointValuePair;
 import org.comdnmr.data.Experiment;
 import org.comdnmr.util.CoMDOptions;
+import org.nmrfx.chemistry.relax.ResonanceSource;
 
 /**
  *
@@ -46,7 +47,7 @@ public class CESTFitter implements EquationFitter {
     int nResidues = 1;
     int[][] states;
     int[] stateCount;
-    String[] resNums;
+    ResonanceSource[] dynSources;
     static List<String> equationNameList = Arrays.asList(CESTEquation.getEquationNames());
     long errTime;
     static final String expType = "cest";
@@ -93,25 +94,25 @@ public class CESTFitter implements EquationFitter {
 
     // public void setData(Collection<ExperimentData> expDataList, String[] resNums) {
     @Override
-    public void setData(ExperimentSet experimentSet, String[] resNums) {
+    public void setData(ExperimentSet experimentSet, ResonanceSource[] dynSources) {
         xValues = new ArrayList[3];
         xValues[0] = new ArrayList<>();
         xValues[1] = new ArrayList<>();
         xValues[2] = new ArrayList<>();
-        this.resNums = resNums.clone();
-        nResidues = resNums.length;
+        this.dynSources = dynSources.clone();
+        nResidues = dynSources.length;
         experimentSet.setupMaps();
-        stateCount = experimentSet.getStateCount(resNums.length);
+        stateCount = experimentSet.getStateCount(dynSources.length);
         Collection<Experiment> expDataList = experimentSet.getExperimentData();
-        nCurves = experimentSet.getDataCount(resNums);
+        nCurves = experimentSet.getDataCount(dynSources);
         states = new int[nCurves][];
         int k = 0;
         int resIndex = 0;
         int id = 0;
         List<Double> fieldList = new ArrayList<>();
-        for (String resNum : resNums) {
+        for (var dynSource : dynSources) {
             for (Experiment expData : expDataList) {
-                ExperimentData experimentalData = expData.getResidueData(resNum);
+                ExperimentData experimentalData = expData.getResidueData(dynSource);
                 if (experimentalData != null) {
                     states[k++] = experimentSet.getStateIndices(resIndex, expData);
                     //  need peakRefs
@@ -165,8 +166,8 @@ public class CESTFitter implements EquationFitter {
         }
         usedFields = new double[1];
         usedFields[0] = fieldValues.get(0);
-        resNums = new String[1];
-        resNums[0] = "0";
+        dynSources = new ResonanceSource[1];
+        dynSources[0] = null;
         //states = new int[1][];
         //states[0] = new int[7];
         //stateCount = new int[7];
@@ -379,7 +380,7 @@ public class CESTFitter implements EquationFitter {
                 boolean useWeight = options.getWeightFit();
                 CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs,
                         useNonParametric, sRadius, fRadius, tol, useWeight);
-                return getResults(this, eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, exchangeValid, curveStats);
+                return getResults(this, eqn, parNames, dynSources, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, exchangeValid, curveStats);
             } else {
                 return null;
             }

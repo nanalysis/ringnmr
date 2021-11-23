@@ -28,10 +28,12 @@ import java.util.Collection;
 import org.comdnmr.data.ExperimentSet;
 import java.util.List;
 import org.apache.commons.math3.optim.PointValuePair;
+import org.nmrfx.chemistry.relax.ResonanceSource;
 import org.comdnmr.data.Experiment;
 import org.comdnmr.data.ExperimentData;
 import org.comdnmr.util.CoMDOptions;
 import org.comdnmr.util.CoMDPreferences;
+import org.nmrfx.chemistry.Atom;
 
 /**
  *
@@ -52,7 +54,7 @@ public class NOEFit implements EquationFitter {
     int nResidues = 1;
     int[][] states;
     int[] stateCount;
-    String[] resNums;
+    ResonanceSource[] dynSources;
     static List<String> equationNameList = Arrays.asList(NOEEquation.getEquationNames());
     long errTime;
     static final String expType = "noe";
@@ -164,7 +166,7 @@ public class NOEFit implements EquationFitter {
         CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs,
                 useNonParametric, sRadius, fRadius, tol, useWeight);
         double[] usedFields = getFields(fieldValues, idValues);
-        return getResults(this, eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, true, curveStats);
+        return getResults(this, eqn, parNames, dynSources, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, true, curveStats);
     }
 
     @Override
@@ -212,21 +214,21 @@ public class NOEFit implements EquationFitter {
     }
 
     @Override
-    public void setData(ExperimentSet experimentSet, String[] resNums) {
-        this.resNums = resNums.clone();
-        nResidues = resNums.length;
+    public void setData(ExperimentSet experimentSet, ResonanceSource[] dynSources) {
+        this.dynSources = dynSources.clone();
+        nResidues = dynSources.length;
         int id = 0;
         experimentSet.setupMaps();
-        stateCount = experimentSet.getStateCount(resNums.length);
+        stateCount = experimentSet.getStateCount(dynSources.length);
         Collection<Experiment> expDataList = experimentSet.getExperimentData();
-        nCurves = resNums.length * expDataList.size();
+        nCurves = dynSources.length * expDataList.size();
         states = new int[nCurves][];
         int k = 0;
         int resIndex = 0;
-        for (String resNum : resNums) {
+        for (var dynSource : dynSources) {
             for (Experiment expData : expDataList) {
                 states[k++] = experimentSet.getStateIndices(resIndex, expData);
-                ExperimentData experimentalData = expData.getResidueData(resNum);
+                ExperimentData experimentalData = expData.getResidueData(dynSource);
                 //  need peakRefs
                 double field = expData.getNucleusField();
                 double[][] x = experimentalData.getXValues();
@@ -260,8 +262,8 @@ public class NOEFit implements EquationFitter {
         yValues.forEach((_item) -> {
             this.idValues.add(0);
         });
-        resNums = new String[1];
-        resNums[0] = "0";
+        dynSources = new ResonanceSource[1];
+        dynSources[0] = null;
         nCurves = 1;
         stateCount = new int[4];
         stateCount[0] = nResidues;

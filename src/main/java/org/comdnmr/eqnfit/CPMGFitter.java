@@ -28,6 +28,7 @@ import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.stat.inference.TTest;
 import org.comdnmr.data.Experiment;
 import org.comdnmr.util.CoMDOptions;
+import org.nmrfx.chemistry.relax.ResonanceSource;
 
 /**
  *
@@ -49,7 +50,7 @@ public class CPMGFitter implements EquationFitter {
     int nResidues = 1;
     int[][] states;
     int[] stateCount;
-    String[] resNums;
+    ResonanceSource[] dynSources;
     long errTime;
     static final String expType = "cpmg";
 
@@ -107,8 +108,8 @@ public class CPMGFitter implements EquationFitter {
         for (Double yValue : yValues) {
             this.idValues.add(0);
         }
-        resNums = new String[1];
-        resNums[0] = "0";
+        dynSources = new ResonanceSource[1];
+        dynSources[0] = null;
         nCurves = 1;
         stateCount = new int[4];
         stateCount[0] = nResidues;
@@ -119,21 +120,21 @@ public class CPMGFitter implements EquationFitter {
     }
 
     @Override
-    public void setData(ExperimentSet experimentSet, String[] resNums) {
+    public void setData(ExperimentSet experimentSet, ResonanceSource[] dynSources) {
         xValues.clear();
-        this.resNums = resNums.clone();
-        nResidues = resNums.length;
+        this.dynSources = dynSources.clone();
+        nResidues = dynSources.length;
 
         stateCount = experimentSet.getStateCount(nResidues);
         Collection<Experiment> expDataList = experimentSet.getExperimentData();
-        nCurves = resNums.length * expDataList.size();
+        nCurves = dynSources.length * expDataList.size();
         states = new int[nCurves][];
         int k = 0;
         int resIndex = 0;
         int id = 0;
-        for (String resNum : resNums) {
+        for (var dynSource : dynSources) {
             for (Experiment expData : expDataList) {
-                ExperimentData experimentalData = expData.getResidueData(resNum);
+                ExperimentData experimentalData = expData.getResidueData(dynSource);
                 if (experimentalData != null) {
 
                     states[k++] = experimentSet.getStateIndices(resIndex, expData);
@@ -345,7 +346,7 @@ public class CPMGFitter implements EquationFitter {
         CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs,
                 useNonParametric, sRadius, fRadius, tol, useWeight);
         double[] usedFields = getFields(fieldValues, idValues);
-        return getResults(this, eqn, parNames, resNums, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, exchangeValid, curveStats);
+        return getResults(this, eqn, parNames, dynSources, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, exchangeValid, curveStats);
     }
 
     @Override

@@ -20,6 +20,7 @@ package org.comdnmr.eqnfit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.nmrfx.chemistry.relax.ResonanceSource;
 
 /**
  *
@@ -88,8 +89,8 @@ public class FitResult {
         return curveFits.get(iCurve).plotEquation.errs;
     }
 
-    public String getResidueNumber(int iCurve) {
-        return curveFits.get(iCurve).resNum;
+    public ResonanceSource getDynamicsSource(int iCurve) {
+        return curveFits.get(iCurve).dynSource;
     }
 
     public boolean exchangeValid() {

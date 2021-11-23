@@ -394,30 +394,32 @@ def loadProject(fileName):
     resProp = DataIO.loadYAMLFile(fileName)
     return resProp
 
-def getResidues(resProp):
+def getDynSources(resProp):
     expDataSets = resProp.getExperimentData()
-    resSet = set()
+    dynSourceSet = set()
     for expDataSet in expDataSets:
-        residues = expDataSet.getResidues()
-        for residue in residues:
-           resSet.add(residue)
-    residues = []
-    for residue in resSet:
-        residues.append([residue])
-    return residues
+        dynSources = expDataSet.getDynamicsSources()
+        for dynSource in dynSources:
+           dynSourceSet.add(dynSource)
+    dynSources = []
+    for dynSource in dynSourceSet:
+        dynSources.append(dynSource)
+    return dynSources
 
-def fitProject(resProp, groups, equationName, saveStats, outFileName):
-    expDataSets = resProp.getExperimentData()
+def fitProject(expSet, groups, equationName, saveStats, outFileName):
+    print 'project'    
+    expDataSets = expSet.getExperimentData()
     residueFitter = ResidueFitter(options)
     groupID = 0
     for group in groups:
-        sgroup = [str(groupNum) for groupNum in group]
-        resInfoList = residueFitter.fitResidues(resProp, sgroup, groupID, equationName)
+        print 'group',group
+        expResults = residueFitter.fitResidues(expSet, group, groupID, equationName)
         groupID += 1
-        for resInfo in resInfoList:
-            fitResNum = resInfo.resNum;
-            resProp.addResidueInfo(str(fitResNum), resInfo)
-    DataIO.saveResultsFile(outFileName, resProp, saveStats)
+        for expResult in expResults:
+            print expResult
+            dynSource = expResult.getSource();
+            expSet.addExperimentResult(dynSource, expResult)
+    DataIO.saveResultsFile(outFileName, expSet, saveStats)
 
 def fitGroups(groups):
     writeHeader()
@@ -439,21 +441,21 @@ def fitGroups(groups):
                 fitGroup(expList,[resNum],groupID)
                 groupID += 1
 
-def genGroups(groups, residues):
+def genGroups(groups, dynSources):
     fullGroups = []
-    for resNum in residues:
-        resNum = int(resNum[0])
+    for dynSource in dynSources:
+        print 'dynsource',dynSource
         inGroup = False
         for group in groups:
-            if resNum in group:
+            if dynSource in group:
                 inGroup = True
                 break
         if inGroup:
-            if resNum == group[0]:
+            if dynSource == group[0]:
                 fullGroups += [group]
         else:
             if not onlyGroups:
-                fullGroups.append([resNum])
+                fullGroups.append([dynSource])
     return fullGroups
 
 def parseArgs():
@@ -518,7 +520,8 @@ def parseArgs():
 
     if projectFile != '':
         resProp = loadProject(projectFile)
-        groups = genGroups(groups, getResidues(resProp))
+        groups = genGroups(groups, getDynSources(resProp))
+        print 'groups', groups
         if equationName == None:
             if resProp.getExpMode() == "cest":
                 equations = CESTEquation.getAllEquationNames()

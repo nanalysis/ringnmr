@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package org.comdnmr.data;
 
 import java.util.ArrayList;
@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.nmrfx.chemistry.Atom;
+import org.nmrfx.chemistry.relax.ResonanceSource;
 
 /**
  *
@@ -34,7 +36,7 @@ import java.util.stream.Collectors;
 public class ExperimentSet implements ValueSet {
 
     Map<String, Experiment> expMaps = new HashMap<>();
-    private final HashMap<String, ExperimentResult> resultMap = new HashMap<>();
+    private final HashMap<ResonanceSource, ExperimentResult> resultMap = new HashMap<>();
     final String name;
     String fileName = null;
     Map<Double, Integer> fieldMap = new LinkedHashMap();
@@ -221,15 +223,15 @@ public class ExperimentSet implements ValueSet {
         return state;
     }
 
-    public void addExperimentResult(String resNum, ExperimentResult value) {
-        resultMap.put(resNum, value);
+    public void addExperimentResult(ResonanceSource dynSource, ExperimentResult value) {
+        resultMap.put(dynSource, value);
     }
 
     public void clearResidueMap() {
         resultMap.clear();
     }
-    
-    public Set<String> getResidueNumberStrs() {
+
+    public Set<ResonanceSource> getDynamicsSources() {
         return resultMap.keySet();
     }
 
@@ -239,15 +241,15 @@ public class ExperimentSet implements ValueSet {
         return values;
     }
 
-    public ExperimentResult getExperimentResult(String resNum) {
-        return resultMap.get(resNum);
+    public ExperimentResult getExperimentResult(ResonanceSource dynSource) {
+        return resultMap.get(dynSource);
     }
 
-    public int getDataCount(String[] resNums) {
+    public int getDataCount(ResonanceSource[] dynSources) {
         int n = 0;
-        for (String resNum : resNums) {
+        for (var dynSource : dynSources) {
             for (Experiment expData : expMaps.values()) {
-                ExperimentData experimentalData = expData.getResidueData(resNum);
+                ExperimentData experimentalData = expData.getResidueData(dynSource);
                 if (experimentalData != null) {
                     n++;
                 }
@@ -283,26 +285,26 @@ public class ExperimentSet implements ValueSet {
         return nuclei;
     }
 
-    public Map<Integer, Double> getParMapData(String eqnName, String state, String parName) {
+    public Map<Atom, Double> getParMapData(String eqnName, String state, String parName) {
 
         List<ExperimentResult> resValues = getExperimentResults();
-        Map<Integer, Double> resultMap = new HashMap<>();
+        Map<Atom, Double> resultMap = new HashMap<>();
 
-        for (ExperimentResult resInfo : resValues) {
-            if (resInfo == null) {
+        for (ExperimentResult experimentResult : resValues) {
+            if (experimentResult == null) {
                 continue;
             }
 
             String useEquName = eqnName;
             if (eqnName.equals("best")) {
-                useEquName = resInfo.getBestEquationName();
+                useEquName = experimentResult.getBestEquationName();
             }
-            int resNum = resInfo.getResNum();
-            Double y = resInfo.getParValue(useEquName, state, parName);
+            Atom atom = experimentResult.getAtom();
+            Double y = experimentResult.getParValue(useEquName, state, parName);
             if (y == null) {
                 continue;
             }
-            resultMap.put(resNum, y);
+            resultMap.put(atom, y);
         }
         return resultMap;
     }

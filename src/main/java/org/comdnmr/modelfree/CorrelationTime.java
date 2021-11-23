@@ -35,6 +35,7 @@ import org.apache.commons.math3.optim.univariate.UnivariateObjectiveFunction;
 import org.apache.commons.math3.optim.univariate.UnivariatePointValuePair;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.comdnmr.data.Experiment;
+import org.nmrfx.chemistry.Atom;
 
 /**
  *
@@ -42,7 +43,7 @@ import org.comdnmr.data.Experiment;
  */
 public class CorrelationTime {
 
-    public static double estimateTau(Map<String, ExperimentSet> residueProps) {
+    public static double estimateTau(Map<Atom, ExperimentSet> residueProps) {
         Map<String, Experiment> t1Map = new HashMap<>();
         Map<String, Experiment> t2Map = new HashMap<>();
         for (ExperimentSet resProp : residueProps.values()) {
@@ -58,7 +59,7 @@ public class CorrelationTime {
         return 0.0;
     }
 
-    public static Map<String, Double> estimateTau(Map<String, ExperimentSet> residueProps,
+    public static Map<String, Double> estimateTau(Map<Atom, ExperimentSet> residueProps,
             String r1SetName, String r2SetName) {
         ExperimentSet resPropsR1 = residueProps.get(r1SetName);
         ExperimentSet resPropsR2 = residueProps.get(r2SetName);
@@ -72,9 +73,9 @@ public class CorrelationTime {
         double tau = 0.0;
         Map<String, Double> result = new HashMap<>();
         if ((resPropsR1 != null) && (resPropsR2 != null)) {
-            Map<Integer, Double> r1Map = resPropsR1.getParMapData(
+            Map<Atom, Double> r1Map = resPropsR1.getParMapData(
                     "best", "0:0:0", "R");
-            Map<Integer, Double> r2Map = resPropsR2.getParMapData(
+            Map<Atom, Double> r2Map = resPropsR2.getParMapData(
                     "best", "0:0:0", "R");
             result = estimateTau(b0, nucName, r1Map, r2Map);
         }
@@ -82,7 +83,7 @@ public class CorrelationTime {
     }
 
     public static Map<String, Double> estimateTau(double b0, String nucName,
-            Map<Integer, Double> r1Map, Map<Integer, Double> r2Map) {
+            Map<Atom, Double> r1Map, Map<Atom, Double> r2Map) {
         DescriptiveStatistics stats = new DescriptiveStatistics();
         r2Map.values().stream().forEach(v -> stats.addValue(v));
         double perLower = stats.getPercentile(40.0);
@@ -91,9 +92,9 @@ public class CorrelationTime {
         stats.clear();
         DescriptiveStatistics r1Stats = new DescriptiveStatistics();
         DescriptiveStatistics r2Stats = new DescriptiveStatistics();
-        for (Integer res : r1Map.keySet()) {
-            Double r1 = r1Map.get(res);
-            Double r2 = r2Map.get(res);
+        for (Atom atom : r1Map.keySet()) {
+            Double r1 = r1Map.get(atom);
+            Double r2 = r2Map.get(atom);
             if ((r1 != null) && (r2 != null)) {
                 if ((r2 > perLower) && (r2 < perUpper)) {
                     r1Stats.addValue(r1);
@@ -255,22 +256,22 @@ public class CorrelationTime {
                 + resPropsNOE);
         double tau = 0.0;
         if ((resPropsR1 != null) && (resPropsR2 != null)) {
-            Map<Integer, Double> r1Map = resPropsR1.getParMapData(
+            Map<Atom, Double> r1Map = resPropsR1.getParMapData(
                     "best", "0:0:0", "R");
-            Map<Integer, Double> r2Map = resPropsR2.getParMapData(
+            Map<Atom, Double> r2Map = resPropsR2.getParMapData(
                     "best", "0:0:0", "R");
-            Map<Integer, Double> noeMap = resPropsNOE.getParMapData(
+            Map<Atom, Double> noeMap = resPropsNOE.getParMapData(
                     "best", "0:0:0", "NOE");
-            Map<Integer, Double> r1ErrMap = resPropsR1.getParMapData(
+            Map<Atom, Double> r1ErrMap = resPropsR1.getParMapData(
                     "best", "0:0:0", "R.sd");
-            Map<Integer, Double> r2ErrMap = resPropsR2.getParMapData(
+            Map<Atom, Double> r2ErrMap = resPropsR2.getParMapData(
                     "best", "0:0:0", "R.sd");
-            Map<Integer, Double> noeErrMap = resPropsNOE.getParMapData(
+            Map<Atom, Double> noeErrMap = resPropsNOE.getParMapData(
                     "best", "0:0:0", "NOE.sd");
 
             double sf = 700.0e6;
             double tauc = 4.4e-9;
-            for (Integer res : r1Map.keySet()) {
+            for (Atom res : r1Map.keySet()) {
                 Double r1 = r1Map.get(res);
                 Double r2 = r2Map.get(res);
                 Double noe = noeMap.get(res);

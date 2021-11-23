@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package org.comdnmr.eqnfit;
 
 import org.comdnmr.util.CoMDPreferences;
@@ -27,8 +27,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.math3.optim.PointValuePair;
-import org.comdnmr.eqnfit.CESTPeak;
+import org.nmrfx.chemistry.relax.ResonanceSource;
 import org.comdnmr.util.CoMDOptions;
+import org.nmrfx.chemistry.Atom;
 
 /**
  *
@@ -47,7 +48,7 @@ public class R1RhoFitter implements EquationFitter {
     int nResidues = 1;
     int[][] states;
     int[] stateCount;
-    String[] resNums;
+    ResonanceSource[] dynSources;
     static List<String> equationNameList = Arrays.asList(R1RhoEquation.getEquationNames());
     long errTime;
     Map<String, List<Double>>[] constraints;
@@ -71,6 +72,7 @@ public class R1RhoFitter implements EquationFitter {
             return states[i][2];
         }
     }
+
     public R1RhoFitter(CoMDOptions options) {
         calcR1Rho = new R1RhoFitFunction(options);
         this.options = options;
@@ -93,26 +95,26 @@ public class R1RhoFitter implements EquationFitter {
     }
 
     @Override
-    public void setData(ExperimentSet experimentSet, String[] resNums) {
+    public void setData(ExperimentSet experimentSet, ResonanceSource[] dynSources) {
         xValues = new ArrayList[3];
         xValues[0] = new ArrayList<>();
         xValues[1] = new ArrayList<>();
         xValues[2] = new ArrayList<>();
-        this.resNums = resNums.clone();
-        nResidues = resNums.length;
+        this.dynSources = dynSources.clone();
+        nResidues = dynSources.length;
         experimentSet.setupMaps();
-        stateCount = experimentSet.getStateCount(resNums.length);
+        stateCount = experimentSet.getStateCount(dynSources.length);
         Collection<Experiment> expDataList = experimentSet.getExperimentData();
-        nCurves = experimentSet.getDataCount(resNums);
+        nCurves = experimentSet.getDataCount(dynSources);
         states = new int[nCurves][];
         int k = 0;
         int resIndex = 0;
         int id = 0;
         List<Double> fieldList = new ArrayList<>();
         constraints = new Map[nCurves];
-        for (String resNum : resNums) {
+        for (var atom : dynSources) {
             for (Experiment expData : expDataList) {
-                ExperimentData experimentalData = expData.getResidueData(resNum);
+                ExperimentData experimentalData = expData.getResidueData(atom);
                 if (experimentalData != null) {
                     constraints[id] = expData.getConstraints();
                     states[k++] = experimentSet.getStateIndices(resIndex, expData);
@@ -160,8 +162,8 @@ public class R1RhoFitter implements EquationFitter {
         for (Double yValue : yValues) {
             idValues.add(0);
         }
-        resNums = new String[1];
-        resNums[0] = "0";
+        dynSources = new ResonanceSource[1];
+        dynSources[0] = null;
         //states = new int[1][];
         //states[0] = new int[7];
         //stateCount = new int[7];
@@ -201,7 +203,7 @@ public class R1RhoFitter implements EquationFitter {
     public List<String> getEquationNameList() {
         return getEquationNames();
     }
-    
+
     @Override
     public String getExpType() {
         return expType;
@@ -395,7 +397,7 @@ public class R1RhoFitter implements EquationFitter {
                 boolean useWeight = options.getWeightFit();
                 CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs,
                         useNonParametric, sRadius, fRadius, tol, useWeight);
-                return getResults(this, eqn, parNames, resNums, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, exchangeValid, curveStats);
+                return getResults(this, eqn, parNames, dynSources, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, exchangeValid, curveStats);
             } else {
                 return null;
             }

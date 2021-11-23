@@ -43,10 +43,10 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
-import org.comdnmr.data.DynamicsSource;
 import org.comdnmr.data.Experiment;
 import org.comdnmr.eqnfit.NOEEquation;
 import org.comdnmr.util.CoMDOptions;
+import org.nmrfx.chemistry.relax.ResonanceSource;
 
 /**
  *
@@ -61,7 +61,7 @@ public class ResidueFitter {
     ExperimentSet experimentSet;
     Function<Double, Double> updaterFunction;
     Function<ProcessingStatus, Double> statusFunction;
-    List<List<String>> residueFitGroups = null;
+    List<List<ResonanceSource>> atomFitGroups = null;
     FitResult fitResult;
 
     public ResidueFitter(CoMDOptions options) {
@@ -78,10 +78,10 @@ public class ResidueFitter {
         fitResidues(experimentSet, null);
     }
 
-    public void fitResidues(ExperimentSet experimentSet, List<List<String>> residueFitGroups) {
+    public void fitResidues(ExperimentSet experimentSet, List<List<ResonanceSource>> residueFitGroups) {
         this.experimentSet = experimentSet;
         experimentSet.setupMaps();
-        this.residueFitGroups = residueFitGroups;
+        this.atomFitGroups = residueFitGroups;
         setProcessingOn();
         updateProgress(0.0);
         if (residueFitGroups == null) {
@@ -137,40 +137,39 @@ public class ResidueFitter {
     }
 
     public void fitAllResidueGroups(Task task) {
-        for (List<String> resGroup : residueFitGroups) {
-            int nResidues = resGroup.size();
+        for (List<ResonanceSource> dynFitGroup : atomFitGroups) {
+            int nResidues = dynFitGroup.size();
             int nFit = 0;
             if (task.isCancelled()) {
                 break;
             }
-            String[] resNumGroup = new String[resGroup.size()];
-            resGroup.toArray(resNumGroup);
-            List<ExperimentResult> resInfoList = fitResidues(experimentSet, resNumGroup, nFit, null);
+            ResonanceSource[] dynGroup = new ResonanceSource[dynFitGroup.size()];
+            dynFitGroup.toArray(dynGroup);
+            List<ExperimentResult> resInfoList = fitResidues(experimentSet, dynGroup, nFit, null);
             resInfoList.forEach((resInfo) -> {
-                int fitResNum = resInfo.getResNum();
-                experimentSet.addExperimentResult(String.valueOf(fitResNum), resInfo);
+                ResonanceSource dynSource = resInfo.getSource();
+                experimentSet.addExperimentResult(dynSource, resInfo);
             });
             nFit++;
             updateProgress((1.0 * nFit) / nResidues);
         }
     }
 
-    public List<List<String>> getAllResidues() {
+    public List<List<ResonanceSource>> getAllAtoms() {
         Map<String, Experiment> expDataSets = experimentSet.getExperimentMap();
-        Set<Integer> resNums = new TreeSet<>();
+        Set<ResonanceSource> resSources = new TreeSet<>();
         expDataSets.values().forEach((expData) -> {
-            expData.getResidues().forEach((resNumS) -> {
-                resNums.add(Integer.parseInt(resNumS));
+            expData.getDynamicsSources().forEach((dynSource) -> {
+                resSources.add(dynSource);
             });
         });
-        List<List<String>> allResidues = new ArrayList<>();
-        for (Integer resNum : resNums) {
+        List<List<ResonanceSource>> allAtoms = new ArrayList<>();
+        for (var resSource : resSources) {
             int groupIndex = -1;
-            String resStr = String.valueOf(resNum);
-            if (residueFitGroups != null) {
+            if (atomFitGroups != null) {
                 int i = 0;
-                for (List<String> resGroup : residueFitGroups) {
-                    if (resGroup.contains(resStr)) {
+                for (List<ResonanceSource> atomGroup : atomFitGroups) {
+                    if (atomGroup.contains(resSource)) {
                         groupIndex = i;
                         break;
                     }
@@ -178,33 +177,34 @@ public class ResidueFitter {
                 }
             }
             if (groupIndex != -1) {
-                List<String> resGroup = residueFitGroups.get(groupIndex);
-                if (resGroup.get(0).equals(resStr)) {
-                    allResidues.add(resGroup);
+                List<ResonanceSource> atomGroup = atomFitGroups.get(groupIndex);
+                if (atomGroup.get(0).equals(resSource)) {
+                    allAtoms.add(atomGroup);
                 }
-            } else if (residueFitGroups == null) {
-                List<String> singleRes = new ArrayList<>();
-                singleRes.add(resStr);
-                allResidues.add(singleRes);
+            } else if (atomFitGroups == null) {
+                List<ResonanceSource> singleAtom = new ArrayList<>();
+                singleAtom.add(resSource);
+                allAtoms.add(singleAtom);
             }
         }
-        return allResidues;
+
+        return allAtoms;
     }
 
-    public void fitAllResidues(Task task) {
-        List<List<String>> allResidues = getAllResidues();
-        int nGroups = allResidues.size();
+    public void fitAllAtoms(Task task) {
+        List<List<ResonanceSource>> allAtoms = getAllAtoms();
+        int nGroups = allAtoms.size();
         int nFit = 0;
-        for (List<String> resList : allResidues) {
+        for (List<ResonanceSource> atomList : allAtoms) {
             if (task.isCancelled()) {
                 break;
             }
-            String[] resNumGroup = new String[resList.size()];
-            resList.toArray(resNumGroup);
-            List<ExperimentResult> resInfoList = fitResidues(experimentSet, resNumGroup, nFit, null);
+            ResonanceSource[] atomGroup = new ResonanceSource[atomList.size()];
+            atomList.toArray(atomGroup);
+            List<ExperimentResult> resInfoList = fitResidues(experimentSet, atomGroup, nFit, null);
             resInfoList.forEach((resInfo) -> {
-                int fitResNum = resInfo.getResNum();
-                experimentSet.addExperimentResult(String.valueOf(fitResNum), resInfo);
+                ResonanceSource fitAtom = resInfo.getSource();
+                experimentSet.addExperimentResult(fitAtom, resInfo);
             });
             nFit++;
             updateProgress((1.0 * nFit) / nGroups);
@@ -237,22 +237,21 @@ public class ResidueFitter {
         return fitter;
     }
 
-    public List<ExperimentResult> doNOE(ExperimentSet experimentSet, String[] resNums, int groupId, String useEquation) {
+    public List<ExperimentResult> doNOE(ExperimentSet experimentSet, ResonanceSource[] dynSources, int groupId, String useEquation) {
         List<ExperimentResult> resInfoList = new ArrayList<>();
-        Map<String, ExperimentResult> resMap = new HashMap<>();
-        for (String residueNumber : resNums) {
+        Map<ResonanceSource, ExperimentResult> resMap = new HashMap<>();
+        for (var dynSource : dynSources) {
             String expName = experimentSet.getName();
-            DynamicsSource dynSource = DynamicsSource.createFromSpecifiers(expName + ".0", residueNumber, "N");
-            ExperimentResult residueInfo = new ExperimentResult(experimentSet, dynSource, groupId, resNums.length);
+            ExperimentResult residueInfo = new ExperimentResult(experimentSet, dynSource, groupId, dynSources.length);
             resInfoList.add(residueInfo);
-            resMap.put(residueNumber, residueInfo);
+            resMap.put(dynSource, residueInfo);
             residueInfo.addFitResult(null);
         }
         return resInfoList;
 
     }
 
-    public List<ExperimentResult> fitResidues(ExperimentSet experimentSet, String[] resNums, int groupId, String useEquation) {
+    public List<ExperimentResult> fitResidues(ExperimentSet experimentSet, ResonanceSource[] dynSources, int groupId, String useEquation) {
         this.experimentSet = experimentSet;
         experimentSet.setupMaps();
         Map<String, FitResult> fitResults = new HashMap<>();
@@ -280,7 +279,7 @@ public class ResidueFitter {
                 bestEquation = "NOEX";
                 break;
             case "noe":
-                return doNOE(experimentSet, resNums, groupId, useEquation);
+                return doNOE(experimentSet, dynSources, groupId, useEquation);
             default:
                 throw new IllegalArgumentException("Invalid mode " + experimentSet.getExpMode());
         }
@@ -290,7 +289,7 @@ public class ResidueFitter {
             }
 
             EquationFitter equationFitter = getFitter(options);
-            equationFitter.setData(experimentSet, resNums);
+            equationFitter.setData(experimentSet, dynSources);
             CoMDOptions options = new CoMDOptions(true);
             fitResult = equationFitter.doFit(equationName, null, options);
             fitResults.put(equationName, fitResult);
@@ -303,13 +302,11 @@ public class ResidueFitter {
 //            System.out.println("fit " + fitResult.getAicc() + " " + aicMin + " " + bestEquation);
         }
         List<ExperimentResult> resInfoList = new ArrayList<>();
-        Map<String, ExperimentResult> resMap = new HashMap<>();
-        for (String residueNumber : resNums) {
-            DynamicsSource dynSource = DynamicsSource.createFromSpecifiers(experimentSet.getName() + ".0", residueNumber, "N");
-
-            ExperimentResult residueInfo = new ExperimentResult(experimentSet, dynSource, groupId, resNums.length);
+        Map<ResonanceSource, ExperimentResult> resMap = new HashMap<>();
+        for (var dynSource : dynSources) {
+            ExperimentResult residueInfo = new ExperimentResult(experimentSet, dynSource, groupId, dynSources.length);
             resInfoList.add(residueInfo);
-            resMap.put(residueNumber, residueInfo);
+            resMap.put(dynSource, residueInfo);
             equationNames.forEach((equationName) -> {
                 residueInfo.addFitResult(fitResults.get(equationName));
             });
@@ -324,8 +321,8 @@ public class ResidueFitter {
             int nCurves = fitResult.getNCurves();
             for (int iCurve = 0; iCurve < nCurves; iCurve++) {
                 CurveFit curveFit = fitResult.getCurveFit(iCurve);
-                String residueNumber = curveFit.getResNum();
-                ExperimentResult residueInfo = resMap.get(residueNumber);
+                ResonanceSource dynSource = curveFit.getDynamicsSource();
+                ExperimentResult residueInfo = resMap.get(dynSource);
                 residueInfo.addCurveSet(curveFit, bestEquation.equals(equationName));
             }
         }
@@ -351,7 +348,7 @@ public class ResidueFitter {
                         protected Object call() {
                             updateStatus("Start processing");
                             updateTitle("Start Processing");
-                            fitAllResidues(this);
+                            fitAllAtoms(this);
                             return 0;
                         }
                     };
@@ -385,9 +382,11 @@ public class ResidueFitter {
                 equationType = CPMGEquation.valueOf(name);
                 break;
             case "r1":
+            case "t1":
                 equationType = ExpEquation.valueOf(name);
                 break;
             case "r2":
+            case "t2":
                 equationType = ExpEquation.valueOf(name);
                 break;
             case "exp":
