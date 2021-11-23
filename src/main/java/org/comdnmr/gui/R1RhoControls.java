@@ -600,7 +600,7 @@ public class R1RhoControls extends EquationControls {
                                     stream().findFirst().get();
                             double[] xVals = expData.getXVals();
 
-//                            String resNum = String.valueOf(controller.currentResProps.getExperimentResults().get(0).getResNumStr());
+//                            String resNum = String.valueOf(controller.currentResProps.getExperimentResults().get(0).getSource());
 //                            double[] xVals = controller.currentResProps.getExperimentData().stream().findFirst().get().getResidueData(resNum).getXValues()[0];
                             if (xVals != null) {
                                 double min = Math.round(xVals[1] / 2.0) * 2.0;
@@ -694,7 +694,7 @@ public class R1RhoControls extends EquationControls {
                         extras[0] = expData.getNucleusField();
                         extras[1] = dataExtras.get(0);
                         extras[2] = dataExtras.get(1);
-//                        System.out.println("resInfo Res Num = " + resInfo.getResNumStr());
+//                        System.out.println("resInfo Res Num = " + resInfo.getSource());
 //                        System.out.println("extras size = " + expData.getExtras().size());
                         //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[1] = " + extras[1]);
 //                        System.out.println("extras[1] = " + extras[1]);

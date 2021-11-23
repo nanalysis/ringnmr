@@ -48,6 +48,8 @@ import static org.comdnmr.gui.CESTControls.PARS.TEX;
 import org.comdnmr.eqnfit.CESTFitFunction;
 import org.comdnmr.util.CoMDPreferences;
 import javafx.scene.input.KeyCode;
+import org.nmrfx.chemistry.Atom;
+import org.nmrfx.chemistry.relax.ResonanceSource;
 
 /**
  *
@@ -637,9 +639,9 @@ public class CESTControls extends EquationControls {
                         if (controller.getCurrentExperimentSet().getExperimentData() != null) {
 //                            double[] xVals = controller.currentResProps.getExperimentData().stream().findFirst().get().getXVals();
                             List<ExperimentResult> resVals = controller.getCurrentExperimentSet().getExperimentResults();
-                            Collections.sort(resVals, (a,b) -> Integer.compare(a.getResNum(), b.getResNum()));
-                            String resNum = String.valueOf(resVals.get(0).getResNum());
-                            double[] xVals = controller.getCurrentExperimentSet().getExperimentData().stream().findFirst().get().getResidueData(resNum).getXValues()[0];
+                            Collections.sort(resVals, (a,b) -> Integer.compare(a.getAtom().getIndex(), b.getAtom().getIndex()));
+                            ResonanceSource resSource = resVals.get(0).getSource();
+                            double[] xVals = controller.getCurrentExperimentSet().getExperimentData().stream().findFirst().get().getResidueData(resSource).getXValues()[0];
                             if (xVals != null) {
                                 double min = Math.floor(xVals[1] / 2) * 2;
                                 double max = Math.ceil(xVals[xVals.length - 1] / 2) * 2;
@@ -743,7 +745,7 @@ public class CESTControls extends EquationControls {
                         extras[0] = expData.getNucleusField();
                         extras[1] = dataExtras.get(0);
                         extras[2] = dataExtras.get(1);
-//                        System.out.println("resInfo Res Num = " + resInfo.getResNumStr());
+//                        System.out.println("resInfo Res Num = " + resInfo.getSource());
 //                        System.out.println("extras size = " + expData.getExtras().size());
                         //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[1] = " + extras[1]);
 //                        System.out.println("extras[1] = " + extras[1]);

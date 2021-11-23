@@ -31,6 +31,7 @@ import org.comdnmr.data.ValueSet;
 import org.nmrfx.chart.Axis;
 import org.nmrfx.chart.XYCanvasBarChart;
 import org.nmrfx.chart.XYValue;
+import org.nmrfx.chemistry.relax.ResonanceSource;
 import org.nmrfx.graphicsio.GraphicsContextInterface;
 import org.nmrfx.graphicsio.GraphicsIOException;
 
@@ -40,7 +41,7 @@ import org.nmrfx.graphicsio.GraphicsIOException;
  */
 public class ResidueChart extends XYCanvasBarChart {
 
-    static Set<String> selectedResidues = new HashSet<>();
+    static Set<ResonanceSource> selectedResidues = new HashSet<>();
     public String currentSeriesName = "";
     ValueSet valueSet = null;
 
@@ -70,12 +71,18 @@ public class ResidueChart extends XYCanvasBarChart {
             Hit hit = hitOpt.get();
             boolean appendMode = e.isShiftDown();
             XYValue value = hit.getValue();
-            int resNum = (int) Math.round(value.getXValue());
-            String statusMessage = hit.getSeries().getName() + " " + resNum + " " + String.format("%.2f", value.getYValue());
+            var series = hit.getSeries();
+            Object extraValue = value.getExtraValue();
+            ResonanceSource resSource = null;
+            if (extraValue instanceof ResonanceSource) {
+                resSource = (ResonanceSource) extraValue;
+            }
+
+            String statusMessage = series.getName() + " " + resSource + " " + String.format("%.2f", value.getYValue());
             PyController.mainController.statusBar.setText(statusMessage);
-            showInfo(hit.getSeries().getName(), hit.getIndex(), resNum, appendMode);
+            showInfo(hit.getSeries().getName(), hit.getIndex(), resSource, appendMode);
         } else {
-            Optional<Integer> intOpt = pickPresenceIndicators(e.getX(), e.getY());
+            Optional<ResonanceSource> intOpt = pickPresenceIndicators(e.getX(), e.getY());
             if (intOpt.isPresent()) {
                 hitChart = true;
                 boolean appendMode = e.isShiftDown();
@@ -110,13 +117,16 @@ public class ResidueChart extends XYCanvasBarChart {
         this.valueSet = valueSet;
     }
 
-    void showInfo(String seriesName, int seriesIndex, int resNum, boolean appendMode) {
-        String resString = String.valueOf(resNum);
+    void showInfo(String seriesName, int seriesIndex, ResonanceSource resSource, boolean appendMode) {
         if (!appendMode) {
             selectedResidues.clear();
-            selectedResidues.add(resString);
-        } else if (!selectedResidues.contains(resString)) {
-            selectedResidues.add(resString);
+            if (resSource != null) {
+                selectedResidues.add(resSource);
+            }
+        } else if (!selectedResidues.contains(resSource)) {
+            if (resSource != null) {
+                selectedResidues.add(resSource);
+            }
         }
         currentSeriesName = seriesName;
         String[] seriesNameParts = seriesName.split("\\|");
@@ -145,36 +155,36 @@ public class ResidueChart extends XYCanvasBarChart {
         String state = seriesNameParts[2];
         state = "*:" + state.substring(2);
 //        System.out.println("series " + seriesName + " map " + mapName + " eqn " + equationName + " state " + state);
-        String[] residues = new String[selectedResidues.size()];
-        selectedResidues.toArray(residues);
+        ResonanceSource[] resSources = new ResonanceSource[selectedResidues.size()];
+        selectedResidues.toArray(resSources);
         controller.chartInfo.valueSet = valueSet;
-        controller.chartInfo.setResidues(residues);
+        controller.chartInfo.setResidues(resSources);
         controller.chartInfo.state = state;
         controller.chartInfo.mapName = mapName;
         controller.chartInfo.equationName = equationName;
         if (valueSet instanceof ExperimentSet) {
             if (!selectedResidues.isEmpty()) {
                 ExperimentSet experimentSet = (ExperimentSet) valueSet;
-                controller.chartInfo.experimentalResult = experimentSet.getExperimentResult(residues[0]);
+                controller.chartInfo.experimentalResult = experimentSet.getExperimentResult(resSources[0]);
             }
         } else if (valueSet instanceof RelaxSet) {
         }
         controller.showInfo(controller.chartInfo, xyCanvasChart);
     }
 
-    Optional<Integer> pickPresenceIndicators(double mouseX, double mouseY) {
-        Optional<Integer> result = Optional.empty();
+    Optional<ResonanceSource> pickPresenceIndicators(double mouseX, double mouseY) {
+        Optional<ResonanceSource> result = Optional.empty();
         if (valueSet != null) {
-            Set<String> resNums = valueSet.getResidueNumberStrs();
-            for (var resStr : resNums) {
-                int resNum = Integer.parseInt(resStr);
+            Set<ResonanceSource> dynSources = valueSet.getDynamicsSources();
+            for (var dynSource : dynSources) {
+                int resNum = dynSource.getAtom().getResidueNumber();
                 double x1 = xAxis.getDisplayPosition(resNum - 0.5) + 1;
                 double x2 = xAxis.getDisplayPosition(resNum + 0.5) - 1;
                 double y1 = yAxis.getYOrigin() - yAxis.getHeight() + 2;
                 double y2 = yAxis.getYOrigin();
                 if ((mouseX > x1) && (mouseX < x2)) {
                     if ((mouseY > y1) && (mouseY < y2)) {
-                        result = Optional.of(resNum);
+                        result = Optional.of(dynSource);
                         break;
                     }
                 }
@@ -186,16 +196,15 @@ public class ResidueChart extends XYCanvasBarChart {
 
     void drawPresenceIndicators(GraphicsContextInterface gC) throws GraphicsIOException {
         if (valueSet != null) {
-            Set<String> resNums = valueSet.getResidueNumberStrs();
-            for (var resStr : resNums) {
-                int resNum = Integer.parseInt(resStr);
+            Set<ResonanceSource> dynSources = valueSet.getDynamicsSources();
+            for (var dynSource : dynSources) {
+                int resNum = dynSource.getAtom().getResidueNumber();
                 double x1 = xAxis.getDisplayPosition(resNum - 0.5) + 1;
                 double x2 = xAxis.getDisplayPosition(resNum + 0.5) - 1;
                 double y1 = yAxis.getYOrigin() - yAxis.getHeight() + 2;
                 double width = x2 - x1;
                 double height = yAxis.getHeight() - 4;
-                String resName = String.valueOf(resNum);
-                if (selectedResidues.contains(resName)) {
+                if (selectedResidues.contains(dynSource)) {
                     gC.setFill(Color.ORANGE);
                 } else {
                     gC.setFill(Color.LIGHTGRAY);

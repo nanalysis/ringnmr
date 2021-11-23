@@ -63,6 +63,7 @@ import org.nmrfx.chemistry.Atom;
 import org.nmrfx.chemistry.Residue;
 import org.nmrfx.chemistry.io.MoleculeIOException;
 import org.nmrfx.chemistry.relax.RelaxationValues;
+import org.nmrfx.chemistry.relax.ResonanceSource;
 import org.nmrfx.peaks.PeakList;
 import org.nmrfx.star.ParseException;
 
@@ -265,15 +266,15 @@ public class ChartUtil {
         return data;
     }
 
-    public static List<DataSeries> getMapData(String seriesName, String expName, String[] residues) {
+    public static List<DataSeries> getMapData(String seriesName, String expName, ResonanceSource[] resSources) {
         List<DataSeries> data = new ArrayList<>();
-        for (String resNum : residues) {
-            data.add(getMapData(seriesName, expName, resNum));
+        for (ResonanceSource resSource : resSources) {
+            data.add(getMapData(seriesName, expName, resSource));
         }
         return data;
     }
 
-    public static DataSeries getMapData(String seriesName, String expName, String resNum) {
+    public static DataSeries getMapData(String seriesName, String expName, ResonanceSource resSource) {
         DataSeries series = new DataSeries();
         ValueSet valueSet = valueSets.get(seriesName);
         ExperimentSet experimentSet;
@@ -284,8 +285,8 @@ public class ChartUtil {
         }
 
         Experiment expData = experimentSet.getExperimentData(expName);
-        series.setName(expName + ":" + resNum);
-        ExperimentData experimentalData = expData.getResidueData(resNum);
+        series.setName(expName + ":" + resSource);
+        ExperimentData experimentalData = expData.getResidueData(resSource);
         if (experimentalData != null) {
             double[][] xValues = experimentalData.getXValues();
             double[] yValues = experimentalData.getYValues();
@@ -305,11 +306,11 @@ public class ChartUtil {
         return series;
     }
 
-    public static ArrayList<GUIPlotEquation> getEquations(Experiment expData, String seriesName, String[] residues, String equationName, String state, double field) {
+    public static ArrayList<GUIPlotEquation> getEquations(Experiment expData, String seriesName, ResonanceSource[] resSources, String equationName, String state, double field) {
         //System.out.println(" series name is " + seriesName);
         ArrayList<GUIPlotEquation> equations = new ArrayList<>();
-        for (String resNum : residues) {
-            GUIPlotEquation equation = getEquation(expData, seriesName, resNum, equationName, state, field);
+        for (ResonanceSource resSource : resSources) {
+            GUIPlotEquation equation = getEquation(expData, seriesName, resSource, equationName, state, field);
             if (equation != null) {
                 equations.add(equation);
             }
@@ -317,9 +318,9 @@ public class ChartUtil {
         return equations;
     }
 
-    public static GUIPlotEquation getEquation(Experiment expData, String seriesName, String resNum, String equationName, String state, double field) {
+    public static GUIPlotEquation getEquation(Experiment expData, String seriesName, ResonanceSource resSource, String equationName, String state, double field) {
         ExperimentSet residueProps = (ExperimentSet) valueSets.get(seriesName);
-        ExperimentResult resInfo = residueProps.getExperimentResult(resNum);
+        ExperimentResult resInfo = residueProps.getExperimentResult(resSource);
         GUIPlotEquation equationCopy = null;
         String expType = expData.getExpMode();
 //            ExperimentData expData = residueProps.getExperimentData("cest"); // fixme
@@ -366,11 +367,11 @@ public class ChartUtil {
         return equationCopy;
     }
 
-    public static ExperimentResult getResInfo(String seriesName, String residue) {
+    public static ExperimentResult getResInfo(String seriesName, ResonanceSource resSource) {
         ValueSet valueSet = valueSets.get(seriesName);
         if (valueSet instanceof ExperimentSet) {
             ExperimentSet experimentSet = (ExperimentSet) valueSet;
-            ExperimentResult resInfo = experimentSet.getExperimentResult(residue);
+            ExperimentResult resInfo = experimentSet.getExperimentResult(resSource);
             return resInfo;
 
         } else {
@@ -386,13 +387,13 @@ public class ChartUtil {
         var map = new HashMap<Residue, HashMap<String, Integer>>();
         int maxAtoms = 0;
         for (RelaxationValues value : values) {
-            Atom atom = value.getAtom();
-            Residue residue = (Residue) atom.getEntity();
+            ResonanceSource resSource = value.getResonanceSource();
+            Residue residue = (Residue) resSource.getAtom().getEntity();
             if (!map.containsKey(residue)) {
                 map.put(residue, new HashMap<>());
             }
             var anameSet = map.get(residue);
-            anameSet.put(atom.getName(), anameSet.size());
+            anameSet.put(resSource.getAtom().getName(), anameSet.size());
             maxAtoms = Math.max(maxAtoms, anameSet.size());
             int resNum = residue.getResNum();
             minRes = Math.min(resNum, minRes);
@@ -405,9 +406,9 @@ public class ChartUtil {
         }
 
         for (RelaxationValues value : values) {
-            Atom atom = value.getAtom();
-            Residue residue = (Residue) atom.getEntity();
-            int iSeries = map.get(residue).get(atom.getName());
+            ResonanceSource resSource = value.getResonanceSource();
+            Residue residue = (Residue) resSource.getAtom().getEntity();
+            int iSeries = map.get(residue).get(resSource.getAtom().getName());
             var series = data.get(iSeries);
             int resNum = residue.getResNum();
             double x = resNum;
@@ -448,18 +449,30 @@ public class ChartUtil {
             return data;
         }
 
-        DataSeries series = new DataSeries();
-        series.setName(mapName + '|' + eqnName + "|" + state + "|" + parName);
-        data.add(series);
         minRes = Integer.MAX_VALUE;
         maxRes = Integer.MIN_VALUE;
+        var map = new HashMap<Residue, HashMap<String, Integer>>();
+        int maxAtoms = 0;
+
         Collection<Experiment> expDataSets = experimentSet.getExperimentData();
         for (Experiment expData : expDataSets) {
-            for (String resNumS : expData.getResidues()) {
-                int resNum = Integer.parseInt(resNumS);
+            for (var resSource : expData.getDynamicsSources()) {
+                Residue residue = (Residue) resSource.getAtom().getEntity();
+                if (!map.containsKey(residue)) {
+                    map.put(residue, new HashMap<>());
+                }
+                var anameSet = map.get(residue);
+                anameSet.put(resSource.getAtom().getName(), anameSet.size());
+                maxAtoms = Math.max(maxAtoms, anameSet.size());
+                int resNum = residue.getResNum();
                 minRes = Math.min(resNum, minRes);
                 maxRes = Math.max(resNum, maxRes);
             }
+        }
+        for (int i = 0; i < maxAtoms; i++) {
+            DataSeries series = new DataSeries();
+            series.setName(mapName + '|' + eqnName + "|" + state + "|" + parName + "|" + i);
+            data.add(series);
         }
 
         List<ExperimentResult> resValues = experimentSet.getExperimentResults();
@@ -473,9 +486,15 @@ public class ChartUtil {
             if (eqnName.equals("best")) {
                 useEquName = experimentResult.getBestEquationName();
             }
-            int resNum = experimentResult.getResNum();
+            var resSource = experimentResult.getSource();
+
+            Residue residue = (Residue) resSource.getAtom().getEntity();
+            int iSeries = map.get(residue).get(resSource.getAtom().getName());
+            var series = data.get(iSeries);
+            int resNum = residue.getResNum();
+
             double x = resNum;
-            Double errUp = null;
+            Double errUp;
             Double y = experimentResult.getParValue(useEquName, state, parName);
             if (y == null) {
                 continue;
@@ -512,6 +531,7 @@ public class ChartUtil {
             }
 
             XYEValue dataPoint = new XYEValue(x, y, errUp);
+            dataPoint.setExtraValue(resSource);
             series.getData().add(dataPoint);
         }
         return data;

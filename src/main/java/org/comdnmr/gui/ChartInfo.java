@@ -10,6 +10,8 @@ import java.util.List;
 import org.comdnmr.data.ExperimentResult;
 import org.comdnmr.data.ExperimentSet;
 import org.comdnmr.data.ValueSet;
+import org.nmrfx.chemistry.Atom;
+import org.nmrfx.chemistry.relax.ResonanceSource;
 
 /**
  *
@@ -20,7 +22,7 @@ public class ChartInfo {
     String mapName;
     String state;
     String equationName;
-    String[] currentResidues;
+    ResonanceSource[] currentResidues;
     ExperimentResult experimentalResult;
     ValueSet valueSet;
     List<int[]> currentStates = new ArrayList<>();
@@ -44,20 +46,24 @@ public class ChartInfo {
     public boolean hasResidues() {
         return currentResidues != null;
     }
-    
+
+    public Atom getAtom() {
+        return experimentalResult.getAtom();
+    }
+
     public int getResNum() {
-        return experimentalResult.getResNum();
+        return experimentalResult.getAtom().getResidueNumber();
     }
 
-    public String getResNumStr() {
-        return String.valueOf(experimentalResult.getResNum());
+    public ResonanceSource getSource() {
+        return experimentalResult.getSource();
     }
 
-    public String[] getResidues() {
+    public ResonanceSource[] getResidues() {
         return currentResidues;
     }
 
-    public void setResidues(String[] residues) {
+    public void setResidues(ResonanceSource[] residues) {
         this.currentResidues = residues;
     }
 
@@ -68,10 +74,10 @@ public class ChartInfo {
     public String getEquationName() {
         return equationName;
     }
-    
+
     public void setStates(List<int[]> states) {
         currentStates.clear();
-        currentStates.addAll(states);        
+        currentStates.addAll(states);
     }
 
     public void clear() {
