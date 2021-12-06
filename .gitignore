@@ -1,7 +1,8 @@
 /target/
 /sandbox/
+/installers/
 /.idea/
-ringnmr.iml
+*.iml
 
 # Compiled source #
 ###################
