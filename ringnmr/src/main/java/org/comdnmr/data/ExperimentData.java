@@ -95,6 +95,10 @@ public class ExperimentData {
     public double[] getErrValues() {
         return errValues;
     }
+    
+    public void setErrValue(int i, double value) {
+        errValues[i] = value;
+    }
 
     public class DataValue {
 
