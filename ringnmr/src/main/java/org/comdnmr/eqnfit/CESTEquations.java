@@ -709,6 +709,11 @@ public class CESTEquations {
         peaks.sort(Comparator.comparingDouble(CESTPeak::getDepth));
 
         List<CESTPeak> peaks2 = peaks;
+        for (int i = 0; i < peaks2.size(); i++) {
+            System.out.println("peaksp guess " + i + " x = " + peaks2.get(i).getPosition());
+            System.out.println("peaksp guess " + i + " y = " + peaks2.get(i).getDepth());
+            System.out.println("peaksp guess " + i + " width50 = " + peaks2.get(i).width50LB + " " + peaks2.get(i).width50UB);
+        }
         if (peaks.size() >= 2) {
             peaks2 = peaks.subList(0, 2);
             if (fitMode.equals("r1rho")) {
@@ -721,9 +726,9 @@ public class CESTEquations {
             CESTPeak peak = peaks2.get(0);
             double newCenter;
             if (peak.width50LB > peak.width50UB) {
-                newCenter = peak.position - peak.width50LB / field / 2.0;
+                newCenter = peak.position + peak.width50LB / field / 2.0;
             } else {
-                newCenter = peak.position + peak.width50UB / field / 2.0;
+                newCenter = peak.position - peak.width50UB / field / 2.0;
             }
             double newDepth = (baseline + peak.depth) / 2.0;
             CESTPeak newPeak = new CESTPeak(peak.pkInd, newCenter, newDepth, peak.width50, peak.width50LB, peak.width50UB, peak.width25, peak.width25LB, peak.width25UB, peak.width75, peak.width75LB, peak.width75UB, peak.baseline);
@@ -731,11 +736,11 @@ public class CESTEquations {
         }
 
         peaks2.sort(Comparator.comparingDouble(CESTPeak::getDepth));
-//        for (int i = 0; i < peaks2.size(); i++) {
-//            System.out.println("peaks guess " + i + " x = " + peaks2.get(i).pos);
-//            System.out.println("peaks guess " + i + " y = " + peaks2.get(i).depth);
-//            System.out.println("peaks guess " + i + " fwhm = " + peaks2.get(i).width50);
-//        }
+        for (int i = 0; i < peaks2.size(); i++) {
+            System.out.println("peaks guess " + i + " x = " + peaks2.get(i).getPosition());
+            System.out.println("peaks guess " + i + " y = " + peaks2.get(i).getDepth());
+            System.out.println("peaks guess " + i + " width50 = " + peaks2.get(i).width50LB + " " + peaks2.get(i).width50UB);
+        }
 
         List<CESTPeak> peaks1 = new ArrayList<>();
         if (peaks2.size() >= 1) {
