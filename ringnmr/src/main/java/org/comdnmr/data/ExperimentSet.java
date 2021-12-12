@@ -36,7 +36,7 @@ import org.nmrfx.chemistry.relax.ResonanceSource;
 public class ExperimentSet implements ValueSet {
 
     Map<String, Experiment> expMaps = new HashMap<>();
-    private final HashMap<ResonanceSource, ExperimentResult> resultMap = new HashMap<>();
+    private final HashMap<String, ExperimentResult> resultMap = new HashMap<>();
     final String name;
     String fileName = null;
     Map<Double, Integer> fieldMap = new LinkedHashMap();
@@ -224,7 +224,7 @@ public class ExperimentSet implements ValueSet {
     }
 
     public void addExperimentResult(ResonanceSource dynSource, ExperimentResult value) {
-        resultMap.put(dynSource, value);
+        resultMap.put(dynSource.getAtomKey(), value);
     }
 
     public void clearResidueMap() {
@@ -232,7 +232,7 @@ public class ExperimentSet implements ValueSet {
     }
 
     public Set<ResonanceSource> getDynamicsSources() {
-        return resultMap.keySet();
+        return resultMap.values().stream().map(v -> v.getSource()).collect(Collectors.toSet());
     }
 
     public List<ExperimentResult> getExperimentResults() {
@@ -242,7 +242,7 @@ public class ExperimentSet implements ValueSet {
     }
 
     public ExperimentResult getExperimentResult(ResonanceSource dynSource) {
-        return resultMap.get(dynSource);
+        return resultMap.get(dynSource.getAtomKey());
     }
 
     public int getDataCount(ResonanceSource[] dynSources) {
