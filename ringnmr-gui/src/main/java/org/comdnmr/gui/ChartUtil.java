@@ -50,6 +50,7 @@ import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Transform;
 import org.comdnmr.eqnfit.CurveFit;
 import org.comdnmr.data.DataIO;
+import org.comdnmr.data.DynamicsSource;
 import org.comdnmr.data.Experiment;
 import org.comdnmr.eqnfit.PlotEquation;
 import org.comdnmr.data.ExperimentResult;
@@ -462,7 +463,11 @@ public class ChartUtil {
                     map.put(residue, new HashMap<>());
                 }
                 var anameSet = map.get(residue);
-                anameSet.put(resSource.getAtom().getName(), anameSet.size());
+                int setSize = anameSet.size();
+                String key = resSource.getAtom().getName();
+                if (!anameSet.containsKey(key)) {
+                    anameSet.put(key, setSize);
+                }
                 maxAtoms = Math.max(maxAtoms, anameSet.size());
                 int resNum = residue.getResNum();
                 minRes = Math.min(resNum, minRes);
@@ -587,7 +592,9 @@ public class ChartUtil {
             reschartNode = PyController.mainController.addChart();
 
         }
-        ExperimentSet resProp = DataIO.processPeakList(peakList);
+        DynamicsSource dynamicsSourceFactory = new DynamicsSource(true, true, true, true);
+
+        ExperimentSet resProp = DataIO.processPeakList(peakList, dynamicsSourceFactory);
         if (resProp != null) {
             valueSets.put(resProp.getName(), resProp);
             String parName = "Kex";

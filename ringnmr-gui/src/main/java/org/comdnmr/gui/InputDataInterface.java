@@ -49,13 +49,17 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.comdnmr.data.DataIO;
+import org.comdnmr.data.DynamicsSource;
 import org.comdnmr.data.Experiment;
 import org.comdnmr.data.ExperimentSet;
 import org.controlsfx.control.textfield.TextFields;
 import org.controlsfx.dialog.ExceptionDialog;
 import org.nmrfx.chart.DataSeries;
+import org.nmrfx.chemistry.MoleculeBase;
+import org.nmrfx.chemistry.MoleculeFactory;
 import org.nmrfx.datasets.DatasetBase;
 import org.nmrfx.peaks.PeakList;
+import org.nmrfx.utils.GUIUtils;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -617,6 +621,18 @@ public class InputDataInterface {
     void loadFromPeakList() {
         PeakList peakList = PeakList.get(peakListChoice.getValue());
         if (peakList != null) {
+            MoleculeBase mol = MoleculeFactory.getActive();
+            boolean dynCreateAtoms;
+            if (mol == null) {
+                if (!GUIUtils.affirm("No molecule present, dynamically create")) {
+                    return;
+                } else {
+                    dynCreateAtoms = true;
+                }
+            } else {
+                dynCreateAtoms = false;
+            }
+            DynamicsSource dynSource = new DynamicsSource(dynCreateAtoms, dynCreateAtoms, dynCreateAtoms, dynCreateAtoms);
             String peakListName = peakList.getName();
             ExperimentSet experimentSet = new ExperimentSet(peakListName, peakListName);
             String expMode = fitModeChoice.getValue().toLowerCase();
@@ -634,7 +650,8 @@ public class InputDataInterface {
 //                    fitModeChoice.getValue(),
 //                    errorPars, delayCalc, B1field);
 
-            DataIO.loadFromPeakList(peakList, expData, experimentSet, xConvChoice.getValue(), yConvChoice.getValue());
+            DataIO.loadFromPeakList(peakList, expData, experimentSet,
+                    xConvChoice.getValue(), yConvChoice.getValue(), dynSource);
             if (experimentSet != null) {
                 ResidueChart reschartNode = PyController.mainController.getActiveChart();
                 if (reschartNode == null) {
