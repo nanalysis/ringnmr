@@ -709,11 +709,6 @@ public class CESTEquations {
         peaks.sort(Comparator.comparingDouble(CESTPeak::getDepth));
 
         List<CESTPeak> peaks2 = peaks;
-        for (int i = 0; i < peaks2.size(); i++) {
-            System.out.println("peaksp guess " + i + " x = " + peaks2.get(i).getPosition());
-            System.out.println("peaksp guess " + i + " y = " + peaks2.get(i).getDepth());
-            System.out.println("peaksp guess " + i + " width50 = " + peaks2.get(i).width50LB + " " + peaks2.get(i).width50UB);
-        }
         if (peaks.size() >= 2) {
             peaks2 = peaks.subList(0, 2);
             if (fitMode.equals("r1rho")) {
@@ -736,11 +731,11 @@ public class CESTEquations {
         }
 
         peaks2.sort(Comparator.comparingDouble(CESTPeak::getDepth));
-        for (int i = 0; i < peaks2.size(); i++) {
-            System.out.println("peaks guess " + i + " x = " + peaks2.get(i).getPosition());
-            System.out.println("peaks guess " + i + " y = " + peaks2.get(i).getDepth());
-            System.out.println("peaks guess " + i + " width50 = " + peaks2.get(i).width50LB + " " + peaks2.get(i).width50UB);
-        }
+ //       for (int i = 0; i < peaks2.size(); i++) {
+ //           System.out.println("peaks guess " + i + " x = " + peaks2.get(i).getPosition());
+ //           System.out.println("peaks guess " + i + " y = " + peaks2.get(i).getDepth());
+ //           System.out.println("peaks guess " + i + " width50 = " + peaks2.get(i).width50LB + " " + peaks2.get(i).width50UB);
+ //       }
 
         List<CESTPeak> peaks1 = new ArrayList<>();
         if (peaks2.size() >= 1) {
