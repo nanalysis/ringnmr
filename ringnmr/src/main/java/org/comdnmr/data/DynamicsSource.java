@@ -42,7 +42,7 @@ public class DynamicsSource {
         this.createAtom = createAtom;
     }
 
-    public Optional<Peak> getPeak(String peakSpecifier, int nDim) {
+    private Optional<Peak> getPeak(String peakSpecifier, int nDim) {
         Optional<Peak> result = Optional.empty();
         Matcher matcher = PEAK_PATTERN.matcher(peakSpecifier);
         if (!matcher.matches()) {
@@ -72,7 +72,7 @@ public class DynamicsSource {
     public Optional<Atom> getAtom(String molName, String atomSpecifier,
             int peakID, boolean patLabel) {
         MoleculeBase molecule;
-        Optional<Atom> result = Optional.empty();
+        Optional<Atom> empty = Optional.empty();
 
         if ((molName == null) || molName.equals("")) {
             molecule = MoleculeFactory.getActive();
@@ -81,7 +81,7 @@ public class DynamicsSource {
         }
         if (molecule == null) {
             if (!createMol) {
-                return result;
+                return empty;
             }
             if (molName == null) {
                 molName = "noname";
@@ -101,6 +101,7 @@ public class DynamicsSource {
             ijChar = matcher.group(6);
             atomName = matcher.group(8);
         }
+        atomName = atomName.toUpperCase();
         String resName = resChar == null ? "X" : PDBAtomParser.convert1To3(resChar);
 
         Polymer polymer = null;
@@ -112,20 +113,39 @@ public class DynamicsSource {
             }
         }
         if (polymer == null) {
+            if (!createAtom) {
+                return empty;
+            }
             polymer = new Polymer(chainName);
             molecule.addEntity(polymer);
         }
         if (ijChar != null) {
+            if (!createAtom) {
+                return empty;
+            }
             resNumStr = String.valueOf(peakID);
             resName = "X";
         }
         Residue residue = polymer.getResidue(resNumStr);
         if (residue == null) {
+            if (!createAtom) {
+                return empty;
+            }
+
             residue = new Residue(resNumStr, resName);
             polymer.addResidue(residue);
         }
         Atom atom = residue.getAtom(atomName);
+        if ((atom == null) && (atomName.charAt(0) == 'H')) {
+            atom = residue.getAtom(atomName + "1");
+            if ((atom != null) && !atom.isMethyl()) {
+                atom = null;
+            }
+        }
         if (atom == null) {
+            if (!createAtom) {
+                return empty;
+            }
             atom = Atom.genAtomWithElement(atomName, atomName.substring(0, 1));
             residue.addAtom(atom);
         }
@@ -210,11 +230,14 @@ public class DynamicsSource {
                     patLabel = true;
                 }
             }
+            if (!createPeak && patLabel) {
+                return empty;
+            }
             Optional<Atom> atomOpt = getAtom(molName, label, peak.getIdNum(), patLabel);
             if (atomOpt.isPresent()) {
                 atoms[i] = atomOpt.get();
             } else {
-                return empty;
+                throw new IllegalArgumentException("Can't find atom for peak " + peak.getName());
             }
         }
         return Optional.of(new ResonanceSource(peak, atoms));

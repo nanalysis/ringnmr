@@ -174,6 +174,9 @@ public class DataIO {
         if (expMode.equals("noe")) {
             eSet = true;
         }
+        if (peakList.peaks().stream().filter(p -> p.getMeasures().isEmpty()).findAny().isPresent()) {
+            throw new IllegalArgumentException("Some peaks don't have measured values");
+        }
         peakList.peaks().stream().filter(peak -> peak.getStatus() >= 0).forEach(peak -> {
             List<Double> xValueList = new ArrayList<>();
             List<Double> yValueList = new ArrayList<>();
@@ -221,26 +224,25 @@ public class DataIO {
                 }
             }
             Optional<ResonanceSource> resSourceOpt = dynamicsSourceFactory.createFromPeak(peak);
-            if (!resSourceOpt.isPresent()) {
-                throw new IllegalArgumentException("Can't generate resonance source from peak " + peak.getName());
-            }
-            ResonanceSource resSource = resSourceOpt.get();
-            if (expMode.equals("cest")) {
-                processCESTData((CESTExperiment) experiment, resSource, xValueList, yValueList, errValueList);
-            } else {
-                ExperimentData residueData = new ExperimentData(experiment, resSource, xValueList, yValueList, errValueList);
-                experiment.addResidueData(resSource, residueData);
-            }
+            if (resSourceOpt.isPresent()) {
+                ResonanceSource resSource = resSourceOpt.get();
+                if (expMode.equals("cest")) {
+                    processCESTData((CESTExperiment) experiment, resSource, xValueList, yValueList, errValueList);
+                } else {
+                    ExperimentData residueData = new ExperimentData(experiment, resSource, xValueList, yValueList, errValueList);
+                    experiment.addResidueData(resSource, residueData);
+                }
 
-            ExperimentResult residueInfo = experimentSet.getExperimentResult(resSource);
+                ExperimentResult residueInfo = experimentSet.getExperimentResult(resSource);
 
-            if (residueInfo == null) {
-                residueInfo = new ExperimentResult(experimentSet, resSource, 0, 0, 0);
-                experimentSet.addExperimentResult(resSource, residueInfo);
-            }
-            if (expMode.equals("noe")) {
-                residueInfo.value = yValueList.get(0);
-                residueInfo.err = errValueList.get(0);
+                if (residueInfo == null) {
+                    residueInfo = new ExperimentResult(experimentSet, resSource, 0, 0, 0);
+                    experimentSet.addExperimentResult(resSource, residueInfo);
+                }
+                if (expMode.equals("noe")) {
+                    residueInfo.value = yValueList.get(0);
+                    residueInfo.err = errValueList.get(0);
+                }
             }
         });
         if (!eSet) {
@@ -716,7 +718,7 @@ public class DataIO {
 
             Logger.getLogger(DataIO.class.getName()).log(Level.SEVERE, null, ex);
         }
-        Optional<ResonanceSource> resSourceOpt = dynamicsSourceFactory.createFromSpecifiers(expData.getExpMode()+ "." + 0, residueNum, atomName);
+        Optional<ResonanceSource> resSourceOpt = dynamicsSourceFactory.createFromSpecifiers(expData.getExpMode() + "." + 0, residueNum, atomName);
         if (!resSourceOpt.isPresent()) {
             throw new IllegalArgumentException("Can't generate resonance source from data " + expData.getName() + "." + 0);
         }
