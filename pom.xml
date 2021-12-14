@@ -16,5 +16,6 @@
     <modules>
         <module>ringnmr</module>
         <module>ringnmr-gui</module>
+        <module>ringnmr-plugin</module>
     </modules>
 </project>
