@@ -15,6 +15,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 import org.apache.commons.math3.optim.PointValuePair;
+import org.comdnmr.data.DynamicsSource;
 import org.comdnmr.modelfree.MolDataValues;
 import org.comdnmr.modelfree.RelaxDataValue;
 import org.comdnmr.modelfree.RelaxEquations;
@@ -45,6 +46,7 @@ public class DRefineTest {
         File file = new File(vectorFileName);
         Path path = file.toPath();
         Map<String, MolDataValues> molValues = new TreeMap<>();
+        DynamicsSource dynamicsSourceFactory = new DynamicsSource(true, true, true, true);
 
         Files.lines(path).forEach(line -> {
             String[] fields = line.split("\t");
@@ -56,7 +58,8 @@ public class DRefineTest {
                 v[0] = Double.valueOf(fields[2]);
                 v[1] = Double.valueOf(fields[3]);
                 v[2] = Double.valueOf(fields[4]);
-                MolDataValues molDataValue = new MolDataValues(atomSpecifier, v);
+                MolDataValues molDataValue = new MolDataValues(atomSpecifier, v,
+                        dynamicsSourceFactory);
                 molValues.put(atomSpecifier, molDataValue);
             }
         });

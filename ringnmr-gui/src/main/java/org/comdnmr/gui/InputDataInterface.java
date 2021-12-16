@@ -49,13 +49,18 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.comdnmr.data.DataIO;
+import org.comdnmr.data.DynamicsSource;
 import org.comdnmr.data.Experiment;
 import org.comdnmr.data.ExperimentSet;
+import org.comdnmr.data.T1Experiment;
 import org.controlsfx.control.textfield.TextFields;
 import org.controlsfx.dialog.ExceptionDialog;
 import org.nmrfx.chart.DataSeries;
+import org.nmrfx.chemistry.MoleculeBase;
+import org.nmrfx.chemistry.MoleculeFactory;
 import org.nmrfx.datasets.DatasetBase;
 import org.nmrfx.peaks.PeakList;
+import org.nmrfx.utils.GUIUtils;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -234,11 +239,11 @@ public class InputDataInterface {
         formatChoice.setValue("mpk2");
 
         nucChoice.getItems().clear();
-        nucChoice.getItems().addAll(Arrays.asList("H", "F", "P", "C", "N"));
+        nucChoice.getItems().addAll(Arrays.asList("H", "D", "F", "P", "C", "N"));
         nucChoice.setValue("H");
 
         B0fieldChoice.getItems().clear();
-        B0fieldChoice.getItems().addAll(Arrays.asList("400", "500", "600", "700", "750", "800", "900", "950", "1000", "1200"));
+        B0fieldChoice.getItems().addAll(Arrays.asList("400", "475", "500", "600", "700", "750", "800", "900", "950", "1000", "1100", "1200"));
         B0fieldChoice.setValue("");
         B0fieldChoice.itemsProperty().addListener((observable, oldValue, newValue)
                 -> {
@@ -617,6 +622,19 @@ public class InputDataInterface {
     void loadFromPeakList() {
         PeakList peakList = PeakList.get(peakListChoice.getValue());
         if (peakList != null) {
+            
+            MoleculeBase mol = MoleculeFactory.getActive();
+            boolean dynCreateMol;
+            if (mol == null) {
+                if (!GUIUtils.affirm("No molecule present, dynamically create")) {
+                    return;
+                } else {
+                    dynCreateMol = true;
+                }
+            } else {
+                dynCreateMol = false;
+            }
+            DynamicsSource dynSource = new DynamicsSource(false, false, dynCreateMol, dynCreateMol);
             String peakListName = peakList.getName();
             ExperimentSet experimentSet = new ExperimentSet(peakListName, peakListName);
             String expMode = fitModeChoice.getValue().toLowerCase();
@@ -627,35 +645,48 @@ public class InputDataInterface {
             Double tau = getDouble(tauTextField.getText());
             Double B1field = getDouble(B1TextField.getText());
 
-            Experiment expData = new Experiment(experimentSet, peakList.getName(),
-                    nucChoice.getValue(), Double.parseDouble(B0fieldChoice.getValue()),
-                    temperatureK, expMode);
+            Experiment expData;
+            switch (expMode) {
+                case "T1":
+                    expData = new T1Experiment(experimentSet, peakList.getName(),
+                            nucChoice.getValue(), Double.parseDouble(B0fieldChoice.getValue()),
+                            temperatureK);
+                default:
+                    expData = new Experiment(experimentSet, peakList.getName(),
+                            nucChoice.getValue(), Double.parseDouble(B0fieldChoice.getValue()),
+                            temperatureK, expMode);
+            }
 //            tau, null,
 //                    fitModeChoice.getValue(),
 //                    errorPars, delayCalc, B1field);
 
-            DataIO.loadFromPeakList(peakList, expData, experimentSet, xConvChoice.getValue(), yConvChoice.getValue());
-            if (experimentSet != null) {
-                ResidueChart reschartNode = PyController.mainController.getActiveChart();
-                if (reschartNode == null) {
-                    reschartNode = PyController.mainController.addChart();
+            try {
+                DataIO.loadFromPeakList(peakList, expData, experimentSet,
+                        xConvChoice.getValue(), yConvChoice.getValue(), dynSource);
+                if (experimentSet != null) {
+                    ResidueChart reschartNode = PyController.mainController.getActiveChart();
+                    if (reschartNode == null) {
+                        reschartNode = PyController.mainController.addChart();
 
+                    }
+                    ChartUtil.addResidueProperty(experimentSet.getName(), experimentSet);
+                    String parName = "Kex";
+                    if (experimentSet.getExpMode().equals("r1")) {
+                        parName = "R";
+                    } else if (experimentSet.getExpMode().equals("r2")) {
+                        parName = "R";
+                    } else if (experimentSet.getExpMode().equals("noe")) {
+                        parName = "NOE";
+                    }
+                    ObservableList<DataSeries> data = ChartUtil.getParMapData(experimentSet.getName(), "best", "0:0:0", parName);
+                    PyController.mainController.setCurrentExperimentSet(experimentSet);
+                    PyController.mainController.makeAxisMenu();
+                    PyController.mainController.setYAxisType(experimentSet.getExpMode(), experimentSet.getName(), "best", "0:0:0", parName);
+                    reschartNode.setResProps(experimentSet);
+                    PyController.mainController.setControls();
                 }
-                ChartUtil.addResidueProperty(experimentSet.getName(), experimentSet);
-                String parName = "Kex";
-                if (experimentSet.getExpMode().equals("r1")) {
-                    parName = "R";
-                } else if (experimentSet.getExpMode().equals("r2")) {
-                    parName = "R";
-                } else if (experimentSet.getExpMode().equals("noe")) {
-                    parName = "NOE";
-                }
-                ObservableList<DataSeries> data = ChartUtil.getParMapData(experimentSet.getName(), "best", "0:0:0", parName);
-                PyController.mainController.setCurrentExperimentSet(experimentSet);
-                PyController.mainController.makeAxisMenu();
-                PyController.mainController.setYAxisType(experimentSet.getExpMode(), experimentSet.getName(), "best", "0:0:0", parName);
-                reschartNode.setResProps(experimentSet);
-                PyController.mainController.setControls();
+            } catch (IllegalArgumentException iAE) {
+                GUIUtils.warn("Load from peak list", iAE.getMessage());
             }
         }
     }
