@@ -41,12 +41,17 @@ done
 dir=`dirname "$pgm"`
 CLASSPATH=${dir}"/lib/Manifest.jar"
 
-
+dir=`dirname "$pgm"`
+CLASSPATH=${dir}"/lib/Manifest.jar"
+jreDir=`ls -d *jre* 2>/dev/null`
 if [ -d "${dir}/../jre.bundle/Contents/Home/jre/bin" ] ; then
     JAVA="${dir}/../jre.bundle/Contents/Home/jre/bin/java"
     CLASSPATH="$dir/lib/ringnmr-$comdnmrver.jar:$CLASSPATH"
 elif [ -d "${dir}/jre/bin" ] ; then
     JAVA="${dir}/jre/bin/java"
+    CLASSPATH="$dir/lib/ringnmr-$comdnmrver.jar:$CLASSPATH"
+elif [ -f "${jreDir}/bin/java" ] ; then
+    JAVA="${jreDir}/bin/java"
     CLASSPATH="$dir/lib/ringnmr-$comdnmrver.jar:$CLASSPATH"
 else
     if [ -n "$JAVA_HOME" ] ; then
@@ -57,17 +62,7 @@ else
             JAVA="$JAVA_HOME/bin/java"
         fi
     fi
-
-    if $ismsys ; then
-        comdnmrdir=`$dir/echopath "$dir"`
-        CLASSPATH="$comdnmrdir/ringnmr-$comdnmrver.jar;$CLASSPATH"
-    elif $iscygwin ; then
-        CLASSPATH=`cygpath -pu "$CLASSPATH"`
-        CLASSPATH="$dir/ringnmr-$comdnmrver.jar;$CLASSPATH"
-        CLASSPATH=`cygpath -pw "$CLASSPATH"`
-    else
-        CLASSPATH="$dir/ringnmr-$comdnmrver.jar:$CLASSPATH"
-    fi
+    CLASSPATH="$dir/ringnmr-$comdnmrver.jar:$CLASSPATH"
 fi
 
 export CLASSPATH
