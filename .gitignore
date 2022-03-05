@@ -1,7 +1,8 @@
 */target/
 /sandbox/
-/installers/
+*/installers/
 /.idea/
+*/.idea/
 *.iml
 
 # Compiled source #
