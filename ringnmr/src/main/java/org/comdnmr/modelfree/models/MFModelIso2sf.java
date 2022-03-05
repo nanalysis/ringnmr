@@ -43,6 +43,10 @@ public class MFModelIso2sf extends MFModelIso2f {
         this(false, targetTau, 0.0, false);
     }
 
+    public MFModelIso2sf() {
+        this(true, 0.0, 0.0, false);
+    }
+
     @Override
     public List<String> getParNames() {
         return getAllParNames("Sf2", "Tau_f", "Ss2", "Tau_s");
@@ -76,7 +80,7 @@ public class MFModelIso2sf extends MFModelIso2f {
                 = Math.abs(1.0 - sf2)
                 + Math.abs(1.0 - ss2)
                 + (Math.log10(tauSx * 1.0e9) + 3.0)
-                + (Math.log10(tauFx*1.0e9) + 3.0);
+                + (Math.log10(tauFx * 1.0e9) + 3.0);
 //                + ((tauSx * 1.0e9) - SLOW_LIMIT)
 //                + tauFx * 1.0e9;
         return J;
@@ -84,6 +88,11 @@ public class MFModelIso2sf extends MFModelIso2f {
 
     @Override
     public double[] calc(double[] omegas, double[] pars) {
+        pars(pars);
+        return calc(omegas);
+    }
+
+    public void pars(double[] pars) {
         int parStart = 0;
         if (fitTau) {
             tauM = pars[0];
@@ -94,7 +103,6 @@ public class MFModelIso2sf extends MFModelIso2f {
         this.tauF = pars[parStart + 1];
         this.ss2 = pars[parStart + 2];
         this.tauS = pars[parStart + 3];
-        return calc(omegas);
     }
 
     @Override
@@ -125,7 +133,7 @@ public class MFModelIso2sf extends MFModelIso2f {
         if (includeEx) {
             return getParValues(targetTau, 0.9, 0.1, 0.9, 0.01, 2.0);
         } else {
-            return getParValues(targetTau, 0.9, 0.1, 0.9, 0.01);
+            return getParValues(targetTau, 0.9, SLOW_LIMIT / 5.0, 0.9, SLOW_LIMIT * 5.0);
         }
     }
 
@@ -151,6 +159,11 @@ public class MFModelIso2sf extends MFModelIso2f {
     @Override
     public int getNumber() {
         return 6;
+    }
+
+    @Override
+    public String getName() {
+        return "model2sf";
     }
 
 }

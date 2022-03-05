@@ -75,4 +75,8 @@ public abstract class MFModel {
     }
 
     public abstract int getNumber();
+
+    public String getName() {
+        return "model" + getNumber();
+    }
 }

@@ -43,7 +43,7 @@ public class MFModelIso1 extends MFModelIso {
     }
 
     public MFModelIso1() {
-        this(false, 0.0, 0.0, false);
+        this(true, 0.0, 0.0, false);
     }
 
     @Override
@@ -110,6 +110,11 @@ public class MFModelIso1 extends MFModelIso {
     @Override
     public int getNumber() {
         return 1;
+    }
+
+    @Override
+    public String getName() {
+        return "model1";
     }
 
 }

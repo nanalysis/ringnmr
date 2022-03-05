@@ -251,7 +251,7 @@ public class DRefineTest {
         int nModelPars = 0;
         for (String key : molData.keySet()) {
             MolDataValues resData = molData.get(key);
-            MFModelIso model = new MFModelIso1();
+            MFModelIso model = new MFModelIso1(false, 0.1, 0.0, false);
             if (!resData.getData().isEmpty()) {
                 nModelPars += model.getNPars();
                 resData.setTestModel(model);

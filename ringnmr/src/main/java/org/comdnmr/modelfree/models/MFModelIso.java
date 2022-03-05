@@ -51,7 +51,7 @@ public abstract class MFModelIso extends MFModel {
     }
 
     public MFModelIso() {
-        this(false, 0.1, 0.0, false);
+        this(true, 0.0, 0.0, false);
     }
 
     public List<String> getAllParNames(String... pars) {

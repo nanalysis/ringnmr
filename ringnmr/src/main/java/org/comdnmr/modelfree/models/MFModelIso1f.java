@@ -42,6 +42,10 @@ public class MFModelIso1f extends MFModelIso1 {
         this(false, targetTau, 0.0, false);
     }
 
+    public MFModelIso1f() {
+        this(true, 0.0, 0.0, false);
+    }
+
     @Override
     public List<String> getParNames() {
         return getAllParNames("Sf2", "Tau_f");
@@ -118,6 +122,11 @@ public class MFModelIso1f extends MFModelIso1 {
     @Override
     public int getNumber() {
         return 2;
+    }
+
+    @Override
+    public String getName() {
+        return "model1f";
     }
 
 }

@@ -43,6 +43,10 @@ public class MFModelIso1s extends MFModelIso {
         this(false, targetTau, 0.0, false);
     }
 
+    public MFModelIso1s() {
+        this(true, 0.0, 0.0, false);
+    }
+
     @Override
     public List<String> getParNames() {
         return getAllParNames("Ss2", "Tau_s");
@@ -121,4 +125,8 @@ public class MFModelIso1s extends MFModelIso {
         return 3;
     }
 
+    @Override
+    public String getName() {
+        return "model1s";
+    }
 }
