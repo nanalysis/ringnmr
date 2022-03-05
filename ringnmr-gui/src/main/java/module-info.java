@@ -5,7 +5,6 @@ module org.comdnmr.gui {
     requires smile.core;
     requires smile.interpolation;
     requires smile.math;
-    requires io.netty.all;
     requires java.logging;
     requires java.desktop;
     requires com.google.common;
