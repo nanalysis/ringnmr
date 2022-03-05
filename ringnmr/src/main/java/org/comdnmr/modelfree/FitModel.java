@@ -5,6 +5,9 @@
  */
 package org.comdnmr.modelfree;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -282,7 +285,7 @@ public class FitModel {
             }
             ResonanceSource resSource = new ResonanceSource(resData.atom);
 
-            OrderPar orderPar = new OrderPar(resSource, bestScore.rss, bestScore.nValues, bestScore.nPars, "model" + bestModel.getNumber());
+            OrderPar orderPar = new OrderPar(resSource, bestScore.rss, bestScore.nValues, bestScore.nPars, bestModel.getName());
             for (int iPar = 0; iPar < parNames.size(); iPar++) {
                 String parName = parNames.get(iPar);
                 double parValue = pars[iPar];
@@ -436,4 +439,36 @@ public class FitModel {
         this.tauFraction = value;
     }
 
+    private void appendValueError(StringBuilder stringBuilder, Double val, Double err, String format) {
+        if (val != null) {
+            stringBuilder.append(String.format(format, val)).append("\t");
+        } else {
+            stringBuilder.append("\t\t");
+        }
+        if (err != null) {
+            stringBuilder.append(String.format(format, err)).append("\t");
+        } else {
+            stringBuilder.append("\t\t");
+        }
+    }
+
+    public void writeData(File file) throws IOException {
+        FileWriter fileWriter = new FileWriter(file);
+        var molDataValues = getData(false);
+        String header = new String("residue\tfield\tr1\tr1_err\tr2\tr2_err\tnoe\tnoe_err\n");
+        fileWriter.write(header);
+        for (var molData : molDataValues.values()) {
+            var data = molData.getData();
+            for (var value:data) {
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.append(molData.specifier).append("\t");
+                stringBuilder.append(String.format("%.2f", value.relaxObj.getSF()/1.0e6)).append("\t");
+                appendValueError(stringBuilder, value.R1, value.R1err, "%.3f");
+                appendValueError(stringBuilder, value.R2, value.R2err, "%.3f");
+                appendValueError(stringBuilder, value.NOE, value.NOEerr, "%.3f");
+                fileWriter.write(stringBuilder.toString());
+                fileWriter.write("\n");
+            }
+        }
+    }
 }

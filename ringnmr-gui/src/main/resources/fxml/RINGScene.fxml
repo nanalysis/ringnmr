@@ -43,7 +43,14 @@
                                     </Menu>
                                 </items>
                             </Menu>
-                            <MenuItem text="Save Analysis..." onAction="#saveParameters" fx:id="savePars"/>
+                            <Menu text="Save">
+                                <items>
+                                    <MenuItem text="Save Analysis..." onAction="#saveParameters" fx:id="savePars"/>
+                                    <MenuItem text="Save R1/R2/NOE..." onAction="#saveR1R2NOE" fx:id="saveR1R2NOE"/>
+                                    <MenuItem text="Save Model Free..." onAction="#saveOrderParameters" fx:id="saveModelFree"/>
+                                </items>
+                            </Menu>
+
                             <Menu text="Prep/Save STAR3 File...">
                                 <items>
                                     <MenuItem text="Add Results to Mol" onAction="#addRelaxResultsToMol"/>

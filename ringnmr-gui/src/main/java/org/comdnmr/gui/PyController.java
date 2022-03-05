@@ -2052,6 +2052,36 @@ public class PyController implements Initializable {
         }
     }
 
+    @FXML
+    public void saveR1R2NOE(ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save R1/R2/NOE File");
+        File file = fileChooser.showSaveDialog(MainApp.primaryStage);
+        if (file != null) {
+            try {
+                RelaxationData.writeToFile(file);
+            } catch (IOException e) {
+                ExceptionDialog exceptionDialog = new ExceptionDialog(e);
+                exceptionDialog.showAndWait();
+            }
+        }
+    }
+
+    @FXML
+    public void saveOrderParameters(ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Order Parameters File");
+        File file = fileChooser.showSaveDialog(MainApp.primaryStage);
+        if (file != null) {
+            try {
+                OrderPar.writeToFile(file);
+            } catch (IOException e) {
+                ExceptionDialog exceptionDialog = new ExceptionDialog(e);
+                exceptionDialog.showAndWait();
+            }
+        }
+    }
+
     public void saveParametersSTAR(ActionEvent event) throws IOException, InvalidMoleculeException, ParseException, InvalidPeakException {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Save STAR File");

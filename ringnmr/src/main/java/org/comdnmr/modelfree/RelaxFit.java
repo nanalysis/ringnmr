@@ -425,6 +425,7 @@ public class RelaxFit {
     public Score score(double[] pars, boolean keepPars) {
         double sumSq = 0.0;
         int n = 0;
+        int nComplex = 0;
         boolean parsOK = true;
         double sumComplexity = 0.0;
         for (MolDataValues molData : molDataValues.values()) {
@@ -443,6 +444,7 @@ public class RelaxFit {
                 RelaxEquations relaxObj = dValue.relaxObj;
                 double[] J = testModel.calc(relaxObj.wValues, resPars);
                 sumComplexity += testModel.getComplexity();
+                nComplex++;
                 double r1 = relaxObj.R1(J);
                 // fixme rEx should be field dependent
                 double rEx = testModel.includesEx() ? resPars[resPars.length - 1] : 0.0;
@@ -456,11 +458,12 @@ public class RelaxFit {
                 parsOK = false;
             }
         }
+        double avgComplexity = sumComplexity / nComplex;
         Score score;
         if (keepPars) {
-            score = new Score(sumSq, n, pars.length, parsOK, sumComplexity, pars.clone());
+            score = new Score(sumSq, n, pars.length, parsOK, avgComplexity, pars.clone());
         } else {
-            score = new Score(sumSq, n, pars.length, parsOK, sumComplexity);
+            score = new Score(sumSq, n, pars.length, parsOK, avgComplexity);
         }
         return score;
     }

@@ -16,8 +16,7 @@ import static org.comdnmr.modelfree.RelaxEquations.IpS;
  */
 public class RelaxDataValue {
 
-    final MolDataValues molDataValue;
-    final double R1;
+    final MolDataValues molDataValue; final double R1;
     final double R1err;
     final double R2;
     final double R2err;
@@ -27,8 +26,8 @@ public class RelaxDataValue {
     double rhoError = 0.0;
 
     public RelaxDataValue(MolDataValues molDataValue, double r1,
-            double r1Error, double r2, double r2Error, double noe, double noeError,
-            RelaxEquations relaxObj) {
+                          double r1Error, double r2, double r2Error, double noe, double noeError,
+                          RelaxEquations relaxObj) {
         this.molDataValue = molDataValue;
         this.R1 = r1;
         this.R1err = r1Error;
@@ -38,6 +37,7 @@ public class RelaxDataValue {
         this.NOEerr = noeError;
         this.relaxObj = relaxObj;
     }
+
 
     public void randomize(MolDataValues molData, double r1, double r2,
             double noe, Random random, double scale) {
