@@ -104,6 +104,7 @@ public class MolDataValues {
             double j0Mul = 6.0 / (3.0 * d2 + 4.0 * c2);
             double j0 = j0Mul * (r2 - 0.5 * r1 - 0.454 * sigma);
             double j0Err = j0Mul * Math.sqrt(Math.pow(r2Err, 2) + Math.pow(0.5 * r1Err, 2) + Math.pow(0.454 * sigmaErr, 2));
+
             result[0][0] += j0;
             result[1][0] = 0.0;
             result[2][0] += j0Err *j0Err;
@@ -113,7 +114,7 @@ public class MolDataValues {
             result[2][iField*2+1] = j87Herr;
 
             result[0][iField*2+2] = jN;
-            result[1][iField*2+2] = 0.87 * relaxEq.getWS();
+            result[1][iField*2+2] = relaxEq.getWS();
             result[2][iField*2+2] = jNerr;
             iField++;
         }
