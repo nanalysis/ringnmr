@@ -254,6 +254,8 @@ public class PyController implements Initializable {
     @FXML
     TextField lambdaField;
     @FXML
+    CheckBox fitJCheckBox;
+    @FXML
     Slider tauFractionSlider;
     @FXML
     Label tauFractionLabel;
@@ -1191,6 +1193,7 @@ public class PyController implements Initializable {
                 tau = null;
             }
         }
+        boolean fitJ = fitJCheckBox.isSelected();
         System.out.println(lambdaText + " lambda " + lambda);
         FitModel fitModel = new FitModel();
         fitModel.setLambda(lambda);
@@ -1201,6 +1204,7 @@ public class PyController implements Initializable {
         fitModel.setFitTau(fitTau);
         fitModel.setT2Limit(t2Limit);
         fitModel.setNReplicates((int) nReplicatesSlider.getValue());
+        fitModel.setFitJ(fitJ);
         var modelNames = new ArrayList<String>();
         for (var modelCheckBox : modelCheckBoxes) {
             if (modelCheckBox.isSelected()) {

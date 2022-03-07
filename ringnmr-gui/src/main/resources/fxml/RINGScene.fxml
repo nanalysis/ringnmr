@@ -310,6 +310,7 @@
                                                 <children>
                                                     <Label text="Lambda  " prefWidth="80"/>
                                                     <TextField fx:id="lambdaField" prefWidth="80"/>
+                                                    <CheckBox text="Fit Js " fx:id="fitJCheckBox"/>
                                                 </children>
                                             </HBox>
                                             <HBox>
