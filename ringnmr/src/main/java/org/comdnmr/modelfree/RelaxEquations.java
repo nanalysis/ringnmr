@@ -20,12 +20,8 @@ package org.comdnmr.modelfree;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import org.ejml.data.DMatrixRMaj;
-import org.ejml.dense.row.CommonOps_DDRM;
+
 import static org.comdnmr.modelfree.RelaxFit.DiffusionType;
-import static org.comdnmr.modelfree.RelaxFit.DiffusionType.ANISOTROPIC;
-import static org.comdnmr.modelfree.RelaxFit.DiffusionType.OBLATE;
-import static org.comdnmr.modelfree.RelaxFit.DiffusionType.PROLATE;
 import static org.comdnmr.modelfree.RelaxFit.DiffusionType.ISOTROPIC;
 
 /**
@@ -46,11 +42,16 @@ public class RelaxEquations {
     public final static double GAMMA_N = -2.7116e7;
     public final static double GAMMA_C = 6.72828e7;
     public final static double GAMMA_H = 2.6752218744e8;
+    public final static double GAMMA_D = 4.1065e7;
 
-    public final static double PLANCK = 1.054e-34;
+    public final static double PLANCK = 1.0546e-34;
     public final static double R_HN = 1.02e-10;
     public final static double R_HC = 1.09e-10;
+    public final static double R_CC = 1.51e-10;
     public final static double SIGMA = -172.0e-6;
+    public final static double QCC = Math.PI*167.0e3/2.0;
+    public final static double QCC2 = QCC * QCC;
+
     public final static Map<String, Double> GAMMA_MAP = new HashMap<>();
     public final static Map<String, Double> R_MAP = new HashMap<>();
 
@@ -125,12 +126,28 @@ public class RelaxEquations {
         return d;
     }
 
+    public double getD2() {
+        return d2;
+    }
+
+    public double getC2() {
+        return c2;
+    }
+
     public double getR() {
         return r;
     }
 
     public double[] getW() {
         return wValues;
+    }
+
+    public double getWI() {
+        return wI;
+    }
+
+    public double getWS() {
+        return wS;
     }
 
     public static double getSF(double sf, String elemX) {
@@ -422,6 +439,37 @@ public class RelaxEquations {
         return value;
     }
 
+    /*
+     * Model-free function for CH3 groups. tf is time scale for methyl rotation
+     * Derived from Skrynnikov and Kay for Sf2 = 1
+     *
+     */
+    public double getJCH3(double w, double tauM, double Sf2, double Ss2, double tauF, double tauS) {
+        double Sf2p = Sf2 / 9.0;
+        double t1 = tauM * tauS / (tauM + tauS);
+        double t2 = tauM * tauF / (tauM + tauF);
+        double t3 = tauM * tauS * tauF / (tauM * tauS + tauM * tauF + tauS * tauF);
+        double temp = (2.0 / 5.0) * (Sf2p * Ss2 * tauM / (1 + w * w * tauM * tauM) +
+                Sf2p * (1 - Ss2) * t1 / (1 + w * w * t1 * t1) +
+                (1 - Sf2p) * Ss2 * t2 / (1 + w * w * t2 * t2) +
+                (1 - Sf2p) * (1 - Ss2) * t3 / (1 + w * w * t3 * t3));
+        return temp;
+    }
+
+    public double getJCH3red(double w, double tauM, double Sf2, double tauF) {
+        double Sf2p = Sf2 / 9.0;
+        double t1 = tauM * tauF / (tauM + tauF);
+        double temp = (2.0 / 5.0) * (Sf2p * tauM / (1 + w * w * tauM * tauM) +
+                (1 - Sf2p) * t1 / (1 + w * w * t1 * t1));
+        return temp;
+    }
+
+    public double getJCH3min(double w, double tauM, double Sf2) {
+        double Sf2p = Sf2 / 9.0;
+        double temp = (2.0 / 5.0) * (Sf2p * tauM / (1.0 + w * w * tauM * tauM));
+        return temp;
+    }
+
     public double[] getDiffusionConstants(String type) {
         String[] types = {"sphere", "spheroid", "ellipsoid"};
         double[][] constants = {{1}};//, 
@@ -556,6 +604,22 @@ public class RelaxEquations {
                 + 6.0 * J[I] + 6.0 * J[IpS]);
         double csaContrib = c2 / 6 * (4.0 * J[0] + 3.0 * J[S]);
         return dipolarContrib + csaContrib + Rex;
+    }
+
+    public double R1_D(double jw, double j2w) {
+        return 3.0 * QCC2 * (jw + 4.0 * j2w) * 1.0e-9;
+    }
+
+    public double R2_D(double j0, double jw, double j2w) {
+        return (3.0 / 2.0) * QCC2 * (3.0 * j0 + 5.0 * jw + 2.0 * j2w) * 1.0e-9;
+    }
+
+    public double RQ_D(double jw) {
+        return 9.0 * QCC2 * jw * 1.0e-9;
+    }
+
+    public double Rap_D(double j0, double jw, double j2w) {
+        return (3.0 / 2.0) * QCC2 * (3 * j0 + jw + 2 * j2w) * 1.0e-9;
     }
 
     /**

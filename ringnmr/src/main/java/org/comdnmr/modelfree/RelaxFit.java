@@ -34,6 +34,7 @@ public class RelaxFit {
 
     boolean reportFitness = true;
     double lambda = 0.1;
+    boolean fitJ = false;
     int reportAt = 10;
     long startTime = 0;
     double B0;
@@ -79,6 +80,14 @@ public class RelaxFit {
 
     public void setUseGlobalTau(boolean useGlobalTau) {
         this.useGlobalTau = useGlobalTau;
+    }
+
+    public boolean getFitJ() {
+        return fitJ;
+    }
+
+    public void setFitJ(boolean value) {
+        fitJ = value;
     }
 
     public double getLambda() {
@@ -422,6 +431,48 @@ public class RelaxFit {
         }
     }
 
+    double[] calcDeltaSqJ(MolDataValues molData, double[] resPars, MFModel testModel) {
+        double sumComplexity = 0.0;
+        double sumSq = 0.0;
+        double[][] jValues = molData.getJValues();
+        double[] jCalc = testModel.calc(jValues[1], resPars);
+        for (int i=0;i< jCalc.length;i++) {
+           // double delta = Math.log10(jCalc[i]) - Math.log10(jValues[0][i]);
+            double delta = jCalc[i] - jValues[0][i];
+            double jErr = jValues[2][i];
+            sumSq += (delta * delta) / (jErr*jErr);
+        }
+        sumComplexity = testModel.getComplexity();
+        double[] result =  {sumSq, sumComplexity};
+        return result;
+    }
+    double[] calcDeltaSqR(MolDataValues molData, double[] resPars, MFModel testModel) {
+        double sumComplexity = 0.0;
+        double sumSq = 0.0;
+        for (RelaxDataValue dValue : molData.getData()) {
+            RelaxEquations relaxObj = dValue.relaxObj;
+            double[] J = testModel.calc(relaxObj.wValues, resPars);
+            sumComplexity += testModel.getComplexity();
+            double r1 = relaxObj.R1(J);
+            // fixme rEx should be field dependent
+            double rEx = testModel.includesEx() ? resPars[resPars.length - 1] : 0.0;
+            double r2 = relaxObj.R2(J, rEx);
+            double noe = relaxObj.NOE(J);
+            double delta2 = dValue.score2(r1, r2, noe);
+            sumSq += delta2;
+        }
+        double[] result =  {sumSq, sumComplexity};
+        return result;
+    }
+
+    double[] calcDeltaSq(MolDataValues molData, double[] resPars, MFModel testModel) {
+        if (fitJ) {
+            return calcDeltaSqJ(molData, resPars, testModel);
+        } else {
+            return calcDeltaSqR(molData, resPars, testModel);
+        }
+    }
+
     public Score score(double[] pars, boolean keepPars) {
         double sumSq = 0.0;
         int n = 0;
@@ -439,21 +490,12 @@ public class RelaxFit {
             } else {
                 resPars = pars;
             }
+            double[] resReult = calcDeltaSq(molData, resPars, testModel);
+            sumSq += resReult[0];
+            sumComplexity += resReult[1];
+            nComplex += molData.getData().size();
+            n += 3;
 
-            for (RelaxDataValue dValue : molData.getData()) {
-                RelaxEquations relaxObj = dValue.relaxObj;
-                double[] J = testModel.calc(relaxObj.wValues, resPars);
-                sumComplexity += testModel.getComplexity();
-                nComplex++;
-                double r1 = relaxObj.R1(J);
-                // fixme rEx should be field dependent
-                double rEx = testModel.includesEx() ? resPars[resPars.length - 1] : 0.0;
-                double r2 = relaxObj.R2(J, rEx);
-                double noe = relaxObj.NOE(J);
-                double delta2 = dValue.score2(r1, r2, noe);
-                sumSq += delta2;
-                n += 3;
-            }
             if (!testModel.checkParConstraints()) {
                 parsOK = false;
             }

@@ -42,6 +42,7 @@ public class FitModel {
 
     Double tau;
     boolean fitTau = false;
+    boolean fitJ = false;
     boolean fitExchange = false;
     double tauFraction = 0.25;
     double lambda = 0.0;
@@ -369,6 +370,7 @@ public class FitModel {
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setRelaxData(molDataRes);
         relaxFit.setLambda(lambda);
+        relaxFit.setFitJ(fitJ);
         model.setTauFraction(localTauFraction);
         double[] start = model.getStart();
         double[] lower = model.getLower();
@@ -400,6 +402,7 @@ public class FitModel {
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setRelaxData(molDataRes);
         relaxFit.setLambda(lambda);
+        relaxFit.setFitJ(fitJ);
         Map<String, MolDataValues> molDataMap = relaxFit.genBootstrap(random, model, pars);
         relaxFit.setRelaxData(molDataMap);
 
@@ -425,6 +428,10 @@ public class FitModel {
 
     public void setLambda(double value) {
         this.lambda = value;
+    }
+
+    public void setFitJ(boolean value) {
+        this.fitJ = value;
     }
 
     public void setNReplicates(int value) {
