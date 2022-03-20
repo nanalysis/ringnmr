@@ -16,10 +16,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import org.apache.commons.math3.optim.PointValuePair;
 import org.comdnmr.data.DynamicsSource;
-import org.comdnmr.modelfree.MolDataValues;
-import org.comdnmr.modelfree.RelaxDataValue;
-import org.comdnmr.modelfree.RelaxEquations;
-import org.comdnmr.modelfree.RelaxFit;
+import org.comdnmr.modelfree.*;
 import org.comdnmr.modelfree.RelaxFit.DiffusionType;
 import org.comdnmr.modelfree.models.MFModel;
 import org.comdnmr.modelfree.models.MFModelAniso1;
@@ -93,7 +90,7 @@ public class DRefineTest {
                     double r2Error = Double.valueOf(fields[8]);
                     double noe = Double.valueOf(fields[9]);
                     double noeError = Double.valueOf(fields[10]);
-                    RelaxDataValue dValue = new RelaxDataValue(molData, r1, r1Error, r2, r2Error, noe, noeError, relaxObj);
+                    R1R2NOEDataValue dValue = new R1R2NOEDataValue(molData, r1, r1Error, r2, r2Error, noe, noeError, relaxObj);
                     molData.addData(dValue);
                 }
             }

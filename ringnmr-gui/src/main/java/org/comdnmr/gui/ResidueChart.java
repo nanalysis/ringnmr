@@ -147,6 +147,7 @@ public class ResidueChart extends XYCanvasBarChart {
         PyController controller = PyController.mainController;
         PlotData xyCanvasChart = controller.xychart;
         String[] seriesNameParts = seriesName.split("\\|");
+        System.out.println("show info " + seriesName + " " + seriesNameParts.length + " " + valueSet);
         if (seriesNameParts.length < 3) {
             return;
         }
@@ -162,6 +163,7 @@ public class ResidueChart extends XYCanvasBarChart {
         controller.chartInfo.state = state;
         controller.chartInfo.mapName = mapName;
         controller.chartInfo.equationName = equationName;
+
         if (valueSet instanceof ExperimentSet) {
             if (!selectedResidues.isEmpty()) {
                 ExperimentSet experimentSet = (ExperimentSet) valueSet;

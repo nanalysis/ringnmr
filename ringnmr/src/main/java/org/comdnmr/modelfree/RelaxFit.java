@@ -449,7 +449,8 @@ public class RelaxFit {
     double[] calcDeltaSqR(MolDataValues molData, double[] resPars, MFModel testModel) {
         double sumComplexity = 0.0;
         double sumSq = 0.0;
-        for (RelaxDataValue dValue : molData.getData()) {
+        for (RelaxDataValue value : molData.getData()) {
+            R1R2NOEDataValue dValue  = (R1R2NOEDataValue) value;
             RelaxEquations relaxObj = dValue.relaxObj;
             double[] J = testModel.calc(relaxObj.wValues, resPars);
             sumComplexity += testModel.getComplexity();
@@ -529,7 +530,8 @@ public class RelaxFit {
                 resPars = pars;
             }
 
-            for (RelaxDataValue dValue : molData.getData()) {
+            for (var value : molData.getData()) {
+                var dValue = (R1R2NOEDataValue) value;
                 RelaxEquations relaxObj = dValue.relaxObj;
                 double[] J = testModel.calc(relaxObj.wValues, resPars);
                 double r1 = relaxObj.R1(J);
@@ -561,7 +563,8 @@ public class RelaxFit {
             System.arraycopy(pars, parStart, resPars, 1, nResPars);
             parStart += nResPars;
 
-            for (RelaxDataValue dValue : molData.getData()) {
+            for (RelaxDataValue value : molData.getData()) {
+                var dValue = (R1R2NOEDataValue) value;
                 RelaxEquations relaxObj = dValue.relaxObj;
                 double[] J = testModel.calc(relaxObj.wValues, resPars);
                 double r1 = relaxObj.R1(J);
@@ -599,7 +602,8 @@ public class RelaxFit {
         int n = 0;
         for (MolDataValues molData : molDataValues.values()) {
             MFModel model = molData.getTestModel();
-            for (RelaxDataValue dValue : molData.getData()) {
+            for (RelaxDataValue value : molData.getData()) {
+                R1R2NOEDataValue dValue  = (R1R2NOEDataValue) value;
                 RelaxEquations relaxObj = dValue.relaxObj;
                 double[] v = molData.vector;
                 int nModelPars = model.getNPars();
@@ -637,7 +641,8 @@ public class RelaxFit {
         int modelNum = 1;
         int nDiffPars = diffusionType.getNDiffusionPars() + diffusionType.getNAnglePars();
         for (MolDataValues molData : molDataValues.values()) {
-            for (RelaxDataValue dValue : molData.getData()) {
+            for (RelaxDataValue value : molData.getData()) {
+                R1R2NOEDataValue dValue  = (R1R2NOEDataValue) value;
                 RelaxEquations relaxObj = dValue.relaxObj;
                 double[] v = molData.vector;
                 double[] resPars = new double[nParsPerModel[modelNum] + nDiffPars];

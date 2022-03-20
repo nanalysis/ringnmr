@@ -1562,7 +1562,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
 
     public static void loadRelaxationTextFile(File file) throws IOException, IllegalArgumentException {
         Path path = file.toPath();
-        String[] types = {"R1", "R2", "NOE"};
+        String[] types = {"R1", "R2", "NOE", "RQ", "RAP"};
         String fileName = file.getName();
         int dotIndex = fileName.lastIndexOf(".");
         if (dotIndex != -1) {
@@ -1573,6 +1573,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             Optional<String> sepStr = Optional.empty();
             int iField = -1;
             int iRes = -1;
+            int iAtom = -1;
             Map<String, Integer> fieldMap = new HashMap<>();
             List<String> header;
             DynamicsSource dynamicsSourceFactory = new DynamicsSource(true, true, true, true);
@@ -1602,6 +1603,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                         header.add(field.toUpperCase());
                     }
                     iField = header.indexOf("FIELD");
+                    iAtom = header.indexOf("ATOM");
                     iRes = header.indexOf("RESIDUE");
                     if (iRes == -1) {
                         iRes = header.indexOf("RESI");
@@ -1610,26 +1612,41 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                         iRes = 0;
                     }
                     for (var type : types) {
-                        fieldMap.put(type, header.indexOf(type));
+                        int typeIndex = header.indexOf(type);
+                        if (typeIndex != -1) {
+                            fieldMap.put(type, header.indexOf(type));
+                        }
                     }
                 } else {
                     String[] fields = CSVRE.parseLine(sepStr.get(), line);
                     String residue = fields[iRes];
                     double field = Double.parseDouble(fields[iField]);
+                    String[] atomNames;
+                    if (iAtom != -1) {
+                        atomNames = new String[1];
+                        atomNames[0] = fields[iAtom];
+                    } else {
+                        atomNames = new String[2];
+                        atomNames[0] = "N";
+                        atomNames[1] = "H";
+                    }
+
                     for (var type : types) {
-                        int index = fieldMap.get(type);
-                        double value = Double.parseDouble(fields[index]);
-                        double error = Double.parseDouble(fields[index + 1]);
-                        String id = fileName + "_" + type + "_" + Math.round(field);
-                        Optional<ResonanceSource> resSourceOpt = dynamicsSourceFactory.
-                                createFromSpecifiers(fileName + "." + residue, residue, "N", "H");
+                        if (fieldMap.containsKey(type)) {
+                            int index = fieldMap.get(type);
+                            double value = Double.parseDouble(fields[index]);
+                            double error = Double.parseDouble(fields[index + 1]);
+                            String id = fileName + "_" + type + "_" + Math.round(field);
+                            Optional<ResonanceSource> resSourceOpt = dynamicsSourceFactory.
+                                    createFromSpecifiers(fileName + "." + residue, residue, atomNames);
 
-                        if (!resSourceOpt.isPresent()) {
-                            throw new IllegalArgumentException("Can't generate resonance source from peak " + fileName + "." + residue);
+                            if (!resSourceOpt.isPresent()) {
+                                throw new IllegalArgumentException("Can't generate resonance source from peak " + fileName + "." + residue);
+                            }
+                            ResonanceSource dynSource = resSourceOpt.get();
+
+                            RelaxationData.add(id, type, dynSource, field, value, error);
                         }
-                        ResonanceSource dynSource = resSourceOpt.get();
-
-                        RelaxationData.add(id, type, dynSource, field, value, error);
                     }
                 }
             }

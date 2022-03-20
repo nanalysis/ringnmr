@@ -18,4 +18,10 @@
         <module>ringnmr-gui</module>
         <module>ringnmr-plugin</module>
     </modules>
+    <repositories>
+        <repository>
+            <id>nanalysis-public</id>
+            <url>https://raw.githubusercontent.com/nanalysis/maven-repository/public/</url>
+        </repository>
+    </repositories>
 </project>

@@ -115,7 +115,7 @@ public class FitModel {
                                     String e2 = nAtom.getElementName();
                                     RelaxEquations relaxObj = RelaxEquations.getRelaxEquations(field * 1e6, "H", "N");
 
-                                    RelaxDataValue dValue = new RelaxDataValue(molData, r1, r1Error, r2, r2Error, noe, noeError, relaxObj);
+                                    R1R2NOEDataValue dValue = new R1R2NOEDataValue(molData, r1, r1Error, r2, r2Error, noe, noeError, relaxObj);
                                     molData.addData(dValue);
                                 }
                             }
@@ -467,12 +467,13 @@ public class FitModel {
         for (var molData : molDataValues.values()) {
             var data = molData.getData();
             for (var value:data) {
+                R1R2NOEDataValue dValue = (R1R2NOEDataValue) value;
                 StringBuilder stringBuilder = new StringBuilder();
                 stringBuilder.append(molData.specifier).append("\t");
-                stringBuilder.append(String.format("%.2f", value.relaxObj.getSF()/1.0e6)).append("\t");
-                appendValueError(stringBuilder, value.R1, value.R1err, "%.3f");
-                appendValueError(stringBuilder, value.R2, value.R2err, "%.3f");
-                appendValueError(stringBuilder, value.NOE, value.NOEerr, "%.3f");
+                stringBuilder.append(String.format("%.2f", dValue.relaxObj.getSF()/1.0e6)).append("\t");
+                appendValueError(stringBuilder, dValue.R1, dValue.R1err, "%.3f");
+                appendValueError(stringBuilder, dValue.R2, dValue.R2err, "%.3f");
+                appendValueError(stringBuilder, dValue.NOE, dValue.NOEerr, "%.3f");
                 fileWriter.write(stringBuilder.toString());
                 fileWriter.write("\n");
             }

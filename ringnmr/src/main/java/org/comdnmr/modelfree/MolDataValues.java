@@ -79,9 +79,9 @@ public class MolDataValues {
         int nFreq = 1 + 2 * nDataValues;
         double[][] result = new double[3][nFreq];
         int iField = 0;
-        for (RelaxDataValue relaxDataValue: dataValues) {
+        for (RelaxDataValue value: dataValues) {
+            R1R2NOEDataValue relaxDataValue = (R1R2NOEDataValue) value;
             RelaxEquations relaxEq = relaxDataValue.relaxObj;
-            double field = relaxEq.getSF();
             double r1 = relaxDataValue.R1;
             double r2 = relaxDataValue.R2;
             double noe = relaxDataValue.NOE;

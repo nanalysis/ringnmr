@@ -26,13 +26,12 @@ import java.io.FileReader;
 import java.io.IOException;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import java.util.ResourceBundle;
+
+import java.util.*;
 import java.net.URL;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -67,6 +66,7 @@ import org.comdnmr.eqnfit.EquationType;
 import org.comdnmr.eqnfit.ExpFitter;
 import org.comdnmr.data.Experiment;
 import org.comdnmr.data.ExperimentData;
+import org.comdnmr.modelfree.FitDeuteriumModel;
 import org.controlsfx.control.PropertySheet;
 import org.comdnmr.eqnfit.ParValueInterface;
 import org.comdnmr.eqnfit.PlotEquation;
@@ -77,13 +77,11 @@ import org.comdnmr.data.ExperimentSet;
 import org.controlsfx.control.StatusBar;
 import org.comdnmr.eqnfit.CESTFitter;
 import java.text.DecimalFormat;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Optional;
+
 import javafx.beans.property.SimpleStringProperty;
-import java.util.Random;
-import java.util.TreeSet;
+
+import java.util.stream.Collectors;
+
 import javafx.animation.PauseTransition;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXMLLoader;
@@ -1225,6 +1223,13 @@ public class PyController implements Initializable {
         showModelFreeData();
     }
 
+    public void fitDeuteriumModel() {
+        var modelNames = new ArrayList<String>();
+
+        FitDeuteriumModel fitModel = new FitDeuteriumModel();
+        fitModel.testIsoModel(null, modelNames);
+    }
+
     public void estimateCorrelationTime() {
         String r1SetName = t1Choice.getValue();
         String r2SetName = t2Choice.getValue();
@@ -1647,8 +1652,8 @@ public class PyController implements Initializable {
         }
     }
 
-    public Map<String, ResidueChart> setupCharts(String[] chartNames) {
-        int nNewCharts = chartNames.length;
+    public Map<String, ResidueChart> setupCharts(List<String> chartNames) {
+        int nNewCharts = chartNames.size();
         int nCharts = barCharts.size();
         for (int iChart = nCharts - 1; iChart >= nNewCharts; iChart--) {
             barCharts.remove(iChart);
@@ -1662,7 +1667,7 @@ public class PyController implements Initializable {
         for (ResidueChart residueChart : barCharts) {
             activeChart = residueChart;
             clearChart();
-            chartMap.put(chartNames[iChart], residueChart);
+            chartMap.put(chartNames.get(iChart), residueChart);
             iChart++;
         }
         return chartMap;
@@ -1670,10 +1675,15 @@ public class PyController implements Initializable {
     }
 
     public void showT1T2NoeData() {
-        String[] chartNames = {"R1", "R2", "NOE"};
-        var chartMap = setupCharts(chartNames);
-
         var molResProps = DataIO.getDataFromMolecule();
+
+        List<String> chartNames = molResProps.values().stream().
+                filter(v -> v.getValues().get(0) instanceof RelaxationData).
+                map(v -> ((RelaxationData) v.getValues().get(0)).getExpType().getName()).
+                sorted().
+                collect(Collectors.toSet()).stream().sorted().collect(Collectors.toList());
+
+        var chartMap = setupCharts(chartNames);
         molResProps.values().stream().
                 filter(v -> v.getValues().get(0) instanceof RelaxationData).
                 sorted((a, b) -> {
@@ -1692,21 +1702,22 @@ public class PyController implements Initializable {
     }
 
     public void showModelFreeData() {
-        String[] chartNames = {"S2", "Sf2", "Ss2", "Tau_e", "Tau_f", "Tau_s", "Rex", "model", "rchisq"};
+        var chartNames = List.of("S2", "Sf2", "Ss2", "Tau_e",
+                "Tau_f", "Tau_s", "Rex", "model", "rchisq");
         showModelFreeData(chartNames);
     }
 
     public void showModelFreeDataS2() {
-        String[] chartNames = {"S2", "Sf2", "Ss2"};
+        var chartNames = List.of("S2", "Sf2", "Ss2");
         showModelFreeData(chartNames);
     }
 
     public void showModelFreeDataTau() {
-        String[] chartNames = {"Tau_e", "Tau_f", "Tau_s"};
+        var chartNames = List.of("Tau_e", "Tau_f", "Tau_s");
         showModelFreeData(chartNames);
     }
 
-    public void showModelFreeData(String[] chartNames) {
+    public void showModelFreeData(List<String> chartNames) {
         var chartMap = setupCharts(chartNames);
         var usedSet = new TreeSet<String>();
         var molResProps = DataIO.getDataFromMolecule();
