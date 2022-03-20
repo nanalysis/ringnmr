@@ -57,13 +57,11 @@ public class DeuteriumMapping {
                 }
             } else if (iCol == 1) {
                 for (int iType = 0; iType < 4; iType++) {
-                    int row = iType;
-                    matrix.set(row, iCol, elements[iType][iCol]);
+                    matrix.set(iType, iCol, elements[iType][iCol]);
                 }
             } else if (iCol == 2) {
                 for (int iType = 0; iType < 4; iType++) {
-                    int row = iType;
-                    matrix.set(row, iCol, elements[iType][2]);
+                    matrix.set(iType, iCol, elements[iType][2]);
                 }
                 for (int iType = 0; iType < 4; iType++) {
                     int row = 4 + iType;

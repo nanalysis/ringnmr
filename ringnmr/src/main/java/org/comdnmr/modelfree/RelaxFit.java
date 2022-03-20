@@ -32,12 +32,8 @@ import org.comdnmr.modelfree.models.MFModelIso2sf;
  */
 public class RelaxFit {
 
-    boolean reportFitness = true;
     double lambda = 0.1;
     boolean fitJ = false;
-    int reportAt = 10;
-    long startTime = 0;
-    double B0;
     Map<String, MolDataValues> molDataValues;
     double[] bestPars;
     double[] parErrs;
@@ -46,7 +42,7 @@ public class RelaxFit {
     Fitter bestFitter;
     int[] nParsPerModel = {0, 1, 2, 0, 0, 3, 4};
     DiffusionType diffusionType;
-    static int ANISO_ANGLE_STARTS[][] = {
+    static int[][] ANISO_ANGLE_STARTS = {
         {0, 0, 0},
         {1, 0, 0},
         {0, 1, 0},
@@ -56,7 +52,7 @@ public class RelaxFit {
         {0, 1, 1},
         {1, 1, 1}
     };
-    static int ANGLE_STARTS[][] = {
+    static int[][] ANGLE_STARTS = {
         {0, 0},
         {1, 0},
         {0, 1},
@@ -99,8 +95,7 @@ public class RelaxFit {
     }
 
     public static double[] getDValues(double isoD) {
-        double[] anisoD = {0.75 * isoD, isoD, 1.25 * isoD};
-        return anisoD;
+        return new double[]{0.75 * isoD, isoD, 1.25 * isoD};
     }
 
     public void setRelaxData(Map<String, MolDataValues> molDataValues) {
@@ -115,8 +110,7 @@ public class RelaxFit {
         ISOTROPIC(1, 0) {
             @Override
             public double[] getGuess(double isoD) {
-                double[] guess = {isoD};
-                return guess;
+                return new double[]{isoD};
             }
 
             public double[] getAngles(int iStart) {
@@ -126,8 +120,7 @@ public class RelaxFit {
         PROLATE(2, 2) {
             @Override
             public double[] getGuess(double isoD) {
-                double[] guess = {0.75 * isoD, 1.25 * isoD};
-                return guess;
+                return new double[]{0.75 * isoD, 1.25 * isoD};
             }
 
             public double[] getAngles(int iStart) {
@@ -141,8 +134,7 @@ public class RelaxFit {
         }, OBLATE(2, 2) {
             @Override
             public double[] getGuess(double isoD) {
-                double[] guess = {0.75 * isoD, 1.25 * isoD};
-                return guess;
+                return new double[]{0.75 * isoD, 1.25 * isoD};
             }
 
             public double[] getAngles(int iStart) {
@@ -156,8 +148,7 @@ public class RelaxFit {
         }, ANISOTROPIC(3, 3) {
             @Override
             public double[] getGuess(double isoD) {
-                double[] anisoD = {0.75 * isoD, isoD, 1.25 * isoD};
-                return anisoD;
+                return new double[]{0.75 * isoD, isoD, 1.25 * isoD};
             }
 
             public double[] getAngles(int iStart) {
@@ -170,9 +161,9 @@ public class RelaxFit {
             }
         };
 
-        int nAnglePars;
-        int nDiffPars;
-        int nAngleGuesses;
+        final int nAnglePars;
+        final int nDiffPars;
+        final int nAngleGuesses;
 
         DiffusionType(int nDiffPars, int nAnglePars) {
             this.nAnglePars = nAnglePars;
@@ -228,9 +219,6 @@ public class RelaxFit {
             default:
                 break;
         }
-//        for (double Jval : J) {
-//            System.out.println("J: " + Jval);
-//        }
         return J;
     }
 
@@ -258,21 +246,19 @@ public class RelaxFit {
                 Dzz = pars[0];
 
         }
-        double[][] D = {{Dxx, 0.0, 0.0},
+        return new double[][]{{Dxx, 0.0, 0.0},
         {0.0, Dyy, 0.0},
         {0.0, 0.0, Dzz}};
-        return D;
     }
 
     public double[][] parsToVT(double[] pars, DiffusionType dType) {
         Rotation rot = getDRotation(pars, dType);
-        double[][] VT = getRotationMatrix(rot);
-        return VT;
+        return getRotationMatrix(rot);
     }
 
     public double[] getJDiffusion(double[] pars, RelaxEquations relaxObj, MFModelAniso model, double[] v, double[][] D, double[][] VT) {
         int extraParStart = diffusionType.getNDiffusionPars() + diffusionType.getNAnglePars();
-        double[] J = new double[5];
+        double[] J;
         double[] modelPars = new double[model.getNPars()];
         System.arraycopy(pars, extraParStart, modelPars, 0, model.getNPars());
         model.update(D, VT);
@@ -314,27 +300,21 @@ public class RelaxFit {
     }
 
     public Rotation getDRotation(double[] pars, DiffusionType dType) {
-        int nEqlDiffPars = 0;
+        int nEqlDiffPars;
         double alpha = 0.0;
         double beta = 0.0;
         double gamma = 0.0;
         switch (dType) {
             case PROLATE:
+            case OBLATE:
+                //Dyy = Dzz
                 //Dxx = Dyy
                 nEqlDiffPars = 1;
                 alpha = pars[3 - nEqlDiffPars];
                 beta = pars[4 - nEqlDiffPars];
                 gamma = 0;
                 break;
-            case OBLATE:
-                //Dyy = Dzz
-                nEqlDiffPars = 1;
-                alpha = pars[3 - nEqlDiffPars];
-                beta = pars[4 - nEqlDiffPars];
-                gamma = 0;
-                break;
             case ANISOTROPIC:
-                nEqlDiffPars = 0;
                 alpha = pars[3];
                 beta = pars[4];
                 gamma = pars[5];
@@ -391,8 +371,7 @@ public class RelaxFit {
         }
 
         public double rms() {
-            double rms = Math.sqrt(rss / nValues);
-            return rms;
+            return Math.sqrt(rss / nValues);
         }
 
         public int getN() {
@@ -417,22 +396,17 @@ public class RelaxFit {
         }
 
         public double aic() {
-            int k = nPars;
-            int n = nValues;
-            double aic = 2 * k + n * Math.log(rss);
-            return aic;
+            return 2 * nPars + nValues * Math.log(rss);
         }
 
         public double aicc() {
             int k = nPars;
-            int n = nValues;
-            double aicc = aic() + 2 * k * (k + 1) / (n - k - 1);
-            return aicc;
+            return aic() + 2.0 * k * (k + 1) / (nValues - k - 1.0);
         }
     }
 
     double[] calcDeltaSqJ(MolDataValues molData, double[] resPars, MFModel testModel) {
-        double sumComplexity = 0.0;
+        double sumComplexity;
         double sumSq = 0.0;
         double[][] jValues = molData.getJValues();
         double[] jCalc = testModel.calc(jValues[1], resPars);
@@ -443,8 +417,7 @@ public class RelaxFit {
             sumSq += (delta * delta) / (jErr*jErr);
         }
         sumComplexity = testModel.getComplexity();
-        double[] result =  {sumSq, sumComplexity};
-        return result;
+        return new double[]{sumSq, sumComplexity};
     }
     double[] calcDeltaSqR(MolDataValues molData, double[] resPars, MFModel testModel) {
         double sumComplexity = 0.0;
@@ -462,8 +435,7 @@ public class RelaxFit {
             double delta2 = dValue.score2(r1, r2, noe);
             sumSq += delta2;
         }
-        double[] result =  {sumSq, sumComplexity};
-        return result;
+        return new double[]{sumSq, sumComplexity};
     }
 
     double[] calcDeltaSq(MolDataValues molData, double[] resPars, MFModel testModel) {
@@ -624,9 +596,8 @@ public class RelaxFit {
                 n++;
             }
         }
-        double rms = Math.sqrt(sumSq / n);
 
-        return rms;
+        return Math.sqrt(sumSq / n);
 
     }
 
@@ -681,8 +652,6 @@ public class RelaxFit {
         double scale = 1.0;
         switch (modelNum) {
             case 2:
-                result = pars[2] < scale * pars[0];
-                break;
             case 5:
                 result = pars[2] < scale * pars[0];
                 break;
@@ -724,8 +693,7 @@ public class RelaxFit {
     public PointValuePair fitResidueToModel(double[] start, double[] lower, double[] upper) {
         Fitter fitter = Fitter.getArrayFitter(this::value);
         try {
-                PointValuePair result = fitter.fit(start, lower, upper, 10.0);
-            return result;
+            return fitter.fit(start, lower, upper, 10.0);
         } catch (Exception ex) {
             ex.printStackTrace();
             return null;
@@ -735,8 +703,7 @@ public class RelaxFit {
     public PointValuePair fitMultiResidueToModel(double[] start, double[] lower, double[] upper) {
         Fitter fitter = Fitter.getArrayFitter(this::valueMultiResidue);
         try {
-            PointValuePair result = fitter.fit(start, lower, upper, 10.0);
-            return result;
+            return fitter.fit(start, lower, upper, 10.0);
         } catch (Exception ex) {
             ex.printStackTrace();
             return null;
@@ -745,7 +712,6 @@ public class RelaxFit {
 
     public PointValuePair fitDiffusion(double[] guesses) {
         Fitter fitter = Fitter.getArrayFitter(this::valueDMat);
-        double[] start = guesses;
         double[] lower = new double[guesses.length];
         double[] upper = new double[guesses.length];
         int nDiffPars = diffusionType.getNDiffusionPars();
@@ -760,7 +726,7 @@ public class RelaxFit {
             upper[i] = guesses[i] + Math.PI / 4.0;
         }
         try {
-            PointValuePair result = fitter.fit(start, lower, upper, 10.0);
+            PointValuePair result = fitter.fit(guesses, lower, upper, 10.0);
 //            System.out.println("Scaled guess, bounds:");
             for (int i = 0; i < lower.length; i++) {
                 double lb = lower[i];

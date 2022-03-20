@@ -1,9 +1,5 @@
 package org.comdnmr.modelfree;
 
-import org.comdnmr.modelfree.MolDataValues;
-import org.comdnmr.modelfree.RelaxDataValue;
-import org.comdnmr.modelfree.RelaxEquations;
-
 public class DeuteriumDataValue extends RelaxDataValue {
     final double rQ;
     final double rQError;

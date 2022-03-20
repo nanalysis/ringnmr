@@ -5,11 +5,6 @@
  */
 package org.comdnmr.modelfree;
 
-import java.util.Random;
-import static org.comdnmr.modelfree.RelaxEquations.I;
-import static org.comdnmr.modelfree.RelaxEquations.ImS;
-import static org.comdnmr.modelfree.RelaxEquations.IpS;
-
 /**
  *
  * @author brucejohnson
