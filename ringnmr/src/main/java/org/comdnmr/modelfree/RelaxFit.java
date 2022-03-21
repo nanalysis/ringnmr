@@ -344,77 +344,18 @@ public class RelaxFit {
         return new Array2DRowRealMatrix(rot.getMatrix()).transpose().getData();
     }
 
-    public class Score {
-
-        final double rss;
-        final int nValues;
-        final int nPars;
-        final boolean parsOK;
-        final double complexity;
-        final double[] pars;
-
-        public Score(double rss, int nValues, int nPars, boolean parsOK, double complexity) {
-            this(rss, nValues, nPars, parsOK, complexity, null);
-        }
-
-        public Score(double rss, int nValues, int nPars, boolean parsOK, double complexity, double[] pars) {
-            this.rss = rss;
-            this.nValues = nValues;
-            this.nPars = nPars;
-            this.parsOK = parsOK;
-            this.complexity = complexity;
-            this.pars = pars;
-        }
-
-        public double[] getPars() {
-            return pars;
-        }
-
-        public double rms() {
-            return Math.sqrt(rss / nValues);
-        }
-
-        public int getN() {
-            return nValues;
-        }
-
-        public double value() {
-            double score = rms();
-            if (!parsOK) {
-                score += nValues * 10.0;
-            }
-            score += complexity * lambda;
-            return score;
-        }
-        
-        public double complexity() {
-            return complexity;
-        }
-        
-        public boolean parsOK() {
-            return parsOK;
-        }
-
-        public double aic() {
-            return 2 * nPars + nValues * Math.log(rss);
-        }
-
-        public double aicc() {
-            int k = nPars;
-            return aic() + 2.0 * k * (k + 1) / (nValues - k - 1.0);
-        }
-    }
-
     double[] calcDeltaSqJ(MolDataValues molData, double[] resPars, MFModel testModel) {
         double sumComplexity;
         double sumSq = 0.0;
         double[][] jValues = molData.getJValues();
-        double[] jCalc = testModel.calc(jValues[1], resPars);
+        double[] jCalc = testModel.calc(jValues[0], resPars);
         for (int i=0;i< jCalc.length;i++) {
            // double delta = Math.log10(jCalc[i]) - Math.log10(jValues[0][i]);
-            double delta = jCalc[i] - jValues[0][i];
+            double delta = jCalc[i] - jValues[1][i];
             double jErr = jValues[2][i];
             sumSq += (delta * delta) / (jErr*jErr);
+
+            System.out.printf("%3d %11.5g %11.5g %11.5g %11.5g %11.5g\n", i, jValues[0][i], jCalc[i], jValues[1][i], jErr, sumSq);
         }
         sumComplexity = testModel.getComplexity();
         return new double[]{sumSq, sumComplexity};
