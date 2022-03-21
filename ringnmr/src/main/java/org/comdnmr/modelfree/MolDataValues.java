@@ -75,6 +75,36 @@ public class MolDataValues {
     }
 
     public double[][] calcJ() {
+        var dataOpt = dataValues.stream().findFirst();
+        if (dataOpt.isPresent()) {
+            if (dataOpt.get() instanceof DeuteriumDataValue) {
+                return calcJDeuterium();
+            } else {
+                return calcJR1R2NOE();
+            }
+        }
+        return new double[0][0];
+    }
+
+    public double[][] calcJDeuterium() {
+        double[][] result = null;
+        if (!dataValues.isEmpty()) {
+            List<Double> rValues = new ArrayList<>();
+            List<Double> fields = new ArrayList<>();
+            for (var value : dataValues) {
+                var dValue = (DeuteriumDataValue) value;
+                rValues.add(dValue.R1);
+                rValues.add(dValue.R2);
+                rValues.add(dValue.rQ);
+                rValues.add(dValue.rAP);
+                fields.add(dValue.relaxObj.getSF() * RelaxEquations.GAMMA_D / RelaxEquations.GAMMA_H * 2.0 * Math.PI);
+            }
+            result = DeuteriumMapping.jointMapping(rValues, fields);
+        }
+        return result;
+    }
+
+    public double[][] calcJR1R2NOE() {
         int nDataValues = dataValues.size();
         int nFreq = 1 + 2 * nDataValues;
         double[][] result = new double[3][nFreq];
@@ -105,20 +135,20 @@ public class MolDataValues {
             double j0 = j0Mul * (r2 - 0.5 * r1 - 0.454 * sigma);
             double j0Err = j0Mul * Math.sqrt(Math.pow(r2Err, 2) + Math.pow(0.5 * r1Err, 2) + Math.pow(0.454 * sigmaErr, 2));
 
-            result[0][0] += j0;
-            result[1][0] = 0.0;
+            result[0][0] = 0.0;
+            result[1][0] += j0;
             result[2][0] += j0Err *j0Err;
 
-            result[0][iField*2+1] = j87H;
-            result[1][iField*2+1] = 0.87 * relaxEq.getWI();
+            result[0][iField*2+1] = 0.87 * relaxEq.getWI();
+            result[1][iField*2+1] = j87H;
             result[2][iField*2+1] = j87Herr;
 
-            result[0][iField*2+2] = jN;
-            result[1][iField*2+2] = relaxEq.getWS();
+            result[0][iField*2+2] = relaxEq.getWS();
+            result[1][iField*2+2] = jN;
             result[2][iField*2+2] = jNerr;
             iField++;
         }
-        result[0][0] /= nDataValues;
+        result[1][0] /= nDataValues;
         result[2][0] = Math.sqrt(result[2][0]);
         return result;
     }

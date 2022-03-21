@@ -178,8 +178,8 @@ public class DeuteriumMapping {
         var fitFields = new double[jValues.length];
 
         for (int i=0;i<jValues.length;i++) {
-            jValues[i] = jValues[i] / scale * 1.0e9;
-            jErrors[i] = ttest[i][1] / scale * 1.0e9;
+            jValues[i] = jValues[i] / scale;
+            jErrors[i] = ttest[i][1] / scale;
             fitFields[i] = fieldList.get(i);
         }
         var result = new double[][]{fitFields, jValues, jErrors};

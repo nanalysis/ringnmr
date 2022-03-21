@@ -131,8 +131,7 @@ import org.nmrfx.graphicsio.SVGGraphicsContext;
 import org.nmrfx.peaks.InvalidPeakException;
 import org.nmrfx.star.ParseException;
 import org.comdnmr.eqnfit.NOEFit;
-import org.comdnmr.modelfree.FitModel;
-import org.nmrfx.chemistry.Atom;
+import org.comdnmr.modelfree.FitR1R2NOEModel;
 import org.nmrfx.chemistry.relax.OrderPar;
 import org.nmrfx.chemistry.relax.RelaxationData;
 import org.nmrfx.chemistry.relax.RelaxationValues;
@@ -1193,16 +1192,16 @@ public class PyController implements Initializable {
         }
         boolean fitJ = fitJCheckBox.isSelected();
         System.out.println(lambdaText + " lambda " + lambda);
-        FitModel fitModel = new FitModel();
-        fitModel.setLambda(lambda);
-        fitModel.setTau(tau);
+        FitR1R2NOEModel fitR1R2NOEModel = new FitR1R2NOEModel();
+        fitR1R2NOEModel.setLambda(lambda);
+        fitR1R2NOEModel.setTau(tau);
         double tauFraction = tauFractionSlider.getValue();
         double t2Limit = t2LimitSlider.getValue();
         boolean fitTau = tauFraction > 0.001;
-        fitModel.setFitTau(fitTau);
-        fitModel.setT2Limit(t2Limit);
-        fitModel.setNReplicates((int) nReplicatesSlider.getValue());
-        fitModel.setFitJ(fitJ);
+        fitR1R2NOEModel.setFitTau(fitTau);
+        fitR1R2NOEModel.setT2Limit(t2Limit);
+        fitR1R2NOEModel.setNReplicates((int) nReplicatesSlider.getValue());
+        fitR1R2NOEModel.setFitJ(fitJ);
         var modelNames = new ArrayList<String>();
         for (var modelCheckBox : modelCheckBoxes) {
             if (modelCheckBox.isSelected()) {
@@ -1210,12 +1209,12 @@ public class PyController implements Initializable {
             }
         }
         try {
-            fitModel.testIsoModel(null, modelNames);
+            fitR1R2NOEModel.testIsoModel(null, modelNames);
         } catch (IllegalStateException iaE) {
             GUIUtils.warn("Model Fit Error", iaE.getMessage());
             return;
         }
-        Double tauFit = fitModel.getTau();
+        Double tauFit = fitR1R2NOEModel.getTau();
         if (tauFit != null) {
             tauCalcField.setText(String.format("%.2f", tauFit));
         }
@@ -1224,8 +1223,7 @@ public class PyController implements Initializable {
     }
 
     public void fitDeuteriumModel() {
-        var modelNames = new ArrayList<String>();
-
+        var modelNames = List.of("D1", "D1f");
         FitDeuteriumModel fitModel = new FitDeuteriumModel();
         fitModel.testIsoModel(null, modelNames);
     }
@@ -1243,8 +1241,8 @@ public class PyController implements Initializable {
                 result = CorrelationTime.estimateTau(r1Set, r2Set);
             }
         } else {
-            FitModel fitModel = new FitModel();
-            result = fitModel.estimateTau();
+            FitR1R2NOEModel fitR1R2NOEModel = new FitR1R2NOEModel();
+            result = fitR1R2NOEModel.estimateTau();
         }
 
         if (!result.isEmpty()) {
