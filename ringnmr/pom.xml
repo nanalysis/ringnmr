@@ -25,7 +25,13 @@
             <name>central maven repo https</name>
             <url>https://repo.maven.apache.org/maven2</url>
         </repository>
+        <repository>
+            <id>nanalysis-public</id>
+            <url>https://raw.githubusercontent.com/nanalysis/maven-repository/public/</url>
+        </repository>
     </repositories>
+
+
 
     <dependencies>
         <dependency>
