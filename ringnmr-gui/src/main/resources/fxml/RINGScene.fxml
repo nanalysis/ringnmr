@@ -364,9 +364,7 @@
                 <ToolBar fx:id="navigatorToolBar" orientation="HORIZONTAL" BorderPane.alignment="CENTER"/>
                 <StatusBar fx:id="statusBar" HBox.hgrow="ALWAYS"/>
                 <Pane prefWidth="20"/>
-                <Label text="-" prefWidth="20"/>
-                <Slider fx:id="barScaleSlider"/>
-                <Label text="+" prefWidth="20"/>
+                <RangeSlider fx:id="barScaleSlider" prefWidth="250"/>
             </children>
         </HBox>
     </bottom>

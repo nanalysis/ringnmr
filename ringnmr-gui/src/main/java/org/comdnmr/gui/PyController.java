@@ -74,6 +74,7 @@ import org.comdnmr.util.ProcessingStatus;
 import org.comdnmr.fit.ResidueFitter;
 import org.comdnmr.data.ExperimentResult;
 import org.comdnmr.data.ExperimentSet;
+import org.controlsfx.control.RangeSlider;
 import org.controlsfx.control.StatusBar;
 import org.comdnmr.eqnfit.CESTFitter;
 import java.text.DecimalFormat;
@@ -155,7 +156,7 @@ public class PyController implements Initializable {
     @FXML
     XYPlotDataPane chartPane;
     @FXML
-    Slider barScaleSlider;
+    RangeSlider barScaleSlider;
 
     @FXML
     Button nmrFxPeakButton;
@@ -509,12 +510,14 @@ public class PyController implements Initializable {
         chartMenu.setOnShowing(e -> {
             makeAxisMenu();
         });
-        barScaleSlider.setMin(1.0);
-        barScaleSlider.setMax(3.0);
-        barScaleSlider.setValue(1.0);
+        barScaleSlider.setMin(0.0);
+        barScaleSlider.setMax(100.0);
+        barScaleSlider.setLowValue(0.0);
+        barScaleSlider.setHighValue(100.0);
         barScaleSlider.setBlockIncrement(0.25);
         barScaleSlider.setShowTickMarks(true);
-        barScaleSlider.valueProperty().addListener(e -> resizeBarPlotCanvas());
+        barScaleSlider.lowValueProperty().addListener(e -> resizeBarPlotCanvas());
+        barScaleSlider.highValueProperty().addListener(e -> resizeBarPlotCanvas());
 
         tauFractionSlider.setMin(0.0);
         tauFractionSlider.setMax(0.5);
@@ -583,14 +586,15 @@ public class PyController implements Initializable {
         double width = chartBox.getWidth();
         double nRes = barChartXMax.get() - barChartXMin.get();
         double scale = (width - 75.0) / nRes;
-        barScaleSlider.setValue(scale);
         resizeBarPlotCanvas();
     }
 
     void resizeBarPlotCanvas() {
         double width = chartBox.getWidth();
         double height = chartBox.getHeight();
-        width *= barScaleSlider.getValue();
+        double barLow = barScaleSlider.getLowValue();
+        double barHigh = barScaleSlider.getHighValue();
+        double barMax = barScaleSlider.getMax();
         barPlotCanvas.setWidth(width);
         barPlotCanvas.setHeight(height);
         GraphicsContext gC = barPlotCanvas.getGraphicsContext2D();
@@ -601,6 +605,17 @@ public class PyController implements Initializable {
         double chartHeight = height / barCharts.size();
         double yPos = 0.0;
         for (ResidueChart residueChart : barCharts) {
+            double xMin = 0.0;
+            double xMax = 1.0;
+            for (DataSeries series:residueChart.getData()) {
+                series.setLimits(barLow / barMax, barHigh / barMax);
+                xMin = series.getMinX();
+                xMax = series.getMaxX();
+            }
+
+            residueChart.xAxis.setLowerBound(xMin);
+            residueChart.xAxis.setUpperBound(xMax);
+
             residueChart.setWidth(width);
             residueChart.setHeight(chartHeight);
             residueChart.setYPos(yPos);

@@ -435,7 +435,7 @@ public class ChartUtil {
             }
 
             XYEValue dataPoint = new XYEValue(x, y, errUp);
-            series.getData().add(dataPoint);
+            series.add(dataPoint);
         }
         return data;
     }
@@ -537,7 +537,7 @@ public class ChartUtil {
 
             XYEValue dataPoint = new XYEValue(x, y, errUp);
             dataPoint.setExtraValue(resSource);
-            series.getData().add(dataPoint);
+            series.add(dataPoint);
         }
         return data;
     }
