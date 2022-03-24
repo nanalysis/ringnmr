@@ -98,8 +98,14 @@ public abstract class MFModelIso extends MFModel {
             case "1":
                 model = new MFModelIso1(fitTau, tau, tauFrac, fitExchange);
                 break;
+            case "D1":
+                model = new MFModelIsoD1(fitTau, tau, tauFrac, fitExchange);
+                break;
             case "1f":
                 model = new MFModelIso1f(fitTau, tau, tauFrac, fitExchange);
+                break;
+            case "D1f":
+                model = new MFModelIsoD1f(fitTau, tau, tauFrac, fitExchange);
                 break;
             case "1s":
                 model = new MFModelIso1s(fitTau, tau, tauFrac, fitExchange);

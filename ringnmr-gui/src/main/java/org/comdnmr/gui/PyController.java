@@ -26,13 +26,12 @@ import java.io.FileReader;
 import java.io.IOException;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import java.util.ResourceBundle;
+
+import java.util.*;
 import java.net.URL;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -67,6 +66,7 @@ import org.comdnmr.eqnfit.EquationType;
 import org.comdnmr.eqnfit.ExpFitter;
 import org.comdnmr.data.Experiment;
 import org.comdnmr.data.ExperimentData;
+import org.comdnmr.modelfree.FitDeuteriumModel;
 import org.controlsfx.control.PropertySheet;
 import org.comdnmr.eqnfit.ParValueInterface;
 import org.comdnmr.eqnfit.PlotEquation;
@@ -77,13 +77,11 @@ import org.comdnmr.data.ExperimentSet;
 import org.controlsfx.control.StatusBar;
 import org.comdnmr.eqnfit.CESTFitter;
 import java.text.DecimalFormat;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Optional;
+
 import javafx.beans.property.SimpleStringProperty;
-import java.util.Random;
-import java.util.TreeSet;
+
+import java.util.stream.Collectors;
+
 import javafx.animation.PauseTransition;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXMLLoader;
@@ -133,8 +131,7 @@ import org.nmrfx.graphicsio.SVGGraphicsContext;
 import org.nmrfx.peaks.InvalidPeakException;
 import org.nmrfx.star.ParseException;
 import org.comdnmr.eqnfit.NOEFit;
-import org.comdnmr.modelfree.FitModel;
-import org.nmrfx.chemistry.Atom;
+import org.comdnmr.modelfree.FitR1R2NOEModel;
 import org.nmrfx.chemistry.relax.OrderPar;
 import org.nmrfx.chemistry.relax.RelaxationData;
 import org.nmrfx.chemistry.relax.RelaxationValues;
@@ -253,6 +250,8 @@ public class PyController implements Initializable {
     TextField tauCalcField;
     @FXML
     TextField lambdaField;
+    @FXML
+    CheckBox fitJCheckBox;
     @FXML
     Slider tauFractionSlider;
     @FXML
@@ -1191,16 +1190,18 @@ public class PyController implements Initializable {
                 tau = null;
             }
         }
+        boolean fitJ = fitJCheckBox.isSelected();
         System.out.println(lambdaText + " lambda " + lambda);
-        FitModel fitModel = new FitModel();
-        fitModel.setLambda(lambda);
-        fitModel.setTau(tau);
+        FitR1R2NOEModel fitR1R2NOEModel = new FitR1R2NOEModel();
+        fitR1R2NOEModel.setLambda(lambda);
+        fitR1R2NOEModel.setTau(tau);
         double tauFraction = tauFractionSlider.getValue();
         double t2Limit = t2LimitSlider.getValue();
         boolean fitTau = tauFraction > 0.001;
-        fitModel.setFitTau(fitTau);
-        fitModel.setT2Limit(t2Limit);
-        fitModel.setNReplicates((int) nReplicatesSlider.getValue());
+        fitR1R2NOEModel.setFitTau(fitTau);
+        fitR1R2NOEModel.setT2Limit(t2Limit);
+        fitR1R2NOEModel.setNReplicates((int) nReplicatesSlider.getValue());
+        fitR1R2NOEModel.setFitJ(fitJ);
         var modelNames = new ArrayList<String>();
         for (var modelCheckBox : modelCheckBoxes) {
             if (modelCheckBox.isSelected()) {
@@ -1208,17 +1209,23 @@ public class PyController implements Initializable {
             }
         }
         try {
-            fitModel.testIsoModel(null, modelNames);
+            fitR1R2NOEModel.testIsoModel(null, modelNames);
         } catch (IllegalStateException iaE) {
             GUIUtils.warn("Model Fit Error", iaE.getMessage());
             return;
         }
-        Double tauFit = fitModel.getTau();
+        Double tauFit = fitR1R2NOEModel.getTau();
         if (tauFit != null) {
             tauCalcField.setText(String.format("%.2f", tauFit));
         }
         addMoleculeDataToAxisMenu();
         showModelFreeData();
+    }
+
+    public void fitDeuteriumModel() {
+        var modelNames = List.of("D1", "D1f");
+        FitDeuteriumModel fitModel = new FitDeuteriumModel();
+        fitModel.testIsoModel(null, modelNames);
     }
 
     public void estimateCorrelationTime() {
@@ -1234,8 +1241,8 @@ public class PyController implements Initializable {
                 result = CorrelationTime.estimateTau(r1Set, r2Set);
             }
         } else {
-            FitModel fitModel = new FitModel();
-            result = fitModel.estimateTau();
+            FitR1R2NOEModel fitR1R2NOEModel = new FitR1R2NOEModel();
+            result = fitR1R2NOEModel.estimateTau();
         }
 
         if (!result.isEmpty()) {
@@ -1643,8 +1650,8 @@ public class PyController implements Initializable {
         }
     }
 
-    public Map<String, ResidueChart> setupCharts(String[] chartNames) {
-        int nNewCharts = chartNames.length;
+    public Map<String, ResidueChart> setupCharts(List<String> chartNames) {
+        int nNewCharts = chartNames.size();
         int nCharts = barCharts.size();
         for (int iChart = nCharts - 1; iChart >= nNewCharts; iChart--) {
             barCharts.remove(iChart);
@@ -1658,7 +1665,7 @@ public class PyController implements Initializable {
         for (ResidueChart residueChart : barCharts) {
             activeChart = residueChart;
             clearChart();
-            chartMap.put(chartNames[iChart], residueChart);
+            chartMap.put(chartNames.get(iChart), residueChart);
             iChart++;
         }
         return chartMap;
@@ -1666,10 +1673,15 @@ public class PyController implements Initializable {
     }
 
     public void showT1T2NoeData() {
-        String[] chartNames = {"R1", "R2", "NOE"};
-        var chartMap = setupCharts(chartNames);
-
         var molResProps = DataIO.getDataFromMolecule();
+
+        List<String> chartNames = molResProps.values().stream().
+                filter(v -> v.getValues().get(0) instanceof RelaxationData).
+                map(v -> ((RelaxationData) v.getValues().get(0)).getExpType().getName()).
+                sorted().
+                collect(Collectors.toSet()).stream().sorted().collect(Collectors.toList());
+
+        var chartMap = setupCharts(chartNames);
         molResProps.values().stream().
                 filter(v -> v.getValues().get(0) instanceof RelaxationData).
                 sorted((a, b) -> {
@@ -1688,21 +1700,22 @@ public class PyController implements Initializable {
     }
 
     public void showModelFreeData() {
-        String[] chartNames = {"S2", "Sf2", "Ss2", "Tau_e", "Tau_f", "Tau_s", "Rex", "model", "rchisq"};
+        var chartNames = List.of("S2", "Sf2", "Ss2", "Tau_e",
+                "Tau_f", "Tau_s", "Rex", "model", "rchisq");
         showModelFreeData(chartNames);
     }
 
     public void showModelFreeDataS2() {
-        String[] chartNames = {"S2", "Sf2", "Ss2"};
+        var chartNames = List.of("S2", "Sf2", "Ss2");
         showModelFreeData(chartNames);
     }
 
     public void showModelFreeDataTau() {
-        String[] chartNames = {"Tau_e", "Tau_f", "Tau_s"};
+        var chartNames = List.of("Tau_e", "Tau_f", "Tau_s");
         showModelFreeData(chartNames);
     }
 
-    public void showModelFreeData(String[] chartNames) {
+    public void showModelFreeData(List<String> chartNames) {
         var chartMap = setupCharts(chartNames);
         var usedSet = new TreeSet<String>();
         var molResProps = DataIO.getDataFromMolecule();

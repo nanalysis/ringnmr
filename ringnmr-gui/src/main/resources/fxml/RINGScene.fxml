@@ -274,7 +274,7 @@
 
                                     </VBox>
                                 </Tab>
-                                <Tab text="Correlation" closable="false" > 
+                                <Tab text="ModelFree" closable="false" >
                                     <VBox HBox.hgrow="ALWAYS">
                                         <children>
                                             <HBox>
@@ -310,6 +310,7 @@
                                                 <children>
                                                     <Label text="Lambda  " prefWidth="80"/>
                                                     <TextField fx:id="lambdaField" prefWidth="80"/>
+                                                    <CheckBox text="Fit Js " fx:id="fitJCheckBox"/>
                                                 </children>
                                             </HBox>
                                             <HBox>
@@ -335,7 +336,8 @@
                                             </HBox>
                                             <HBox>
                                                 <children>
-                                                    <Button text="Model-Iso" onAction="#calcModel1"/>
+                                                    <Button text="Fit-Isotropic" onAction="#calcModel1"/>
+                                                    <Button text="Fit Deuterium-Isotropic" onAction="#fitDeuteriumModel"/>
                                                 </children>
                                             </HBox>
                                         </children>

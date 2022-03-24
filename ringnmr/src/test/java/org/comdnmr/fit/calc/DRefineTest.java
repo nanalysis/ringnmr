@@ -9,25 +9,14 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
+
 import org.apache.commons.math3.optim.PointValuePair;
+import org.comdnmr.data.DataIO;
 import org.comdnmr.data.DynamicsSource;
-import org.comdnmr.modelfree.MolDataValues;
-import org.comdnmr.modelfree.RelaxDataValue;
-import org.comdnmr.modelfree.RelaxEquations;
-import org.comdnmr.modelfree.RelaxFit;
+import org.comdnmr.modelfree.*;
 import org.comdnmr.modelfree.RelaxFit.DiffusionType;
-import org.comdnmr.modelfree.models.MFModel;
-import org.comdnmr.modelfree.models.MFModelAniso1;
-import org.comdnmr.modelfree.models.MFModelIso;
-import org.comdnmr.modelfree.models.MFModelIso1;
-import org.comdnmr.modelfree.models.MFModelIso1f;
-import org.comdnmr.modelfree.models.MFModelIso2s;
-import org.comdnmr.modelfree.models.MFModelIso2sf;
+import org.comdnmr.modelfree.models.*;
 import org.junit.Test;
 import org.junit.Assert;
 
@@ -93,7 +82,7 @@ public class DRefineTest {
                     double r2Error = Double.valueOf(fields[8]);
                     double noe = Double.valueOf(fields[9]);
                     double noeError = Double.valueOf(fields[10]);
-                    RelaxDataValue dValue = new RelaxDataValue(molData, r1, r1Error, r2, r2Error, noe, noeError, relaxObj);
+                    R1R2NOEDataValue dValue = new R1R2NOEDataValue(molData, r1, r1Error, r2, r2Error, noe, noeError, relaxObj);
                     molData.addData(dValue);
                 }
             }
@@ -134,9 +123,63 @@ public class DRefineTest {
 
     }
 
+    private Map<String, MolDataValues> loadDeuteriumTestData() {
+        File file = new File("src/test/data/val121gamma2no700.csv");
+        try {
+            DataIO.loadRelaxationTextFile(file);
+        } catch (IOException e) {
+            return null;
+        }
+        return FitDeuteriumModel.getData(false);
+    }
+
+    @Test
+    public void testDeuteriumD1() {
+        var data = loadDeuteriumTestData();
+        FitDeuteriumModel fitDeuteriumModel = new FitDeuteriumModel();
+        var modelNames = List.of("D1f");
+
+        fitDeuteriumModel.testModels(data,modelNames);
+    }
+
+    @Test
+    public void testDeuteriumD1J() {
+        MFModelIsoD1 model = new MFModelIsoD1();
+        double[] hFreqs = {100.0, 200.0, 300.0, 400.0, 500.0, 600.0, 700.0, 800.0, 900.0, 1000.0};
+        double[] omegas = new double[hFreqs.length * 2 + 1];
+
+        for (int i = 0; i < hFreqs.length; i++) {
+            omegas[i * 2 + 1] = 1.0e6* hFreqs[i] * RelaxEquations.GAMMA_D / RelaxEquations.GAMMA_H * 2.0 * Math.PI;
+            omegas[i * 2 + 2] = omegas[i * 2 + 1] * 2;
+        }
+        Arrays.sort(omegas);
+        double[] pars = {7.0, 1.0};
+        var jValues = model.calc(omegas, pars);
+        for (int i = 0; i < omegas.length; i++) {
+            System.out.printf("%9.4f %9.4f\n", omegas[i]*1.0e-9, Math.log10(jValues[i]*1.0e9));
+        }
+    }
+
+    @Test
+    public void testDeuteriumD1fJ() {
+        MFModelIsoD1f model = new MFModelIsoD1f();
+        double[] hFreqs = {100.0, 200.0, 300.0, 400.0, 500.0, 600.0, 700.0, 800.0, 900.0, 1000.0};
+        double[] omegas = new double[hFreqs.length * 2 + 1];
+
+        for (int i = 0; i < hFreqs.length; i++) {
+            omegas[i * 2 + 1] = 1.0e6* hFreqs[i] * RelaxEquations.GAMMA_D / RelaxEquations.GAMMA_H * 2.0 * Math.PI;
+            omegas[i * 2 + 2] = omegas[i * 2 + 1] * 2;
+        }
+        Arrays.sort(omegas);
+        double[] pars = {12.411, 0.471, 44.9e-3};
+        var jValues = model.calc(omegas, pars);
+        for (int i = 0; i < omegas.length; i++) {
+            System.out.printf("%9.4f %9.4f\n", omegas[i]*1.0e-9, Math.log10(jValues[i]*1.0e9));
+        }
+    }
+
     public void testIsoModel(RelaxFit relaxFit, int modelNum) {
         DRefineTest.this.testIsoModel(relaxFit, modelNum, null);
-
     }
 
     public void testIsoModel(RelaxFit relaxFit, int modelNum, String matchSpec) {

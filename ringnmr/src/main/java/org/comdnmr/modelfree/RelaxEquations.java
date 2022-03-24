@@ -20,12 +20,8 @@ package org.comdnmr.modelfree;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import org.ejml.data.DMatrixRMaj;
-import org.ejml.dense.row.CommonOps_DDRM;
+
 import static org.comdnmr.modelfree.RelaxFit.DiffusionType;
-import static org.comdnmr.modelfree.RelaxFit.DiffusionType.ANISOTROPIC;
-import static org.comdnmr.modelfree.RelaxFit.DiffusionType.OBLATE;
-import static org.comdnmr.modelfree.RelaxFit.DiffusionType.PROLATE;
 import static org.comdnmr.modelfree.RelaxFit.DiffusionType.ISOTROPIC;
 
 /**
@@ -46,11 +42,16 @@ public class RelaxEquations {
     public final static double GAMMA_N = -2.7116e7;
     public final static double GAMMA_C = 6.72828e7;
     public final static double GAMMA_H = 2.6752218744e8;
+    public final static double GAMMA_D = 4.1065e7;
 
-    public final static double PLANCK = 1.054e-34;
+    public final static double PLANCK = 1.0546e-34;
     public final static double R_HN = 1.02e-10;
     public final static double R_HC = 1.09e-10;
+    public final static double R_CC = 1.51e-10;
     public final static double SIGMA = -172.0e-6;
+    public final static double QCC = Math.PI*167.0e3/2.0;
+    public final static double QCC2 = QCC * QCC;
+
     public final static Map<String, Double> GAMMA_MAP = new HashMap<>();
     public final static Map<String, Double> R_MAP = new HashMap<>();
 
@@ -93,8 +94,7 @@ public class RelaxEquations {
         d2 = d * d;
         c = wS * SIGMA / Math.sqrt(3.0);
         c2 = c * c;
-        double[] w = {0.0, wS, wI - wS, wI, wI + wS};
-        wValues = w;
+        wValues = new double[]{0.0, wS, wI - wS, wI, wI + wS};
 
         this.sf = sf;
     }
@@ -125,12 +125,28 @@ public class RelaxEquations {
         return d;
     }
 
+    public double getD2() {
+        return d2;
+    }
+
+    public double getC2() {
+        return c2;
+    }
+
     public double getR() {
         return r;
     }
 
     public double[] getW() {
         return wValues;
+    }
+
+    public double getWI() {
+        return wI;
+    }
+
+    public double getWS() {
+        return wS;
     }
 
     public static double getSF(double sf, String elemX) {
@@ -149,8 +165,7 @@ public class RelaxEquations {
      */
     public double JModelFree(double w, double tauM, double s2) {
         double value1 = s2 / (1.0 + w * w * tauM * tauM);
-        double value = 0.4 * tauM * (value1);
-        return value;
+        return 0.4 * tauM * (value1);
     }
 
     // Note: tauM = tm in Art Palmer's code, and taui in Relax. 
@@ -168,8 +183,7 @@ public class RelaxEquations {
     public double JModelFree(double w, double tau, double tauM, double s2) {
         double value1 = s2 / (1.0 + w * w * tauM * tauM);
         double value2 = ((1.0 - s2) * (tau + tauM) * tau) / ((tau + tauM) * (tau + tauM) + w * w * tauM * tauM * tau * tau);
-        double value = 0.4 * tauM * (value1 + value2);
-        return value;
+        return 0.4 * tauM * (value1 + value2);
     }
 
     // Note: tauM = tm in Art Palmer's code. tau = ts in Art Palmer's code.
@@ -188,8 +202,7 @@ public class RelaxEquations {
     public double JModelFree(double w, double tau, double tauM, double s2, double sf2) {
         double value1 = s2 / (1.0 + w * w * tauM * tauM);
         double value2 = ((sf2 - s2) * (tau + tauM) * tau) / ((tau + tauM) * (tau + tauM) + w * w * tauM * tauM * tau * tau);
-        double value = 0.4 * tauM * (value1 + value2);
-        return value;
+        return 0.4 * tauM * (value1 + value2);
     }
 
     /**
@@ -209,8 +222,7 @@ public class RelaxEquations {
         double value1 = s2 / (1.0 + w * w * tauM * tauM);
         double value2 = ((1 - sf2) * (tauF + tauM) * tauF) / ((tauF + tauM) * (tauF + tauM) + w * w * tauM * tauM * tauF * tauF);
         double value3 = ((sf2 - s2) * (tauS + tauM) * tauS) / ((tauS + tauM) * (tauS + tauM) + w * w * tauM * tauM * tauS * tauS);
-        double value = 0.4 * tauM * (value1 + value2 + value3);
-        return value;
+        return 0.4 * tauM * (value1 + value2 + value3);
     }
 
     // Note: tauM = tm in Art Palmer's code, and taui in Relax. 
@@ -228,8 +240,7 @@ public class RelaxEquations {
         double JIminusS = JModelFree(wI - wS, tauM, s2); // R1, R2, NOE
         double JI = JModelFree(wI, tauM, s2); // R2
         double JS = JModelFree(wS, tauM, s2); //R1, R2
-        double[] result = {J0, JS, JIminusS, JI, JIplusS};
-        return result;
+        return new double[]{J0, JS, JIminusS, JI, JIplusS};
     }
 
     // Note: tauM = tm in Art Palmer's code, and taui in Relax. tau = ts in Art Palmer's code (taue in the paper), and taue in Relax.
@@ -248,8 +259,7 @@ public class RelaxEquations {
         double JIminusS = JModelFree(wI - wS, tau, tauM, s2); // R1, R2, NOE
         double JI = JModelFree(wI, tau, tauM, s2); // R2
         double JS = JModelFree(wS, tau, tauM, s2); //R1, R2
-        double[] result = {J0, JS, JIminusS, JI, JIplusS};
-        return result;
+        return new double[]{J0, JS, JIminusS, JI, JIplusS};
     }
 
     // Note: tauM = tm in Art Palmer's code. tau = ts in Art Palmer's code.
@@ -270,8 +280,7 @@ public class RelaxEquations {
         double JIminusS = JModelFree(wI - wS, tau, tauM, s2, sf2); // R1, R2, NOE
         double JI = JModelFree(wI, tau, tauM, s2, sf2); // R2
         double JS = JModelFree(wS, tau, tauM, s2, sf2); //R1, R2
-        double[] result = {J0, JS, JIminusS, JI, JIplusS};
-        return result;
+        return new double[]{J0, JS, JIminusS, JI, JIplusS};
     }
 
     /**
@@ -292,8 +301,7 @@ public class RelaxEquations {
         double JIminusS = JModelFree(wI - wS, tauF, tauM, tauS, s2, sf2); // R1, R2, NOE
         double JI = JModelFree(wI, tauF, tauM, tauS, s2, sf2); // R2
         double JS = JModelFree(wS, tauF, tauM, tauS, s2, sf2); //R1, R2
-        double[] result = {J0, JS, JIminusS, JI, JIplusS};
-        return result;
+        return new double[]{J0, JS, JIminusS, JI, JIplusS};
     }
 
     /**
@@ -365,8 +373,7 @@ public class RelaxEquations {
                 sum += value1 + value2 + value3;
             }
         }
-        double value = 0.4 * sum;
-        return value;
+        return 0.4 * sum;
     }
 
     // Note: tauM = tm in Art Palmer's code, and taui in Relax. 
@@ -393,8 +400,7 @@ public class RelaxEquations {
         double JIminusS = JDiffusion(diffType, wI - wS, D, VT, v, s2, tauF, sf2, tauS); // R1, R2, NOE
         double JI = JDiffusion(diffType, wI, D, VT, v, s2, tauF, sf2, tauS); // R2
         double JS = JDiffusion(diffType, wS, D, VT, v, s2, tauF, sf2, tauS); //R1, R2
-        double[] result = {J0, JS, JIminusS, JI, JIplusS};
-        return result;
+        return new double[]{J0, JS, JIminusS, JI, JIplusS};
     }
 
     /**
@@ -405,8 +411,7 @@ public class RelaxEquations {
      * @return double. The spectral density, J(w).
      */
     public double J(double w, double tau) {
-        double value = 0.4 * tau / (1.0 + w * w * tau * tau);
-        return value;
+        return 0.4 * tau / (1.0 + w * w * tau * tau);
     }
 
     /**
@@ -418,8 +423,35 @@ public class RelaxEquations {
      * @return double. The spectral density, J(w).
      */
     public double J(double w, double tau, double S2) {
-        double value = 0.4 * S2 * tau / (1.0 + w * w * tau * tau);
-        return value;
+        return 0.4 * S2 * tau / (1.0 + w * w * tau * tau);
+    }
+
+    /*
+     * Model-free function for CH3 groups. tf is time scale for methyl rotation
+     * Derived from Skrynnikov and Kay for Sf2 = 1
+     *
+     */
+    public double getJCH3(double w, double tauM, double Sf2, double Ss2, double tauF, double tauS) {
+        double Sf2p = Sf2 / 9.0;
+        double t1 = tauM * tauS / (tauM + tauS);
+        double t2 = tauM * tauF / (tauM + tauF);
+        double t3 = tauM * tauS * tauF / (tauM * tauS + tauM * tauF + tauS * tauF);
+        return (2.0 / 5.0) * (Sf2p * Ss2 * tauM / (1 + w * w * tauM * tauM) +
+                Sf2p * (1 - Ss2) * t1 / (1 + w * w * t1 * t1) +
+                (1 - Sf2p) * Ss2 * t2 / (1 + w * w * t2 * t2) +
+                (1 - Sf2p) * (1 - Ss2) * t3 / (1 + w * w * t3 * t3));
+    }
+
+    public double getJCH3red(double w, double tauM, double Sf2, double tauF) {
+        double Sf2p = Sf2 / 9.0;
+        double t1 = tauM * tauF / (tauM + tauF);
+        return (2.0 / 5.0) * (Sf2p * tauM / (1 + w * w * tauM * tauM) +
+                (1 - Sf2p) * t1 / (1 + w * w * t1 * t1));
+    }
+
+    public double getJCH3min(double w, double tauM, double Sf2) {
+        double Sf2p = Sf2 / 9.0;
+        return (2.0 / 5.0) * (Sf2p * tauM / (1.0 + w * w * tauM * tauM));
     }
 
     public double[] getDiffusionConstants(String type) {
@@ -444,7 +476,7 @@ public class RelaxEquations {
     }
 
     public double calcS2(double J0, double bN, double mN) {
-        return (5 / 2) * Math.sqrt((J0 - bN) * mN);
+        return (5.0 / 2) * Math.sqrt((J0 - bN) * mN);
     }
 
     /**
@@ -459,8 +491,7 @@ public class RelaxEquations {
         double JIminusS = J(wI - wS, tau); // R1, R2, NOE
         double JI = J(wI, tau); // R2
         double JS = J(wS, tau); //R1, R2
-        double[] result = {J0, JS, JIminusS, JI, JIplusS};
-        return result;
+        return new double[]{J0, JS, JIminusS, JI, JIplusS};
     }
 
     /**
@@ -558,6 +589,22 @@ public class RelaxEquations {
         return dipolarContrib + csaContrib + Rex;
     }
 
+    public double R1_D(double jw, double j2w) {
+        return 3.0 * QCC2 * (jw + 4.0 * j2w) * 1.0e-9;
+    }
+
+    public double R2_D(double j0, double jw, double j2w) {
+        return (3.0 / 2.0) * QCC2 * (3.0 * j0 + 5.0 * jw + 2.0 * j2w) * 1.0e-9;
+    }
+
+    public double RQ_D(double jw) {
+        return 9.0 * QCC2 * jw * 1.0e-9;
+    }
+
+    public double Rap_D(double j0, double jw, double j2w) {
+        return (3.0 / 2.0) * QCC2 * (3 * j0 + jw + 2 * j2w) * 1.0e-9;
+    }
+
     /**
      * NOE calculation
      *
@@ -606,8 +653,7 @@ public class RelaxEquations {
 
         double cosTheta = Math.cos(theta);
         double[] J = getJ(tauC);
-        double nuxy2 = 2.0 * p * dN * (4.0 * J[0] + 3.0 * J[S]) * (3.0 * cosTheta * cosTheta - 1.0);
-        return nuxy2;
+        return 2.0 * p * dN * (4.0 * J[0] + 3.0 * J[S]) * (3.0 * cosTheta * cosTheta - 1.0);
     }
 
     /**
@@ -624,8 +670,7 @@ public class RelaxEquations {
         double w1 = (J[ImS] + 6 * J[IpS]) / (6 * J[IpS] - J[ImS]);
         double w2 = (6 * J[I]) / (6 * J[IpS] - J[ImS]);
         double f = (gammaS / gammaI) * R1 * (NOE - 1);
-        double rhoExp = (2 * R2 - R1 - w2 * f) / (R1 - w1 * f);
-        return rhoExp;
+        return (2 * R2 - R1 - w2 * f) / (R1 - w1 * f);
     }
 
     /**
@@ -650,12 +695,12 @@ public class RelaxEquations {
         double f = (gammaS / gammaI) * R1 * (NOE - 1);
         double rhoExp1 = 2 * R2 - R1 - w2 * f;
         double rhoExp2 = R1 - w1 * f;
+        double v = (R1err / R1) * (R1err / R1) + (NOEerr / NOE) * (NOEerr / NOE);
         double rhoExpErr1 = Math.sqrt(2 * 2 * R2err * R2err + R1err * R1err
-                + w2 * w2 * (f * f * ((R1err / R1) * (R1err / R1) + (NOEerr / NOE) * (NOEerr / NOE)) + R1err * R1err));
+                + w2 * w2 * (f * f * v + R1err * R1err));
         double rhoExpErr2 = Math.sqrt(R1err * R1err
-                + w1 * w1 * (f * f * ((R1err / R1) * (R1err / R1) + (NOEerr / NOE) * (NOEerr / NOE)) + R1err * R1err));
-        double rhoExpErr = Math.sqrt(rhoExp * rhoExp * ((rhoExpErr1 / rhoExp1) * (rhoExpErr1 / rhoExp1) + (rhoExpErr2 / rhoExp2) * (rhoExpErr2 / rhoExp2)));
-        return rhoExpErr;
+                + w1 * w1 * (f * f * v + R1err * R1err));
+        return Math.sqrt(rhoExp * rhoExp * ((rhoExpErr1 / rhoExp1) * (rhoExpErr1 / rhoExp1) + (rhoExpErr2 / rhoExp2) * (rhoExpErr2 / rhoExp2)));
     }
 
     /**
@@ -674,8 +719,7 @@ public class RelaxEquations {
         double f = (gammaS / gammaI) * R1 * (NOE - 1);
         double R1c = R1 - w1 * f;
         double R2c = R2 - w2 * f;
-        double rhoExp = (2 * R2c - R1c) / (R1c);
-        return rhoExp;
+        return (2 * R2c - R1c) / (R1c);
     }
 
     /**
@@ -686,8 +730,7 @@ public class RelaxEquations {
      * @return double. RhoExp.
      */
     public double calcRhoPred(double[] J) {
-        double rhoPred = (4.0 / 3.0) * (J[0] / J[S]);
-        return rhoPred;
+        return (4.0 / 3.0) * (J[0] / J[S]);
     }
 
 }

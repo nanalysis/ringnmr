@@ -34,6 +34,8 @@ do
     sdir=`ls -d ${PRG}-*`
     cd $sdir
     echo $sdir
+    cp -r -p ../../../../ringnmr/target/*-bin/ring*/ringnmr .
+    cp -r -p ../../../../ringnmr/target/*-bin/ring*/ringnmr.bat .
 
     rm lib/javafx*
 
