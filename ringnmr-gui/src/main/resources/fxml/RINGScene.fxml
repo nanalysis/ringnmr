@@ -364,7 +364,10 @@
                 <ToolBar fx:id="navigatorToolBar" orientation="HORIZONTAL" BorderPane.alignment="CENTER"/>
                 <StatusBar fx:id="statusBar" HBox.hgrow="ALWAYS"/>
                 <Pane prefWidth="20"/>
-                <RangeSlider fx:id="barScaleSlider" prefWidth="250"/>
+                <ScrollBar fx:id="barScaleScrollBar" prefWidth="250"
+                           value="500" min="0" max="1000" visible="1000"/>
+                <Pane prefWidth="20"/>
+                <Slider fx:id="barScaleSlider" prefWidth="250" min="1.0" max="20.0" value="1.0"/>
             </children>
         </HBox>
     </bottom>

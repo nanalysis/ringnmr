@@ -40,13 +40,7 @@ import javafx.event.Event;
 import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.SnapshotParameters;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.TabPane;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.BorderPane;
@@ -90,16 +84,6 @@ import javafx.print.PrinterJob;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Alert;
-import javafx.scene.control.SplitPane;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ContentDisplay;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.Slider;
-import javafx.scene.control.ToolBar;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -156,7 +140,9 @@ public class PyController implements Initializable {
     @FXML
     XYPlotDataPane chartPane;
     @FXML
-    RangeSlider barScaleSlider;
+    ScrollBar barScaleScrollBar;
+    @FXML
+    Slider barScaleSlider;
 
     @FXML
     Button nmrFxPeakButton;
@@ -510,14 +496,8 @@ public class PyController implements Initializable {
         chartMenu.setOnShowing(e -> {
             makeAxisMenu();
         });
-        barScaleSlider.setMin(0.0);
-        barScaleSlider.setMax(100.0);
-        barScaleSlider.setLowValue(0.0);
-        barScaleSlider.setHighValue(100.0);
-        barScaleSlider.setBlockIncrement(0.25);
-        barScaleSlider.setShowTickMarks(true);
-        barScaleSlider.lowValueProperty().addListener(e -> resizeBarPlotCanvas());
-        barScaleSlider.highValueProperty().addListener(e -> resizeBarPlotCanvas());
+        barScaleSlider.valueProperty().addListener(e -> resizeBarPlotCanvas());
+        barScaleScrollBar.valueProperty().addListener(e -> resizeBarPlotCanvas());
 
         tauFractionSlider.setMin(0.0);
         tauFractionSlider.setMax(0.5);
@@ -592,11 +572,20 @@ public class PyController implements Initializable {
     void resizeBarPlotCanvas() {
         double width = chartBox.getWidth();
         double height = chartBox.getHeight();
-        double barLow = barScaleSlider.getLowValue();
-        double barHigh = barScaleSlider.getHighValue();
-        double barMax = barScaleSlider.getMax();
+        double barScale = barScaleSlider.getValue();
+        double barValue = barScaleScrollBar.getValue();
+        barScaleScrollBar.setVisible(true);
+        double scrollMin = barScaleScrollBar.getMin();
+        double scrollMax = barScaleScrollBar.getMax();
+        double visAmount = (scrollMax-scrollMin) / barScale;
+        barScaleScrollBar.setVisibleAmount(visAmount);
         barPlotCanvas.setWidth(width);
         barPlotCanvas.setHeight(height);
+        double visFraction = 1.0/barScale;
+        double barCenter = barValue / barScaleScrollBar.getMax() * (1.0-visFraction);
+        double barDiv = 1.0 /barScale;
+        double fMin = barCenter;
+        double fMax = barCenter + barDiv;
         GraphicsContext gC = barPlotCanvas.getGraphicsContext2D();
         gC.clearRect(0, 0, barPlotCanvas.getWidth(), barPlotCanvas.getHeight());
         if (ssPainter != null) {
@@ -608,9 +597,9 @@ public class PyController implements Initializable {
             double xMin = 0.0;
             double xMax = 1.0;
             for (DataSeries series:residueChart.getData()) {
-                series.setLimits(barLow / barMax, barHigh / barMax);
-                xMin = series.getMinX();
-                xMax = series.getMaxX();
+                series.setLimits(fMin, fMax);
+                xMin = series.getMinX() - 1.0;
+                xMax = series.getMaxX() + 1.0;
             }
 
             residueChart.xAxis.setLowerBound(xMin);
