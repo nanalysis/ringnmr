@@ -94,8 +94,6 @@ public class DeuteriumMapping {
     }
 
     public static double[][] jointMapping(List<Double> rValueList, List<Double> fields) {
-        System.out.println(rValueList);
-        System.out.println(fields);
         int nRows = rValueList.size();
         double[] rValues = rValueList.stream()
                 .mapToDouble(Double::doubleValue)
@@ -171,7 +169,6 @@ public class DeuteriumMapping {
 
         dataFrame = dataFrame.merge(DoubleVector.of("y",rValues));
         var model = OLS.fit(formula, dataFrame);
-        System.out.println(model);
         var jValues = model.coefficients();
         var ttest = model.ttest();
         var jErrors = new double[jValues.length];

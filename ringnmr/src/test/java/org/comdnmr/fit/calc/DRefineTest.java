@@ -144,7 +144,9 @@ public class DRefineTest {
 
     @Test
     public void testDeuteriumD1J() {
-        MFModelIsoD1 model = new MFModelIsoD1();
+        MFModelIso1 model = new MFModelIso1();
+        model.setSScale(9.0);
+
         double[] hFreqs = {100.0, 200.0, 300.0, 400.0, 500.0, 600.0, 700.0, 800.0, 900.0, 1000.0};
         double[] omegas = new double[hFreqs.length * 2 + 1];
 
@@ -162,7 +164,8 @@ public class DRefineTest {
 
     @Test
     public void testDeuteriumD1fJ() {
-        MFModelIsoD1f model = new MFModelIsoD1f();
+        MFModelIso1f model = new MFModelIso1f();
+        model.setSScale(9.0);
         double[] hFreqs = {100.0, 200.0, 300.0, 400.0, 500.0, 600.0, 700.0, 800.0, 900.0, 1000.0};
         double[] omegas = new double[hFreqs.length * 2 + 1];
 

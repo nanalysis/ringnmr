@@ -128,6 +128,7 @@ public class ResidueChart extends XYCanvasBarChart {
                 selectedResidues.add(resSource);
             }
         }
+        System.out.println(resSource);
         currentSeriesName = seriesName;
         String[] seriesNameParts = seriesName.split("\\|");
         String mapName = seriesNameParts[0];

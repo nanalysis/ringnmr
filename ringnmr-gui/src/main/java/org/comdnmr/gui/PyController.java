@@ -61,6 +61,7 @@ import org.comdnmr.eqnfit.ExpFitter;
 import org.comdnmr.data.Experiment;
 import org.comdnmr.data.ExperimentData;
 import org.comdnmr.modelfree.FitDeuteriumModel;
+import org.comdnmr.modelfree.FitModel;
 import org.controlsfx.control.PropertySheet;
 import org.comdnmr.eqnfit.ParValueInterface;
 import org.comdnmr.eqnfit.PlotEquation;
@@ -593,17 +594,25 @@ public class PyController implements Initializable {
         }
         double chartHeight = height / barCharts.size();
         double yPos = 0.0;
+        double xMin = Double.MAX_VALUE;
+        double xMax = Double.NEGATIVE_INFINITY;
         for (ResidueChart residueChart : barCharts) {
-            double xMin = 0.0;
-            double xMax = 1.0;
-            for (DataSeries series:residueChart.getData()) {
-                series.setLimits(fMin, fMax);
-                xMin = series.getMinX() - 1.0;
-                xMax = series.getMaxX() + 1.0;
+            for (DataSeries series : residueChart.getData()) {
+                xMin = Math.min(xMin, series.getMinX() - 1.0);
+                xMax = Math.max(xMax, series.getMaxX() + 1.0);
             }
-
-            residueChart.xAxis.setLowerBound(xMin);
-            residueChart.xAxis.setUpperBound(xMax);
+        }
+        double limitMin = fMin * (xMax - xMin) + xMin;
+        double limitMax = fMax * (xMax - xMin) + xMin;
+        System.out.println("x min max " + xMin + " " + xMax + " " + fMin + " " + fMax);
+        for (ResidueChart residueChart : barCharts) {
+            for (DataSeries series : residueChart.getData()) {
+                series.setLimits(limitMin, limitMax);
+            }
+        }
+        for (ResidueChart residueChart : barCharts) {
+            residueChart.xAxis.setLowerBound(limitMin);
+            residueChart.xAxis.setUpperBound(limitMax);
 
             residueChart.setWidth(width);
             residueChart.setHeight(chartHeight);
@@ -1171,7 +1180,18 @@ public class PyController implements Initializable {
 
     }
 
-    public void calcModel1() {
+    public void fitR1R2NOEModel() {
+        FitModel fitModel = new FitR1R2NOEModel();
+        fitIsotropicModel(fitModel, "");
+    }
+
+    public void fitDeuteriumModel() {
+        var modelNames = List.of("D1", "D1f");
+        FitDeuteriumModel fitModel = new FitDeuteriumModel();
+        fitIsotropicModel(fitModel, "D");
+    }
+
+    public void fitIsotropicModel(FitModel fitModel, String prefix) {
         String lambdaText = lambdaField.getText();
         double lambda = 0.0;
         if (!lambdaText.isBlank()) {
@@ -1196,40 +1216,34 @@ public class PyController implements Initializable {
         }
         boolean fitJ = fitJCheckBox.isSelected();
         System.out.println(lambdaText + " lambda " + lambda);
-        FitR1R2NOEModel fitR1R2NOEModel = new FitR1R2NOEModel();
-        fitR1R2NOEModel.setLambda(lambda);
-        fitR1R2NOEModel.setTau(tau);
+        fitModel.setLambda(lambda);
+        fitModel.setTau(tau);
         double tauFraction = tauFractionSlider.getValue();
         double t2Limit = t2LimitSlider.getValue();
         boolean fitTau = tauFraction > 0.001;
-        fitR1R2NOEModel.setFitTau(fitTau);
-        fitR1R2NOEModel.setT2Limit(t2Limit);
-        fitR1R2NOEModel.setNReplicates((int) nReplicatesSlider.getValue());
-        fitR1R2NOEModel.setFitJ(fitJ);
+        fitModel.setFitTau(fitTau);
+        fitModel.setT2Limit(t2Limit);
+        fitModel.setNReplicates((int) nReplicatesSlider.getValue());
+        fitModel.setFitJ(fitJ);
         var modelNames = new ArrayList<String>();
         for (var modelCheckBox : modelCheckBoxes) {
             if (modelCheckBox.isSelected()) {
-                modelNames.add(modelCheckBox.getText());
+                String modelName = prefix + modelCheckBox.getText();
+                modelNames.add(modelName);
             }
         }
         try {
-            fitR1R2NOEModel.testIsoModel(null, modelNames);
+            fitModel.testIsoModel(null, modelNames);
         } catch (IllegalStateException iaE) {
             GUIUtils.warn("Model Fit Error", iaE.getMessage());
             return;
         }
-        Double tauFit = fitR1R2NOEModel.getTau();
+        Double tauFit = fitModel.getTau();
         if (tauFit != null) {
             tauCalcField.setText(String.format("%.2f", tauFit));
         }
         addMoleculeDataToAxisMenu();
         showModelFreeData();
-    }
-
-    public void fitDeuteriumModel() {
-        var modelNames = List.of("D1", "D1f");
-        FitDeuteriumModel fitModel = new FitDeuteriumModel();
-        fitModel.testIsoModel(null, modelNames);
     }
 
     public void estimateCorrelationTime() {

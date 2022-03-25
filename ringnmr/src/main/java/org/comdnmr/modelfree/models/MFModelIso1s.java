@@ -61,8 +61,8 @@ public class MFModelIso1s extends MFModelIso {
         for (double omega : omegas) {
             double omega2 = omega * omega;
             double tauf = tauMx * tauSx / (tauMx + tauSx);
-            double value1 = ss2 * tauMx / (1.0 + omega2 * tauMx * tauMx);
-            double value2 = (1.0 - ss2) * (tauf) / (1.0 + omega2 * tauf * tauf);
+            double value1 = ss2 / sN * tauMx / (1.0 + omega2 * tauMx * tauMx);
+            double value2 = (1.0 - ss2 / sN) * (tauf) / (1.0 + omega2 * tauf * tauf);
             J[j++] = 0.4 * (value1 + value2);
         }
         return J;

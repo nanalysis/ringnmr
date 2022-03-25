@@ -355,7 +355,7 @@ public class RelaxFit {
             double jErr = jValues[2][i];
             sumSq += (delta * delta) / (jErr*jErr);
 
-            System.out.printf("%3d %11.5g %11.5g %11.5g %11.5g %11.5g\n", i, jValues[0][i], jCalc[i], jValues[1][i], jErr, sumSq);
+//            System.out.printf("%3d %11.5g %11.5g %11.5g %11.5g %11.5g\n", i, jValues[0][i], jCalc[i], jValues[1][i], jErr, sumSq);
         }
         sumComplexity = testModel.getComplexity();
         return new double[]{sumSq, sumComplexity};
