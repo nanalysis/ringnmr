@@ -59,15 +59,15 @@ public class MFModelIso2sf extends MFModelIso2f {
         double tauSx = tauS * 1.0e-9;
         double[] J = new double[omegas.length];
         int j = 0;
-        double s2 = ss2 * sf2;
+        double s2 = ss2 * sf2 / (sN * sN);
         for (double omega : omegas) {
             double omega2 = omega * omega;
             double vM = s2 * tauMx / (1.0 + omega2 * tauMx * tauMx);
-            double vMS = sf2 * (1.0 - ss2) * (tauMx * tauSx * (tauMx + tauSx))
+            double vMS = sf2 / sN * (1.0 - ss2 / sN) * (tauMx * tauSx * (tauMx + tauSx))
                     / (tauMx * tauMx * tauSx * tauSx * omega2 + (tauMx + tauSx) * (tauMx + tauSx));
-            double vMF = (1.0 - sf2) * ss2 * (tauMx * tauFx * (tauMx + tauFx))
+            double vMF = (1.0 - sf2 / sN) * ss2 / sN * (tauMx * tauFx * (tauMx + tauFx))
                     / (tauMx * tauMx * tauFx * tauFx * omega2 + (tauMx + tauFx) * (tauMx + tauFx));
-            double vMFS = (1.0 - sf2) * (1.0 - ss2) * (tauFx * tauMx * tauSx * (tauFx * (tauMx + tauSx) + tauMx * tauSx))
+            double vMFS = (1.0 - sf2 / sN) * (1.0 - ss2 / sN) * (tauFx * tauMx * tauSx * (tauFx * (tauMx + tauSx) + tauMx * tauSx))
                     / (tauFx * tauFx * tauMx * tauMx * tauSx * tauSx * omega2
                     + (tauFx * (tauMx + tauSx) + tauMx * tauSx) * (tauFx * (tauMx + tauSx) + tauMx * tauSx));
             // complexity += Math.abs(vMS / vM) + Math.abs(vMF / vM) + Math.abs(vMFS / vM);

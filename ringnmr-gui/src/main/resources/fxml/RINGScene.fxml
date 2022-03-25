@@ -336,7 +336,7 @@
                                             </HBox>
                                             <HBox>
                                                 <children>
-                                                    <Button text="Fit-Isotropic" onAction="#calcModel1"/>
+                                                    <Button text="Fit-Isotropic" onAction="#fitR1R2NOEModel"/>
                                                     <Button text="Fit Deuterium-Isotropic" onAction="#fitDeuteriumModel"/>
                                                 </children>
                                             </HBox>

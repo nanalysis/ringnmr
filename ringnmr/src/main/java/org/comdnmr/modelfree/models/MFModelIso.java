@@ -30,7 +30,7 @@ import java.util.List;
  * @author brucejohnson
  */
 public abstract class MFModelIso extends MFModel {
-
+    double sN = 1.0;
     double tauM;
     double rEX;
     double tauFrac = 0.25;
@@ -68,6 +68,10 @@ public abstract class MFModelIso extends MFModel {
         return parNames;
     }
 
+    public void setSScale(double value) {
+        sN = value;
+    }
+
     public boolean fitTau() {
         return fitTau;
     }
@@ -96,31 +100,34 @@ public abstract class MFModelIso extends MFModel {
         MFModelIso model;
         switch (modelName) {
             case "1":
+            case "D1":
                 model = new MFModelIso1(fitTau, tau, tauFrac, fitExchange);
                 break;
-            case "D1":
-                model = new MFModelIsoD1(fitTau, tau, tauFrac, fitExchange);
-                break;
             case "1f":
+            case "D1f":
                 model = new MFModelIso1f(fitTau, tau, tauFrac, fitExchange);
                 break;
-            case "D1f":
-                model = new MFModelIsoD1f(fitTau, tau, tauFrac, fitExchange);
-                break;
             case "1s":
+            case "D1s":
                 model = new MFModelIso1s(fitTau, tau, tauFrac, fitExchange);
                 break;
             case "2s":
+            case "D2s":
                 model = new MFModelIso2s(fitTau, tau, tauFrac, fitExchange);
                 break;
             case "2f":
+            case "D2f":
                 model = new MFModelIso2f(fitTau, tau, tauFrac, fitExchange);
                 break;
             case "2sf":
+            case "D2sf":
                 model = new MFModelIso2sf(fitTau, tau, tauFrac, fitExchange);
                 break;
             default:
                 model = null;
+        }
+        if (modelName.charAt(0) == 'D') {
+            model.setSScale(9.0);
         }
         return model;
 

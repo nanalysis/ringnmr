@@ -3,10 +3,11 @@ package org.comdnmr.modelfree;
 import org.apache.commons.math3.optim.PointValuePair;
 import org.comdnmr.modelfree.models.MFModelIso;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-public class FitModel {
+public abstract class FitModel {
     Double tau;
     boolean fitTau = false;
     boolean fitJ = false;
@@ -15,6 +16,7 @@ public class FitModel {
     double lambda = 0.0;
     double t2Limit = 0.0;
     int nReplicates = 0;
+    public abstract void testIsoModel(String searchKey, List<String> modelNames);
 
     double[][] replicates(Map<String, MolDataValues> molDataRes,
                           MFModelIso bestModel, double localTauFraction,

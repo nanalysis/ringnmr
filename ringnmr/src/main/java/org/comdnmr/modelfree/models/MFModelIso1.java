@@ -29,7 +29,6 @@ import java.util.List;
  * @author brucejohnson
  */
 public class MFModelIso1 extends MFModelIso {
-
     double sf2;
 
     public MFModelIso1(boolean fitTau, double targetTau, double tauFraction,
@@ -58,7 +57,7 @@ public class MFModelIso1 extends MFModelIso {
         int j = 0;
         for (double omega : omegas) {
             double omega2 = omega * omega;
-            J[j++] = 0.4 * sf2 * tauMx / (1.0 + omega2 * tauMx * tauMx);
+            J[j++] = 0.4 * sf2 / sN * tauMx / (1.0 + omega2 * tauMx * tauMx);
         }
         return J;
     }

@@ -12,7 +12,7 @@ import org.nmrfx.chemistry.relax.ResonanceSource;
 
 import java.util.*;
 
-public class FitDeuteriumModel {
+public class FitDeuteriumModel extends FitModel {
     boolean fitTau = true;
     boolean fitJ = true;
     boolean fitExchange = false;
@@ -23,12 +23,9 @@ public class FitDeuteriumModel {
     public static Map<String, MolDataValues> getData(boolean requireCoords) {
         Map<String, MolDataValues> molDataValues = new HashMap<>();
         MoleculeBase mol = MoleculeFactory.getActive();
-        System.out.println("mol " + mol);
         if (mol != null) {
             for (Polymer polymer : mol.getPolymers()) {
-                System.out.println("poly " + polymer);
                 for (Residue residue : polymer.getResidues()) {
-                    System.out.println("res " + residue);
                     for (Atom atom : residue.getAtoms()) {
                         var relaxData = atom.getRelaxationData();
                         boolean hasDeuterium = relaxData.values().stream().
@@ -122,7 +119,6 @@ public class FitDeuteriumModel {
         for (String key : molData.keySet()) {
             molDataRes.clear();
             MolDataValues resData = molData.get(key);
-            System.out.println(resData);
             if (!resData.getData().isEmpty()) {
                 molDataRes.put(key, resData);
                 List<Double> rValues = new ArrayList<>();
@@ -133,7 +129,6 @@ public class FitDeuteriumModel {
                     rValues.add(dValue.R2);
                     rValues.add(dValue.rQ);
                     rValues.add(dValue.rAP);
-                    System.out.println("dValue " + dValue.relaxObj.getSF());
                     fields.add(dValue.relaxObj.getSF());
                 }
                 double[][] mappingResult = DeuteriumMapping.jointMapping(rValues, fields);
@@ -144,7 +139,6 @@ public class FitDeuteriumModel {
                     double logJ = Math.log10(jValue);
                     double logJUp = Math.log10(jValue + errValue);
                     double logJLow = Math.log10(jValue - errValue);
-                    System.out.printf("%7.1f %7.5f %7.5f %7.5f %7.5f %7.5f\n", field / 1.0e6, jValue, errValue, logJ, logJLow, logJUp);
                 }
 
             }
