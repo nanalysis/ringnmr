@@ -52,8 +52,7 @@ public class MFModelIso2sf extends MFModelIso2f {
         return getAllParNames("Sf2", "Tau_f", "Ss2", "Tau_s");
     }
 
-    @Override
-    public double[] calc(double[] omegas) {
+    public double[] calcSF(double[] omegas) {
         double tauMx = tauM * 1.0e-9;
         double tauFx = tauF * 1.0e-9;
         double tauSx = tauS * 1.0e-9;
@@ -75,6 +74,32 @@ public class MFModelIso2sf extends MFModelIso2f {
                 //   complexity += Math.abs(7.75 + Math.log10(tauM))
             }
             J[j++] = 0.4 * (vM + vMS + vMF + vMFS);
+        }
+        complexity
+                = Math.abs(1.0 - sf2)
+                + Math.abs(1.0 - ss2)
+                + (Math.log10(tauSx * 1.0e9) + 3.0)
+                + (Math.log10(tauFx * 1.0e9) + 3.0);
+//                + ((tauSx * 1.0e9) - SLOW_LIMIT)
+//                + tauFx * 1.0e9;
+        return J;
+    }
+
+    @Override
+    public double[] calc(double[] omegas) {
+        double tauMx = tauM * 1.0e-9;
+        double tauFx = tauF * 1.0e-9;
+        double tauSx = tauS * 1.0e-9;
+        double[] J = new double[omegas.length];
+        int j = 0;
+        double s2 = ss2 * sf2 / (sN * sN);
+        for (double omega : omegas) {
+            double omega2 = omega * omega;
+
+            double value1 = s2 / (1.0 + omega2 * tauMx * tauMx);
+            double value2 = ((1 - sf2/sN) * (tauFx + tauMx) * tauFx) / ((tauFx + tauMx) * (tauFx + tauMx) + omega2 * tauMx * tauMx * tauFx * tauFx);
+            double value3 = ((sf2/sN - s2) * (tauSx + tauMx) * tauSx) / ((tauSx + tauMx) * (tauSx + tauMx) + omega2 * tauMx * tauMx * tauSx * tauSx);
+            J[j++] = 0.4 * tauMx * (value1 + value2 + value3);
         }
         complexity
                 = Math.abs(1.0 - sf2)
