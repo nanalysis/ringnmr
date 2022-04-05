@@ -65,6 +65,7 @@ import org.nmrfx.chemistry.Residue;
 import org.nmrfx.chemistry.io.MoleculeIOException;
 import org.nmrfx.chemistry.relax.RelaxationValues;
 import org.nmrfx.chemistry.relax.ResonanceSource;
+import org.nmrfx.chemistry.relax.SpectralDensity;
 import org.nmrfx.peaks.PeakList;
 import org.nmrfx.star.ParseException;
 
@@ -539,6 +540,31 @@ public class ChartUtil {
             XYEValue dataPoint = new XYEValue(x, y, errUp);
             dataPoint.setExtraValue(resSource);
             series.add(dataPoint);
+        }
+        return data;
+    }
+
+    public static ObservableList<DataSeries> getSpectralDensityData(Map<String, SpectralDensity> spectralDensityMap) {
+        ObservableList<DataSeries> data = FXCollections.observableArrayList();
+        for (var entry:spectralDensityMap.entrySet()) {
+            SpectralDensity spectralDensity = entry.getValue();
+            DataSeries series = new DataSeries();
+            series.setName("J " + entry.getKey());
+            data.add(series);
+            double[][] spectralDensities = spectralDensity.getSpectralDensities();
+            for (int i=0;i<spectralDensities[0].length;i++) {
+                double x = spectralDensities[0][i] * 1.0e-9;
+                double y = spectralDensities[1][i];
+                double err = spectralDensities[2][i];
+                double yLow = y - err;
+                double yHigh = y + err;
+                double yLog = Math.log10(y *1.0e9);
+                double yLogLow = Math.log10(yLow *1.0e9);
+                double yLogHigh = Math.log10(yHigh *1.0e9);
+                XYEValue xyeValue = new XYEValue(x, yLog, (yLogHigh-yLogLow) / 2.0);
+                System.out.println(x + " " + y + " " + err + " " + yLog + " " + yLogLow + " " + yLogHigh);
+                series.add(xyeValue);
+            }
         }
         return data;
     }

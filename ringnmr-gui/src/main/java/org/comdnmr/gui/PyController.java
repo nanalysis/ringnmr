@@ -19,111 +19,78 @@ package org.comdnmr.gui;
 
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
-
-import java.util.*;
-import java.net.URL;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-
+import javafx.animation.PauseTransition;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
 import javafx.geometry.Bounds;
+import javafx.print.PrinterJob;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javax.imageio.ImageIO;
-import javax.script.ScriptException;
-import org.comdnmr.eqnfit.CPMGFitter;
-import org.comdnmr.eqnfit.FitResult;
-import org.comdnmr.eqnfit.CurveFit;
-import org.comdnmr.data.DataIO;
-import org.comdnmr.eqnfit.EquationFitter;
-import org.comdnmr.eqnfit.EquationType;
-import org.comdnmr.eqnfit.ExpFitter;
-import org.comdnmr.data.Experiment;
-import org.comdnmr.data.ExperimentData;
-import org.comdnmr.modelfree.FitDeuteriumModel;
-import org.comdnmr.modelfree.FitModel;
-import org.controlsfx.control.PropertySheet;
-import org.comdnmr.eqnfit.ParValueInterface;
-import org.comdnmr.eqnfit.PlotEquation;
-import org.comdnmr.util.ProcessingStatus;
-import org.comdnmr.fit.ResidueFitter;
-import org.comdnmr.data.ExperimentResult;
-import org.comdnmr.data.ExperimentSet;
-import org.controlsfx.control.RangeSlider;
-import org.controlsfx.control.StatusBar;
-import org.comdnmr.eqnfit.CESTFitter;
-import java.text.DecimalFormat;
-
-import javafx.beans.property.SimpleStringProperty;
-
-import java.util.stream.Collectors;
-
-import javafx.animation.PauseTransition;
-import javafx.embed.swing.SwingFXUtils;
-import javafx.fxml.FXMLLoader;
-import javafx.print.PrinterJob;
-import javafx.scene.Scene;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
-import org.comdnmr.data.DoubleArrayExperiment;
-import org.comdnmr.data.RelaxSet;
-import org.comdnmr.data.ValueSet;
-import org.comdnmr.util.CoMDPreferences;
-import org.comdnmr.modelfree.CorrelationTime;
-import org.comdnmr.eqnfit.FitFunction;
-import org.comdnmr.eqnfit.R1RhoFitter;
-import static org.comdnmr.gui.MainApp.preferencesController;
-import static org.comdnmr.gui.MainApp.primaryStage;
+import org.comdnmr.data.*;
+import org.comdnmr.eqnfit.*;
+import org.comdnmr.fit.ResidueFitter;
+import org.comdnmr.modelfree.*;
 import org.comdnmr.util.CoMDOptions;
+import org.comdnmr.util.CoMDPreferences;
+import org.comdnmr.util.ProcessingStatus;
 import org.comdnmr.utils.NMRFxClient;
+import org.controlsfx.control.StatusBar;
 import org.controlsfx.dialog.ExceptionDialog;
 import org.nmrfx.chart.Axis;
 import org.nmrfx.chart.DataSeries;
 import org.nmrfx.chart.XYEValue;
 import org.nmrfx.chart.XYValue;
+import org.nmrfx.chemistry.Atom;
 import org.nmrfx.chemistry.InvalidMoleculeException;
 import org.nmrfx.chemistry.MoleculeBase;
 import org.nmrfx.chemistry.MoleculeFactory;
-import org.nmrfx.chemistry.relax.RelaxationData.relaxTypes;
 import org.nmrfx.chemistry.io.MoleculeIOException;
+import org.nmrfx.chemistry.relax.*;
+import org.nmrfx.chemistry.relax.RelaxationData.relaxTypes;
+import org.nmrfx.console.ConsoleController;
 import org.nmrfx.graphicsio.GraphicsIOException;
 import org.nmrfx.graphicsio.SVGGraphicsContext;
 import org.nmrfx.peaks.InvalidPeakException;
 import org.nmrfx.star.ParseException;
-import org.comdnmr.eqnfit.NOEFit;
-import org.comdnmr.modelfree.FitR1R2NOEModel;
-import org.nmrfx.chemistry.relax.OrderPar;
-import org.nmrfx.chemistry.relax.RelaxationData;
-import org.nmrfx.chemistry.relax.RelaxationValues;
-import org.nmrfx.chemistry.relax.ResonanceSource;
-import org.nmrfx.console.ConsoleController;
 import org.nmrfx.utils.GUIUtils;
+
+import javax.imageio.ImageIO;
+import javax.script.ScriptException;
+import java.io.*;
+import java.net.URL;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.text.DecimalFormat;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.comdnmr.gui.MainApp.preferencesController;
+import static org.comdnmr.gui.MainApp.primaryStage;
 
 public class PyController implements Initializable {
 
@@ -133,8 +100,6 @@ public class PyController implements Initializable {
     List<ResidueChart> barCharts = new ArrayList<>();
 
     SSPainter ssPainter = null;
-    @FXML
-    SSRegion ssregion;
 
     @FXML
     StackPane stackPane;
@@ -148,15 +113,13 @@ public class PyController implements Initializable {
     @FXML
     Button nmrFxPeakButton;
     @FXML
-    TableView resInfoTable;
+    TableView<ExperimentData.DataValue> resInfoTable;
     @FXML
     TableView parameterTable;
     @FXML
     ChoiceBox<String> equationChoice;
     @FXML
     TabPane parTabPane;
-    @FXML
-    PropertySheet propertySheet;
     @FXML
     Label aicLabel;
     @FXML
@@ -182,8 +145,6 @@ public class PyController implements Initializable {
     CheckBox sliderGuessCheckBox;
     @FXML
     CheckBox calcErrorsCheckBox;
-    @FXML
-    TextField nSimTextField;
 
     @FXML
     TextField xLowerBoundTextField;
@@ -298,7 +259,6 @@ public class PyController implements Initializable {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setContentText("Error: Residue must be selected in display equation");
             alert.showAndWait();
-            return;
         }
 
     }
@@ -312,11 +272,11 @@ public class PyController implements Initializable {
         }
 
         try {
-            Scene scene = new Scene((Pane) loader.load());
+            Scene scene = new Scene(loader.load());
             stage.setScene(scene);
             scene.getStylesheets().add("/styles/Styles.css");
 
-            controller = loader.<PyController>getController();
+            controller = loader.getController();
             controller.stage = stage;
             //controllers.add(controller);
             stage.setTitle("RING NMR Dynamics");
@@ -332,12 +292,7 @@ public class PyController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         mainController = this;
-        //propertySheet.setPropertyEditorFactory(new NvFxPropertyEditorFactory());
-//        propertySheet.setMode(PropertySheet.Mode.NAME);
-//        propertySheet.setModeSwitcherVisible(false);
-//        propertySheet.setSearchBoxVisible(false);
         makeAxisMenu();
-//        simControls = new CPMGControls();
         if (getFittingMode().equals("cpmg")) {
             simControls = new CPMGControls();
             xLowerBoundTextField.setText("0.0");
@@ -352,7 +307,7 @@ public class PyController implements Initializable {
             genDataXValTextField.setDisable(false);
             StringBuilder sBuilder = new StringBuilder();
             for (double xval : getFitter().getSimXDefaults()) {
-                sBuilder.append(String.valueOf(xval));
+                sBuilder.append(xval);
                 sBuilder.append(" ");
             }
             genDataXValTextField.setText(sBuilder.toString());
@@ -395,7 +350,7 @@ public class PyController implements Initializable {
             genDataXValTextField.setDisable(false);
             StringBuilder sBuilder = new StringBuilder();
             for (double xval : getFitter().getSimXDefaults()) {
-                sBuilder.append(String.valueOf(xval));
+                sBuilder.append(xval);
                 sBuilder.append(" ");
             }
             genDataXValTextField.setText(sBuilder.toString());
@@ -413,7 +368,7 @@ public class PyController implements Initializable {
             genDataXValTextField.setDisable(false);
             StringBuilder sBuilder = new StringBuilder();
             for (double xval : getFitter().getSimXDefaults()) {
-                sBuilder.append(String.valueOf(xval));
+                sBuilder.append(xval);
                 sBuilder.append(" ");
             }
             genDataXValTextField.setText(sBuilder.toString());
@@ -452,18 +407,14 @@ public class PyController implements Initializable {
         statusCircle = new Circle(10);
         statusBar.getLeftItems().add(statusCircle);
         updateEquationChoices(getFittingMode());
-        equationChoice.valueProperty().addListener(e -> {
-            equationAction();
-        });
+        equationChoice.valueProperty().addListener(e -> equationAction());
 
         simChoice.getItems().add("Simulate CPMG");
         simChoice.getItems().add("Simulate EXP");
         simChoice.getItems().add("Simulate CEST");
         simChoice.getItems().add("Simulate R1Rho");
         simChoice.setValue("Simulate CPMG");
-        simChoice.valueProperty().addListener(s -> {
-            simAction();
-        });
+        simChoice.valueProperty().addListener(s -> simAction());
 
         splitPane.setDividerPositions(0.4, 0.7);
 
@@ -481,7 +432,7 @@ public class PyController implements Initializable {
         zeroYCheckBox.selectedProperty().addListener(e -> includeYZero(zeroYCheckBox.isSelected()));
         zeroYCheckBox.setSelected(false);
         nmrFxPeakButton.setDisable(true);
-        nmrFxPeakButton.setOnAction(e -> nmrFxMessage(e));
+        nmrFxPeakButton.setOnAction(this::nmrFxMessage);
         xychart = (PlotData) chartPane.getChart();
         chartPane.widthProperty().addListener(e -> resizeXYPlotCanvas());
         chartPane.heightProperty().addListener(e -> resizeXYPlotCanvas());
@@ -489,14 +440,12 @@ public class PyController implements Initializable {
         chartBox.heightProperty().addListener(e -> resizeBarPlotCanvas());
         chartBox.setContent(barPlotCanvas);
         addChart();
-        barPlotCanvas.setOnMouseClicked(e -> mouseClickedOnBarCanvas(e));
+        barPlotCanvas.setOnMouseClicked(this::mouseClickedOnBarCanvas);
 //        mainController.setOnHidden(e -> Platform.exit());
         PauseTransition logoTransition = new PauseTransition(Duration.seconds(5));
         logoTransition.setOnFinished(e -> removeLogo());
         logoTransition.play();
-        chartMenu.setOnShowing(e -> {
-            makeAxisMenu();
-        });
+        chartMenu.setOnShowing(e -> makeAxisMenu());
         barScaleSlider.valueProperty().addListener(e -> resizeBarPlotCanvas());
         barScaleScrollBar.valueProperty().addListener(e -> resizeBarPlotCanvas());
 
@@ -564,9 +513,6 @@ public class PyController implements Initializable {
     }
 
     void calcChartScale() {
-        double width = chartBox.getWidth();
-        double nRes = barChartXMax.get() - barChartXMin.get();
-        double scale = (width - 75.0) / nRes;
         resizeBarPlotCanvas();
     }
 
@@ -585,7 +531,6 @@ public class PyController implements Initializable {
         double visFraction = 1.0/barScale;
         double barCenter = barValue / barScaleScrollBar.getMax() * (1.0-visFraction);
         double barDiv = 1.0 /barScale;
-        double fMin = barCenter;
         double fMax = barCenter + barDiv;
         GraphicsContext gC = barPlotCanvas.getGraphicsContext2D();
         gC.clearRect(0, 0, barPlotCanvas.getWidth(), barPlotCanvas.getHeight());
@@ -602,9 +547,9 @@ public class PyController implements Initializable {
                 xMax = Math.max(xMax, series.getMaxX() + 1.0);
             }
         }
-        double limitMin = fMin * (xMax - xMin) + xMin;
+        double limitMin = barCenter * (xMax - xMin) + xMin;
         double limitMax = fMax * (xMax - xMin) + xMin;
-        System.out.println("x min max " + xMin + " " + xMax + " " + fMin + " " + fMax);
+        System.out.println("x min max " + xMin + " " + xMax + " " + barCenter + " " + fMax);
         for (ResidueChart residueChart : barCharts) {
             for (DataSeries series : residueChart.getData()) {
                 series.setLimits(limitMin, limitMax);
@@ -712,7 +657,7 @@ public class PyController implements Initializable {
             genDataXValTextField.setDisable(false);
             StringBuilder sBuilder = new StringBuilder();
             for (double xval : getFitter().getSimXDefaults()) {
-                sBuilder.append(String.valueOf(xval));
+                sBuilder.append(xval);
                 sBuilder.append(" ");
             }
             genDataXValTextField.setText(sBuilder.toString());
@@ -725,7 +670,7 @@ public class PyController implements Initializable {
             genDataXValTextField.setDisable(false);
             StringBuilder sBuilder = new StringBuilder();
             for (double xval : getFitter().getSimXDefaults()) {
-                sBuilder.append(String.valueOf(xval));
+                sBuilder.append(xval);
                 sBuilder.append(" ");
             }
             genDataXValTextField.setText(sBuilder.toString());
@@ -738,7 +683,7 @@ public class PyController implements Initializable {
             genDataXValTextField.setDisable(false);
             StringBuilder sBuilder = new StringBuilder();
             for (double xval : getFitter().getSimXDefaults()) {
-                sBuilder.append(String.valueOf(xval));
+                sBuilder.append(xval);
                 sBuilder.append(" ");
             }
             genDataXValTextField.setText(sBuilder.toString());
@@ -779,26 +724,32 @@ public class PyController implements Initializable {
     }
 
     void updateEquationChoices(String mode) {
-        if (mode.equals("cpmg")) {
-            simControls.updateEquations(equationChoice, CPMGFitter.getEquationNames());
-        } else if (mode.equals("exp")) {
-            simControls.updateEquations(equationChoice, ExpFitter.getEquationNames());
-        } else if (mode.equals("noe")) {
-            simControls.updateEquations(equationChoice, NOEFit.getEquationNames());
-        } else if (mode.equals("cest")) {
-            if (!CESTFitter.getEquationNames().isEmpty()) {
-                simControls.updateEquations(equationChoice, CESTFitter.getEquationNames());
-            } else {
-                Alert alert = new Alert(Alert.AlertType.ERROR, "At least one CEST equation must be selected in Preferences.");
-                alert.showAndWait();
-            }
-        } else if (mode.equals("r1rho")) {
-            if (!R1RhoFitter.getEquationNames().isEmpty()) {
-                simControls.updateEquations(equationChoice, R1RhoFitter.getEquationNames());
-            } else {
-                Alert alert = new Alert(Alert.AlertType.ERROR, "At least one R1RHO equation must be selected in Preferences.");
-                alert.showAndWait();
-            }
+        switch (mode) {
+            case "cpmg":
+                simControls.updateEquations(equationChoice, CPMGFitter.getEquationNames());
+                break;
+            case "exp":
+                simControls.updateEquations(equationChoice, ExpFitter.getEquationNames());
+                break;
+            case "noe":
+                simControls.updateEquations(equationChoice, NOEFit.getEquationNames());
+                break;
+            case "cest":
+                if (!CESTFitter.getEquationNames().isEmpty()) {
+                    simControls.updateEquations(equationChoice, CESTFitter.getEquationNames());
+                } else {
+                    Alert alert = new Alert(Alert.AlertType.ERROR, "At least one CEST equation must be selected in Preferences.");
+                    alert.showAndWait();
+                }
+                break;
+            case "r1rho":
+                if (!R1RhoFitter.getEquationNames().isEmpty()) {
+                    simControls.updateEquations(equationChoice, R1RhoFitter.getEquationNames());
+                } else {
+                    Alert alert = new Alert(Alert.AlertType.ERROR, "At least one R1RHO equation must be selected in Preferences.");
+                    alert.showAndWait();
+                }
+                break;
         }
     }
 
@@ -810,16 +761,16 @@ public class PyController implements Initializable {
         Button bButton;
 
         bButton = GlyphsDude.createIconButton(FontAwesomeIcon.FAST_BACKWARD, "", iconSize, fontSize, ContentDisplay.GRAPHIC_ONLY);
-        bButton.setOnAction(e -> firstResidue(e));
+        bButton.setOnAction(this::firstResidue);
         buttons.add(bButton);
         bButton = GlyphsDude.createIconButton(FontAwesomeIcon.BACKWARD, "", iconSize, fontSize, ContentDisplay.GRAPHIC_ONLY);
-        bButton.setOnAction(e -> previousResidue(e));
+        bButton.setOnAction(this::previousResidue);
         buttons.add(bButton);
         bButton = GlyphsDude.createIconButton(FontAwesomeIcon.FORWARD, "", iconSize, fontSize, ContentDisplay.GRAPHIC_ONLY);
-        bButton.setOnAction(e -> nextResidue(e));
+        bButton.setOnAction(this::nextResidue);
         buttons.add(bButton);
         bButton = GlyphsDude.createIconButton(FontAwesomeIcon.FAST_FORWARD, "", iconSize, fontSize, ContentDisplay.GRAPHIC_ONLY);
-        bButton.setOnAction(e -> lastResidue(e));
+        bButton.setOnAction(this::lastResidue);
         buttons.add(bButton);
 
         navigatorToolBar.getItems().addAll(buttons);
@@ -828,8 +779,8 @@ public class PyController implements Initializable {
     private void incrResidue(int delta) {
         List<ExperimentResult> resInfo = getCurrentExperimentSet().getExperimentResults();
         List<ResonanceSource> resSources = new ArrayList<>();
-        for (int i = 0; i < resInfo.size(); i++) {
-            resSources.add(resInfo.get(i).getSource());
+        for (ExperimentResult experimentResult : resInfo) {
+            resSources.add(experimentResult.getSource());
         }
         Collections.sort(resSources);
         if (chartInfo.hasResidue()) {
@@ -865,7 +816,7 @@ public class PyController implements Initializable {
         incrResidue(10000);
     }
 
-    public void loadParameterFile(Event e) {
+    public void loadParameterFile() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open YAML File");
         fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Yaml File", "*.yaml", "*.yml"));
@@ -995,7 +946,7 @@ public class PyController implements Initializable {
         } else {
             try {
                 BufferedReader reader = new BufferedReader(new FileReader(f));
-                String text = null;
+                String text;
                 while ((text = reader.readLine()) != null) {
                     port = Integer.parseInt(text);
                 }
@@ -1120,14 +1071,12 @@ public class PyController implements Initializable {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setContentText("Error: Upper Bound must be > Lower Bound.");
                 alert.showAndWait();
-                return;
             }
 
         } catch (NumberFormatException nfEsb) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setContentText("Error: Bound and Interval values must be provided.");
             alert.showAndWait();
-            return;
         }
 
     }
@@ -1165,8 +1114,8 @@ public class PyController implements Initializable {
     public void updateChartEquations(String equationName, double[] pars, double[] errs, double[] fields) {
         List<GUIPlotEquation> equations = new ArrayList<>();
         String expType = getFittingMode();
-        for (int i = 0; i < fields.length; i++) {
-            double[] extras = {fields[i] / fields[0]};
+        for (double field : fields) {
+            double[] extras = {field / fields[0]};
             //System.out.println("updateChartEquations got called with extras length = "+extras.length);
             GUIPlotEquation plotEquation = new GUIPlotEquation(expType, equationName, pars, errs, extras);
             equations.add(plotEquation);
@@ -1186,14 +1135,13 @@ public class PyController implements Initializable {
     }
 
     public void fitDeuteriumModel() {
-        var modelNames = List.of("D1", "D1f");
         FitDeuteriumModel fitModel = new FitDeuteriumModel();
         fitIsotropicModel(fitModel, "D");
     }
 
     public void fitIsotropicModel(FitModel fitModel, String prefix) {
         String lambdaText = lambdaField.getText();
-        double lambda = 0.0;
+        double lambda;
         if (!lambdaText.isBlank()) {
             try {
                 lambda = Double.parseDouble(lambdaText);
@@ -1334,15 +1282,9 @@ public class PyController implements Initializable {
         } else if (getFittingMode().equals("exp")) {
             TableColumn<ExperimentData.DataValue, Double> xColumn = new TableColumn<>("Delay");
             TableColumn<ExperimentData.DataValue, Double> yColumn = new TableColumn<>("Intensity");
-//            TableColumn<ExperimentData.DataValue, Double> t1Column = new TableColumn<>("R1");
-//            TableColumn<ExperimentData.DataValue, Double> t2Column = new TableColumn<>("R2");
-//            TableColumn<ExperimentData.DataValue, Double> t1RhoColumn = new TableColumn<>("T1Rho");
 
             xColumn.setCellValueFactory(new PropertyValueFactory<>("X0"));
             yColumn.setCellValueFactory(new PropertyValueFactory<>("Y"));
-//            t1Column.setCellValueFactory(new PropertyValueFactory<>("R1"));
-//            t2Column.setCellValueFactory(new PropertyValueFactory<>("R2"));
-//            t1RhoColumn.setCellValueFactory(new PropertyValueFactory<>("T1Rho"));
 
             resInfoTable.getColumns().clear();
             resInfoTable.getColumns().addAll(nameColumn, resNameColumn, resColumn, atomNameColumn,
@@ -1412,13 +1354,6 @@ public class PyController implements Initializable {
                 }
             }
             if (savePars) {
-//                chartInfo.mapName = mapName;
-//                chartInfo.currentResidues = new String[residues.length];
-//                System.arraycopy(residues, 0, chartInfo.currentResidues, 0, residues.length);
-//                chartInfo.state = state;
-//                chartInfo.equationName = equationName;
-//                chartInfo.currentStates.clear();
-//                chartInfo.currentStates.addAll(allStates);
             }
 
             updateTableWithPars(allParValues);
@@ -1497,7 +1432,7 @@ public class PyController implements Initializable {
             String state = parValue.getState();
             String parName = parValue.getName();
             boolean ok = true;
-            // remove redundant parameters 
+            // remove redundant parameters
             if ((state != null) && (parName != null)) {
                 if (!state.equals("0:0:0") && (parName.equals("Kex") || parName.equals("dPPM")
                         || parName.equals("pA") || parName.equals("dPPMmin"))) {
@@ -1531,22 +1466,11 @@ public class PyController implements Initializable {
         parTabPane.getSelectionModel().select(1);
         List<ExperimentData.DataValue> data = resInfoTable.getItems();
         int iRow = 0;
-        int peakNum = 0;
-        String name = "";
-//        for (ExperimentData.DataValue dValue : data) {
-//            if ((dValue.getIndex() == index) && ((dValue.getName() + ":" + dValue.getResidue()).equals(seriesName))) {
-//                resInfoTable.getSelectionModel().clearAndSelect(iRow);
-//                resInfoTable.scrollTo(iRow);
-//            }
-//            name = data.get(iRow).getName();
-//            peakNum = data.get(iRow).getPeak();
-//            iRow++;
-//
-//        }
+        int peakNum;
+        String name;
         name = data.get(iRow).getName();
         peakNum = data.get(iRow).getPeak();
-//        System.out.println("selected row peak num = " + peakNum);
-        return name + "." + String.valueOf(peakNum);
+        return name + "." + peakNum;
     }
 
     public void clearChart(Event e) {
@@ -1593,29 +1517,15 @@ public class PyController implements Initializable {
         chart.autoScale(false);
         double xMin = Math.floor((ChartUtil.minRes - 2) / 5.0) * 5.0;
         double xMax = Math.ceil((ChartUtil.maxRes + 2) / 5.0) * 5.0;
-        boolean calcScale = barChartXMin.isEmpty() || barChartXMin.get() != xMin;
         barChartXMin = Optional.of(xMin);
         barChartXMax = Optional.of(xMax);
         xAxis.setLowerBound(xMin);
         xAxis.setUpperBound(xMax);
-//        xAxis.setTickUnit(10);
-//        xAxis.setMinorTickCount(5);
-//        yAxis.setMinWidth(75.0);
-//        yAxis.setPrefWidth(75.0);
         chart.yAxis.setLabel(yLabel);
 
         chart.setTitle(setName);
-        if (chart.getData().size() > 1) {
-//            chart.setLegendVisible(true); // fixme
-//            chart.setLegendSide(Side.TOP);
-        } else {
-            // chart.setLegendVisible(false); //fixme
-        }
         setCurrentExperimentSet(ChartUtil.getResidueProperty(setName));
         chart.setResProps(ChartUtil.getResidueProperty(setName));
-//        if (calcScale) {
-//            calcChartScale();
-//        }
         refreshResidueCharts();
     }
 
@@ -1651,7 +1561,7 @@ public class PyController implements Initializable {
         for (var entry : molResProps.entrySet()) {
             String setName = entry.getKey();
             ChartUtil.addResidueProperty(setName, molResProps.get(setName));
-            RelaxSet relaxSet = (RelaxSet) entry.getValue();
+            RelaxSet relaxSet = entry.getValue();
             Menu cascade = new Menu(setName);
             var values = relaxSet.getValues();
             if (!values.isEmpty()) {
@@ -1696,7 +1606,6 @@ public class PyController implements Initializable {
         List<String> chartNames = molResProps.values().stream().
                 filter(v -> v.getValues().get(0) instanceof RelaxationData).
                 map(v -> ((RelaxationData) v.getValues().get(0)).getExpType().getName()).
-                sorted().
                 collect(Collectors.toSet()).stream().sorted().collect(Collectors.toList());
 
         var chartMap = setupCharts(chartNames);
@@ -1812,7 +1721,7 @@ public class PyController implements Initializable {
                                 if (isValidPar) {
                                     Menu cascade3 = new Menu(equationName);
                                     cascade2.getItems().add(cascade3);
-                                    experimentSet.getStateStrings().stream().forEach(state -> {
+                                    experimentSet.getStateStrings().forEach(state -> {
                                         MenuItem cmItem1 = new MenuItem(state);
                                         cmItem1.setOnAction(e -> setYAxisType(expMode, setName, equationName, state, parType));
                                         cascade3.getItems().add(cmItem1);
@@ -1838,9 +1747,6 @@ public class PyController implements Initializable {
                 ResonanceSource[] resNums = {chartInfo.getSource()};
                 equationFitter.setData(getCurrentExperimentSet(), resNums);
                 String equationName = simControls.getEquation();
-//        System.out.println("guesses eqnFitter = " + equationFitter);
-//        System.out.println("guesses resNums = " + resNums);
-//        System.out.println("guesses eqnName = " + equationName);
                 List<ParValueInterface> guesses = equationFitter.guessPars(equationName);
                 if (guesses != null) {
                     simControls.updateSliders(guesses, equationName);
@@ -1850,7 +1756,6 @@ public class PyController implements Initializable {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setContentText("Error: Residue must be selected");
                 alert.showAndWait();
-                return;
             }
         }
     }
@@ -1892,15 +1797,6 @@ public class PyController implements Initializable {
                 String equationName = simControls.getEquation();
                 equationFitter.setupFit(equationName);
                 int[][] map = equationFitter.getFitModel().getMap();
-//            for (int i=0; i<map.length; i++) {
-//                for (int j=0; j<map[i].length; j++) {
-//                    System.out.println("map " + i + " " + j + " " + map[i][j]);
-//                }
-//            }
-//            System.out.println("getFitModel = " + equationFitter.getFitModel());
-//            System.out.println("fitEqn eqnFitter = " + equationFitter);
-//            System.out.println("fitEqn resNums = " + resNums);
-//            System.out.println("fitEqn eqnName = " + equationName);
                 double[] sliderGuesses = null;
                 if (sliderGuessCheckBox.isSelected()) {
                     sliderGuesses = simControls.sliderGuess(equationName, map);
@@ -1914,7 +1810,6 @@ public class PyController implements Initializable {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setContentText("Error: Residue must be selected when fitting");
             alert.showAndWait();
-            return;
         }
     }
 
@@ -1935,8 +1830,6 @@ public class PyController implements Initializable {
             simControls.updateSliders(parValues, fitResult.getEquationName());
             String equationName = fitResult.getEquationName(); //equationSelector.getValue();
             String expType = getFittingMode();
-            //System.out.println("Fit button residueProperties = " + residueProperties);
-            //System.out.println("Fit button expData = " + residueProps.getExperimentData("cest"));
             Optional<Experiment> optionalData = Optional.empty();
             if (hasExperimentSet()) {
                 optionalData = getCurrentExperimentSet().getExperimentData().stream().findFirst();
@@ -1950,75 +1843,25 @@ public class PyController implements Initializable {
                     extras[0] = expData.getNucleusField();
                     extras[1] = expData.getExtras().get(0);
                     extras[2] = expData.getExtras().get(1);
-//                    System.out.println("Fit button expData extras size = " + expData.getExtras().size() + " extra[1] = " + extras[1]);
                     GUIPlotEquation plotEquation = new GUIPlotEquation(expType, equationName, pars, errs, extras);
-//                    for (int i = 0; i < extras.length; i++) {
-//                        System.out.println(iCurve + " " + i + " extra " + extras[i]);
-//                    }
-//                    for (int i = 0; i < pars.length; i++) {
-//                        System.out.println(iCurve + " " + i + " pars " + pars[i]);
-//                    }
-                    //equationCopy.setExtra(extras);
 
                     equations.add(plotEquation);
                 }
-//                ExperimentData expData = optionalData.get();
-//                double[] pars = curveFit.getEquation().getPars(); //pars = getPars(equationName);
-//                double[] errs = curveFit.getEquation().getErrs(); //double[] errs = new double[pars.length];
-//                double[] extras = new double[3];
-//                for (int j = 0; j < expData.getExtras().size() / 2; j++) {
-//                    extras[0] = expData.getB0Field();
-//                    extras[1] = expData.getExtras().get(2 * j);
-//                    extras[2] = expData.getExtras().get(2 * j + 1);
-////                    System.out.println("Fit button expData extras size = " + expData.getExtras().size() + " extra[1] = " + extras[1]);
-//                    PlotEquation plotEquation = new PlotEquation(equationName, pars, errs, extras);
-//                    for (int i = 0; i < extras.length; i++) {
-//                        System.out.println(iCurve + " " + i + " extra " + extras[i]);
-//                    }
-//                    for (int i = 0; i < pars.length; i++) {
-//                        System.out.println(iCurve + " " + i + " pars " + pars[i]);
-//                    }
-//                    //equationCopy.setExtra(extras);
-//
-//                    equations.add(plotEquation);
-//                }
             } else {
                 double[] pars = curveFit.getEquation().getPars(); //pars = getPars(equationName);
                 double[] errs = curveFit.getEquation().getErrs(); //double[] errs = new double[pars.length];
                 double[] extras = curveFit.getEquation().getExtras();
                 double[] simExtras = simControls.getExtras();
-//                extras[0] = CPMGFit.REF_FIELD;
-//System.out.println("extras " + extras[0]);
                 if (simExtras.length > 1) {
                     extras = new double[simExtras.length + 1];
                     extras[0] = CoMDPreferences.getRefField() * simControls.getNucleus().getFreqRatio();
 
-                    for (int i = 0; i < simExtras.length; i++) {
-                        //                    System.out.println("simextras " + i + " " + simExtras[i]);
-                        extras[i + 1] = simExtras[i];
-                    }
+                    System.arraycopy(simExtras, 0, extras, 1, simExtras.length);
                 }
-                //for (int i = 0; i < extras.length; i++) {
-                //System.out.println(iCurve + " " + i + " extra " + extras[i]);
-                //}
-                //for (int i = 0; i < simExtras.length; i++) {
-                //System.out.println(iCurve + " " + i + " simExtras " + simExtras[i]);
-                //}
-                //for (int i = 0; i < pars.length; i++) {
-                //System.out.println(iCurve + " " + i + " pars " + pars[i]);
-                //}
                 GUIPlotEquation plotEquation = new GUIPlotEquation(expType, equationName, pars, errs, extras);
-
-                //equationCopy.setExtra(extras);
-                //System.out.println("Fit button extras size = " + extras.length + " extra[0] = " + extras[0]);
                 equations.add(plotEquation);
 
             }
-//            double[] pars = curveFit.getEquation().getPars();
-//            double[] errs = curveFit.getEquation().getErrs();
-//            //System.out.println("updateAfterFit got called with curvefit.getEquation().getExtras() length = "+curveFit.getEquation().getExtras().length);
-//            PlotEquation plotEquation = new PlotEquation(fitResult.getEquationName(), pars, errs, curveFit.getEquation().getExtras());
-//            equations.add(plotEquation);
         }
         showEquations(equations);
     }
@@ -2046,10 +1889,9 @@ public class PyController implements Initializable {
 
             fitResult = null;
             List<List<ResonanceSource>> allResidues = new ArrayList<>();
-            List<ResonanceSource> groupResidues = new ArrayList<>();
             fittingResidues.clear();
             fittingResidues.addAll(ResidueChart.selectedResidues);
-            groupResidues.addAll(ResidueChart.selectedResidues);
+            List<ResonanceSource> groupResidues = new ArrayList<>(ResidueChart.selectedResidues);
             if (!groupResidues.isEmpty()) {
                 allResidues.add(groupResidues);
                 residueFitter.fitResidues(getCurrentExperimentSet(), allResidues);
@@ -2138,7 +1980,7 @@ public class PyController implements Initializable {
                 if (valueSet instanceof ExperimentSet) {
                     ExperimentSet experimentSet = (ExperimentSet) valueSet;
                     relaxTypes expMode = relaxTypes.valueOf(experimentSet.getExpMode().toUpperCase());
-                    System.out.println("add " + experimentSet.toString() + " " + expMode);
+                    System.out.println("add " + experimentSet + " " + expMode);
                     DataIO.addRelaxationFitResults(experimentSet, expMode);
                 }
             });
@@ -2163,7 +2005,7 @@ public class PyController implements Initializable {
                 clearChart();
                 statusBar.setProgress(f);
                 setYAxisType(getCurrentExperimentSet().getExpMode(), sParts[0], sParts[1], sParts[2], sParts[3]);
-                setCurrentExperimentSet((ExperimentSet) ChartUtil.getResidueProperty(getCurrentExperimentSet().getName()));
+                setCurrentExperimentSet(ChartUtil.getResidueProperty(getCurrentExperimentSet().getName()));
 
             } else {
                 Platform.runLater(() -> {
@@ -2243,7 +2085,7 @@ public class PyController implements Initializable {
             String filePath = file.getAbsolutePath();
 
             Map<String, Object>[] plottedData = xychart.getPlottedData();
-            Map<String, Object> graphData = null;
+            Map<String, Object> graphData;
             graphData = xychart.getGraphData();
             graphData.put("file", filePath);
             graphData.put("exportType", exportType);
@@ -2251,12 +2093,6 @@ public class PyController implements Initializable {
             if (!"grace".equals(exportType) && saveBar) {
                 Node barNode = chartBox.getContent();
                 barChartData = new ArrayList<>(1);
-//                    if (node instanceof XYBarChart) {
-//                        XYBarChart barChart = (XYBarChart) node;
-//                        String barChartName = barChart.toString();
-//                        HashMap<String, Object> chartData = barChart.getChartData();
-//                        barChartData.add(chartData);
-//                    }
             } else {
                 barChartData = new ArrayList<>(0);
             }
@@ -2269,23 +2105,23 @@ public class PyController implements Initializable {
         }
     }
 
-    public void saveGraceFile() throws IOException, ScriptException {
+    public void saveGraceFile() throws ScriptException {
         exportExecutable("ASCII.agr", "grace", false);
     }
 
-    public void savePythonFile() throws IOException, ScriptException {
+    public void savePythonFile() throws ScriptException {
         exportExecutable("graph.py", "python", false);
     }
 
-    public void saveRFile() throws IOException, ScriptException {
+    public void saveRFile() throws ScriptException {
         exportExecutable("graph.r", "r", false);
     }
 
-    public void saveBarToPythonFile() throws IOException, ScriptException {
+    public void saveBarToPythonFile() throws ScriptException {
         exportExecutable("graph.py", "python", true);
     }
 
-    public void saveBarToRFile() throws IOException, ScriptException {
+    public void saveBarToRFile() throws ScriptException {
         exportExecutable("graph.r", "r", true);
     }
 
@@ -2352,8 +2188,6 @@ public class PyController implements Initializable {
     public String[] getParTypes(String mode) {
         String[] cpmgTypes = {"R2", "dPPMmin", "Kex", "pA", "dPPM", "RMS", "AIC", "Equation"};
         String[] expTypes = {"A", "R", "C", "RMS", "AIC", "Equation"};
-        String[] t1Types = {"R1"};
-        String[] t2Types = {"R2"};
         String[] sTypes = {"S2", "Rex"};
         String[] cestTypes = {"kex", "pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B", "RMS", "AIC", "Equation"};
         String[] r1rhoTypes = {"kex", "pb", "deltaA0", "deltaB0", "R1A", "R1B", "R2A", "R2B", "RMS", "AIC", "Equation"};
@@ -2412,8 +2246,7 @@ public class PyController implements Initializable {
         if (simSelected == null) {
             return "cpmg";
         }
-        String simMode = simSelected.substring(9, simSelected.length()).toLowerCase();
-        return simMode;
+        return simSelected.substring(9).toLowerCase();
     }
 
     void simAction() {
@@ -2458,8 +2291,7 @@ public class PyController implements Initializable {
         List<int[]> allStates = new ArrayList<>();
         boolean calcScale = scalePlot.isSelected();
         if (chartInfo.hasExperiments() && chartInfo.hasResidues()) {
-            //double maxY = getMaxY(valueSet, equationName, mapName, state, residues) / 100.0;
-            //System.out.println("max Y " + maxY);
+            System.out.println("has data");
             int iSeries = 0;
             for (Experiment expData : ((ExperimentSet) chartInfo.getExperiments()).getExperimentData()) {
                 if (!ExperimentSet.matchStateString(chartInfo.state, expData.getState())) {
@@ -2495,6 +2327,19 @@ public class PyController implements Initializable {
                 ExperimentSet expSet = (ExperimentSet) chartInfo.getExperiments();
                 int[] states = expSet.getStateIndices(0, expData);
                 allStates.add(states);
+            }
+        } else {
+//            System.out.println("no data " + chartInfo.getResidues().length);
+            RelaxSet relaxSet = (RelaxSet) chartInfo.valueSet;
+//            System.out.println("relaxset " + relaxSet.getValues());
+            for (ResonanceSource resonanceSource : chartInfo.getResidues()) {
+//                System.out.println("res " + resonanceSource + " " + chartInfo.mapName +
+//                        " " + relaxSet.getValue(resonanceSource));
+                Atom atom = resonanceSource.getAtom();
+                Map<String, SpectralDensity> spectralDensityMap = atom.getSpectralDensity();
+                allData.addAll(ChartUtil.getSpectralDensityData(spectralDensityMap));
+                System.out.println(spectralDensityMap);
+                System.out.println(allData);
             }
         }
         chartInfo.setStates(allStates);
@@ -2645,7 +2490,6 @@ public class PyController implements Initializable {
         EquationFitter equationFitter = getFitter();
         equationFitter.getFitModel().setMap(map);
         double[] sliderGuesses = simControls.sliderGuess(equationName, map);
-        double[] xBounds = xychart.getXBounds();
         double[] yBounds = xychart.getYBounds();
         double sdev = Math.abs(yBounds[1] - yBounds[0]) * 0.02;
         if (genDataSDevTextField.getText().equals("")) {
@@ -2665,38 +2509,28 @@ public class PyController implements Initializable {
             }
             xValues = xVals;
         }
-        double fieldRef = 1.0;
-        int iLine = 0;
+        double fieldRef;
 
         List<DataSeries> data = new ArrayList<>();
         DataSeries series = new DataSeries();
         series.setName("sim" + ":" + "0");
         data.add(series);
         for (PlotEquation eqn : xychart.plotEquations) {
-            if (iLine == 0) {
-                fieldRef = eqn.getExtra(0);
-            }
-//            plotEquation.equation.setFieldRef(fieldRef);
+            fieldRef = eqn.getExtra(0);
             double[] extras = eqn.getExtras();
             double[] ax = new double[extras.length];
-//            System.out.println("extras " + extras.length);
-            for (int j = 1; j < extras.length; j++) {
-                ax[j] = extras[j];
-            }
-            for (int i = 0; i < xValues.length; i++) {
-                double xValue = xValues[i];
+            if (extras.length - 1 >= 0) System.arraycopy(extras, 1, ax, 1, extras.length - 1);
+            for (double xValue : xValues) {
                 ax[0] = xValue;
                 double yValue = eqn.calculate(sliderGuesses, ax, fieldRef);
                 yValue += Double.parseDouble(genDataSDevTextField.getText()) * rand.nextGaussian(); //sdev * rand.nextGaussian();
-//                XYValue dataPoint = new XYValue(xValue, yValue);
                 XYValue dataPoint = new XYEValue(xValue, yValue, Double.parseDouble(genDataSDevTextField.getText()));
-                dataPoint.setExtraValue(new Double(sdev));
+                dataPoint.setExtraValue(sdev);
                 series.getData().add(dataPoint);
             }
         }
         allData.addAll(data);
         xychart.setData(allData);
-//    
     }
 
     @FXML

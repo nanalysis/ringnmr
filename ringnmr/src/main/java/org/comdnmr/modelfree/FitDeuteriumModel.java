@@ -9,6 +9,7 @@ import org.nmrfx.chemistry.*;
 import org.nmrfx.chemistry.relax.OrderPar;
 import org.nmrfx.chemistry.relax.RelaxationData;
 import org.nmrfx.chemistry.relax.ResonanceSource;
+import org.nmrfx.chemistry.relax.SpectralDensity;
 
 import java.util.*;
 
@@ -27,74 +28,85 @@ public class FitDeuteriumModel extends FitModel {
             for (Polymer polymer : mol.getPolymers()) {
                 for (Residue residue : polymer.getResidues()) {
                     for (Atom atom : residue.getAtoms()) {
-                        var relaxData = atom.getRelaxationData();
-                        boolean hasDeuterium = relaxData.values().stream().
-                                anyMatch(v -> v.expType == RelaxationData.relaxTypes.RQ);
-
-                        if (hasDeuterium) {
-                            Vector3D vec = null;
-                            MolDataValues molData = vec == null
-                                    ? new MolDataValues(atom)
-                                    : new MolDataValues(atom, vec.toArray());
-                            Set<Long> fields = new HashSet<>();
-                            for (var entry : relaxData.entrySet()) {
-                                RelaxationData data = entry.getValue();
-                                fields.add(Math.round(data.getField()));
-                            }
-                            for (var field : fields) {
-                                Double r1 = null;
-                                Double r1Error = null;
-
-                                Double r2 = null;
-                                Double r2Error = null;
-
-                                Double rQ = null;
-                                Double rQError = null;
-
-                                Double rAP = null;
-                                Double rAPError = null;
-
-                                for (var entry : relaxData.entrySet()) {
-                                    RelaxationData data = entry.getValue();
-                                    if (Math.round(data.getField()) == field) {
-                                        switch (data.getExpType()) {
-                                            case R1:
-                                                r1 = data.getValue();
-                                                r1Error = data.getError();
-                                                break;
-                                            case R2:
-                                                r2 = data.getValue();
-                                                r2Error = data.getError();
-                                                break;
-                                            case RQ:
-                                                rQ = data.getValue();
-                                                rQError = data.getError();
-                                                break;
-                                            case RAP:
-                                                rAP = data.getValue();
-                                                rAPError = data.getError();
-                                                break;
-                                        }
-                                    }
-                                }
-                                if ((r1 != null) && (r2 != null) && (rQ != null) && (rAP != null)) {
-                                    RelaxEquations relaxObj = RelaxEquations.getRelaxEquations(field * 1e6, "H", "N");
-
-                                    RelaxDataValue dValue = new DeuteriumDataValue(molData, r1, r1Error, r2, r2Error,
-                                            rQ, rQError, rAP, rAPError, relaxObj);
-                                    molData.addData(dValue);
-                                }
-                            }
-                            if (!molData.dataValues.isEmpty()) {
-                                molDataValues.put(molData.specifier, molData);
-                            }
+                        MolDataValues molData = getMolDataValues(atom);
+                        if (!molData.dataValues.isEmpty()) {
+                            molDataValues.put(molData.specifier, molData);
                         }
-
                     }
                 }
             }
         }
         return molDataValues;
+    }
+
+    public static boolean hasDeuteriumData(Atom atom) {
+        var relaxData = atom.getRelaxationData();
+        boolean hasDeuterium = relaxData.values().stream().
+                anyMatch(v -> v.expType == RelaxationData.relaxTypes.RQ);
+        return hasDeuterium;
+    }
+
+    public static MolDataValues getMolDataValues(Atom atom) {
+        var relaxData = atom.getRelaxationData();
+        boolean hasDeuterium = relaxData.values().stream().
+                anyMatch(v -> v.expType == RelaxationData.relaxTypes.RQ);
+        MolDataValues molData = null;
+        if (hasDeuterium) {
+            Vector3D vec = null;
+            molData = vec == null
+                    ? new MolDataValues(atom)
+                    : new MolDataValues(atom, vec.toArray());
+            Set<Long> fields = new HashSet<>();
+            for (var entry : relaxData.entrySet()) {
+                RelaxationData data = entry.getValue();
+                fields.add(Math.round(data.getField()));
+            }
+            for (var field : fields) {
+                Double r1 = null;
+                Double r1Error = null;
+
+                Double r2 = null;
+                Double r2Error = null;
+
+                Double rQ = null;
+                Double rQError = null;
+
+                Double rAP = null;
+                Double rAPError = null;
+
+                for (var entry : relaxData.entrySet()) {
+                    RelaxationData data = entry.getValue();
+                    if (Math.round(data.getField()) == field) {
+                        switch (data.getExpType()) {
+                            case R1:
+                                r1 = data.getValue();
+                                r1Error = data.getError();
+                                break;
+                            case R2:
+                                r2 = data.getValue();
+                                r2Error = data.getError();
+                                break;
+                            case RQ:
+                                rQ = data.getValue();
+                                rQError = data.getError();
+                                break;
+                            case RAP:
+                                rAP = data.getValue();
+                                rAPError = data.getError();
+                                break;
+                        }
+                    }
+                }
+                if ((r1 != null) && (r2 != null) && (rQ != null) && (rAP != null)) {
+                    RelaxEquations relaxObj = RelaxEquations.getRelaxEquations(field * 1e6, "H", "N");
+
+                    RelaxDataValue dValue = new DeuteriumDataValue(molData, r1, r1Error, r2, r2Error,
+                            rQ, rQError, rAP, rAPError, relaxObj);
+                    molData.addData(dValue);
+                }
+            }
+        }
+        return molData;
     }
 
     public void testIsoModel(String searchKey, List<String> modelNames) {
@@ -212,6 +224,10 @@ public class FitDeuteriumModel extends FitModel {
                 orderPar = orderPar.setModel();
             }
             atom.addOrderPar("order", orderPar);
+            double[][] jValues  = resData.getJValues();
+            SpectralDensity spectralDensity = new SpectralDensity(key,jValues);
+            atom.addSpectralDensity(key, spectralDensity);
+
             result = Optional.of(orderPar);
         }
         return result;
@@ -228,10 +244,10 @@ public class FitDeuteriumModel extends FitModel {
         double[] upper = model.getUpper();
         double[] keepStart = start.clone();
         var parNames = model.getAllParNames();
-        for (var parName:parNames) {
+        for (var parName : parNames) {
             System.out.println(parName);
         }
-        for (int i =0;i<start.length;i++) {
+        for (int i = 0; i < start.length; i++) {
             System.out.println(i + " start " + start[i] + " lower " + lower[i] + " upper " + upper[i]);
         }
         int nTries = 3;
@@ -255,6 +271,7 @@ public class FitDeuteriumModel extends FitModel {
         System.out.println();
         return score;
     }
+
     double[][] replicates(Map<String, MolDataValues> molDataRes,
                           MFModelIso bestModel, double localTauFraction,
                           boolean localFitTau, double[] pars, Random random) {
@@ -268,6 +285,7 @@ public class FitDeuteriumModel extends FitModel {
         }
         return repData;
     }
+
     Score fitReplicate(Map<String, MolDataValues> molDataRes, MFModelIso model,
                        double localTauFraction, boolean localFitTau, double[] pars, Random random) {
         RelaxFit relaxFit = new RelaxFit();

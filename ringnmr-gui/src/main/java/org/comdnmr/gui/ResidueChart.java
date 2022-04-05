@@ -128,7 +128,7 @@ public class ResidueChart extends XYCanvasBarChart {
                 selectedResidues.add(resSource);
             }
         }
-        System.out.println(resSource);
+        System.out.println(" Res source is " + resSource);
         currentSeriesName = seriesName;
         String[] seriesNameParts = seriesName.split("\\|");
         String mapName = seriesNameParts[0];
@@ -148,7 +148,7 @@ public class ResidueChart extends XYCanvasBarChart {
         PyController controller = PyController.mainController;
         PlotData xyCanvasChart = controller.xychart;
         String[] seriesNameParts = seriesName.split("\\|");
-        System.out.println("show info " + seriesName + " " + seriesNameParts.length + " " + valueSet);
+        System.out.println("show info se" + seriesName + " " + seriesNameParts.length + " valueset " + valueSet);
         if (seriesNameParts.length < 3) {
             return;
         }

@@ -36,6 +36,10 @@ public class RelaxSet implements ValueSet {
         return relaxValueList;
     }
 
+    public RelaxationValues getValue(ResonanceSource resonanceSource) {
+        return map.get(resonanceSource);
+    }
+
     @Override
     public Set<ResonanceSource> getDynamicsSources() {
         return map.keySet();

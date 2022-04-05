@@ -27,11 +27,8 @@ import org.nmrfx.chemistry.Atom;
 import org.nmrfx.chemistry.MoleculeBase;
 import org.nmrfx.chemistry.MoleculeFactory;
 import org.nmrfx.chemistry.Polymer;
-import org.nmrfx.chemistry.relax.RelaxationData;
-import org.nmrfx.chemistry.relax.RelaxationRex;
+import org.nmrfx.chemistry.relax.*;
 import org.nmrfx.chemistry.Residue;
-import org.nmrfx.chemistry.relax.OrderPar;
-import org.nmrfx.chemistry.relax.ResonanceSource;
 
 /**
  *
@@ -296,6 +293,9 @@ public class FitR1R2NOEModel extends FitModel {
                 orderPar = orderPar.setModel();
             }
             atom.addOrderPar("order", orderPar);
+            double[][] jValues  = resData.getJValues();
+            SpectralDensity spectralDensity = new SpectralDensity(key,jValues);
+            atom.addSpectralDensity(key, spectralDensity);
             result = Optional.of(orderPar);
         }
         return result;
