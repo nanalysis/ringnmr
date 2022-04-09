@@ -19,6 +19,7 @@ import org.comdnmr.modelfree.RelaxFit.DiffusionType;
 import org.comdnmr.modelfree.models.*;
 import org.junit.Test;
 import org.junit.Assert;
+import org.nmrfx.chemistry.MoleculeFactory;
 
 /**
  *
@@ -135,6 +136,8 @@ public class DRefineTest {
 
     @Test
     public void testDeuteriumD1() {
+        MoleculeFactory.clearAllMolecules();
+        MoleculeFactory.setActive(null);
         var data = loadDeuteriumTestData();
         FitDeuteriumModel fitDeuteriumModel = new FitDeuteriumModel();
         var modelNames = List.of("D1f");
