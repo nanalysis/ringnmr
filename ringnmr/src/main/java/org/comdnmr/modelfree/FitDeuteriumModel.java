@@ -29,7 +29,7 @@ public class FitDeuteriumModel extends FitModel {
                 for (Residue residue : polymer.getResidues()) {
                     for (Atom atom : residue.getAtoms()) {
                         MolDataValues molData = getMolDataValues(atom);
-                        if (!molData.dataValues.isEmpty()) {
+                        if ((molData != null) && !molData.dataValues.isEmpty()) {
                             molDataValues.put(molData.specifier, molData);
                         }
                     }
