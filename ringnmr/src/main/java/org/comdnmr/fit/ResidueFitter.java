@@ -17,6 +17,7 @@
  */
 package org.comdnmr.fit;
 
+import org.comdnmr.data.DataIO;
 import org.comdnmr.eqnfit.R1RhoFitter;
 import org.comdnmr.eqnfit.CESTEquation;
 import org.comdnmr.eqnfit.ExpEquation;
@@ -46,6 +47,7 @@ import javafx.concurrent.Worker;
 import org.comdnmr.data.Experiment;
 import org.comdnmr.eqnfit.NOEEquation;
 import org.comdnmr.util.CoMDOptions;
+import org.nmrfx.chemistry.relax.RelaxationData;
 import org.nmrfx.chemistry.relax.ResonanceSource;
 
 /**
@@ -134,6 +136,12 @@ public class ResidueFitter {
 
     void finishProcessing() {
         updateStatus("Done");
+        try {
+            RelaxationData.relaxTypes relaxType = RelaxationData.relaxTypes.valueOf(experimentSet.getExpMode().toUpperCase());
+            DataIO.addRelaxationFitResults(experimentSet, relaxType);
+        } catch (IllegalArgumentException iAE) {
+
+        }
     }
 
     public void fitAllResidueGroups(Task task) {
