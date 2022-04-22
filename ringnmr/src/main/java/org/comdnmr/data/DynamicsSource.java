@@ -207,35 +207,45 @@ public class DynamicsSource {
         return Optional.of(new ResonanceSource(peakOpt.get(), atoms));
     }
 
-    public Optional<ResonanceSource> createFromPeak(Peak peak) {
+    public Optional<ResonanceSource> createFromPeak(Peak peak, String... nucNames) {
         Optional<ResonanceSource> empty = Optional.empty();
         String molName = null;
         PeakList peakList = peak.getPeakList();
         int nDim = peakList.getNDim();
-        Atom[] atoms = new Atom[nDim];
-        for (int i = 0; i < nDim; i++) {
-            String label = peak.getPeakDim(i).getAtomLabel();
+        Atom[] atoms = new Atom[nucNames.length];
+        int iAtom = 0;
+        int iPeakDim = 0;
+        for (String nucName : nucNames) {
+            System.out.println("nucName " + nucName);
+            for (int i = 0; i < nDim; i++) {
+                String peakDimNucleus = peak.getPeakDim(i).getSpectralDimObj().getNucleus();
+                if (peakDimNucleus.endsWith(nucName)) {
+                    iPeakDim = i;
+                    break;
+                }
+            }
+            String label = peak.getPeakDim(iPeakDim).getAtomLabel();
             boolean patLabel = false;
             if ((label == null) || (label.trim().equals(""))) {
-                label = peak.getPeakDim(i).getLabel();
+                label = peak.getPeakDim(iPeakDim).getLabel();
                 if ((label == null) || (label.trim().equals(""))) {
-                    String fullPattern = peakList.getSpectralDim(i).getPattern();
+                    String fullPattern = peakList.getSpectralDim(iPeakDim).getPattern();
                     if (fullPattern.length() > 2) {
                         String[] patterns = SpectralDim.parsePattern(fullPattern);
                         label = patterns[0];
                     } else {
-                        String atomType = peak.getPeakDim(i).getSpectralDimObj().getAtomType();
+                        String atomType = peak.getPeakDim(iPeakDim).getSpectralDimObj().getAtomType();
                         label = "i." + atomType;
                     }
                     patLabel = true;
                 }
             }
-            if (!createPeak && patLabel) {
+            if (!createAtom && patLabel) {
                 return empty;
             }
             Optional<Atom> atomOpt = getAtom(molName, label, peak.getIdNum(), patLabel);
             if (atomOpt.isPresent()) {
-                atoms[i] = atomOpt.get();
+                atoms[iAtom++] = atomOpt.get();
             } else {
                 throw new IllegalArgumentException("Can't find atom for peak " + peak.getName());
             }

@@ -48,16 +48,13 @@ import javafx.scene.layout.HBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import org.comdnmr.data.DataIO;
-import org.comdnmr.data.DynamicsSource;
-import org.comdnmr.data.Experiment;
-import org.comdnmr.data.ExperimentSet;
-import org.comdnmr.data.T1Experiment;
+import org.comdnmr.data.*;
 import org.controlsfx.control.textfield.TextFields;
 import org.controlsfx.dialog.ExceptionDialog;
 import org.nmrfx.chart.DataSeries;
 import org.nmrfx.chemistry.MoleculeBase;
 import org.nmrfx.chemistry.MoleculeFactory;
+import org.nmrfx.chemistry.relax.RelaxationData;
 import org.nmrfx.datasets.DatasetBase;
 import org.nmrfx.peaks.PeakList;
 import org.nmrfx.utils.GUIUtils;
@@ -634,7 +631,8 @@ public class InputDataInterface {
             } else {
                 dynCreateMol = false;
             }
-            DynamicsSource dynSource = new DynamicsSource(false, false, dynCreateMol, dynCreateMol);
+            boolean dynCreateAtom = true;
+            DynamicsSource dynSource = new DynamicsSource(false, false, dynCreateMol, dynCreateAtom);
             String peakListName = peakList.getName();
             ExperimentSet experimentSet = new ExperimentSet(peakListName, peakListName);
             String expMode = fitModeChoice.getValue().toLowerCase();
@@ -647,8 +645,17 @@ public class InputDataInterface {
 
             Experiment expData;
             switch (expMode) {
-                case "T1":
+                case "r1":
                     expData = new T1Experiment(experimentSet, peakList.getName(),
+                            nucChoice.getValue(), Double.parseDouble(B0fieldChoice.getValue()),
+                            temperatureK);
+                    break;
+                case "r2":
+                    expData = new T2Experiment(experimentSet, peakList.getName(),
+                            nucChoice.getValue(), Double.parseDouble(B0fieldChoice.getValue()),
+                            temperatureK);
+                case "noe":
+                    expData = new NOEExperiment(experimentSet, peakList.getName(),
                             nucChoice.getValue(), Double.parseDouble(B0fieldChoice.getValue()),
                             temperatureK);
                 default:
@@ -681,9 +688,13 @@ public class InputDataInterface {
                     ObservableList<DataSeries> data = ChartUtil.getParMapData(experimentSet.getName(), "best", "0:0:0", parName);
                     PyController.mainController.setCurrentExperimentSet(experimentSet);
                     PyController.mainController.makeAxisMenu();
-                    PyController.mainController.setYAxisType(experimentSet.getExpMode(), experimentSet.getName(), "best", "0:0:0", parName);
+                    PyController.mainController.setYAxisType(experimentSet.getExpMode(), experimentSet.getName(),
+                            "best", "0:0:0", parName, true);
                     reschartNode.setResProps(experimentSet);
                     PyController.mainController.setControls();
+                    if (expMode.equalsIgnoreCase("noe")) {
+                        DataIO.addRelaxationFitResults(experimentSet, RelaxationData.relaxTypes.NOE);
+                    }
                 }
             } catch (IllegalArgumentException iAE) {
                 GUIUtils.warn("Load from peak list", iAE.getMessage());
@@ -885,7 +896,8 @@ public class InputDataInterface {
         ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
         PyController.mainController.setCurrentExperimentSet(resProp);
         PyController.mainController.makeAxisMenu();
-        PyController.mainController.setYAxisType(resProp.getExpMode(), resProp.getName(), "best", "0:0:0", parName);
+        PyController.mainController.setYAxisType(resProp.getExpMode(), resProp.getName(),
+                "best", "0:0:0", parName, true);
         reschartNode.setResProps(resProp);
         PyController.mainController.setControls();
 
