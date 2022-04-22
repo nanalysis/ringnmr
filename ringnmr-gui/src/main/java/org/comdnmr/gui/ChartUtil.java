@@ -553,7 +553,7 @@ public class ChartUtil {
             data.add(series);
             double[][] spectralDensities = spectralDensity.getSpectralDensities();
             for (int i=0;i<spectralDensities[0].length;i++) {
-                double x = spectralDensities[0][i] * 1.0e-9;
+                double x = Math.abs(spectralDensities[0][i] * 1.0e-9);
                 double y = spectralDensities[1][i];
                 double err = spectralDensities[2][i];
                 double yLow = y - err;
@@ -605,7 +605,7 @@ public class ChartUtil {
         ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
         PyController.mainController.setCurrentExperimentSet(resProp);
         PyController.mainController.makeAxisMenu();
-        PyController.mainController.setYAxisType(resProp.getExpMode(), resProp.getName(), "best", "0:0:0", parName);
+        PyController.mainController.setYAxisType(resProp.getExpMode(), resProp.getName(), "best", "0:0:0", parName, true);
         reschartNode.setResProps(resProp);
         PyController.mainController.setControls();
     }
@@ -635,7 +635,7 @@ public class ChartUtil {
             ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
             PyController.mainController.setCurrentExperimentSet(resProp);
             PyController.mainController.makeAxisMenu();
-            PyController.mainController.setYAxisType(resProp.getExpMode(), resProp.getName(), "best", "0:0:0", parName);
+            PyController.mainController.setYAxisType(resProp.getExpMode(), resProp.getName(), "best", "0:0:0", parName, true);
             reschartNode.setResProps(resProp);
             PyController.mainController.setControls();
         }

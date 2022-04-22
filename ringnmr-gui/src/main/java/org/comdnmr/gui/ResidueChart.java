@@ -44,6 +44,7 @@ public class ResidueChart extends XYCanvasBarChart {
     static Set<ResonanceSource> selectedResidues = new HashSet<>();
     public String currentSeriesName = "";
     ValueSet valueSet = null;
+    Set<ResonanceSource> dynSources = new HashSet<>();
 
     public static ResidueChart buildChart(Canvas canvas) {
         Axis xAxis = new Axis(Orientation.HORIZONTAL, 0, 100, 400, 100.0);
@@ -102,7 +103,9 @@ public class ResidueChart extends XYCanvasBarChart {
     @Override
     public void annotate(GraphicsContextInterface gC) {
         try {
-            drawPresenceIndicators(gC);
+            if (dynSources != null && !dynSources.isEmpty()) {
+                drawPresenceIndicators(gC);
+            }
         } catch (GraphicsIOException ex) {
         }
     }
@@ -115,6 +118,7 @@ public class ResidueChart extends XYCanvasBarChart {
 
     public void setResProps(ValueSet valueSet) {
         this.valueSet = valueSet;
+        dynSources = valueSet.getDynamicsSources();
     }
 
     void showInfo(String seriesName, int seriesIndex, ResonanceSource resSource, boolean appendMode) {
@@ -133,6 +137,7 @@ public class ResidueChart extends XYCanvasBarChart {
         String[] seriesNameParts = seriesName.split("\\|");
         String mapName = seriesNameParts[0];
         valueSet = ChartUtil.getResidueProperty(mapName);
+        dynSources = valueSet.getDynamicsSources();
         showInfo(seriesName);
         drawChart();
     }
@@ -141,6 +146,7 @@ public class ResidueChart extends XYCanvasBarChart {
         String[] seriesNameParts = currentSeriesName.split("\\|");
         String mapName = seriesNameParts[0];
         valueSet = ChartUtil.getResidueProperty(mapName);
+        dynSources = valueSet.getDynamicsSources();
         showInfo(currentSeriesName);
     }
 
@@ -177,8 +183,7 @@ public class ResidueChart extends XYCanvasBarChart {
 
     Optional<ResonanceSource> pickPresenceIndicators(double mouseX, double mouseY) {
         Optional<ResonanceSource> result = Optional.empty();
-        if (valueSet != null) {
-            Set<ResonanceSource> dynSources = valueSet.getDynamicsSources();
+        if (dynSources != null) {
             for (var dynSource : dynSources) {
                 int resNum = dynSource.getAtom().getResidueNumber();
                 double x1 = xAxis.getDisplayPosition(resNum - 0.5) + 1;
@@ -193,13 +198,11 @@ public class ResidueChart extends XYCanvasBarChart {
                 }
             }
         }
-
         return result;
     }
 
     void drawPresenceIndicators(GraphicsContextInterface gC) throws GraphicsIOException {
-        if (valueSet != null) {
-            Set<ResonanceSource> dynSources = valueSet.getDynamicsSources();
+        if (dynSources != null) {
             for (var dynSource : dynSources) {
                 int resNum = dynSource.getAtom().getResidueNumber();
                 double x1 = xAxis.getDisplayPosition(resNum - 0.5) + 1;
