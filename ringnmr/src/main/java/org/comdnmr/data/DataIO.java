@@ -170,9 +170,14 @@ public class DataIO {
             throw new IllegalArgumentException("Peaklist or dataset doesn't have measured values");
         }
         experimentSet.addExperimentData(experiment.getName(), experiment);
+        String nucName = experiment.getNucleusName();
+        String[] nucNames;
         boolean eSet = false;
         if (expMode.equals("noe")) {
             eSet = true;
+            nucNames = new String[]{nucName, "H"};
+        } else {
+            nucNames = new String[]{nucName};
         }
         if (peakList.peaks().stream().filter(p -> p.getMeasures().isEmpty()).findAny().isPresent()) {
             throw new IllegalArgumentException("Some peaks don't have measured values");
@@ -223,7 +228,7 @@ public class DataIO {
                     }
                 }
             }
-            Optional<ResonanceSource> resSourceOpt = dynamicsSourceFactory.createFromPeak(peak);
+            Optional<ResonanceSource> resSourceOpt = dynamicsSourceFactory.createFromPeak(peak, nucNames);
             if (resSourceOpt.isPresent()) {
                 ResonanceSource resSource = resSourceOpt.get();
                 if (expMode.equals("cest")) {
@@ -1476,29 +1481,23 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     }
 
                     ResonanceSource dynSource = expResult.getSource();
-                    Atom[] atoms = dynSource.getAtoms();
-                    for (Atom atom : atoms) {
-                        Map<String, String> extras = new HashMap<>();
-                        String coherenceType = "Sz";
-                        String units = "s-1";
-                        extras.put("coherenceType", coherenceType);
-                        extras.put("units", units);
-                        switch (expType) {
-                            case R1: {
-                                RelaxationData relaxData = new RelaxationData(datasetName, expType, dynSource, field, temperature, value, error, extras);
-                                atom.getRelaxationData().put(datasetName, relaxData);
-                                break;
-                            }
-                            case NOE: {
-                                RelaxationData relaxData = new RelaxationData(datasetName, expType, dynSource, field, temperature, value, error, extras);
-                                atom.getRelaxationData().put(datasetName, relaxData);
-                                break;
-                            }
-                            default: {
-                                RelaxationRex relaxData = new RelaxationRex(datasetName, expType, dynSource, field, temperature, value, error, null, null, extras);
-                                atom.getRelaxationData().put(datasetName, relaxData);
-                                break;
-                            }
+                    Atom atom = dynSource.getAtom();
+                    Map<String, String> extras = new HashMap<>();
+                    String coherenceType = "Sz";
+                    String units = "s-1";
+                    extras.put("coherenceType", coherenceType);
+                    extras.put("units", units);
+                    switch (expType) {
+                        case R1:
+                        case NOE: {
+                            RelaxationData relaxData = new RelaxationData(datasetName, expType, dynSource, field, temperature, value, error, extras);
+                            atom.getRelaxationData().put(datasetName, relaxData);
+                            break;
+                        }
+                        default: {
+                            RelaxationRex relaxData = new RelaxationRex(datasetName, expType, dynSource, field, temperature, value, error, null, null, extras);
+                            atom.getRelaxationData().put(datasetName, relaxData);
+                            break;
                         }
                     }
                 });

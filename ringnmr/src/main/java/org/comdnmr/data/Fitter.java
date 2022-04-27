@@ -170,7 +170,7 @@ public class Fitter {
         public PointValuePair refineCMAES(double[] guess, double inputSigma) throws Exception {
             startTime = System.currentTimeMillis();
             random.setSeed(1);
-            double lambdaMul = 3.0;
+            double lambdaMul = 10.0;
             int lambda = (int) (lambdaMul * FastMath.round(4 + 3 * FastMath.log(guess.length)));
             //int nSteps = guess.length*1000;
             int nSteps = 2000;

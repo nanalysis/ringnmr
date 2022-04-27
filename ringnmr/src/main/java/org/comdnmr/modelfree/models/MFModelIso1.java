@@ -64,13 +64,17 @@ public class MFModelIso1 extends MFModelIso {
 
     @Override
     public double[] calc(double[] omegas, double[] pars) {
+        pars(pars);
+        return calc(omegas);
+    }
+
+    public void pars(double[] pars) {
         int parStart = 0;
         if (fitTau) {
             tauM = pars[0];
             parStart = 1;
         }
         this.sf2 = pars[parStart];
-        return calc(omegas);
     }
 
     public double[] calc(double[] omegas, double s2) {

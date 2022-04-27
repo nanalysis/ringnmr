@@ -18,6 +18,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
+
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.apache.commons.math3.optim.PointValuePair;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
@@ -31,7 +32,6 @@ import org.nmrfx.chemistry.relax.*;
 import org.nmrfx.chemistry.Residue;
 
 /**
- *
  * @author brucejohnson
  */
 public class FitR1R2NOEModel extends FitModel {
@@ -44,74 +44,74 @@ public class FitR1R2NOEModel extends FitModel {
                 for (Residue residue : polymer.getResidues()) {
                     var hAtom = residue.getAtom("H");
                     var nAtom = residue.getAtom("N");
-                    if ((hAtom != null) && (nAtom != null)) {
-                        var hPoint = hAtom.getPoint();
-                        var nPoint = nAtom.getPoint();
-                        Vector3D vec = null;
-                        if ((hPoint == null) || (nPoint == null)) {
-                            if (requireCoords) {
+                    if (nAtom == null) {
+                        continue;
+                    }
+                    Vector3D vec = null;
+                    if (requireCoords) {
+                        if (hAtom != null) {
+                            var hPoint = hAtom.getPoint();
+                            var nPoint = nAtom.getPoint();
+                            if ((hPoint == null) || (nPoint == null)) {
                                 continue;
+                            } else {
+                                vec = hPoint.subtract(nPoint);
                             }
                         } else {
-                            vec = hPoint.subtract(nPoint);
-                        }
-                        var relaxData = hAtom.getRelaxationData();
-                        if ((relaxData == null) || relaxData.isEmpty()) {
-                            relaxData = nAtom.getRelaxationData();
-                        }
-                        if (relaxData != null) {
-                            MolDataValues molData = vec == null
-                                    ? new MolDataValues(nAtom)
-                                    : new MolDataValues(nAtom, vec.toArray());
-                            Set<Long> fields = new HashSet<>();
-                            for (var entry : relaxData.entrySet()) {
-                                RelaxationData data = entry.getValue();
-                                fields.add(Math.round(data.getField()));
-                            }
-                            for (var field : fields) {
-                                Double r1 = null;
-                                Double r1Error = null;
-
-                                Double r2 = null;
-                                Double r2Error = null;
-
-                                Double noe = null;
-                                Double noeError = null;
-
-                                for (var entry : relaxData.entrySet()) {
-                                    RelaxationData data = entry.getValue();
-                                    if (Math.round(data.getField()) == field) {
-                                        switch (data.getExpType()) {
-                                            case R1:
-                                                r1 = data.getValue();
-                                                r1Error = data.getError();
-                                                break;
-                                            case R2:
-                                                r2 = data.getValue();
-                                                r2Error = data.getError();
-                                                break;
-                                            case NOE:
-                                                noe = data.getValue();
-                                                noeError = data.getError();
-                                                break;
-                                        }
-                                    }
-                                }
-                                if ((r1 != null) && (r2 != null) && (noe != null)) {
-                                    String e1 = hAtom.getElementName();
-                                    String e2 = nAtom.getElementName();
-                                    RelaxEquations relaxObj = RelaxEquations.getRelaxEquations(field * 1e6, "H", "N");
-
-                                    R1R2NOEDataValue dValue = new R1R2NOEDataValue(molData, r1, r1Error, r2, r2Error, noe, noeError, relaxObj);
-                                    molData.addData(dValue);
-                                }
-                            }
-                            if (!molData.dataValues.isEmpty()) {
-                                molDataValues.put(molData.specifier, molData);
-                            }
+                            continue;
                         }
                     }
+                    var relaxData = nAtom.getRelaxationData();
 
+                    if (relaxData != null) {
+                        MolDataValues molData = vec == null
+                                ? new MolDataValues(nAtom)
+                                : new MolDataValues(nAtom, vec.toArray());
+                        Set<Long> fields = new HashSet<>();
+                        for (var entry : relaxData.entrySet()) {
+                            RelaxationData data = entry.getValue();
+                            fields.add(Math.round(data.getField()));
+                        }
+                        for (var field : fields) {
+                            Double r1 = null;
+                            Double r1Error = null;
+
+                            Double r2 = null;
+                            Double r2Error = null;
+
+                            Double noe = null;
+                            Double noeError = null;
+
+                            for (var entry : relaxData.entrySet()) {
+                                RelaxationData data = entry.getValue();
+                                if (Math.round(data.getField()) == field) {
+                                    switch (data.getExpType()) {
+                                        case R1:
+                                            r1 = data.getValue();
+                                            r1Error = data.getError();
+                                            break;
+                                        case R2:
+                                            r2 = data.getValue();
+                                            r2Error = data.getError();
+                                            break;
+                                        case NOE:
+                                            noe = data.getValue();
+                                            noeError = data.getError();
+                                            break;
+                                    }
+                                }
+                            }
+                            if ((r1 != null) && (r2 != null) && (noe != null)) {
+                                RelaxEquations relaxObj = RelaxEquations.getRelaxEquations(field * 1e6, "H", "N");
+
+                                R1R2NOEDataValue dValue = new R1R2NOEDataValue(molData, r1, r1Error, r2, r2Error, noe, noeError, relaxObj);
+                                molData.addData(dValue);
+                            }
+                        }
+                        if (!molData.dataValues.isEmpty()) {
+                            molDataValues.put(molData.specifier, molData);
+                        }
+                    }
                 }
             }
         }
@@ -293,8 +293,8 @@ public class FitR1R2NOEModel extends FitModel {
                 orderPar = orderPar.setModel();
             }
             atom.addOrderPar("order", orderPar);
-            double[][] jValues  = resData.getJValues();
-            SpectralDensity spectralDensity = new SpectralDensity(key,jValues);
+            double[][] jValues = resData.getJValues();
+            SpectralDensity spectralDensity = new SpectralDensity(key, jValues);
             atom.addSpectralDensity(key, spectralDensity);
             result = Optional.of(orderPar);
         }
@@ -356,7 +356,7 @@ public class FitR1R2NOEModel extends FitModel {
         PointValuePair best = null;
         for (int i = 0; i < nTries; i++) {
             PointValuePair fitResult = relaxFit.fitResidueToModel(start, lower, upper);
-            System.out.println(i + " " + fitResult.getValue());
+            System.out.println(i + " testModel " + fitResult.getValue());
             if ((i == 0) || (fitResult.getValue() < best.getValue())) {
                 best = fitResult;
             }
@@ -397,11 +397,11 @@ public class FitR1R2NOEModel extends FitModel {
         fileWriter.write(header);
         for (var molData : molDataValues.values()) {
             var data = molData.getData();
-            for (var value:data) {
+            for (var value : data) {
                 R1R2NOEDataValue dValue = (R1R2NOEDataValue) value;
                 StringBuilder stringBuilder = new StringBuilder();
                 stringBuilder.append(molData.specifier).append("\t");
-                stringBuilder.append(String.format("%.2f", dValue.relaxObj.getSF()/1.0e6)).append("\t");
+                stringBuilder.append(String.format("%.2f", dValue.relaxObj.getSF() / 1.0e6)).append("\t");
                 appendValueError(stringBuilder, dValue.R1, dValue.R1err, "%.3f");
                 appendValueError(stringBuilder, dValue.R2, dValue.R2err, "%.3f");
                 appendValueError(stringBuilder, dValue.NOE, dValue.NOEerr, "%.3f");

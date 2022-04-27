@@ -70,6 +70,11 @@ public class MFModelIso2f extends MFModelIso1f {
 
     @Override
     public double[] calc(double[] omegas, double[] pars) {
+        pars(pars);
+        return calc(omegas);
+    }
+
+    public void pars(double[] pars) {
         int parStart = 0;
         if (fitTau) {
             tauM = pars[0];
@@ -79,7 +84,6 @@ public class MFModelIso2f extends MFModelIso1f {
         this.sf2 = pars[parStart];
         this.tauF = pars[parStart + 1];
         this.ss2 = pars[parStart + 2];
-        return calc(omegas);
     }
 
     public double[] calc(double[] omegas, double s2, double tauF, double sf2) {
