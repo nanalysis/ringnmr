@@ -1088,6 +1088,10 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     case "r2":
                         expData = new T2Experiment(experimentSet, expName, nucleus, B0field, temperature);
                         break;
+                    case "rq":
+                    case "rap":
+                        expData = new T1orT2Experiment(experimentSet, expName, nucleus, B0field, temperature, expMode);
+                        break;
                     case "cest":
                         expData = new CESTExperiment(experimentSet, expName, nucleus, B0field, temperature, tau, B1field);
                         break;
@@ -1204,6 +1208,10 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     break;
                 case "r2":
                     expData = new T2Experiment(experimentSet, expName, nucleus, B0field, temperature);
+                    break;
+                case "rap":
+                case "rq":
+                    expData = new T1orT2Experiment(experimentSet, expName, nucleus, B0field, temperature, expMode);
                     break;
                 case "cest":
                     expData = new CESTExperiment(experimentSet, expName, nucleus, B0field, temperature, tau, B1field);

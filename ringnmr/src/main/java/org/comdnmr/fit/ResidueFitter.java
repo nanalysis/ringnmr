@@ -228,9 +228,9 @@ public class ResidueFitter {
                 fitter = new CPMGFitter(options);
                 break;
             case "r1":
-                fitter = new ExpFitter(options);
-                break;
             case "r2":
+            case "rq":
+            case "rap":
                 fitter = new ExpFitter(options);
                 break;
             case "cest":
@@ -271,10 +271,9 @@ public class ResidueFitter {
                 equationNames = CPMGFitter.getEquationNames();
                 break;
             case "r1":
-                equationNames = ExpFitter.getEquationNames();
-                bestEquation = "EXPAB";
-                break;
             case "r2":
+            case "rq":
+            case "rap":
                 equationNames = ExpFitter.getEquationNames();
                 bestEquation = "EXPAB";
                 break;
