@@ -595,11 +595,10 @@ public class ChartUtil {
         }
         valueSets.put(resProp.getName(), resProp);
         String parName = "Kex";
-        if (resProp.getExpMode().equals("r1")) {
+        String expMode = resProp.getExpMode();
+        if (expMode.equals("r1") || expMode.equals("r2") || expMode.equals("rq") || expMode.equals("rap")) {
             parName = "R";
-        } else if (resProp.getExpMode().equals("r2")) {
-            parName = "R";
-        } else if (resProp.getExpMode().equals("noe")) {
+        } else if (expMode.equals("noe")) {
             parName = "NOE";
         }
         ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
@@ -625,9 +624,8 @@ public class ChartUtil {
         if (resProp != null) {
             valueSets.put(resProp.getName(), resProp);
             String parName = "Kex";
-            if (resProp.getExpMode().equals("r1")) {
-                parName = "R";
-            } else if (resProp.getExpMode().equals("r2")) {
+            String expMode = resProp.getExpMode();
+            if (expMode.equals("r1") || expMode.equals("r2") || expMode.equals("rq") || expMode.equals("rap")) {
                 parName = "R";
             } else if (resProp.getExpMode().equals("noe")) {
                 parName = "NOE";

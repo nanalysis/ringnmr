@@ -2158,8 +2158,8 @@ public class PyController implements Initializable {
                 fitMode = simMode;
             }
         } else {
-            fitMode = getCurrentExperimentSet().getExpMode();
-            if (fitMode.equalsIgnoreCase("r1") || fitMode.equalsIgnoreCase("r2")) {
+            fitMode = getCurrentExperimentSet().getExpMode().toLowerCase();
+            if (fitMode.equals("r1") || fitMode.equals("r2") || fitMode.equals("rq") || fitMode.equals("rap")) {
                 fitMode = "exp";
             }
         }
@@ -2202,9 +2202,7 @@ public class PyController implements Initializable {
             return cestTypes;
         } else if (mode.equals("r1rho")) {
             return r1rhoTypes;
-        } else if (mode.equals("r1")) {
-            return expTypes;
-        } else if (mode.equals("r2")) {
+        } if (mode.equals("r1") || mode.equals("r2") || mode.equals("rq") || mode.equals("rap")) {
             return expTypes;
         } else if (mode.equals("s2")) {
             return sTypes;

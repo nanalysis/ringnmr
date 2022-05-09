@@ -216,7 +216,8 @@ public class InputDataInterface {
         }
 
         fitModeChoice.getItems().clear();
-        fitModeChoice.getItems().addAll(Arrays.asList("Select", "R1", "R2", "NOE", "CPMG", "CEST", "R1RHO"));
+        fitModeChoice.getItems().addAll(Arrays.asList("Select", "R1", "R2", "NOE",
+                "CPMG", "CEST", "R1RHO","RAP","RQ"));
         fitModeChoice.setValue("Select");
 
         fitModeChoice.valueProperty().addListener(x -> {
@@ -654,10 +655,18 @@ public class InputDataInterface {
                     expData = new T2Experiment(experimentSet, peakList.getName(),
                             nucChoice.getValue(), Double.parseDouble(B0fieldChoice.getValue()),
                             temperatureK);
+                    break;
+                case "rq":
+                case "rap":
+                    expData = new T1Experiment(experimentSet, peakList.getName(),
+                            nucChoice.getValue(), Double.parseDouble(B0fieldChoice.getValue()),
+                            temperatureK);
+                    break;
                 case "noe":
                     expData = new NOEExperiment(experimentSet, peakList.getName(),
                             nucChoice.getValue(), Double.parseDouble(B0fieldChoice.getValue()),
                             temperatureK);
+                    break;
                 default:
                     expData = new Experiment(experimentSet, peakList.getName(),
                             nucChoice.getValue(), Double.parseDouble(B0fieldChoice.getValue()),
@@ -678,9 +687,7 @@ public class InputDataInterface {
                     }
                     ChartUtil.addResidueProperty(experimentSet.getName(), experimentSet);
                     String parName = "Kex";
-                    if (experimentSet.getExpMode().equals("r1")) {
-                        parName = "R";
-                    } else if (experimentSet.getExpMode().equals("r2")) {
+                    if (expMode.equals("r1") || expMode.equals("r2") || expMode.equals("rq") || expMode.equals("rap")) {
                         parName = "R";
                     } else if (experimentSet.getExpMode().equals("noe")) {
                         parName = "NOE";
@@ -888,9 +895,7 @@ public class InputDataInterface {
 //            ExperimentSet resProp = DataIO.loadParameters(fileName);
         ChartUtil.addResidueProperty(resProp.getName(), resProp);
         String parName = "Kex";
-        if (resProp.getExpMode().equals("r1")) {
-            parName = "R";
-        } else if (resProp.getExpMode().equals("r2")) {
+        if (expMode.equals("r1") || expMode.equals("r2") || expMode.equals("rq") || expMode.equals("rap")) {
             parName = "R";
         }
         ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
