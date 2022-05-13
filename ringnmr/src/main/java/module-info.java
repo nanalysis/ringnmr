@@ -13,11 +13,11 @@ module org.comdnmr {
     requires java.desktop;
     requires com.google.common;
     requires jython.slim;
-    requires javafx.base;
-    requires javafx.graphics;
     requires java.prefs;
     requires ojalgo;
     requires org.yaml.snakeyaml;
     requires org.nmrfx.core;
     requires ejml.fat;
+    requires javafx.base;
+    requires javafx.graphics;
 }
