@@ -135,7 +135,9 @@ public class PyController implements Initializable {
     @FXML
     Menu chartMenu;
     @FXML
-    Menu axisMenu;
+    Menu experimentalDataAxisMenu;
+    @FXML
+    Menu moleculeDataAxisMenu;
     @FXML
     BorderPane simPane;
 
@@ -524,13 +526,13 @@ public class PyController implements Initializable {
         barScaleScrollBar.setVisible(true);
         double scrollMin = barScaleScrollBar.getMin();
         double scrollMax = barScaleScrollBar.getMax();
-        double visAmount = (scrollMax-scrollMin) / barScale;
+        double visAmount = (scrollMax - scrollMin) / barScale;
         barScaleScrollBar.setVisibleAmount(visAmount);
         barPlotCanvas.setWidth(width);
         barPlotCanvas.setHeight(height);
-        double visFraction = 1.0/barScale;
-        double barCenter = barValue / barScaleScrollBar.getMax() * (1.0-visFraction);
-        double barDiv = 1.0 /barScale;
+        double visFraction = 1.0 / barScale;
+        double barCenter = barValue / barScaleScrollBar.getMax() * (1.0 - visFraction);
+        double barDiv = 1.0 / barScale;
         double fMax = barCenter + barDiv;
         GraphicsContext gC = barPlotCanvas.getGraphicsContext2D();
         gC.clearRect(0, 0, barPlotCanvas.getWidth(), barPlotCanvas.getHeight());
@@ -923,8 +925,7 @@ public class PyController implements Initializable {
     }
 
     @FXML
-    public void inputParameters(ActionEvent event
-    ) {
+    public void inputParameters(ActionEvent event) {
         if (inputDataInterface == null) {
             inputDataInterface = new InputDataInterface(this);
         }
@@ -932,8 +933,15 @@ public class PyController implements Initializable {
     }
 
     @FXML
-    public void startServer(ActionEvent event
-    ) {
+    public void loadFromPeakLists(ActionEvent event) {
+        if (inputDataInterface == null) {
+            inputDataInterface = new InputDataInterface(this);
+        }
+        inputDataInterface.createPeakListInterface();
+    }
+
+    @FXML
+    public void startServer(ActionEvent event) {
         String tempDir = System.getProperty("java.io.tmpdir");
         String userName = System.getProperty("user.name");
         Path path = FileSystems.getDefault().getPath(tempDir, "NMRFx_" + userName + "_port.txt");
@@ -1160,6 +1168,8 @@ public class PyController implements Initializable {
             } catch (NumberFormatException nfE) {
                 tau = null;
             }
+        } else if (prefix.equals("D")) {
+            tau = 10.0;
         }
         boolean fitJ = fitJCheckBox.isSelected();
         System.out.println(lambdaText + " lambda " + lambda);
@@ -1172,6 +1182,7 @@ public class PyController implements Initializable {
         fitModel.setT2Limit(t2Limit);
         fitModel.setNReplicates((int) nReplicatesSlider.getValue());
         fitModel.setFitJ(fitJ);
+        fitModel.setTauFraction(tauFraction);
         var modelNames = new ArrayList<String>();
         for (var modelCheckBox : modelCheckBoxes) {
             if (modelCheckBox.isSelected()) {
@@ -1314,7 +1325,7 @@ public class PyController implements Initializable {
         }
     }
 
-//    public void updateTableWithPars(String mapName, String[] residues, String equationName, String state, List<int[]> allStates) {
+    //    public void updateTableWithPars(String mapName, String[] residues, String equationName, String state, List<int[]> allStates) {
 //        updateTableWithPars(mapName, residues, equationName, state, allStates, true);
 //    }
 //                updateTableWithPars(currentMapName, currentResidues, equationName, currentState, useStates, false);
@@ -1495,6 +1506,7 @@ public class PyController implements Initializable {
 
     public void setYAxisType(String expMode, String setName, String eqnName, String state, String typeName, boolean updateProps) {
         ObservableList<DataSeries> data = ChartUtil.getParMapData(setName, eqnName, state, typeName);
+        System.out.println("set axis type " + setName + " " + eqnName + " " + state + " " + typeName + " " + updateProps);
         String yLabel = expMode.equalsIgnoreCase(typeName) ? typeName
                 : expMode.toUpperCase() + ": " + typeName;
         addSeries(data, setName, yLabel, updateProps);
@@ -1551,7 +1563,8 @@ public class PyController implements Initializable {
 
     void makeAxisMenu() {
         makeT1T2Menu();
-        axisMenu.getItems().clear();
+        experimentalDataAxisMenu.getItems().clear();
+        moleculeDataAxisMenu.getItems().clear();
         addMoleculeDataToAxisMenu();
         addResiduePropertiesToAxisMenu();
     }
@@ -1567,7 +1580,7 @@ public class PyController implements Initializable {
             var values = relaxSet.getValues();
             if (!values.isEmpty()) {
                 RelaxationValues value = values.get(0);
-                axisMenu.getItems().add(cascade);
+                moleculeDataAxisMenu.getItems().add(cascade);
                 String[] parNames = value.getParNames();
                 for (var parName : parNames) {
                     MenuItem cmItem1 = new MenuItem(parName);
@@ -1682,52 +1695,74 @@ public class PyController implements Initializable {
             if (valueSet instanceof ExperimentSet) {
                 ExperimentSet experimentSet = (ExperimentSet) valueSet;
                 Menu cascade = new Menu(setName);
-                axisMenu.getItems().add(cascade);
+                experimentalDataAxisMenu.getItems().add(cascade);
                 String expMode = experimentSet.getExpMode();
                 String[] parTypes = getParTypes(experimentSet.getExpMode());
-                for (String parType : parTypes) {
-                    if (experimentSet.getEquationNames().size() == 1) {
-                        String equationName = experimentSet.getEquationNames().get(0);
-                        MenuItem cmItem1 = new MenuItem(parType);
-                        cmItem1.setOnAction(e -> setYAxisType(expMode, setName, equationName, "0:0:0", parType, true));
-                        cascade.getItems().add(cmItem1);
+                if (experimentSet.getEquationNames().size() == 0) {
+                    final String parName;
+                    if (expMode.equals("r1") || expMode.equals("r2") || expMode.equals("rq") || expMode.equals("rap")) {
+                        parName = "R";
+                    } else if (experimentSet.getExpMode().equals("noe")) {
+                        parName = "NOE";
                     } else {
-                        Menu cascade2 = new Menu(parType);
-                        cascade.getItems().add(cascade2);
-                        ArrayList<String> equationNames = new ArrayList<>();
-                        if (experimentSet.getEquationNames().size() > 1) {
-                            equationNames.add("best");
-                        }
-                        equationNames.addAll(experimentSet.getEquationNames());
-                        List<String> stateStrings = experimentSet.getStateStrings();
+                        parName = "Kex";
+                    }
+                    MenuItem cmItem1 = new MenuItem("R");
+                    cmItem1.setOnAction(e -> setYAxisType(expMode, experimentSet.getName(), "best", "0:0:0", parName, true));
+                    cascade.getItems().add(cmItem1);
+                } else {
+                    for (String parType : parTypes) {
+                        if (experimentSet.getEquationNames().size() == 1) {
+                            String equationName = experimentSet.getEquationNames().get(0);
+                            MenuItem cmItem1 = new MenuItem(parType);
+                            cmItem1.setOnAction(e -> setYAxisType(expMode, setName, equationName, "0:0:0", parType, true));
+                            cascade.getItems().add(cmItem1);
+                        } else {
 
-                        for (String equationName : equationNames) {
-                            if ((stateStrings.size() < 2) || parType.equals("RMS") || parType.equals("AIC") || parType.equals("Equation")) {
-                                MenuItem cmItem1 = new MenuItem(equationName);
-                                cmItem1.setOnAction(e -> setYAxisType(expMode, setName, equationName, "0:0:0", parType, true));
+                            Menu cascade2 = new Menu(parType);
+                            cascade.getItems().add(cascade2);
+                            ArrayList<String> equationNames = new ArrayList<>();
+                            if (experimentSet.getEquationNames().size() > 1) {
+                                equationNames.add("best");
+                            }
+                            equationNames.addAll(experimentSet.getEquationNames());
+                            List<String> stateStrings = experimentSet.getStateStrings();
+                            if (equationNames.size() == 0) {
+                                MenuItem cmItem1 = new MenuItem(experimentSet.getName());
+                                cmItem1.setOnAction(e -> setYAxisType(expMode, experimentSet.getName(), "best", "0:0:0", "R", true));
                                 cascade2.getItems().add(cmItem1);
+
                             } else {
-                                boolean isValidPar = false;
-                                if (equationName.equals("best")) {
-                                    isValidPar = true;
-                                } else {
-                                    String[] validPars = getParNames(equationName);
-                                    for (String validPar : validPars) {
-                                        if (validPar.equals(parType)) {
+
+                                for (String equationName : equationNames) {
+                                    if ((stateStrings.size() < 2) || parType.equals("RMS") || parType.equals("AIC") || parType.equals("Equation")) {
+                                        MenuItem cmItem1 = new MenuItem(equationName);
+                                        cmItem1.setOnAction(e -> setYAxisType(expMode, setName, equationName, "0:0:0", parType, true));
+                                        cascade2.getItems().add(cmItem1);
+                                    } else {
+                                        boolean isValidPar = false;
+                                        if (equationName.equals("best")) {
                                             isValidPar = true;
-                                            break;
+                                        } else {
+                                            String[] validPars = getParNames(equationName);
+                                            for (String validPar : validPars) {
+                                                if (validPar.equals(parType)) {
+                                                    isValidPar = true;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        if (isValidPar) {
+                                            Menu cascade3 = new Menu(equationName);
+                                            cascade2.getItems().add(cascade3);
+                                            experimentSet.getStateStrings().forEach(state -> {
+                                                MenuItem cmItem1 = new MenuItem(state);
+                                                cmItem1.setOnAction(e -> setYAxisType(expMode, setName, equationName, state, parType, true));
+                                                cascade3.getItems().add(cmItem1);
+
+                                            });
                                         }
                                     }
-                                }
-                                if (isValidPar) {
-                                    Menu cascade3 = new Menu(equationName);
-                                    cascade2.getItems().add(cascade3);
-                                    experimentSet.getStateStrings().forEach(state -> {
-                                        MenuItem cmItem1 = new MenuItem(state);
-                                        cmItem1.setOnAction(e -> setYAxisType(expMode, setName, equationName, state, parType, true));
-                                        cascade3.getItems().add(cmItem1);
-
-                                    });
                                 }
                             }
                         }
@@ -1869,15 +1904,10 @@ public class PyController implements Initializable {
 
     @FXML
     public void fitResidues(ActionEvent event) {
-//        if (getFittingMode().equals("cest")) {
-//            ChooseCESTFitEquations.allRes = true;
-//            ChooseCESTFitEquations.create();
-//        } else {
         fitResult = null;
         if (hasExperimentSet()) {
             residueFitter.fitResidues(getCurrentExperimentSet());
         }
-//        }
     }
 
     @FXML
@@ -2202,7 +2232,8 @@ public class PyController implements Initializable {
             return cestTypes;
         } else if (mode.equals("r1rho")) {
             return r1rhoTypes;
-        } if (mode.equals("r1") || mode.equals("r2") || mode.equals("rq") || mode.equals("rap")) {
+        }
+        if (mode.equals("r1") || mode.equals("r2") || mode.equals("rq") || mode.equals("rap")) {
             return expTypes;
         } else if (mode.equals("s2")) {
             return sTypes;

@@ -25,11 +25,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.collections.ObservableList;
@@ -108,6 +104,61 @@ public class InputDataInterface {
 
     public InputDataInterface(PyController controller) {
         pyController = controller;
+    }
+
+    public void createPeakListInterface() {
+        infoStage.setTitle("Load from Peak Lists");
+        inputInfoDisplay.getChildren().clear();
+        int row = 0;
+        List<PeakList> peakLists = new ArrayList<>();
+        List<ChoiceBox<String>> choices = new ArrayList<>();
+        PeakList.peakLists().forEach(peakList -> {
+            if (peakList.hasMeasures()) {
+                Label peakListLabel = new Label(peakList.getName());
+                peakLists.add(peakList);
+                ChoiceBox<String> typeChoice = new ChoiceBox();
+                choices.add(typeChoice);
+                typeChoice.getItems().addAll(Arrays.asList("", "R1", "R2", "NOE","RAP","RQ"));
+                inputInfoDisplay.add(peakListLabel,0,choices.size()-1);
+                inputInfoDisplay.add(typeChoice,1,choices.size()-1);
+                typeChoice.setValue("");
+            }
+        });
+        loadButton.setOnAction(e -> loadFromPeakLists(peakLists, choices));
+        loadButton.setText("Load");
+        loadButton.setDisable(false);
+        inputInfoDisplay.add(loadButton, 1, choices.size());
+        infoStage.setScene(inputScene);
+        infoStage.show();
+    }
+
+    private void loadFromPeakLists(List<PeakList> peakLists, List<ChoiceBox<String>> choiceBoxes) {
+        for (int i = 0; i < peakLists.size(); i++) {
+            String type = choiceBoxes.get(i).getValue();
+            if (!type.isBlank()) {
+                PeakList peakList = peakLists.get(i);
+                if (peakList != null) {
+                    int peakDim = 1;
+                    String nucleus;
+                    double B0field;
+                    double temperature;
+                    DatasetBase dataset = DatasetBase.getDataset(peakList.fileName);
+                    if (dataset == null) {
+                        nucleus = peakList.getSpectralDim(0).getNucleus();
+                        B0field = peakList.getSpectralDim(0).getSf();
+                        temperature = 298.14;
+                    } else {
+                        nucleus = dataset.getNucleus(peakDim).getName();
+                        B0field = dataset.getSf(0);
+                        temperature = dataset.getTempK();
+                    }
+                    nucChoice.setValue(nucleus);
+                    B0fieldChoice.setValue(String.valueOf(B0field));
+                    tempTextField.setText(String.valueOf(temperature));
+                    loadFromPeakList(peakList, type, nucleus, B0field, temperature);
+                }
+            }
+        }
     }
 
     public void inputParameters() {
@@ -353,6 +404,7 @@ public class InputDataInterface {
 
         infoStage.setScene(inputScene);
         infoStage.show();
+        infoStage.toFront();
 
     }
 
@@ -619,6 +671,15 @@ public class InputDataInterface {
 
     void loadFromPeakList() {
         PeakList peakList = PeakList.get(peakListChoice.getValue());
+        String expMode = fitModeChoice.getValue();
+        Double b0Field = Double.parseDouble(B0fieldChoice.getValue());
+        Double temperatureK = getDouble(tempTextField.getText());
+        String nucName = nucChoice.getValue();
+        loadFromPeakList(peakList, expMode, nucName, b0Field.doubleValue(), temperatureK.doubleValue());
+    }
+
+    void loadFromPeakList(PeakList peakList, String expMode, String nucName, double b0Field, double temperatureK) {
+        expMode = expMode.toLowerCase();
         if (peakList != null) {
             
             MoleculeBase mol = MoleculeFactory.getActive();
@@ -636,72 +697,56 @@ public class InputDataInterface {
             DynamicsSource dynSource = new DynamicsSource(false, false, dynCreateMol, dynCreateAtom);
             String peakListName = peakList.getName();
             ExperimentSet experimentSet = new ExperimentSet(peakListName, peakListName);
-            String expMode = fitModeChoice.getValue().toLowerCase();
             experimentSet.setExpMode(expMode);
-            double[] delayCalc = {0.0, 0.0, 1.0};
-            HashMap<String, Object> errorPars = new HashMap<>();
-            Double temperatureK = getDouble(tempTextField.getText());
-            Double tau = getDouble(tauTextField.getText());
-            Double B1field = getDouble(B1TextField.getText());
 
             Experiment expData;
             switch (expMode) {
+                case "rq":
+                case "rap":
                 case "r1":
                     expData = new T1Experiment(experimentSet, peakList.getName(),
-                            nucChoice.getValue(), Double.parseDouble(B0fieldChoice.getValue()),
-                            temperatureK);
+                            nucName, b0Field, temperatureK);
                     break;
                 case "r2":
                     expData = new T2Experiment(experimentSet, peakList.getName(),
-                            nucChoice.getValue(), Double.parseDouble(B0fieldChoice.getValue()),
-                            temperatureK);
-                    break;
-                case "rq":
-                case "rap":
-                    expData = new T1Experiment(experimentSet, peakList.getName(),
-                            nucChoice.getValue(), Double.parseDouble(B0fieldChoice.getValue()),
-                            temperatureK);
+                            nucName, b0Field, temperatureK);
                     break;
                 case "noe":
                     expData = new NOEExperiment(experimentSet, peakList.getName(),
-                            nucChoice.getValue(), Double.parseDouble(B0fieldChoice.getValue()),
-                            temperatureK);
+                            nucName, b0Field, temperatureK);
                     break;
                 default:
                     expData = new Experiment(experimentSet, peakList.getName(),
-                            nucChoice.getValue(), Double.parseDouble(B0fieldChoice.getValue()),
-                            temperatureK, expMode);
+                            nucName, b0Field, temperatureK, expMode);
             }
-//            tau, null,
-//                    fitModeChoice.getValue(),
-//                    errorPars, delayCalc, B1field);
 
             try {
+                String xConv = xConvChoice.getValue() == null ? "identity" :xConvChoice.getValue();
+                String yConv = yConvChoice.getValue() == null ? "identity" :yConvChoice.getValue();
                 DataIO.loadFromPeakList(peakList, expData, experimentSet,
-                        xConvChoice.getValue(), yConvChoice.getValue(), dynSource);
-                if (experimentSet != null) {
-                    ResidueChart reschartNode = PyController.mainController.getActiveChart();
-                    if (reschartNode == null) {
-                        reschartNode = PyController.mainController.addChart();
+                        xConv, yConv, dynSource);
+                ResidueChart reschartNode = PyController.mainController.getActiveChart();
+                if (reschartNode == null) {
+                    reschartNode = PyController.mainController.addChart();
 
-                    }
-                    ChartUtil.addResidueProperty(experimentSet.getName(), experimentSet);
-                    String parName = "Kex";
-                    if (expMode.equals("r1") || expMode.equals("r2") || expMode.equals("rq") || expMode.equals("rap")) {
-                        parName = "R";
-                    } else if (experimentSet.getExpMode().equals("noe")) {
-                        parName = "NOE";
-                    }
-                    ObservableList<DataSeries> data = ChartUtil.getParMapData(experimentSet.getName(), "best", "0:0:0", parName);
-                    PyController.mainController.setCurrentExperimentSet(experimentSet);
-                    PyController.mainController.makeAxisMenu();
-                    PyController.mainController.setYAxisType(experimentSet.getExpMode(), experimentSet.getName(),
-                            "best", "0:0:0", parName, true);
-                    reschartNode.setResProps(experimentSet);
-                    PyController.mainController.setControls();
-                    if (expMode.equalsIgnoreCase("noe")) {
-                        DataIO.addRelaxationFitResults(experimentSet, RelaxationData.relaxTypes.NOE);
-                    }
+                }
+                reschartNode.getData().clear();
+                ChartUtil.addResidueProperty(experimentSet.getName(), experimentSet);
+                String parName = "Kex";
+                if (expMode.equals("r1") || expMode.equals("r2") || expMode.equals("rq") || expMode.equals("rap")) {
+                    parName = "R";
+                } else if (experimentSet.getExpMode().equals("noe")) {
+                    parName = "NOE";
+                }
+                ObservableList<DataSeries> data = ChartUtil.getParMapData(experimentSet.getName(), "best", "0:0:0", parName);
+                PyController.mainController.setCurrentExperimentSet(experimentSet);
+                PyController.mainController.makeAxisMenu();
+                PyController.mainController.setYAxisType(experimentSet.getExpMode(), experimentSet.getName(),
+                        "best", "0:0:0", parName, true);
+                reschartNode.setResProps(experimentSet);
+                PyController.mainController.setControls();
+                if (expMode.equalsIgnoreCase("noe")) {
+                    DataIO.addRelaxationFitResults(experimentSet, RelaxationData.relaxTypes.NOE);
                 }
             } catch (IllegalArgumentException iAE) {
                 GUIUtils.warn("Load from peak list", iAE.getMessage());
