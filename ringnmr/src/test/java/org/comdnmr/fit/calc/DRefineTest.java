@@ -140,7 +140,8 @@ public class DRefineTest {
         MoleculeFactory.setActive(null);
         var data = loadDeuteriumTestData();
         FitDeuteriumModel fitDeuteriumModel = new FitDeuteriumModel();
-        var modelNames = List.of("D1f");
+        fitDeuteriumModel.setTau(10.0);
+        var modelNames = List.of("1f");
 
         fitDeuteriumModel.testModels(data,modelNames);
     }
