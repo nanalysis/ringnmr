@@ -1123,7 +1123,6 @@ public class PyController implements Initializable {
         String expType = getFittingMode();
         for (double field : fields) {
             double[] extras = {field / fields[0]};
-            //System.out.println("updateChartEquations got called with extras length = "+extras.length);
             GUIPlotEquation plotEquation = new GUIPlotEquation(expType, equationName, pars, errs, extras);
             equations.add(plotEquation);
         }
@@ -1350,7 +1349,6 @@ public class PyController implements Initializable {
 
                     allParValues.addAll(parValues);
                     CurveFit curveSet = chartInfo.experimentalResult.getCurveSet(useEquationName, chartInfo.state.replace("*", "0"));
-//                    System.out.println("curv " + useEquationName + " " + state + " " + curveSet);
                     try {
                         String aic = String.format("%.2f", curveSet.getParMap().get("AIC"));
                         String rms = String.format("%.3f", curveSet.getParMap().get("RMS"));
@@ -1506,7 +1504,6 @@ public class PyController implements Initializable {
 
     public void setYAxisType(String expMode, String setName, String eqnName, String state, String typeName, boolean updateProps) {
         ObservableList<DataSeries> data = ChartUtil.getParMapData(setName, eqnName, state, typeName);
-        System.out.println("set axis type " + setName + " " + eqnName + " " + state + " " + typeName + " " + updateProps);
         String yLabel = expMode.equalsIgnoreCase(typeName) ? typeName
                 : expMode.toUpperCase() + ": " + typeName;
         addSeries(data, setName, yLabel, updateProps);
@@ -2011,7 +2008,6 @@ public class PyController implements Initializable {
                 if (valueSet instanceof ExperimentSet) {
                     ExperimentSet experimentSet = (ExperimentSet) valueSet;
                     relaxTypes expMode = relaxTypes.valueOf(experimentSet.getExpMode().toUpperCase());
-                    System.out.println("add " + experimentSet + " " + expMode);
                     DataIO.addRelaxationFitResults(experimentSet, expMode);
                 }
             });
@@ -2321,7 +2317,6 @@ public class PyController implements Initializable {
         List<int[]> allStates = new ArrayList<>();
         boolean calcScale = scalePlot.isSelected();
         if (chartInfo.hasExperiments() && chartInfo.hasResidues()) {
-            System.out.println("has data");
             int iSeries = 0;
             for (Experiment expData : ((ExperimentSet) chartInfo.getExperiments()).getExperimentData()) {
                 if (!ExperimentSet.matchStateString(chartInfo.state, expData.getState())) {
@@ -2330,7 +2325,6 @@ public class PyController implements Initializable {
                 String expName = expData.getName();
                 for (ResonanceSource resNum : chartInfo.getResidues()) {
                     if (expData.getResidueData(resNum) != null) {
-//                        System.out.println(expData.getResidueData(resNum));
                         experimentalDataSets.add(expData.getResidueData(resNum));
                         DataSeries series = ChartUtil.getMapData(chartInfo.mapName, expName, resNum);
                         series.setStroke(PlotData.colors[iSeries % 8]);
@@ -2359,17 +2353,11 @@ public class PyController implements Initializable {
                 allStates.add(states);
             }
         } else {
-//            System.out.println("no data " + chartInfo.getResidues().length);
             RelaxSet relaxSet = (RelaxSet) chartInfo.valueSet;
-//            System.out.println("relaxset " + relaxSet.getValues());
             for (ResonanceSource resonanceSource : chartInfo.getResidues()) {
-//                System.out.println("res " + resonanceSource + " " + chartInfo.mapName +
-//                        " " + relaxSet.getValue(resonanceSource));
                 Atom atom = resonanceSource.getAtom();
                 Map<String, SpectralDensity> spectralDensityMap = atom.getSpectralDensity();
                 allData.addAll(ChartUtil.getSpectralDensityData(spectralDensityMap));
-                System.out.println(spectralDensityMap);
-                System.out.println(allData);
             }
         }
         chartInfo.setStates(allStates);
@@ -2431,9 +2419,7 @@ public class PyController implements Initializable {
             fieldVals[i] = CoMDPreferences.getRefField() * simControls.getNucleus().getFreqRatio();
             fieldValues.add(fieldVals[i]);
         }
-        System.out.println("xval len " + xValues.size());
         for (int j = 0; j < extras.length; j++) {
-            System.out.println("set sim " + j + " " + extras[j]);
             ArrayList<Double> xValuesEx = new ArrayList<>();
             for (int i = 0; i < yValues.size(); i++) {
                 xValuesEx.add(extras[j]);
