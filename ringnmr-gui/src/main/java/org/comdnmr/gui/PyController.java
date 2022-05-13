@@ -430,10 +430,10 @@ public class PyController implements Initializable {
         initResidueNavigator();
         calcErrorsCheckBox.selectedProperty().addListener(e -> FitFunction.setCalcError(calcErrorsCheckBox.isSelected()));
         calcErrorsCheckBox.setSelected(true);
+        autoscaleXCheckBox.setSelected(true);
         autoscaleXCheckBox.selectedProperty().addListener(e -> autoscaleX(autoscaleXCheckBox.isSelected()));
-        autoscaleXCheckBox.setSelected(false);
+        autoscaleYCheckBox.setSelected(true);
         autoscaleYCheckBox.selectedProperty().addListener(e -> autoscaleY(autoscaleYCheckBox.isSelected()));
-        autoscaleYCheckBox.setSelected(false);
         zeroXCheckBox.selectedProperty().addListener(e -> includeXZero(zeroXCheckBox.isSelected()));
         zeroXCheckBox.setSelected(false);
         zeroYCheckBox.selectedProperty().addListener(e -> includeYZero(zeroYCheckBox.isSelected()));
@@ -441,6 +441,8 @@ public class PyController implements Initializable {
         nmrFxPeakButton.setDisable(true);
         nmrFxPeakButton.setOnAction(this::nmrFxMessage);
         xychart = (PlotData) chartPane.getChart();
+        xychart.getXAxis().setAutoRanging(true);
+        xychart.getYAxis().setAutoRanging(true);
         chartPane.widthProperty().addListener(e -> resizeXYPlotCanvas());
         chartPane.heightProperty().addListener(e -> resizeXYPlotCanvas());
         chartBox.widthProperty().addListener(e -> resizeBarPlotCanvas());
@@ -2327,7 +2329,25 @@ public class PyController implements Initializable {
                 Atom atom = resonanceSource.getAtom();
                 Map<String, SpectralDensity> spectralDensityMap = atom.getSpectralDensity();
                 allData.addAll(ChartUtil.getSpectralDensityData(spectralDensityMap));
+                var orderPars = atom.getOrderPars();
+                for (var key: orderPars.keySet()) {
+                    var orderPar = orderPars.get(key);
+                    String[] parNames = {"Tau_e", "S2", "Tau_f"};
+                    double[] pars = new double[parNames.length];
+                    double[] errs = new double[parNames.length];
+                    int iPar = 0;
+                    for (var parName:parNames) {
+                        pars[iPar] = orderPar.getValue(parName);
+                        Double err = orderPar.getError(parName);
+                        errs[iPar] = err == null ? 0.0 : err;
+                        iPar++;
+                    }
+                    double[] extras = new double[1];
+                    var guiPlotEquation =  new GUIPlotEquation("D1f", "spectralDensity", pars, errs, extras);
+                    equations.add(guiPlotEquation);
+                }
             }
+
         }
         chartInfo.setStates(allStates);
         updateTable(experimentalDataSets);
