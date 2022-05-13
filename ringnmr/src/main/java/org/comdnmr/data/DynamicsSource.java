@@ -216,7 +216,6 @@ public class DynamicsSource {
         int iAtom = 0;
         int iPeakDim = 0;
         for (String nucName : nucNames) {
-            System.out.println("nucName " + nucName);
             for (int i = 0; i < nDim; i++) {
                 String peakDimNucleus = peak.getPeakDim(i).getSpectralDimObj().getNucleus();
                 if (peakDimNucleus.endsWith(nucName)) {

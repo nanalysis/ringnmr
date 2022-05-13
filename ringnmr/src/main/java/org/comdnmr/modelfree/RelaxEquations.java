@@ -59,10 +59,13 @@ public class RelaxEquations {
         GAMMA_MAP.put("H", GAMMA_H);
         GAMMA_MAP.put("N", GAMMA_N);
         GAMMA_MAP.put("C", GAMMA_C);
+        GAMMA_MAP.put("D", GAMMA_D);
         R_MAP.put("HN", R_HN);
         R_MAP.put("NH", R_HN);
         R_MAP.put("HC", R_HC);
         R_MAP.put("CH", R_HC);
+        R_MAP.put("DC", R_HC);
+        R_MAP.put("CD", R_HC);
     }
 
     private final double r;
@@ -87,14 +90,24 @@ public class RelaxEquations {
     public RelaxEquations(double sf, String elem1, String elem2) {
         gammaI = GAMMA_MAP.get(elem1);
         gammaS = GAMMA_MAP.get(elem2);
-        wI = sf * 2.0 * Math.PI;
-        wS = wI * gammaS / gammaI;
+        if (elem1.equals("D")) {
+            wI = sf * 2.0 * Math.PI * gammaI / GAMMA_H;
+            wS = sf * 2.0 * Math.PI * gammaS / GAMMA_H;
+        } else {
+            wI = sf * 2.0 * Math.PI;
+            wS = wI * gammaS / gammaI;
+        }
         r = R_MAP.get(elem1 + elem2);
         d = MU0 * (gammaI * gammaS * PLANCK) / (4.0 * Math.PI * r * r * r);
         d2 = d * d;
         c = wS * SIGMA / Math.sqrt(3.0);
         c2 = c * c;
-        wValues = new double[]{0.0, wS, wI - wS, wI, wI + wS};
+        if (elem1.equals("D")) {
+            wValues = new double[]{0.0,wI, 2.0*wI};
+        } else {
+            wValues = new double[]{0.0, wS, wI - wS, wI, wI + wS};
+
+        }
 
         this.sf = sf;
     }
@@ -589,20 +602,29 @@ public class RelaxEquations {
         return dipolarContrib + csaContrib + Rex;
     }
 
-    public double R1_D(double jw, double j2w) {
-        return 3.0 * QCC2 * (jw + 4.0 * j2w) * 1.0e-9;
+    public double R1_D(double[] J) {
+        double jw = J[1];
+        double j2w = J[2];
+        return 3.0 * QCC2 * (jw + 4.0 * j2w);
     }
 
-    public double R2_D(double j0, double jw, double j2w) {
-        return (3.0 / 2.0) * QCC2 * (3.0 * j0 + 5.0 * jw + 2.0 * j2w) * 1.0e-9;
+    public double R2_D(double[] J) {
+        double j0 = J[0];
+        double jw = J[1];
+        double j2w = J[2];
+        return (3.0 / 2.0) * QCC2 * (3.0 * j0 + 5.0 * jw + 2.0 * j2w);
     }
 
-    public double RQ_D(double jw) {
-        return 9.0 * QCC2 * jw * 1.0e-9;
+    public double RQ_D(double[] J) {
+        double jw = J[1];
+        return 9.0 * QCC2 * jw;
     }
 
-    public double Rap_D(double j0, double jw, double j2w) {
-        return (3.0 / 2.0) * QCC2 * (3 * j0 + jw + 2 * j2w) * 1.0e-9;
+    public double Rap_D(double[] J) {
+        double j0 = J[0];
+        double jw = J[1];
+        double j2w = J[2];
+        return (3.0 / 2.0) * QCC2 * (3 * j0 + jw + 2 * j2w);
     }
 
     /**

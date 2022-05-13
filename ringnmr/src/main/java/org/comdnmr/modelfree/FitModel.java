@@ -75,4 +75,8 @@ public abstract class FitModel {
     public void setT2Limit(double value) {
         this.t2Limit = value;
     }
+
+    public void setTauFraction(double value) {
+        tauFraction = value;
+    }
 }

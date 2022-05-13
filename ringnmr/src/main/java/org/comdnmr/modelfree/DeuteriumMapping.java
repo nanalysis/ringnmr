@@ -23,16 +23,16 @@ public class DeuteriumMapping {
         Matrix matrix = new Matrix(elements);
         double scale = 3.0 * RelaxEquations.QCC2;
 
-        String[] names = {"J0","J1","J2"};
-        String[] namesI = {"J0","J1","J2","0"};
-        Formula formula = Formula.of("y",namesI);
+        String[] names = {"J0", "J1", "J2"};
+        String[] namesI = {"J0", "J1", "J2", "0"};
+        Formula formula = Formula.of("y", namesI);
 
         var dataFrame = DataFrame.of(matrix.toArray(), names);
-        dataFrame = dataFrame.merge(DoubleVector.of("y",rValues));
+        dataFrame = dataFrame.merge(DoubleVector.of("y", rValues));
         var model = OLS.fit(formula, dataFrame);
         var jValues = model.coefficients();
         var ttest = model.ttest();
-        for (int i=0;i<jValues.length;i++) {
+        for (int i = 0; i < jValues.length; i++) {
             jValues[i] = Math.log10(jValues[i] / scale * 1.0e9);
         }
 
@@ -76,17 +76,17 @@ public class DeuteriumMapping {
         }
         double scale = 3.0 * RelaxEquations.QCC2;
 
-        String[] names = {"J0","J1","J2","J3"};
-        String[] namesI = {"J0","J1","J2","J3","0"};
-        Formula formula = Formula.of("y",namesI);
+        String[] names = {"J0", "J1", "J2", "J3"};
+        String[] namesI = {"J0", "J1", "J2", "J3", "0"};
+        Formula formula = Formula.of("y", namesI);
 
         var dataFrame = DataFrame.of(matrix.toArray(), names);
-        dataFrame = dataFrame.merge(DoubleVector.of("y",rValues));
+        dataFrame = dataFrame.merge(DoubleVector.of("y", rValues));
         var model = OLS.fit(formula, dataFrame);
 
         Matrix.SVD svd = matrix.svd();
         var jValues = svd.solve(rValues);
-        for (int i=0;i<jValues.length;i++) {
+        for (int i = 0; i < jValues.length; i++) {
             jValues[i] = Math.log10(jValues[i] / scale);
         }
 
@@ -157,29 +157,38 @@ public class DeuteriumMapping {
         double scale = 3.0 * RelaxEquations.QCC2;
 
         String[] names = new String[nCols];
-        String[] namesI = new String[nCols+1];
-        for (int i=0;i<nCols;i++) {
+        String[] namesI = new String[nCols + 1];
+        for (int i = 0; i < nCols; i++) {
             names[i] = "J" + i;
             namesI[i] = "J" + i;
         }
         namesI[nCols] = "0";
-        Formula formula = Formula.of("y",namesI);
+        Formula formula = Formula.of("y", namesI);
 
         var dataFrame = DataFrame.of(matrix.toArray(), names);
 
-        dataFrame = dataFrame.merge(DoubleVector.of("y",rValues));
-        var model = OLS.fit(formula, dataFrame);
-        var jValues = model.coefficients();
-        var ttest = model.ttest();
-        var jErrors = new double[jValues.length];
-        var fitFields = new double[jValues.length];
+        dataFrame = dataFrame.merge(DoubleVector.of("y", rValues));
+        try {
+            var model = OLS.fit(formula, dataFrame);
+            var jValues = model.coefficients();
+            var ttest = model.ttest();
+            var jErrors = new double[jValues.length];
+            var fitFields = new double[jValues.length];
 
-        for (int i=0;i<jValues.length;i++) {
-            jValues[i] = jValues[i] / scale;
-            jErrors[i] = ttest[i][1] / scale;
-            fitFields[i] = fieldList.get(i);
+            for (int i = 0; i < jValues.length; i++) {
+                jValues[i] = jValues[i] / scale;
+                jErrors[i] = ttest[i][1] / scale;
+                fitFields[i] = fieldList.get(i);
+            }
+            var result = new double[][]{fitFields, jValues, jErrors};
+            return result;
+        } catch (IllegalArgumentException iAE) {
+            System.out.println(iAE.getMessage());
+            System.out.println(rValueList);
+            System.out.println(dataFrame);
+            return null;
         }
-        var result = new double[][]{fitFields, jValues, jErrors};
-        return result;
+
     }
 }
+

@@ -444,18 +444,37 @@ public class RelaxFit {
             }
 
             for (var value : molData.getData()) {
-                var dValue = (R1R2NOEDataValue) value;
-                RelaxEquations relaxObj = dValue.relaxObj;
-                double[] J = testModel.calc(relaxObj.wValues, resPars);
-                double r1 = relaxObj.R1(J);
-                double rEx = testModel.includesEx() ? resPars[resPars.length - 1] : 0.0;
-
-                double r2 = relaxObj.R2(J, rEx);
-                double noe = relaxObj.NOE(J);
-                dValue.randomize(newMolData, r1, r2, noe, random, 1.0);
+                if (value instanceof  R1R2NOEDataValue) {
+                    var dValue = (R1R2NOEDataValue) value;
+                    randomize(random, testModel, newMolData, dValue,resPars);
+                } else {
+                    var dValue = (DeuteriumDataValue) value;
+                    randomize(random, testModel, newMolData, dValue,resPars);
+                }
             }
         }
         return newMolDataValues;
+    }
+
+    private void randomize(Random random, MFModel testModel, MolDataValues newMolData, R1R2NOEDataValue dValue, double[] resPars) {
+        RelaxEquations relaxObj = dValue.relaxObj;
+        double[] J = testModel.calc(relaxObj.wValues, resPars);
+        double r1 = relaxObj.R1(J);
+        double rEx = testModel.includesEx() ? resPars[resPars.length - 1] : 0.0;
+        double r2 = relaxObj.R2(J, rEx);
+        double noe = relaxObj.NOE(J);
+        dValue.randomize(newMolData, r1, r2, noe, random, 1.0);
+    }
+
+    private void randomize(Random random, MFModel testModel, MolDataValues newMolData, DeuteriumDataValue dValue, double[] resPars) {
+        RelaxEquations relaxObj = dValue.relaxObj;
+        double[] J = testModel.calc(relaxObj.wValues, resPars);
+        double r1 = relaxObj.R1_D(J);
+        double rEx = testModel.includesEx() ? resPars[resPars.length - 1] : 0.0;
+        double r2 = relaxObj.R2_D(J);
+        double rAP = relaxObj.Rap_D(J);
+        double rQ = relaxObj.RQ_D(J);
+        dValue.randomize(newMolData, r1, r2, rQ, rAP, random, 1.0);
     }
 
     public double value(double[] pars, double[][] values) {
