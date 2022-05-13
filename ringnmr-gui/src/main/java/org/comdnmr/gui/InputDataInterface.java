@@ -25,11 +25,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.collections.ObservableList;
@@ -76,7 +72,7 @@ public class InputDataInterface {
     TextField chosenFileLabel = new TextField();
     TextField chosenXPK2FileLabel = new TextField();
     TextField chosenParamFileLabel = TextFields.createClearableTextField();
-    ComboBox<String> B0fieldChoice = new ComboBox();
+    ComboBox<String> B0fieldChoice = new ComboBox<>();
     TextField tempTextField = new TextField();
     ChoiceBox<String> nucChoice = new ChoiceBox<>();
     TextField pTextField = new TextField();
@@ -90,7 +86,7 @@ public class InputDataInterface {
     CheckBox ppmBox = new CheckBox("ppm to Hz");
     ChoiceBox<String> errModeChoice = new ChoiceBox<>();
     TextField errPercentTextField = new TextField();
-    ArrayList<HashMap<String, Object>> dataList = new ArrayList();
+    List<HashMap<String, Object>> dataList = new ArrayList<>();
     Button dirChoiceButton = new Button();
     Button fileChoiceButton = new Button();
     Button xpk2ChoiceButton = new Button();
@@ -108,6 +104,60 @@ public class InputDataInterface {
 
     public InputDataInterface(PyController controller) {
         pyController = controller;
+    }
+
+    public void createPeakListInterface() {
+        infoStage.setTitle("Load from Peak Lists");
+        inputInfoDisplay.getChildren().clear();
+        List<PeakList> peakLists = new ArrayList<>();
+        List<ChoiceBox<String>> choices = new ArrayList<>();
+        PeakList.peakLists().forEach(peakList -> {
+            if (peakList.hasMeasures()) {
+                Label peakListLabel = new Label(peakList.getName());
+                peakLists.add(peakList);
+                ChoiceBox<String> typeChoice = new ChoiceBox<>();
+                choices.add(typeChoice);
+                typeChoice.getItems().addAll(Arrays.asList("", "R1", "R2", "NOE","RAP","RQ"));
+                inputInfoDisplay.add(peakListLabel,0,choices.size()-1);
+                inputInfoDisplay.add(typeChoice,1,choices.size()-1);
+                typeChoice.setValue("");
+            }
+        });
+        loadButton.setOnAction(e -> loadFromPeakLists(peakLists, choices));
+        loadButton.setText("Load");
+        loadButton.setDisable(false);
+        inputInfoDisplay.add(loadButton, 1, choices.size());
+        infoStage.setScene(inputScene);
+        infoStage.show();
+    }
+
+    private void loadFromPeakLists(List<PeakList> peakLists, List<ChoiceBox<String>> choiceBoxes) {
+        for (int i = 0; i < peakLists.size(); i++) {
+            String type = choiceBoxes.get(i).getValue();
+            if (!type.isBlank()) {
+                PeakList peakList = peakLists.get(i);
+                if (peakList != null) {
+                    int peakDim = 1;
+                    String nucleus;
+                    double B0field;
+                    double temperature;
+                    DatasetBase dataset = DatasetBase.getDataset(peakList.fileName);
+                    if (dataset == null) {
+                        nucleus = peakList.getSpectralDim(0).getNucleus();
+                        B0field = peakList.getSpectralDim(0).getSf();
+                        temperature = 298.14;
+                    } else {
+                        nucleus = dataset.getNucleus(peakDim).getName();
+                        B0field = dataset.getSf(0);
+                        temperature = dataset.getTempK();
+                    }
+                    nucChoice.setValue(nucleus);
+                    B0fieldChoice.setValue(String.valueOf(B0field));
+                    tempTextField.setText(String.valueOf(temperature));
+                    loadFromPeakList(peakList, type, nucleus, B0field, temperature);
+                }
+            }
+        }
     }
 
     public void inputParameters() {
@@ -136,11 +186,10 @@ public class InputDataInterface {
             tauLabel, B1FieldLabel, nucLabel, errModeLabel, errPercentLabel, xValLabel, delayLabel, yValLabel, yamlLabel};
 
         dirChoiceButton.setText("Browse");
-        dirChoiceButton.setOnAction(e -> chooseDirectory(e));
+        dirChoiceButton.setOnAction(this::chooseDirectory);
         chosenDirLabel.setText("");
 
-//        Button fileChoiceButton = new Button();
-        fileChoiceButton.setOnAction(e -> chooseFile(e));
+        fileChoiceButton.setOnAction(this::chooseFile);
         fileChoiceButton.setText("Browse");
         chosenFileLabel.setText("");
         chosenFileLabel.setStyle("-fx-control-inner-background: red;");
@@ -154,8 +203,7 @@ public class InputDataInterface {
 
         });
 
-//        Button xpk2ChoiceButton = new Button();
-        xpk2ChoiceButton.setOnAction(e -> chooseXPK2File(e));
+        xpk2ChoiceButton.setOnAction(this::chooseXPK2File);
         xpk2ChoiceButton.setText("Browse");
         chosenXPK2FileLabel.setText("");
         chosenXPK2FileLabel.setStyle("-fx-control-inner-background: red;");
@@ -169,8 +217,7 @@ public class InputDataInterface {
 
         });
 
-//        Button paramFileChoiceButton = new Button();
-        paramFileChoiceButton.setOnAction(e -> chooseParamFile(e));
+        paramFileChoiceButton.setOnAction(this::chooseParamFile);
         paramFileChoiceButton.setText("Browse");
         chosenParamFileLabel.setText("");
         chosenParamFileLabel.setStyle("-fx-control-inner-background: red;");
@@ -220,17 +267,13 @@ public class InputDataInterface {
                 "CPMG", "CEST", "R1RHO","RAP","RQ"));
         fitModeChoice.setValue("Select");
 
-        fitModeChoice.valueProperty().addListener(x -> {
-            updateInfoInterface();
-        });
+        fitModeChoice.valueProperty().addListener(x -> updateInfoInterface());
 
         peakListChoice.getItems().clear();
         peakListChoice.getItems().add("");
-        PeakList.peakLists().stream().forEach(p -> peakListChoice.getItems().add(p.getName()));
+        PeakList.peakLists().forEach(p -> peakListChoice.getItems().add(p.getName()));
         peakListChoice.setValue("");
-        peakListChoice.valueProperty().addListener(x -> {
-            updatePeakList();
-        });
+        peakListChoice.valueProperty().addListener(x -> updatePeakList());
 
         formatChoice.getItems().clear();
         formatChoice.getItems().addAll(Arrays.asList("mpk2", "ires", "txt"));
@@ -243,7 +286,7 @@ public class InputDataInterface {
         B0fieldChoice.getItems().clear();
         B0fieldChoice.getItems().addAll(Arrays.asList("400", "475", "500", "600", "700", "750", "800", "900", "950", "1000", "1100", "1200"));
         B0fieldChoice.setValue("");
-        B0fieldChoice.itemsProperty().addListener((observable, oldValue, newValue)
+        B0fieldChoice.valueProperty().addListener((observable, oldValue, newValue)
                 -> {
             if (newValue.equals("")) {
                 tauTextField.setStyle("-fx-control-inner-background: red;");
@@ -253,29 +296,25 @@ public class InputDataInterface {
         });
         B0fieldChoice.setEditable(true);
 
-        EventHandler<ActionEvent> boxevent = new EventHandler<ActionEvent>() {
-
-            public void handle(ActionEvent e) {
-                String[] xvals = xValTextArea.getText().split("\t");
-                ArrayList<Double> fxvals = new ArrayList();
-                String xString = "";
-                if ((fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST") || fitModeChoice.getSelectionModel().getSelectedItem().equals("R1RHO"))
-                        && ppmBox.isSelected()) {
-                    for (int i = 0; i < xvals.length; i++) {
-                        fxvals.add(Double.parseDouble(xvals[i]) * Double.parseDouble(B0fieldChoice.getSelectionModel().getSelectedItem().toString()));
-                        xString += fxvals.get(i).toString() + "\t";
-                    }
-                    xValTextArea.setText(xString);
-                } else if ((fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST") || fitModeChoice.getSelectionModel().getSelectedItem().equals("R1RHO"))
-                        && !ppmBox.isSelected()) {
-                    for (int i = 0; i < xvals.length; i++) {
-                        fxvals.add(Double.parseDouble(xvals[i]) / Double.parseDouble(B0fieldChoice.getSelectionModel().getSelectedItem().toString()));
-                        xString += fxvals.get(i).toString() + "\t";
-                    }
-                    xValTextArea.setText(xString);
+        EventHandler<ActionEvent> boxevent = e -> {
+            String[] xvals = xValTextArea.getText().split("\t");
+            ArrayList<Double> fxvals = new ArrayList<>();
+            StringBuilder xString = new StringBuilder();
+            if ((fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST") || fitModeChoice.getSelectionModel().getSelectedItem().equals("R1RHO"))
+                    && ppmBox.isSelected()) {
+                for (int i = 0; i < xvals.length; i++) {
+                    fxvals.add(Double.parseDouble(xvals[i]) * Double.parseDouble(B0fieldChoice.getSelectionModel().getSelectedItem()));
+                    xString.append(fxvals.get(i).toString()).append("\t");
                 }
+                xValTextArea.setText(xString.toString());
+            } else if ((fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST") || fitModeChoice.getSelectionModel().getSelectedItem().equals("R1RHO"))
+                    && !ppmBox.isSelected()) {
+                for (int i = 0; i < xvals.length; i++) {
+                    fxvals.add(Double.parseDouble(xvals[i]) / Double.parseDouble(B0fieldChoice.getSelectionModel().getSelectedItem()));
+                    xString.append(fxvals.get(i).toString()).append("\t");
+                }
+                xValTextArea.setText(xString.toString());
             }
-
         };
 
         // set event to checkbox 
@@ -288,9 +327,7 @@ public class InputDataInterface {
         xConvChoice.getItems().addAll(Arrays.asList("identity", "tau2", "ppmtohz", "hztoppm", "calc"));
         xConvChoice.setValue("identity");
 
-        xConvChoice.valueProperty().addListener(x -> {
-            updateDelays();
-        });
+        xConvChoice.valueProperty().addListener(x -> updateDelays());
 
         yConvChoice.getItems().addAll(Arrays.asList("identity", "rate", "normalize"));
         yConvChoice.setValue("identity");
@@ -317,8 +354,6 @@ public class InputDataInterface {
         inputInfoDisplay.add(nucChoice, 1, labels.length - 7);
         inputInfoDisplay.add(errModeChoice, 1, labels.length - 6);
         inputInfoDisplay.add(errPercentTextField, 1, labels.length - 5);
-//        inputInfoDisplay.add(xValTextArea, 1, labels.length - 2, 1, 1);
-//        inputInfoDisplay.add(ppmBox, 2, labels.length - 2);
         inputInfoDisplay.add(xConvChoice, 1, labels.length - 4);
         inputInfoDisplay.add(delayBox, 1, labels.length - 3, 2, 1);
         inputInfoDisplay.add(yConvChoice, 1, labels.length - 2);
@@ -328,24 +363,20 @@ public class InputDataInterface {
         chosenXPK2FileLabel.setMaxWidth(200);
         chosenParamFileLabel.setMaxWidth(200);
 
-//        Button addButton = new Button();
-        addButton.setOnAction(e -> addInfo(e));
+        addButton.setOnAction(this::addInfo);
         addButton.setText("Add to Data List");
         inputInfoDisplay.add(addButton, 1, labels.length);
 
-//        Button clearButton = new Button();
-        clearButton.setOnAction(e -> clearDataList(e));
+        clearButton.setOnAction(this::clearDataList);
         clearButton.setText("Clear Data List");
         inputInfoDisplay.add(clearButton, 1, labels.length + 1);
 
-//        Button yamlButton = new Button();
-        yamlButton.setOnAction(e -> makeYAML(e));
+        yamlButton.setOnAction(this::makeYAML);
         yamlButton.setText("Create YAML");
         yamlButton.disableProperty().bind(yamlTextField.textProperty().isEmpty());
         inputInfoDisplay.add(yamlButton, 2, labels.length - 1);
 
-//        Button loadButton = new Button();
-        loadButton.setOnAction(e -> loadInfo(e));
+        loadButton.setOnAction(this::loadInfo);
         loadButton.setText("Load");
         inputInfoDisplay.add(loadButton, 2, labels.length + 1);
 
@@ -353,6 +384,7 @@ public class InputDataInterface {
 
         infoStage.setScene(inputScene);
         infoStage.show();
+        infoStage.toFront();
 
     }
 
@@ -366,11 +398,7 @@ public class InputDataInterface {
 
     void updateErrorMode() {
         if ((errModeChoice != null) && (errModeChoice.getValue() != null)) {
-            if (errModeChoice.getValue().equals("replicates") || errModeChoice.getValue().equals("measured")) {
-                errPercentTextField.setDisable(true);
-            } else {
-                errPercentTextField.setDisable(false);
-            }
+            errPercentTextField.setDisable(errModeChoice.getValue().equals("replicates") || errModeChoice.getValue().equals("measured"));
         }
     }
 
@@ -378,8 +406,6 @@ public class InputDataInterface {
         Button[] buttons = {fileChoiceButton, xpk2ChoiceButton, paramFileChoiceButton, addButton, clearButton, loadButton};
         TextField[] textFields = {B1TextField, tauTextField, tempTextField, pTextField,
             errPercentTextField, yamlTextField, chosenFileLabel, chosenXPK2FileLabel, chosenParamFileLabel};
-//                TextField[] textFields = {tempTextField, pTextField,
-//                    errPercentTextField, yamlTextField, chosenFileLabel, chosenXPK2FileLabel, chosenParamFileLabel};
         if (fitModeChoice.getSelectionModel().getSelectedItem() != null) {
             if (fitModeChoice.getSelectionModel().getSelectedItem().equals("Select")) {
                 for (TextField textField : textFields) {
@@ -456,9 +482,9 @@ public class InputDataInterface {
                     tauTextField.setDisable(true);
                     ppmBox.setDisable(true);
                     xConvChoice.getItems().clear();
-                    xConvChoice.getItems().addAll(Arrays.asList("identity"));
+                    xConvChoice.getItems().addAll(List.of("identity"));
                     yConvChoice.getItems().clear();
-                    yConvChoice.getItems().addAll(Arrays.asList("normalize"));
+                    yConvChoice.getItems().addAll(List.of("normalize"));
                     xConvChoice.setValue("identity");
                     yConvChoice.setValue("normalize");
                 } else if ((fitModeChoice.getSelectionModel().getSelectedItem().equals("CEST") || fitModeChoice.getSelectionModel().getSelectedItem().equals("R1RHO"))) {
@@ -573,7 +599,6 @@ public class InputDataInterface {
         String field = Arrays.asList(head.get(3)).get(sfInd);
         String nuc = Arrays.asList(head.get(4)).get(codeInd);
         String nuc1 = nuc.replaceAll("[^a-zA-Z]", "");
-        String nuc2 = nuc.replaceAll("[a-zA-Z]", "");
         nucChoice.setValue(nuc1);
         B0fieldChoice.getSelectionModel().select(field);
     }
@@ -583,8 +608,6 @@ public class InputDataInterface {
         PeakList peakList = PeakList.get(peakListChoice.getValue());
         if (peakList != null) {
             int peakDim = 1;
-            String peakListName = peakList.getName();
-            List<Number> vcpmgList = null;
             String nucleus;
             double B0field;
             double temperature;
@@ -619,6 +642,15 @@ public class InputDataInterface {
 
     void loadFromPeakList() {
         PeakList peakList = PeakList.get(peakListChoice.getValue());
+        String expMode = fitModeChoice.getValue();
+        double b0Field = Double.parseDouble(B0fieldChoice.getValue());
+        Double temperatureK = getDouble(tempTextField.getText());
+        String nucName = nucChoice.getValue();
+        loadFromPeakList(peakList, expMode, nucName, b0Field, temperatureK);
+    }
+
+    void loadFromPeakList(PeakList peakList, String expMode, String nucName, double b0Field, double temperatureK) {
+        expMode = expMode.toLowerCase();
         if (peakList != null) {
             
             MoleculeBase mol = MoleculeFactory.getActive();
@@ -636,72 +668,56 @@ public class InputDataInterface {
             DynamicsSource dynSource = new DynamicsSource(false, false, dynCreateMol, dynCreateAtom);
             String peakListName = peakList.getName();
             ExperimentSet experimentSet = new ExperimentSet(peakListName, peakListName);
-            String expMode = fitModeChoice.getValue().toLowerCase();
             experimentSet.setExpMode(expMode);
-            double[] delayCalc = {0.0, 0.0, 1.0};
-            HashMap<String, Object> errorPars = new HashMap<>();
-            Double temperatureK = getDouble(tempTextField.getText());
-            Double tau = getDouble(tauTextField.getText());
-            Double B1field = getDouble(B1TextField.getText());
 
             Experiment expData;
             switch (expMode) {
+                case "rq":
+                case "rap":
                 case "r1":
                     expData = new T1Experiment(experimentSet, peakList.getName(),
-                            nucChoice.getValue(), Double.parseDouble(B0fieldChoice.getValue()),
-                            temperatureK);
+                            nucName, b0Field, temperatureK);
                     break;
                 case "r2":
                     expData = new T2Experiment(experimentSet, peakList.getName(),
-                            nucChoice.getValue(), Double.parseDouble(B0fieldChoice.getValue()),
-                            temperatureK);
-                    break;
-                case "rq":
-                case "rap":
-                    expData = new T1Experiment(experimentSet, peakList.getName(),
-                            nucChoice.getValue(), Double.parseDouble(B0fieldChoice.getValue()),
-                            temperatureK);
+                            nucName, b0Field, temperatureK);
                     break;
                 case "noe":
                     expData = new NOEExperiment(experimentSet, peakList.getName(),
-                            nucChoice.getValue(), Double.parseDouble(B0fieldChoice.getValue()),
-                            temperatureK);
+                            nucName, b0Field, temperatureK);
                     break;
                 default:
                     expData = new Experiment(experimentSet, peakList.getName(),
-                            nucChoice.getValue(), Double.parseDouble(B0fieldChoice.getValue()),
-                            temperatureK, expMode);
+                            nucName, b0Field, temperatureK, expMode);
             }
-//            tau, null,
-//                    fitModeChoice.getValue(),
-//                    errorPars, delayCalc, B1field);
 
             try {
+                String xConv = xConvChoice.getValue() == null ? "identity" :xConvChoice.getValue();
+                String yConv = yConvChoice.getValue() == null ? "identity" :yConvChoice.getValue();
                 DataIO.loadFromPeakList(peakList, expData, experimentSet,
-                        xConvChoice.getValue(), yConvChoice.getValue(), dynSource);
-                if (experimentSet != null) {
-                    ResidueChart reschartNode = PyController.mainController.getActiveChart();
-                    if (reschartNode == null) {
-                        reschartNode = PyController.mainController.addChart();
+                        xConv, yConv, dynSource);
+                ResidueChart reschartNode = PyController.mainController.getActiveChart();
+                if (reschartNode == null) {
+                    reschartNode = PyController.mainController.addChart();
 
-                    }
-                    ChartUtil.addResidueProperty(experimentSet.getName(), experimentSet);
-                    String parName = "Kex";
-                    if (expMode.equals("r1") || expMode.equals("r2") || expMode.equals("rq") || expMode.equals("rap")) {
-                        parName = "R";
-                    } else if (experimentSet.getExpMode().equals("noe")) {
-                        parName = "NOE";
-                    }
-                    ObservableList<DataSeries> data = ChartUtil.getParMapData(experimentSet.getName(), "best", "0:0:0", parName);
-                    PyController.mainController.setCurrentExperimentSet(experimentSet);
-                    PyController.mainController.makeAxisMenu();
-                    PyController.mainController.setYAxisType(experimentSet.getExpMode(), experimentSet.getName(),
-                            "best", "0:0:0", parName, true);
-                    reschartNode.setResProps(experimentSet);
-                    PyController.mainController.setControls();
-                    if (expMode.equalsIgnoreCase("noe")) {
-                        DataIO.addRelaxationFitResults(experimentSet, RelaxationData.relaxTypes.NOE);
-                    }
+                }
+                reschartNode.getData().clear();
+                ChartUtil.addResidueProperty(experimentSet.getName(), experimentSet);
+                String parName = "Kex";
+                if (expMode.equals("r1") || expMode.equals("r2") || expMode.equals("rq") || expMode.equals("rap")) {
+                    parName = "R";
+                } else if (experimentSet.getExpMode().equals("noe")) {
+                    parName = "NOE";
+                }
+                ObservableList<DataSeries> data = ChartUtil.getParMapData(experimentSet.getName(), "best", "0:0:0", parName);
+                PyController.mainController.setCurrentExperimentSet(experimentSet);
+                PyController.mainController.makeAxisMenu();
+                PyController.mainController.setYAxisType(experimentSet.getExpMode(), experimentSet.getName(),
+                        "best", "0:0:0", parName, true);
+                reschartNode.setResProps(experimentSet);
+                PyController.mainController.setControls();
+                if (expMode.equalsIgnoreCase("noe")) {
+                    DataIO.addRelaxationFitResults(experimentSet, RelaxationData.relaxTypes.NOE);
                 }
             } catch (IllegalArgumentException iAE) {
                 GUIUtils.warn("Load from peak list", iAE.getMessage());
@@ -733,14 +749,14 @@ public class InputDataInterface {
     }
 
     public void addInfo() {
-        HashMap hm = new HashMap();
+        HashMap<String, Object> hm = new HashMap<>();
         hm.put("file", chosenFileLabel.getText());
 
         hm.put("paramFile", chosenParamFileLabel.getText());
         hm.put("temperature", Double.parseDouble(tempTextField.getText()));
         hm.put("xconv", xConvChoice.getSelectionModel().getSelectedItem());
         hm.put("yconv", yConvChoice.getSelectionModel().getSelectedItem());
-        hm.put("B0", Double.parseDouble(B0fieldChoice.getSelectionModel().getSelectedItem().toString()));
+        hm.put("B0", Double.parseDouble(B0fieldChoice.getSelectionModel().getSelectedItem()));
         hm.put("nucleus", nucChoice.getSelectionModel().getSelectedItem().replaceAll("[^a-zA-Z]", ""));
         if (!tauTextField.isDisabled()) {
             hm.put("tau", Double.parseDouble(tauTextField.getText()));
@@ -751,12 +767,12 @@ public class InputDataInterface {
         if (!B1TextField.isDisabled()) {
             hm.put("B1", Double.parseDouble(B1TextField.getText()));
         }
-        HashMap hmde = new HashMap();
+        HashMap<String, java.io.Serializable> hmde = new HashMap<>();
         hmde.put("mode", errModeChoice.getValue());
         if (!errModeChoice.getValue().equals("replicates") && !errModeChoice.getValue().equals("measured")) {
             hmde.put("value", Double.parseDouble(errPercentTextField.getText()));
         }
-        HashMap hmdd = new HashMap();
+        HashMap<String, Double> hmdd = new HashMap<String, Double>();
         if (!delayC0TextField.getText().equals("") && !delayDeltaTextField.getText().equals("") && !delayDelta0TextField.getText().equals("")) {
             hmdd.put("c0", Double.parseDouble(delayC0TextField.getText()));
             hmdd.put("delta0", Double.parseDouble(delayDelta0TextField.getText()));
@@ -770,7 +786,7 @@ public class InputDataInterface {
 
         String[] xvals = xValTextArea.getText().trim().split("\t");
         if (xvals.length > 0) {
-            ArrayList<Double> fxvals = new ArrayList();
+            ArrayList<Double> fxvals = new ArrayList<>();
             try {
                 for (String xval : xvals) {
                     fxvals.add(Double.parseDouble(xval));
@@ -781,11 +797,6 @@ public class InputDataInterface {
             hm.put("vcpmg", fxvals);
         }
         dataList.add(hm);
-//        String fileTail = chosenFileLabel.getText().substring(0, chosenFileLabel.getText().lastIndexOf('.'));
-//        yamlTextField.setText(fileTail + ".yaml");
-//        for (int i=0; i<dataList.size(); i++) {
-//            System.out.println("dataList " + i + " " + dataList.get(i));
-//        }
     }
 
     public void makeYAML(ActionEvent event) {
@@ -799,14 +810,14 @@ public class InputDataInterface {
     public void makeYAML(List data) {
         HashMap hm1 = new HashMap();
         HashMap hm2 = new HashMap();
-        ArrayList<HashMap<String, Object>> dataHmList = new ArrayList();
+        List<HashMap<String, Object>> dataHmList = new ArrayList<>();
 
-        for (int i = 0; i < data.size(); i++) {
-            HashMap hmdf = (HashMap) data.get(i);
+        for (Object datum : data) {
+            HashMap hmdf = (HashMap) datum;
             HashMap hmd = new HashMap(hmdf);
 
             String paramFile = (String) hmdf.get("paramFile");
-            String paramFileName = paramFile.substring(paramFile.lastIndexOf("/") + 1, paramFile.length());
+            String paramFileName = paramFile.substring(paramFile.lastIndexOf("/") + 1);
             hm2.put("mode", hmdf.get("fitmode"));
             if (!paramFileName.equals("")) {
                 hm2.put("file", paramFileName);
@@ -866,7 +877,7 @@ public class InputDataInterface {
         File projectDirFile = new File(chosenDirLabel.getText().trim());
         dirPath = projectDirFile.toPath();
 
-        ExperimentSet resProp = null;
+        ExperimentSet resProp;
         String expMode = fitModeChoice.getSelectionModel().getSelectedItem().toLowerCase();
         resProp = new ExperimentSet(projectName, projectDirFile.toString());
         expMode = expMode.toLowerCase();

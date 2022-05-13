@@ -5,12 +5,12 @@
     <parent>
         <groupId>org.comdnmr</groupId>
         <artifactId>ringnmr-parent</artifactId>
-        <version>1.10</version>
+        <version>1.11</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>ringnmr</artifactId>
-    <version>1.10</version>
+    <version>1.11</version>
     <name>ringnmr</name>
     <packaging>jar</packaging>
 
@@ -37,7 +37,7 @@
         <dependency>
             <groupId>org.nmrfx</groupId>
             <artifactId>nmrfx-core</artifactId>
-            <version>11.2.4</version>
+            <version>11.2.4-a</version>
             <scope>compile</scope>
         </dependency>
               <dependency>
@@ -74,17 +74,7 @@
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
-            <artifactId>javafx-graphics</artifactId>
-            <version>11</version>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-fxml</artifactId>
-            <version>11</version>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-web</artifactId>
+            <artifactId>javafx-base</artifactId>
             <version>11</version>
         </dependency>
         <dependency>

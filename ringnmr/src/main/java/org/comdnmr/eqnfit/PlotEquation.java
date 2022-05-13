@@ -23,6 +23,7 @@
 package org.comdnmr.eqnfit;
 
 import org.comdnmr.fit.ResidueFitter;
+import org.comdnmr.modelfree.models.MFModelIso;
 
 /**
  *
@@ -83,10 +84,21 @@ public class PlotEquation {
     }
 
     public double calculate(double[] xValue, double field) {
-        EquationType equationType = ResidueFitter.getEquationType(expType, name);
-        int[][] map = equationType.makeMap(1);
+        if (expType.equals("D1f")) {
+            return calculateSpectralDensity(xValue, field);
+        } else {
+            EquationType equationType = ResidueFitter.getEquationType(expType, name);
+            int[][] map = equationType.makeMap(1);
+            double y = equationType.calculate(pars, map[0], xValue, 0, field);
+            return y;
+        }
+    }
 
-        double y = equationType.calculate(pars, map[0], xValue, 0, field);
+    private double calculateSpectralDensity(double[] xValue, double field) {
+        var model = MFModelIso.buildModel("D1f",true,0.0,0.0,false);
+        double[] omegas = {xValue[0] * 1.0e9};
+        double[] specDens = model.calc(omegas, pars);
+        double y = Math.log10(specDens[0] * 1.0e9);
         return y;
     }
 
@@ -101,21 +113,29 @@ public class PlotEquation {
     }
 
     public double getMinX() {
-        EquationType equationType = ResidueFitter.getEquationType(expType, name);
-        if (equationType == null) {
-            System.out.println(expType + " " + name);
+        if (expType.equals("D1f")) {
             return 0.0;
+        } else {
+            EquationType equationType = ResidueFitter.getEquationType(expType, name);
+            if (equationType == null) {
+                System.out.println(expType + " " + name);
+                return 0.0;
+            }
+            return equationType.getMinX();
         }
-        return equationType.getMinX();
     }
 
     public double getMaxX() {
-        EquationType equationType = ResidueFitter.getEquationType(expType, name);
-        if (equationType == null) {
-            System.out.println(expType + " " + name);
-            return 0.0;
+        if (expType.equals("D1f")) {
+            return 2.0;
+        } else {
+            EquationType equationType = ResidueFitter.getEquationType(expType, name);
+            if (equationType == null) {
+                System.out.println(expType + " " + name);
+                return 0.0;
+            }
+            return equationType.getMaxX();
         }
-        return equationType.getMaxX();
     }
 
     @Override

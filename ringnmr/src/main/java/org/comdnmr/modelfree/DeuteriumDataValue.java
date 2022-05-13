@@ -1,5 +1,7 @@
 package org.comdnmr.modelfree;
 
+import java.util.Random;
+
 public class DeuteriumDataValue extends RelaxDataValue {
     final double rQ;
     final double rQError;
@@ -16,4 +18,16 @@ public class DeuteriumDataValue extends RelaxDataValue {
         this.rQ = rQ;
         this.rQError = rQError;
     }
+
+    public void randomize(MolDataValues molData, double r1, double r2,
+                          double rQ, double rAP, Random random, double scale) {
+        double newR1 = r1 + random.nextGaussian() * scale * R1err;
+        double newR2 = r2 + random.nextGaussian() * scale * R2err;
+        double newRQ = rQ + random.nextGaussian() * scale * rQError;
+        double newRAP = rAP + random.nextGaussian() * scale * rAPError;
+        RelaxDataValue newValue = new DeuteriumDataValue(molData, newR1, R1err,
+                newR2, R2err, newRQ, rQError, newRAP, rAPError, relaxObj);
+        molData.addData(newValue);
+    }
+
 }

@@ -30,6 +30,7 @@
                                 <items>
                                     <MenuItem text="Project File..." onAction="#loadParameterFile" fx:id="loadMenuItem"/>
                                     <MenuItem text="Setup Parameters..." onAction="#inputParameters" fx:id="inputMenuItem"/>
+                                    <MenuItem text="Load from peak lists..." onAction="#loadFromPeakLists"/>
                                     <MenuItem text="Relaxation Table..." onAction="#loadRelaxValues" />
                                     <MenuItem text="Secondary Structure..." onAction="#loadSecondaryStructure" fx:id="loadSSMenuItem"/>
                                     <MenuItem text="XY Chart  Data..." onAction="#loadSimData"/>
@@ -88,7 +89,8 @@
                             <MenuItem text="New Chart" onAction="#addChart" fx:id="addChart"/>
                             <MenuItem text="Remove Active Chart" onAction="#removeChart" fx:id="removeChart"/>
                             <MenuItem text="Clear Active Chart" onAction="#clearChart" fx:id="clearChart"/>
-                            <Menu text="Add Data" fx:id="axisMenu"/>
+                            <Menu text="Add Experimental Data" fx:id="experimentalDataAxisMenu"/>
+                            <Menu text="Add Molecule Data" fx:id="moleculeDataAxisMenu"/>
                             <Menu text="Groups">
                                 <items>
                                     <MenuItem text="T1/T2/NOE" onAction="#showT1T2NoeData"/>

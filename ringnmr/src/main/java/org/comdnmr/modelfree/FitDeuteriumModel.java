@@ -14,12 +14,6 @@ import org.nmrfx.chemistry.relax.SpectralDensity;
 import java.util.*;
 
 public class FitDeuteriumModel extends FitModel {
-    boolean fitTau = true;
-    boolean fitJ = true;
-    boolean fitExchange = false;
-    double tauFraction = 0.50;
-    double lambda = 0.0;
-    int nReplicates = 0;
 
     public static Map<String, MolDataValues> getData(boolean requireCoords) {
         Map<String, MolDataValues> molDataValues = new HashMap<>();
@@ -180,7 +174,6 @@ public class FitDeuteriumModel extends FitModel {
         double lowestAIC = Double.MAX_VALUE;
         boolean localFitTau = fitTau;
         double localTauFraction = tauFraction;
-        double tau = 12.5;
         for (var modelName : modelNames) {
 
             MFModelIso model = MFModelIso.buildModel(modelName,
@@ -188,7 +181,7 @@ public class FitDeuteriumModel extends FitModel {
 
             resData.setTestModel(model);
             Score score = tryModel(molDataRes, model, localTauFraction, localFitTau, random);
-            if (score.aic() < lowestAIC) {
+            if ((score != null) && (score.aic() < lowestAIC)) {
                 lowestAIC = score.aic();
                 bestModel = model;
                 bestScore = score;
@@ -237,7 +230,7 @@ public class FitDeuteriumModel extends FitModel {
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setRelaxData(molDataRes);
         relaxFit.setLambda(0.0);
-        relaxFit.setFitJ(fitJ);
+        relaxFit.setFitJ(true);
         model.setTauFraction(localTauFraction);
         double[] start = model.getStart();
         double[] lower = model.getLower();
@@ -253,23 +246,29 @@ public class FitDeuteriumModel extends FitModel {
         int nTries = 3;
         PointValuePair best = null;
         for (int i = 0; i < nTries; i++) {
-            PointValuePair fitResult = relaxFit.fitResidueToModel(start, lower, upper);
-            System.out.println(i + " try " + fitResult.getValue());
-            if ((i == 0) || (fitResult.getValue() < best.getValue())) {
-                best = fitResult;
+            try {
+                PointValuePair fitResult = relaxFit.fitResidueToModel(start, lower, upper);
+                if ((i == 0) || (fitResult.getValue() < best.getValue())) {
+                    best = fitResult;
+                }
+            } catch(Exception iaE) {
+                System.out.println(iaE.getMessage());
             }
             for (int j = 0; j < start.length; j++) {
                 start[j] = keepStart[j] + random.nextGaussian() * 0.1 * (upper[j] - lower[j]);
             }
         }
-        var score = relaxFit.score(best.getPoint(), true);
-        System.out.println(score.rms() + " " + score.value() + " " + score.complexity() + " " + score.parsOK());
-        System.out.print("Pars result: ");
-        for (var d : score.getPars()) {
-            System.out.print(d + " ");
+        if (best != null) {
+            var score = relaxFit.score(best.getPoint(), true);
+            System.out.println(score.rms() + " " + score.value() + " " + score.complexity() + " " + score.parsOK());
+            System.out.print("Pars result: ");
+            for (var d : score.getPars()) {
+                System.out.print(d + " ");
+            }
+            System.out.println();
+            return score;
         }
-        System.out.println();
-        return score;
+        return null;
     }
 
     double[][] replicates(Map<String, MolDataValues> molDataRes,
