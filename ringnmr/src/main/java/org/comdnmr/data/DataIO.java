@@ -1123,7 +1123,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
 
     }
 
-    public static void processYAMLDataSections(ExperimentSet experimentSet, Path dirPath, String expMode, ArrayList<HashMap<String, Object>> dataList) throws IOException {
+    public static void processYAMLDataSections(ExperimentSet experimentSet, Path dirPath, String expMode, List<HashMap<String, Object>> dataList) throws IOException {
         for (HashMap<String, Object> dataMap3 : dataList) {
             Double temperature = getDoubleValue(dataMap3, "temperature", null);
             if (temperature != null) {
