@@ -5,12 +5,12 @@
     <parent>
         <groupId>org.comdnmr</groupId>
         <artifactId>ringnmr-parent</artifactId>
-        <version>1.11</version>
+        <version>1.12</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>ringnmr</artifactId>
-    <version>1.11</version>
+    <version>1.12</version>
     <name>ringnmr</name>
     <packaging>jar</packaging>
 
