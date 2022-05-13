@@ -276,10 +276,20 @@ public class FitDeuteriumModel extends FitModel {
                           boolean localFitTau, double[] pars, Random random) {
         double[][] repData = new double[pars.length][nReplicates];
         for (int iRep = 0; iRep < nReplicates; iRep++) {
-            Score score2 = fitReplicate(molDataRes, bestModel, localTauFraction, localFitTau, pars, random);
-            double[] repPars = score2.getPars();
-            for (int iPar = 0; iPar < pars.length; iPar++) {
-                repData[iPar][iRep] = repPars[iPar];
+            boolean ok = false;
+            for (int jTry = 0; jTry < 5; jTry++) {
+                Score score2 = fitReplicate(molDataRes, bestModel, localTauFraction, localFitTau, pars, random);
+                if (score2 != null) {
+                    double[] repPars = score2.getPars();
+                    for (int iPar = 0; iPar < pars.length; iPar++) {
+                        repData[iPar][iRep] = repPars[iPar];
+                    }
+                    ok = true;
+                    break;
+                }
+            }
+            if (!ok) {
+                return null;
             }
         }
         return repData;
@@ -298,7 +308,11 @@ public class FitDeuteriumModel extends FitModel {
         double[] lower = model.getLower();
         double[] upper = model.getUpper();
         PointValuePair fitResult = relaxFit.fitResidueToModel(pars, lower, upper);
-        return relaxFit.score(fitResult.getPoint(), true);
+        if (fitResult == null) {
+            return null;
+        } else {
+            return relaxFit.score(fitResult.getPoint(), true);
+        }
     }
 
 }
