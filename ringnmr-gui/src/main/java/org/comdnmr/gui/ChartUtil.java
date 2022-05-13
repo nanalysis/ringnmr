@@ -555,15 +555,16 @@ public class ChartUtil {
             for (int i=0;i<spectralDensities[0].length;i++) {
                 double x = Math.abs(spectralDensities[0][i] * 1.0e-9);
                 double y = spectralDensities[1][i];
-                double err = spectralDensities[2][i];
-                double yLow = y - err;
-                double yHigh = y + err;
-                double yLog = Math.log10(y *1.0e9);
-                double yLogLow = Math.log10(yLow *1.0e9);
-                double yLogHigh = Math.log10(yHigh *1.0e9);
-                XYEValue xyeValue = new XYEValue(x, yLog, (yLogHigh-yLogLow) / 2.0);
-                System.out.println(x + " " + y + " " + err + " " + yLog + " " + yLogLow + " " + yLogHigh);
-                series.add(xyeValue);
+                if (y > 0.0) {
+                    double err = spectralDensities[2][i];
+                    double yLow = y - err;
+                    double yHigh = y + err;
+                    double yLog = Math.log10(y * 1.0e9);
+                    double yLogLow = Math.log10(yLow * 1.0e9);
+                    double yLogHigh = Math.log10(yHigh * 1.0e9);
+                    XYEValue xyeValue = new XYEValue(x, yLog, (yLogHigh - yLogLow) / 2.0);
+                    series.add(xyeValue);
+                }
             }
         }
         return data;
