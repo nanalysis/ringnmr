@@ -63,4 +63,12 @@ public class Score {
         int k = nPars;
         return aic() + 2.0 * k * (k + 1) / (nValues - k - 1.0);
     }
+
+    public double chiSq() {
+        return rss;
+    }
+
+    public double reducedChiSq() {
+        return rss / (nValues - nPars);
+    }
 }
