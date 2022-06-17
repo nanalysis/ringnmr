@@ -57,6 +57,7 @@ import org.comdnmr.modelfree.CorrelationTime;
 import org.comdnmr.modelfree.FitDeuteriumModel;
 import org.comdnmr.modelfree.FitModel;
 import org.comdnmr.modelfree.FitR1R2NOEModel;
+import org.comdnmr.modelfree.models.MFModelIso;
 import org.comdnmr.util.CoMDOptions;
 import org.comdnmr.util.CoMDPreferences;
 import org.comdnmr.util.ProcessingStatus;
@@ -2330,21 +2331,25 @@ public class PyController implements Initializable {
                 Map<String, SpectralDensity> spectralDensityMap = atom.getSpectralDensity();
                 allData.addAll(ChartUtil.getSpectralDensityData(spectralDensityMap));
                 var orderPars = atom.getOrderPars();
-                for (var key: orderPars.keySet()) {
-                    var orderPar = orderPars.get(key);
-                    String[] parNames = {"Tau_e", "S2", "Tau_f"};
-                    double[] pars = new double[parNames.length];
-                    double[] errs = new double[parNames.length];
-                    int iPar = 0;
-                    for (var parName:parNames) {
-                        pars[iPar] = orderPar.getValue(parName);
-                        Double err = orderPar.getError(parName);
-                        errs[iPar] = err == null ? 0.0 : err;
-                        iPar++;
+                if (orderPars != null) {
+                    for (var key : orderPars.keySet()) {
+                        var orderPar = orderPars.get(key);
+                        String modelName = orderPar.getModel();
+                        var model = MFModelIso.buildModel(modelName,true,0.0,0.0,false);
+                        var parNames = model.getParNames();
+                        double[] pars = new double[parNames.size()];
+                        double[] errs = new double[parNames.size()];
+                        int iPar = 0;
+                        for (var parName : parNames) {
+                            pars[iPar] = orderPar.getValue(parName);
+                            Double err = orderPar.getError(parName);
+                            errs[iPar] = err == null ? 0.0 : err;
+                            iPar++;
+                        }
+                        double[] extras = new double[1];
+                        var guiPlotEquation = new GUIPlotEquation(modelName, "spectralDensity", pars, errs, extras);
+                        equations.add(guiPlotEquation);
                     }
-                    double[] extras = new double[1];
-                    var guiPlotEquation =  new GUIPlotEquation("D1f", "spectralDensity", pars, errs, extras);
-                    equations.add(guiPlotEquation);
                 }
             }
 
