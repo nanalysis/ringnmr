@@ -1431,7 +1431,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         switch (type) {
             case "pdb":
                 PDBFile pdb = new PDBFile();
-                MoleculeBase mol = pdb.read(fileName);
+                MoleculeBase mol = pdb.read(fileName, false);
                 mol.updateAtomArray();
                 break;
             case "star":
