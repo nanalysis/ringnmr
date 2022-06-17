@@ -416,7 +416,7 @@ public class ChartUtil {
             double x = resNum;
             Double errUp = null;
             Double y = value.getValue(parName);
-            if (y == null) {
+            if ((y == null) || !Double.isFinite(y)) {
                 continue;
             }
             errUp = value.getError(parName);
@@ -555,8 +555,8 @@ public class ChartUtil {
             for (int i=0;i<spectralDensities[0].length;i++) {
                 double x = Math.abs(spectralDensities[0][i] * 1.0e-9);
                 double y = spectralDensities[1][i];
-                if (y > 0.0) {
-                    double err = spectralDensities[2][i];
+                double err = spectralDensities[2][i];
+                if (y > err) {
                     double yLow = y - err;
                     double yHigh = y + err;
                     double yLog = Math.log10(y * 1.0e9);
