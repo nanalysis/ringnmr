@@ -358,11 +358,12 @@ public class RelaxFit {
 //            System.out.printf("%3d %11.5g %11.5g %11.5g %11.5g %11.5g\n", i, jValues[0][i], jCalc[i], jValues[1][i], jErr, sumSq);
         }
         sumComplexity = testModel.getComplexity();
-        return new double[]{sumSq, sumComplexity};
+        return new double[]{sumSq, sumComplexity, jCalc.length};
     }
     double[] calcDeltaSqR(MolDataValues molData, double[] resPars, MFModel testModel) {
         double sumComplexity = 0.0;
         double sumSq = 0.0;
+        int nPar = 0;
         for (RelaxDataValue value : molData.getData()) {
             R1R2NOEDataValue dValue  = (R1R2NOEDataValue) value;
             RelaxEquations relaxObj = dValue.relaxObj;
@@ -375,8 +376,9 @@ public class RelaxFit {
             double noe = relaxObj.NOE(J);
             double delta2 = dValue.score2(r1, r2, noe);
             sumSq += delta2;
+            nPar += 3;
         }
-        return new double[]{sumSq, sumComplexity};
+        return new double[]{sumSq, sumComplexity, nPar};
     }
 
     double[] calcDeltaSq(MolDataValues molData, double[] resPars, MFModel testModel) {
@@ -404,11 +406,11 @@ public class RelaxFit {
             } else {
                 resPars = pars;
             }
-            double[] resReult = calcDeltaSq(molData, resPars, testModel);
-            sumSq += resReult[0];
-            sumComplexity += resReult[1];
+            double[] resResult = calcDeltaSq(molData, resPars, testModel);
+            sumSq += resResult[0];
+            sumComplexity += resResult[1];
             nComplex += molData.getData().size();
-            n += 3;
+            n += (int) Math.round(resResult[2]);
 
             if (!testModel.checkParConstraints()) {
                 parsOK = false;
