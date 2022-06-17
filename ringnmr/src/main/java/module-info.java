@@ -4,6 +4,7 @@ module org.comdnmr {
     exports org.comdnmr.modelfree;
     exports org.comdnmr.util;
     exports org.comdnmr.eqnfit;
+    exports org.comdnmr.modelfree.models;
     requires commons.math3;
     requires smile.data;
     requires smile.core;
