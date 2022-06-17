@@ -111,11 +111,11 @@ public class DeuteriumMapping {
             boolean matchDouble = false;
             int jField = 0;
             for (var testField : fieldList) {
-                if (Math.abs(field - testField) < 1.0) {
+                if (Math.abs((field - testField)/testField) < 0.01) {
                     matchSingle = true;
                     singleColumns[iField] = jField;
                 }
-                if (Math.abs(field * 2.0 - testField) < 1.0) {
+                if (Math.abs((field * 2.0 - testField) / testField) < 0.01) {
                     matchDouble = true;
                     doubleColumns[iField] = jField;
                 }
