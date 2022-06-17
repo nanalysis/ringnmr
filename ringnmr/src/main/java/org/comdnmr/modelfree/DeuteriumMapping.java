@@ -93,7 +93,7 @@ public class DeuteriumMapping {
         return jValues;
     }
 
-    public static double[][] jointMapping(List<Double> rValueList, List<Double> fields) {
+    public static double[][] jointMapping(List<Double> rValueList, List<Double> errValueList, List<Double> fields) {
         int nRows = rValueList.size();
         double[] rValues = rValueList.stream()
                 .mapToDouble(Double::doubleValue)
@@ -164,10 +164,18 @@ public class DeuteriumMapping {
         }
         namesI[nCols] = "0";
         Formula formula = Formula.of("y", namesI);
+        for (int i=0;i<nRows;i++) {
+            double errScale = 1.0 / errValueList.get(i);
+            for (int j = 0;j<nCols;j++) {
+                matrix.mul(i, j, errScale);
+            }
+            rValues[i] *= errScale;
+        }
 
         var dataFrame = DataFrame.of(matrix.toArray(), names);
 
         dataFrame = dataFrame.merge(DoubleVector.of("y", rValues));
+
         try {
             var model = OLS.fit(formula, dataFrame);
             var jValues = model.coefficients();

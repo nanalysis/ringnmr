@@ -128,6 +128,7 @@ public class FitDeuteriumModel extends FitModel {
             if (!resData.getData().isEmpty()) {
                 molDataRes.put(key, resData);
                 List<Double> rValues = new ArrayList<>();
+                List<Double> errValues = new ArrayList<>();
                 List<Double> fields = new ArrayList<>();
                 for (var value : resData.dataValues) {
                     var dValue = (DeuteriumDataValue) value;
@@ -135,9 +136,13 @@ public class FitDeuteriumModel extends FitModel {
                     rValues.add(dValue.R2);
                     rValues.add(dValue.rQ);
                     rValues.add(dValue.rAP);
+                    errValues.add(dValue.R1err);
+                    errValues.add(dValue.R2err);
+                    errValues.add(dValue.rQError);
+                    errValues.add(dValue.rAPError);
                     fields.add(dValue.relaxObj.getSF());
                 }
-                double[][] mappingResult = DeuteriumMapping.jointMapping(rValues, fields);
+                double[][] mappingResult = DeuteriumMapping.jointMapping(rValues, errValues, fields);
                 for (int i = 0; i < mappingResult[0].length; i++) {
                     double field = mappingResult[0][i];
                     double jValue = mappingResult[1][i];
