@@ -2286,6 +2286,7 @@ public class PyController implements Initializable {
         List<ExperimentData> experimentalDataSets = new ArrayList<>();
         List<int[]> allStates = new ArrayList<>();
         boolean calcScale = scalePlot.isSelected();
+        List<ParValueInterface> parValues = null;
         if (chartInfo.hasExperiments() && chartInfo.hasResidues()) {
             int iSeries = 0;
             for (Experiment expData : ((ExperimentSet) chartInfo.getExperiments()).getExperimentData()) {
@@ -2331,6 +2332,7 @@ public class PyController implements Initializable {
                 Map<String, SpectralDensity> spectralDensityMap = atom.getSpectralDensity();
                 allData.addAll(ChartUtil.getSpectralDensityData(spectralDensityMap));
                 var orderPars = atom.getOrderPars();
+                parValues = new ArrayList<>();
                 if (orderPars != null) {
                     for (var key : orderPars.keySet()) {
                         var orderPar = orderPars.get(key);
@@ -2344,6 +2346,8 @@ public class PyController implements Initializable {
                             pars[iPar] = orderPar.getValue(parName);
                             Double err = orderPar.getError(parName);
                             errs[iPar] = err == null ? 0.0 : err;
+                            ParValue parValue = new ParValue(resonanceSource,"", parName,pars[iPar], errs[iPar]);
+                            parValues.add(parValue);
                             iPar++;
                         }
                         double[] extras = new double[1];
@@ -2358,7 +2362,11 @@ public class PyController implements Initializable {
         updateTable(experimentalDataSets);
         if (chartInfo.hasResidues()) {
             setControls();
-            updateTableWithPars(chartInfo);
+            if (parValues != null) {
+                updateTableWithPars(parValues);
+            } else {
+                updateTableWithPars(chartInfo);
+            }
             updateEquation(chartInfo.mapName, chartInfo.getResidues(), chartInfo.equationName);
         }
         plotData.setData(allData);
