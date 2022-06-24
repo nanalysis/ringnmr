@@ -111,7 +111,7 @@ public class DeuteriumMapping {
             boolean matchDouble = false;
             int jField = 0;
             for (var testField : fieldList) {
-                if (Math.abs((field - testField)/testField) < 0.01) {
+                if (Math.abs((field - testField) / testField) < 0.01) {
                     matchSingle = true;
                     singleColumns[iField] = jField;
                 }
@@ -164,9 +164,9 @@ public class DeuteriumMapping {
         }
         namesI[nCols] = "0";
         Formula formula = Formula.of("y", namesI);
-        for (int i=0;i<nRows;i++) {
+        for (int i = 0; i < nRows; i++) {
             double errScale = 1.0 / errValueList.get(i);
-            for (int j = 0;j<nCols;j++) {
+            for (int j = 0; j < nCols; j++) {
                 matrix.mul(i, j, errScale);
             }
             rValues[i] *= errScale;
@@ -188,7 +188,22 @@ public class DeuteriumMapping {
                 jErrors[i] = ttest[i][1] / scale;
                 fitFields[i] = fieldList.get(i);
             }
-            var result = new double[][]{fitFields, jValues, jErrors};
+            double[][] jValuesOrig = new double[3][nFreqs * 3];
+            for (int iFreq = 0; iFreq < nFreqs; iFreq++) {
+                int singleColumn = singleColumns[iFreq];
+                int doubleColumn = doubleColumns[iFreq];
+                jValuesOrig[0][iFreq * 3 + 0] = fitFields[0];
+                jValuesOrig[0][iFreq * 3 + 1] = fitFields[singleColumn];
+                jValuesOrig[0][iFreq * 3 + 2] = fitFields[doubleColumn];
+                jValuesOrig[1][iFreq * 3 + 0] = jValues[0];
+                jValuesOrig[1][iFreq * 3 + 1] = jValues[singleColumn];
+                jValuesOrig[1][iFreq * 3 + 2] = jValues[doubleColumn];
+                jValuesOrig[2][iFreq * 3 + 0] = jErrors[0];
+                jValuesOrig[2][iFreq * 3 + 1] = jErrors[singleColumn];
+                jValuesOrig[2][iFreq * 3 + 2] = jErrors[doubleColumn];
+            }
+
+            var result = new double[][]{fitFields, jValues, jErrors, jValuesOrig[0], jValuesOrig[1], jValuesOrig[2]};
             return result;
         } catch (IllegalArgumentException iAE) {
             System.out.println(iAE.getMessage());
