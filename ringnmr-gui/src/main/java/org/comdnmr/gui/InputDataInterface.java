@@ -694,6 +694,9 @@ public class InputDataInterface {
             try {
                 String xConv = xConvChoice.getValue() == null ? "identity" :xConvChoice.getValue();
                 String yConv = yConvChoice.getValue() == null ? "identity" :yConvChoice.getValue();
+                if (expMode.equalsIgnoreCase("noe")) {
+                    yConv = "normalize";
+                }
                 DataIO.loadFromPeakList(peakList, expData, experimentSet,
                         xConv, yConv, dynSource);
                 ResidueChart reschartNode = PyController.mainController.getActiveChart();
@@ -704,9 +707,10 @@ public class InputDataInterface {
                 reschartNode.getData().clear();
                 ChartUtil.addResidueProperty(experimentSet.getName(), experimentSet);
                 String parName = "Kex";
-                if (expMode.equals("r1") || expMode.equals("r2") || expMode.equals("rq") || expMode.equals("rap")) {
+                if (expMode.equalsIgnoreCase("r1") || expMode.equalsIgnoreCase("r2") ||
+                        expMode.equalsIgnoreCase("rq") || expMode.equalsIgnoreCase("rap")) {
                     parName = "R";
-                } else if (experimentSet.getExpMode().equals("noe")) {
+                } else if (experimentSet.getExpMode().equalsIgnoreCase("noe")) {
                     parName = "NOE";
                 }
                 ObservableList<DataSeries> data = ChartUtil.getParMapData(experimentSet.getName(), "best", "0:0:0", parName);
