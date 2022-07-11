@@ -127,11 +127,14 @@ public class PlotEquation {
 
     public double getMaxX() {
         if (expType.startsWith("model")) {
-            return 2.0;
+            if (expType.contains("D")) {
+                return 2.0;
+            } else {
+                return 5.0;
+            }
         } else {
             EquationType equationType = ResidueFitter.getEquationType(expType, name);
             if (equationType == null) {
-                System.out.println(expType + " " + name);
                 return 0.0;
             }
             return equationType.getMaxX();
