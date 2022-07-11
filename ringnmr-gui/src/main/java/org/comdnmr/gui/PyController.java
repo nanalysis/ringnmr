@@ -2363,6 +2363,7 @@ public class PyController implements Initializable {
         if (chartInfo.hasResidues()) {
             setControls();
             if (parValues != null) {
+                xychart.setNames("Spectral Density", "\u03C9 (1/ns)", "log10[J(\u03C9)/1ns]", "0");
                 updateTableWithPars(parValues);
             } else {
                 updateTableWithPars(chartInfo);
