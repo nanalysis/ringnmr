@@ -170,10 +170,11 @@ public class DataIO {
             throw new IllegalArgumentException("Peaklist or dataset doesn't have measured values");
         }
         experimentSet.addExperimentData(experiment.getName(), experiment);
+        experimentSet.setupMaps();
         String nucName = experiment.getNucleusName();
         String[] nucNames;
         boolean eSet = false;
-        if (expMode.equals("noe")) {
+        if (expMode.equalsIgnoreCase("noe")) {
             eSet = true;
             nucNames = new String[]{nucName, "H"};
         } else {
@@ -192,12 +193,12 @@ public class DataIO {
                 int offset = 0;
                 double refIntensity = 1.0;
                 double refNoise = 0.0;
-                if (expMode.equals("noe")) {
+                if (expMode.equalsIgnoreCase("noe")) {
                     offset = 1;
                     refIntensity = v[0][0];
                     refNoise = v[1][0];
                 }
-                if (expMode.equals("noe") && (xValues.length > 3)) {
+                if (expMode.equalsIgnoreCase("noe") && (xValues.length > 3)) {
                     double noes[] = new double[xValues.length / 2];
                     for (int i = 0; i < noes.length; i++) {
                         if (xValues[i * 2] > 0.5) {
@@ -216,7 +217,7 @@ public class DataIO {
                         xValueList.add(xValues[i]);
                         double expIntensity = v[0][i];
                         yValueList.add(expIntensity / refIntensity);
-                        if (expMode.equals("noe")) {
+                        if (expMode.equalsIgnoreCase("noe")) {
                             double expNoise = v[1][i];
                             double r1 = refNoise / refIntensity;
                             double r2 = expNoise / expIntensity;
@@ -231,7 +232,7 @@ public class DataIO {
             Optional<ResonanceSource> resSourceOpt = dynamicsSourceFactory.createFromPeak(peak, nucNames);
             if (resSourceOpt.isPresent()) {
                 ResonanceSource resSource = resSourceOpt.get();
-                if (expMode.equals("cest")) {
+                if (expMode.equalsIgnoreCase("cest")) {
                     processCESTData((CESTExperiment) experiment, resSource, xValueList, yValueList, errValueList);
                 } else {
                     ExperimentData residueData = new ExperimentData(experiment, resSource, xValueList, yValueList, errValueList);
@@ -244,7 +245,7 @@ public class DataIO {
                     residueInfo = new ExperimentResult(experimentSet, resSource, 0, 0, 0);
                     experimentSet.addExperimentResult(resSource, residueInfo);
                 }
-                if (expMode.equals("noe")) {
+                if (expMode.equalsIgnoreCase("noe")) {
                     residueInfo.value = yValueList.get(0);
                     residueInfo.err = errValueList.get(0);
                 }
@@ -262,15 +263,6 @@ public class DataIO {
             HashMap<String, Object> errorPars, double[] delayCalc,
             DynamicsSource dynamicsSourceFactory)
             throws IOException, IllegalArgumentException { //(String fileName, ExperimentSet resProp, String nucleus,
-//            double temperature, double B0field, double tau, double[] vcpmgs, String expMode,
-//            HashMap<String, Object> errorPars, double[] delayCalc) throws IOException, IllegalArgumentException {
-        System.out.println("load peak file");
-//        Path path = Paths.get(fileName);
-//        String fileTail = path.getFileName().toString();
-//        fileTail = fileTail.substring(0, fileTail.indexOf('.'));
-
-//        ExperimentData expData = new ExperimentData(fileTail, nucleus, B0field, temperature, tau, xvals, expMode, errorPars, delayCalc, B1field);
-//        String fileName = expData.getName();
         Path path = Paths.get(fileName);
         if (Files.notExists(path, LinkOption.NOFOLLOW_LINKS)) {
             throw new FileNotFoundException(fileName);
@@ -292,13 +284,13 @@ public class DataIO {
         if (errorPars != null) {
             if (errorPars.containsKey("mode")) {
                 errorMode = errorPars.get("mode").toString();
-                if (errorMode.equals("percent")) {
+                if (errorMode.equalsIgnoreCase("percent")) {
                     if (errorPars.containsKey("value")) {
                         String percentValue = errorPars.get("value").toString();
                         errF = Double.parseDouble(percentValue) * 0.01;
                         eSet = true;
                     }
-                } else if (errorMode.equals("noise")) {
+                } else if (errorMode.equalsIgnoreCase("noise")) {
                     if (errorPars.containsKey("value")) {
                         String noiseValueStr = errorPars.get("value").toString();
                         noise = Double.parseDouble(noiseValueStr);
@@ -369,8 +361,8 @@ public class DataIO {
                         }
                         // find indices of x values, including any replicates
                         for (int i = 0; i < nfields; i++) {
-                            if (!expMode.equals("noe") && Character.isDigit(sfields[i].charAt(0))
-                                    || (expMode.equals("noe") && Character.isDigit(sfields[i].charAt(0)) && sfields[i].contains("1"))) {
+                            if (!expMode.equalsIgnoreCase("noe") && Character.isDigit(sfields[i].charAt(0))
+                                    || (expMode.equalsIgnoreCase("noe") && Character.isDigit(sfields[i].charAt(0)) && sfields[i].contains("1"))) {
                                 xValIndices.computeIfAbsent(sfields[i], s -> new ArrayList<>()).add(i);
                             }
                         }
@@ -389,7 +381,7 @@ public class DataIO {
                             }
                         }
                     }
-                    if (expMode.equals("cest") || expMode.equals("cpmg") || expMode.equals("noe")) {
+                    if (expMode.equalsIgnoreCase("cest") || expMode.equalsIgnoreCase("cpmg") || expMode.equalsIgnoreCase("noe")) {
                         offset++;
                         if (hasErrColumns) {
                             offset++;
@@ -446,7 +438,7 @@ public class DataIO {
                     double refError = 0.0;
                     double avgIntensity = 1.0;
                     double avgRefIntensity = 1.0;
-                    if (expMode.equals("cest") || expMode.equals("cpmg") || expMode.equals("noe")) {
+                    if (expMode.equalsIgnoreCase("cest") || expMode.equalsIgnoreCase("cpmg") || expMode.equalsIgnoreCase("noe")) {
                         int refOffset = offset - 1;
                         if (hasErrColumns) {
                             refOffset = offset - 2;
@@ -474,7 +466,7 @@ public class DataIO {
                     int iX = 0;
                     for (int i = offset; i < sfields.length; i++) {
                         String valueStr = sfields[i].trim();
-                        if ((valueStr.length() == 0) || valueStr.equals("NA")) {
+                        if ((valueStr.length() == 0) || valueStr.equalsIgnoreCase("NA")) {
                             continue;
                         }
                         Double yValue;
@@ -511,16 +503,16 @@ public class DataIO {
                         }
                         double normIntensity = diffSum / (nReps - 1);
                         double normRefIntensity = refDiffSum / (nReps - 1);
-                        if (hasErrColumns && errorMode.equals("measured")) {
+                        if (hasErrColumns && errorMode.equalsIgnoreCase("measured")) {
                             eValue = Double.parseDouble(sfields[i].trim());
                             eSet = true;
-                            if (expMode.equals("cpmg")) {
+                            if (expMode.equalsIgnoreCase("cpmg")) {
                                 if (normIntensity != 0) {
                                     eValue = eValue / (normIntensity * tau);
                                 } else {
                                     eValue = eValue / (intensity * tau);
                                 }
-                            } else if (expMode.equals("noe") && (yConv == YCONV.NORMALIZE)) {
+                            } else if (expMode.equalsIgnoreCase("noe") && (yConv == YCONV.NORMALIZE)) {
                                 double r1 = refError / refIntensity;
                                 double r2 = eValue / intensity;
                                 if (normIntensity != 0 && normRefIntensity != 0) {
@@ -529,21 +521,21 @@ public class DataIO {
                                 }
                                 eValue = Math.abs(yValue) * Math.sqrt(r1 * r1 + r2 * r2);
                             }
-                        } else if (expMode.equals("cpmg")) {
-                            if (errorMode.equals("noise")) {
+                        } else if (expMode.equalsIgnoreCase("cpmg")) {
+                            if (errorMode.equalsIgnoreCase("noise")) {
                                 if (normIntensity != 0) {
                                     eValue = noise / (normIntensity * tau);
                                 } else {
                                     eValue = noise / (intensity * tau);
                                 }
-                            } else if (errorMode.equals("percent")) {
+                            } else if (errorMode.equalsIgnoreCase("percent")) {
                                 if (normIntensity != 0 && normRefIntensity != 0) {
                                     eValue = (errF * normRefIntensity) / (normIntensity * tau);
                                 } else {
                                     eValue = (errF * refIntensity) / (intensity * tau);
                                 }
                             }
-                        } else if (expMode.equals("noe") && (yConv == YCONV.NORMALIZE)) {
+                        } else if (expMode.equalsIgnoreCase("noe") && (yConv == YCONV.NORMALIZE)) {
                             double r1 = noise / refIntensity;
                             double r2 = noise / intensity;
                             if (normIntensity != 0 && normRefIntensity != 0) {
@@ -552,9 +544,9 @@ public class DataIO {
                             }
                             eValue = Math.abs(yValue) * Math.sqrt(r1 * r1 + r2 * r2);
                         } else {
-                            if (errorMode.equals("percent")) {
+                            if (errorMode.equalsIgnoreCase("percent")) {
                                 eValue = Math.abs(yValue) * errF;
-                            } else if (errorMode.equals("noise")) {
+                            } else if (errorMode.equalsIgnoreCase("noise")) {
                                 eValue = noise;
                             }
                         }
@@ -569,7 +561,7 @@ public class DataIO {
                         throw new IllegalArgumentException("Can't generate resonance source from peak " + expMode + "." + peakNum);
                     }
                     ResonanceSource dynSource = resSourceOpt.get();
-                    if (expMode.equals("cest")) {
+                    if (expMode.equalsIgnoreCase("cest")) {
                         processCESTData((CESTExperiment) experiment, dynSource, xValueList, yValueList, errValueList);
                     } else {
                         ExperimentData residueData = new ExperimentData(experiment, dynSource, xValueList, yValueList, errValueList);
@@ -582,7 +574,7 @@ public class DataIO {
                         residueInfo = new ExperimentResult(experimientSet, dynSource, 0, 0, 0);
                         experimientSet.addExperimentResult(dynSource, residueInfo);
                     }
-                    if (expMode.equals("noe")) {
+                    if (expMode.equalsIgnoreCase("noe")) {
                         residueInfo.value = yValueList.get(0);
                         residueInfo.err = errValueList.get(0);
                     }
@@ -963,9 +955,9 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                             break;
                         case "r1rho":
                             equationName = equationName.replace("R1RHO", "");
-                            if (equationName.equals("PERTURBATION")) {
+                            if (equationName.equalsIgnoreCase("PERTURBATION")) {
                                 equationName = "TROTT_PALMER";
-                            } else if (equationName.equals("PERTURBATIONNOEX")) {
+                            } else if (equationName.equalsIgnoreCase("PERTURBATIONNOEX")) {
                                 equationName = "NOEX";
                             }
                             equationType = R1RhoEquation.valueOf(equationName);
@@ -1007,7 +999,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     parMap.put("Equation", 1.0 + equationNames.indexOf(equationName));
                     PlotEquation plotEquation = new PlotEquation(fitMode, equationName, pars, errs, fields);
                     CurveFit curveSet = new CurveFit(stateString, dynSource, parMap, plotEquation);
-                    expResult.addCurveSet(curveSet, bestValue.equals("best"));
+                    expResult.addCurveSet(curveSet, bestValue.equalsIgnoreCase("best"));
                 }
             }
 
@@ -1237,7 +1229,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     throw new IOException("Invalid expMode in .yaml file " + expMode);
             }
             DynamicsSource dynamicsSourceFactory = new DynamicsSource(true, true, true, true);
-            if ((fileFormat != null) && fileFormat.equals("mpk2")) {
+            if ((fileFormat != null) && fileFormat.equalsIgnoreCase("mpk2")) {
                 if (dataFile == null) {
                     throw new IllegalArgumentException("No file par in .yaml file");
                 }
@@ -1247,7 +1239,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 loadPeakFile(dataFileName, expData, experimentSet, xConv, yConv,
                         errorPars, delayCalc, dynamicsSourceFactory);
 
-            } else if ((fileFormat != null) && fileFormat.equals("ires")) {
+            } else if ((fileFormat != null) && fileFormat.equalsIgnoreCase("ires")) {
                 List<Map<String, Object>> filesMaps = (List<Map<String, Object>>) dataMap3.get("files");
                 for (Map<String, Object> filesMap : filesMaps) {
                     Map<String, List<Double>> constraintMap = getConstraints(dataMap3, filesMap);
