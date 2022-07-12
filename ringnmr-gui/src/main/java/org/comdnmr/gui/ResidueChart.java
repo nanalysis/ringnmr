@@ -31,6 +31,8 @@ import org.comdnmr.data.ValueSet;
 import org.nmrfx.chart.Axis;
 import org.nmrfx.chart.XYCanvasBarChart;
 import org.nmrfx.chart.XYValue;
+import org.nmrfx.chemistry.MoleculeBase;
+import org.nmrfx.chemistry.MoleculeFactory;
 import org.nmrfx.chemistry.relax.ResonanceSource;
 import org.nmrfx.graphicsio.GraphicsContextInterface;
 import org.nmrfx.graphicsio.GraphicsIOException;
@@ -64,6 +66,20 @@ public class ResidueChart extends XYCanvasBarChart {
         getData().addListener((ListChangeListener) (e -> seriesChanged()));
     }
 
+    public String getExpSeries(String seriesName) {
+        MoleculeBase mol = MoleculeFactory.getActive();
+
+        if (seriesName.startsWith(mol.getName()) && seriesName.contains("_RING")) {
+            String testSeries = seriesName.substring(mol.getName().length()+1, seriesName.indexOf("_RING"));
+            if (ChartUtil.getResiduePropertyNames().contains(testSeries)) {
+                ValueSet valueSet = ChartUtil.getResidueProperty(testSeries);
+                seriesName = valueSet.getName() + '|' +
+                        "EXPAB" + "|" + "0:0:0" + "|" + "R" + "|" + "0";
+            }
+        }
+        return seriesName;
+
+    }
     public boolean mouseClicked(MouseEvent e) {
         Optional<Hit> hitOpt = pickChart(e.getX(), e.getY(), 5);
         boolean hitChart = false;
@@ -78,10 +94,11 @@ public class ResidueChart extends XYCanvasBarChart {
             if (extraValue instanceof ResonanceSource) {
                 resSource = (ResonanceSource) extraValue;
             }
+            String seriesName = getExpSeries(series.getName());
 
-            String statusMessage = series.getName() + " " + resSource + " " + String.format("%.2f", value.getYValue());
+            String statusMessage = seriesName + " " + resSource + " " + String.format("%.2f", value.getYValue());
             PyController.mainController.statusBar.setText(statusMessage);
-            showInfo(hit.getSeries().getName(), hit.getIndex(), resSource, appendMode);
+            showInfo(seriesName, hit.getIndex(), resSource, appendMode);
         } else {
             Optional<ResonanceSource> intOpt = pickPresenceIndicators(e.getX(), e.getY());
             if (intOpt.isPresent()) {
@@ -154,7 +171,7 @@ public class ResidueChart extends XYCanvasBarChart {
         PyController controller = PyController.mainController;
         PlotData xyCanvasChart = controller.xychart;
         String[] seriesNameParts = seriesName.split("\\|");
-        System.out.println("show info se" + seriesName + " " + seriesNameParts.length + " valueset " + valueSet);
+        System.out.println("show info se " + seriesName + " " + seriesNameParts.length + " valueset " + valueSet);
         if (seriesNameParts.length < 3) {
             return;
         }
