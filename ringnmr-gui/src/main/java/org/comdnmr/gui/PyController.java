@@ -57,6 +57,7 @@ import org.comdnmr.modelfree.CorrelationTime;
 import org.comdnmr.modelfree.FitDeuteriumModel;
 import org.comdnmr.modelfree.FitModel;
 import org.comdnmr.modelfree.FitR1R2NOEModel;
+import org.comdnmr.modelfree.models.MFModelIso;
 import org.comdnmr.util.CoMDOptions;
 import org.comdnmr.util.CoMDPreferences;
 import org.comdnmr.util.ProcessingStatus;
@@ -1881,6 +1882,13 @@ public class PyController implements Initializable {
         }
     }
 
+    public void fitResiduesNow() {
+        fitResult = null;
+        if (hasExperimentSet()) {
+            residueFitter.fitResiduesNow(getCurrentExperimentSet());
+        }
+    }
+
     @FXML
     public void fitGroupResidues() {
         if (hasExperimentSet()) {
@@ -2285,6 +2293,7 @@ public class PyController implements Initializable {
         List<ExperimentData> experimentalDataSets = new ArrayList<>();
         List<int[]> allStates = new ArrayList<>();
         boolean calcScale = scalePlot.isSelected();
+        List<ParValueInterface> parValues = null;
         if (chartInfo.hasExperiments() && chartInfo.hasResidues()) {
             int iSeries = 0;
             for (Experiment expData : ((ExperimentSet) chartInfo.getExperiments()).getExperimentData()) {
@@ -2330,21 +2339,28 @@ public class PyController implements Initializable {
                 Map<String, SpectralDensity> spectralDensityMap = atom.getSpectralDensity();
                 allData.addAll(ChartUtil.getSpectralDensityData(spectralDensityMap));
                 var orderPars = atom.getOrderPars();
-                for (var key: orderPars.keySet()) {
-                    var orderPar = orderPars.get(key);
-                    String[] parNames = {"Tau_e", "S2", "Tau_f"};
-                    double[] pars = new double[parNames.length];
-                    double[] errs = new double[parNames.length];
-                    int iPar = 0;
-                    for (var parName:parNames) {
-                        pars[iPar] = orderPar.getValue(parName);
-                        Double err = orderPar.getError(parName);
-                        errs[iPar] = err == null ? 0.0 : err;
-                        iPar++;
+                parValues = new ArrayList<>();
+                if (orderPars != null) {
+                    for (var key : orderPars.keySet()) {
+                        var orderPar = orderPars.get(key);
+                        String modelName = orderPar.getModel();
+                        var model = MFModelIso.buildModel(modelName,true,0.0,0.0,false);
+                        var parNames = model.getParNames();
+                        double[] pars = new double[parNames.size()];
+                        double[] errs = new double[parNames.size()];
+                        int iPar = 0;
+                        for (var parName : parNames) {
+                            pars[iPar] = orderPar.getValue(parName);
+                            Double err = orderPar.getError(parName);
+                            errs[iPar] = err == null ? 0.0 : err;
+                            ParValue parValue = new ParValue(resonanceSource,"", parName,pars[iPar], errs[iPar]);
+                            parValues.add(parValue);
+                            iPar++;
+                        }
+                        double[] extras = new double[1];
+                        var guiPlotEquation = new GUIPlotEquation(modelName, "spectralDensity", pars, errs, extras);
+                        equations.add(guiPlotEquation);
                     }
-                    double[] extras = new double[1];
-                    var guiPlotEquation =  new GUIPlotEquation("D1f", "spectralDensity", pars, errs, extras);
-                    equations.add(guiPlotEquation);
                 }
             }
 
@@ -2353,7 +2369,12 @@ public class PyController implements Initializable {
         updateTable(experimentalDataSets);
         if (chartInfo.hasResidues()) {
             setControls();
-            updateTableWithPars(chartInfo);
+            if (parValues != null) {
+                xychart.setNames("Spectral Density", "\u03C9 (1/ns)", "log10[J(\u03C9)/1ns]", "0");
+                updateTableWithPars(parValues);
+            } else {
+                updateTableWithPars(chartInfo);
+            }
             updateEquation(chartInfo.mapName, chartInfo.getResidues(), chartInfo.equationName);
         }
         plotData.setData(allData);

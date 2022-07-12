@@ -98,6 +98,9 @@ public abstract class MFModelIso extends MFModel {
             double tau, double tauFrac,
             boolean fitExchange) {
         MFModelIso model;
+        if (modelName.startsWith("model")) {
+            modelName = modelName.substring(5);
+        }
         switch (modelName) {
             case "1":
             case "D1":

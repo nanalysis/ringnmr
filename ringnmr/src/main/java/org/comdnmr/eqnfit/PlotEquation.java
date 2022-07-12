@@ -84,7 +84,7 @@ public class PlotEquation {
     }
 
     public double calculate(double[] xValue, double field) {
-        if (expType.equals("D1f")) {
+        if (expType.startsWith("model")) {
             return calculateSpectralDensity(xValue, field);
         } else {
             EquationType equationType = ResidueFitter.getEquationType(expType, name);
@@ -95,7 +95,7 @@ public class PlotEquation {
     }
 
     private double calculateSpectralDensity(double[] xValue, double field) {
-        var model = MFModelIso.buildModel("D1f",true,0.0,0.0,false);
+        var model = MFModelIso.buildModel(expType,true,0.0,0.0,false);
         double[] omegas = {xValue[0] * 1.0e9};
         double[] specDens = model.calc(omegas, pars);
         double y = Math.log10(specDens[0] * 1.0e9);
@@ -113,7 +113,7 @@ public class PlotEquation {
     }
 
     public double getMinX() {
-        if (expType.equals("D1f")) {
+        if (expType.startsWith("model")) {
             return 0.0;
         } else {
             EquationType equationType = ResidueFitter.getEquationType(expType, name);
@@ -126,12 +126,15 @@ public class PlotEquation {
     }
 
     public double getMaxX() {
-        if (expType.equals("D1f")) {
-            return 2.0;
+        if (expType.startsWith("model")) {
+            if (expType.contains("D")) {
+                return 2.0;
+            } else {
+                return 5.0;
+            }
         } else {
             EquationType equationType = ResidueFitter.getEquationType(expType, name);
             if (equationType == null) {
-                System.out.println(expType + " " + name);
                 return 0.0;
             }
             return equationType.getMaxX();

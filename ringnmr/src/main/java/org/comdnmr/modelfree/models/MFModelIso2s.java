@@ -135,7 +135,11 @@ public class MFModelIso2s extends MFModelIso1s {
 
     @Override
     public String getName() {
-        return "model2s";
+        if (sN > 8.0) {
+            return "modelD2s";
+        } else {
+            return "model2s";
+        }
     }
 
 }

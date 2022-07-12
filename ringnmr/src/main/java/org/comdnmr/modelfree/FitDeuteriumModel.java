@@ -92,7 +92,7 @@ public class FitDeuteriumModel extends FitModel {
                     }
                 }
                 if ((r1 != null) && (r2 != null) && (rQ != null) && (rAP != null)) {
-                    RelaxEquations relaxObj = RelaxEquations.getRelaxEquations(field * 1e6, "H", "N");
+                    RelaxEquations relaxObj = RelaxEquations.getRelaxEquations(field * 1e6, "D", "C");
 
                     RelaxDataValue dValue = new DeuteriumDataValue(molData, r1, r1Error, r2, r2Error,
                             rQ, rQError, rAP, rAPError, relaxObj);
@@ -128,6 +128,7 @@ public class FitDeuteriumModel extends FitModel {
             if (!resData.getData().isEmpty()) {
                 molDataRes.put(key, resData);
                 List<Double> rValues = new ArrayList<>();
+                List<Double> errValues = new ArrayList<>();
                 List<Double> fields = new ArrayList<>();
                 for (var value : resData.dataValues) {
                     var dValue = (DeuteriumDataValue) value;
@@ -135,9 +136,13 @@ public class FitDeuteriumModel extends FitModel {
                     rValues.add(dValue.R2);
                     rValues.add(dValue.rQ);
                     rValues.add(dValue.rAP);
+                    errValues.add(dValue.R1err);
+                    errValues.add(dValue.R2err);
+                    errValues.add(dValue.rQError);
+                    errValues.add(dValue.rAPError);
                     fields.add(dValue.relaxObj.getSF());
                 }
-                double[][] mappingResult = DeuteriumMapping.jointMapping(rValues, fields);
+                double[][] mappingResult = DeuteriumMapping.jointMapping(rValues, errValues, fields);
                 for (int i = 0; i < mappingResult[0].length; i++) {
                     double field = mappingResult[0][i];
                     double jValue = mappingResult[1][i];
@@ -216,7 +221,7 @@ public class FitDeuteriumModel extends FitModel {
             if ((bestModel instanceof MFModelIso2sf) && (lambda > 1.0e-6)) {
                 orderPar = orderPar.setModel();
             }
-            atom.addOrderPar("order", orderPar);
+            atom.addOrderPar("order_parameter_list_1", orderPar);
             double[][] jValues  = resData.getJValues();
             SpectralDensity spectralDensity = new SpectralDensity(key,jValues);
             atom.addSpectralDensity(key, spectralDensity);
@@ -236,7 +241,7 @@ public class FitDeuteriumModel extends FitModel {
         double[] lower = model.getLower();
         double[] upper = model.getUpper();
         double[] keepStart = start.clone();
-        var parNames = model.getAllParNames();
+        var parNames = model.getParNames();
         for (var parName : parNames) {
             System.out.println(parName);
         }
