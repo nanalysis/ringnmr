@@ -76,6 +76,16 @@ public class ResidueFitter {
         this.options = options;
     }
 
+    public void fitResiduesNow(ExperimentSet experimentSet) {
+        this.experimentSet = experimentSet;
+        experimentSet.setupMaps();
+        this.atomFitGroups = null;
+        experimentSet.clearResidueMap();
+        fitAllAtoms(null);
+        RelaxationData.relaxTypes relaxType = RelaxationData.relaxTypes.valueOf(experimentSet.getExpMode().toUpperCase());
+        DataIO.addRelaxationFitResults(experimentSet, relaxType);
+    }
+
     public void fitResidues(ExperimentSet experimentSet) {
         fitResidues(experimentSet, null);
     }
@@ -204,7 +214,7 @@ public class ResidueFitter {
         int nGroups = allAtoms.size();
         int nFit = 0;
         for (List<ResonanceSource> atomList : allAtoms) {
-            if (task.isCancelled()) {
+            if ((task != null) && task.isCancelled()) {
                 break;
             }
             ResonanceSource[] atomGroup = new ResonanceSource[atomList.size()];
@@ -215,8 +225,9 @@ public class ResidueFitter {
                 experimentSet.addExperimentResult(fitAtom, resInfo);
             });
             nFit++;
-            updateProgress((1.0 * nFit) / nGroups);
-
+            if (task != null) {
+                updateProgress((1.0 * nFit) / nGroups);
+            }
         }
 
     }

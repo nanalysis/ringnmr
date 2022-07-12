@@ -1882,6 +1882,13 @@ public class PyController implements Initializable {
         }
     }
 
+    public void fitResiduesNow() {
+        fitResult = null;
+        if (hasExperimentSet()) {
+            residueFitter.fitResiduesNow(getCurrentExperimentSet());
+        }
+    }
+
     @FXML
     public void fitGroupResidues() {
         if (hasExperimentSet()) {

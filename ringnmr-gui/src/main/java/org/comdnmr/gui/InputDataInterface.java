@@ -39,6 +39,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.DirectoryChooser;
@@ -109,6 +110,9 @@ public class InputDataInterface {
     public void createPeakListInterface() {
         infoStage.setTitle("Load from Peak Lists");
         inputInfoDisplay.getChildren().clear();
+        ColumnConstraints col1 = new ColumnConstraints(200);
+        ColumnConstraints col2 = new ColumnConstraints(100);
+        inputInfoDisplay.getColumnConstraints().addAll(col1, col2);
         List<PeakList> peakLists = new ArrayList<>();
         List<ChoiceBox<String>> choices = new ArrayList<>();
         PeakList.peakLists().forEach(peakList -> {
@@ -123,15 +127,17 @@ public class InputDataInterface {
                 typeChoice.setValue("");
             }
         });
-        loadButton.setOnAction(e -> loadFromPeakLists(peakLists, choices));
+        CheckBox autoFit = new CheckBox("Auto Fit");
+        loadButton.setOnAction(e -> loadFromPeakLists(peakLists, choices, autoFit.isSelected()));
         loadButton.setText("Load");
         loadButton.setDisable(false);
+        inputInfoDisplay.add(autoFit, 0, choices.size());
         inputInfoDisplay.add(loadButton, 1, choices.size());
         infoStage.setScene(inputScene);
         infoStage.show();
     }
 
-    private void loadFromPeakLists(List<PeakList> peakLists, List<ChoiceBox<String>> choiceBoxes) {
+    private void loadFromPeakLists(List<PeakList> peakLists, List<ChoiceBox<String>> choiceBoxes, boolean autoFit) {
         for (int i = 0; i < peakLists.size(); i++) {
             String type = choiceBoxes.get(i).getValue();
             if (!type.isBlank()) {
@@ -154,7 +160,7 @@ public class InputDataInterface {
                     nucChoice.setValue(nucleus);
                     B0fieldChoice.setValue(String.valueOf(B0field));
                     tempTextField.setText(String.valueOf(temperature));
-                    loadFromPeakList(peakList, type, nucleus, B0field, temperature);
+                    loadFromPeakList(peakList, type, nucleus, B0field, temperature, autoFit);
                 }
             }
         }
@@ -646,10 +652,11 @@ public class InputDataInterface {
         double b0Field = Double.parseDouble(B0fieldChoice.getValue());
         Double temperatureK = getDouble(tempTextField.getText());
         String nucName = nucChoice.getValue();
-        loadFromPeakList(peakList, expMode, nucName, b0Field, temperatureK);
+        loadFromPeakList(peakList, expMode, nucName, b0Field, temperatureK, false);
     }
 
-    void loadFromPeakList(PeakList peakList, String expMode, String nucName, double b0Field, double temperatureK) {
+    void loadFromPeakList(PeakList peakList, String expMode, String nucName, double b0Field, double temperatureK,
+                          boolean autoFit) {
         expMode = expMode.toLowerCase();
         if (peakList != null) {
             
@@ -722,6 +729,10 @@ public class InputDataInterface {
                 PyController.mainController.setControls();
                 if (expMode.equalsIgnoreCase("noe")) {
                     DataIO.addRelaxationFitResults(experimentSet, RelaxationData.relaxTypes.NOE);
+                } else {
+                    if (autoFit) {
+                        PyController.mainController.fitResiduesNow();
+                    }
                 }
             } catch (IllegalArgumentException iAE) {
                 GUIUtils.warn("Load from peak list", iAE.getMessage());
