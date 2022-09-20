@@ -1933,7 +1933,7 @@ public class PyController implements Initializable {
     @FXML
     public void saveR1R2NOE() {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Save R1/R2/NOE File");
+        fileChooser.setTitle("Save R1/R2/... File");
         File file = fileChooser.showSaveDialog(MainApp.primaryStage);
         if (file != null) {
             try {

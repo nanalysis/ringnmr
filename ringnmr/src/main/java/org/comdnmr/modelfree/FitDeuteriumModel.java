@@ -36,14 +36,14 @@ public class FitDeuteriumModel extends FitModel {
     public static boolean hasDeuteriumData(Atom atom) {
         var relaxData = atom.getRelaxationData();
         boolean hasDeuterium = relaxData.values().stream().
-                anyMatch(v -> v.expType == RelaxationData.relaxTypes.RQ);
+                anyMatch(v -> v.getExpType() == RelaxationData.relaxTypes.RQ);
         return hasDeuterium;
     }
 
     public static MolDataValues getMolDataValues(Atom atom) {
         var relaxData = atom.getRelaxationData();
         boolean hasDeuterium = relaxData.values().stream().
-                anyMatch(v -> v.expType == RelaxationData.relaxTypes.RQ);
+                anyMatch(v -> v.getExpType() == RelaxationData.relaxTypes.RQ);
         MolDataValues molData = null;
         if (hasDeuterium) {
             Vector3D vec = null;
