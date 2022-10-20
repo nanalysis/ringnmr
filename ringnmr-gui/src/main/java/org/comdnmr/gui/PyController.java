@@ -1028,9 +1028,11 @@ public class PyController implements Initializable {
                 getCurrentExperimentSet().getExperimentData().
                         stream().findFirst().ifPresent(e -> {
                             double[] xVals = ((DoubleArrayExperiment) e).getXVals();
-                            xychart.setBounds(Math.floor(xVals[1] / 2) * 2, Math.ceil(xVals[xVals.length - 1] / 2) * 2, 0.0, 1.0, 1.0, 0.25);
-                            xLowerBoundTextField.setText(String.valueOf(Math.floor(xVals[1] / 2) * 2));
-                            xUpperBoundTextField.setText(String.valueOf(Math.ceil(xVals[xVals.length - 1] / 2) * 2));
+                            if (xVals != null) {
+                                xychart.setBounds(Math.floor(xVals[1] / 2) * 2, Math.ceil(xVals[xVals.length - 1] / 2) * 2, 0.0, 1.0, 1.0, 0.25);
+                                xLowerBoundTextField.setText(String.valueOf(Math.floor(xVals[1] / 2) * 2));
+                                xUpperBoundTextField.setText(String.valueOf(Math.ceil(xVals[xVals.length - 1] / 2) * 2));
+                            }
                         });
             }
             yLowerBoundTextField.setText("0.0");

@@ -51,9 +51,9 @@ public class CPMGControls extends EquationControls {
 
     enum PARS implements ParControls {
         R2("R2", 0.0, 50.0, 10.0, 10.0, 2),
-        KEX("Kex", 0.0, 4000.0, 500.0, 500.0, 1),
+        KEX("Kex", 0.0, 20000, 500.0, 500.0, 1),
         DPPMMIN("dPPMmin", 0.0, 5.0, 0.5, 0.5, 3),
-        PA("pA", 0.5, 0.99, 0.1, 0.9, 3),
+        PA("pA", 0.5, 0.999, 0.1, 0.9, 3),
         DPPM("dPPM", 0.0, 5.0, 0.5, 0.5, 3),
         FIELD2("Field2", 500.0, 1200.0, 100.0, 600.0, 1);
 

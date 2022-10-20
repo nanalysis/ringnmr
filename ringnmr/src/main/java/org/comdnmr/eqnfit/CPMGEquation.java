@@ -293,13 +293,15 @@ public enum CPMGEquation implements EquationType {
             double d1 = (psi + 2.0 * dW * dW) / Math.sqrt(psi * psi + zeta * zeta);
             double dP = 0.5 * (d1 + 1);
             double dM = 0.5 * (d1 - 1);
-            double ch = dP * FastMath.cosh(etaP) - dM * FastMath.cos(etaM);
+            double ch = dP * Math.cosh(etaP) - dM * Math.cos(etaM);
+            if (Double.isInfinite(ch) || (ch > 1e40)) {
+                ch = 1e40;
+            }
             double rexContrib = 0.5 * (kEx - (1.0 / tauCP) * FastMath.acosh(ch));
             double dR = (1.0 / tauCP) * FastMath.acosh(ch);
             double value = r2 + rexContrib;
             if (Double.isInfinite(value)) {
-                System.out.println("infi");
-                System.out.println(kEx + " pa " + pA + " r2 " + r2 + " dw " + dW + " psi " + psi + " rex " + rexContrib + " ch " + ch + " eta " + etaP + " " + etaM + " " + eta1 + " " + psi);
+                System.out.println("nu " + nu + "kex " + kEx + " pa " + pA + " r2 " + r2 + " dw " + dW + " psi " + psi + " rex " + rexContrib + " ch " + ch + " eta " + etaP + " " + etaM + " " + eta1 + " " + psi);
             }
             return value;
         }
@@ -355,13 +357,14 @@ public enum CPMGEquation implements EquationType {
         @Override
         public double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
             double[][] boundaries = new double[2][guesses.length];
+           // "Kex", "pA", "R2", "dPPM"
             for (int id = 0; id < map.length; id++) {
                 int iPar = map[id][0];
                 boundaries[0][iPar] = 0.0;
                 boundaries[1][iPar] = Math.min(guesses[iPar] * 4, CoMDPreferences.getCPMGMaxFreq());
                 iPar = map[id][1];
                 boundaries[0][iPar] = 0.5;
-                boundaries[1][iPar] = 0.99;
+                boundaries[1][iPar] = 0.999;
                 iPar = map[id][2];
                 boundaries[0][iPar] = 0.0;
                 boundaries[1][iPar] = guesses[iPar] * 4;
