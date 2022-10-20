@@ -553,6 +553,12 @@ public class PyController implements Initializable {
                 xMax = Math.max(xMax, series.getMaxX() + 1.0);
             }
         }
+        if (xMin == Double.MAX_VALUE) {
+            xMin = Math.floor((ChartUtil.minRes - 2) / 5.0) * 5.0;
+            xMax = Math.ceil((ChartUtil.maxRes + 2) / 5.0) * 5.0;
+            barChartXMin = Optional.of(xMin);
+            barChartXMax = Optional.of(xMax);
+        }
         double limitMin = barCenter * (xMax - xMin) + xMin;
         double limitMax = fMax * (xMax - xMin) + xMin;
         for (ResidueChart residueChart : barCharts) {
@@ -1048,9 +1054,11 @@ public class PyController implements Initializable {
                 getCurrentExperimentSet().getExperimentData().
                         stream().findFirst().ifPresent(e -> {
                             double[] xVals = ((DoubleArrayExperiment) e).getXVals();
-                            xychart.setBounds(Math.floor(xVals[1] / 2) * 2, Math.ceil(xVals[xVals.length - 1] / 2) * 2, 0.0, 1.0, 1.0, 0.25);
-                            xLowerBoundTextField.setText(String.valueOf(Math.floor(xVals[1] / 2) * 2));
-                            xUpperBoundTextField.setText(String.valueOf(Math.ceil(xVals[xVals.length - 1] / 2) * 2));
+                            if (xVals != null) {
+                                xychart.setBounds(Math.floor(xVals[1] / 2) * 2, Math.ceil(xVals[xVals.length - 1] / 2) * 2, 0.0, 1.0, 1.0, 0.25);
+                                xLowerBoundTextField.setText(String.valueOf(Math.floor(xVals[1] / 2) * 2));
+                                xUpperBoundTextField.setText(String.valueOf(Math.ceil(xVals[xVals.length - 1] / 2) * 2));
+                            }
                         });
             }
             yLowerBoundTextField.setText("0.0");
@@ -2346,7 +2354,7 @@ public class PyController implements Initializable {
                     for (var key : orderPars.keySet()) {
                         var orderPar = orderPars.get(key);
                         String modelName = orderPar.getModel();
-                        var model = MFModelIso.buildModel(modelName,true,0.0,0.0,false);
+                        var model = MFModelIso.buildModel(modelName, true, 0.0, 0.0, false);
                         var parNames = model.getParNames();
                         double[] pars = new double[parNames.size()];
                         double[] errs = new double[parNames.size()];
@@ -2355,7 +2363,7 @@ public class PyController implements Initializable {
                             pars[iPar] = orderPar.getValue(parName);
                             Double err = orderPar.getError(parName);
                             errs[iPar] = err == null ? 0.0 : err;
-                            ParValue parValue = new ParValue(resonanceSource,"", parName,pars[iPar], errs[iPar]);
+                            ParValue parValue = new ParValue(resonanceSource, "", parName, pars[iPar], errs[iPar]);
                             parValues.add(parValue);
                             iPar++;
                         }
