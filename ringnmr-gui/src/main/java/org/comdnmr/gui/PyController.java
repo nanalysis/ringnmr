@@ -1091,9 +1091,34 @@ public class PyController implements Initializable {
         }
 
     }
+    // temporary addition till bug in xychart autoscale (only uses one series) is fixed
+    public double[] calcAutoScale() {
+        if (!xychart.getData().isEmpty()) {
+            double xMax = Double.NEGATIVE_INFINITY;
+            double xMin = Double.MAX_VALUE;
+            double yMax = Double.NEGATIVE_INFINITY;
+            double yMin = Double.MAX_VALUE;
+            boolean ok = false;
+            for (DataSeries dataSeries : xychart.getData()) {
+                if (!dataSeries.isEmpty()) {
+                    ok = true;
+                    xMin = Math.min(xMin,dataSeries.getMinX());
+                    xMax = Math.max(xMax, dataSeries.getMaxX());
+                    yMin = Math.min(yMin, dataSeries.getMinY());
+                    yMax = Math.max(yMax, dataSeries.getMaxY());
+                }
+            }
+
+            if (ok) {
+                double[] bounds = {xMin, xMax, yMin, yMax};
+                return bounds;
+            }
+        }
+        return null;
+    }
 
     public void autoscaleBounds() {
-        double[] bounds = xychart.autoScale(true);
+        double[] bounds = calcAutoScale();
         if (bounds != null) {
             xLowerBoundTextField.setText(Double.toString(bounds[0]));
             xUpperBoundTextField.setText(Double.toString(bounds[1]));
@@ -1102,6 +1127,7 @@ public class PyController implements Initializable {
             if (simControls instanceof CESTControls) {
                 ((CESTControls) simControls).updateDeltaLimits(bounds[0], bounds[1]);
             }
+            setBounds();
         }
 
     }
