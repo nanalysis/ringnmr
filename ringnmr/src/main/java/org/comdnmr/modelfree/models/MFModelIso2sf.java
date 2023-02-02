@@ -29,7 +29,7 @@ import java.util.List;
  * @author brucejohnson
  */
 public class MFModelIso2sf extends MFModelIso2f {
-
+    private static double tauScale = 1.0;
     double tauS;
     double complexity = 0.0;
 
@@ -45,6 +45,10 @@ public class MFModelIso2sf extends MFModelIso2f {
 
     public MFModelIso2sf() {
         this(true, 0.0, 0.0, false);
+    }
+
+    public void setTauScale(double value) {
+        tauScale = value;
     }
 
     @Override
@@ -77,8 +81,8 @@ public class MFModelIso2sf extends MFModelIso2f {
         complexity
                 = Math.abs(1.0 - sf2)
                 + Math.abs(1.0 - ss2)
-                + (Math.log10(tauSx * 1.0e9) + 3.0)
-                + (Math.log10(tauFx * 1.0e9) + 3.0);
+                + tauScale * (Math.log10(tauSx * 1.0e9) + 3.0)
+                + tauScale * (Math.log10(tauFx * 1.0e9) + 3.0);
         return J;
     }
 
