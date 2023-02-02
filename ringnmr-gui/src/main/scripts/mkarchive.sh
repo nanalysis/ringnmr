@@ -1,9 +1,9 @@
 #!/bin/zsh
 
-JREHOME='/Users/brucejohnson/Development/mkjre'
+JREHOME='/Users/brucejohnson/Development/jres'
 jversion='jdk-11.0.9.1+1-jre'
 jversion='jdk-16.0.51-jre'
-jversion='zulu15.32.15-ca-fx-jre15.0.3'
+jversion='zulu17.40.19-ca-fx-jre17.0.6'
 PRGSCRIPT=ringnmr-gui
 
 dir=`pwd`
