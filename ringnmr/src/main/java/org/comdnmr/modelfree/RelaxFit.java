@@ -32,7 +32,7 @@ import org.comdnmr.modelfree.models.MFModelIso2sf;
  */
 public class RelaxFit {
 
-    double lambda = 0.1;
+    double lambda = 0.0;
     boolean fitJ = false;
     Map<String, MolDataValues> molDataValues;
     double[] bestPars;
@@ -481,7 +481,7 @@ public class RelaxFit {
 
     public double value(double[] pars, double[][] values) {
         var score = score(pars, false);
-        return score.value();
+        return score.value(lambda);
     }
 
     public double valueMultiResidue(double[] pars, double[][] values) {
