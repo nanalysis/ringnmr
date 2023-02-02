@@ -37,7 +37,7 @@
         <dependency>
             <groupId>org.nmrfx</groupId>
             <artifactId>nmrfx-core</artifactId>
-            <version>11.3.0</version>
+            <version>11.3.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
               <dependency>
