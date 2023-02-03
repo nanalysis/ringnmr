@@ -27,7 +27,7 @@
         <dependency>
             <groupId>org.nmrfx</groupId>
             <artifactId>nmrfx-utils</artifactId>
-            <version>11.3.1-SNAPSHOT</version>
+            <version>11.3.1</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
