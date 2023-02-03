@@ -165,8 +165,10 @@ public class ResidueFitter {
             dynFitGroup.toArray(dynGroup);
             List<ExperimentResult> resInfoList = fitResidues(experimentSet, dynGroup, nFit, null);
             resInfoList.forEach((resInfo) -> {
-                ResonanceSource dynSource = resInfo.getSource();
-                experimentSet.addExperimentResult(dynSource, resInfo);
+                ResonanceSource dynSource = resInfo.getResonanceSource();
+                if (!dynSource.deleted()) {
+                    experimentSet.addExperimentResult(dynSource, resInfo);
+                }
             });
             nFit++;
             updateProgress((1.0 * nFit) / nResidues);
@@ -177,7 +179,7 @@ public class ResidueFitter {
         Map<String, Experiment> expDataSets = experimentSet.getExperimentMap();
         Set<ResonanceSource> resSources = new TreeSet<>();
         expDataSets.values().forEach((expData) -> {
-            expData.getDynamicsSources().forEach((dynSource) -> {
+            expData.getDynamicsSources().stream().filter(dynSource -> !dynSource.deleted()).forEach(dynSource -> {
                 resSources.add(dynSource);
             });
         });
@@ -221,7 +223,7 @@ public class ResidueFitter {
             atomList.toArray(atomGroup);
             List<ExperimentResult> resInfoList = fitResidues(experimentSet, atomGroup, nFit, null);
             resInfoList.forEach((resInfo) -> {
-                ResonanceSource fitAtom = resInfo.getSource();
+                ResonanceSource fitAtom = resInfo.getResonanceSource();
                 experimentSet.addExperimentResult(fitAtom, resInfo);
             });
             nFit++;

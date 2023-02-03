@@ -95,7 +95,6 @@ public class ResidueChart extends XYCanvasBarChart {
                 resSource = (ResonanceSource) extraValue;
             }
             String seriesName = getExpSeries(series.getName());
-
             String statusMessage = seriesName + " " + resSource + " " + String.format("%.2f", value.getYValue());
             PyController.mainController.statusBar.setText(statusMessage);
             showInfo(seriesName, hit.getIndex(), resSource, appendMode);
@@ -136,6 +135,10 @@ public class ResidueChart extends XYCanvasBarChart {
     public void setResProps(ValueSet valueSet) {
         this.valueSet = valueSet;
         dynSources = valueSet.getDynamicsSources();
+    }
+
+    public Set<ResonanceSource> getSelectedSources() {
+        return selectedResidues;
     }
 
     void showInfo(String seriesName, int seriesIndex, ResonanceSource resSource, boolean appendMode) {

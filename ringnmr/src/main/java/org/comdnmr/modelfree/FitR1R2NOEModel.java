@@ -84,6 +84,9 @@ public class FitR1R2NOEModel extends FitModel {
 
                             for (var entry : relaxData.entrySet()) {
                                 RelaxationData data = entry.getValue();
+                                if (data.getResonanceSource().deleted()) {
+                                    break;
+                                }
                                 if (Math.round(data.getField()) == field) {
                                     switch (data.getExpType()) {
                                         case R1:

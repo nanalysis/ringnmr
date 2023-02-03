@@ -232,7 +232,7 @@ public class ExperimentSet implements ValueSet {
     }
 
     public Set<ResonanceSource> getDynamicsSources() {
-        return resultMap.values().stream().map(v -> v.getSource()).collect(Collectors.toSet());
+        return resultMap.values().stream().map(v -> v.getResonanceSource()).filter(resSource -> !resSource.deleted()).collect(Collectors.toSet());
     }
 
     public List<ExperimentResult> getExperimentResults() {
@@ -294,7 +294,9 @@ public class ExperimentSet implements ValueSet {
             if (experimentResult == null) {
                 continue;
             }
-
+            if (experimentResult.getResonanceSource().deleted()) {
+                continue;
+            }
             String useEquName = eqnName;
             if (eqnName.equals("best")) {
                 useEquName = experimentResult.getBestEquationName();

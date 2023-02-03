@@ -1480,24 +1480,26 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                         error = fitPars.get("R.sd");
                     }
 
-                    ResonanceSource dynSource = expResult.getSource();
-                    Atom atom = dynSource.getAtom();
-                    Map<String, String> extras = new HashMap<>();
-                    String coherenceType = "Sz";
-                    String units = "s-1";
-                    extras.put("coherenceType", coherenceType);
-                    extras.put("units", units);
-                    switch (expType) {
-                        case R1:
-                        case NOE: {
-                            RelaxationData relaxData = new RelaxationData(datasetName, expType, dynSource, field, temperature, value, error, extras);
-                            atom.getRelaxationData().put(datasetName, relaxData);
-                            break;
-                        }
-                        default: {
-                            RelaxationRex relaxData = new RelaxationRex(datasetName, expType, dynSource, field, temperature, value, error, null, null, extras);
-                            atom.getRelaxationData().put(datasetName, relaxData);
-                            break;
+                    ResonanceSource resonanceSource = expResult.getResonanceSource();
+                    if (!resonanceSource.deleted()) {
+                        Atom atom = resonanceSource.getAtom();
+                        Map<String, String> extras = new HashMap<>();
+                        String coherenceType = "Sz";
+                        String units = "s-1";
+                        extras.put("coherenceType", coherenceType);
+                        extras.put("units", units);
+                        switch (expType) {
+                            case R1:
+                            case NOE: {
+                                RelaxationData relaxData = new RelaxationData(datasetName, expType, resonanceSource, field, temperature, value, error, extras);
+                                atom.getRelaxationData().put(datasetName, relaxData);
+                                break;
+                            }
+                            default: {
+                                RelaxationRex relaxData = new RelaxationRex(datasetName, expType, resonanceSource, field, temperature, value, error, null, null, extras);
+                                atom.getRelaxationData().put(datasetName, relaxData);
+                                break;
+                            }
                         }
                     }
                 });

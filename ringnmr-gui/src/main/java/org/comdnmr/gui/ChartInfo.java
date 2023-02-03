@@ -27,6 +27,17 @@ public class ChartInfo {
     ValueSet valueSet;
     List<int[]> currentStates = new ArrayList<>();
 
+    @Override
+    public String toString() {
+        StringBuilder sBuilder = new StringBuilder();
+        sBuilder.append(mapName).append(" ").append(equationName).append(" ").append(state).append(" ").
+                append(valueSet.getName());
+        for (var resonanceSource : currentResidues) {
+            sBuilder.append(" ").append(resonanceSource.getAtom().getShortName());
+        }
+        return sBuilder.toString();
+    }
+
     public boolean hasExperiments() {
         return valueSet != null && (valueSet instanceof ExperimentSet);
     }
@@ -56,7 +67,7 @@ public class ChartInfo {
     }
 
     public ResonanceSource getSource() {
-        return experimentalResult.getSource();
+        return experimentalResult.getResonanceSource();
     }
 
     public ResonanceSource[] getResidues() {

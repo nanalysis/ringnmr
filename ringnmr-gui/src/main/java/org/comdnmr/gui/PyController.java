@@ -522,6 +522,23 @@ public class PyController implements Initializable {
         xychart.setHeight(canvas.getHeight());
     }
 
+    void filterSeries() {
+        for (ResidueChart residueChart : barCharts) {
+            for (DataSeries series : residueChart.getData()) {
+                var copyOfValues = List.copyOf(series.getValues());
+                series.clear();
+                for (var v : copyOfValues) {
+                    Object obj = v.getExtraValue();
+                    if (obj instanceof ResonanceSource resonanceSource) {
+                        if (!resonanceSource.deleted()) {
+                            series.add(v);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     void resizeBarPlotCanvas() {
         double width = chartBox.getWidth();
         double height = chartBox.getHeight();
@@ -615,6 +632,9 @@ public class PyController implements Initializable {
             Axis yAxis = residueChart.yAxis;
             if (residueChart.mouseClicked(e)) {
                 activeChart = residueChart;
+                System.out.println("sources " + residueChart.getSelectedSources());
+                System.out.println("chartinfo " + chartInfo);
+
                 break;
             } else if ((x > xAxis.getXOrigin()) && (x < xAxis.getXOrigin() + xAxis.getWidth())) {
                 if ((y < yAxis.getYOrigin()) && (y > xAxis.getYOrigin() - yAxis.getHeight())) {
@@ -781,6 +801,9 @@ public class PyController implements Initializable {
         bButton = GlyphsDude.createIconButton(FontAwesomeIcon.FAST_FORWARD, "", iconSize, fontSize, ContentDisplay.GRAPHIC_ONLY);
         bButton.setOnAction(this::lastResidue);
         buttons.add(bButton);
+        bButton = GlyphsDude.createIconButton(FontAwesomeIcon.REMOVE, "", iconSize, fontSize, ContentDisplay.GRAPHIC_ONLY);
+        bButton.setOnAction(this::removeItem);
+        buttons.add(bButton);
 
         navigatorToolBar.getItems().addAll(buttons);
     }
@@ -789,7 +812,7 @@ public class PyController implements Initializable {
         List<ExperimentResult> resInfo = getCurrentExperimentSet().getExperimentResults();
         List<ResonanceSource> resSources = new ArrayList<>();
         for (ExperimentResult experimentResult : resInfo) {
-            resSources.add(experimentResult.getSource());
+            resSources.add(experimentResult.getResonanceSource());
         }
         Collections.sort(resSources);
         if (chartInfo.hasResidue()) {
@@ -823,6 +846,16 @@ public class PyController implements Initializable {
 
     public void lastResidue(ActionEvent event) {
         incrResidue(10000);
+    }
+
+    void removeItem(ActionEvent event) {
+        if (chartInfo != null) {
+            for (var resonanceSource : chartInfo.getResidues()) {
+                resonanceSource.deleted(!resonanceSource.deleted());
+            }
+            filterSeries();
+            refreshResidueCharts();
+        }
     }
 
     public void loadParameterFile() {

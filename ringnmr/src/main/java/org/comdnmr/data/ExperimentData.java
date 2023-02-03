@@ -171,6 +171,10 @@ public class ExperimentData {
         public String getAtomName() {
             return resInfo.dynSource.getAtoms()[0].getName();
         }
+
+        public ResonanceSource getResonanceSource() {
+            return resInfo.getSource();
+        }
     }
 
     public ArrayList<DataValue> getDataValues() {

@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -60,7 +59,6 @@ import org.comdnmr.data.ValueSet;
 import org.nmrfx.chart.DataSeries;
 import org.nmrfx.chart.XYEValue;
 import org.nmrfx.chart.XYValue;
-import org.nmrfx.chemistry.Atom;
 import org.nmrfx.chemistry.Residue;
 import org.nmrfx.chemistry.io.MoleculeIOException;
 import org.nmrfx.chemistry.relax.RelaxationValues;
@@ -390,6 +388,9 @@ public class ChartUtil {
         int maxAtoms = 0;
         for (RelaxationValues value : values) {
             ResonanceSource resSource = value.getResonanceSource();
+            if (resSource.deleted()) {
+                continue;
+            }
             Residue residue = (Residue) resSource.getAtom().getEntity();
             if (!map.containsKey(residue)) {
                 map.put(residue, new HashMap<>());
@@ -409,6 +410,9 @@ public class ChartUtil {
 
         for (RelaxationValues value : values) {
             ResonanceSource resSource = value.getResonanceSource();
+            if (resSource.deleted()) {
+                continue;
+            }
             Residue residue = (Residue) resSource.getAtom().getEntity();
             int iSeries = map.get(residue).get(resSource.getAtom().getName());
             var series = data.get(iSeries);
@@ -456,10 +460,12 @@ public class ChartUtil {
         maxRes = Integer.MIN_VALUE;
         var map = new HashMap<Residue, HashMap<String, Integer>>();
         int maxAtoms = 0;
-
         Collection<Experiment> expDataSets = experimentSet.getExperimentData();
         for (Experiment expData : expDataSets) {
             for (var resSource : expData.getDynamicsSources()) {
+                if (resSource.deleted()) {
+                    continue;
+                }
                 Residue residue = (Residue) resSource.getAtom().getEntity();
                 if (!map.containsKey(residue)) {
                     map.put(residue, new HashMap<>());
@@ -493,7 +499,10 @@ public class ChartUtil {
             if (eqnName.equals("best")) {
                 useEquName = experimentResult.getBestEquationName();
             }
-            var resSource = experimentResult.getSource();
+            var resSource = experimentResult.getResonanceSource();
+            if (resSource.deleted()) {
+                continue;
+            }
 
             Residue residue = (Residue) resSource.getAtom().getEntity();
             int iSeries = map.get(residue).get(resSource.getAtom().getName());

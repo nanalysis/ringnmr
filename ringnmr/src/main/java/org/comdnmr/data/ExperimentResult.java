@@ -42,7 +42,7 @@ import org.nmrfx.chemistry.relax.ResonanceSource;
 public class ExperimentResult {
 
     ExperimentSet experimentSet;
-    ResonanceSource dynSource;
+    ResonanceSource resonanceSource;
     Map<String, Map<String, CurveFit>> curveSets = new LinkedHashMap<>();
     Map<String, FitResult> fitResults = new LinkedHashMap<>();
     PlotEquation bestEquation = null;
@@ -105,22 +105,22 @@ public class ExperimentResult {
 
         @Override
         public ResonanceSource getDynamicsSource() {
-            return resInfo.dynSource;
+            return resInfo.resonanceSource;
         }
 
         @Override
         public String getAtomName() {
-            return resInfo.dynSource.getAtoms()[0].getName();
+            return resInfo.resonanceSource.getAtoms()[0].getName();
         }
 
         @Override
         public String getResidue() {
-            return String.valueOf(resInfo.dynSource.getAtoms()[0].getResidueNumber());
+            return String.valueOf(resInfo.resonanceSource.getAtoms()[0].getResidueNumber());
         }
 
         @Override
         public String getResName() {
-            return resInfo.dynSource.getAtoms()[0].getResidueName();
+            return resInfo.resonanceSource.getAtoms()[0].getResidueName();
         }
 
         @Override
@@ -129,24 +129,24 @@ public class ExperimentResult {
         }
     }
 
-    public ExperimentResult(ExperimentSet experimentSet, ResonanceSource dynSource, int groupId, int groupSize) {
-        this(experimentSet, dynSource, groupId, groupSize, 0);
+    public ExperimentResult(ExperimentSet experimentSet, ResonanceSource resonanceSource, int groupId, int groupSize) {
+        this(experimentSet, resonanceSource, groupId, groupSize, 0);
     }
 
-    public ExperimentResult(ExperimentSet experimentSet, ResonanceSource dynSource, int groupId, int groupSize, int peakNum) {
+    public ExperimentResult(ExperimentSet experimentSet, ResonanceSource resonanceSource, int groupId, int groupSize, int peakNum) {
         this.experimentSet = experimentSet;
-        this.dynSource = dynSource;
+        this.resonanceSource = resonanceSource;
         this.groupId = groupId;
         this.groupSize = groupSize;
         this.peakNum = peakNum;
     }
 
-    public ResonanceSource getSource() {
-        return dynSource;
+    public ResonanceSource getResonanceSource() {
+        return resonanceSource;
     }
 
     public Atom getAtom() {
-        return dynSource.getAtoms()[0];
+        return resonanceSource.getAtoms()[0];
     }
 
     public void addFitResult(FitResult fitResult) {

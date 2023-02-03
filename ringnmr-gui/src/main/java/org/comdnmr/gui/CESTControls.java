@@ -48,7 +48,6 @@ import static org.comdnmr.gui.CESTControls.PARS.TEX;
 import org.comdnmr.eqnfit.CESTFitFunction;
 import org.comdnmr.util.CoMDPreferences;
 import javafx.scene.input.KeyCode;
-import org.nmrfx.chemistry.Atom;
 import org.nmrfx.chemistry.relax.ResonanceSource;
 
 /**
@@ -640,7 +639,7 @@ public class CESTControls extends EquationControls {
 //                            double[] xVals = controller.currentResProps.getExperimentData().stream().findFirst().get().getXVals();
                             List<ExperimentResult> resVals = controller.getCurrentExperimentSet().getExperimentResults();
                             Collections.sort(resVals, (a,b) -> Integer.compare(a.getAtom().getIndex(), b.getAtom().getIndex()));
-                            ResonanceSource resSource = resVals.get(0).getSource();
+                            ResonanceSource resSource = resVals.get(0).getResonanceSource();
                             double[] xVals = controller.getCurrentExperimentSet().getExperimentData().stream().findFirst().get().getResidueData(resSource).getXValues()[0];
                             if (xVals != null) {
                                 double min = Math.floor(xVals[1] / 2) * 2;
