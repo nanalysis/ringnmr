@@ -2332,7 +2332,9 @@ public class PyController implements Initializable {
 
     @FXML
     void clearProject() {
-        clearProject(true);
+        if (GUIUtils.affirm("Clear Project")) {
+            clearProject(true);
+        }
     }
 
     void clearProject(boolean clearXY) {
@@ -2348,6 +2350,20 @@ public class PyController implements Initializable {
         clearSecondaryStructure();
         barCharts.remove(activeChart);
         addChart();
+    }
+
+    @FXML
+    void clearRelaxPars() {
+        if (GUIUtils.affirm("Clear Relaxation Parameters")) {
+            DataIO.clearRelaxationData();
+        }
+    }
+
+    @FXML
+    void clearOrderPars() {
+        if (GUIUtils.affirm("Clear Order Parameters")) {
+            DataIO.clearOrderPars();
+        }
     }
 
     void showInfo(String equationName) {

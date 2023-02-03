@@ -80,6 +80,8 @@
                             <MenuItem text="Show Console" onAction="#showConsole"/>
                             <MenuItem text="Clear Secondary Structure..." onAction="#clearSecondaryStructure" fx:id="clearSSMenuItem"/>
                             <MenuItem text="Clear Project" onAction="#clearProject"/>
+                            <MenuItem text="Clear Molecule Order Pars" onAction="#clearOrderPars"/>
+                            <MenuItem text="Clear Molecule T1/T2/NOE Pars" onAction="#clearRelaxPars"/>
                             <MenuItem text="Exit" onAction="#exitProgram"/>
 
                         </items>

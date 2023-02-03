@@ -1524,6 +1524,24 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         NMRStarWriter.writeAll(chan);
     }
 
+    public static void clearRelaxationData() {
+        MoleculeBase mol = MoleculeFactory.getActive();
+        if (mol != null) {
+            for (Atom atom : mol.getAtomArray()) {
+                atom.getRelaxationData().clear();
+            }
+        }
+    }
+
+    public static void clearOrderPars() {
+        MoleculeBase mol = MoleculeFactory.getActive();
+        if (mol != null) {
+            for (Atom atom : mol.getAtomArray()) {
+                atom.getOrderPars().clear();
+            }
+        }
+    }
+
     public static Map<String, RelaxSet> getDataFromMolecule() {
         Map<String, RelaxSet> relaxValueMap = new HashMap<>();
 
