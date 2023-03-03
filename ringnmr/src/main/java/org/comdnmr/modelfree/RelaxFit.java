@@ -409,7 +409,11 @@ public class RelaxFit {
             double[] resResult = calcDeltaSq(molData, resPars, testModel);
             sumSq += resResult[0];
             sumComplexity += resResult[1];
-            nComplex += molData.getData().size();
+            if (fitJ) {
+                nComplex++;
+            } else {
+                nComplex += molData.getData().size();
+            }
             n += (int) Math.round(resResult[2]);
 
             if (!testModel.checkParConstraints()) {

@@ -15,12 +15,14 @@ import org.apache.commons.math3.optim.SimpleBounds;
 import org.apache.commons.math3.optim.SimpleValueChecker;
 import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
 import org.apache.commons.math3.optim.nonlinear.scalar.ObjectiveFunction;
+import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.BOBYQAOptimizer;
 import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.CMAESOptimizer;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.random.SynchronizedRandomGenerator;
 import org.apache.commons.math3.random.Well19937c;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.util.FastMath;
+import org.comdnmr.util.CoMDPreferences;
 
 public class Fitter {
 
@@ -71,7 +73,12 @@ public class Fitter {
         if (xValues != null) {
             opt.setXYE(xValues, yValues, errValues);
         }
-        PointValuePair result = opt.refineCMAES(start, inputSigma);
+        PointValuePair result;
+        if (CoMDPreferences.getOptimizer().equals("BOBYQA")) {
+            result = opt.refineBOBYQA(start, inputSigma);
+        } else {
+            result = opt.refineCMAES(start, inputSigma);
+        }
 
         return result;
     }
@@ -208,6 +215,43 @@ public class Fitter {
 
             return deNormResult;
         }
+
+        public PointValuePair refineBOBYQA(double[] guess, double inputSigma) {
+            startTime = System.currentTimeMillis();
+            random.setSeed(1);
+            double lambdaMul = 3.0;
+            int lambda = (int) (lambdaMul * FastMath.round(4 + 3 * FastMath.log(guess.length)));
+            //int nSteps = guess.length*1000;
+            int nSteps = 2000;
+            double stopFitness = 0.0;
+            int diagOnly = 0;
+            double[] normLower = new double[guess.length];
+            double[] normUpper = new double[guess.length];
+            Arrays.fill(normLower, 0.0);
+            Arrays.fill(normUpper, 100.0);
+            double[] normGuess = normalize(guess);
+            fixGuesses(normGuess);
+            //new Checker(100 * Precision.EPSILON, 100 * Precision.SAFE_MIN, nSteps));
+
+            int n = guess.length;
+            int nInterp = 2 * n + 1;
+            double initialRadius = inputSigma;
+            double stopRadius = CoMDPreferences.getFinalRadius();
+            stopRadius = Math.pow(10.0, stopRadius);
+
+            BOBYQAOptimizer optimizer = new BOBYQAOptimizer(nInterp, initialRadius, stopRadius);
+            PointValuePair result = null;
+
+            result = optimizer.optimize(
+                    new MaxEval(2000000),
+                    new ObjectiveFunction(this), GoalType.MINIMIZE,
+                    new SimpleBounds(normLower, normUpper),
+                    new InitialGuess(normGuess));
+            endTime = System.currentTimeMillis();
+            fitTime = endTime - startTime;
+            PointValuePair deNormResult = new PointValuePair(deNormalize(result.getPoint()), result.getValue());
+            return deNormResult;
+        }
     }
 
     public double[] bootstrap(double[] guess, int nSim, boolean parametric, double[] yPred) {
@@ -239,7 +283,11 @@ public class Fitter {
 
             PointValuePair result;
             try {
-                result = optimizer.refineCMAES(guess, inputSigma);
+                if (CoMDPreferences.getOptimizer().equals("BOBYQA")) {
+                    result = optimizer.refineBOBYQA(guess, inputSigma);
+                } else {
+                    result = optimizer.refineCMAES(guess, inputSigma);
+                }
             } catch (Exception ex) {
                 return;
             }
