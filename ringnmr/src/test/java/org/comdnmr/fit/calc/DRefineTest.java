@@ -17,6 +17,7 @@ import org.comdnmr.data.DynamicsSource;
 import org.comdnmr.modelfree.*;
 import org.comdnmr.modelfree.RelaxFit.DiffusionType;
 import org.comdnmr.modelfree.models.*;
+import org.comdnmr.util.CoMDPreferences;
 import org.junit.Test;
 import org.junit.Assert;
 import org.nmrfx.chemistry.MoleculeFactory;
@@ -37,7 +38,7 @@ public class DRefineTest {
         Path path = file.toPath();
         Map<String, MolDataValues> molValues = new TreeMap<>();
         DynamicsSource dynamicsSourceFactory = new DynamicsSource(true, true, true, true);
-
+        CoMDPreferences.setOptimizer("CMAES");
         Files.lines(path).forEach(line -> {
             String[] fields = line.split("\t");
             if (fields.length == 5) {
