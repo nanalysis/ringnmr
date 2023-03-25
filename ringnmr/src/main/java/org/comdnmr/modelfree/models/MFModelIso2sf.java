@@ -81,8 +81,8 @@ public class MFModelIso2sf extends MFModelIso2f {
         complexity
                 = Math.abs(1.0 - sf2)
                 + Math.abs(1.0 - ss2)
-                + tauScale * (Math.log10(tauSx* 1.0e9  - 0.15 + 0.001) + 3.0)
-                + tauScale * (Math.log10(tauFx * 1.0e9) + 3.0);
+                + tauScale * (Math.log10(tauSx * 1.0e9  + 0.001) + 3.0)
+                + tauScale * (Math.log10(tauFx * 1.0e9 + 0.001) + 3.0);
         return J;
     }
 
@@ -147,7 +147,7 @@ public class MFModelIso2sf extends MFModelIso2f {
 
     @Override
     public boolean checkParConstraints() {
-        return tauS * 1.0e-9 < tauM && tauF < tauS;
+        return tauF < tauM && tauS < tauM;
     }
 
     @Override
