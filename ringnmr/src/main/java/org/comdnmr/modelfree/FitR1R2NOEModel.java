@@ -89,18 +89,18 @@ public class FitR1R2NOEModel extends FitModel {
                                 }
                                 if (Math.round(data.getField()) == field) {
                                     switch (data.getExpType()) {
-                                        case R1:
+                                        case R1 -> {
                                             r1 = data.getValue();
                                             r1Error = data.getError();
-                                            break;
-                                        case R2:
+                                        }
+                                        case R2 -> {
                                             r2 = data.getValue();
                                             r2Error = data.getError();
-                                            break;
-                                        case NOE:
+                                        }
+                                        case NOE -> {
                                             noe = data.getValue();
                                             noeError = data.getError();
-                                            break;
+                                        }
                                     }
                                 }
                             }
@@ -164,11 +164,7 @@ public class FitR1R2NOEModel extends FitModel {
             MolDataValues value = entry.getValue();
             for (RelaxDataValue rlxValue : value.getData()) {
                 long sfMHz = Math.round(rlxValue.relaxObj.getSF() / 1.0e6);
-                List<RelaxDataValue> values = map.get(sfMHz);
-                if (values == null) {
-                    values = new ArrayList<>();
-                    map.put(sfMHz, values);
-                }
+                List<RelaxDataValue> values = map.computeIfAbsent(sfMHz, k -> new ArrayList<>());
                 values.add(rlxValue);
             }
         }
@@ -182,10 +178,9 @@ public class FitR1R2NOEModel extends FitModel {
             }
         }
         if (max > 0) {
-            Map<String, Double> tauData = CorrelationTime.estimateTau(maxMHz, "N", map.get(maxMHz));
-            return tauData;
+            return CorrelationTime.estimateTau(maxMHz, "N", map.get(maxMHz));
         } else {
-            return Collections.EMPTY_MAP;
+            return Collections.emptyMap();
         }
     }
 
@@ -306,7 +301,6 @@ public class FitR1R2NOEModel extends FitModel {
 
     public void testModel(Map<String, MolDataValues> molData, MFModelIso model) {
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
-        MoleculeBase mol = MoleculeFactory.getActive();
         Random random = new Random();
 
         for (String key : molData.keySet()) {
@@ -314,7 +308,6 @@ public class FitR1R2NOEModel extends FitModel {
             MolDataValues resData = molData.get(key);
 
             if (!resData.getData().isEmpty()) {
-                double lowestAIC = Double.MAX_VALUE;
                 resData.setTestModel(model);
                 molDataRes.put(key, molData.get(key));
                 Score score = tryModel(molDataRes, model, tauFraction, fitTau, random);
@@ -340,9 +333,7 @@ public class FitR1R2NOEModel extends FitModel {
     }
 
     boolean overT2Limit(Map<String, MolDataValues> molDataRes, double limit) {
-        return molDataRes.values().stream().anyMatch(v -> {
-            return v.getData().stream().anyMatch(d -> d.R2 > limit);
-        });
+        return molDataRes.values().stream().anyMatch(v -> v.getData().stream().anyMatch(d -> d.R2 > limit));
     }
 
     Score tryModel(Map<String, MolDataValues> molDataRes, MFModelIso model, double localTauFraction, boolean localFitTau, Random random) {
@@ -372,7 +363,7 @@ public class FitR1R2NOEModel extends FitModel {
         for (var d : score.getPars()) {
             System.out.print(d + " ");
         }
-        System.out.println("");
+        System.out.println();
         return score;
     }
 
@@ -394,22 +385,23 @@ public class FitR1R2NOEModel extends FitModel {
     }
 
     public void writeData(File file) throws IOException {
-        FileWriter fileWriter = new FileWriter(file);
-        var molDataValues = getData(false);
-        String header = new String("residue\tfield\tr1\tr1_err\tr2\tr2_err\tnoe\tnoe_err\n");
-        fileWriter.write(header);
-        for (var molData : molDataValues.values()) {
-            var data = molData.getData();
-            for (var value : data) {
-                R1R2NOEDataValue dValue = (R1R2NOEDataValue) value;
-                StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.append(molData.specifier).append("\t");
-                stringBuilder.append(String.format("%.2f", dValue.relaxObj.getSF() / 1.0e6)).append("\t");
-                appendValueError(stringBuilder, dValue.R1, dValue.R1err, "%.3f");
-                appendValueError(stringBuilder, dValue.R2, dValue.R2err, "%.3f");
-                appendValueError(stringBuilder, dValue.NOE, dValue.NOEerr, "%.3f");
-                fileWriter.write(stringBuilder.toString());
-                fileWriter.write("\n");
+        try (FileWriter fileWriter = new FileWriter(file)) {
+            var molDataValues = getData(false);
+            String header = "residue\tfield\tr1\tr1_err\tr2\tr2_err\tnoe\tnoe_err\n";
+            fileWriter.write(header);
+            for (var molData : molDataValues.values()) {
+                var data = molData.getData();
+                for (var value : data) {
+                    R1R2NOEDataValue dValue = (R1R2NOEDataValue) value;
+                    StringBuilder stringBuilder = new StringBuilder();
+                    stringBuilder.append(molData.specifier).append("\t");
+                    stringBuilder.append(String.format("%.2f", dValue.relaxObj.getSF() / 1.0e6)).append("\t");
+                    appendValueError(stringBuilder, dValue.R1, dValue.R1err, "%.3f");
+                    appendValueError(stringBuilder, dValue.R2, dValue.R2err, "%.3f");
+                    appendValueError(stringBuilder, dValue.NOE, dValue.NOEerr, "%.3f");
+                    fileWriter.write(stringBuilder.toString());
+                    fileWriter.write("\n");
+                }
             }
         }
     }

@@ -42,7 +42,7 @@ public class RelaxFit {
     Fitter bestFitter;
     int[] nParsPerModel = {0, 1, 2, 0, 0, 3, 4};
     DiffusionType diffusionType;
-    static int[][] ANISO_ANGLE_STARTS = {
+    static final int[][] ANISO_ANGLE_STARTS = {
         {0, 0, 0},
         {1, 0, 0},
         {0, 1, 0},
@@ -52,7 +52,7 @@ public class RelaxFit {
         {0, 1, 1},
         {1, 1, 1}
     };
-    static int[][] ANGLE_STARTS = {
+    static final int[][] ANGLE_STARTS = {
         {0, 0},
         {1, 0},
         {0, 1},
@@ -192,34 +192,34 @@ public class RelaxFit {
     public double[] getJ(double[] pars, RelaxEquations relaxObj, int modelNum) {
         double tauM = pars[0];//4.5e-9;
         double s2 = pars[1];
-        double[] J = new double[5];
+        double[] valJ = new double[5];
         switch (modelNum) {
             case 1:
                 MFModelIso1 model1 = new MFModelIso1(tauM);
-                J = model1.calc(relaxObj.wValues, s2);
+                valJ = model1.calc(relaxObj.wValues, s2);
                 break;
             case 2:
                 double tau = pars[2];
                 MFModelIso1f model2 = new MFModelIso1f(tauM);
-                J = model2.calc(relaxObj.wValues, s2, tau);
+                valJ = model2.calc(relaxObj.wValues, s2, tau);
                 break;
             case 5:
                 tau = pars[2];
                 double sf2 = pars[3];
                 MFModelIso2s model5 = new MFModelIso2s(tauM);
-                J = model5.calc(relaxObj.wValues, s2, tau, sf2);
+                valJ = model5.calc(relaxObj.wValues, s2, tau, sf2);
                 break;
             case 6:
                 tau = pars[2];
                 sf2 = pars[3];
                 double tauS = pars[4];
                 MFModelIso2sf model6 = new MFModelIso2sf(tauM);
-                J = model6.calc(relaxObj.wValues, s2, tau, sf2, tauS);
+                valJ = model6.calc(relaxObj.wValues, s2, tau, sf2, tauS);
                 break;
             default:
                 break;
         }
-        return J;
+        return valJ;
     }
 
     public double[][] parsToD(double[] pars, DiffusionType dType) {
@@ -258,67 +258,66 @@ public class RelaxFit {
 
     public double[] getJDiffusion(double[] pars, RelaxEquations relaxObj, MFModelAniso model, double[] v, double[][] D, double[][] VT) {
         int extraParStart = diffusionType.getNDiffusionPars() + diffusionType.getNAnglePars();
-        double[] J;
+        double[] valJ;
         double[] modelPars = new double[model.getNPars()];
         System.arraycopy(pars, extraParStart, modelPars, 0, model.getNPars());
         model.update(D, VT);
-        J = model.calc(relaxObj.wValues, modelPars);
-        return J;
+        valJ = model.calc(relaxObj.wValues, modelPars);
+        return valJ;
     }
 
-    public double[] getJDiffusion(double[] pars, RelaxEquations relaxObj, int modelNum, double[] v, double[][] D, double[][] VT) {
+    public double[] getJDiffusion(double[] pars, RelaxEquations relaxObj, int modelNum, double[] v, double[][] valD, double[][] valVT) {
         int extraParStart = diffusionType.getNDiffusionPars() + diffusionType.getNAnglePars();
         double s2 = pars[extraParStart];
-        double[] J = new double[5];
+        double[] valJ = new double[5];
         switch (modelNum) {
             case 1:
-                MFModelAniso1 model1 = new MFModelAniso1(diffusionType, D, VT, v);
-                J = model1.calc(relaxObj.wValues, s2);
+                MFModelAniso1 model1 = new MFModelAniso1(diffusionType, valD, valVT, v);
+                valJ = model1.calc(relaxObj.wValues, s2);
                 break;
             case 2:
                 double tau = pars[extraParStart + 1];
-                MFModelAniso2 model2 = new MFModelAniso2(diffusionType, D, VT, v);
-                J = model2.calc(relaxObj.wValues, s2, tau);
+                MFModelAniso2 model2 = new MFModelAniso2(diffusionType, valD, valVT, v);
+                valJ = model2.calc(relaxObj.wValues, s2, tau);
                 break;
             case 5:
                 tau = pars[extraParStart + 1];
                 double sf2 = pars[extraParStart + 2];
-                MFModelAniso5 model5 = new MFModelAniso5(diffusionType, D, VT, v);
-                J = model5.calc(relaxObj.wValues, s2, tau, sf2);
+                MFModelAniso5 model5 = new MFModelAniso5(diffusionType, valD, valVT, v);
+                valJ = model5.calc(relaxObj.wValues, s2, tau, sf2);
                 break;
             case 6:
                 tau = pars[extraParStart + 1];
                 sf2 = pars[extraParStart + 2];
                 double tauS = pars[extraParStart + 3];
-                MFModelAniso6 model6 = new MFModelAniso6(diffusionType, D, VT, v);
-                J = model6.calc(relaxObj.wValues, s2, tau, sf2, tauS);
+                MFModelAniso6 model6 = new MFModelAniso6(diffusionType, valD, valVT, v);
+                valJ = model6.calc(relaxObj.wValues, s2, tau, sf2, tauS);
                 break;
             default:
                 break;
         }
-        return J;
+        return valJ;
     }
 
     public Rotation getDRotation(double[] pars, DiffusionType dType) {
         int nEqlDiffPars;
-        double alpha = 0.0;
-        double beta = 0.0;
-        double gamma = 0.0;
+        double alpha;
+        double beta;
+        double gamma;
         switch (dType) {
-            case PROLATE:
-            case OBLATE:
+            case PROLATE, OBLATE -> {
                 //Dyy = Dzz
                 //Dxx = Dyy
                 nEqlDiffPars = 1;
                 alpha = pars[3 - nEqlDiffPars];
                 beta = pars[4 - nEqlDiffPars];
                 gamma = 0;
-                break;
-            case ANISOTROPIC:
+            }
+            default -> {
                 alpha = pars[3];
                 beta = pars[4];
                 gamma = pars[5];
-                break;
+            }
         }
 //        System.out.println("alpha = " + alpha*180./Math.PI + " beta = " + beta*180./Math.PI + " gamma = " + gamma*180./Math.PI);
         Rotation rot = null;
@@ -450,8 +449,7 @@ public class RelaxFit {
             }
 
             for (var value : molData.getData()) {
-                if (value instanceof  R1R2NOEDataValue) {
-                    var dValue = (R1R2NOEDataValue) value;
+                if (value instanceof R1R2NOEDataValue dValue) {
                     randomize(random, testModel, newMolData, dValue,resPars);
                 } else {
                     var dValue = (DeuteriumDataValue) value;
@@ -464,11 +462,11 @@ public class RelaxFit {
 
     private void randomize(Random random, MFModel testModel, MolDataValues newMolData, R1R2NOEDataValue dValue, double[] resPars) {
         RelaxEquations relaxObj = dValue.relaxObj;
-        double[] J = testModel.calc(relaxObj.wValues, resPars);
-        double r1 = relaxObj.R1(J);
+        double[] valJ = testModel.calc(relaxObj.wValues, resPars);
+        double r1 = relaxObj.R1(valJ);
         double rEx = testModel.includesEx() ? resPars[resPars.length - 1] : 0.0;
-        double r2 = relaxObj.R2(J, rEx);
-        double noe = relaxObj.NOE(J);
+        double r2 = relaxObj.R2(valJ, rEx);
+        double noe = relaxObj.NOE(valJ);
         dValue.randomize(newMolData, r1, r2, noe, random, 1.0);
     }
 
@@ -504,10 +502,10 @@ public class RelaxFit {
             for (RelaxDataValue value : molData.getData()) {
                 var dValue = (R1R2NOEDataValue) value;
                 RelaxEquations relaxObj = dValue.relaxObj;
-                double[] J = testModel.calc(relaxObj.wValues, resPars);
-                double r1 = relaxObj.R1(J);
-                double r2 = relaxObj.R2(J, 0.0);
-                double noe = relaxObj.NOE(J);
+                double[] valJ = testModel.calc(relaxObj.wValues, resPars);
+                double r1 = relaxObj.R1(valJ);
+                double r2 = relaxObj.R2(valJ, 0.0);
+                double noe = relaxObj.NOE(valJ);
                 double delta2 = dValue.score2(r1, r2, noe);
                 sumSq += delta2;
                 n += 3;
@@ -516,7 +514,7 @@ public class RelaxFit {
                 parsOK = false;
             }
         }
-        double rms = Math.sqrt(sumSq / n);
+        double rms = n == 0 ? 0.0 : Math.sqrt(sumSq / n);
         if (!parsOK) {
             rms += n * 10.0;
         }
@@ -529,11 +527,11 @@ public class RelaxFit {
         } else if (diffusionType == ANISOTROPIC) {
             Arrays.sort(pars, 0, 3);
         }
-        double[][] D = null;
-        double[][] VT = null;
+        double[][] valD = null;
+        double[][] valVT = null;
         if (diffusionType != DiffusionType.ISOTROPIC) {
-            D = parsToD(pars, diffusionType);
-            VT = parsToVT(pars, diffusionType);
+            valD = parsToD(pars, diffusionType);
+            valVT = parsToVT(pars, diffusionType);
         }
         double sumSq = 0.0;
         int nDiffPars = diffusionType.getNDiffusionPars() + diffusionType.getNAnglePars();
@@ -548,22 +546,22 @@ public class RelaxFit {
                 double[] resPars = new double[nModelPars + nDiffPars];
                 System.arraycopy(pars, 0, resPars, 0, nDiffPars);
                 resPars[resPars.length - 1] = 1.0; //Model 0: S2 = 1.0, all others null.
-                double[] J;
+                double[] valJ;
                 if (model instanceof MFModelIso) {
                     resPars[0] = 1.0 / (6.0 * resPars[0]);
-                    J = model.calc(relaxObj.wValues, resPars);
+                    valJ = model.calc(relaxObj.wValues, resPars);
                 } else {
-                    J = getJDiffusion(resPars, relaxObj, (MFModelAniso) model, v, D, VT);
+                    valJ = getJDiffusion(resPars, relaxObj, (MFModelAniso) model, v, valD, valVT);
                 }
-                double rhoExp = dValue.calcExpRho(J);
-                double rhoPred = dValue.calcPredRho(J);
+                double rhoExp = dValue.calcExpRho(valJ);
+                double rhoPred = dValue.calcPredRho(valJ);
                 double delta = rhoPred - rhoExp;
                 sumSq += delta * delta;
                 n++;
             }
         }
 
-        return Math.sqrt(sumSq / n);
+        return n == 0 ? 0.0 : Math.sqrt(sumSq / n);
 
     }
 
@@ -573,8 +571,8 @@ public class RelaxFit {
         } else if (diffusionType == ANISOTROPIC) {
             Arrays.sort(pars, 0, 3);
         }
-        double[][] D = parsToD(pars, diffusionType);
-        double[][] VT = parsToVT(pars, diffusionType);
+        double[][] valD = parsToD(pars, diffusionType);
+        double[][] valVT = parsToVT(pars, diffusionType);
         int modelNum = 1;
         int nDiffPars = diffusionType.getNDiffusionPars() + diffusionType.getNAnglePars();
         for (MolDataValues molData : molDataValues.values()) {
@@ -585,9 +583,9 @@ public class RelaxFit {
                 double[] resPars = new double[nParsPerModel[modelNum] + nDiffPars];
                 System.arraycopy(pars, 0, resPars, 0, nDiffPars);
                 resPars[resPars.length - 1] = 1.0; //Model 0: S2 = 1.0, all others null.
-                double[] J = getJDiffusion(resPars, relaxObj, modelNum, v, D, VT);
-                double rhoExp = dValue.calcExpRho(J);
-                double rhoPred = dValue.calcPredRho(J);
+                double[] valJ = getJDiffusion(resPars, relaxObj, modelNum, v, valD, valVT);
+                double rhoExp = dValue.calcExpRho(valJ);
+                double rhoPred = dValue.calcPredRho(valJ);
                 System.out.println(rhoExp + " " + rhoPred + " " + (rhoExp - rhoPred) + " " + molData.specifier);
             }
         }
@@ -616,18 +614,11 @@ public class RelaxFit {
     private boolean checkParConstraint(double[] pars, int modelNum) {
         boolean result;
         double scale = 1.0;
-        switch (modelNum) {
-            case 2:
-            case 5:
-                result = pars[2] < scale * pars[0];
-                break;
-            case 6:
-                result = pars[2] < scale * pars[0] && pars[4] < scale * pars[0];
-                break;
-            default:
-                result = true;
-
-        }
+        result = switch (modelNum) {
+            case 2, 5 -> pars[2] < scale * pars[0];
+            case 6 -> pars[2] < scale * pars[0] && pars[4] < scale * pars[0];
+            default -> true;
+        };
         return result;
 
     }
@@ -682,7 +673,6 @@ public class RelaxFit {
         double[] upper = new double[guesses.length];
         int nDiffPars = diffusionType.getNDiffusionPars();
         int nAnglePars = diffusionType.getNAnglePars();
-//        System.out.println(diffusionType + " " + nDiffPars + " " + nAnglePars);
         for (int i = 0; i < nDiffPars; i++) {
             lower[i] = guesses[i] / 2;
             upper[i] = guesses[i] * 2;
@@ -693,22 +683,6 @@ public class RelaxFit {
         }
         try {
             PointValuePair result = fitter.fit(guesses, lower, upper, 10.0);
-//            System.out.println("Scaled guess, bounds:");
-            for (int i = 0; i < lower.length; i++) {
-                double lb = lower[i];
-                double ub = upper[i];
-                double guess = guesses[i];
-                if (i < nDiffPars) {
-                    lb /= 1e7;
-                    ub /= 1e7;
-                    guess /= 1e7;
-                } else {
-                    lb = Math.toDegrees(lb);
-                    ub = Math.toDegrees(ub);
-                    guess = Math.toDegrees(guess);
-                }
-//                System.out.printf("guess %7.3f LB %7.3f UB %7.3f\nValues", guess, lb, ub);
-            }
             bestPars = result.getPoint();
             bestChiSq = result.getValue();
             return result;
