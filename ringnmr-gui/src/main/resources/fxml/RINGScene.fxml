@@ -319,6 +319,11 @@
                                             </HBox>
                                             <HBox>
                                                 <children>
+                                                    <CheckBox text="Bootstrap Aggregate " fx:id="bootStrapCheckBox"/>
+                                                </children>
+                                            </HBox>
+                                            <HBox>
+                                                <children>
                                                     <Label text="T2 Limit  " prefWidth="80"/>
                                                     <Slider fx:id="t2LimitSlider" prefWidth="150"/>
                                                     <Label fx:id="t2LimitLabel" prefWidth="80"/>

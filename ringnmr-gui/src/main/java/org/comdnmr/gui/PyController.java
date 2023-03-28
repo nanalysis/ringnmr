@@ -207,6 +207,8 @@ public class PyController implements Initializable {
     @FXML
     CheckBox fitJCheckBox;
     @FXML
+    CheckBox bootStrapCheckBox;
+    @FXML
     Slider tauFractionSlider;
     @FXML
     Label tauFractionLabel;
@@ -484,10 +486,10 @@ public class PyController implements Initializable {
                 -> t2LimitLabel.setText(String.format("%.1f", t2LimitSlider.getValue())));
 
         nReplicatesSlider.setMin(0.0);
-        nReplicatesSlider.setMax(200.0);
+        nReplicatesSlider.setMax(1000);
         nReplicatesSlider.setValue(0.0);
         bootstrapNLabel.setText("0");
-        nReplicatesSlider.setBlockIncrement(10);
+        nReplicatesSlider.setBlockIncrement(25);
         nReplicatesSlider.setMajorTickUnit(50);
         nReplicatesSlider.setMinorTickCount(4);
         nReplicatesSlider.setShowTickMarks(true);
@@ -1233,6 +1235,7 @@ public class PyController implements Initializable {
             tau = 10.0;
         }
         boolean fitJ = fitJCheckBox.isSelected();
+        boolean bootStrapA = bootStrapCheckBox.isSelected();
         System.out.println(lambdaText + " lambda " + lambda);
         fitModel.setLambda(lambda);
         fitModel.setTau(tau);
@@ -1243,6 +1246,7 @@ public class PyController implements Initializable {
         fitModel.setT2Limit(t2Limit);
         fitModel.setNReplicates((int) nReplicatesSlider.getValue());
         fitModel.setFitJ(fitJ);
+        fitModel.setBootstrap(bootStrapA);
         fitModel.setTauFraction(tauFraction);
         var modelNames = new ArrayList<String>();
         for (var modelCheckBox : modelCheckBoxes) {

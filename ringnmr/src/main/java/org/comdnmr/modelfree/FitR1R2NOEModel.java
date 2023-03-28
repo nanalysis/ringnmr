@@ -8,16 +8,9 @@ package org.comdnmr.modelfree;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Random;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.apache.commons.math3.optim.PointValuePair;
@@ -150,7 +143,11 @@ public class FitR1R2NOEModel extends FitModel {
         Random random = new Random();
         Map<String, MolDataValues> molData = getData(false);
         MolDataValues molDataValue = molData.get(searchKey);
-        return testModels(molDataValue, searchKey, modelNames, random);
+        if (bootstrap) {
+            return testModelsWithBootstrapAggregation(molDataValue, searchKey, modelNames, random);
+        } else {
+            return testModels(molDataValue, searchKey, modelNames, random);
+        }
     }
 
     public Map<String, Double> estimateTau() {
@@ -219,20 +216,55 @@ public class FitR1R2NOEModel extends FitModel {
         if (tau == null) {
             tau = estimateTau(molData).get("tau");
         }
-        MoleculeBase mol = MoleculeFactory.getActive();
-        Map<String, MolDataValues> molDataRes = new TreeMap<>();
-        for (String key : molData.keySet()) {
-            molDataRes.clear();
-            MolDataValues resData = molData.get(key);
+
+        molData.entrySet().stream().sorted(Comparator.comparing(Map.Entry::getKey)).parallel().forEach(e -> {
+            MolDataValues resData = e.getValue();
+            String key = e.getKey();
             if (!resData.getData().isEmpty()) {
-                molDataRes.put(key, resData);
-                testModels(resData, key, modelNames, random);
+                if (bootstrap) {
+                    testModelsWithBootstrapAggregation(resData, key, modelNames, random);
+                } else {
+                    testModels(resData, key, modelNames, random);
+                }
             }
+        });
+    }
+
+    private OrderPar makeOrderPar(MolDataValues resData, Map<String, MolDataValues> molDataRes, String key,
+                                  Score bestScore, MFModelIso bestModel, double[][] repData) {
+        ResonanceSource resSource = new ResonanceSource(resData.atom);
+        Atom atom = resData.atom;
+        var parNames = bestModel.getParNames();
+        double[] pars = bestScore.getPars();
+
+        OrderPar orderPar = new OrderPar(resSource, bestScore.rss, bestScore.nValues, bestScore.nPars, bestModel.getName());
+        for (int iPar = 0; iPar < parNames.size(); iPar++) {
+            String parName = parNames.get(iPar);
+            double parValue = pars[iPar];
+            Double parError = null;
+            if (repData != null) {
+                DescriptiveStatistics sumStat = new DescriptiveStatistics(repData[iPar]);
+                parError = sumStat.getStandardDeviation();
+            }
+            orderPar = orderPar.set(parName, parValue, parError);
         }
+        if (!bestModel.fitTau()) {
+            orderPar = orderPar.set("Tau_e", bestModel.getTau(), 0.0);
+        }
+
+        orderPar = orderPar.set("model", (double) bestModel.getNumber(), null);
+        if ((bestModel instanceof MFModelIso2sf) && (lambda > 1.0e-6)) {
+            orderPar = orderPar.setModel();
+        }
+        atom.addOrderPar("order", orderPar);
+        double[][] jValues = resData.getJValues();
+        SpectralDensity spectralDensity = new SpectralDensity(key, jValues);
+        atom.addSpectralDensity(key, spectralDensity);
+        return orderPar;
+
     }
 
     public Optional<OrderPar> testModels(MolDataValues resData, String key, List<String> modelNames, Random random) {
-        Optional<OrderPar> result = Optional.empty();
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
         molDataRes.put(key, resData);
 
@@ -249,47 +281,143 @@ public class FitR1R2NOEModel extends FitModel {
             localFitTau = false;
         }
         for (var modelName : modelNames) {
-
             MFModelIso model = MFModelIso.buildModel(modelName,
                     localFitTau, tau, localTauFraction, fitExchange);
-
             resData.setTestModel(model);
             Score score = tryModel(molDataRes, model, localTauFraction, localFitTau, random);
-            if (score.aic() < lowestAIC) {
+            double[][] repData = null;
+            if (nReplicates > 2) {
+                double[] pars = score.getPars();
+                repData = replicates(molDataRes, model, localTauFraction, localFitTau, pars, random);
+                OrderPar orderPar = makeOrderPar(resData, molDataRes, key, score, model, repData);
+            }
+            if (score.aicc() < lowestAIC) {
                 lowestAIC = score.aic();
                 bestModel = model;
                 bestScore = score;
             }
         }
+        Optional<OrderPar> result = Optional.empty();
         if (bestScore != null) {
-            Atom atom = resData.atom;
             double[] pars = bestScore.getPars();
             var parNames = bestModel.getParNames();
             double[][] repData = null;
             if (nReplicates > 2) {
                 repData = replicates(molDataRes, bestModel, localTauFraction, localFitTau, pars, random);
             }
+            OrderPar orderPar = makeOrderPar(resData, molDataRes, key, bestScore, bestModel, repData);
+            result = Optional.of(orderPar);
+        }
+        return result;
+    }
+
+    int bestScore(List<Score> scores) {
+        double lowestAIC = Double.MAX_VALUE;
+        int iBest = -1;
+        int i = 0;
+        for (var score : scores) {
+            if (score.aic() < lowestAIC) {
+                lowestAIC = score.aic();
+                iBest = i;
+            }
+            i++;
+        }
+        return iBest;
+    }
+
+    public Optional<OrderPar> testModelsWithBootstrapAggregation(MolDataValues resData, String key, List<String> modelNames, Random random) {
+        Optional<OrderPar> result = Optional.empty();
+        Map<String, MolDataValues> molDataRes = new TreeMap<>();
+        molDataRes.put(key, resData);
+
+        boolean localFitTau;
+        double localTauFraction;
+        if (overT2Limit(molDataRes, t2Limit)) {
+            localTauFraction = tauFraction;
+            localFitTau = fitTau;
+        } else {
+            localTauFraction = 0.0;
+            localFitTau = false;
+        }
+        int maxPars = 5;
+        int nJ = 12;
+        double[][] repData = new double[maxPars][nReplicates];
+        MFModelIso[] bestModels = new MFModelIso[nReplicates];
+        Score[] bestScores = new Score[nReplicates];
+        BootstrapAggregator bootstrapAggregator = new BootstrapAggregator(4);
+        var iRepList = IntStream.range(0, bootstrapAggregator.getN()).boxed().collect(Collectors.toList());
+        Collections.shuffle(iRepList);
+        int[] totalCounts = new int[nJ];
+        for (int iRep = 0; iRep < nReplicates; iRep++) {
+            int bootStrapSet = iRepList.get(iRep);
+            for (var molData : molDataRes.values()) {
+                molData.setBootstrapAggregator(bootstrapAggregator);
+                molData.setBootstrapSet(bootStrapSet);
+            }
+            BootstrapAggregator.incrCounts(totalCounts, bootstrapAggregator.getY( bootStrapSet));
+            List<Score> scores = new ArrayList<>();
+            List<MFModelIso> models = new ArrayList<>();
+            for (var modelName : modelNames) {
+                MFModelIso model = MFModelIso.buildModel(modelName,
+                        localFitTau, tau, localTauFraction, fitExchange);
+                resData.setTestModel(model);
+                Score score = tryModel(molDataRes, model, localTauFraction, localFitTau, random);
+                scores.add(score);
+                models.add(model);
+            }
+            int iBest = bestScore(scores);
+            if (iBest != -1) {
+                Score bestScore = scores.get(iBest);
+                MFModelIso bestModel = models.get(iBest);
+                double[] repPars = bestScore.getPars();
+                bestModels[iRep] = bestModel;
+                bestScores[iRep] = bestScore;
+                double[] pars = bestModel.getStandardPars(repPars);
+                for (int iPar = 0; iPar < pars.length; iPar++) {
+                    repData[iPar][iRep] = pars[iPar];
+                }
+            }
+        }
+        for (int i=0;i< totalCounts.length;i++) {
+            totalCounts[i] /= nReplicates;
+        }
+        for (var molData : molDataRes.values()) {
+            molData.clearBootStrapSet();;
+        }
+        MFModelIso bestModel = MFModelIso.buildModel("2sf",
+                localFitTau, tau, localTauFraction, fitExchange);
+
+        if (bestModels[0] != null) {
+            String[] parNames = {"Tau_e", "Sf2", "Tau_f", "Ss2", "Tau_s"};
+
             ResonanceSource resSource = new ResonanceSource(resData.atom);
 
-            OrderPar orderPar = new OrderPar(resSource, bestScore.rss, bestScore.nValues, bestScore.nPars, bestModel.getName());
-            for (int iPar = 0; iPar < parNames.size(); iPar++) {
-                String parName = parNames.get(iPar);
-                double parValue = pars[iPar];
+            OrderPar orderPar = new OrderPar(resSource, bestScores[0].rss, bestScores[0].nValues, parNames.length, bestModel.getName());
+            double[][] cov = new double[nJ][parNames.length];
+            for (int iPar = 0; iPar < parNames.length; iPar++) {
+                String parName = parNames[iPar];
                 Double parError = null;
-                if (repData != null) {
-                    DescriptiveStatistics sumStat = new DescriptiveStatistics(repData[iPar]);
-                    parError = sumStat.getStandardDeviation();
+                DescriptiveStatistics sumStat = new DescriptiveStatistics(repData[iPar]);
+                double parValue = sumStat.getMean();
+                for (int j=0;j<nJ;j++) {
+                    for (int i = 0; i < nReplicates; i++) {
+                        int[] y = bootstrapAggregator.getY(iRepList.get(i));
+                        cov[j][iPar] += (y[j]-totalCounts[j]) * (repData[iPar][i] - parValue);
+                    }
+                    cov[j][iPar] /= nReplicates;
                 }
+                double sum = 0.0;
+                for (int j=0;j<nJ;j++) {
+                    sum += cov[j][iPar] * cov[j][iPar];
+                }
+                parError = Math.sqrt(sum / nJ);
+             //   parError = sumStat.getStandardDeviation();
                 orderPar = orderPar.set(parName, parValue, parError);
             }
-            if (!bestModel.fitTau()) {
-                orderPar = orderPar.set("Tau_e", bestModel.getTau(), 0.0);
-            }
-
             orderPar = orderPar.set("model", (double) bestModel.getNumber(), null);
-            if ((bestModel instanceof MFModelIso2sf) && (lambda > 1.0e-6)) {
-                orderPar = orderPar.setModel();
-            }
+           // orderPar = orderPar.setModel();
+
+            Atom atom = resData.atom;
             atom.addOrderPar("order", orderPar);
             double[][] jValues = resData.getJValues();
             SpectralDensity spectralDensity = new SpectralDensity(key, jValues);
@@ -350,7 +478,6 @@ public class FitR1R2NOEModel extends FitModel {
         PointValuePair best = null;
         for (int i = 0; i < nTries; i++) {
             PointValuePair fitResult = relaxFit.fitResidueToModel(start, lower, upper);
-            System.out.println(i + " testModel " + fitResult.getValue());
             if ((i == 0) || (fitResult.getValue() < best.getValue())) {
                 best = fitResult;
             }
@@ -359,11 +486,6 @@ public class FitR1R2NOEModel extends FitModel {
             }
         }
         var score = relaxFit.score(best.getPoint(), true);
-        System.out.println(score.rms() + " " + score.value(lambda) + " " + score.complexity() + " " + score.parsOK());
-        for (var d : score.getPars()) {
-            System.out.print(d + " ");
-        }
-        System.out.println();
         return score;
     }
 

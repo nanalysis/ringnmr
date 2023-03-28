@@ -6,8 +6,10 @@ import java.util.List;
 public class SpectralDensityCalculator {
 
     public static double[][] calcJR1R2NOE(List<RelaxDataValue> dataValues) {
+        boolean useAverage = false;
         int nDataValues = dataValues.size();
-        int nFreq = 1 + 2 * nDataValues;
+        int stepSize = useAverage ? 2 : 3;
+        int nFreq = useAverage ? 1 + stepSize * nDataValues : stepSize * nDataValues;
         double[][] result = new double[3][nFreq];
         int iField = 0;
         for (RelaxDataValue value : dataValues) {
@@ -36,24 +38,31 @@ public class SpectralDensityCalculator {
             double j0 = j0Mul * (r2 - 0.5 * r1 - 0.454 * sigma);
             double j0Err = j0Mul * Math.sqrt(Math.pow(r2Err, 2) + Math.pow(0.5 * r1Err, 2) + Math.pow(0.454 * sigmaErr, 2));
 
-            result[0][0] = 0.0;
-            result[1][0] += j0;
-            result[2][0] += j0Err * j0Err;
+            if (useAverage) {
+                result[0][0] = 0.0;
+                result[1][0] += j0;
+                result[2][0] += j0Err * j0Err;
+            } else {
+                result[0][iField * stepSize] = 0.0;
+                result[1][iField * stepSize] = j0;
+                result[2][iField * stepSize] = j0Err;
+            }
 
-            result[0][iField * 2 + 1] = 0.87 * relaxEq.getWI();
-            result[1][iField * 2 + 1] = j87H;
-            result[2][iField * 2 + 1] = j87Herr;
+            result[0][iField * stepSize + 1] = 0.87 * relaxEq.getWI();
+            result[1][iField * stepSize + 1] = j87H;
+            result[2][iField * stepSize + 1] = j87Herr;
 
-            result[0][iField * 2 + 2] = relaxEq.getWS();
-            result[1][iField * 2 + 2] = jN;
-            result[2][iField * 2 + 2] = jNerr;
+            result[0][iField * stepSize + 2] = relaxEq.getWS();
+            result[1][iField * stepSize + 2] = jN;
+            result[2][iField * stepSize + 2] = jNerr;
             iField++;
         }
-        result[1][0] /= nDataValues;
-        result[2][0] = Math.sqrt(result[2][0]);
+        if (useAverage) {
+            result[1][0] /= nDataValues;
+            result[2][0] = Math.sqrt(result[2][0]);
+        }
         return result;
     }
-
     public static double[][] calcJDeuterium(List<RelaxDataValue> dataValues) {
         double[][] result = null;
         if (!dataValues.isEmpty()) {

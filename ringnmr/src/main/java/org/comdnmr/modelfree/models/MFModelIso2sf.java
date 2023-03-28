@@ -132,6 +132,36 @@ public class MFModelIso2sf extends MFModelIso2f {
         this.tauS = pars[parStart + 3];
     }
 
+    public double[] sortPars(double[] pars) {
+        pars(pars);
+        double[] sortPars = new double[5];
+        sortPars[0] = tauM;
+        if (sf2 > ss2) {
+            sortPars[1] = ss2;
+            sortPars[2] = tauS;
+            sortPars[3] = sf2;
+            sortPars[4] = tauF;
+        } else {
+            sortPars[1] = sf2;
+            sortPars[2] = tauF;
+            sortPars[3] = ss2;
+            sortPars[4] = tauS;
+        }
+        return sortPars;
+    }
+
+    @Override
+    public double[] getStandardPars(double[] pars) {
+        pars(pars);
+        double[] stdPars = new double[5];
+        stdPars[0] = tauM;
+        stdPars[1] = sf2;
+        stdPars[2] = tauF;
+        stdPars[3] = ss2;
+        stdPars[4] = tauS;
+        return stdPars;
+    }
+
     @Override
     public double getComplexity() {
         return complexity;

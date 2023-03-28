@@ -25,6 +25,8 @@ public class MolDataValues {
     final List<RelaxDataValue> dataValues = new ArrayList<>();
     MFModel model;
     double[][] jValues = null;
+    Integer bootstrapSet = null;
+    BootstrapAggregator bootstrapAggregator = null;
 
     public MolDataValues(String specifier, double[] vector, DynamicsSource dynSourceFactory) {
         this.specifier = specifier;
@@ -74,6 +76,20 @@ public class MolDataValues {
         return vector;
     }
 
+    public void setBootstrapAggregator(BootstrapAggregator bootstrapAggregator) {
+        this.bootstrapAggregator = bootstrapAggregator;
+    }
+
+    public void setBootstrapSet(int iSet) {
+        bootstrapSet = iSet;
+        jValues = null;
+    }
+
+    public void clearBootStrapSet() {
+        bootstrapSet = null;
+        jValues = null;
+    }
+
     public double[][] calcJ() {
         var dataOpt = dataValues.stream().findFirst();
         if (dataOpt.isPresent()) {
@@ -88,8 +104,13 @@ public class MolDataValues {
 
     double[][] getJValues() {
         if (jValues == null) {
-            jValues = calcJ();
+            if (bootstrapSet != null) {
+                jValues = bootstrapAggregator.getBootStrapJ(calcJ(), bootstrapSet);
+            } else {
+                jValues = calcJ();
+            }
         }
         return jValues;
+
     }
 }

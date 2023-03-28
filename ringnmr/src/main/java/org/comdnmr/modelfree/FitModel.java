@@ -11,6 +11,7 @@ public abstract class FitModel {
     Double tau;
     boolean fitTau = false;
     boolean fitJ = false;
+    boolean bootstrap = false;
     boolean fitExchange = false;
     double tauFraction = 0.25;
     double lambda = 0.0;
@@ -66,6 +67,10 @@ public abstract class FitModel {
 
     public void setFitJ(boolean value) {
         this.fitJ = value;
+    }
+
+    public void setBootstrap(boolean value) {
+        this.bootstrap = value;
     }
 
     public void setNReplicates(int value) {

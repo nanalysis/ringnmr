@@ -94,6 +94,9 @@ public abstract class MFModelIso extends MFModel {
 
     public abstract double[] getStart();
 
+    public abstract double[] getStandardPars(double[] pars);
+
+
     public static MFModelIso buildModel(String modelName, boolean fitTau,
             double tau, double tauFrac,
             boolean fitExchange) {
