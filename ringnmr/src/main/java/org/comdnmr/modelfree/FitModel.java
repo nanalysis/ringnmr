@@ -15,6 +15,7 @@ public abstract class FitModel {
     boolean fitExchange = false;
     double tauFraction = 0.25;
     double lambda = 0.0;
+    boolean useLambda = false;
     double t2Limit = 0.0;
     int nReplicates = 0;
     public abstract void testIsoModel(String searchKey, List<String> modelNames);
@@ -38,6 +39,7 @@ public abstract class FitModel {
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setRelaxData(molDataRes);
         relaxFit.setLambda(lambda);
+        relaxFit.setUseLambda(useLambda);
         relaxFit.setFitJ(fitJ);
         Map<String, MolDataValues> molDataMap = relaxFit.genBootstrap(random, model, pars);
         relaxFit.setRelaxData(molDataMap);
@@ -63,6 +65,14 @@ public abstract class FitModel {
 
     public void setLambda(double value) {
         this.lambda = value;
+    }
+
+    public void setUseLambda(boolean value) {
+        this.useLambda = value;
+    }
+
+    public boolean useLambda() {
+        return useLambda && lambda > 1.0e-8;
     }
 
     public void setFitJ(boolean value) {

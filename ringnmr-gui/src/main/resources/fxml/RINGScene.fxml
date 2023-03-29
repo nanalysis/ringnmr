@@ -310,15 +310,12 @@
                                                     <Label text="Models:  " prefWidth="80"/>
                                                 </children>
                                             </HBox>
-                                            <HBox>
+                                            <HBox spacing="10">
                                                 <children>
                                                     <Label text="Lambda  " prefWidth="80"/>
                                                     <TextField fx:id="lambdaField" prefWidth="80"/>
-                                                    <CheckBox text="Fit Js " fx:id="fitJCheckBox"/>
-                                                </children>
-                                            </HBox>
-                                            <HBox>
-                                                <children>
+                                                    <CheckBox text="Use Lambda: " fx:id="lambdaCheckBox"/>
+                                                    <CheckBox text="Fit Js: " fx:id="fitJCheckBox"/>
                                                     <CheckBox text="Bootstrap Aggregate " fx:id="bootStrapCheckBox"/>
                                                 </children>
                                             </HBox>

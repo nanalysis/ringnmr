@@ -209,6 +209,8 @@ public class PyController implements Initializable {
     @FXML
     CheckBox bootStrapCheckBox;
     @FXML
+    CheckBox lambdaCheckBox;
+    @FXML
     Slider tauFractionSlider;
     @FXML
     Label tauFractionLabel;
@@ -496,6 +498,8 @@ public class PyController implements Initializable {
         nReplicatesSlider.setShowTickLabels(true);
         nReplicatesSlider.valueProperty().addListener(v
                 -> bootstrapNLabel.setText(String.format("%d", (int) nReplicatesSlider.getValue())));
+        bootStrapCheckBox.selectedProperty().addListener(e -> bootStrapChanged(bootStrapCheckBox.isSelected()));
+        lambdaCheckBox.selectedProperty().addListener(e -> lambdaChanged(lambdaCheckBox.isSelected()));
 
         String[] modelNames = {"1", "1f", "1s", "2f", "2s", "2sf"};
         for (var modelName : modelNames) {
@@ -1238,6 +1242,7 @@ public class PyController implements Initializable {
         boolean bootStrapA = bootStrapCheckBox.isSelected();
         System.out.println(lambdaText + " lambda " + lambda);
         fitModel.setLambda(lambda);
+        fitModel.setUseLambda(lambdaCheckBox.isSelected());
         fitModel.setTau(tau);
         double tauFraction = tauFractionSlider.getValue();
         double t2Limit = t2LimitSlider.getValue();
@@ -2332,6 +2337,43 @@ public class PyController implements Initializable {
         updateXYChartLabels();
         genDataSDevTextField.setText("");
         simControls.simSliderAction("");
+    }
+
+    void bootStrapChanged(boolean state) {
+        if (state) {
+            fitJCheckBox.setSelected(true);
+            int nReplicates = (int) nReplicatesSlider.getValue();
+            if (nReplicates < 10) {
+                nReplicates = 50;
+                nReplicatesSlider.setValue(nReplicates);
+            }
+            if (!lambdaCheckBox.isSelected()) {
+                modelCheckBoxes.forEach(checkBox -> checkBox.setSelected(true));
+            }
+        }
+    }
+
+    void lambdaChanged(boolean state) {
+        if (state) {
+            fitJCheckBox.setSelected(true);
+            String lambdaText = lambdaField.getText();
+            double lambda;
+            if (!lambdaText.isBlank()) {
+                try {
+                    lambda = Double.parseDouble(lambdaText);
+                } catch (NumberFormatException nfE) {
+                    lambda = 0.0;
+                }
+            } else {
+                lambda = 0.0;
+            }
+            if (lambda < 1.0e-4) {
+                lambda = 0.5;
+            }
+            lambdaField.setText(String.valueOf(lambda));
+            modelCheckBoxes.forEach(checkBox -> checkBox.setSelected(false));
+            modelCheckBoxes.get(modelCheckBoxes.size() - 1).setSelected(true);
+        }
     }
 
     @FXML

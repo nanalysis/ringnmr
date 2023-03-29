@@ -33,6 +33,7 @@ import org.comdnmr.modelfree.models.MFModelIso2sf;
 public class RelaxFit {
 
     double lambda = 0.0;
+    boolean useLambda = false;
     boolean fitJ = false;
     Map<String, MolDataValues> molDataValues;
     double[] bestPars;
@@ -92,6 +93,14 @@ public class RelaxFit {
 
     public void setLambda(double value) {
         this.lambda = value;
+    }
+
+    public void setUseLambda(boolean value) {
+        this.useLambda = value;
+    }
+
+    public boolean useLambda() {
+        return useLambda && lambda > 1.0e-8;
     }
 
     public static double[] getDValues(double isoD) {

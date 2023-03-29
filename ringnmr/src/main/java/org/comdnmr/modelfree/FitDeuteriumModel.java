@@ -218,7 +218,7 @@ public class FitDeuteriumModel extends FitModel {
             }
 
             orderPar = orderPar.set("model", (double) bestModel.getNumber(), null);
-            if ((bestModel instanceof MFModelIso2sf) && (lambda > 1.0e-6)) {
+            if ((bestModel instanceof MFModelIso2sf) && useLambda) {
                 orderPar = orderPar.setModel();
             }
             atom.addOrderPar("order_parameter_list_1", orderPar);
@@ -305,6 +305,7 @@ public class FitDeuteriumModel extends FitModel {
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setRelaxData(molDataRes);
         relaxFit.setLambda(lambda);
+        relaxFit.setUseLambda(useLambda);
         relaxFit.setFitJ(fitJ);
         Map<String, MolDataValues> molDataMap = relaxFit.genBootstrap(random, model, pars);
         relaxFit.setRelaxData(molDataMap);

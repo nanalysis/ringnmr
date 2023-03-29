@@ -253,7 +253,7 @@ public class FitR1R2NOEModel extends FitModel {
         }
 
         orderPar = orderPar.set("model", (double) bestModel.getNumber(), null);
-        if ((bestModel instanceof MFModelIso2sf) && (lambda > 1.0e-6)) {
+        if ((bestModel instanceof MFModelIso2sf) && useLambda()) {
             orderPar = orderPar.setModel();
         }
         atom.addOrderPar("order", orderPar);
@@ -468,6 +468,7 @@ public class FitR1R2NOEModel extends FitModel {
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setRelaxData(molDataRes);
         relaxFit.setLambda(lambda);
+        relaxFit.setUseLambda(useLambda);
         relaxFit.setFitJ(fitJ);
         model.setTauFraction(localTauFraction);
         double[] start = model.getStart();
