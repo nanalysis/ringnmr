@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -115,10 +116,7 @@ public class FitR1R2NOEModel extends FitModel {
     }
 
     public void testIsoModel() {
-        testIsoModel(null, List.of("1"));
-    }
-
-    public void testIsoModel(String searchKey, List<String> modelNames) {
+        System.out.println("test iso");
         Map<String, MolDataValues> molData = getData(false);
         if (searchKey != null) {
             if (molData.containsKey(searchKey)) {
@@ -216,8 +214,13 @@ public class FitR1R2NOEModel extends FitModel {
         if (tau == null) {
             tau = estimateTau(molData).get("tau");
         }
-
+        AtomicInteger counts = new AtomicInteger();
+        int n = molData.entrySet().size();
         molData.entrySet().stream().sorted(Comparator.comparing(Map.Entry::getKey)).parallel().forEach(e -> {
+            updateProgress((double) counts.get() / n);
+            if (cancelled.get()) {
+                return;
+            }
             MolDataValues resData = e.getValue();
             String key = e.getKey();
             if (!resData.getData().isEmpty()) {
@@ -227,6 +230,7 @@ public class FitR1R2NOEModel extends FitModel {
                     testModels(resData, key, modelNames, random);
                 }
             }
+            int iCount = counts.incrementAndGet();
         });
     }
 
@@ -349,6 +353,9 @@ public class FitR1R2NOEModel extends FitModel {
         Collections.shuffle(iRepList);
         int[] totalCounts = new int[nJ];
         for (int iRep = 0; iRep < nReplicates; iRep++) {
+            if (cancelled.get()) {
+                return result;
+            }
             int bootStrapSet = iRepList.get(iRep);
             for (var molData : molDataRes.values()) {
                 molData.setBootstrapAggregator(bootstrapAggregator);

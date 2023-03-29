@@ -231,6 +231,7 @@ public class PyController implements Initializable {
     NMRFxClient cl;
 
     ResidueFitter residueFitter;
+    FitModel modelFitter;
     List<ResonanceSource> fittingResidues = new ArrayList<>();
     boolean simulate = true;
     ChartInfo chartInfo = new ChartInfo();
@@ -1205,13 +1206,13 @@ public class PyController implements Initializable {
     }
 
     public void fitR1R2NOEModel() {
-        FitModel fitModel = new FitR1R2NOEModel();
-        fitIsotropicModel(fitModel, "");
+        modelFitter = new FitR1R2NOEModel();
+        fitIsotropicModel(modelFitter, "");
     }
 
     public void fitDeuteriumModel() {
-        FitDeuteriumModel fitModel = new FitDeuteriumModel();
-        fitIsotropicModel(fitModel, "D");
+        modelFitter = new FitDeuteriumModel();
+        fitIsotropicModel(modelFitter, "D");
     }
 
     public void fitIsotropicModel(FitModel fitModel, String prefix) {
@@ -1261,12 +1262,18 @@ public class PyController implements Initializable {
             }
         }
         try {
-            fitModel.testIsoModel(null, modelNames);
+            fitModel.setup(null, modelNames);
+            fitModel.updaters(this::updateFitProgress, this::updateStatus);
+           // fitModel.testIsoModel();
+            fitModel.fitResidues();
         } catch (IllegalStateException iaE) {
             GUIUtils.warn("Model Fit Error", iaE.getMessage());
             return;
         }
-        Double tauFit = fitModel.getTau();
+    }
+
+    public void finishModelFreeFit() {
+        Double tauFit = modelFitter.getTau();
         if (tauFit != null) {
             tauCalcField.setText(String.format("%.2f", tauFit));
         }
@@ -1994,8 +2001,12 @@ public class PyController implements Initializable {
 
     @FXML
     public void haltFit() {
-        residueFitter.haltFit();
-        makeAxisMenu();
+        if (modelFitter != null) {
+            modelFitter.haltFit();
+        } else {
+            residueFitter.haltFit();
+            makeAxisMenu();
+        }
     }
 
     @FXML
@@ -2097,6 +2108,8 @@ public class PyController implements Initializable {
                     setCurrentExperimentSet(ChartUtil.getResidueProperty(getCurrentExperimentSet().getName()));
                 });
             }
+        } else if (modelFitter != null) {
+            statusBar.setProgress(f);
         }
         return null;
 
@@ -2123,7 +2136,11 @@ public class PyController implements Initializable {
         } else {
             statusBar.setText(s);
             if (s.equals("Done")) {
-                refreshFit();
+                if (modelFitter != null) {
+                    finishModelFreeFit();
+                } else {
+                    refreshFit();
+                }
             }
         }
         if (status.isOk()) {
