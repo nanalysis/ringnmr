@@ -103,7 +103,7 @@ public class FitDeuteriumModel extends FitModel {
         return molData;
     }
 
-    public void testIsoModel() {
+    public  Map<String, OrderPar> testIsoModel() {
         Map<String, MolDataValues> molData = getData(false);
         if (searchKey != null) {
             if (molData.containsKey(searchKey)) {
@@ -115,6 +115,7 @@ public class FitDeuteriumModel extends FitModel {
 
         if (!molData.isEmpty()) {
             testModels(molData, modelNames);
+            return null;
         } else {
             throw new IllegalStateException("No relaxation data to analyze.  Need T1,T2 and NOE");
         }

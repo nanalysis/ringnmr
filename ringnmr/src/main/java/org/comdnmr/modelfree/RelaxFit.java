@@ -88,7 +88,7 @@ public class RelaxFit {
     }
 
     public double getLambda() {
-        return lambda;
+        return useLambda ? lambda : 0.0;
     }
 
     public void setLambda(double value) {
@@ -492,7 +492,7 @@ public class RelaxFit {
 
     public double value(double[] pars, double[][] values) {
         var score = score(pars, false);
-        return score.value(lambda);
+        return score.value(getLambda());
     }
 
     public double valueMultiResidue(double[] pars, double[][] values) {

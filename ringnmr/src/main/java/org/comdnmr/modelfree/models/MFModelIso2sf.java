@@ -136,7 +136,17 @@ public class MFModelIso2sf extends MFModelIso2f {
         pars(pars);
         double[] sortPars = new double[5];
         sortPars[0] = tauM;
-        if (sf2 > ss2) {
+        double tauLimit = 7.0e-3;
+        boolean swapIt = false;
+        if ((tauS < tauLimit) && (tauF < tauLimit)) {
+            if (ss2 < sf2) {
+                swapIt = true;
+            }
+        } else if (tauF > tauS) {
+            swapIt = true;
+        }
+
+        if (swapIt) {
             sortPars[1] = ss2;
             sortPars[2] = tauS;
             sortPars[3] = sf2;
@@ -152,14 +162,7 @@ public class MFModelIso2sf extends MFModelIso2f {
 
     @Override
     public double[] getStandardPars(double[] pars) {
-        pars(pars);
-        double[] stdPars = new double[5];
-        stdPars[0] = tauM;
-        stdPars[1] = sf2;
-        stdPars[2] = tauF;
-        stdPars[3] = ss2;
-        stdPars[4] = tauS;
-        return stdPars;
+        return sortPars(pars);
     }
 
     @Override
@@ -197,9 +200,9 @@ public class MFModelIso2sf extends MFModelIso2f {
     @Override
     public double[] getLower() {
         if (includeEx) {
-            return getParValues(tauLower(), 0.0, 0.001, 0.0, SLOW_LIMIT, 0.0);
+            return getParValues(tauLower(), 0.0, 0.001, 0.0, 0.001, 0.0);
         } else {
-            return getParValues(tauLower(), 0.0, 0.001, 0.0, SLOW_LIMIT);
+            return getParValues(tauLower(), 0.0, 0.001, 0.0, 0.001);
         }
     }
 

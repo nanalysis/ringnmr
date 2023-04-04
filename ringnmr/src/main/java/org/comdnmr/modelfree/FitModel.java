@@ -5,11 +5,9 @@ import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
 import org.apache.commons.math3.optim.PointValuePair;
-import org.comdnmr.data.ExperimentSet;
 import org.comdnmr.modelfree.models.MFModelIso;
-import org.comdnmr.util.CoMDOptions;
 import org.comdnmr.util.ProcessingStatus;
-import org.nmrfx.chemistry.relax.ResonanceSource;
+import org.nmrfx.chemistry.relax.OrderPar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +33,8 @@ public abstract class FitModel {
     List<String> modelNames = new ArrayList<>();
     String searchKey = null;
     AtomicBoolean cancelled = new AtomicBoolean(false);
+    double[][] replicateData;
+    Double validationScore = null;
 
     Function<Double, Double> updaterFunction;
     Function<ProcessingStatus, Double> statusFunction;
@@ -51,7 +51,7 @@ public abstract class FitModel {
         this.statusFunction = statusFunction;
     }
 
-    public abstract void testIsoModel();
+    public abstract  Map<String, OrderPar> testIsoModel();
 
     double[][] replicates(Map<String, MolDataValues> molDataRes,
                           MFModelIso bestModel, double localTauFraction,
@@ -126,6 +126,14 @@ public abstract class FitModel {
 
     public void setTauFraction(double value) {
         tauFraction = value;
+    }
+
+    public double[][] getReplicateData() {
+        return replicateData;
+    }
+
+    public Double getValidationScore() {
+        return validationScore;
     }
 
     private class FitResidues {

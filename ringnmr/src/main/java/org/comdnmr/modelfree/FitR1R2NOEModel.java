@@ -29,6 +29,11 @@ import org.nmrfx.chemistry.Residue;
  * @author brucejohnson
  */
 public class FitR1R2NOEModel extends FitModel {
+    Map<String, MolDataValues> molData = null;
+
+    public void setData(Map<String, MolDataValues> molData) {
+        this.molData = molData;
+    }
 
     Map<String, MolDataValues> getData(boolean requireCoords) {
         Map<String, MolDataValues> molDataValues = new HashMap<>();
@@ -115,9 +120,10 @@ public class FitR1R2NOEModel extends FitModel {
         return molDataValues;
     }
 
-    public void testIsoModel() {
-        System.out.println("test iso");
-        Map<String, MolDataValues> molData = getData(false);
+    public  Map<String, OrderPar> testIsoModel() {
+        if ((molData == null) || (molData.isEmpty())) {
+            molData = getData(false);
+        }
         if (searchKey != null) {
             if (molData.containsKey(searchKey)) {
                 var keepVal = molData.get(searchKey);
@@ -131,7 +137,8 @@ public class FitR1R2NOEModel extends FitModel {
                 tau = estimateTau(molData).get("tau");
             }
 
-            testModels(molData, modelNames);
+            Map<String, OrderPar> results = testModels(molData, modelNames);
+            return results;
         } else {
             throw new IllegalStateException("No relaxation data to analyze.  Need T1,T2 and NOE");
         }
@@ -209,13 +216,14 @@ public class FitR1R2NOEModel extends FitModel {
         }
     }
 
-    public void testModels(Map<String, MolDataValues> molData, List<String> modelNames) {
+    public  Map<String, OrderPar> testModels(Map<String, MolDataValues> molData, List<String> modelNames) {
         Random random = new Random();
         if (tau == null) {
             tau = estimateTau(molData).get("tau");
         }
         AtomicInteger counts = new AtomicInteger();
         int n = molData.entrySet().size();
+        Map<String, OrderPar> results = new HashMap<>();
         molData.entrySet().stream().sorted(Comparator.comparing(Map.Entry::getKey)).parallel().forEach(e -> {
             updateProgress((double) counts.get() / n);
             if (cancelled.get()) {
@@ -225,13 +233,16 @@ public class FitR1R2NOEModel extends FitModel {
             String key = e.getKey();
             if (!resData.getData().isEmpty()) {
                 if (bootstrap) {
-                    testModelsWithBootstrapAggregation(resData, key, modelNames, random);
+                    Optional<OrderPar> result = testModelsWithBootstrapAggregation(resData, key, modelNames, random);
+                    result.ifPresent(o -> results.put(key, o));
                 } else {
-                    testModels(resData, key, modelNames, random);
+                    Optional<OrderPar> result = testModels(resData, key, modelNames, random);
+                    result.ifPresent(o -> results.put(key, o));
                 }
             }
             int iCount = counts.incrementAndGet();
         });
+        return results;
     }
 
     private OrderPar makeOrderPar(MolDataValues resData, Map<String, MolDataValues> molDataRes, String key,
@@ -305,11 +316,11 @@ public class FitR1R2NOEModel extends FitModel {
         if (bestScore != null) {
             double[] pars = bestScore.getPars();
             var parNames = bestModel.getParNames();
-            double[][] repData = null;
+            replicateData = null;
             if (nReplicates > 2) {
-                repData = replicates(molDataRes, bestModel, localTauFraction, localFitTau, pars, random);
+                replicateData = replicates(molDataRes, bestModel, localTauFraction, localFitTau, pars, random);
             }
-            OrderPar orderPar = makeOrderPar(resData, molDataRes, key, bestScore, bestModel, repData);
+            OrderPar orderPar = makeOrderPar(resData, molDataRes, key, bestScore, bestModel, replicateData);
             result = Optional.of(orderPar);
         }
         return result;
@@ -345,7 +356,7 @@ public class FitR1R2NOEModel extends FitModel {
         }
         int maxPars = 5;
         int nJ = 12;
-        double[][] repData = new double[maxPars][nReplicates];
+        replicateData = new double[maxPars][nReplicates];
         MFModelIso[] bestModels = new MFModelIso[nReplicates];
         Score[] bestScores = new Score[nReplicates];
         BootstrapAggregator bootstrapAggregator = new BootstrapAggregator(4);
@@ -380,8 +391,9 @@ public class FitR1R2NOEModel extends FitModel {
                 bestModels[iRep] = bestModel;
                 bestScores[iRep] = bestScore;
                 double[] pars = bestModel.getStandardPars(repPars);
+
                 for (int iPar = 0; iPar < pars.length; iPar++) {
-                    repData[iPar][iRep] = pars[iPar];
+                    replicateData[iPar][iRep] = pars[iPar];
                 }
             }
         }
@@ -398,18 +410,24 @@ public class FitR1R2NOEModel extends FitModel {
             String[] parNames = {"Tau_e", "Sf2", "Tau_f", "Ss2", "Tau_s"};
 
             ResonanceSource resSource = new ResonanceSource(resData.atom);
-
-            OrderPar orderPar = new OrderPar(resSource, bestScores[0].rss, bestScores[0].nValues, parNames.length, bestModel.getName());
+            double rssSum = 0.0;
+            for (int i = 0; i < nReplicates; i++) {
+                rssSum += bestScores[i].rss;
+            }
+            double rss = rssSum /= nReplicates;
+            OrderPar orderPar = new OrderPar(resSource, rss, bestScores[0].nValues, parNames.length, bestModel.getName());
             double[][] cov = new double[nJ][parNames.length];
+            double[] bestPars = new double[parNames.length];
             for (int iPar = 0; iPar < parNames.length; iPar++) {
                 String parName = parNames[iPar];
                 Double parError = null;
-                DescriptiveStatistics sumStat = new DescriptiveStatistics(repData[iPar]);
+                DescriptiveStatistics sumStat = new DescriptiveStatistics(replicateData[iPar]);
                 double parValue = sumStat.getMean();
+                bestPars[iPar] = parValue;
                 for (int j=0;j<nJ;j++) {
                     for (int i = 0; i < nReplicates; i++) {
                         int[] y = bootstrapAggregator.getY(iRepList.get(i));
-                        cov[j][iPar] += (y[j]-totalCounts[j]) * (repData[iPar][i] - parValue);
+                        cov[j][iPar] += (y[j]-totalCounts[j]) * (replicateData[iPar][i] - parValue);
                     }
                     cov[j][iPar] /= nReplicates;
                 }
@@ -423,7 +441,10 @@ public class FitR1R2NOEModel extends FitModel {
             }
             orderPar = orderPar.set("model", (double) bestModel.getNumber(), null);
            // orderPar = orderPar.setModel();
-
+            resData.setTestModel(bestModel);
+            if ((nReplicates + nReplicates) <= iRepList.size()) {
+                validationScore = scoreBootstrap(molDataRes, bestModel, bestPars, bootstrapAggregator, iRepList, nReplicates, nReplicates, localFitTau, localTauFraction);
+            }
             Atom atom = resData.atom;
             atom.addOrderPar("order", orderPar);
             double[][] jValues = resData.getJValues();
@@ -432,6 +453,32 @@ public class FitR1R2NOEModel extends FitModel {
             result = Optional.of(orderPar);
         }
         return result;
+    }
+
+    public double scoreBootstrap(Map<String, MolDataValues> molDataRes, MFModelIso model, double[] pars,
+                                BootstrapAggregator bootstrapAggregator, List<Integer> iRepList, int iStart, int nReplicates,
+                                boolean localFitTau, double localTauFraction) {
+        double rssSum = 0.0;
+        int startPar = localFitTau ? 0 : 1;
+        double[] pars2 = new double[pars.length - startPar];
+
+        System.arraycopy(pars, startPar, pars2, 0, pars2.length);
+        for (int iRep = 0; iRep < nReplicates; iRep++) {
+            int bootStrapSet = iRepList.get(iRep + iStart);
+            for (var molData : molDataRes.values()) {
+                molData.setBootstrapAggregator(bootstrapAggregator);
+                molData.setBootstrapSet(bootStrapSet);
+            }
+            RelaxFit relaxFit = new RelaxFit();
+            relaxFit.setRelaxData(molDataRes);
+            relaxFit.setLambda(lambda);
+            relaxFit.setUseLambda(useLambda);
+            relaxFit.setFitJ(fitJ);
+            model.setTauFraction(localTauFraction);
+            var score = relaxFit.score(pars2, true);
+            rssSum += score.rss;
+        }
+        return rssSum / nReplicates;
     }
 
     public void testModel(Map<String, MolDataValues> molData, MFModelIso model) {
