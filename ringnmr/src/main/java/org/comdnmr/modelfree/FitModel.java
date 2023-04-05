@@ -35,6 +35,8 @@ public abstract class FitModel {
     AtomicBoolean cancelled = new AtomicBoolean(false);
     double[][] replicateData;
     Double validationScore = null;
+    boolean useMedian = false;
+    boolean calcValidation = false;
 
     Function<Double, Double> updaterFunction;
     Function<ProcessingStatus, Double> statusFunction;
@@ -82,6 +84,14 @@ public abstract class FitModel {
         double[] upper = model.getUpper();
         PointValuePair fitResult = relaxFit.fitResidueToModel(pars, lower, upper);
         return relaxFit.score(fitResult.getPoint(), true);
+    }
+
+    public void setUseMedian(boolean value) {
+        useMedian = value;
+    }
+
+    public void setCalcValidation(boolean value) {
+        calcValidation = value;
     }
 
     public Double getTau() {

@@ -422,7 +422,7 @@ public class FitR1R2NOEModel extends FitModel {
                 String parName = parNames[iPar];
                 Double parError = null;
                 DescriptiveStatistics sumStat = new DescriptiveStatistics(replicateData[iPar]);
-                double parValue = sumStat.getMean();
+                double parValue = useMedian ? sumStat.getPercentile(50.0) : sumStat.getMean();
                 bestPars[iPar] = parValue;
                 for (int j=0;j<nJ;j++) {
                     for (int i = 0; i < nReplicates; i++) {
@@ -440,17 +440,16 @@ public class FitR1R2NOEModel extends FitModel {
                 orderPar = orderPar.set(parName, parValue, parError);
             }
             orderPar = orderPar.set("model", (double) bestModel.getNumber(), null);
-           // orderPar = orderPar.setModel();
-            resData.setTestModel(bestModel);
-            if ((nReplicates + nReplicates) <= iRepList.size()) {
-                validationScore = scoreBootstrap(molDataRes, bestModel, bestPars, bootstrapAggregator, iRepList, nReplicates, nReplicates, localFitTau, localTauFraction);
-            }
             Atom atom = resData.atom;
             atom.addOrderPar("order", orderPar);
             double[][] jValues = resData.getJValues();
             SpectralDensity spectralDensity = new SpectralDensity(key, jValues);
             atom.addSpectralDensity(key, spectralDensity);
             result = Optional.of(orderPar);
+            resData.setTestModel(bestModel);
+            if (calcValidation && ((nReplicates + nReplicates) <= iRepList.size())) {
+                validationScore = scoreBootstrap(molDataRes, bestModel, bestPars, bootstrapAggregator, iRepList, nReplicates, nReplicates, localFitTau, localTauFraction);
+            }
         }
         return result;
     }
