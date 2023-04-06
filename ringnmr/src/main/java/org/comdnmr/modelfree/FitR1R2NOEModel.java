@@ -120,7 +120,7 @@ public class FitR1R2NOEModel extends FitModel {
         return molDataValues;
     }
 
-    public  Map<String, OrderPar> testIsoModel() {
+    public  Map<String, ModelFitResult> testIsoModel() {
         if ((molData == null) || (molData.isEmpty())) {
             molData = getData(false);
         }
@@ -137,14 +137,14 @@ public class FitR1R2NOEModel extends FitModel {
                 tau = estimateTau(molData).get("tau");
             }
 
-            Map<String, OrderPar> results = testModels(molData, modelNames);
+            Map<String, ModelFitResult> results = testModels(molData, modelNames);
             return results;
         } else {
             throw new IllegalStateException("No relaxation data to analyze.  Need T1,T2 and NOE");
         }
     }
 
-    public Optional<OrderPar> testIsoModelResidue(String searchKey, List<String> modelNames) {
+    public Optional<ModelFitResult> testIsoModelResidue(String searchKey, List<String> modelNames) {
         Random random = new Random();
         Map<String, MolDataValues> molData = getData(false);
         MolDataValues molDataValue = molData.get(searchKey);
@@ -216,14 +216,14 @@ public class FitR1R2NOEModel extends FitModel {
         }
     }
 
-    public  Map<String, OrderPar> testModels(Map<String, MolDataValues> molData, List<String> modelNames) {
+    public  Map<String, ModelFitResult> testModels(Map<String, MolDataValues> molData, List<String> modelNames) {
         Random random = new Random();
         if (tau == null) {
             tau = estimateTau(molData).get("tau");
         }
         AtomicInteger counts = new AtomicInteger();
         int n = molData.entrySet().size();
-        Map<String, OrderPar> results = new HashMap<>();
+        Map<String, ModelFitResult> results = new HashMap<>();
         molData.entrySet().stream().sorted(Comparator.comparing(Map.Entry::getKey)).parallel().forEach(e -> {
             updateProgress((double) counts.get() / n);
             if (cancelled.get()) {
@@ -233,10 +233,10 @@ public class FitR1R2NOEModel extends FitModel {
             String key = e.getKey();
             if (!resData.getData().isEmpty()) {
                 if (bootstrap) {
-                    Optional<OrderPar> result = testModelsWithBootstrapAggregation(resData, key, modelNames, random);
+                    Optional<ModelFitResult> result = testModelsWithBootstrapAggregation(resData, key, modelNames, random);
                     result.ifPresent(o -> results.put(key, o));
                 } else {
-                    Optional<OrderPar> result = testModels(resData, key, modelNames, random);
+                    Optional<ModelFitResult> result = testModels(resData, key, modelNames, random);
                     result.ifPresent(o -> results.put(key, o));
                 }
             }
@@ -279,7 +279,7 @@ public class FitR1R2NOEModel extends FitModel {
 
     }
 
-    public Optional<OrderPar> testModels(MolDataValues resData, String key, List<String> modelNames, Random random) {
+    public Optional<ModelFitResult> testModels(MolDataValues resData, String key, List<String> modelNames, Random random) {
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
         molDataRes.put(key, resData);
 
@@ -312,7 +312,8 @@ public class FitR1R2NOEModel extends FitModel {
                 bestScore = score;
             }
         }
-        Optional<OrderPar> result = Optional.empty();
+        Optional<ModelFitResult> result = Optional.empty();
+        double[][] replicateData;
         if (bestScore != null) {
             double[] pars = bestScore.getPars();
             var parNames = bestModel.getParNames();
@@ -321,7 +322,8 @@ public class FitR1R2NOEModel extends FitModel {
                 replicateData = replicates(molDataRes, bestModel, localTauFraction, localFitTau, pars, random);
             }
             OrderPar orderPar = makeOrderPar(resData, molDataRes, key, bestScore, bestModel, replicateData);
-            result = Optional.of(orderPar);
+            ModelFitResult modelFitResult = new ModelFitResult(orderPar, replicateData, null);
+            result = Optional.of(modelFitResult);
         }
         return result;
     }
@@ -340,8 +342,8 @@ public class FitR1R2NOEModel extends FitModel {
         return iBest;
     }
 
-    public Optional<OrderPar> testModelsWithBootstrapAggregation(MolDataValues resData, String key, List<String> modelNames, Random random) {
-        Optional<OrderPar> result = Optional.empty();
+    public Optional<ModelFitResult> testModelsWithBootstrapAggregation(MolDataValues resData, String key, List<String> modelNames, Random random) {
+        Optional<ModelFitResult> result = Optional.empty();
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
         molDataRes.put(key, resData);
 
@@ -356,7 +358,7 @@ public class FitR1R2NOEModel extends FitModel {
         }
         int maxPars = 5;
         int nJ = 12;
-        replicateData = new double[maxPars][nReplicates];
+        double[][] replicateData = new double[maxPars][nReplicates];
         MFModelIso[] bestModels = new MFModelIso[nReplicates];
         Score[] bestScores = new Score[nReplicates];
         BootstrapAggregator bootstrapAggregator = new BootstrapAggregator(4);
@@ -445,11 +447,13 @@ public class FitR1R2NOEModel extends FitModel {
             double[][] jValues = resData.getJValues();
             SpectralDensity spectralDensity = new SpectralDensity(key, jValues);
             atom.addSpectralDensity(key, spectralDensity);
-            result = Optional.of(orderPar);
             resData.setTestModel(bestModel);
+            Double validationScore = null;
             if (calcValidation && ((nReplicates + nReplicates) <= iRepList.size())) {
                 validationScore = scoreBootstrap(molDataRes, bestModel, bestPars, bootstrapAggregator, iRepList, nReplicates, nReplicates, localFitTau, localTauFraction);
             }
+            ModelFitResult modelFitResult = new ModelFitResult(orderPar, replicateData, validationScore);
+            result = Optional.of(modelFitResult);
         }
         return result;
     }

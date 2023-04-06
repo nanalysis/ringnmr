@@ -590,6 +590,7 @@ public class PyController implements Initializable {
                 series.setLimits(limitMin, limitMax);
             }
         }
+        int iChart = 0;
         for (ResidueChart residueChart : barCharts) {
             residueChart.xAxis.setLowerBound(limitMin);
             residueChart.xAxis.setUpperBound(limitMax);
@@ -598,6 +599,10 @@ public class PyController implements Initializable {
             residueChart.setHeight(chartHeight);
             residueChart.setYPos(yPos);
             residueChart.autoScale(false);
+            iChart++;
+            boolean xVisible = iChart == barCharts.size();
+            residueChart.getXAxis().setLabelVisible(xVisible);
+            residueChart.getXAxis().setTickLabelsVisible(xVisible);
             residueChart.drawChart();
             yPos += chartHeight;
         }
@@ -1667,6 +1672,9 @@ public class PyController implements Initializable {
             clearChart();
             chartMap.put(chartNames.get(iChart), residueChart);
             iChart++;
+            boolean xVisible = iChart == barCharts.size();
+            residueChart.getXAxis().setLabelVisible(xVisible);
+            residueChart.getXAxis().setTickLabelsVisible(xVisible);
         }
         return chartMap;
 

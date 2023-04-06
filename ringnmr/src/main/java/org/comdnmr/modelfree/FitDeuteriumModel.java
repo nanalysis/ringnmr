@@ -103,7 +103,7 @@ public class FitDeuteriumModel extends FitModel {
         return molData;
     }
 
-    public  Map<String, OrderPar> testIsoModel() {
+    public  Map<String, ModelFitResult> testIsoModel() {
         Map<String, MolDataValues> molData = getData(false);
         if (searchKey != null) {
             if (molData.containsKey(searchKey)) {

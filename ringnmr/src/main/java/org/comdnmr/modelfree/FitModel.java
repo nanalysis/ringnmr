@@ -33,8 +33,6 @@ public abstract class FitModel {
     List<String> modelNames = new ArrayList<>();
     String searchKey = null;
     AtomicBoolean cancelled = new AtomicBoolean(false);
-    double[][] replicateData;
-    Double validationScore = null;
     boolean useMedian = false;
     boolean calcValidation = false;
 
@@ -53,7 +51,7 @@ public abstract class FitModel {
         this.statusFunction = statusFunction;
     }
 
-    public abstract  Map<String, OrderPar> testIsoModel();
+    public abstract  Map<String, ModelFitResult> testIsoModel();
 
     double[][] replicates(Map<String, MolDataValues> molDataRes,
                           MFModelIso bestModel, double localTauFraction,
@@ -136,14 +134,6 @@ public abstract class FitModel {
 
     public void setTauFraction(double value) {
         tauFraction = value;
-    }
-
-    public double[][] getReplicateData() {
-        return replicateData;
-    }
-
-    public Double getValidationScore() {
-        return validationScore;
     }
 
     private class FitResidues {

@@ -29,7 +29,7 @@ import java.util.List;
  * @author brucejohnson
  */
 public class MFModelIso2sf extends MFModelIso2f {
-    private static double tauScale = 1.0;
+    private static double tauScale = 0.1;
     double tauS;
     double complexity = 0.0;
 
