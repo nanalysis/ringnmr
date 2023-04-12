@@ -58,6 +58,7 @@ import org.comdnmr.modelfree.FitDeuteriumModel;
 import org.comdnmr.modelfree.FitModel;
 import org.comdnmr.modelfree.FitR1R2NOEModel;
 import org.comdnmr.modelfree.models.MFModelIso;
+import org.comdnmr.modelfree.models.MFModelIso2sf;
 import org.comdnmr.util.CoMDOptions;
 import org.comdnmr.util.CoMDPreferences;
 import org.comdnmr.util.ProcessingStatus;
@@ -203,7 +204,13 @@ public class PyController implements Initializable {
     @FXML
     TextField tauCalcField;
     @FXML
-    TextField lambdaField;
+    Slider sLambdaSlider;
+    @FXML
+    Label sLambdaLabel;
+    @FXML
+    Slider tauLambdaSlider;
+    @FXML
+    Label tauLambdaLabel;
     @FXML
     CheckBox fitJCheckBox;
     @FXML
@@ -475,6 +482,32 @@ public class PyController implements Initializable {
         tauFractionSlider.setShowTickLabels(true);
         tauFractionSlider.valueProperty().addListener(v
                 -> tauFractionLabel.setText(String.format("%.2f", tauFractionSlider.getValue())));
+
+
+        sLambdaSlider.setMin(0.0);
+        sLambdaSlider.setMax(2.0);
+        sLambdaSlider.setValue(0.0);
+        sLambdaLabel.setText("0.0");
+        sLambdaSlider.setBlockIncrement(0.05);
+        sLambdaSlider.setMajorTickUnit(0.5);
+        sLambdaSlider.setMinorTickCount(4);
+        sLambdaSlider.setShowTickMarks(true);
+        sLambdaSlider.setShowTickLabels(true);
+        sLambdaSlider.valueProperty().addListener(v
+                -> sLambdaLabel.setText(String.format("%.1f", sLambdaSlider.getValue())));
+
+        tauLambdaSlider.setMin(0.0);
+        tauLambdaSlider.setMax(2.0);
+        tauLambdaSlider.setValue(0.0);
+        tauLambdaLabel.setText("0.0");
+        tauLambdaSlider.setBlockIncrement(0.05);
+        tauLambdaSlider.setMajorTickUnit(0.5);
+        tauLambdaSlider.setMinorTickCount(4);
+        tauLambdaSlider.setShowTickMarks(true);
+        tauLambdaSlider.setShowTickLabels(true);
+        tauLambdaSlider.valueProperty().addListener(v
+                -> tauLambdaLabel.setText(String.format("%.1f", tauLambdaSlider.getValue())));
+
 
         t2LimitSlider.setMin(0.0);
         t2LimitSlider.setMax(100.0);
@@ -1221,18 +1254,8 @@ public class PyController implements Initializable {
     }
 
     public void fitIsotropicModel(FitModel fitModel, String prefix) {
-        String lambdaText = lambdaField.getText();
-        double lambda;
-        if (!lambdaText.isBlank()) {
-            try {
-                lambda = Double.parseDouble(lambdaText);
-            } catch (NumberFormatException nfE) {
-                lambda = 0.0;
-            }
-        } else {
-            lambdaField.setText("0.0");
-            lambda = 0.0;
-        }
+        double lambda = sLambdaSlider.getValue();
+        double tauScale = tauLambdaSlider.getValue();
 
         String tauText = tauCalcField.getText();
         Double tau = null;
@@ -1244,9 +1267,9 @@ public class PyController implements Initializable {
         } else if (prefix.equals("D")) {
             tau = 10.0;
         }
+        MFModelIso2sf.setTauScale(tauScale);
         boolean fitJ = fitJCheckBox.isSelected();
         boolean bootStrapA = bootStrapCheckBox.isSelected();
-        System.out.println(lambdaText + " lambda " + lambda);
         fitModel.setLambda(lambda);
         fitModel.setUseLambda(lambdaCheckBox.isSelected());
         fitModel.setTau(tau);
@@ -2381,21 +2404,10 @@ public class PyController implements Initializable {
     void lambdaChanged(boolean state) {
         if (state) {
             fitJCheckBox.setSelected(true);
-            String lambdaText = lambdaField.getText();
-            double lambda;
-            if (!lambdaText.isBlank()) {
-                try {
-                    lambda = Double.parseDouble(lambdaText);
-                } catch (NumberFormatException nfE) {
-                    lambda = 0.0;
-                }
-            } else {
-                lambda = 0.0;
+            if (sLambdaSlider.getValue() < 1.0e-5) {
+                sLambdaSlider.setValue(0.5);
+                tauLambdaSlider.setValue(0.5);
             }
-            if (lambda < 1.0e-4) {
-                lambda = 0.5;
-            }
-            lambdaField.setText(String.valueOf(lambda));
             modelCheckBoxes.forEach(checkBox -> checkBox.setSelected(false));
             modelCheckBoxes.get(modelCheckBoxes.size() - 1).setSelected(true);
         }

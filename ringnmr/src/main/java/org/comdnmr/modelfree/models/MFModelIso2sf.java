@@ -47,7 +47,7 @@ public class MFModelIso2sf extends MFModelIso2f {
         this(true, 0.0, 0.0, false);
     }
 
-    public void setTauScale(double value) {
+    public static void setTauScale(double value) {
         tauScale = value;
     }
 
