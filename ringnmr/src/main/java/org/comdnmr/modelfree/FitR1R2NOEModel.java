@@ -474,7 +474,8 @@ public class FitR1R2NOEModel extends FitModel {
             }
             RelaxFit relaxFit = new RelaxFit();
             relaxFit.setRelaxData(molDataRes);
-            relaxFit.setLambda(lambda);
+            relaxFit.setLambdaS(lambdaS);
+            relaxFit.setLambdaTau(lambdaTau);
             relaxFit.setUseLambda(useLambda);
             relaxFit.setFitJ(fitJ);
             model.setTauFraction(localTauFraction);
@@ -524,7 +525,8 @@ public class FitR1R2NOEModel extends FitModel {
     Score tryModel(Map<String, MolDataValues> molDataRes, MFModelIso model, double localTauFraction, boolean localFitTau, Random random) {
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setRelaxData(molDataRes);
-        relaxFit.setLambda(lambda);
+        relaxFit.setLambdaS(lambdaS);
+        relaxFit.setLambdaTau(lambdaTau);
         relaxFit.setUseLambda(useLambda);
         relaxFit.setFitJ(fitJ);
         model.setTauFraction(localTauFraction);

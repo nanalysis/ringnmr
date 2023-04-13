@@ -58,7 +58,6 @@ import org.comdnmr.modelfree.FitDeuteriumModel;
 import org.comdnmr.modelfree.FitModel;
 import org.comdnmr.modelfree.FitR1R2NOEModel;
 import org.comdnmr.modelfree.models.MFModelIso;
-import org.comdnmr.modelfree.models.MFModelIso2sf;
 import org.comdnmr.util.CoMDOptions;
 import org.comdnmr.util.CoMDPreferences;
 import org.comdnmr.util.ProcessingStatus;
@@ -85,7 +84,10 @@ import org.nmrfx.utils.GUIUtils;
 
 import javax.imageio.ImageIO;
 import javax.script.ScriptException;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
@@ -1254,8 +1256,8 @@ public class PyController implements Initializable {
     }
 
     public void fitIsotropicModel(FitModel fitModel, String prefix) {
-        double lambda = sLambdaSlider.getValue();
-        double tauScale = tauLambdaSlider.getValue();
+        double lambdaS = sLambdaSlider.getValue();
+        double lambdaTau = tauLambdaSlider.getValue();
 
         String tauText = tauCalcField.getText();
         Double tau = null;
@@ -1267,10 +1269,10 @@ public class PyController implements Initializable {
         } else if (prefix.equals("D")) {
             tau = 10.0;
         }
-        MFModelIso2sf.setTauScale(tauScale);
         boolean fitJ = fitJCheckBox.isSelected();
         boolean bootStrapA = bootStrapCheckBox.isSelected();
-        fitModel.setLambda(lambda);
+        fitModel.setLambdaS(lambdaS);
+        fitModel.setLambdaTau(lambdaTau);
         fitModel.setUseLambda(lambdaCheckBox.isSelected());
         fitModel.setTau(tau);
         double tauFraction = tauFractionSlider.getValue();

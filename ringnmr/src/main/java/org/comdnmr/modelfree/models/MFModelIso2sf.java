@@ -29,9 +29,9 @@ import java.util.List;
  * @author brucejohnson
  */
 public class MFModelIso2sf extends MFModelIso2f {
-    private static double tauScale = 0.1;
     double tauS;
-    double complexity = 0.0;
+    double complexityS = 0.0;
+    double complexityTau = 0.0;
 
     public MFModelIso2sf(boolean fitTau, double targetTau, double tauFraction,
             boolean includeEx) {
@@ -45,10 +45,6 @@ public class MFModelIso2sf extends MFModelIso2f {
 
     public MFModelIso2sf() {
         this(true, 0.0, 0.0, false);
-    }
-
-    public static void setTauScale(double value) {
-        tauScale = value;
     }
 
     @Override
@@ -78,38 +74,12 @@ public class MFModelIso2sf extends MFModelIso2f {
                     + (tauFx * (tauMx + tauSx) + tauMx * tauSx) * (tauFx * (tauMx + tauSx) + tauMx * tauSx));
             J[j++] = 0.4 * (vM + vMS + vMF + vMFS);
         }
-        complexity
+        complexityS
                 = Math.abs(1.0 - sf2)
-                + Math.abs(1.0 - ss2)
-                + tauScale * (Math.log10(tauSx * 1.0e9  + 0.001) + 3.0)
-                + tauScale * (Math.log10(tauFx * 1.0e9 + 0.001) + 3.0);
-        return J;
-    }
-
-    public double[] calcOld(double[] omegas) {
-        double tauMx = tauM * 1.0e-9;
-        double tauFx = tauF * 1.0e-9;
-        double tauSx = tauS * 1.0e-9;
-        double[] J = new double[omegas.length];
-        int j = 0;
-        double ss2 = this.ss2 / sN;
-        double sf2 = this.sf2 / sN;
-        double s2 = ss2 * sf2;
-        for (double omega : omegas) {
-            double omega2 = omega * omega;
-
-            double value1 = s2 / (1.0 + omega2 * tauMx * tauMx);
-            double value2 = ((1 - sf2) * (tauFx + tauMx) * tauFx) / ((tauFx + tauMx) * (tauFx + tauMx) + omega2 * tauMx * tauMx * tauFx * tauFx);
-            double value3 = ((sf2 - s2) * (tauSx + tauMx) * tauSx) / ((tauSx + tauMx) * (tauSx + tauMx) + omega2 * tauMx * tauMx * tauSx * tauSx);
-            J[j++] = 0.4 * tauMx * (value1 + value2 + value3);
-        }
-        complexity
-                = Math.abs(1.0 - sf2)
-                + Math.abs(1.0 - ss2)
-                + (Math.log10(tauSx * 1.0e9) + 3.0)
-                + (Math.log10(tauFx * 1.0e9) + 3.0);
-//                + ((tauSx * 1.0e9) - SLOW_LIMIT)
-//                + tauFx * 1.0e9;
+                + Math.abs(1.0 - ss2);
+        complexityTau
+                = (Math.log10(tauSx * 1.0e9 + 0.001) + 3.0)
+                + (Math.log10(tauFx * 1.0e9 + 0.001) + 3.0);
         return J;
     }
 
@@ -166,8 +136,13 @@ public class MFModelIso2sf extends MFModelIso2f {
     }
 
     @Override
-    public double getComplexity() {
-        return complexity;
+    public double getComplexityS() {
+        return complexityS;
+    }
+
+    @Override
+    public double getComplexityTau() {
+        return complexityTau;
     }
 
     public double[] calc(double[] omegas, double sf2, double tauF, double ss2, double tauS) {

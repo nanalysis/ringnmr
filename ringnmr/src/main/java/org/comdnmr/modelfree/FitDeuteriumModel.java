@@ -235,7 +235,8 @@ public class FitDeuteriumModel extends FitModel {
     Score tryModel(Map<String, MolDataValues> molDataRes, MFModelIso model, double localTauFraction, boolean localFitTau, Random random) {
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setRelaxData(molDataRes);
-        relaxFit.setLambda(0.0);
+        relaxFit.setLambdaS(0.0);
+        relaxFit.setLambdaTau(0.0);
         relaxFit.setFitJ(true);
         model.setTauFraction(localTauFraction);
         double[] start = model.getStart();
@@ -266,7 +267,7 @@ public class FitDeuteriumModel extends FitModel {
         }
         if (best != null) {
             var score = relaxFit.score(best.getPoint(), true);
-            System.out.println(score.rms() + " " + score.value() + " " + score.complexity() + " " + score.parsOK());
+            System.out.println(score.rms() + " " + score.value() + " " + score.complexityS() + " " + score.complexityTau() + " " + score.parsOK());
             System.out.print("Pars result: ");
             for (var d : score.getPars()) {
                 System.out.print(d + " ");
@@ -305,7 +306,8 @@ public class FitDeuteriumModel extends FitModel {
                        double localTauFraction, boolean localFitTau, double[] pars, Random random) {
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setRelaxData(molDataRes);
-        relaxFit.setLambda(lambda);
+        relaxFit.setLambdaS(lambdaS);
+        relaxFit.setLambdaTau(lambdaTau);
         relaxFit.setUseLambda(useLambda);
         relaxFit.setFitJ(fitJ);
         Map<String, MolDataValues> molDataMap = relaxFit.genBootstrap(random, model, pars);
