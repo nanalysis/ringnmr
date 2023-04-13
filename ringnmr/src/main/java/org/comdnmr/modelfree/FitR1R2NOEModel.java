@@ -357,11 +357,12 @@ public class FitR1R2NOEModel extends FitModel {
             localFitTau = false;
         }
         int maxPars = 5;
-        int nJ = 12;
+        int nExp = resData.dataValues.size();
+        int nJ = nExp * 3;
         double[][] replicateData = new double[maxPars][nReplicates];
         MFModelIso[] bestModels = new MFModelIso[nReplicates];
         Score[] bestScores = new Score[nReplicates];
-        BootstrapAggregator bootstrapAggregator = new BootstrapAggregator(4);
+        BootstrapAggregator bootstrapAggregator = new BootstrapAggregator(nExp);
         var iRepList = IntStream.range(0, bootstrapAggregator.getN()).boxed().collect(Collectors.toList());
         Collections.shuffle(iRepList);
         int[] totalCounts = new int[nJ];

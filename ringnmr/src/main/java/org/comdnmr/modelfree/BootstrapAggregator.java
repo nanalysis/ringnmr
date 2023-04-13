@@ -46,14 +46,21 @@ public class BootstrapAggregator {
             {0, 1, 1}
     };
 
+    static final int[][] SELECTIONS2 = {
+            {0, 0},
+            {0, 1},
+            {1, 1}
+    };
     public BootstrapAggregator(int nExp) throws IllegalArgumentException {
-        if ((nExp != 3) && (nExp != 4)) {
+        if ((nExp != 2) && (nExp != 3) && (nExp != 4)) {
             throw new IllegalArgumentException("Invalid nFreq " + nExp);
         }
         this.nExp = nExp;
         this.nJ = nExp * nFreq;
-        if (nExp == 3) {
-            selections = SELECTIONS3;
+        if (nExp == 2) {
+            selections = SELECTIONS2;
+        } else if (nExp == 3) {
+                selections = SELECTIONS3;
         } else {
             selections = SELECTIONS4;
         }
