@@ -134,6 +134,10 @@ public abstract class FitModel {
         this.nReplicates = value;
     }
 
+    public int getNReplicates() {
+        return nReplicates;
+    }
+
     public void setT2Limit(double value) {
         this.t2Limit = value;
     }

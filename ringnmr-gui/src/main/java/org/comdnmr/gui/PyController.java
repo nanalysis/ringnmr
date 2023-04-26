@@ -1309,6 +1309,7 @@ public class PyController implements Initializable {
         }
         addMoleculeDataToAxisMenu();
         showModelFreeData();
+        nReplicatesSlider.setValue(modelFitter.getNReplicates());
     }
 
     public void estimateCorrelationTime() {
