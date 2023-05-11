@@ -5,12 +5,12 @@
     <parent>
         <groupId>org.comdnmr</groupId>
         <artifactId>ringnmr-parent</artifactId>
-        <version>1.15</version>
+        <version>1.16</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>ringnmr</artifactId>
-    <version>1.15</version>
+    <version>1.16</version>
     <name>ringnmr</name>
     <packaging>jar</packaging>
 
@@ -37,7 +37,7 @@
         <dependency>
             <groupId>org.nmrfx</groupId>
             <artifactId>nmrfx-core</artifactId>
-            <version>11.3.2</version>
+            <version>11.3.3</version>
             <scope>compile</scope>
         </dependency>
               <dependency>
@@ -66,6 +66,16 @@
             <artifactId>commons-math3</artifactId>
             <version>3.6</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-rng-simple</artifactId>
+            <version>1.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-rng-sampling</artifactId>
+            <version>1.5</version>
         </dependency>
         <dependency>
             <groupId>org.ejml</groupId>
