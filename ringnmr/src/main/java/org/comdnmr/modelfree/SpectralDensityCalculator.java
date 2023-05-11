@@ -1,6 +1,7 @@
 package org.comdnmr.modelfree;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class SpectralDensityCalculator {
@@ -10,7 +11,7 @@ public class SpectralDensityCalculator {
         int nDataValues = dataValues.size();
         int stepSize = useAverage ? 2 : 3;
         int nFreq = useAverage ? 1 + stepSize * nDataValues : stepSize * nDataValues;
-        double[][] result = new double[3][nFreq];
+        double[][] result = new double[4][nFreq];
         int iField = 0;
         for (RelaxDataValue value : dataValues) {
             R1R2NOEDataValue relaxDataValue = (R1R2NOEDataValue) value;
@@ -61,6 +62,7 @@ public class SpectralDensityCalculator {
             result[1][0] /= nDataValues;
             result[2][0] = Math.sqrt(result[2][0]);
         }
+        Arrays.fill(result[3], 1.0);
         return result;
     }
     public static double[][] calcJDeuterium(List<RelaxDataValue> dataValues) {

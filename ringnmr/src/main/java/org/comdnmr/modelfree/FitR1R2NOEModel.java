@@ -16,6 +16,9 @@ import java.util.stream.IntStream;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.apache.commons.math3.optim.PointValuePair;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.apache.commons.rng.UniformRandomProvider;
+import org.apache.commons.rng.simple.RandomSource;
+import org.apache.commons.rng.sampling.distribution.DirichletSampler;
 import org.comdnmr.modelfree.models.MFModelIso;
 import org.comdnmr.modelfree.models.MFModelIso2sf;
 import org.nmrfx.chemistry.Atom;
@@ -148,7 +151,7 @@ public class FitR1R2NOEModel extends FitModel {
         Random random = new Random();
         Map<String, MolDataValues> molData = getData(false);
         MolDataValues molDataValue = molData.get(searchKey);
-        if (bootstrap) {
+        if (bootstrapMode != BootstrapMode.PARAMETRIC) {
             return testModelsWithBootstrapAggregation(molDataValue, searchKey, modelNames, random);
         } else {
             return testModels(molDataValue, searchKey, modelNames, random);
@@ -232,7 +235,7 @@ public class FitR1R2NOEModel extends FitModel {
             MolDataValues resData = e.getValue();
             String key = e.getKey();
             if (!resData.getData().isEmpty()) {
-                if (bootstrap) {
+                if (bootstrapMode != BootstrapMode.PARAMETRIC) {
                     Optional<ModelFitResult> result = testModelsWithBootstrapAggregation(resData, key, modelNames, random);
                     result.ifPresent(o -> results.put(key, o));
                 } else {
@@ -342,6 +345,13 @@ public class FitR1R2NOEModel extends FitModel {
         return iBest;
     }
 
+    private void scaleWeights(double[] weights) {
+        for (int i=0;i < weights.length;i++) {
+            weights[i] = weights[i] * weights.length;
+        }
+
+    }
+
     public Optional<ModelFitResult> testModelsWithBootstrapAggregation(MolDataValues resData, String key, List<String> modelNames, Random random) {
         Optional<ModelFitResult> result = Optional.empty();
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
@@ -364,19 +374,38 @@ public class FitR1R2NOEModel extends FitModel {
         double[][] replicateData = new double[maxPars][nReplicates];
         MFModelIso[] bestModels = new MFModelIso[nReplicates];
         Score[] bestScores = new Score[nReplicates];
-        var iRepList = IntStream.range(0, bootstrapAggregator.getN()).boxed().collect(Collectors.toList());
-        Collections.shuffle(iRepList);
+        UniformRandomProvider rng = RandomSource.XO_RO_SHI_RO_128_PP.create();
+
+        List<Integer> iRepList = null;
+        DirichletSampler dirichlet = null;
+        if (bootstrapMode == BootstrapMode.BAYESIAN) {
+            dirichlet = DirichletSampler.symmetric(rng, nJ, 4.0);
+        } else {
+            iRepList = IntStream.range(0, bootstrapAggregator.getN()).boxed().collect(Collectors.toList());
+            Collections.shuffle(iRepList);
+        }
+
         int[] totalCounts = new int[nJ];
         for (int iRep = 0; iRep < nReplicates; iRep++) {
             if (cancelled.get()) {
                 return result;
             }
-            int bootStrapSet = iRepList.get(iRep);
-            for (var molData : molDataRes.values()) {
-                molData.setBootstrapAggregator(bootstrapAggregator);
-                molData.setBootstrapSet(bootStrapSet);
+            if (bootstrapMode == BootstrapMode.BAYESIAN) {
+                double[] weights = dirichlet.sample();
+                scaleWeights(weights);
+                for (var molData : molDataRes.values()) {
+                    molData.weight(weights);
+                    molData.clearBootStrapSet();
+                }
+            } else {
+                int bootStrapSet = iRepList.get(iRep);
+                for (var molData : molDataRes.values()) {
+                    molData.setBootstrapAggregator(bootstrapAggregator);
+                    molData.setBootstrapSet(bootStrapSet);
+                    molData.weight(null);
+                }
+                BootstrapAggregator.incrCounts(totalCounts, bootstrapAggregator.getY(bootStrapSet));
             }
-            BootstrapAggregator.incrCounts(totalCounts, bootstrapAggregator.getY( bootStrapSet));
             List<Score> scores = new ArrayList<>();
             List<MFModelIso> models = new ArrayList<>();
             for (var modelName : modelNames) {
@@ -428,19 +457,23 @@ public class FitR1R2NOEModel extends FitModel {
                 DescriptiveStatistics sumStat = new DescriptiveStatistics(replicateData[iPar]);
                 double parValue = useMedian ? sumStat.getPercentile(50.0) : sumStat.getMean();
                 bestPars[iPar] = parValue;
-                for (int j=0;j<nJ;j++) {
-                    for (int i = 0; i < nReplicates; i++) {
-                        int[] y = bootstrapAggregator.getY(iRepList.get(i));
-                        cov[j][iPar] += (y[j]-totalCounts[j]) * (replicateData[iPar][i] - parValue);
+                if (bootstrapMode == BootstrapMode.BAYESIAN) {
+                    parError = sumStat.getStandardDeviation();
+                } else {
+                    for (int j = 0; j < nJ; j++) {
+                        for (int i = 0; i < nReplicates; i++) {
+                            int[] y = bootstrapAggregator.getY(iRepList.get(i));
+                            cov[j][iPar] += (y[j] - totalCounts[j]) * (replicateData[iPar][i] - parValue);
+                        }
+                        cov[j][iPar] /= nReplicates;
                     }
-                    cov[j][iPar] /= nReplicates;
+
+                    double sum = 0.0;
+                    for (int j = 0; j < nJ; j++) {
+                        sum += cov[j][iPar] * cov[j][iPar];
+                    }
+                    parError = Math.sqrt(sum / nJ);
                 }
-                double sum = 0.0;
-                for (int j=0;j<nJ;j++) {
-                    sum += cov[j][iPar] * cov[j][iPar];
-                }
-                parError = Math.sqrt(sum / nJ);
-             //   parError = sumStat.getStandardDeviation();
                 orderPar = orderPar.set(parName, parValue, parError);
             }
             orderPar = orderPar.set("model", (double) bestModel.getNumber(), null);
@@ -451,8 +484,16 @@ public class FitR1R2NOEModel extends FitModel {
             atom.addSpectralDensity(key, spectralDensity);
             resData.setTestModel(bestModel);
             Double validationScore = null;
-            if (calcValidation && ((nReplicates + nReplicates) <= iRepList.size())) {
-                validationScore = scoreBootstrap(molDataRes, bestModel, bestPars, bootstrapAggregator, iRepList, nReplicates, nReplicates, localFitTau, localTauFraction);
+            if (calcValidation) {
+                if (bootstrapMode == BootstrapMode.BAYESIAN) {
+                    validationScore = scoreBayesian(molDataRes, bestModel, bestPars, dirichlet,
+                            nReplicates, nReplicates, localFitTau, localTauFraction);
+                } else {
+                    if ((nReplicates + nReplicates) <= iRepList.size()) {
+                        validationScore = scoreBootstrap(molDataRes, bestModel, bestPars, bootstrapAggregator, iRepList,
+                                nReplicates, nReplicates, localFitTau, localTauFraction);
+                    }
+                }
             }
             ModelFitResult modelFitResult = new ModelFitResult(orderPar, replicateData, validationScore);
             result = Optional.of(modelFitResult);
@@ -461,8 +502,8 @@ public class FitR1R2NOEModel extends FitModel {
     }
 
     public double scoreBootstrap(Map<String, MolDataValues> molDataRes, MFModelIso model, double[] pars,
-                                BootstrapAggregator bootstrapAggregator, List<Integer> iRepList, int iStart, int nReplicates,
-                                boolean localFitTau, double localTauFraction) {
+                                 BootstrapAggregator bootstrapAggregator, List<Integer> iRepList, int iStart, int nReplicates,
+                                 boolean localFitTau, double localTauFraction) {
         double rssSum = 0.0;
         int startPar = localFitTau ? 0 : 1;
         double[] pars2 = new double[pars.length - startPar];
@@ -474,17 +515,41 @@ public class FitR1R2NOEModel extends FitModel {
                 molData.setBootstrapAggregator(bootstrapAggregator);
                 molData.setBootstrapSet(bootStrapSet);
             }
-            RelaxFit relaxFit = new RelaxFit();
-            relaxFit.setRelaxData(molDataRes);
-            relaxFit.setLambdaS(lambdaS);
-            relaxFit.setLambdaTau(lambdaTau);
-            relaxFit.setUseLambda(useLambda);
-            relaxFit.setFitJ(fitJ);
             model.setTauFraction(localTauFraction);
-            var score = relaxFit.score(pars2, true);
-            rssSum += score.rss;
+            rssSum += scoreModel(molDataRes, pars2);
         }
         return rssSum / nReplicates;
+    }
+
+    public double scoreBayesian(Map<String, MolDataValues> molDataRes, MFModelIso model, double[] pars,
+                                DirichletSampler dirichlet, int iStart, int nReplicates,
+                                 boolean localFitTau, double localTauFraction) {
+        double rssSum = 0.0;
+        int startPar = localFitTau ? 0 : 1;
+        double[] pars2 = new double[pars.length - startPar];
+
+        System.arraycopy(pars, startPar, pars2, 0, pars2.length);
+        for (int iRep = 0; iRep < nReplicates; iRep++) {
+            double[] weights = dirichlet.sample();
+            scaleWeights(weights);
+            for (var molData : molDataRes.values()) {
+                molData.weight(weights);
+            }
+            model.setTauFraction(localTauFraction);
+            rssSum += scoreModel(molDataRes, pars2);
+        }
+        return rssSum / nReplicates;
+    }
+
+    private double scoreModel(Map<String, MolDataValues> molDataRes, double[] pars) {
+        RelaxFit relaxFit = new RelaxFit();
+        relaxFit.setRelaxData(molDataRes);
+        relaxFit.setLambdaS(lambdaS);
+        relaxFit.setLambdaTau(lambdaTau);
+        relaxFit.setUseLambda(useLambda);
+        relaxFit.setFitJ(fitJ);
+        var score = relaxFit.score(pars, true);
+        return score.rss;
     }
 
     public void testModel(Map<String, MolDataValues> molData, MFModelIso model) {

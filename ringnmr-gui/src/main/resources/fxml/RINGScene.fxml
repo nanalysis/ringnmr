@@ -363,7 +363,7 @@
                                                     <Label text="Bootstrap N" prefWidth="80"/>
                                                     <Slider fx:id="nReplicatesSlider" prefWidth="150"/>
                                                     <Label fx:id="bootstrapNLabel" prefWidth="50"/>
-                                                    <CheckBox text=" Aggregate " fx:id="bootStrapCheckBox"/>
+                                                    <ChoiceBox  fx:id="bootStrapChoice"/>
                                                 </children>
                                             </HBox>
                                             <HBox>

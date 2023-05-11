@@ -216,7 +216,7 @@ public class PyController implements Initializable {
     @FXML
     CheckBox fitJCheckBox;
     @FXML
-    CheckBox bootStrapCheckBox;
+    ChoiceBox<FitModel.BootstrapMode> bootStrapChoice;
     @FXML
     CheckBox lambdaCheckBox;
     @FXML
@@ -534,7 +534,9 @@ public class PyController implements Initializable {
         nReplicatesSlider.setShowTickLabels(true);
         nReplicatesSlider.valueProperty().addListener(v
                 -> bootstrapNLabel.setText(String.format("%d", (int) nReplicatesSlider.getValue())));
-        bootStrapCheckBox.selectedProperty().addListener(e -> bootStrapChanged(bootStrapCheckBox.isSelected()));
+        bootStrapChoice.getItems().addAll(FitModel.BootstrapMode.values());
+        bootStrapChoice.setValue(FitModel.BootstrapMode.PARAMETRIC);
+        bootStrapChoice.valueProperty().addListener(e -> bootStrapChanged(bootStrapChoice.getValue()));
         lambdaCheckBox.selectedProperty().addListener(e -> lambdaChanged(lambdaCheckBox.isSelected()));
 
         String[] modelNames = {"1", "1f", "1s", "2f", "2s", "2sf"};
@@ -1270,7 +1272,6 @@ public class PyController implements Initializable {
             tau = 10.0;
         }
         boolean fitJ = fitJCheckBox.isSelected();
-        boolean bootStrapA = bootStrapCheckBox.isSelected();
         fitModel.setLambdaS(lambdaS);
         fitModel.setLambdaTau(lambdaTau);
         fitModel.setUseLambda(lambdaCheckBox.isSelected());
@@ -1282,7 +1283,7 @@ public class PyController implements Initializable {
         fitModel.setT2Limit(t2Limit);
         fitModel.setNReplicates((int) nReplicatesSlider.getValue());
         fitModel.setFitJ(fitJ);
-        fitModel.setBootstrap(bootStrapA);
+        fitModel.setBootstrapMode(bootStrapChoice.getValue());
         fitModel.setTauFraction(tauFraction);
         var modelNames = new ArrayList<String>();
         for (var modelCheckBox : modelCheckBoxes) {
@@ -2390,8 +2391,8 @@ public class PyController implements Initializable {
         simControls.simSliderAction("");
     }
 
-    void bootStrapChanged(boolean state) {
-        if (state) {
+    void bootStrapChanged(FitModel.BootstrapMode mode) {
+        if (mode != FitModel.BootstrapMode.PARAMETRIC) {
             fitJCheckBox.setSelected(true);
             int nReplicates = (int) nReplicatesSlider.getValue();
             if (nReplicates < 10) {

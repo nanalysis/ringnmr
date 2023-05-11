@@ -20,7 +20,8 @@ public abstract class FitModel {
     Double tau;
     boolean fitTau = false;
     boolean fitJ = false;
-    boolean bootstrap = false;
+    BootstrapMode bootstrapMode = BootstrapMode.PARAMETRIC;
+    boolean bayesian = false;
     boolean fitExchange = false;
     double tauFraction = 0.25;
     double lambdaS = 0.0;
@@ -39,6 +40,12 @@ public abstract class FitModel {
 
     Function<Double, Double> updaterFunction;
     Function<ProcessingStatus, Double> statusFunction;
+
+    public enum BootstrapMode {
+        PARAMETRIC,
+        AGGREGATE,
+        BAYESIAN
+    }
 
 
     public void setup(String searchKey, List<String> modelNames) {
@@ -126,8 +133,8 @@ public abstract class FitModel {
         this.fitJ = value;
     }
 
-    public void setBootstrap(boolean value) {
-        this.bootstrap = value;
+    public void setBootstrapMode(BootstrapMode value) {
+        this.bootstrapMode = value;
     }
 
     public void setNReplicates(int value) {

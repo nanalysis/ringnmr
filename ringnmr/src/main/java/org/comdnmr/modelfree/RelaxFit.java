@@ -365,11 +365,12 @@ public class RelaxFit {
         double sumSq = 0.0;
         double[][] jValues = molData.getJValues();
         double[] jCalc = testModel.calc(jValues[0], resPars);
+        double[] weights = jValues[jValues.length - 1];
         for (int i=0;i< jCalc.length;i++) {
            // double delta = Math.log10(jCalc[i]) - Math.log10(jValues[0][i]);
             double delta = jCalc[i] - jValues[1][i];
             double jErr = jValues[2][i];
-            sumSq += (delta * delta) / (jErr*jErr);
+            sumSq += weights[i] * (delta * delta) / (jErr*jErr);
 
 //            System.out.printf("%3d %11.5g %11.5g %11.5g %11.5g %11.5g\n", i, jValues[0][i], jCalc[i], jValues[1][i], jErr, sumSq);
         }

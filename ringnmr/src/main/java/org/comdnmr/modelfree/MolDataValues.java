@@ -27,6 +27,7 @@ public class MolDataValues {
     double[][] jValues = null;
     Integer bootstrapSet = null;
     BootstrapAggregator bootstrapAggregator = null;
+    double[] weights = null;
 
     public MolDataValues(String specifier, double[] vector, DynamicsSource dynSourceFactory) {
         this.specifier = specifier;
@@ -54,6 +55,10 @@ public class MolDataValues {
             sBuilder.append("\n");
         }
         return sBuilder.toString();
+    }
+
+    public void weight(double[] weights) {
+        this.weights = weights;
     }
 
     public void addData(RelaxDataValue value) {
@@ -90,7 +95,7 @@ public class MolDataValues {
         jValues = null;
     }
 
-    public double[][] calcJ() {
+    private double[][] calcJ() {
         var dataOpt = dataValues.stream().findFirst();
         if (dataOpt.isPresent()) {
             if (dataOpt.get() instanceof DeuteriumDataValue) {
@@ -109,6 +114,9 @@ public class MolDataValues {
             } else {
                 jValues = calcJ();
             }
+        }
+        if (weights != null) {
+            System.arraycopy(weights, 0, jValues[jValues.length -1], 0, weights.length);
         }
         return jValues;
 
