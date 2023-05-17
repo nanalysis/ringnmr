@@ -5,9 +5,10 @@ import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
 import org.apache.commons.math3.optim.PointValuePair;
+import org.apache.commons.rng.UniformRandomProvider;
+import org.apache.commons.rng.simple.RandomSource;
 import org.comdnmr.modelfree.models.MFModelIso;
 import org.comdnmr.util.ProcessingStatus;
-import org.nmrfx.chemistry.relax.OrderPar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +18,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
 public abstract class FitModel {
+    public static UniformRandomProvider rng = null;
+
     Double tau;
     boolean fitTau = false;
     boolean fitJ = false;
@@ -45,6 +48,13 @@ public abstract class FitModel {
         PARAMETRIC,
         AGGREGATE,
         BAYESIAN
+    }
+
+    public static UniformRandomProvider getRandomSource() {
+        if (rng == null) {
+             rng = RandomSource.XO_RO_SHI_RO_128_PP.create();
+        }
+        return rng;
     }
 
 

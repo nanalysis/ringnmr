@@ -370,20 +370,19 @@ public class FitR1R2NOEModel extends FitModel {
         int nExp = resData.dataValues.size();
         int nJ = nExp * 3;
         BootstrapAggregator bootstrapAggregator = new BootstrapAggregator(nExp);
-        nReplicates = Math.min(nReplicates, bootstrapAggregator.getN());
-        double[][] replicateData = new double[maxPars][nReplicates];
-        MFModelIso[] bestModels = new MFModelIso[nReplicates];
-        Score[] bestScores = new Score[nReplicates];
-        UniformRandomProvider rng = RandomSource.XO_RO_SHI_RO_128_PP.create();
 
         List<Integer> iRepList = null;
         DirichletSampler dirichlet = null;
         if (bootstrapMode == BootstrapMode.BAYESIAN) {
-            dirichlet = DirichletSampler.symmetric(rng, nJ, 4.0);
+            dirichlet = DirichletSampler.symmetric(getRandomSource(), nJ, 4.0);
         } else {
+            nReplicates = Math.min(nReplicates, bootstrapAggregator.getN());
             iRepList = IntStream.range(0, bootstrapAggregator.getN()).boxed().collect(Collectors.toList());
             Collections.shuffle(iRepList);
         }
+        double[][] replicateData = new double[maxPars][nReplicates];
+        MFModelIso[] bestModels = new MFModelIso[nReplicates];
+        Score[] bestScores = new Score[nReplicates];
 
         int[] totalCounts = new int[nJ];
         for (int iRep = 0; iRep < nReplicates; iRep++) {
