@@ -123,12 +123,12 @@ public class BootstrapAggregator {
 
     public  double[][] getBootStrapJ(double[][] jValues, int iSelection) {
         int[][] sel = getSelections(iSelection);
-        double[][] result = new double[3][nJ];
+        double[][] result = new double[4][nJ];
         for (int iFreq = 0; iFreq < nFreq; iFreq++) {
             for (int iExp = 0; iExp < nExp; iExp++) {
                 int index = iExp * nFreq + iFreq;
                 int swapIndex = sel[iFreq][iExp] * nFreq + iFreq;
-                for (int jType = 0; jType < 3; jType++) {  // type is freq, value, error
+                for (int jType = 0; jType < 4; jType++) {  // type is freq, value, error, weight
                     result[jType][index] = jValues[jType][swapIndex];
                 }
             }

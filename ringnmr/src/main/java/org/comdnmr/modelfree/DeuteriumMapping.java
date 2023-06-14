@@ -8,6 +8,7 @@ import smile.math.matrix.Matrix;
 import smile.regression.OLS;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class DeuteriumMapping {
@@ -202,8 +203,9 @@ public class DeuteriumMapping {
                 jValuesOrig[2][iFreq * 3 + 1] = jErrors[singleColumn];
                 jValuesOrig[2][iFreq * 3 + 2] = jErrors[doubleColumn];
             }
-
-            var result = new double[][]{fitFields, jValues, jErrors, jValuesOrig[0], jValuesOrig[1], jValuesOrig[2]};
+            double[] weights = new double[fitFields.length];
+            Arrays.fill(weights, 1.0);
+            var result = new double[][]{fitFields, jValues, jErrors, jValuesOrig[0], jValuesOrig[1], jValuesOrig[2], weights};
             return result;
         } catch (IllegalArgumentException iAE) {
             System.out.println(iAE.getMessage());

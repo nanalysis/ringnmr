@@ -5,9 +5,10 @@ import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
 import org.apache.commons.math3.optim.PointValuePair;
+import org.apache.commons.rng.UniformRandomProvider;
+import org.apache.commons.rng.simple.RandomSource;
 import org.comdnmr.modelfree.models.MFModelIso;
 import org.comdnmr.util.ProcessingStatus;
-import org.nmrfx.chemistry.relax.OrderPar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,10 +18,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
 public abstract class FitModel {
+    public static UniformRandomProvider rng = null;
+
     Double tau;
     boolean fitTau = false;
     boolean fitJ = false;
-    boolean bootstrap = false;
+    BootstrapMode bootstrapMode = BootstrapMode.PARAMETRIC;
+    boolean bayesian = false;
     boolean fitExchange = false;
     double tauFraction = 0.25;
     double lambdaS = 0.0;
@@ -39,6 +43,19 @@ public abstract class FitModel {
 
     Function<Double, Double> updaterFunction;
     Function<ProcessingStatus, Double> statusFunction;
+
+    public enum BootstrapMode {
+        PARAMETRIC,
+        AGGREGATE,
+        BAYESIAN
+    }
+
+    public static UniformRandomProvider getRandomSource() {
+        if (rng == null) {
+             rng = RandomSource.XO_RO_SHI_RO_128_PP.create();
+        }
+        return rng;
+    }
 
 
     public void setup(String searchKey, List<String> modelNames) {
@@ -126,8 +143,8 @@ public abstract class FitModel {
         this.fitJ = value;
     }
 
-    public void setBootstrap(boolean value) {
-        this.bootstrap = value;
+    public void setBootstrapMode(BootstrapMode value) {
+        this.bootstrapMode = value;
     }
 
     public void setNReplicates(int value) {
