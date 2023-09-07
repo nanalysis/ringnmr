@@ -110,30 +110,30 @@ public class PreferencesController implements Initializable {
         ArrayList<String> optimizers = new ArrayList<>();
         optimizers.add("CMA-ES");
         optimizers.add("BOBYQA");
-        maxFreqItem = new DoubleRangeOperationItem((obs, oldV, newV) -> {
+        maxFreqItem = new DoubleRangeOperationItem(prefSheet, (obs, oldV, newV) -> {
             CoMDPreferences.setCPMGMaxFreq((Double) newV);
         }, CoMDPreferences.getCPMGMaxFreq(), 100.0, 5000.0, 100.0, 20000.0, "Limits", "CPMG Max Freq", "Max Frequency");
-        DoubleRangeOperationItem rexRatioItem = new DoubleRangeOperationItem((obs, oldV, newV) -> {
+        DoubleRangeOperationItem rexRatioItem = new DoubleRangeOperationItem(prefSheet, (obs, oldV, newV) -> {
             CoMDPreferences.setRexRatio((Double) newV);
         }, CoMDPreferences.getRexRatio(), 0.0, 10.0, "Limits", "CPMG Rex Ratio", "Rex must be this many times rmsd");
-        DoubleRangeOperationItem deltaABdiffItem = new DoubleRangeOperationItem((obs, oldV, newV) -> {
+        DoubleRangeOperationItem deltaABdiffItem = new DoubleRangeOperationItem(prefSheet, (obs, oldV, newV) -> {
             CoMDPreferences.setDeltaABDiff((Double) newV);
         }, CoMDPreferences.getDeltaABDiff(), 0.0, 2.0, "Limits", "CEST/R1Rho DeltaAB Min Diff", "DeltaAB difference magnitude must be larger than this number for valid exchange");
-        DoubleRangeOperationItem refFieldItem = new DoubleRangeOperationItem((obs, oldV, newV) -> {
+        DoubleRangeOperationItem refFieldItem = new DoubleRangeOperationItem(prefSheet, (obs, oldV, newV) -> {
             CoMDPreferences.setRefField((Double) newV);
         }, CoMDPreferences.getRefField(), 100.0, 1200.0, "Limits", "Reference Field", "Rex value reported at this H1 field");
-        IntRangeOperationItem nSamplesItem = new IntRangeOperationItem((obs, oldV, newV) -> {
+        IntRangeOperationItem nSamplesItem = new IntRangeOperationItem(prefSheet, (obs, oldV, newV) -> {
             CoMDPreferences.setSampleSize((Integer) newV);
         }, CoMDPreferences.getSampleSize(), 10, 500, "Optimizer", "Bootstrap Samples", "Number of bootstrap samples");
-        ChoiceOperationItem optimizerChoiceItem = new ChoiceOperationItem(optimizerListener,
+        ChoiceOperationItem optimizerChoiceItem = new ChoiceOperationItem(prefSheet, optimizerListener,
                 CoMDPreferences.getOptimizer(), optimizers, "Optimizer", "Refine Optimizer", "Optimizer for refinement");
-        ChoiceOperationItem bootStrapOptimizerrChoiceItem = new ChoiceOperationItem(bootStrapOptimizerListener,
+        ChoiceOperationItem bootStrapOptimizerrChoiceItem = new ChoiceOperationItem(prefSheet, bootStrapOptimizerListener,
                 CoMDPreferences.getBootStrapOptimizer(), optimizers, "Optimizer", "Bootstrap Optimizer", "Optimizer for bootstrap");
 
-        DirectoryOperationItem locationFileItem = new DirectoryOperationItem(datasetListener, getDatasetDirectory().getPath(), "File Locations", "Datasets", "desc");
+        DirectoryOperationItem locationFileItem = new DirectoryOperationItem(prefSheet, datasetListener, getDatasetDirectory().getPath(), "File Locations", "Datasets", "desc");
 
         int nProcessesDefault = Runtime.getRuntime().availableProcessors() / 2;
-        IntRangeOperationItem nProcessesItem = new IntRangeOperationItem(nprocessListener, nProcessesDefault, 1, 32, "Processor", "NProcesses", "How many parallel processes to run during processing");
+        IntRangeOperationItem nProcessesItem = new IntRangeOperationItem(prefSheet, nprocessListener, nProcessesDefault, 1, 32, "Processor", "NProcesses", "How many parallel processes to run during processing");
 
         ArrayList<String> cestEqnChoices = new ArrayList<>();
         cestEqnChoices.addAll(Arrays.asList("NOEX", "TROTT_PALMER", "SD", "BALDWINKAY", "LAGUERRE",
@@ -146,37 +146,37 @@ public class PreferencesController implements Initializable {
         expEqnChoices.addAll(Arrays.asList("EXPAB", "EXPABC"));
 //        prefSheet.getItems().addAll(locationTypeItem, locationFileItem, nProcessesItem, maxFreqItem, rexRatioItem, nSamplesItem);
 
-        DoubleRangeOperationItem startingRadiusItem = new DoubleRangeOperationItem((obs, oldV, newV) -> {
+        DoubleRangeOperationItem startingRadiusItem = new DoubleRangeOperationItem(prefSheet, (obs, oldV, newV) -> {
             CoMDPreferences.setStartingRadius((Double) newV);
         }, CoMDPreferences.getStartRadius(), 1.0, 30.0, "Optimizer", "Starting Radius", "Iniital search radius for optimizer");
-        DoubleRangeOperationItem finalRadiusItem = new DoubleRangeOperationItem((obs, oldV, newV) -> {
+        DoubleRangeOperationItem finalRadiusItem = new DoubleRangeOperationItem(prefSheet, (obs, oldV, newV) -> {
             CoMDPreferences.setFinalRadius((Double) newV);
         }, CoMDPreferences.getFinalRadius(), -6, -1.0, "Optimizer", "Final Radius", "Final search radius for BOBYQA");
-        DoubleRangeOperationItem toleranceItem = new DoubleRangeOperationItem((obs, oldV, newV) -> {
+        DoubleRangeOperationItem toleranceItem = new DoubleRangeOperationItem(prefSheet, (obs, oldV, newV) -> {
             CoMDPreferences.setTolerance((Double) newV);
         }, CoMDPreferences.getTolerance(), -7.0, -1.0, "Optimizer", "Tolerance", "Final tolerance for CMA-ES");
 
-        BooleanOperationItem weightFitItem = new BooleanOperationItem(
+        BooleanOperationItem weightFitItem = new BooleanOperationItem(prefSheet,
                 (obs, oldV, newV) -> {
                     CoMDPreferences.setWeightFit((Boolean) newV);
                 }, CoMDPreferences.getWeightFit(), "Optimizer", "Weight Fit",
                 "Weight residuals by error values");
-        BooleanOperationItem nonParametricItem = new BooleanOperationItem(
+        BooleanOperationItem nonParametricItem = new BooleanOperationItem(prefSheet,
                 (obs, oldV, newV) -> {
                     CoMDPreferences.setNonParametric((Boolean) newV);
                 }, CoMDPreferences.getNonParametricBootstrap(), "Optimizer", "Non-Parametric",
                 "Bootstrapping with non-parametric method");
-        BooleanOperationItem absValueItem = new BooleanOperationItem(
+        BooleanOperationItem absValueItem = new BooleanOperationItem(prefSheet,
                 (obs, oldV, newV) -> {
                     CoMDPreferences.setAbsValueFit((Boolean) newV);
                 }, CoMDPreferences.getAbsValueFit(), "Optimizer", "Absolute Value",
                 "Fit absolute value of deviations (not squared)");
-        BooleanOperationItem neuralNetworkGuessItem = new BooleanOperationItem(
+        BooleanOperationItem neuralNetworkGuessItem = new BooleanOperationItem(prefSheet,
                 (obs, oldV, newV) -> {
                     CoMDPreferences.setNeuralNetworkGuess((Boolean) newV);
                 }, CoMDPreferences.getNeuralNetworkGuess(), "Optimizer", "Neural Network Guess",
                 "Use Neural Network for guesses");
-        BooleanOperationItem corrR1RhoItem = new BooleanOperationItem(
+        BooleanOperationItem corrR1RhoItem = new BooleanOperationItem(prefSheet,
                 (obs, oldV, newV) -> {
                     CoMDPreferences.setCalR1rhoCorr((Boolean) newV);
                 }, CoMDPreferences.getCalR1rhoCorr(), "R1Rho Equations", "Correct R1rho",
@@ -187,18 +187,18 @@ public class PreferencesController implements Initializable {
                 startingRadiusItem, toleranceItem, finalRadiusItem, weightFitItem, neuralNetworkGuessItem, corrR1RhoItem);
         for (String eqn : cestEqnChoices) {
             boolean defaultState = CoMDPreferences.getCESTEquationState(eqn);
-            BooleanOperationItem cestEqnListItem = new BooleanOperationItem(cestEqnListener, defaultState, "CEST Equations", eqn, "List of equations to use during CEST Fitting");
+            BooleanOperationItem cestEqnListItem = new BooleanOperationItem(prefSheet, cestEqnListener, defaultState, "CEST Equations", eqn, "List of equations to use during CEST Fitting");
             prefSheet.getItems().add(cestEqnListItem);
         }
         for (String eqn1 : r1rhoEqnChoices) {
             boolean defaultState = CoMDPreferences.getR1RhoEquationState(eqn1);
-            BooleanOperationItem r1rhoEqnListItem = new BooleanOperationItem(r1rhoEqnListener, defaultState, "R1Rho Equations", eqn1, "List of equations to use during R1Rho Fitting");
+            BooleanOperationItem r1rhoEqnListItem = new BooleanOperationItem(prefSheet, r1rhoEqnListener, defaultState, "R1Rho Equations", eqn1, "List of equations to use during R1Rho Fitting");
             prefSheet.getItems().add(r1rhoEqnListItem);
         }
 
         for (String eqn1 : expEqnChoices) {
             boolean defaultState = CoMDPreferences.getExpEquationState(eqn1);
-            BooleanOperationItem expEqnListItem = new BooleanOperationItem(expEqnListener, defaultState, "Exp Equations", eqn1, "List of equations to use during Exp Fitting");
+            BooleanOperationItem expEqnListItem = new BooleanOperationItem(prefSheet, expEqnListener, defaultState, "Exp Equations", eqn1, "List of equations to use during Exp Fitting");
             prefSheet.getItems().add(expEqnListItem);
         }
 
@@ -293,7 +293,7 @@ public class PreferencesController implements Initializable {
     /**
      * Returns the Directory for datasets,
      *
-     * @param file the file or null to remove the path
+     * @param value the file or null to remove the path
      */
     public static void setLocation(String value) {
         Preferences prefs = Preferences.userNodeForPackage(MainApp.class);
@@ -398,7 +398,7 @@ public class PreferencesController implements Initializable {
     /**
      * Returns the Directory for datasets,
      *
-     * @param file the file or null to remove the path
+     * @param value the number of processes to use
      */
     public static void setNProcesses(Integer value) {
         Preferences prefs = Preferences.userNodeForPackage(Experiment.class);
