@@ -1,11 +1,10 @@
 package org.comdnmr.modelfree;
 
 
-import smile.data.DataFrame;
-import smile.data.formula.Formula;
-import smile.data.vector.DoubleVector;
-import smile.math.matrix.Matrix;
-import smile.regression.OLS;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.SingularValueDecomposition;
+import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,18 +20,11 @@ public class DeuteriumMapping {
 
     public static double[] independentMapping(double R1, double R1rho, double RQ, double Rap) {
         double[] rValues = {R1, R1rho, RQ, Rap};
-        Matrix matrix = new Matrix(elements);
         double scale = 3.0 * RelaxEquations.QCC2;
 
-        String[] names = {"J0", "J1", "J2"};
-        String[] namesI = {"J0", "J1", "J2", "0"};
-        Formula formula = Formula.of("y", namesI);
-
-        var dataFrame = DataFrame.of(matrix.toArray(), names);
-        dataFrame = dataFrame.merge(DoubleVector.of("y", rValues));
-        var model = OLS.fit(formula, dataFrame);
-        var jValues = model.coefficients();
-        var ttest = model.ttest();
+        OLSMultipleLinearRegression olsMultipleLinearRegression = new OLSMultipleLinearRegression();
+        olsMultipleLinearRegression.newSampleData(rValues, elements);
+        double[] jValues = olsMultipleLinearRegression.estimateRegressionParameters();
         for (int i = 0; i < jValues.length; i++) {
             jValues[i] = Math.log10(jValues[i] / scale * 1.0e9);
         }
@@ -47,50 +39,44 @@ public class DeuteriumMapping {
                 .toArray();
         int nFreqs = nRows / 4;
         int nCols = 4;
-        Matrix matrix = new Matrix(nRows, nCols);
+        Array2DRowRealMatrix matrix = new Array2DRowRealMatrix(nRows, nCols);
+        ArrayRealVector realVector = new ArrayRealVector(rValues);
         for (int iCol = 0; iCol < nCols; iCol++) {
             if (iCol == 0) {
                 for (int iFreq = 0; iFreq < nFreqs; iFreq++) {
                     for (int iType = 0; iType < 4; iType++) {
                         int row = iFreq * 4 + iType;
-                        matrix.set(row, iCol, elements[iType][0]);
+                        matrix.setEntry(row, iCol, elements[iType][0]);
                     }
                 }
             } else if (iCol == 1) {
                 for (int iType = 0; iType < 4; iType++) {
-                    matrix.set(iType, iCol, elements[iType][iCol]);
+                    matrix.setEntry(iType, iCol, elements[iType][iCol]);
                 }
             } else if (iCol == 2) {
                 for (int iType = 0; iType < 4; iType++) {
-                    matrix.set(iType, iCol, elements[iType][2]);
+                    matrix.setEntry(iType, iCol, elements[iType][2]);
                 }
                 for (int iType = 0; iType < 4; iType++) {
                     int row = 4 + iType;
-                    matrix.set(row, iCol, elements[iType][1]);
+                    matrix.setEntry(row, iCol, elements[iType][1]);
                 }
             } else if (iCol == 3) {
                 for (int iType = 0; iType < 4; iType++) {
                     int row = 4 + iType;
-                    matrix.set(row, iCol, elements[iType][2]);
+                    matrix.setEntry(row, iCol, elements[iType][2]);
                 }
             }
         }
         double scale = 3.0 * RelaxEquations.QCC2;
 
-        String[] names = {"J0", "J1", "J2", "J3"};
-        String[] namesI = {"J0", "J1", "J2", "J3", "0"};
-        Formula formula = Formula.of("y", namesI);
+        SingularValueDecomposition svd = new SingularValueDecomposition(matrix);
+        var solver = svd.getSolver();
+        var jValues = solver.solve(realVector).toArray();
 
-        var dataFrame = DataFrame.of(matrix.toArray(), names);
-        dataFrame = dataFrame.merge(DoubleVector.of("y", rValues));
-        var model = OLS.fit(formula, dataFrame);
-
-        Matrix.SVD svd = matrix.svd();
-        var jValues = svd.solve(rValues);
         for (int i = 0; i < jValues.length; i++) {
             jValues[i] = Math.log10(jValues[i] / scale);
         }
-
         return jValues;
     }
 
@@ -134,12 +120,12 @@ public class DeuteriumMapping {
             iField++;
         }
         int nCols = fieldList.size();
-        Matrix matrix = new Matrix(nRows, nCols);
+        Array2DRowRealMatrix matrix = new Array2DRowRealMatrix(nRows, nCols);
 
         for (int iFreq = 0; iFreq < nFreqs; iFreq++) {
             for (int iType = 0; iType < 4; iType++) {
                 int row = iFreq * 4 + iType;
-                matrix.set(row, 0, elements[iType][0]);
+                matrix.setEntry(row, 0, elements[iType][0]);
             }
         }
         for (int iFreq = 0; iFreq < nFreqs; iFreq++) {
@@ -147,46 +133,37 @@ public class DeuteriumMapping {
             int doubleColumn = doubleColumns[iFreq];
             for (int iType = 0; iType < 4; iType++) {
                 int row = iFreq * 4 + iType;
-                matrix.set(row, singleColumn, elements[iType][1]);
+                matrix.setEntry(row, singleColumn, elements[iType][1]);
             }
             for (int iType = 0; iType < 4; iType++) {
                 int row = iFreq * 4 + iType;
-                matrix.set(row, doubleColumn, elements[iType][2]);
+                matrix.setEntry(row, doubleColumn, elements[iType][2]);
             }
         }
 
         double scale = 3.0 * RelaxEquations.QCC2;
 
-        String[] names = new String[nCols];
-        String[] namesI = new String[nCols + 1];
-        for (int i = 0; i < nCols; i++) {
-            names[i] = "J" + i;
-            namesI[i] = "J" + i;
-        }
-        namesI[nCols] = "0";
-        Formula formula = Formula.of("y", namesI);
         for (int i = 0; i < nRows; i++) {
             double errScale = 1.0 / errValueList.get(i);
             for (int j = 0; j < nCols; j++) {
-                matrix.mul(i, j, errScale);
+                matrix.multiplyEntry(i, j, errScale);
             }
             rValues[i] *= errScale;
         }
 
-        var dataFrame = DataFrame.of(matrix.toArray(), names);
-
-        dataFrame = dataFrame.merge(DoubleVector.of("y", rValues));
-
         try {
-            var model = OLS.fit(formula, dataFrame);
-            var jValues = model.coefficients();
-            var ttest = model.ttest();
+            OLSMultipleLinearRegression olsMultipleLinearRegression = new OLSMultipleLinearRegression();
+            olsMultipleLinearRegression.setNoIntercept(true);
+            olsMultipleLinearRegression.newSampleData(rValues, matrix.getData());
+            double[] jValues = olsMultipleLinearRegression.estimateRegressionParameters();
+            double[] errs = olsMultipleLinearRegression.estimateRegressionParametersStandardErrors();
+
             var jErrors = new double[jValues.length];
             var fitFields = new double[jValues.length];
 
             for (int i = 0; i < jValues.length; i++) {
                 jValues[i] = jValues[i] / scale;
-                jErrors[i] = ttest[i][1] / scale;
+                jErrors[i] = errs[i] / scale;
                 fitFields[i] = fieldList.get(i);
             }
             double[][] jValuesOrig = new double[3][nFreqs * 3];
@@ -210,7 +187,6 @@ public class DeuteriumMapping {
         } catch (IllegalArgumentException iAE) {
             System.out.println(iAE.getMessage());
             System.out.println(rValueList);
-            System.out.println(dataFrame);
             return null;
         }
 

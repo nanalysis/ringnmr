@@ -26,7 +26,7 @@ import org.comdnmr.util.ANNLoader;
 import org.comdnmr.util.CoMDPreferences;
 import org.comdnmr.util.DataUtil;
 import org.comdnmr.util.Utilities;
-import java.util.Arrays;
+
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -480,7 +480,7 @@ public enum CPMGEquation implements EquationType {
     public static double[] annCPMGGuesser(String exchangeType, double[] xValues, double[] yValues, double[] fields) throws Exception {
         //System.out.println("Using Neural Network!");
         double[] trainingX = {10.0, 20.0, 50.0, 100.0, 200.0, 400.0, 600.0, 800.0, 1000.0, 1100.0};
-        double[] yANNInput = DataUtil.getInterpolation(trainingX, xValues, yValues);
+        double[] yANNInput = DataUtil.getCPMGInterpolation(trainingX, xValues, yValues);
         if (yANNInput != null) {
             int nFields = fields.length;
             exchangeType = exchangeType.toUpperCase();

@@ -17,12 +17,12 @@
 */
 package org.comdnmr.util;
 
+import org.apache.commons.math3.analysis.polynomials.PolynomialFunction;
+import org.apache.commons.math3.linear.*;
+
 import java.util.Arrays;
 import java.util.DoubleSummaryStatistics;
 import java.util.stream.IntStream;
-import smile.interpolation.KrigingInterpolation;
-import smile.interpolation.variogram.PowerVariogram;
-import smile.interpolation.variogram.Variogram;
 
 public class DataUtil {
 
@@ -233,34 +233,56 @@ public class DataUtil {
         return minY;
     }
 
-    public static double[] getInterpolation(double[] fixedXValues, double[] xDataPoints, double[] yDataPoints) {
+    public static double[] getCPMGInterpolation(double[] fixedXValues, double[] xDataPoints, double[] yDataPoints) {
         int lenOfFixedX = fixedXValues.length;
         int lenOfXDP = xDataPoints.length;
+        double[] x = new double[lenOfXDP +1 ];
+        double[] y = new double[lenOfXDP +1 ];
         if ((lenOfFixedX > 3) && (lenOfXDP > 3)) {
-
-            double[][] xValues = new double[xDataPoints.length][1];
-            double[] weightValues = new double[xDataPoints.length];
-            double yMax = Double.NEGATIVE_INFINITY;
-            for (int i = 0; i < lenOfXDP; i++) {
-                xValues[i][0] = xDataPoints[i];
-                if (yDataPoints[i] > yMax) {
-                    yMax = yDataPoints[i];
-                }
+            double min = Double.MAX_VALUE;
+            for (int i=0;i<xDataPoints.length;i++) {
+                x[i] = xDataPoints[i];
+                y[i] = yDataPoints[i];
+                min = Math.min(min,yDataPoints[i]);
             }
-            for (int i = 0; i < lenOfXDP; i++) {
-                weightValues[i] = yMax * 0.05;
-            }
-            Variogram vGram = new PowerVariogram(xValues, yDataPoints);
-            KrigingInterpolation krig = new KrigingInterpolation(xValues, yDataPoints, vGram, weightValues);
-
+            x[lenOfXDP] = fixedXValues[lenOfFixedX - 1];
+            y[lenOfXDP] = min;
+            var fitPars = fitPoly(x, y, 5);
+            var poly = new PolynomialFunction(fitPars.toArray());
             double[] newArray = new double[lenOfFixedX];
 
             for (int i = 0; i < lenOfFixedX; i++) {
-                newArray[i] = krig.interpolate(fixedXValues[i]);
+                newArray[i] = poly.value(fixedXValues[i]);
             }
             return newArray;
         } else {
             return null;
         }
     }
+
+    public static RealVector fitPoly(double[] xValues, double[] yValues, int order) {
+        int nRows = xValues.length;
+        RealMatrix A = new Array2DRowRealMatrix(nRows, order);
+        RealVector B = new ArrayRealVector(nRows);
+
+        for (int i = 0; i < nRows; i++) {
+            A.setEntry(i, 0, 1.0);
+
+            for (int j = 1; j < order; j++) {
+                A.setEntry(i, j, A.getEntry(i, j - 1) * (xValues[i]));
+            }
+
+            B.setEntry(i, yValues[i]);
+        }
+
+        SingularValueDecomposition svd = new SingularValueDecomposition(A);
+        RealMatrix U = svd.getU();
+        RealMatrix V = svd.getV();
+        double[] svs = svd.getSingularValues();
+        double coef;
+        DecompositionSolver solver = svd.getSolver();
+        RealVector X = solver.solve(B);
+        return X;
+    }
+
 }
