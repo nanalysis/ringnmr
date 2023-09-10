@@ -474,7 +474,7 @@ public class PyController implements Initializable {
         barScaleScrollBar.valueProperty().addListener(e -> resizeBarPlotCanvas());
 
         tauFractionSlider.setMin(0.0);
-        tauFractionSlider.setMax(0.5);
+        tauFractionSlider.setMax(0.9);
         tauFractionSlider.setValue(0.1);
         tauFractionLabel.setText("0.1");
         tauFractionSlider.setBlockIncrement(0.1);
