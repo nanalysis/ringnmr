@@ -17,6 +17,7 @@
  */
 package org.comdnmr.gui;
 
+import org.comdnmr.modelfree.RelaxEquations;
 import org.nmrfx.utils.properties.DirectoryOperationItem;
 import org.nmrfx.utils.properties.ChoiceOperationItem;
 import org.nmrfx.utils.properties.IntRangeOperationItem;
@@ -182,9 +183,25 @@ public class PreferencesController implements Initializable {
                 }, CoMDPreferences.getCalR1rhoCorr(), "R1Rho Equations", "Correct R1rho",
                 "Correction if starting in ground state");
 
+        DoubleRangeOperationItem hnDistanceItem = new DoubleRangeOperationItem(prefSheet, (obs, oldV, newV) -> {
+            RelaxEquations.setR("H", "N", (Double) newV * 1.0e-10);
+        }, RelaxEquations.getR("H", "N") * 1.0e10, 1.0, 1.04, "ModelFree", "HN Distance", "H-N bond distance");
+
+        DoubleRangeOperationItem hcDistanceItem = new DoubleRangeOperationItem(prefSheet, (obs, oldV, newV) -> {
+            RelaxEquations.setR("H", "C", (Double) newV * 1.0e-10);
+        }, RelaxEquations.getR("H", "C") * 1.0e10, 1.04, 1.12, "ModelFree", "HC Distance", "H-N bond distance");
+
+        DoubleRangeOperationItem nSigmaItem = new DoubleRangeOperationItem(prefSheet, (obs, oldV, newV) -> {
+            RelaxEquations.setSigma( "N", (Double) newV * -1.0e-6);
+        }, RelaxEquations.getSigma("N") * -1.0e6, 100, 220, "ModelFree", "N CSA", "N Chemical Shift Anisotropy (* -1.0)");
+
+        DoubleRangeOperationItem cSigmaItem = new DoubleRangeOperationItem(prefSheet, (obs, oldV, newV) -> {
+            RelaxEquations.setSigma("C", (Double) newV * -1.0e-6);
+        }, RelaxEquations.getSigma("C") * -1.0e6, 100, 220, "ModelFree", "C CSA", "C Chemical Shift Anisotropy (* -1.0)");
+
         prefSheet.getItems().addAll(nProcessesItem, refFieldItem, maxFreqItem, rexRatioItem, deltaABdiffItem,
                 absValueItem, nonParametricItem, nSamplesItem, optimizerChoiceItem, bootStrapOptimizerrChoiceItem,
-                startingRadiusItem, toleranceItem, finalRadiusItem, weightFitItem, neuralNetworkGuessItem, corrR1RhoItem);
+                startingRadiusItem, toleranceItem, finalRadiusItem, weightFitItem, neuralNetworkGuessItem, corrR1RhoItem, hnDistanceItem, hcDistanceItem, nSigmaItem, cSigmaItem);
         for (String eqn : cestEqnChoices) {
             boolean defaultState = CoMDPreferences.getCESTEquationState(eqn);
             BooleanOperationItem cestEqnListItem = new BooleanOperationItem(prefSheet, cestEqnListener, defaultState, "CEST Equations", eqn, "List of equations to use during CEST Fitting");
