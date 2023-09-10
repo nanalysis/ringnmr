@@ -235,8 +235,9 @@ public class FitDeuteriumModel extends FitModel {
     Score tryModel(Map<String, MolDataValues> molDataRes, MFModelIso model, double localTauFraction, boolean localFitTau, Random random) {
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setRelaxData(molDataRes);
-        relaxFit.setLambdaS(0.0);
-        relaxFit.setLambdaTau(0.0);
+        relaxFit.setLambdaS(lambdaS);
+        relaxFit.setLambdaTau(lambdaTau);
+        relaxFit.setUseLambda(useLambda);
         relaxFit.setFitJ(true);
         model.setTauFraction(localTauFraction);
         double[] start = model.getStart();
