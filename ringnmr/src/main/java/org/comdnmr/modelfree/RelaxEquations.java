@@ -54,6 +54,7 @@ public class RelaxEquations {
 
     public final static Map<String, Double> GAMMA_MAP = new HashMap<>();
     public final static Map<String, Double> R_MAP = new HashMap<>();
+    public final static Map<String, Double> SIGMA_MAP = new HashMap<>();
 
     static {
         GAMMA_MAP.put("H", GAMMA_H);
@@ -66,6 +67,8 @@ public class RelaxEquations {
         R_MAP.put("CH", R_HC);
         R_MAP.put("DC", R_HC);
         R_MAP.put("CD", R_HC);
+        SIGMA_MAP.put("N", SIGMA);
+        SIGMA_MAP.put("C", SIGMA);
     }
 
     private final double r;
@@ -120,6 +123,23 @@ public class RelaxEquations {
             relaxMap.put(key, rObj);
         }
         return relaxMap.get(key);
+    }
+
+    public static void setR(String elem1, String elem2, double value) {
+        R_MAP.put(elem1+elem2, value);
+        R_MAP.put(elem2+elem1, value);
+        relaxMap.clear();
+    }
+    public static double getR(String elem1, String elem2) {
+        return R_MAP.get(elem1+elem2);
+    }
+
+    public static void setSigma(String elem1, double value) {
+        SIGMA_MAP.put(elem1, value);
+        relaxMap.clear();
+    }
+    public static double getSigma(String elem1) {
+        return SIGMA_MAP.get(elem1);
     }
 
     public double getSF() {
