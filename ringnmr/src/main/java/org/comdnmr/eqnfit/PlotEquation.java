@@ -74,7 +74,7 @@ public class PlotEquation {
     }
 
     public double[] getErrs() {
-        return pars;
+        return errs;
     }
 
     public double calculate(double[] pars, double[] xValue, double field) {
