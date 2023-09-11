@@ -331,27 +331,6 @@ public class FitR1R2NOEModel extends FitModel {
         return result;
     }
 
-    int bestScore(List<Score> scores) {
-        double lowestAIC = Double.MAX_VALUE;
-        int iBest = -1;
-        int i = 0;
-        for (var score : scores) {
-            if (score.aic() < lowestAIC) {
-                lowestAIC = score.aic();
-                iBest = i;
-            }
-            i++;
-        }
-        return iBest;
-    }
-
-    private void scaleWeights(double[] weights) {
-        for (int i=0;i < weights.length;i++) {
-            weights[i] = weights[i] * weights.length;
-        }
-
-    }
-
     public Optional<ModelFitResult> testModelsWithBootstrapAggregation(MolDataValues resData, String key, List<String> modelNames, Random random) {
         Optional<ModelFitResult> result = Optional.empty();
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
@@ -518,37 +497,6 @@ public class FitR1R2NOEModel extends FitModel {
             rssSum += scoreModel(molDataRes, pars2);
         }
         return rssSum / nReplicates;
-    }
-
-    public double scoreBayesian(Map<String, MolDataValues> molDataRes, MFModelIso model, double[] pars,
-                                DirichletSampler dirichlet, int iStart, int nReplicates,
-                                 boolean localFitTau, double localTauFraction) {
-        double rssSum = 0.0;
-        int startPar = localFitTau ? 0 : 1;
-        double[] pars2 = new double[pars.length - startPar];
-
-        System.arraycopy(pars, startPar, pars2, 0, pars2.length);
-        for (int iRep = 0; iRep < nReplicates; iRep++) {
-            double[] weights = dirichlet.sample();
-            scaleWeights(weights);
-            for (var molData : molDataRes.values()) {
-                molData.weight(weights);
-            }
-            model.setTauFraction(localTauFraction);
-            rssSum += scoreModel(molDataRes, pars2);
-        }
-        return rssSum / nReplicates;
-    }
-
-    private double scoreModel(Map<String, MolDataValues> molDataRes, double[] pars) {
-        RelaxFit relaxFit = new RelaxFit();
-        relaxFit.setRelaxData(molDataRes);
-        relaxFit.setLambdaS(lambdaS);
-        relaxFit.setLambdaTau(lambdaTau);
-        relaxFit.setUseLambda(useLambda);
-        relaxFit.setFitJ(fitJ);
-        var score = relaxFit.score(pars, true);
-        return score.rss;
     }
 
     public void testModel(Map<String, MolDataValues> molData, MFModelIso model) {

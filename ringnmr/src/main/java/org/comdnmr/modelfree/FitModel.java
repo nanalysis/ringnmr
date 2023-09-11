@@ -6,6 +6,7 @@ import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
 import org.apache.commons.math3.optim.PointValuePair;
 import org.apache.commons.rng.UniformRandomProvider;
+import org.apache.commons.rng.sampling.distribution.DirichletSampler;
 import org.apache.commons.rng.simple.RandomSource;
 import org.comdnmr.modelfree.models.MFModelIso;
 import org.comdnmr.util.ProcessingStatus;
@@ -52,7 +53,7 @@ public abstract class FitModel {
 
     public static UniformRandomProvider getRandomSource() {
         if (rng == null) {
-             rng = RandomSource.XO_RO_SHI_RO_128_PP.create();
+            rng = RandomSource.XO_RO_SHI_RO_128_PP.create();
         }
         return rng;
     }
@@ -64,12 +65,63 @@ public abstract class FitModel {
         this.modelNames.addAll(modelNames);
     }
 
+    void scaleWeights(double[] weights) {
+        for (int i = 0; i < weights.length; i++) {
+            weights[i] = weights[i] * weights.length;
+        }
+
+    }
+
+    public double scoreBayesian(Map<String, MolDataValues> molDataRes, MFModelIso model, double[] pars,
+                                DirichletSampler dirichlet, int iStart, int nReplicates,
+                                boolean localFitTau, double localTauFraction) {
+        double rssSum = 0.0;
+        int startPar = localFitTau ? 0 : 1;
+        double[] pars2 = new double[pars.length - startPar];
+
+        System.arraycopy(pars, startPar, pars2, 0, pars2.length);
+        for (int iRep = 0; iRep < nReplicates; iRep++) {
+            double[] weights = dirichlet.sample();
+            scaleWeights(weights);
+            for (var molData : molDataRes.values()) {
+                molData.weight(weights);
+            }
+            model.setTauFraction(localTauFraction);
+            rssSum += scoreModel(molDataRes, pars2);
+        }
+        return rssSum / nReplicates;
+    }
+
+     double scoreModel(Map<String, MolDataValues> molDataRes, double[] pars) {
+        RelaxFit relaxFit = new RelaxFit();
+        relaxFit.setRelaxData(molDataRes);
+        relaxFit.setLambdaS(lambdaS);
+        relaxFit.setLambdaTau(lambdaTau);
+        relaxFit.setUseLambda(useLambda);
+        relaxFit.setFitJ(fitJ);
+        var score = relaxFit.score(pars, true);
+        return score.rss;
+    }
+    int bestScore(List<Score> scores) {
+        double lowestAIC = Double.MAX_VALUE;
+        int iBest = -1;
+        int i = 0;
+        for (var score : scores) {
+            if (score.aic() < lowestAIC) {
+                lowestAIC = score.aic();
+                iBest = i;
+            }
+            i++;
+        }
+        return iBest;
+    }
+
     public void updaters(Function<Double, Double> updaterFunction, Function<ProcessingStatus, Double> statusFunction) {
         this.updaterFunction = updaterFunction;
         this.statusFunction = statusFunction;
     }
 
-    public abstract  Map<String, ModelFitResult> testIsoModel();
+    public abstract Map<String, ModelFitResult> testIsoModel();
 
     double[][] replicates(Map<String, MolDataValues> molDataRes,
                           MFModelIso bestModel, double localTauFraction,

@@ -148,8 +148,7 @@ public class DeuteriumMappingTest {
         var modelNames = List.of("D1f");
         var result = fitModel.testModels(resData, "tst", modelNames, random);
         Assert.assertTrue(result.isPresent());
-        Assert.assertEquals(0.0, result.get().getReducedChiSqr(),3.0);
-
+        Assert.assertEquals(0.0, result.get().orderPar().getReducedChiSqr(), 3.0);
     }
 
 }

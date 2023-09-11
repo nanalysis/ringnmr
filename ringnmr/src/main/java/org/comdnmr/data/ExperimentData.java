@@ -143,37 +143,41 @@ public class ExperimentData {
         }
 
         public String getRefPeak() {
-            return resInfo.dynSource.getPeak().getName();
+            return resInfo.dynSource.getPeak() == null ? "" : resInfo.dynSource.getPeak().getName();
         }
 
         public int getPeak() {
-            return resInfo.dynSource.getPeak().getIdNum();
+            return resInfo.dynSource.getPeak() == null ? -1 : resInfo.dynSource.getPeak().getIdNum();
         }
 
         public String getName() {
-            return resInfo.getDataName();
+            return resInfo.experiment == null ? "" : resInfo.getDataName();
         }
 
         public String getResidue() {
-            Entity entity = resInfo.dynSource.getAtoms()[0].getEntity();
-            if (entity instanceof Residue) {
-                Residue residue = (Residue) entity;
-                return residue.getNumber();
-            } else {
+            if (resInfo == null) {
                 return "1";
+            } else {
+                Entity entity = resInfo.dynSource.getAtoms()[0].getEntity();
+                if (entity instanceof Residue) {
+                    Residue residue = (Residue) entity;
+                    return residue.getNumber();
+                } else {
+                    return "1";
+                }
             }
         }
 
         public String getResName() {
-            return resInfo.dynSource.getAtoms()[0].getResidueName();
+            return resInfo == null ? "" : resInfo.dynSource.getAtoms()[0].getResidueName();
         }
 
         public String getAtomName() {
-            return resInfo.dynSource.getAtoms()[0].getName();
+            return resInfo == null ? "" : resInfo.dynSource.getAtoms()[0].getName();
         }
 
         public ResonanceSource getResonanceSource() {
-            return resInfo.getSource();
+            return resInfo == null ? null : resInfo.getSource();
         }
     }
 

@@ -474,7 +474,7 @@ public class PyController implements Initializable {
         barScaleScrollBar.valueProperty().addListener(e -> resizeBarPlotCanvas());
 
         tauFractionSlider.setMin(0.0);
-        tauFractionSlider.setMax(0.5);
+        tauFractionSlider.setMax(0.9);
         tauFractionSlider.setValue(0.1);
         tauFractionLabel.setText("0.1");
         tauFractionSlider.setBlockIncrement(0.1);
@@ -1357,7 +1357,7 @@ public class PyController implements Initializable {
         }
     }
 
-    public void updateTable(List<ExperimentData> experimentalDataSets) {
+    public void updateTable(List<ExperimentData> experimentalDataSets, String fitMode) {
         ObservableList<ExperimentData.DataValue> data = FXCollections.observableArrayList();
         for (ExperimentData experimentalData : experimentalDataSets) {
             data.addAll(experimentalData.getDataValues());
@@ -1381,7 +1381,7 @@ public class PyController implements Initializable {
         resInfoTable.getColumns().clear();
         resInfoTable.getColumns().addAll(nameColumn, resNameColumn, resColumn, atomNameColumn, errColumn, peakColumn);
 
-        if (getFittingMode().equals("cpmg")) {
+        if (fitMode.equals("cpmg")) {
             TableColumn<ExperimentData.DataValue, Double> xColumn = new TableColumn<>("Vcpmg");
             TableColumn<ExperimentData.DataValue, Double> yColumn = new TableColumn<>("Reff");
 
@@ -1390,7 +1390,7 @@ public class PyController implements Initializable {
 
             resInfoTable.getColumns().clear();
             resInfoTable.getColumns().addAll(nameColumn, resNameColumn, resColumn, atomNameColumn, xColumn, yColumn, errColumn, peakColumn);
-        } else if (getFittingMode().equals("exp")) {
+        } else if (fitMode.equals("exp")) {
             TableColumn<ExperimentData.DataValue, Double> xColumn = new TableColumn<>("Delay");
             TableColumn<ExperimentData.DataValue, Double> yColumn = new TableColumn<>("Intensity");
 
@@ -1401,7 +1401,7 @@ public class PyController implements Initializable {
             resInfoTable.getColumns().addAll(nameColumn, resNameColumn, resColumn, atomNameColumn,
                     //                    t1Column, t2Column, t1RhoColumn,
                     xColumn, yColumn, errColumn, peakColumn);
-        } else if (getFittingMode().equals("cest")) {
+        } else if (fitMode.equals("cest")) {
             TableColumn<ExperimentData.DataValue, Double> x0Column = new TableColumn<>("Offset");
             TableColumn<ExperimentData.DataValue, Double> x1Column = new TableColumn<>("B1 Field");
             TableColumn<ExperimentData.DataValue, Double> yColumn = new TableColumn<>("Intensity");
@@ -1412,7 +1412,7 @@ public class PyController implements Initializable {
 
             resInfoTable.getColumns().clear();
             resInfoTable.getColumns().addAll(nameColumn, resNameColumn, resColumn, atomNameColumn, x0Column, x1Column, yColumn, errColumn, peakColumn);
-        } else if (getFittingMode().equals("r1rho")) {
+        } else if (fitMode.equals("r1rho")) {
             TableColumn<ExperimentData.DataValue, Double> x0Column = new TableColumn<>("Offset");
             TableColumn<ExperimentData.DataValue, Double> x1Column = new TableColumn<>("B1 Field");
             TableColumn<ExperimentData.DataValue, Double> yColumn = new TableColumn<>("Intensity");
@@ -1423,6 +1423,16 @@ public class PyController implements Initializable {
 
             resInfoTable.getColumns().clear();
             resInfoTable.getColumns().addAll(nameColumn, resNameColumn, resColumn, atomNameColumn, x0Column, x1Column, yColumn, errColumn, peakColumn);
+        } else if (fitMode.equals("modelfree")) {
+            TableColumn<ExperimentData.DataValue, Double> xColumn = new TableColumn<>("\u03C9 (1/ns)");
+            TableColumn<ExperimentData.DataValue, Double> yColumn = new TableColumn<>("log10[J(\u03C9)/1ns]");
+
+            xColumn.setCellValueFactory(new PropertyValueFactory<>("X0"));
+            yColumn.setCellValueFactory(new PropertyValueFactory<>("Y"));
+
+            resInfoTable.getColumns().clear();
+            resInfoTable.getColumns().addAll(nameColumn, resNameColumn, resColumn, atomNameColumn, xColumn, yColumn, errColumn, peakColumn);
+
         }
     }
 
@@ -2284,6 +2294,8 @@ public class PyController implements Initializable {
             String simMode = getSimMode();
             if (simMode != null) {
                 fitMode = simMode;
+            } else {
+                fitMode = "modelfree";
             }
         } else {
             fitMode = getCurrentExperimentSet().getExpMode().toLowerCase();
@@ -2466,6 +2478,7 @@ public class PyController implements Initializable {
         List<int[]> allStates = new ArrayList<>();
         boolean calcScale = scalePlot.isSelected();
         List<ParValueInterface> parValues = null;
+        String fitMode = getFittingMode();
         if (chartInfo.hasExperiments() && chartInfo.hasResidues()) {
             int iSeries = 0;
             for (Experiment expData : ((ExperimentSet) chartInfo.getExperiments()).getExperimentData()) {
@@ -2506,10 +2519,27 @@ public class PyController implements Initializable {
                 allStates.add(states);
             }
         } else {
+            fitMode = "modelfree";
             for (ResonanceSource resonanceSource : chartInfo.getResidues()) {
                 Atom atom = resonanceSource.getAtom();
                 Map<String, SpectralDensity> spectralDensityMap = atom.getSpectralDensity();
-                allData.addAll(ChartUtil.getSpectralDensityData(spectralDensityMap));
+                var sdData = ChartUtil.getSpectralDensityData(spectralDensityMap);
+                allData.addAll(sdData);
+                List<Double> xV = new ArrayList<>();
+                List<Double> yV = new ArrayList<>();
+                List<Double> eV = new ArrayList<>();
+                for (var v : sdData) {
+                    var d = v.getData();
+                    for (var dv : d) {
+                        if (dv instanceof XYEValue xye) {
+                            xV.add(xye.getXValue());
+                            yV.add(xye.getYValue());
+                            eV.add(xye.getError());
+                        }
+                    }
+                    ExperimentData sdExpData = new ExperimentData(null, resonanceSource, xV, yV, eV);
+                    experimentalDataSets.add(sdExpData);
+                }
                 var orderPars = atom.getOrderPars();
                 parValues = new ArrayList<>();
                 if (orderPars != null) {
@@ -2538,7 +2568,7 @@ public class PyController implements Initializable {
 
         }
         chartInfo.setStates(allStates);
-        updateTable(experimentalDataSets);
+        updateTable(experimentalDataSets, fitMode);
         if (chartInfo.hasResidues()) {
             setControls();
             if (parValues != null) {
