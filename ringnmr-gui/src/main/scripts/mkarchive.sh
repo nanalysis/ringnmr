@@ -4,6 +4,14 @@ JREHOME='/Users/brucejohnson/Development/jres'
 jversion='jdk-11.0.9.1+1-jre'
 jversion='jdk-16.0.51-jre'
 jversion='zulu17.40.19-ca-fx-jre17.0.6'
+
+#zulu17.44.15-ca-fx-jre17.0.8-win_x64
+#zulu17.44.15-ca-fx-jre17.0.8-linux_x64
+#zulu17.44.15_1-ca-fx-jre17.0.8-macosx_aarch64
+
+jversionMac='zulu17.44.15_1-ca-fx-jre17.0.8'
+jversion='zulu17.44.15-ca-fx-jre17.0.8'
+
 PRGSCRIPT=ringnmr-gui
 
 dir=`pwd`
@@ -15,11 +23,21 @@ then
 fi
 
 #for os in "linux-amd64"
-for os in "macosx_x64" "linux_x64" "win_x64"
 #for os in "macosx_x64"
+for os in "macosx_aarch64" "macosx_x64" "linux_x64" "win_x64"
 do
-    #jreFileName=${jversion}_${os}
-    jreFileName=${jversion}-${os}
+    if [[ $os == "linux_x64" ]]
+    then
+        jreFileName=${jversion}-${os}
+    elif [[ $os == "macosx_x64" ]]
+    then
+        jreFileName=${jversionMac}-${os}
+    elif [[ $os == "macosx_aarch64" ]]
+    then
+        jreFileName=${jversionMac}-${os}
+    else
+        jreFileName=${jversion}-${os}
+    fi
     echo $jreFileName
 
     dir=installers/$os
@@ -56,6 +74,13 @@ do
         cp -R -p ${JREHOME}/$jreFileName .
         rm lib/*-linux*
         rm lib/*-win*
+        rm lib/*-macosx_aa**
+    elif [[ $os == "macosx_aarch64" ]]
+    then
+        cp -R -p ${JREHOME}/$jreFileName .
+        rm lib/*-linux*
+        rm lib/*-win*
+        rm lib/*-macosx_x8**
     else
         cp -r -p ${JREHOME}/$jreFileName jre
     fi
