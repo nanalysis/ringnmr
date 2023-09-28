@@ -2235,12 +2235,14 @@ public class PyController implements Initializable {
             } else {
                 barChartData = new ArrayList<>(0);
             }
+            var interpreter = MainApp.getInterpreter();
 
-            MainApp.engine.put("data", plottedData);
-            MainApp.engine.put("configData", graphData);
-            MainApp.engine.put("barChartData", barChartData);
-            MainApp.engine.eval("writer = Writer(configData,data,barChartData)");
-            MainApp.engine.eval("writer.writeFromExportData()");
+            interpreter.exec("from exporter import Writer");
+            interpreter.set("data", plottedData);
+            interpreter.set("configData", graphData);
+            interpreter.set("barChartData", barChartData);
+            interpreter.exec("writer = Writer(configData,data,barChartData)");
+            interpreter.exec("writer.writeFromExportData()");
         }
     }
 
