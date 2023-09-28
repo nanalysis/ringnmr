@@ -291,7 +291,8 @@ public class PlotData extends XYCanvasChart {
             for (int i = 0; i < numPlots; i++) {
                 HashMap<String, Object> plotDatum = new HashMap<>();
                 plotDatum.put("rawData", returnLine(i));
-                plotDatum.put("graphTitle", getSeriesName(i));
+                plotDatum.put("graphTitle", getSeriesName(i).replace(" ","_")
+                        .replace(".","_"));
                 plotDatum.put("fittedData", returnEquation(i));
                 plottedData[i] = plotDatum;
             }
