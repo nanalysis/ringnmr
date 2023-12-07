@@ -149,7 +149,7 @@ public class MFModelIso2sf extends MFModelIso2f {
     public double[] calc(double[] omegas, double sf2, double tauF, double ss2, double tauS) {
         this.sf2 = sf2;
         this.tauF = tauF;
-        this.ss2 = sf2;
+        this.ss2 = ss2;
         this.tauS = tauS;
         return calc(omegas);
     }
