@@ -1158,7 +1158,7 @@ public class PyController implements Initializable {
             double yLB = Double.parseDouble(yLowerBoundTextField.getText());
             double yUB = Double.parseDouble(yUpperBoundTextField.getText());
             double yTick = Double.parseDouble(yTickTextField.getText());
-            if (xLB < xUB & yLB < yUB) {
+            if (xLB < xUB && yLB < yUB) {
                 xychart.setBounds(xLB, xUB, yLB, yUB, xTick, yTick);
             } else {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
