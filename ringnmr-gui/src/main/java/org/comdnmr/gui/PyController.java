@@ -1173,6 +1173,7 @@ public class PyController implements Initializable {
         }
 
     }
+
     // temporary addition till bug in xychart autoscale (only uses one series) is fixed
     public double[] calcAutoScale() {
         if (!xychart.getData().isEmpty()) {
@@ -1184,7 +1185,7 @@ public class PyController implements Initializable {
             for (DataSeries dataSeries : xychart.getData()) {
                 if (!dataSeries.isEmpty()) {
                     ok = true;
-                    xMin = Math.min(xMin,dataSeries.getMinX());
+                    xMin = Math.min(xMin, dataSeries.getMinX());
                     xMax = Math.max(xMax, dataSeries.getMaxX());
                     yMin = Math.min(yMin, dataSeries.getMinY());
                     yMax = Math.max(yMax, dataSeries.getMaxY());
@@ -1295,7 +1296,7 @@ public class PyController implements Initializable {
         try {
             fitModel.setup(null, modelNames);
             fitModel.updaters(this::updateFitProgress, this::updateStatus);
-           // fitModel.testIsoModel();
+            // fitModel.testIsoModel();
             fitModel.fitResidues();
         } catch (IllegalStateException iaE) {
             GUIUtils.warn("Model Fit Error", iaE.getMessage());
@@ -1461,20 +1462,28 @@ public class PyController implements Initializable {
 
                     allParValues.addAll(parValues);
                     CurveFit curveSet = chartInfo.experimentalResult.getCurveSet(useEquationName, chartInfo.state.replace("*", "0"));
-                    try {
-                        String aic = String.format("%.2f", curveSet.getParMap().get("AIC"));
-                        String rms = String.format("%.3f", curveSet.getParMap().get("RMS"));
-                        String rChiSq = String.format("%.2f", curveSet.getParMap().get("rChiSq"));
-                        aicLabel.setText(aic);
-                        rmsLabel.setText(rms);
-                        rChiSqLabel.setText(rChiSq);
-                    } catch (NullPointerException npEaic) {
-
-                    }
+                    Double aic = curveSet.getParMap().get("AIC");
+                    Double rms = curveSet.getParMap().get("RMS");
+                    Double rChiSq = curveSet.getParMap().get("rChiSq");
+                    updateFitQuality(aic, rms, rChiSq);
                 }
             }
             updateTableWithPars(allParValues);
         }
+    }
+
+    void updateFitQuality(Double aicValue, Double rmsValue, Double rChiSqValue) {
+        try {
+            String aic = aicValue != null && Double.isFinite(aicValue) ? String.format("%.2f", aicValue) : "";
+            String rms = rmsValue != null && Double.isFinite(rmsValue) ? String.format("%.2f", rmsValue) : "";
+            String rChiSq = rChiSqValue != null && Double.isFinite(rChiSqValue) ? String.format("%.2f", rChiSqValue) : "";
+            aicLabel.setText(aic);
+            rmsLabel.setText(rms);
+            rChiSqLabel.setText(rChiSq);
+        } catch (NullPointerException npEaic) {
+
+        }
+
     }
 
     public void updateEquation(String mapName, ResonanceSource[] residues, String equationName) {
@@ -1521,8 +1530,8 @@ public class PyController implements Initializable {
             double errValue = c.getValue().getError();
             int nSig = (int) Math.floor(Math.log10(errValue)) - 1;
             nSig = -nSig;
-            if (nSig < 0) {
-                nSig = 0;
+            if (nSig < 2) {
+                nSig = 2;
             }
             df.setMaximumFractionDigits(nSig);
             property.setValue(df.format(c.getValue().getValue()));
@@ -1533,8 +1542,8 @@ public class PyController implements Initializable {
             double errValue = c.getValue().getError();
             int nSig = (int) Math.floor(Math.log10(errValue));
             nSig = -nSig;
-            if (nSig < 0) {
-                nSig = 0;
+            if (nSig < 2) {
+                nSig = 2;
             }
             df.setMaximumFractionDigits(nSig);
             property.setValue(df.format(errValue));
@@ -1788,7 +1797,36 @@ public class PyController implements Initializable {
                 barCharts.remove(resChart);
             }
         }
+        SeriesComparator seriesComparator = new SeriesComparator();
+        for (ResidueChart residueChart : barCharts) {
+            for (var d : residueChart.getData()) {
+                System.out.println(d.getName());
+            }
+            Collections.sort(residueChart.getData(), seriesComparator);
+            for (var d : residueChart.getData()) {
+                System.out.println(d.getName());
+            }
+        }
+
         resizeBarPlotCanvas();
+    }
+
+    class SeriesComparator implements Comparator<DataSeries> {
+
+        @Override
+        public int compare(DataSeries s1, DataSeries s2) {
+            String o1 = s1.getName();
+            String o2 = s2.getName();
+            String[] fields1 = o1.split("\\|");
+            String[] fields2 = o2.split("\\|");
+            String a1 = fields1[fields1.length - 1];
+            String a2 = fields2[fields2.length - 1];
+            int c = a1.compareTo(a2);
+            if (c == 0) {
+                c = o1.compareTo(o2);
+            }
+            return c;
+        }
     }
 
     void addResiduePropertiesToAxisMenu() {
@@ -2545,8 +2583,8 @@ public class PyController implements Initializable {
                 var orderPars = atom.getOrderPars();
                 parValues = new ArrayList<>();
                 if (orderPars != null) {
-                    for (var key : orderPars.keySet()) {
-                        var orderPar = orderPars.get(key);
+                    for (var entry : orderPars.entrySet()) {
+                        var orderPar = entry.getValue();
                         String modelName = orderPar.getModel();
                         var model = MFModelIso.buildModel(modelName, true, 0.0, 0.0, false);
                         var parNames = model.getParNames();
@@ -2561,6 +2599,10 @@ public class PyController implements Initializable {
                             parValues.add(parValue);
                             iPar++;
                         }
+                        double aic = orderPar.getAIC();
+                        double rms = 0.0;
+                        double rChiSq = orderPar.getReducedChiSqr();
+                        updateFitQuality(aic, rms, rChiSq);
                         double[] extras = new double[1];
                         var guiPlotEquation = new GUIPlotEquation(modelName, "spectralDensity", pars, errs, extras);
                         equations.add(guiPlotEquation);

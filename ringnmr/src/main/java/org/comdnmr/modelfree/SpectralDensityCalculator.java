@@ -65,12 +65,15 @@ public class SpectralDensityCalculator {
         Arrays.fill(result[3], 1.0);
         return result;
     }
+
     public static double[][] calcJDeuterium(List<RelaxDataValue> dataValues) {
         double[][] result = null;
         if (!dataValues.isEmpty()) {
             List<Double> rValues = new ArrayList<>();
             List<Double> errValues = new ArrayList<>();
             List<Double> fields = new ArrayList<>();
+            boolean doIndependent = true;
+
             for (var value : dataValues) {
                 var dValue = (DeuteriumDataValue) value;
                 rValues.add(dValue.R1);
@@ -83,7 +86,14 @@ public class SpectralDensityCalculator {
                 errValues.add(dValue.rAPError);
                 fields.add(dValue.relaxObj.getSF() * RelaxEquations.GAMMA_D / RelaxEquations.GAMMA_H * 2.0 * Math.PI);
             }
-            result = DeuteriumMapping.jointMapping(rValues, errValues, fields);
+            if (doIndependent && dataValues.size() == 1) {
+                result = DeuteriumMapping.independentMapping(rValues, errValues, fields);
+            } else {
+                result = DeuteriumMapping.jointMapping(rValues, errValues, fields);
+            }
+            for (int i = 0; i < result[0].length; i++) {
+                System.out.println(result[0][i] + " " + result[1][i] + " " + result[2][i]);
+            }
         }
         return result;
     }
