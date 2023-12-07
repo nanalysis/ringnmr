@@ -69,9 +69,10 @@ public class MFModelIso2sf extends MFModelIso2f {
                     / (tauMx * tauMx * tauSx * tauSx * omega2 + (tauMx + tauSx) * (tauMx + tauSx));
             double vMF = (1.0 - sf2) * ss2 * (tauMx * tauFx * (tauMx + tauFx))
                     / (tauMx * tauMx * tauFx * tauFx * omega2 + (tauMx + tauFx) * (tauMx + tauFx));
-            double vMFS = (1.0 - sf2) * (1.0 - ss2) * (tauFx * tauMx * tauSx * (tauFx * (tauMx + tauSx) + tauMx * tauSx))
+            double tauMFS = tauFx * (tauMx + tauSx) + tauMx * tauSx;
+            double vMFS = (1.0 - sf2) * (1.0 - ss2) * (tauFx * tauMx * tauSx * tauMFS)
                     / (tauFx * tauFx * tauMx * tauMx * tauSx * tauSx * omega2
-                    + (tauFx * (tauMx + tauSx) + tauMx * tauSx) * (tauFx * (tauMx + tauSx) + tauMx * tauSx));
+                    + tauMFS * tauMFS);
             J[j++] = 0.4 * (vM + vMS + vMF + vMFS);
         }
         complexityS
