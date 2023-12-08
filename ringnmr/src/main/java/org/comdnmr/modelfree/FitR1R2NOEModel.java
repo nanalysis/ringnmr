@@ -5,6 +5,15 @@
  */
 package org.comdnmr.modelfree;
 
+import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
+import org.apache.commons.math3.optim.PointValuePair;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.apache.commons.rng.sampling.distribution.DirichletSampler;
+import org.comdnmr.modelfree.models.MFModelIso;
+import org.comdnmr.modelfree.models.MFModelIso2sf;
+import org.nmrfx.chemistry.*;
+import org.nmrfx.chemistry.relax.*;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -12,21 +21,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
-import org.apache.commons.math3.optim.PointValuePair;
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.apache.commons.rng.UniformRandomProvider;
-import org.apache.commons.rng.simple.RandomSource;
-import org.apache.commons.rng.sampling.distribution.DirichletSampler;
-import org.comdnmr.modelfree.models.MFModelIso;
-import org.comdnmr.modelfree.models.MFModelIso2sf;
-import org.nmrfx.chemistry.Atom;
-import org.nmrfx.chemistry.MoleculeBase;
-import org.nmrfx.chemistry.MoleculeFactory;
-import org.nmrfx.chemistry.Polymer;
-import org.nmrfx.chemistry.relax.*;
-import org.nmrfx.chemistry.Residue;
 
 /**
  * @author brucejohnson
