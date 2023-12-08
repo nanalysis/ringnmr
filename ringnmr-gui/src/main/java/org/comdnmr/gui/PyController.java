@@ -256,6 +256,7 @@ public class PyController implements Initializable {
 
     static Random rand = new Random();
     File initialDir = null;
+    SeriesComparator seriesComparator = new SeriesComparator();
 
     @FXML
     private void pyAction(ActionEvent event) {
@@ -1749,6 +1750,7 @@ public class PyController implements Initializable {
                     activeChart = chartMap.get(rData.getName());
                     showRelaxationValues(setName, rData.getName(), parNames[0]);
                 });
+        sortChartSeries();
         resizeBarPlotCanvas();
     }
 
@@ -1797,20 +1799,15 @@ public class PyController implements Initializable {
                 barCharts.remove(resChart);
             }
         }
-        SeriesComparator seriesComparator = new SeriesComparator();
-        for (ResidueChart residueChart : barCharts) {
-            for (var d : residueChart.getData()) {
-                System.out.println(d.getName());
-            }
-            Collections.sort(residueChart.getData(), seriesComparator);
-            for (var d : residueChart.getData()) {
-                System.out.println(d.getName());
-            }
-        }
-
+        sortChartSeries();
         resizeBarPlotCanvas();
     }
 
+    private void sortChartSeries() {
+        for (ResidueChart residueChart : barCharts) {
+            Collections.sort(residueChart.getData(), seriesComparator);
+        }
+    }
     class SeriesComparator implements Comparator<DataSeries> {
 
         @Override
