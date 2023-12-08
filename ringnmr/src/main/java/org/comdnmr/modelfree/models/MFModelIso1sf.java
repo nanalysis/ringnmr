@@ -88,6 +88,7 @@ public class MFModelIso1sf extends MFModelIso2f {
         return calc(omegas);
     }
 
+    @Override
     public void pars(double[] pars) {
         int parStart = 0;
         if (fitTau) {
@@ -95,7 +96,7 @@ public class MFModelIso1sf extends MFModelIso2f {
             parStart = 1;
         }
 
-        this.tauF = pars[parStart + 0];
+        this.tauF = pars[parStart];
         this.ss2 = pars[parStart + 1];
         this.tauS = pars[parStart + 2];
     }
@@ -104,10 +105,7 @@ public class MFModelIso1sf extends MFModelIso2f {
         pars(pars);
         double[] sortPars = new double[4];
         sortPars[0] = tauM;
-        boolean swapIt = false;
-        if (tauF > tauS) {
-            swapIt = true;
-        }
+        boolean swapIt = tauF > tauS;
 
         if (swapIt) {
             sortPars[1] = tauS;
@@ -136,6 +134,7 @@ public class MFModelIso1sf extends MFModelIso2f {
         return complexityTau;
     }
 
+    @Override
     public double[] calc(double[] omegas, double tauF, double ss2, double tauS) {
         this.tauF = tauF;
         this.ss2 = ss2;
@@ -146,11 +145,6 @@ public class MFModelIso1sf extends MFModelIso2f {
     @Override
     public boolean checkParConstraints() {
         return tauF < tauM && tauS < tauM;
-    }
-
-    @Override
-    public double calcWeight() {
-        return 0.0;
     }
 
     @Override

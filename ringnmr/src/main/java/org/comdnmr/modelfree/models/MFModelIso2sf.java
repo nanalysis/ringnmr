@@ -90,6 +90,7 @@ public class MFModelIso2sf extends MFModelIso2f {
         return calc(omegas);
     }
 
+    @Override
     public void pars(double[] pars) {
         int parStart = 0;
         if (fitTau) {
@@ -157,11 +158,6 @@ public class MFModelIso2sf extends MFModelIso2f {
     @Override
     public boolean checkParConstraints() {
         return tauF < tauM && tauS < tauM;
-    }
-
-    @Override
-    public double calcWeight() {
-        return 0.0;
     }
 
     @Override
