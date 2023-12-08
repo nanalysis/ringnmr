@@ -540,7 +540,8 @@ public class PyController implements Initializable {
         bootStrapChoice.valueProperty().addListener(e -> bootStrapChanged(bootStrapChoice.getValue()));
         lambdaCheckBox.selectedProperty().addListener(e -> lambdaChanged(lambdaCheckBox.isSelected()));
 
-        String[] modelNames = {"1", "1f", "1s", "2f", "2s", "2sf"};
+        modelBox.setSpacing(10);
+        String[] modelNames = {"1", "1f", "1s", "2f", "2s", "1sf", "2sf"};
         for (var modelName : modelNames) {
             var checkBox = new CheckBox(modelName);
             checkBox.setMinWidth(40.0);

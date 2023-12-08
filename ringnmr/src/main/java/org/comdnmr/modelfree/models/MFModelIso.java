@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
- /*
+/*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
  * @author brucejohnson
  */
 public abstract class MFModelIso extends MFModel {
@@ -36,7 +35,7 @@ public abstract class MFModelIso extends MFModel {
     double tauFrac = 0.25;
 
     public MFModelIso(boolean fitTau, double targetTau, double tauFraction,
-            boolean includeEx) {
+                      boolean includeEx) {
         this.fitTau = fitTau;
         this.targetTau = targetTau;
         this.tauFrac = tauFrac;
@@ -98,8 +97,8 @@ public abstract class MFModelIso extends MFModel {
 
 
     public static MFModelIso buildModel(String modelName, boolean fitTau,
-            double tau, double tauFrac,
-            boolean fitExchange) {
+                                        double tau, double tauFrac,
+                                        boolean fitExchange) {
         MFModelIso model;
         if (modelName.startsWith("model")) {
             modelName = modelName.substring(5);
@@ -124,6 +123,10 @@ public abstract class MFModelIso extends MFModel {
             case "2f":
             case "D2f":
                 model = new MFModelIso2f(fitTau, tau, tauFrac, fitExchange);
+                break;
+            case "1sf":
+            case "D1sf":
+                model = new MFModelIso1sf(fitTau, tau, tauFrac, fitExchange);
                 break;
             case "2sf":
             case "D2sf":
