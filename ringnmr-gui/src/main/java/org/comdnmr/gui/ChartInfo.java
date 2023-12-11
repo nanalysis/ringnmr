@@ -9,9 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 import org.comdnmr.data.ExperimentResult;
 import org.comdnmr.data.ExperimentSet;
-import org.comdnmr.data.ValueSet;
 import org.nmrfx.chemistry.Atom;
 import org.nmrfx.chemistry.relax.ResonanceSource;
+import org.nmrfx.chemistry.relax.ValueSet;
 
 /**
  *
@@ -31,7 +31,7 @@ public class ChartInfo {
     public String toString() {
         StringBuilder sBuilder = new StringBuilder();
         sBuilder.append(mapName).append(" ").append(equationName).append(" ").append(state).append(" ").
-                append(valueSet.getName());
+                append(valueSet.name());
         for (var resonanceSource : currentResidues) {
             sBuilder.append(" ").append(resonanceSource.getAtom().getShortName());
         }

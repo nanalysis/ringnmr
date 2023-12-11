@@ -47,6 +47,7 @@ import javafx.concurrent.Worker;
 import org.comdnmr.data.Experiment;
 import org.comdnmr.eqnfit.NOEEquation;
 import org.comdnmr.util.CoMDOptions;
+import org.nmrfx.chemistry.relax.RelaxTypes;
 import org.nmrfx.chemistry.relax.RelaxationData;
 import org.nmrfx.chemistry.relax.ResonanceSource;
 
@@ -82,7 +83,7 @@ public class ResidueFitter {
         this.atomFitGroups = null;
         experimentSet.clearResidueMap();
         fitAllAtoms(null);
-        RelaxationData.relaxTypes relaxType = RelaxationData.relaxTypes.valueOf(experimentSet.getExpMode().toUpperCase());
+        RelaxTypes relaxType = RelaxTypes.valueOf(experimentSet.getExpMode().toUpperCase());
         DataIO.addRelaxationFitResults(experimentSet, relaxType);
     }
 
@@ -147,7 +148,7 @@ public class ResidueFitter {
     void finishProcessing() {
         updateStatus("Done");
         try {
-            RelaxationData.relaxTypes relaxType = RelaxationData.relaxTypes.valueOf(experimentSet.getExpMode().toUpperCase());
+            RelaxTypes relaxType = RelaxTypes.valueOf(experimentSet.getExpMode().toUpperCase());
             DataIO.addRelaxationFitResults(experimentSet, relaxType);
         } catch (IllegalArgumentException iAE) {
 
@@ -262,7 +263,7 @@ public class ResidueFitter {
         List<ExperimentResult> resInfoList = new ArrayList<>();
         Map<ResonanceSource, ExperimentResult> resMap = new HashMap<>();
         for (var dynSource : dynSources) {
-            String expName = experimentSet.getName();
+            String expName = experimentSet.name();
             ExperimentResult residueInfo = new ExperimentResult(experimentSet, dynSource, groupId, dynSources.length);
             resInfoList.add(residueInfo);
             resMap.put(dynSource, residueInfo);

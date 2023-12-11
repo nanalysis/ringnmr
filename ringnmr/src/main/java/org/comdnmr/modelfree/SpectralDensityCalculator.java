@@ -91,9 +91,6 @@ public class SpectralDensityCalculator {
             } else {
                 result = DeuteriumMapping.jointMapping(rValues, errValues, fields);
             }
-            for (int i = 0; i < result[0].length; i++) {
-                System.out.println(result[0][i] + " " + result[1][i] + " " + result[2][i]);
-            }
         }
         return result;
     }

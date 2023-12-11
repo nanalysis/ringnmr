@@ -74,7 +74,7 @@ import org.nmrfx.chemistry.MoleculeBase;
 import org.nmrfx.chemistry.MoleculeFactory;
 import org.nmrfx.chemistry.io.MoleculeIOException;
 import org.nmrfx.chemistry.relax.*;
-import org.nmrfx.chemistry.relax.RelaxationData.relaxTypes;
+import org.nmrfx.chemistry.relax.RelaxTypes;
 import org.nmrfx.console.ConsoleController;
 import org.nmrfx.graphicsio.GraphicsIOException;
 import org.nmrfx.graphicsio.SVGGraphicsContext;
@@ -1606,9 +1606,9 @@ public class PyController implements Initializable {
     }
 
     public void showRelaxationValues(String setName, String valueName, String parName) {
-        RelaxSet relaxSet = (RelaxSet) ChartUtil.getResidueProperty(setName);
-        if (relaxSet != null) {
-            List<RelaxationValues> values = relaxSet.getValues();
+        ValueSet valueSet = ChartUtil.getResidueProperty(setName);
+        if (valueSet != null) {
+            List<RelaxationValues> values = (List<RelaxationValues>) valueSet.rValues();
             ObservableList<DataSeries> data = ChartUtil.getRelaxationDataSeries(values, valueName, setName, parName);
             String yLabel = valueName.equalsIgnoreCase(parName) ? parName
                     : valueName.toUpperCase() + ": " + parName;
@@ -1681,21 +1681,44 @@ public class PyController implements Initializable {
     }
 
     void addMoleculeDataToAxisMenu() {
-        var molResProps = DataIO.getDataFromMolecule();
-        //ChartUtil.clearResidueProperties();
+        addRelaxationDataToAxisMenu(DataIO.getRelaxationDataFromMolecule());
+        addOrderParDataToAxisMenu(DataIO.getOrderParSetFromMolecule());
+    }
+
+    void addRelaxationDataToAxisMenu(Map<String, RelaxationSet> molResProps) {
         for (var entry : molResProps.entrySet()) {
             String setName = entry.getKey();
             ChartUtil.addResidueProperty(setName, molResProps.get(setName));
-            RelaxSet relaxSet = entry.getValue();
+            RelaxationSet relaxSet = entry.getValue();
             Menu cascade = new Menu(setName);
-            var values = relaxSet.getValues();
+            var values = relaxSet.values();
             if (!values.isEmpty()) {
                 RelaxationValues value = values.get(0);
                 moleculeDataAxisMenu.getItems().add(cascade);
                 String[] parNames = value.getParNames();
                 for (var parName : parNames) {
                     MenuItem cmItem1 = new MenuItem(parName);
-                    cmItem1.setOnAction(e -> showRelaxationValues(setName, value.getName(), parName));
+                    cmItem1.setOnAction(e -> showRelaxationValues(setName, setName, parName));
+                    cascade.getItems().add(cmItem1);
+                }
+
+            }
+        }
+    }
+    void addOrderParDataToAxisMenu(Map<String, OrderParSet> molResProps) {
+        for (var entry : molResProps.entrySet()) {
+            String setName = entry.getKey();
+            ChartUtil.addResidueProperty(setName, molResProps.get(setName));
+            OrderParSet relaxSet = entry.getValue();
+            Menu cascade = new Menu(setName);
+            var values = relaxSet.values();
+            if (!values.isEmpty()) {
+                RelaxationValues value = values.get(0);
+                moleculeDataAxisMenu.getItems().add(cascade);
+                String[] parNames = value.getParNames();
+                for (var parName : parNames) {
+                    MenuItem cmItem1 = new MenuItem(parName);
+                    cmItem1.setOnAction(e -> showRelaxationValues(setName, setName, parName));
                     cascade.getItems().add(cmItem1);
                 }
 
@@ -1729,27 +1752,27 @@ public class PyController implements Initializable {
     }
 
     public void showT1T2NoeData() {
-        var molResProps = DataIO.getDataFromMolecule();
+        var molResProps = DataIO.getRelaxationDataFromMolecule();
 
         List<String> chartNames = molResProps.values().stream().
-                filter(v -> v.getValues().get(0) instanceof RelaxationData).
-                map(v -> ((RelaxationData) v.getValues().get(0)).getExpType().getName()).
+                filter(v -> v.values().get(0) != null).
+                map(v -> v.relaxType().getName()).
                 collect(Collectors.toSet()).stream().sorted().collect(Collectors.toList());
 
         var chartMap = setupCharts(chartNames);
         molResProps.values().stream().
-                filter(v -> v.getValues().get(0) instanceof RelaxationData).
+                filter(v -> v.values().get(0) != null).
                 sorted((a, b) -> {
-                    var ra = (RelaxationData) a.getValues().get(0);
-                    var rb = (RelaxationData) b.getValues().get(0);
-                    return Double.compare(ra.getField(), rb.getField());
+                    double fieldA = a.field();
+                    double fieldB = b.field();
+                    return Double.compare(fieldA, fieldB);
                 }).
                 forEach(v -> {
-                    var setName = v.getName();
-                    var rData = (RelaxationData) v.getValues().get(0);
+                    var setName = v.name();
+                    var rData = (RelaxationData) v.values().get(0);
                     String[] parNames = rData.getParNames();
-                    activeChart = chartMap.get(rData.getName());
-                    showRelaxationValues(setName, rData.getName(), parNames[0]);
+                    activeChart = chartMap.get(v.relaxType().getName());
+                    showRelaxationValues(setName, parNames[0], parNames[0]);
                 });
         sortChartSeries();
         resizeBarPlotCanvas();
@@ -1774,21 +1797,26 @@ public class PyController implements Initializable {
     public void showModelFreeData(List<String> chartNames) {
         var chartMap = setupCharts(chartNames);
         var usedSet = new TreeSet<String>();
-        var molResProps = DataIO.getDataFromMolecule();
-        molResProps.values().stream().
-                filter(v -> v.getValues().get(0) instanceof OrderPar).
-                forEach(v -> {
-                    var values = v.getValues();
+        var molResProps = DataIO.getOrderParSetFromMolecule();
+        System.out.println(molResProps);
+        molResProps.entrySet().stream().
+                forEach(entry -> {
+                    OrderParSet v = entry.getValue();
+                    String key = entry.getKey();
+                    var values = v.values();
                     boolean hasNull = values.stream().anyMatch(value -> value.getValue() == null);
+                    System.out.println(key + " " + values.size());
                     if (!hasNull) {
-                        var setName = v.getName();
-                        var rData = (OrderPar) v.getValues().get(0);
+                        var setName = v.name();
+                        System.out.println("set name " + setName);
+                        var rData = (OrderPar) v.values().get(0);
                         for (var parName : chartNames) {
                             boolean hasValue = values.stream().anyMatch(value
                                     -> (value.getValue(parName) != null) && (value.getValue(parName) > 1.0e-6));
+                            System.out.println("chart par " + parName + " " + hasValue);
                             if (hasValue) {
                                 activeChart = chartMap.get(parName);
-                                showRelaxationValues(setName, rData.getName(), parName);
+                                showRelaxationValues(setName, parName, parName);
                                 usedSet.add(parName);
                             }
                         }
@@ -1847,7 +1875,7 @@ public class PyController implements Initializable {
                         parName = "Kex";
                     }
                     MenuItem cmItem1 = new MenuItem("R");
-                    cmItem1.setOnAction(e -> setYAxisType(expMode, experimentSet.getName(), "best", "0:0:0", parName, true));
+                    cmItem1.setOnAction(e -> setYAxisType(expMode, experimentSet.name(), "best", "0:0:0", parName, true));
                     cascade.getItems().add(cmItem1);
                 } else {
                     for (String parType : parTypes) {
@@ -1867,8 +1895,8 @@ public class PyController implements Initializable {
                             equationNames.addAll(experimentSet.getEquationNames());
                             List<String> stateStrings = experimentSet.getStateStrings();
                             if (equationNames.size() == 0) {
-                                MenuItem cmItem1 = new MenuItem(experimentSet.getName());
-                                cmItem1.setOnAction(e -> setYAxisType(expMode, experimentSet.getName(), "best", "0:0:0", "R", true));
+                                MenuItem cmItem1 = new MenuItem(experimentSet.name());
+                                cmItem1.setOnAction(e -> setYAxisType(expMode, experimentSet.name(), "best", "0:0:0", "R", true));
                                 cascade2.getItems().add(cmItem1);
 
                             } else {
@@ -2154,7 +2182,7 @@ public class PyController implements Initializable {
                 var valueSet = ChartUtil.getResidueProperty(setName);
                 if (valueSet instanceof ExperimentSet) {
                     ExperimentSet experimentSet = (ExperimentSet) valueSet;
-                    relaxTypes expMode = relaxTypes.valueOf(experimentSet.getExpMode().toUpperCase());
+                    RelaxTypes expMode = RelaxTypes.valueOf(experimentSet.getExpMode().toUpperCase());
                     DataIO.addRelaxationFitResults(experimentSet, expMode);
                 }
             });
@@ -2168,7 +2196,7 @@ public class PyController implements Initializable {
             String[] sParts;
             if (seriesName.length() == 0) {
                 sParts = new String[4];
-                sParts[0] = getCurrentExperimentSet().getName();
+                sParts[0] = getCurrentExperimentSet().name();
                 sParts[1] = "best";
                 sParts[2] = "0:0:0";
                 sParts[3] = "RMS";
@@ -2179,14 +2207,14 @@ public class PyController implements Initializable {
                 clearChart();
                 statusBar.setProgress(f);
                 setYAxisType(getCurrentExperimentSet().getExpMode(), sParts[0], sParts[1], sParts[2], sParts[3], false);
-                setCurrentExperimentSet(ChartUtil.getResidueProperty(getCurrentExperimentSet().getName()));
+                setCurrentExperimentSet(ChartUtil.getResidueProperty(getCurrentExperimentSet().name()));
 
             } else {
                 Platform.runLater(() -> {
                     clearChart();
                     setYAxisType(getCurrentExperimentSet().getExpMode(), sParts[0], sParts[1], sParts[2], sParts[3], false);
                     statusBar.setProgress(f);
-                    setCurrentExperimentSet(ChartUtil.getResidueProperty(getCurrentExperimentSet().getName()));
+                    setCurrentExperimentSet(ChartUtil.getResidueProperty(getCurrentExperimentSet().name()));
                 });
             }
         } else if (modelFitter != null) {
@@ -2560,6 +2588,7 @@ public class PyController implements Initializable {
             fitMode = "modelfree";
             for (ResonanceSource resonanceSource : chartInfo.getResidues()) {
                 Atom atom = resonanceSource.getAtom();
+                System.out.println("ressourc " + resonanceSource + " " + atom.getFullName());
                 Map<String, SpectralDensity> spectralDensityMap = atom.getSpectralDensity();
                 var sdData = ChartUtil.getSpectralDensityData(spectralDensityMap);
                 allData.addAll(sdData);
@@ -2583,6 +2612,9 @@ public class PyController implements Initializable {
                 if (orderPars != null) {
                     for (var entry : orderPars.entrySet()) {
                         var orderPar = entry.getValue();
+                        if (!entry.getKey().name().equals(chartInfo.mapName)) {
+                            continue;
+                        }
                         String modelName = orderPar.getModel();
                         var model = MFModelIso.buildModel(modelName, true, 0.0, 0.0, false);
                         var parNames = model.getParNames();

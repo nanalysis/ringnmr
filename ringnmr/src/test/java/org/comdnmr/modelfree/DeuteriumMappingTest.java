@@ -6,10 +6,9 @@ import org.comdnmr.modelfree.models.MFModelIso1f;
 import org.comdnmr.modelfree.models.MFModelIso2f;
 import org.junit.Assert;
 import org.junit.Test;
+import org.nmrfx.chemistry.relax.OrderParSet;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class DeuteriumMappingTest {
     List<Double> fields = List.of(4.0E8, 5.0E8, 8.0E8, 9.0E8);
@@ -120,6 +119,10 @@ public class DeuteriumMappingTest {
         List<Double> rValueErrs = new ArrayList<>();
         double[] v = {0.0, 1.0, 2.0};
         MolDataValues resData = new MolDataValues("3.CB",v, dynamicsSourceFactory);
+        Map<String, OrderParSet> orderParSetMap = new HashMap<>();
+
+        OrderParSet orderParSet = orderParSetMap.computeIfAbsent("order_parameter_list_1", k -> new OrderParSet(k));
+
         for (int i = 0; i < rValuesWithErrs.size(); i += 8) {
             double r1 = rValuesWithErrs.get(i);
             double r1Error = rValuesWithErrs.get(i+1);
@@ -146,7 +149,7 @@ public class DeuteriumMappingTest {
         fitModel.setFitJ(true);
         Random random = new Random();
         var modelNames = List.of("D1f");
-        var result = fitModel.testModels(resData, "tst", modelNames, random);
+        var result = fitModel.testModels(orderParSetMap, resData, "tst", modelNames, random);
         Assert.assertTrue(result.isPresent());
         Assert.assertEquals(0.0, result.get().orderPar().getReducedChiSqr(), 3.0);
     }

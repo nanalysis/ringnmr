@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package org.comdnmr.gui;
 
 import java.util.List;
@@ -24,7 +24,6 @@ import org.comdnmr.eqnfit.ParValueInterface;
 import org.nmrfx.datasets.Nuclei;
 
 /**
- *
  * @author Bruce Johnson
  */
 public abstract class EquationControls {
@@ -46,7 +45,8 @@ public abstract class EquationControls {
     public VBox init() {
         VBox vBox = new VBox();
         nucleiSelector.getItems().clear();
-        for (Nuclei nuc : Nuclei.values()) {
+        Nuclei[] nucs = {Nuclei.H1, Nuclei.findNuclei("2H"), Nuclei.C13, Nuclei.N15, Nuclei.findNuclei("19F")};
+        for (Nuclei nuc : nucs) {
             nucleiSelector.getItems().add(nuc);
         }
         nucleiSelector.getSelectionModel().select(Nuclei.N15);
@@ -56,7 +56,7 @@ public abstract class EquationControls {
     public Nuclei getNucleus() {
         return nucleiSelector.getSelectionModel().getSelectedItem();
     }
-    
+
     public void setNucleus(String nucName) {
         nucleiSelector.getSelectionModel().select(Nuclei.findNuclei(nucName));
     }

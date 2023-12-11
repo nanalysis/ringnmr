@@ -41,6 +41,7 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.comdnmr.eqnfit.CESTEquation;
 import org.comdnmr.eqnfit.CESTFitter;
@@ -66,13 +67,8 @@ import org.nmrfx.chemistry.io.NMRNEFReader;
 import org.nmrfx.chemistry.io.NMRStarReader;
 import org.nmrfx.chemistry.io.NMRStarWriter;
 import org.nmrfx.chemistry.io.PDBFile;
-import org.nmrfx.chemistry.relax.OrderPar;
+import org.nmrfx.chemistry.relax.*;
 import org.nmrfx.datasets.DatasetBase;
-import org.nmrfx.chemistry.relax.RelaxationData;
-import org.nmrfx.chemistry.relax.RelaxationData.relaxTypes;
-import org.nmrfx.chemistry.relax.RelaxationRex;
-import org.nmrfx.chemistry.relax.RelaxationValues;
-import org.nmrfx.chemistry.relax.ResonanceSource;
 import org.nmrfx.chemistry.utilities.CSVRE;
 import org.nmrfx.peaks.InvalidPeakException;
 import org.nmrfx.peaks.PeakList;
@@ -80,7 +76,6 @@ import org.nmrfx.star.ParseException;
 import org.yaml.snakeyaml.Yaml;
 
 /**
- *
  * @author Bruce Johnson
  */
 public class DataIO {
@@ -150,14 +145,14 @@ public class DataIO {
     }
 
     public static void loadFromPeakList(PeakList peakList, Experiment expData,
-            ExperimentSet resProp, String xConvStr, String yConvStr, DynamicsSource dynamicsSourceFactory) {
+                                        ExperimentSet resProp, String xConvStr, String yConvStr, DynamicsSource dynamicsSourceFactory) {
         loadFromPeakList(peakList, expData, resProp, XCONV.valueOf(xConvStr.toUpperCase()),
                 YCONV.valueOf(yConvStr.toUpperCase()), dynamicsSourceFactory);
 
     }
 
     public static void loadFromPeakList(PeakList peakList, Experiment experiment,
-            ExperimentSet experimentSet, XCONV xConv, YCONV yConv, DynamicsSource dynamicsSourceFactory) {
+                                        ExperimentSet experimentSet, XCONV xConv, YCONV yConv, DynamicsSource dynamicsSourceFactory) {
         String expMode = experiment.getExpMode();
         DatasetBase dataset = DatasetBase.getDataset(peakList.fileName);
         final double[] xValues;
@@ -259,9 +254,9 @@ public class DataIO {
     }
 
     public static void loadPeakFile(String fileName, Experiment experiment,
-            ExperimentSet experimientSet, XCONV xConv, YCONV yConv,
-            HashMap<String, Object> errorPars, double[] delayCalc,
-            DynamicsSource dynamicsSourceFactory)
+                                    ExperimentSet experimientSet, XCONV xConv, YCONV yConv,
+                                    HashMap<String, Object> errorPars, double[] delayCalc,
+                                    DynamicsSource dynamicsSourceFactory)
             throws IOException, IllegalArgumentException { //(String fileName, ExperimentSet resProp, String nucleus,
         Path path = Paths.get(fileName);
         if (Files.notExists(path, LinkOption.NOFOLLOW_LINKS)) {
@@ -590,7 +585,7 @@ public class DataIO {
     }
 
     public static void processCESTData(OffsetExperiment expData, ResonanceSource dynSource,
-            List<Double> xValueList, List<Double> yValueList, List<Double> errValueList) {
+                                       List<Double> xValueList, List<Double> yValueList, List<Double> errValueList) {
         Double B1field = expData.getB1Field();
         List<Double> B1fieldList = new ArrayList<>();
         xValueList.forEach((_item) -> {
@@ -648,10 +643,10 @@ public class DataIO {
     }
 
     public static void loadResidueDataFile(String fileName, Experiment expData,
-            String residueNum, String atomName, ExperimentSet experimentSet, String nucleus,
-            double temperature, double field,
-            HashMap<String, Object> errorPars, XCONV xConv, YCONV yConv,
-            double refIntensity, DynamicsSource dynamicsSourceFactory)
+                                           String residueNum, String atomName, ExperimentSet experimentSet, String nucleus,
+                                           double temperature, double field,
+                                           HashMap<String, Object> errorPars, XCONV xConv, YCONV yConv,
+                                           double refIntensity, DynamicsSource dynamicsSourceFactory)
             throws IOException, IllegalArgumentException {
         boolean gotHeader = false;
         int nValues = 0;
@@ -731,8 +726,8 @@ public class DataIO {
     }
 
     public static void loadTextFile(Experiment expData, String fileName, ExperimentSet experimentSet,
-            String nucleus, double temperature, double field, XCONV xConv,
-            String expMode, DynamicsSource dynamicsSourceFactory)
+                                    String nucleus, double temperature, double field, XCONV xConv,
+                                    String expMode, DynamicsSource dynamicsSourceFactory)
             throws IOException, IllegalArgumentException {
         Path path = Paths.get(fileName);
         String fileTail = path.getFileName().toString();
@@ -849,7 +844,7 @@ public class DataIO {
     }
 
     public static ExperimentSet loadResultsFile(String fitMode, String fileName,
-            DynamicsSource dynamicsSourceFactory) throws IOException {
+                                                DynamicsSource dynamicsSourceFactory) throws IOException {
         Path path = Paths.get(fileName);
         String fileTail = path.getFileName().toString();
         fileTail = fileTail.substring(0, fileTail.indexOf('.'));
@@ -1055,7 +1050,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
     }
 
     public static ExperimentSet processPeakList(PeakList peakList,
-            DynamicsSource dynamicsSourceFactory) {
+                                                DynamicsSource dynamicsSourceFactory) {
         ExperimentSet experimentSet = null;
         if (peakList != null) {
             String peakListName = peakList.getName();
@@ -1327,8 +1322,8 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
     public static void saveResultsFile(String fileName, ExperimentSet resProp, boolean saveStats) {
         String[] headerFields = {"Residue", "Peak", "GrpSz", "Group", "State", "Equation", "RMS", "AIC", "Best"};
         String[] headerFields2 = {"Residue", "Peak", "GrpSz", "Group", "State", "RefineOpt", "RefineTime",
-            "BootstrapOpt", "BootstrapTime", "Samples", "AbsMode", "NonParametricMode", "StartRadius", "FinalRadius",
-            "Tolerance", "Weight", "Equation", "RMS", "AIC", "Best"};
+                "BootstrapOpt", "BootstrapTime", "Samples", "AbsMode", "NonParametricMode", "StartRadius", "FinalRadius",
+                "Tolerance", "Weight", "Equation", "RMS", "AIC", "Best"};
         if (saveStats) {
             headerFields = headerFields2;
         }
@@ -1414,7 +1409,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
      * Load molecular information from a file.
      *
      * @param fileName String. The file to read.
-     * @param type String. The filetype: pdb, star, nef, or cif.
+     * @param type     String. The filetype: pdb, star, nef, or cif.
      * @throws ParseException
      * @throws MoleculeIOException
      * @throws IOException
@@ -1446,11 +1441,11 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
     /**
      * Add the R1/R2 fit results to a map, and to a molecule, if present.
      *
-     * @param expSet ExperimentSet. The set pf experimental results.
+     * @param expSet  ExperimentSet. The set pf experimental results.
      * @param expType relaxTypes. The experiment type, R1 or R2.
      */
-    public static void addRelaxationFitResults(ExperimentSet expSet, relaxTypes expType) {
-        String datasetName = expSet.getName() + "_RING_fit";
+    public static void addRelaxationFitResults(ExperimentSet expSet, RelaxTypes expType) {
+        String datasetName = expSet.name() + "_RING_fit";
         String expName = "EXPAB";
         double[] fields = expSet.getFields();
 
@@ -1462,10 +1457,16 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 final int iList = f;
                 List<ExperimentResult> expResults = expSet.getExperimentResults();
                 Collections.sort(expResults, (a, b) -> Integer.compare(a.getAtom().getIndex(), b.getAtom().getIndex()));
+                Map<String, String> extras = new HashMap<>();
+                String coherenceType = "Sz";
+                String units = "s-1";
+                extras.put("coherenceType", coherenceType);
+                extras.put("units", units);
+                RelaxationSet relaxationSet = new RelaxationSet(datasetName, expType, f, temperature, extras);
                 expResults.forEach((expResult) -> {
                     Double value;
                     Double error;
-                    if (expType == relaxTypes.NOE) {
+                    if (expType == RelaxTypes.NOE) {
                         value = expResult.value;
                         error = expResult.err;
                     } else {
@@ -1483,21 +1484,16 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     ResonanceSource resonanceSource = expResult.getResonanceSource();
                     if (!resonanceSource.deleted()) {
                         Atom atom = resonanceSource.getAtom();
-                        Map<String, String> extras = new HashMap<>();
-                        String coherenceType = "Sz";
-                        String units = "s-1";
-                        extras.put("coherenceType", coherenceType);
-                        extras.put("units", units);
                         switch (expType) {
                             case R1:
                             case NOE: {
-                                RelaxationData relaxData = new RelaxationData(datasetName, expType, resonanceSource, field, temperature, value, error, extras);
-                                atom.getRelaxationData().put(datasetName, relaxData);
+                                RelaxationData relaxData = new RelaxationData(relaxationSet, resonanceSource, value, error);
+                                atom.getRelaxationData().put(relaxationSet, relaxData);
                                 break;
                             }
                             default: {
-                                RelaxationRex relaxData = new RelaxationRex(datasetName, expType, resonanceSource, field, temperature, value, error, null, null, extras);
-                                atom.getRelaxationData().put(datasetName, relaxData);
+                                RelaxationRex relaxData = new RelaxationRex(relaxationSet, resonanceSource, value, error, null, null);
+                                atom.getRelaxationData().put(relaxationSet, relaxData);
                                 break;
                             }
                         }
@@ -1530,6 +1526,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             for (Atom atom : mol.getAtomArray()) {
                 atom.getRelaxationData().clear();
             }
+            mol.relaxationSetMap().clear();
         }
     }
 
@@ -1539,45 +1536,20 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             for (Atom atom : mol.getAtomArray()) {
                 atom.getOrderPars().clear();
             }
+            mol.orderParSetMap().clear();
         }
     }
 
-    public static Map<String, RelaxSet> getDataFromMolecule() {
-        Map<String, RelaxSet> relaxValueMap = new HashMap<>();
-
+    public static Map<String, RelaxationSet> getRelaxationDataFromMolecule() {
         MoleculeBase mol = MoleculeFactory.getActive();
-        if (mol != null) {
-            String molName = mol.getName();
-            for (Atom atom : mol.getAtomArray()) {
-                Map<String, RelaxationValues> valuesMap = new HashMap<>();
-                Map<String, RelaxationData> relaxData = atom.getRelaxationData();
-                Map<String, OrderPar> orderData = atom.getOrderPars();
-                valuesMap.putAll(relaxData);
-                valuesMap.putAll(orderData);
-                if (!valuesMap.isEmpty()) {
-                    for (Map.Entry<String, RelaxationValues> entry : valuesMap.entrySet()) {
-                        RelaxationValues relaxValue = entry.getValue();
-                        String entryName = entry.getKey();
-                        String expType = relaxValue.getName();
-                        String relaxSetName = molName + "_" + entryName + "_" + expType;
-                        RelaxSet relaxSet;
-
-                        if (!relaxValueMap.containsKey(relaxSetName)) {
-                            relaxSet = new RelaxSet(relaxSetName);
-                            relaxValueMap.put(relaxSetName, relaxSet);
-                        } else {
-                            relaxSet = relaxValueMap.get(relaxSetName);
-                        }
-                        Entity entity = atom.getEntity();
-                        if (entity instanceof Residue) {
-                            relaxSet.addValue(relaxValue);
-                        }
-                    }
-                }
-            }
-        }
-        return relaxValueMap;
+        return mol != null ? mol.relaxationSetMap() : Collections.emptyMap();
     }
+
+    public static Map<String, OrderParSet> getOrderParSetFromMolecule() {
+        MoleculeBase mol = MoleculeFactory.getActive();
+        return mol != null ? mol.orderParSetMap() : Collections.emptyMap();
+    }
+
 
     public static void loadRelaxationTextFile(File file) throws IOException, IllegalArgumentException {
         Path path = file.toPath();
@@ -1587,6 +1559,11 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         if (dotIndex != -1) {
             fileName = fileName.substring(0, dotIndex);
         }
+        MoleculeBase mol = MoleculeFactory.getActive();
+        if (mol == null) {
+            mol = MoleculeFactory.newMolecule("noname");
+        }
+        Map<String, RelaxationSet> setMap = mol.relaxationSetMap();
 
         try (BufferedReader fileReader = Files.newBufferedReader(path)) {
             Optional<String> sepStr = Optional.empty();
@@ -1658,13 +1635,16 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                             String id = fileName + "_" + type + "_" + Math.round(field);
                             Optional<ResonanceSource> resSourceOpt = dynamicsSourceFactory.
                                     createFromSpecifiers(fileName + "." + residue, residue, atomNames);
+                            RelaxTypes relaxType = RelaxTypes.valueOf(type);
+                            RelaxationSet relaxationSet = setMap
+                                    .computeIfAbsent(id, (k) -> new RelaxationSet(id, relaxType, field, 25, Collections.emptyMap()));
 
                             if (!resSourceOpt.isPresent()) {
                                 throw new IllegalArgumentException("Can't generate resonance source from peak " + fileName + "." + residue);
                             }
                             ResonanceSource dynSource = resSourceOpt.get();
 
-                            RelaxationData.add(id, type, dynSource, field, value, error);
+                            RelaxationData.add(relaxationSet, dynSource, value, error);
                         }
                     }
                 }

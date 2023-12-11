@@ -26,14 +26,14 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import org.comdnmr.data.ExperimentSet;
-import org.comdnmr.data.RelaxSet;
-import org.comdnmr.data.ValueSet;
+import org.nmrfx.chemistry.relax.RelaxationSet;
 import org.nmrfx.chart.Axis;
 import org.nmrfx.chart.XYCanvasBarChart;
 import org.nmrfx.chart.XYValue;
 import org.nmrfx.chemistry.MoleculeBase;
 import org.nmrfx.chemistry.MoleculeFactory;
 import org.nmrfx.chemistry.relax.ResonanceSource;
+import org.nmrfx.chemistry.relax.ValueSet;
 import org.nmrfx.graphicsio.GraphicsContextInterface;
 import org.nmrfx.graphicsio.GraphicsIOException;
 
@@ -73,7 +73,7 @@ public class ResidueChart extends XYCanvasBarChart {
             String testSeries = seriesName.substring(mol.getName().length()+1, seriesName.indexOf("_RING"));
             if (ChartUtil.getResiduePropertyNames().contains(testSeries)) {
                 ValueSet valueSet = ChartUtil.getResidueProperty(testSeries);
-                seriesName = valueSet.getName() + '|' +
+                seriesName = valueSet.name() + '|' +
                         "EXPAB" + "|" + "0:0:0" + "|" + "R" + "|" + "0";
             }
         }
@@ -134,7 +134,7 @@ public class ResidueChart extends XYCanvasBarChart {
 
     public void setResProps(ValueSet valueSet) {
         this.valueSet = valueSet;
-        dynSources = valueSet.getDynamicsSources();
+        dynSources = valueSet.resonanceSources();
     }
 
     public Set<ResonanceSource> getSelectedSources() {
@@ -157,7 +157,7 @@ public class ResidueChart extends XYCanvasBarChart {
         String[] seriesNameParts = seriesName.split("\\|");
         String mapName = seriesNameParts[0];
         valueSet = ChartUtil.getResidueProperty(mapName);
-        dynSources = valueSet.getDynamicsSources();
+        dynSources = valueSet.resonanceSources();
         showInfo(seriesName);
         drawChart();
     }
@@ -166,7 +166,7 @@ public class ResidueChart extends XYCanvasBarChart {
         String[] seriesNameParts = currentSeriesName.split("\\|");
         String mapName = seriesNameParts[0];
         valueSet = ChartUtil.getResidueProperty(mapName);
-        dynSources = valueSet.getDynamicsSources();
+        dynSources = valueSet.resonanceSources();
         showInfo(currentSeriesName);
     }
 
@@ -196,7 +196,7 @@ public class ResidueChart extends XYCanvasBarChart {
                 ExperimentSet experimentSet = (ExperimentSet) valueSet;
                 controller.chartInfo.experimentalResult = experimentSet.getExperimentResult(resSources[0]);
             }
-        } else if (valueSet instanceof RelaxSet) {
+        } else if (valueSet instanceof RelaxationSet) {
         }
         controller.showInfo(controller.chartInfo, xyCanvasChart);
     }
