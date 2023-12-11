@@ -180,7 +180,13 @@ public class FitR1R2NOEModel extends FitModel {
         AtomicInteger counts = new AtomicInteger();
         int n = molData.entrySet().size();
         Map<String, ModelFitResult> results = new HashMap<>();
-        OrderParSet orderParSet = new OrderParSet("testorder");
+        MoleculeBase moleculeBase = MoleculeFactory.getActive();
+        Map<String, OrderParSet> orderParSetMap = moleculeBase.orderParSetMap();
+        for (var modelName : modelNames) {
+            OrderParSet orderParSet = orderParSetMap.computeIfAbsent("order_parameter_list_" + modelName, k -> new OrderParSet(k));
+        }
+        OrderParSet orderParSet = orderParSetMap.computeIfAbsent("order_parameter_list_1", k -> new OrderParSet(k));
+
         molData.entrySet().stream().sorted(Comparator.comparing(Map.Entry::getKey)).parallel().forEach(e -> {
             updateProgress((double) counts.get() / n);
             if (cancelled.get()) {
@@ -190,10 +196,10 @@ public class FitR1R2NOEModel extends FitModel {
             String key = e.getKey();
             if (!resData.getData().isEmpty()) {
                 if (bootstrapMode != BootstrapMode.PARAMETRIC) {
-                    Optional<ModelFitResult> result = testModelsWithBootstrapAggregation(orderParSet, resData, key, modelNames, random);
+                    Optional<ModelFitResult> result = testModelsWithBootstrapAggregation(orderParSetMap, resData, key, modelNames, random);
                     result.ifPresent(o -> results.put(key, o));
                 } else {
-                    Optional<ModelFitResult> result = testModels(resData, key, modelNames, random);
+                    Optional<ModelFitResult> result = testModels(orderParSetMap, resData, key, modelNames, random);
                     result.ifPresent(o -> results.put(key, o));
                 }
             }
@@ -236,7 +242,7 @@ public class FitR1R2NOEModel extends FitModel {
 
     }
 
-    public Optional<ModelFitResult> testModels(MolDataValues resData, String key, List<String> modelNames, Random random) {
+    public Optional<ModelFitResult> testModels(Map<String, OrderParSet> orderParSetMap, MolDataValues resData, String key, List<String> modelNames, Random random) {
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
         molDataRes.put(key, resData);
 
@@ -257,7 +263,7 @@ public class FitR1R2NOEModel extends FitModel {
                     localFitTau, tau, localTauFraction, fitExchange);
             resData.setTestModel(model);
             Score score = tryModel(molDataRes, model, localTauFraction, localFitTau, random);
-            OrderParSet orderParSet = new OrderParSet("order_"+ modelName);
+            OrderParSet orderParSet = orderParSetMap.get("order_parameter_list_"+ modelName);
             double[][] repData = null;
             if (nReplicates > 2) {
                 double[] pars = score.getPars();
@@ -279,7 +285,7 @@ public class FitR1R2NOEModel extends FitModel {
             if (nReplicates > 2) {
                 replicateData = replicates(molDataRes, bestModel, localTauFraction, localFitTau, pars, random);
             }
-            OrderParSet orderParSet = new OrderParSet("order");
+            OrderParSet orderParSet = orderParSetMap.get("order_parameter_list_1");
             OrderPar orderPar = makeOrderPar(orderParSet, resData, molDataRes, key, bestScore, bestModel, replicateData);
             ModelFitResult modelFitResult = new ModelFitResult(orderPar, replicateData, null);
             result = Optional.of(modelFitResult);
@@ -287,7 +293,7 @@ public class FitR1R2NOEModel extends FitModel {
         return result;
     }
 
-    public Optional<ModelFitResult> testModelsWithBootstrapAggregation(OrderParSet orderParSet, MolDataValues resData, String key, List<String> modelNames, Random random) {
+    public Optional<ModelFitResult> testModelsWithBootstrapAggregation(Map<String, OrderParSet> orderParSetMap, MolDataValues resData, String key, List<String> modelNames, Random random) {
         Optional<ModelFitResult> result = Optional.empty();
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
         molDataRes.put(key, resData);
@@ -382,6 +388,7 @@ public class FitR1R2NOEModel extends FitModel {
                 rssSum += bestScores[i].rss;
             }
             double rss = rssSum /= nReplicates;
+            OrderParSet orderParSet = orderParSetMap.get("order_parameter_list_1");
             OrderPar orderPar = new OrderPar(orderParSet, resSource, rss, bestScores[0].nValues, parNames.length, bestModel.getName());
             double[][] cov = new double[nJ][parNames.length];
             double[] bestPars = new double[parNames.length];

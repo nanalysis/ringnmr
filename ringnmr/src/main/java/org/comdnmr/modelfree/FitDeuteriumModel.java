@@ -186,7 +186,7 @@ public class FitDeuteriumModel extends FitModel {
             String key = e.getKey();
             if (!resData.getData().isEmpty()) {
                 if (bootstrapMode != BootstrapMode.PARAMETRIC) {
-                    Optional<ModelFitResult> result = testModelsWithBootstrapAggregation(resData, key, modelNames, random);
+                    Optional<ModelFitResult> result = testModelsWithBootstrapAggregation(orderParSetMap, resData, key, modelNames, random);
                     result.ifPresent(o -> results.put(key, o));
                 } else {
                     Optional<ModelFitResult> result = testModels(orderParSetMap, resData, key, modelNames, random);
@@ -268,7 +268,7 @@ public class FitDeuteriumModel extends FitModel {
         return orderPar;
     }
 
-    public Optional<ModelFitResult> testModelsWithBootstrapAggregation(MolDataValues resData, String key, List<String> modelNames, Random random) {
+    public Optional<ModelFitResult> testModelsWithBootstrapAggregation(Map<String, OrderParSet> orderParSetMap, MolDataValues resData, String key, List<String> modelNames, Random random) {
         Optional<ModelFitResult> result = Optional.empty();
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
         molDataRes.put(key, resData);
@@ -339,8 +339,7 @@ public class FitDeuteriumModel extends FitModel {
                 rssSum += bestScores[i].rss;
             }
             double rss = rssSum /= nReplicates;
-            OrderParSet orderParSet = new OrderParSet("order_parameter_list_1");
-
+            OrderParSet orderParSet = orderParSetMap.get("order_parameter_list_1");
             OrderPar orderPar = new OrderPar(orderParSet, resSource, rss, bestScores[0].nValues, parNames.length, bestModel.getName());
             double[][] cov = new double[nJ][parNames.length];
             double[] bestPars = new double[parNames.length];

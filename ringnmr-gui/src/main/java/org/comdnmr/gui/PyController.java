@@ -1274,6 +1274,7 @@ public class PyController implements Initializable {
         } else if (prefix.equals("D")) {
             tau = 10.0;
         }
+        DataIO.clearOrderPars();
         boolean fitJ = fitJCheckBox.isSelected();
         fitModel.setLambdaS(lambdaS);
         fitModel.setLambdaTau(lambdaTau);
