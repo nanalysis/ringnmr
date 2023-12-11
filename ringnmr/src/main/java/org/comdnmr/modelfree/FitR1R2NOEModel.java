@@ -66,7 +66,10 @@ public class FitR1R2NOEModel extends FitModel {
                         Set<Long> fields = new HashSet<>();
                         for (var entry : relaxData.entrySet()) {
                             RelaxationData data = entry.getValue();
-                            fields.add(Math.round(entry.getKey().field()));
+                            RelaxationSet relaxationSet = entry.getKey();
+                            if (relaxationSet.active()) {
+                                fields.add(Math.round(relaxationSet.field()));
+                            }
                         }
                         for (var field : fields) {
                             Double r1 = null;
@@ -82,6 +85,10 @@ public class FitR1R2NOEModel extends FitModel {
                                 RelaxationData data = entry.getValue();
                                 if (data.getResonanceSource().deleted()) {
                                     break;
+                                }
+                                RelaxationSet relaxationSet = entry.getKey();
+                                if (!relaxationSet.active()) {
+                                    continue;
                                 }
                                 if (Math.round(entry.getKey().field()) == field) {
                                     switch (entry.getKey().relaxType()) {

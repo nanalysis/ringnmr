@@ -20,6 +20,7 @@ public class OrderParameterTool {
             MolDataValues resData = e.getValue();
             Atom atom = resData.getAtom();
             String key = e.getKey();
+            resData.clearJ();
             double[][] jValues = resData.getJValues();
             SpectralDensity spectralDensity = new SpectralDensity(key, jValues);
             atom.addSpectralDensity(key, spectralDensity);
@@ -77,12 +78,15 @@ public class OrderParameterTool {
                     double e2 = e1 * (0.5 + f) + e3 * (0.5 - f);
 
                     RelaxTypes type = RelaxTypes.values()[i];
-                    RelaxationSet relaxationSet = rData[i][0].getRelaxationSet();
+                    RelaxationSet relaxationSet1 = rData[i][0].getRelaxationSet();
+                    RelaxationSet relaxationSet3 = rData[i][1].getRelaxationSet();
                     ResonanceSource resSource = rData[i][0].getResonanceSource();
-                    String id = relaxationSet.name() + "_interp_" + ((int) field2);
-                    RelaxationSet newSet = new RelaxationSet(id, type, field2, relaxationSet.temperature(), Collections.emptyMap());
+                    String id = relaxationSet1.name() + "_interp_" + ((int) field2);
+                    RelaxationSet newSet = new RelaxationSet(id, type, field2, relaxationSet1.temperature(), Collections.emptyMap());
                     RelaxationData newData = new RelaxationData(newSet, resSource, v2, e2);
-                    resSource.getAtom().addRelaxationData(relaxationSet, newData);
+                    resSource.getAtom().addRelaxationData(newSet, newData);
+                    relaxationSet1.active(false);
+                    relaxationSet3.active(false);
                 }
             }
         }

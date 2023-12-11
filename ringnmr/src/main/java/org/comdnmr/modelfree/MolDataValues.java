@@ -98,6 +98,10 @@ public class MolDataValues {
         jValues = null;
     }
 
+    public void clearJ() {
+        jValues = null;
+    }
+
     public double[][] calcJ() {
         var dataOpt = dataValues.stream().findFirst();
         if (dataOpt.isPresent()) {

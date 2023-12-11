@@ -58,7 +58,9 @@ public class FitDeuteriumModel extends FitModel {
             Set<Long> fields = new HashSet<>();
             for (var entry : relaxData.entrySet()) {
                 RelaxationSet relaxationSet = entry.getKey();
-                fields.add(Math.round(relaxationSet.field()));
+                if (relaxationSet.active()) {
+                    fields.add(Math.round(relaxationSet.field()));
+                }
             }
             for (var field : fields) {
                 Double r1 = null;
@@ -76,6 +78,9 @@ public class FitDeuteriumModel extends FitModel {
                 for (var entry : relaxData.entrySet()) {
                     RelaxationData data = entry.getValue();
                     RelaxationSet relaxationSet = entry.getKey();
+                    if (!relaxationSet.active()) {
+                        continue;
+                    }
                     if (Math.round(relaxationSet.field()) == field) {
                         switch (relaxationSet.relaxType()) {
                             case R1:
