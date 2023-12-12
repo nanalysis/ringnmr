@@ -213,8 +213,15 @@ public class FitDeuteriumModel extends FitModel {
         MFModelIso bestModel = null;
         Score bestScore = null;
         double lowestAIC = Double.MAX_VALUE;
-        boolean localFitTau = fitTau;
-        double localTauFraction = tauFraction;
+        boolean localFitTau;
+        double localTauFraction;
+        if (fitTau(molDataRes)) {
+            localFitTau = true;
+            localTauFraction = tauFraction;
+        } else {
+            localTauFraction = 0.0;
+            localFitTau = false;
+        }
         for (var modelName : modelNames) {
             MFModelIso model = MFModelIso.buildModel(modelName,
                     localFitTau, tau, localTauFraction, fitExchange);
@@ -278,8 +285,16 @@ public class FitDeuteriumModel extends FitModel {
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
         molDataRes.put(key, resData);
 
-        boolean localFitTau = fitTau;
-        double localTauFraction = tauFraction;
+        boolean localFitTau;
+        double localTauFraction;
+        if (fitTau(molDataRes)) {
+            localFitTau = true;
+            localTauFraction = tauFraction;
+        } else {
+            localTauFraction = 0.0;
+            localFitTau = false;
+        }
+
         int maxPars = 5;
         double[][] jData = resData.getJValues();
         int nJ = jData[0].length;

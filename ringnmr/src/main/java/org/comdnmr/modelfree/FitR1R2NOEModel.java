@@ -258,9 +258,9 @@ public class FitR1R2NOEModel extends FitModel {
         double lowestAIC = Double.MAX_VALUE;
         boolean localFitTau;
         double localTauFraction;
-        if (overT2Limit(molDataRes, t2Limit)) {
+        if (fitTau(molDataRes)) {
+            localFitTau = true;
             localTauFraction = tauFraction;
-            localFitTau = fitTau;
         } else {
             localTauFraction = 0.0;
             localFitTau = false;
@@ -307,9 +307,9 @@ public class FitR1R2NOEModel extends FitModel {
 
         boolean localFitTau;
         double localTauFraction;
-        if (overT2Limit(molDataRes, t2Limit)) {
+        if (fitTau(molDataRes)) {
+            localFitTau = true;
             localTauFraction = tauFraction;
-            localFitTau = fitTau;
         } else {
             localTauFraction = 0.0;
             localFitTau = false;
@@ -467,10 +467,6 @@ public class FitR1R2NOEModel extends FitModel {
             rssSum += scoreModel(molDataRes, pars2);
         }
         return rssSum / nReplicates;
-    }
-
-    boolean overT2Limit(Map<String, MolDataValues> molDataRes, double limit) {
-        return molDataRes.values().stream().anyMatch(v -> v.getData().stream().anyMatch(d -> d.R2 > limit));
     }
 
     Score tryModel(Map<String, MolDataValues> molDataRes, MFModelIso model, double localTauFraction, boolean localFitTau, Random random) {
