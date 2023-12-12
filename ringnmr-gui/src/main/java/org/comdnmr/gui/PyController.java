@@ -1647,7 +1647,6 @@ public class PyController implements Initializable {
         Axis xAxis = chart.xAxis;
         Axis yAxis = chart.yAxis;
         xAxis.setAutoRanging(false);
-        yAxis.setAutoRanging(true);
         chart.autoScale(false);
         double xMin = Math.floor((ChartUtil.minRes - 2) / 5.0) * 5.0;
         double xMax = Math.ceil((ChartUtil.maxRes + 2) / 5.0) * 5.0;
@@ -1655,6 +1654,13 @@ public class PyController implements Initializable {
         barChartXMax = Optional.of(xMax);
         xAxis.setLowerBound(xMin);
         xAxis.setUpperBound(xMax);
+        if (yLabel.startsWith("S") && yLabel.endsWith("2")) {
+            yAxis.setAutoRanging(false);
+            yAxis.setLowerBound(0.0);
+            yAxis.setUpperBound(1.0);
+        } else {
+            yAxis.setAutoRanging(true);
+        }
         chart.yAxis.setLabel(yLabel);
 
         chart.setTitle(setName);
