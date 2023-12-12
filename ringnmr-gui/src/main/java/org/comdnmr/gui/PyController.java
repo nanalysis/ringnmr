@@ -200,6 +200,8 @@ public class PyController implements Initializable {
     @FXML
     ChoiceBox<String> t2Choice;
     @FXML
+    MenuButton relaxSetMenu;
+    @FXML
     TextField r1MedianField;
     @FXML
     TextField r2MedianField;
@@ -440,6 +442,7 @@ public class PyController implements Initializable {
         simChoice.valueProperty().addListener(s -> simAction());
 
         splitPane.setDividerPositions(0.4, 0.7);
+        relaxSetMenu.showingProperty().addListener(e -> makeRelaxSetMenu());
 
         setBoundsButton.setOnAction(event -> setBounds());
 
@@ -1671,6 +1674,40 @@ public class PyController implements Initializable {
             if (valueSet instanceof ExperimentSet) {
                 t1Choice.getItems().add(setName);
                 t2Choice.getItems().add(setName);
+            }
+        }
+    }
+
+    void makeRelaxSetMenu() {
+        System.out.println("make relax");
+        relaxSetMenu.getItems().clear();
+        MoleculeBase moleculeBase = MoleculeFactory.getActive();
+        Set<Integer> fieldSets = new HashSet<>();
+        if (moleculeBase != null) {
+            var relaxSets = moleculeBase.relaxationSetMap();
+            for (var entry:relaxSets.entrySet()) {
+                int field = (int) entry.getValue().field();
+                if (!fieldSets.contains(field)) {
+                    CheckMenuItem checkMenuItem = new CheckMenuItem(String.valueOf(field));
+                    checkMenuItem.setSelected(entry.getValue().active());
+                    checkMenuItem.setOnAction(e -> activateRelaxField(field, checkMenuItem.isSelected()));
+                    relaxSetMenu.getItems().add(checkMenuItem);
+                    fieldSets.add(field);
+                }
+            }
+        }
+    }
+
+    void activateRelaxField(int field, boolean state) {
+        MoleculeBase moleculeBase = MoleculeFactory.getActive();
+        Map<Integer, List<RelaxationSet>> fieldSets = new HashMap<>();
+        if (moleculeBase != null) {
+            var relaxSets = moleculeBase.relaxationSetMap();
+            for (var entry : relaxSets.entrySet()) {
+                int entryField = (int) entry.getValue().field();
+                if (entryField == field) {
+                    entry.getValue().active(state);
+                }
             }
         }
     }

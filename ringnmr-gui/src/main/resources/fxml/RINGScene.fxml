@@ -302,6 +302,7 @@
                                                     <ChoiceBox fx:id="t1Choice" prefWidth="150"/>
                                                     <TextField fx:id="r1MedianField" prefWidth="80"/>
                                                     <Label text="(1/s):" prefWidth="30"/>
+                                                    <MenuButton fx:id="relaxSetMenu" text="Fields"/>
                                                 </children>
                                             </HBox>
                                             <HBox>
