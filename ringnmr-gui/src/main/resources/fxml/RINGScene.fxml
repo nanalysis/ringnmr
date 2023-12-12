@@ -296,13 +296,27 @@
                                 <Tab text="ModelFree" closable="false">
                                     <VBox HBox.hgrow="ALWAYS" spacing="3">
                                         <children>
+                                            <ToolBar>
+                                                <MenuButton text="Actions">
+                                                    <items>
+                                                        <MenuItem text="Fit-Isotropic" onAction="#fitR1R2NOEModel"/>
+                                                        <MenuItem text="Fit Deuterium-Isotropic"
+                                                                  onAction="#fitDeuteriumModel"/>
+                                                        <MenuItem text="Estimate Tau"
+                                                                  onAction="#estimateCorrelationTime"
+                                                                  fx:id="calcDiffusionButton"/>
+                                                    </items>
+                                                </MenuButton>
+                                                <MenuButton fx:id="relaxSetMenu" text="Fields"/>
+                                                <Label text="Bootstrap mode:"/>
+                                                <ChoiceBox fx:id="bootStrapChoice"/>
+                                            </ToolBar>
                                             <HBox>
                                                 <children>
                                                     <Label text="R1:  " prefWidth="80"/>
                                                     <ChoiceBox fx:id="t1Choice" prefWidth="150"/>
                                                     <TextField fx:id="r1MedianField" prefWidth="80"/>
                                                     <Label text="(1/s):" prefWidth="30"/>
-                                                    <MenuButton fx:id="relaxSetMenu" text="Fields"/>
                                                 </children>
                                             </HBox>
                                             <HBox>
@@ -316,8 +330,6 @@
                                             <HBox spacing="10">
                                                 <children>
                                                     <Label text="Tau:  " prefWidth="80"/>
-                                                    <Button text="Estimate Tau" onAction="#estimateCorrelationTime"
-                                                            fx:id="calcDiffusionButton" prefWidth="150"/>
                                                     <TextField fx:id="tauCalcField" prefWidth="80"/>
                                                     <Label text="(ns)" prefWidth="30"/>
                                                 </children>
@@ -366,14 +378,6 @@
                                                     <Label text="Bootstrap N" prefWidth="80"/>
                                                     <Slider fx:id="nReplicatesSlider" prefWidth="150"/>
                                                     <Label fx:id="bootstrapNLabel" prefWidth="50"/>
-                                                    <ChoiceBox  fx:id="bootStrapChoice"/>
-                                                </children>
-                                            </HBox>
-                                            <HBox>
-                                                <children>
-                                                    <Button text="Fit-Isotropic" onAction="#fitR1R2NOEModel"/>
-                                                    <Button text="Fit Deuterium-Isotropic"
-                                                            onAction="#fitDeuteriumModel"/>
                                                 </children>
                                             </HBox>
                                         </children>
