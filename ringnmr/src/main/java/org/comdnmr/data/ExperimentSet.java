@@ -44,6 +44,8 @@ public class ExperimentSet implements ValueSet {
     private String bootStrapMode = "parametric";
     private String expMode = "cpmg";
 
+    private boolean active = true;
+
     public ExperimentSet(String name, String fileName) {
         this.name = name;
         this.fileName = fileName;
@@ -233,6 +235,16 @@ public class ExperimentSet implements ValueSet {
     @Override
     public List<? extends RelaxationValues> rValues() {
         return Collections.emptyList();
+    }
+
+    @Override
+    public void active(boolean b) {
+        active = b;
+    }
+
+    @Override
+    public boolean active() {
+        return active;
     }
 
     public List<ExperimentResult> getExperimentResults() {
