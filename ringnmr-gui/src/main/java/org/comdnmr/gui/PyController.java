@@ -1261,6 +1261,10 @@ public class PyController implements Initializable {
 
     public void fitDeuteriumModel() {
         modelFitter = new FitDeuteriumModel();
+        fitJCheckBox.setSelected(true);
+        if (modelCheckBoxes.stream().filter(CheckBox::isSelected).findAny().isEmpty()) {
+            modelCheckBoxes.stream().filter(m -> m.getText().equals("1f")).findAny().ifPresent(m -> m.setSelected(true));
+        }
         fitIsotropicModel(modelFitter, "D");
     }
 
