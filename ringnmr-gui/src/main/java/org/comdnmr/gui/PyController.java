@@ -3005,7 +3005,7 @@ public class PyController implements Initializable {
             SVGGraphicsContext svgGC = new SVGGraphicsContext();
             try {
                 Canvas canvas = xychart.getCanvas();
-                svgGC.create(true, canvas.getWidth(), canvas.getHeight(), selectedFile.toString());
+                svgGC.create(canvas.getWidth(), canvas.getHeight(), selectedFile.toString());
                 xychart.exportVectorGraphics(svgGC);
                 svgGC.saveFile();
             } catch (GraphicsIOException ex) {
@@ -3024,7 +3024,7 @@ public class PyController implements Initializable {
         if (selectedFile != null) {
             SVGGraphicsContext svgGC = new SVGGraphicsContext();
             try {
-                svgGC.create(true, barPlotCanvas.getWidth(), barPlotCanvas.getHeight(), selectedFile.toString());
+                svgGC.create(barPlotCanvas.getWidth(), barPlotCanvas.getHeight(), selectedFile.toString());
                 exportBarPlotSVGAction(svgGC);
                 svgGC.saveFile();
             } catch (GraphicsIOException ex) {
