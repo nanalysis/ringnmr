@@ -278,7 +278,7 @@ public class FitR1R2NOEModel extends FitModel {
                 OrderPar orderPar = makeOrderPar(orderParSet, resData, molDataRes, key, score, model, repData);
             }
             if (score.aicc() < lowestAIC) {
-                lowestAIC = score.aic();
+                lowestAIC = score.aicc();
                 bestModel = model;
                 bestScore = score;
             }

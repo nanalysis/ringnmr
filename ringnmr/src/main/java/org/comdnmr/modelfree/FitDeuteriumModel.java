@@ -232,8 +232,8 @@ public class FitDeuteriumModel extends FitModel {
             if (score != null) {
                 OrderPar orderPar = makeOrderPar(orderParSet, resSource, score, model, model.getParNames(), score.getPars(), null);
                 atom.addOrderPar(orderParSet, orderPar);
-                if (score.aic() < lowestAIC) {
-                    lowestAIC = score.aic();
+                if (score.aicc() < lowestAIC) {
+                    lowestAIC = score.aicc();
                     bestModel = model;
                     bestScore = score;
                 }

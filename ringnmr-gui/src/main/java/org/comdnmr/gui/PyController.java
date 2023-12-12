@@ -2694,7 +2694,7 @@ public class PyController implements Initializable {
                             parValues.add(parValue);
                             iPar++;
                         }
-                        double aic = orderPar.getAIC();
+                        double aic = orderPar.getAICC();
                         double rms = 0.0;
                         double rChiSq = orderPar.getReducedChiSqr();
                         updateFitQuality(aic, rms, rChiSq);
