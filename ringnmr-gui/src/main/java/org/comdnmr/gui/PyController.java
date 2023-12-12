@@ -58,6 +58,7 @@ import org.comdnmr.modelfree.FitDeuteriumModel;
 import org.comdnmr.modelfree.FitModel;
 import org.comdnmr.modelfree.FitR1R2NOEModel;
 import org.comdnmr.modelfree.models.MFModelIso;
+import org.comdnmr.modelfree.models.OrderParameterTool;
 import org.comdnmr.util.CoMDOptions;
 import org.comdnmr.util.CoMDPreferences;
 import org.comdnmr.util.ProcessingStatus;
@@ -3061,6 +3062,12 @@ public class PyController implements Initializable {
      */
     public void setCurrentExperimentSet(ValueSet valueSet) {
         this.chartInfo.valueSet = valueSet;
+    }
+
+    public void interpolateRates() {
+        String fieldStr = GUIUtils.input("Target Field");
+        double field = Double.valueOf(fieldStr);
+        OrderParameterTool.interpolateRates(field);
     }
 
 }

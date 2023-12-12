@@ -302,6 +302,8 @@
                                                         <MenuItem text="Fit-Isotropic" onAction="#fitR1R2NOEModel"/>
                                                         <MenuItem text="Fit Deuterium-Isotropic"
                                                                   onAction="#fitDeuteriumModel"/>
+                                                        <MenuItem text="Interpolate Rates"
+                                                                  onAction="#interpolateRates"/>
                                                         <MenuItem text="Estimate Tau"
                                                                   onAction="#estimateCorrelationTime"
                                                                   fx:id="calcDiffusionButton"/>

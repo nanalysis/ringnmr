@@ -3,6 +3,8 @@ package org.comdnmr.modelfree.models;
 import org.comdnmr.modelfree.FitDeuteriumModel;
 import org.comdnmr.modelfree.MolDataValues;
 import org.nmrfx.chemistry.Atom;
+import org.nmrfx.chemistry.MoleculeBase;
+import org.nmrfx.chemistry.MoleculeFactory;
 import org.nmrfx.chemistry.relax.*;
 
 import java.util.Collections;
@@ -25,6 +27,28 @@ public class OrderParameterTool {
             SpectralDensity spectralDensity = new SpectralDensity(key, jValues);
             atom.addSpectralDensity(key, spectralDensity);
         });
+    }
+    public static void interpolateRates(double field2) {
+        MoleculeBase moleculeBase = MoleculeFactory.getActive();
+        var relaxMap = moleculeBase.relaxationSetMap();
+        Double lower = null;
+        Double upper = null;
+        for (var entry : relaxMap.entrySet()) {
+            double field = entry.getValue().field();
+            if ((field2 - field) > 1.0) {
+                if ((lower == null) || (field > lower)) {
+                    lower = field;
+                }
+            } else if ((field2 - field) < -1.0) {
+                if ((upper == null) || (field < upper)) {
+                    upper = field;
+                }
+            }
+        }
+        System.out.println("interpolate " + lower + " " + field2 + " " + upper);
+        if ((lower != null) && (upper != null)) {
+            interpolateRates(lower, field2, upper);
+        }
     }
 
     public static void interpolateRates(double field1, double field2, double field3) {
@@ -68,6 +92,9 @@ public class OrderParameterTool {
                     nValues[iType]++;
                 }
             }
+            MoleculeBase moleculeBase = MoleculeFactory.getActive();
+            var relaxMap = moleculeBase.relaxationSetMap();
+
             for (int i = 0; i < nTypes; i++) {
                 if (nValues[i] == 2 && values[i][0] != null && values[i][1] != null) {
                     double v1 = values[i][0];
@@ -87,6 +114,8 @@ public class OrderParameterTool {
                     resSource.getAtom().addRelaxationData(newSet, newData);
                     relaxationSet1.active(false);
                     relaxationSet3.active(false);
+                    relaxMap.put(id, newSet);
+
                 }
             }
         }
