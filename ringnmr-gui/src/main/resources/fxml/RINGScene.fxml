@@ -304,6 +304,8 @@
                                                                   onAction="#fitDeuteriumModel"/>
                                                         <MenuItem text="Interpolate Rates"
                                                                   onAction="#interpolateRates"/>
+                                                        <MenuItem text="Calculate Spectral Densities"
+                                                                  onAction="#calculateSpectralDensities"/>
                                                         <MenuItem text="Estimate Tau"
                                                                   onAction="#estimateCorrelationTime"
                                                                   fx:id="calcDiffusionButton"/>

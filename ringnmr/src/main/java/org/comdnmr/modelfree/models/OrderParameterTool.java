@@ -16,13 +16,14 @@ public class OrderParameterTool {
 
     }
 
-    public static void calculateOrderParameters() {
+    public static void calculateSpectralDensities() {
         var data = FitDeuteriumModel.getData(false);
         data.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(e -> {
             MolDataValues resData = e.getValue();
             Atom atom = resData.getAtom();
             String key = e.getKey();
             resData.clearJ();
+            atom.getSpectralDensity().clear();
             double[][] jValues = resData.getJValues();
             SpectralDensity spectralDensity = new SpectralDensity(key, jValues);
             atom.addSpectralDensity(key, spectralDensity);

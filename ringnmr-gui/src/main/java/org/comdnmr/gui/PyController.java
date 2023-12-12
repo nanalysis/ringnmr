@@ -3072,8 +3072,13 @@ public class PyController implements Initializable {
 
     public void interpolateRates() {
         String fieldStr = GUIUtils.input("Target Field");
-        double field = Double.valueOf(fieldStr);
-        OrderParameterTool.interpolateRates(field);
+        if (!fieldStr.isBlank()) {
+            double field = Double.valueOf(fieldStr);
+            OrderParameterTool.interpolateRates(field);
+        }
+    }
+    public void calculateSpectralDensities() {
+        OrderParameterTool.calculateSpectralDensities();
     }
 
 }
