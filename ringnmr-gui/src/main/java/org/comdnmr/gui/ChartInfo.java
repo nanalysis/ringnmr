@@ -19,7 +19,7 @@ import org.nmrfx.chemistry.relax.ValueSet;
  */
 public class ChartInfo {
 
-    String mapName;
+    List<String> mapName = new ArrayList<>();
     String state;
     String equationName;
     ResonanceSource[] currentResidues;

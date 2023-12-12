@@ -1448,7 +1448,7 @@ public class PyController implements Initializable {
         List<ParValueInterface> allParValues = new ArrayList<>();
         if (chartInfo.hasResidues() && chartInfo.hasExperiments()) {
             for (ResonanceSource resSource : chartInfo.getResidues()) {
-                ExperimentResult resInfo = ChartUtil.getResInfo(chartInfo.mapName, resSource);
+                ExperimentResult resInfo = ChartUtil.getResInfo(chartInfo.mapName.get(0), resSource);
                 if (resInfo != null) {
                     chartInfo.experimentalResult = resInfo;
                     final String useEquationName;
@@ -1465,10 +1465,12 @@ public class PyController implements Initializable {
 
                     allParValues.addAll(parValues);
                     CurveFit curveSet = chartInfo.experimentalResult.getCurveSet(useEquationName, chartInfo.state.replace("*", "0"));
-                    Double aic = curveSet.getParMap().get("AIC");
-                    Double rms = curveSet.getParMap().get("RMS");
-                    Double rChiSq = curveSet.getParMap().get("rChiSq");
-                    updateFitQuality(aic, rms, rChiSq);
+                    if (curveSet != null) {
+                        Double aic = curveSet.getParMap().get("AIC");
+                        Double rms = curveSet.getParMap().get("RMS");
+                        Double rChiSq = curveSet.getParMap().get("rChiSq");
+                        updateFitQuality(aic, rms, rChiSq);
+                    }
                 }
             }
             updateTableWithPars(allParValues);
@@ -2159,6 +2161,20 @@ public class PyController implements Initializable {
         }
     }
 
+    public void saveSpectralDensities() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Spectral Densities File");
+        File file = fileChooser.showSaveDialog(MainApp.primaryStage);
+        if (file != null) {
+            try {
+                SpectralDensity.writeToFile(file);
+            } catch (IOException e) {
+                ExceptionDialog exceptionDialog = new ExceptionDialog(e);
+                exceptionDialog.showAndWait();
+            }
+        }
+    }
+
     public void saveParametersSTAR() throws IOException, InvalidMoleculeException, ParseException, InvalidPeakException {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Save STAR File");
@@ -2428,7 +2444,7 @@ public class PyController implements Initializable {
     @FXML
     void setBestEquation() {
         for (ResonanceSource resSource : chartInfo.currentResidues) {
-            ExperimentResult resInfo = ChartUtil.getResInfo(chartInfo.mapName, resSource);
+            ExperimentResult resInfo = ChartUtil.getResInfo(chartInfo.mapName.get(0), resSource);
             if (resInfo != null) {
                 String equationName = equationChoice.getValue();
                 resInfo.setBestEquationName(equationName);
@@ -2546,8 +2562,8 @@ public class PyController implements Initializable {
         boolean calcScale = scalePlot.isSelected();
         List<ParValueInterface> parValues = null;
         String fitMode = getFittingMode();
+        int iSeries = 0;
         if (chartInfo.hasExperiments() && chartInfo.hasResidues()) {
-            int iSeries = 0;
             for (Experiment expData : ((ExperimentSet) chartInfo.getExperiments()).getExperimentData()) {
                 if (!ExperimentSet.matchStateString(chartInfo.state, expData.getState())) {
                     continue;
@@ -2556,12 +2572,12 @@ public class PyController implements Initializable {
                 for (ResonanceSource resNum : chartInfo.getResidues()) {
                     if (expData.getResidueData(resNum) != null) {
                         experimentalDataSets.add(expData.getResidueData(resNum));
-                        DataSeries series = ChartUtil.getMapData(chartInfo.mapName, expName, resNum);
+                        DataSeries series = ChartUtil.getMapData(chartInfo.mapName.get(0), expName, resNum);
                         series.setStroke(PlotData.colors[iSeries % 8]);
                         series.setFill(PlotData.colors[iSeries % 8]);
                         allData.add(series);
                         GUIPlotEquation equation = ChartUtil.getEquation(expData,
-                                chartInfo.mapName, resNum, chartInfo.equationName, expData.getState(),
+                                chartInfo.mapName.get(0), resNum, chartInfo.equationName, expData.getState(),
                                 expData.getNucleusField());
                         double maxY = 1.0;
                         if (equation != null) {
@@ -2613,7 +2629,7 @@ public class PyController implements Initializable {
                 if (orderPars != null) {
                     for (var entry : orderPars.entrySet()) {
                         var orderPar = entry.getValue();
-                        if (!entry.getKey().name().equals(chartInfo.mapName)) {
+                        if (!chartInfo.mapName.contains(entry.getKey().name())) {
                             continue;
                         }
                         String modelName = orderPar.getModel();
@@ -2636,7 +2652,10 @@ public class PyController implements Initializable {
                         updateFitQuality(aic, rms, rChiSq);
                         double[] extras = new double[1];
                         var guiPlotEquation = new GUIPlotEquation(modelName, "spectralDensity", pars, errs, extras);
+                        guiPlotEquation.setColor(PlotData.colors[iSeries % 8]);
                         equations.add(guiPlotEquation);
+                        iSeries++;
+
                     }
                 }
             }
@@ -2652,7 +2671,7 @@ public class PyController implements Initializable {
             } else {
                 updateTableWithPars(chartInfo);
             }
-            updateEquation(chartInfo.mapName, chartInfo.getResidues(), chartInfo.equationName);
+            updateEquation(chartInfo.mapName.get(0), chartInfo.getResidues(), chartInfo.equationName);
         }
         plotData.setData(allData);
         setBounds();

@@ -17,9 +17,8 @@
  */
 package org.comdnmr.gui;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Orientation;
 import javafx.scene.canvas.Canvas;
@@ -44,6 +43,7 @@ import org.nmrfx.graphicsio.GraphicsIOException;
 public class ResidueChart extends XYCanvasBarChart {
 
     static Set<ResonanceSource> selectedResidues = new HashSet<>();
+    static List<String> mapNames = new ArrayList<>();
     public String currentSeriesName = "";
     ValueSet valueSet = null;
     Set<ResonanceSource> dynSources = new HashSet<>();
@@ -147,6 +147,7 @@ public class ResidueChart extends XYCanvasBarChart {
             if (resSource != null) {
                 selectedResidues.add(resSource);
             }
+            mapNames.clear();
         } else if (!selectedResidues.contains(resSource)) {
             if (resSource != null) {
                 selectedResidues.add(resSource);
@@ -156,6 +157,7 @@ public class ResidueChart extends XYCanvasBarChart {
         currentSeriesName = seriesName;
         String[] seriesNameParts = seriesName.split("\\|");
         String mapName = seriesNameParts[0];
+        mapNames.add(mapName);
         valueSet = ChartUtil.getResidueProperty(mapName);
         dynSources = valueSet.resonanceSources();
         showInfo(seriesName);
@@ -165,6 +167,8 @@ public class ResidueChart extends XYCanvasBarChart {
     void showInfo() {
         String[] seriesNameParts = currentSeriesName.split("\\|");
         String mapName = seriesNameParts[0];
+        mapNames.clear();
+        mapNames.add(mapName);
         valueSet = ChartUtil.getResidueProperty(mapName);
         dynSources = valueSet.resonanceSources();
         showInfo(currentSeriesName);
@@ -188,7 +192,8 @@ public class ResidueChart extends XYCanvasBarChart {
         controller.chartInfo.valueSet = valueSet;
         controller.chartInfo.setResidues(resSources);
         controller.chartInfo.state = state;
-        controller.chartInfo.mapName = mapName;
+        controller.chartInfo.mapName.clear();
+        controller.chartInfo.mapName.addAll(mapNames);
         controller.chartInfo.equationName = equationName;
 
         if (valueSet instanceof ExperimentSet) {
