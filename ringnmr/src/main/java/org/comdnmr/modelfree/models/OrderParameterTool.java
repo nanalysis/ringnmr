@@ -110,7 +110,8 @@ public class OrderParameterTool {
                     RelaxationSet relaxationSet3 = rData[i][1].getRelaxationSet();
                     ResonanceSource resSource = rData[i][0].getResonanceSource();
                     String id = relaxationSet1.name() + "_interp_" + ((int) field2);
-                    RelaxationSet newSet = new RelaxationSet(id, type, field2, relaxationSet1.temperature(), Collections.emptyMap());
+                    RelaxationSet newSet = relaxMap.computeIfAbsent(id,
+                            (k) -> new RelaxationSet(id, type, field2, relaxationSet1.temperature(), Collections.emptyMap()));
                     RelaxationData newData = new RelaxationData(newSet, resSource, v2, e2);
                     resSource.getAtom().addRelaxationData(newSet, newData);
                     relaxationSet1.active(false);

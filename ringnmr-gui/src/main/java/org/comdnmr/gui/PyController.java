@@ -1283,6 +1283,7 @@ public class PyController implements Initializable {
             tau = 10.0;
         }
         DataIO.clearOrderPars();
+        DataIO.clearSpectralDensities();
         boolean fitJ = fitJCheckBox.isSelected();
         fitModel.setLambdaS(lambdaS);
         fitModel.setLambdaTau(lambdaTau);
@@ -1690,7 +1691,6 @@ public class PyController implements Initializable {
     }
 
     void makeRelaxSetMenu() {
-        System.out.println("make relax");
         relaxSetMenu.getItems().clear();
         MoleculeBase moleculeBase = MoleculeFactory.getActive();
         Set<Integer> fieldSets = new HashSet<>();
@@ -1711,7 +1711,6 @@ public class PyController implements Initializable {
 
     void activateRelaxField(int field, boolean state) {
         MoleculeBase moleculeBase = MoleculeFactory.getActive();
-        Map<Integer, List<RelaxationSet>> fieldSets = new HashMap<>();
         if (moleculeBase != null) {
             var relaxSets = moleculeBase.relaxationSetMap();
             for (var entry : relaxSets.entrySet()) {
@@ -1806,13 +1805,17 @@ public class PyController implements Initializable {
         var molResProps = DataIO.getRelaxationDataFromMolecule();
 
         List<String> chartNames = molResProps.values().stream().
+                filter(v -> !v.values().isEmpty()).
                 filter(v -> v.values().get(0) != null).
+                filter(v -> v.active()).
                 map(v -> v.relaxType().getName()).
                 collect(Collectors.toSet()).stream().sorted().collect(Collectors.toList());
 
         var chartMap = setupCharts(chartNames);
         molResProps.values().stream().
+                filter(v -> !v.values().isEmpty()).
                 filter(v -> v.values().get(0) != null).
+                filter(v -> v.active()).
                 sorted((a, b) -> {
                     double fieldA = a.field();
                     double fieldB = b.field();
@@ -1849,22 +1852,17 @@ public class PyController implements Initializable {
         var chartMap = setupCharts(chartNames);
         var usedSet = new TreeSet<String>();
         var molResProps = DataIO.getOrderParSetFromMolecule();
-        System.out.println(molResProps);
         molResProps.entrySet().stream().
                 forEach(entry -> {
                     OrderParSet v = entry.getValue();
                     String key = entry.getKey();
                     var values = v.values();
                     boolean hasNull = values.stream().anyMatch(value -> value.getValue() == null);
-                    System.out.println(key + " " + values.size());
                     if (!hasNull) {
                         var setName = v.name();
-                        System.out.println("set name " + setName);
-                        var rData = (OrderPar) v.values().get(0);
                         for (var parName : chartNames) {
                             boolean hasValue = values.stream().anyMatch(value
                                     -> (value.getValue(parName) != null) && (value.getValue(parName) > 1.0e-6));
-                            System.out.println("chart par " + parName + " " + hasValue);
                             if (hasValue) {
                                 activeChart = chartMap.get(parName);
                                 showRelaxationValues(setName, parName, parName);

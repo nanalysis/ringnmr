@@ -1540,6 +1540,15 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         }
     }
 
+    public static void clearSpectralDensities() {
+        MoleculeBase mol = MoleculeFactory.getActive();
+        if (mol != null) {
+            for (Atom atom : mol.getAtomArray()) {
+                atom.getSpectralDensity().clear();
+            }
+        }
+    }
+
     public static Map<String, RelaxationSet> getRelaxationDataFromMolecule() {
         MoleculeBase mol = MoleculeFactory.getActive();
         return mol != null ? mol.relaxationSetMap() : Collections.emptyMap();
