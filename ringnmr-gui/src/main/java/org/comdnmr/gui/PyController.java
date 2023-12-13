@@ -2693,7 +2693,7 @@ public class PyController implements Initializable {
                             iPar++;
                         }
                         double aic = orderPar.getAICC();
-                        double rms = 0.0;
+                        double rms = orderPar.getRMS();
                         double rChiSq = orderPar.getReducedChiSqr();
                         updateFitQuality(aic, rms, rChiSq);
                         double[] extras = new double[1];
