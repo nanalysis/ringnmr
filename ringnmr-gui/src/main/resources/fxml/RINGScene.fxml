@@ -159,12 +159,16 @@
                                                     <children>
                                                         <Label text="AIC: " fx:id="aicLabel1"/>
                                                         <Label text="" fx:id="aicLabel"/>
+                                                        <Pane prefWidth="10"/>
                                                         <Label text="AICC: " fx:id="aiccLabel1"/>
                                                         <Label text="" fx:id="aiccLabel"/>
+                                                        <Pane prefWidth="10"/>
                                                         <Label text="  RMS: " fx:id="rmsLabel1"/>
                                                         <Label text="" fx:id="rmsLabel"/>
+                                                        <Pane prefWidth="10"/>
                                                         <Label text="  rChiSq: " fx:id="rChiSqLabel1"/>
                                                         <Label text="" fx:id="rChiSqLabel"/>
+                                                        <Pane prefWidth="10"/>
                                                         <Label text="  N: " fx:id="nLabel1"/>
                                                         <Label text="" fx:id="nLabel"/>
                                                     </children>
