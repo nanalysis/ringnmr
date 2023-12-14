@@ -159,10 +159,14 @@
                                                     <children>
                                                         <Label text="AIC: " fx:id="aicLabel1"/>
                                                         <Label text="" fx:id="aicLabel"/>
+                                                        <Label text="AICC: " fx:id="aiccLabel1"/>
+                                                        <Label text="" fx:id="aiccLabel"/>
                                                         <Label text="  RMS: " fx:id="rmsLabel1"/>
                                                         <Label text="" fx:id="rmsLabel"/>
                                                         <Label text="  rChiSq: " fx:id="rChiSqLabel1"/>
                                                         <Label text="" fx:id="rChiSqLabel"/>
+                                                        <Label text="  N: " fx:id="nLabel1"/>
+                                                        <Label text="" fx:id="nLabel"/>
                                                     </children>
                                                 </HBox>
                                             </VBox>

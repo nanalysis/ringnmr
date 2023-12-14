@@ -130,9 +130,13 @@ public class PyController implements Initializable {
     @FXML
     Label aicLabel;
     @FXML
+    Label aiccLabel;
+    @FXML
     Label rmsLabel;
     @FXML
     Label rChiSqLabel;
+    @FXML
+    Label nLabel;
 
     @FXML
     ScrollPane chartBox;
@@ -1478,7 +1482,7 @@ public class PyController implements Initializable {
                         Double aic = curveSet.getParMap().get("AIC");
                         Double rms = curveSet.getParMap().get("RMS");
                         Double rChiSq = curveSet.getParMap().get("rChiSq");
-                        updateFitQuality(aic, rms, rChiSq);
+                        updateFitQuality(aic, null, rms, rChiSq,null);
                     }
                 }
             }
@@ -1486,14 +1490,19 @@ public class PyController implements Initializable {
         }
     }
 
-    void updateFitQuality(Double aicValue, Double rmsValue, Double rChiSqValue) {
+    void updateFitQuality(Double aicValue, Double aiccValue, Double rmsValue, Double rChiSqValue, Integer nValue) {
         try {
             String aic = aicValue != null && Double.isFinite(aicValue) ? String.format("%.2f", aicValue) : "";
+            String aicc = aiccValue != null && Double.isFinite(aiccValue) ? String.format("%.2f", aiccValue) : "";
             String rms = rmsValue != null && Double.isFinite(rmsValue) ? String.format("%.2f", rmsValue) : "";
             String rChiSq = rChiSqValue != null && Double.isFinite(rChiSqValue) ? String.format("%.2f", rChiSqValue) : "";
+            String n = nValue != null ? String.valueOf(nValue) : "";
+
             aicLabel.setText(aic);
+            aiccLabel.setText(aicc);
             rmsLabel.setText(rms);
             rChiSqLabel.setText(rChiSq);
+            nLabel.setText(n);
         } catch (NullPointerException npEaic) {
 
         }
@@ -2074,7 +2083,8 @@ public class PyController implements Initializable {
             String aic = String.format("%.2f", fitResult.getAicc());
             String rms = String.format("%.3f", fitResult.getRms());
             String rChiSq = String.format("%.2f", fitResult.getRChiSq());
-            aicLabel.setText(aic);
+            updateFitQuality(null, fitResult.getAicc(), fitResult.getRms(), fitResult.getRChiSq(), null);
+            aiccLabel.setText(aic);
             rmsLabel.setText(rms);
             rChiSqLabel.setText(rChiSq);
             updateTableWithPars(parValues);
@@ -2692,10 +2702,12 @@ public class PyController implements Initializable {
                             parValues.add(parValue);
                             iPar++;
                         }
-                        double aic = orderPar.getAICC();
-                        double rms = orderPar.getRMS();
-                        double rChiSq = orderPar.getReducedChiSqr();
-                        updateFitQuality(aic, rms, rChiSq);
+                        Double aicc = orderPar.getAICC();
+                        Double aic = orderPar.getAIC();
+                        Double rms = orderPar.getRMS();
+                        Double rChiSq = orderPar.getReducedChiSqr();
+                        Integer nValues = orderPar.getN();
+                        updateFitQuality(aic, aicc, rms, rChiSq, nValues);
                         double[] extras = new double[1];
                         var guiPlotEquation = new GUIPlotEquation(modelName, "spectralDensity", pars, errs, extras);
                         guiPlotEquation.setColor(PlotData.colors[iSeries % 8]);
