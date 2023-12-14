@@ -14,10 +14,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class FitDeuteriumModel extends FitModel {
-    Map<String, MolDataValues> molData = null;
+    Map<String, MolDataValues> molDataValuesMap = null;
+    Random random = new Random();
 
-    public void setData(Map<String, MolDataValues> molData) {
-        this.molData = molData;
+    public void setData(Map<String, MolDataValues> molDataValuesMap) {
+        this.molDataValuesMap = molDataValuesMap;
     }
 
     public static Map<String, MolDataValues> getData(boolean requireCoords) {
@@ -27,7 +28,7 @@ public class FitDeuteriumModel extends FitModel {
             for (Polymer polymer : mol.getPolymers()) {
                 for (Residue residue : polymer.getResidues()) {
                     for (Atom atom : residue.getAtoms()) {
-                        MolDataValues molData = getMolDataValues(atom);
+                        MolDataValues molData = getMolDataValues(atom, requireCoords);
                         if ((molData != null) && !molData.dataValues.isEmpty()) {
                             molDataValues.put(molData.specifier, molData);
                         }
@@ -40,18 +41,31 @@ public class FitDeuteriumModel extends FitModel {
 
     public static boolean hasDeuteriumData(Atom atom) {
         var relaxData = atom.getRelaxationData();
-        boolean hasDeuterium = relaxData.values().stream().
+        return relaxData.values().stream().
                 anyMatch(v -> v.getRelaxationSet().relaxType() == RelaxTypes.RQ);
-        return hasDeuterium;
     }
 
-    public static MolDataValues getMolDataValues(Atom atom) {
+    public static MolDataValues getMolDataValues(Atom atom, boolean requireCoords) {
         var relaxData = atom.getRelaxationData();
         boolean hasDeuterium = relaxData.values().stream().
                 anyMatch(v -> v.getRelaxationSet().relaxType() == RelaxTypes.RQ);
         MolDataValues molData = null;
         if (hasDeuterium) {
             Vector3D vec = null;
+            if (requireCoords) {
+                if (atom.getParent() != null) {
+                    var aPoint = atom.getPoint();
+                    var bPoint = atom.getParent().getPoint();
+                    if ((aPoint == null) || (bPoint == null)) {
+                        return null;
+                    } else {
+                        vec = aPoint.subtract(bPoint);
+                    }
+                } else {
+                    return null;
+                }
+            }
+
             molData = vec == null
                     ? new MolDataValues(atom)
                     : new MolDataValues(atom, vec.toArray());
@@ -83,22 +97,22 @@ public class FitDeuteriumModel extends FitModel {
                     }
                     if (Math.round(relaxationSet.field()) == field) {
                         switch (relaxationSet.relaxType()) {
-                            case R1:
+                            case R1 -> {
                                 r1 = data.getValue();
                                 r1Error = data.getError();
-                                break;
-                            case R2:
+                            }
+                            case R2 -> {
                                 r2 = data.getValue();
                                 r2Error = data.getError();
-                                break;
-                            case RQ:
+                            }
+                            case RQ -> {
                                 rQ = data.getValue();
                                 rQError = data.getError();
-                                break;
-                            case RAP:
+                            }
+                            case RAP -> {
                                 rAP = data.getValue();
                                 rAPError = data.getError();
-                                break;
+                            }
                         }
                     }
                 }
@@ -115,74 +129,34 @@ public class FitDeuteriumModel extends FitModel {
     }
 
     public Map<String, ModelFitResult> testIsoModel() {
-        if ((molData == null) || (molData.isEmpty())) {
-            molData = getData(false);
+        if ((molDataValuesMap == null) || (molDataValuesMap.isEmpty())) {
+            molDataValuesMap = getData(false);
         }
-        if (searchKey != null) {
-            if (molData.containsKey(searchKey)) {
-                var keepVal = molData.get(searchKey);
-                molData.clear();
-                molData.put(searchKey, keepVal);
-            }
+        if ((searchKey != null) && molDataValuesMap.containsKey(searchKey)) {
+            var keepVal = molDataValuesMap.get(searchKey);
+            molDataValuesMap.clear();
+            molDataValuesMap.put(searchKey, keepVal);
         }
 
-        if (!molData.isEmpty()) {
-            Map<String, ModelFitResult> results = testModels(molData, modelNames);
-            return results;
+        if (!molDataValuesMap.isEmpty()) {
+            return testModels(molDataValuesMap, modelNames);
         } else {
             throw new IllegalStateException("No relaxation data to analyze.  Need T1,T2 and NOE");
         }
     }
 
-    public void calcJ(Map<String, MolDataValues> molData) {
-        Map<String, MolDataValues> molDataRes = new TreeMap<>();
-        for (String key : molData.keySet()) {
-            molDataRes.clear();
-            MolDataValues resData = molData.get(key);
-            if (!resData.getData().isEmpty()) {
-                molDataRes.put(key, resData);
-                List<Double> rValues = new ArrayList<>();
-                List<Double> errValues = new ArrayList<>();
-                List<Double> fields = new ArrayList<>();
-                for (var value : resData.dataValues) {
-                    var dValue = (DeuteriumDataValue) value;
-                    rValues.add(dValue.R1);
-                    rValues.add(dValue.R2);
-                    rValues.add(dValue.rQ);
-                    rValues.add(dValue.rAP);
-                    errValues.add(dValue.R1err);
-                    errValues.add(dValue.R2err);
-                    errValues.add(dValue.rQError);
-                    errValues.add(dValue.rAPError);
-                    fields.add(dValue.relaxObj.getSF());
-                }
-                double[][] mappingResult = DeuteriumMapping.jointMapping(rValues, errValues, fields);
-                for (int i = 0; i < mappingResult[0].length; i++) {
-                    double field = mappingResult[0][i];
-                    double jValue = mappingResult[1][i];
-                    double errValue = mappingResult[2][i];
-                    double logJ = Math.log10(jValue);
-                    double logJUp = Math.log10(jValue + errValue);
-                    double logJLow = Math.log10(jValue - errValue);
-                }
-
-            }
-        }
-    }
-
     public Map<String, ModelFitResult> testModels(Map<String, MolDataValues> molData, List<String> modelNames) {
-        Random random = new Random();
         AtomicInteger counts = new AtomicInteger();
         int n = molData.entrySet().size();
         Map<String, ModelFitResult> results = new ConcurrentHashMap<>();
         MoleculeBase moleculeBase = MoleculeFactory.getActive();
         Map<String, OrderParSet> orderParSetMap = moleculeBase.orderParSetMap();
         for (var modelName : modelNames) {
-            OrderParSet orderParSet = orderParSetMap.computeIfAbsent("order_parameter_list_" + modelName, k -> new OrderParSet(k));
+            orderParSetMap.computeIfAbsent("order_parameter_list_" + modelName, OrderParSet::new);
         }
-        OrderParSet orderParSet = orderParSetMap.computeIfAbsent("order_parameter_list_1", k -> new OrderParSet(k));
+        orderParSetMap.computeIfAbsent("order_parameter_list_1", OrderParSet::new);
 
-        molData.entrySet().stream().sorted(Comparator.comparing(Map.Entry::getKey)).parallel().forEach(e -> {
+        molData.entrySet().stream().sorted(Map.Entry.comparingByKey()).parallel().forEach(e -> {
             updateProgress((double) counts.getAndIncrement() / n);
             if (cancelled.get()) {
                 return;
@@ -299,14 +273,12 @@ public class FitDeuteriumModel extends FitModel {
         double[][] jData = resData.getJValues();
         int nJ = jData[0].length;
 
-        DirichletSampler dirichlet = null;
-        dirichlet = DirichletSampler.symmetric(getRandomSource(), nJ, 4.0);
+        DirichletSampler dirichlet = DirichletSampler.symmetric(getRandomSource(), nJ, 4.0);
 
         double[][] replicateData = new double[maxPars][nReplicates];
         MFModelIso[] bestModels = new MFModelIso[nReplicates];
         Score[] bestScores = new Score[nReplicates];
 
-        int[] totalCounts = new int[nJ];
         for (int iRep = 0; iRep < nReplicates; iRep++) {
             if (cancelled.get()) {
                 return result;
@@ -341,9 +313,6 @@ public class FitDeuteriumModel extends FitModel {
                 }
             }
         }
-        for (int i = 0; i < totalCounts.length; i++) {
-            totalCounts[i] /= nReplicates;
-        }
         for (var molData : molDataRes.values()) {
             molData.clearBootStrapSet();
         }
@@ -358,14 +327,13 @@ public class FitDeuteriumModel extends FitModel {
             for (int i = 0; i < nReplicates; i++) {
                 rssSum += bestScores[i].rss;
             }
-            double rss = rssSum /= nReplicates;
+            double rss = rssSum / nReplicates;
             OrderParSet orderParSet = orderParSetMap.get("order_parameter_list_1");
             OrderPar orderPar = new OrderPar(orderParSet, resSource, rss, bestScores[0].nValues, parNames.length, bestModel.getName());
-            double[][] cov = new double[nJ][parNames.length];
             double[] bestPars = new double[parNames.length];
             for (int iPar = 0; iPar < parNames.length; iPar++) {
                 String parName = parNames[iPar];
-                Double parError = null;
+                double parError;
                 DescriptiveStatistics sumStat = new DescriptiveStatistics(replicateData[iPar]);
                 double parValue = useMedian ? sumStat.getPercentile(50.0) : sumStat.getMean();
                 bestPars[iPar] = parValue;
@@ -407,23 +375,22 @@ public class FitDeuteriumModel extends FitModel {
         for (int i = 0; i < nTries; i++) {
             try {
                 PointValuePair fitResult = relaxFit.fitResidueToModel(start, lower, upper);
-                if ((i == 0) || (fitResult.getValue() < best.getValue())) {
+                if ((best == null) || (fitResult.getValue() < best.getValue())) {
                     best = fitResult;
                 }
             } catch (Exception iaE) {
-                System.out.println(iaE.getMessage());
             }
             for (int j = 0; j < start.length; j++) {
                 start[j] = keepStart[j] + random.nextGaussian() * 0.1 * (upper[j] - lower[j]);
             }
         }
         if (best != null) {
-            var score = relaxFit.score(best.getPoint(), true);
-            return score;
+            return relaxFit.score(best.getPoint(), true);
         }
         return null;
     }
 
+    @Override
     double[][] replicates(Map<String, MolDataValues> molDataRes,
                           MFModelIso bestModel, double localTauFraction,
                           boolean localFitTau, double[] pars, Random random) {
@@ -448,6 +415,7 @@ public class FitDeuteriumModel extends FitModel {
         return repData;
     }
 
+    @Override
     Score fitReplicate(Map<String, MolDataValues> molDataRes, MFModelIso model,
                        double localTauFraction, boolean localFitTau, double[] pars, Random random) {
         RelaxFit relaxFit = new RelaxFit();
