@@ -150,6 +150,10 @@ public class PyController implements Initializable {
     @FXML
     Menu moleculeDataAxisMenu;
     @FXML
+    Menu groupsMenu;
+    @FXML
+    Menu orderParSetAxisMenu;
+    @FXML
     BorderPane simPane;
 
     @FXML
@@ -320,6 +324,8 @@ public class PyController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         mainController = this;
         makeAxisMenu();
+        groupsMenu.showingProperty().addListener(e -> addOrderParSetsToAxisMenu());
+
         if (getFittingMode().equals("cpmg")) {
             simControls = new CPMGControls();
             xLowerBoundTextField.setText("0.0");
@@ -868,7 +874,11 @@ public class PyController implements Initializable {
     }
 
     private void incrResidue(int delta) {
-        List<ExperimentResult> resInfo = getCurrentExperimentSet().getExperimentResults();
+        var currentSet = getCurrentExperimentSet();
+        if (currentSet == null) {
+            return;
+        }
+        List<ExperimentResult> resInfo = currentSet.getExperimentResults();
         List<ResonanceSource> resSources = new ArrayList<>();
         for (ExperimentResult experimentResult : resInfo) {
             resSources.add(experimentResult.getResonanceSource());
@@ -1780,9 +1790,27 @@ public class PyController implements Initializable {
                     cmItem1.setOnAction(e -> showRelaxationValues(setName, setName, parName));
                     cascade.getItems().add(cmItem1);
                 }
-
             }
         }
+    }
+
+    void addOrderParSetsToAxisMenu() {
+        System.out.println("add order");
+        Map<String, OrderParSet>  molResProps = DataIO.getOrderParSetFromMolecule();
+        orderParSetAxisMenu.getItems().clear();
+        for (var entry : molResProps.entrySet()) {
+            String setName = entry.getKey();
+            if (!entry.getValue().values().isEmpty()) {
+                CheckMenuItem checkMenuItem = new CheckMenuItem(setName);
+                checkMenuItem.setSelected(entry.getValue().active());
+                checkMenuItem.setOnAction(e -> activateOrderParSet(entry.getValue(), checkMenuItem.isSelected()));
+                orderParSetAxisMenu.getItems().add(checkMenuItem);
+            }
+        }
+    }
+
+    private void activateOrderParSet(OrderParSet orderParSet, boolean state) {
+        orderParSet.active(state);
     }
 
     public Map<String, ResidueChart> setupCharts(List<String> chartNames) {
@@ -1861,7 +1889,7 @@ public class PyController implements Initializable {
         var chartMap = setupCharts(chartNames);
         var usedSet = new TreeSet<String>();
         var molResProps = DataIO.getOrderParSetFromMolecule();
-        molResProps.entrySet().stream().
+        molResProps.entrySet().stream().filter(entry -> entry.getValue().active()).
                 forEach(entry -> {
                     OrderParSet v = entry.getValue();
                     String key = entry.getKey();

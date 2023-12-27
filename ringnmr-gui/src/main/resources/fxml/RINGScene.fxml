@@ -74,11 +74,12 @@
                     <MenuItem text="Clear Active Chart" onAction="#clearChart" fx:id="clearChart"/>
                     <Menu text="Add Experimental Data" fx:id="experimentalDataAxisMenu"/>
                     <Menu text="Add Molecule Data" fx:id="moleculeDataAxisMenu"/>
-                    <Menu text="Groups">
+                    <Menu text="Groups" fx:id="groupsMenu">
                         <MenuItem text="T1/T2/NOE" onAction="#showT1T2NoeData"/>
                         <MenuItem text="ModelFree Pars" onAction="#showModelFreeData"/>
                         <MenuItem text="ModelFree Pars - S2" onAction="#showModelFreeDataS2"/>
                         <MenuItem text="ModelFree Pars - Tau" onAction="#showModelFreeDataTau"/>
+                        <Menu text="Order Par Sets" fx:id="orderParSetAxisMenu"/>
                     </Menu>
                 </Menu>
                 <Menu text="Fitting">
