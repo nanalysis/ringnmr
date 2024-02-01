@@ -114,6 +114,10 @@ public class MolDataValues {
         return new double[0][0];
     }
 
+    public void setJValues(double[][] jValuesSet) {
+        jValues = new double[jValuesSet.length][jValuesSet[0].length];
+    }
+
     public double[][] getJValues() {
         if (jValues == null) {
             if (bootstrapSet != null) {
