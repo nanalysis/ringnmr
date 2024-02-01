@@ -61,14 +61,13 @@ public class Score {
         return parsOK;
     }
 
-    //Applied Mathematics Letters 74 (2017) 33–45
     public double aic() {
-        return 2 * (nPars + 1) + nValues * Math.log(rss / nValues);
+        return 2 * nPars + chiSq();
     }
 
     public double aicc() {
         int k = nPars;
-        return aic() + 2.0 * (k + 1) * (k + 2) / (nValues - k);
+        return aic() + 2.0 * k * (k + 1) / (nValues - k - 1);
     }
 
     public double chiSq() {
