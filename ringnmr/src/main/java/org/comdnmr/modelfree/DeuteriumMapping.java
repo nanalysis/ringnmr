@@ -2,13 +2,16 @@ package org.comdnmr.modelfree;
 
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 public class DeuteriumMapping {
+    static Random random = new Random();
     static double[][] elements = {
             {0.0, 1.0, 4.0},
             {3.0 / 2.0, 5.0 / 2.0, 1.0},
@@ -119,22 +122,47 @@ public class DeuteriumMapping {
             for (int j = 0; j < nCols; j++) {
                 matrix.multiplyEntry(i, j, errScale);
             }
-            rValues[i] *= errScale;
+            //rValues[i] *= errScale;
         }
 
         try {
-            OLSMultipleLinearRegression olsMultipleLinearRegression = new OLSMultipleLinearRegression();
-            olsMultipleLinearRegression.setNoIntercept(true);
-            olsMultipleLinearRegression.newSampleData(rValues, matrix.getData());
-            double[] jValues = olsMultipleLinearRegression.estimateRegressionParameters();
-            double[] errs = olsMultipleLinearRegression.estimateRegressionParametersStandardErrors();
-
+            int nReplicates = 100;
+            double[][] jValuesRep = new double[nCols][nReplicates];
+            double[][] errs = new double[nCols][nReplicates];
+            double[] jValues = new double[nCols];
+            for (int j=0;j<nReplicates;j++) {
+                double[] rTemp = new double[rValues.length];
+                if (nReplicates == 1) {
+                    for (int i = 0; i < nRows; i++) {
+                        rTemp[i] = rValues[i] / errValueList.get(i);
+                    }
+                } else {
+                    for (int i = 0; i < nRows; i++) {
+                        rTemp[i] = (rValues[i] + random.nextGaussian()  * errValueList.get(i)) / errValueList.get(i);
+                    }
+                }
+                OLSMultipleLinearRegression olsMultipleLinearRegression = new OLSMultipleLinearRegression();
+                olsMultipleLinearRegression.setNoIntercept(true);
+                olsMultipleLinearRegression.newSampleData(rTemp, matrix.getData());
+                double[] jValues1 = olsMultipleLinearRegression.estimateRegressionParameters();
+                double[] errs1 = olsMultipleLinearRegression.estimateRegressionParametersStandardErrors();
+                for (int i=0;i<jValues1.length;i++) {
+                    jValuesRep[i][j] = jValues1[i];
+                    errs[i][j] = errs1[i];
+                }
+            }
             var jErrors = new double[jValues.length];
             var fitFields = new double[jValues.length];
 
             for (int i = 0; i < jValues.length; i++) {
-                jValues[i] = jValues[i] / scale;
-                jErrors[i] = errs[i] / scale;
+                if (nReplicates == 1) {
+                    jValues[i] = jValuesRep[i][0] / scale;
+                    jErrors[i] = errs[i][0] / scale;
+                } else {
+                    DescriptiveStatistics sumStat = new DescriptiveStatistics(jValuesRep[i]);
+                    jValues[i] =  sumStat.getMean() / scale;
+                    jErrors[i] = sumStat.getStandardDeviation() / scale;
+                }
                 fitFields[i] = fieldList.get(i);
             }
             double[][] jValuesOrig = new double[3][nFreqs * 3];
