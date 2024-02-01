@@ -205,8 +205,10 @@ public class FitDeuteriumModel extends FitModel {
             Score score = tryModel(molDataRes, model, localTauFraction, localFitTau, random);
             if (score != null) {
                 OrderPar orderPar = makeOrderPar(orderParSet, resSource, score, model, model.getParNames(), score.getPars(), null);
-                atom.addOrderPar(orderParSet, orderPar);
-                if (score.aicc() < lowestAIC) {
+                if (modelNames.size() > 1) {
+                    atom.addOrderPar(orderParSet, orderPar);
+                }
+                if ((bestScore == null) || (score.aicc() < lowestAIC)) {
                     lowestAIC = score.aicc();
                     bestModel = model;
                     bestScore = score;
