@@ -1587,7 +1587,11 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 if (line == null) {
                     break;
                 }
+
                 line = line.strip();
+                if (line.startsWith("#")) {
+                    continue;
+                }
                 if (sepStr.isEmpty()) {
                     if (line.contains("\t")) {
                         sepStr = Optional.of("\t");
@@ -1595,10 +1599,6 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                         sepStr = Optional.of(",");
                     } else {
                         sepStr = Optional.of(" ");
-                    }
-                    if (line.startsWith("#")) {
-                        line = line.substring(1);
-
                     }
                     line = line.strip();
                     String[] fields = CSVRE.parseLine(sepStr.get(), line);
