@@ -17,17 +17,12 @@
  */
 package org.comdnmr.data;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import org.nmrfx.chemistry.Atom;
+import org.nmrfx.chemistry.relax.RelaxationValues;
 import org.nmrfx.chemistry.relax.ResonanceSource;
+import org.nmrfx.chemistry.relax.ValueSet;
 
 /**
  *
@@ -49,6 +44,8 @@ public class ExperimentSet implements ValueSet {
     private String bootStrapMode = "parametric";
     private String expMode = "cpmg";
 
+    private boolean active = true;
+
     public ExperimentSet(String name, String fileName) {
         this.name = name;
         this.fileName = fileName;
@@ -61,7 +58,7 @@ public class ExperimentSet implements ValueSet {
         return sBuilder.toString();
     }
 
-    public String getName() {
+    public String name() {
         return name;
     }
 
@@ -231,8 +228,23 @@ public class ExperimentSet implements ValueSet {
         resultMap.clear();
     }
 
-    public Set<ResonanceSource> getDynamicsSources() {
+    public Set<ResonanceSource> resonanceSources() {
         return resultMap.values().stream().map(v -> v.getResonanceSource()).filter(resSource -> !resSource.deleted()).collect(Collectors.toSet());
+    }
+
+    @Override
+    public List<? extends RelaxationValues> rValues() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public void active(boolean b) {
+        active = b;
+    }
+
+    @Override
+    public boolean active() {
+        return active;
     }
 
     public List<ExperimentResult> getExperimentResults() {

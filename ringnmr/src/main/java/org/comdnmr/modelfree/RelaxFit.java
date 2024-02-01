@@ -35,7 +35,7 @@ public class RelaxFit {
     double lambdaS = 0.0;
     double lambdaTau = 0.0;
     boolean useLambda = false;
-    boolean logJMode = true;
+    boolean logJMode = false;
     boolean fitJ = false;
     Map<String, MolDataValues> molDataValues;
     double[] bestPars;
@@ -364,24 +364,26 @@ public class RelaxFit {
 
     double[] calcDeltaSqJ(MolDataValues molData, double[] resPars, MFModel testModel) {
         double sumSq = 0.0;
+
         double[][] jValues = molData.getJValues();
         double[] jCalc = testModel.calc(jValues[0], resPars);
         double[] weights = jValues[jValues.length - 1];
         for (int i=0;i< jCalc.length;i++) {
+            double jErr;
             if (logJMode) {
                 double delta = Math.log10(jCalc[i]) - Math.log10(jValues[1][i]);
                 double high = jValues[1][i] + jValues[2][i];
                 double low = jValues[1][i] - jValues[2][i];
-                double jErr = Math.abs(Math.log10(high) - Math.log10(low)) / 2.0;
+                jErr = Math.abs(Math.log10(high) - Math.log10(low)) / 2.0;
                 sumSq += weights[i] * (delta * delta) / (jErr * jErr);
             } else {
                 double delta = jCalc[i] - jValues[1][i];
-                double jErr = jValues[2][i];
+                jErr = jValues[2][i];
                 sumSq += weights[i] * (delta * delta) / (jErr * jErr);
 
             }
 
-//            System.out.printf("%3d %11.5g %11.5g %11.5g %11.5g %11.5g\n", i, jValues[0][i], jCalc[i], jValues[1][i], jErr, sumSq);
+          // System.out.printf("%3d %11.5g %11.5g %11.5g %11.5g %11.5g %11.5g\n", i, jValues[0][i], jCalc[i], jValues[1][i], jErr, weights[i], sumSq);
         }
         double complexityS = testModel.getComplexityS();
         double complexityTau = testModel.getComplexityTau();

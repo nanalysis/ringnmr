@@ -5,6 +5,15 @@
  */
 package org.comdnmr.modelfree;
 
+import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
+import org.apache.commons.math3.optim.PointValuePair;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.apache.commons.rng.sampling.distribution.DirichletSampler;
+import org.comdnmr.modelfree.models.MFModelIso;
+import org.comdnmr.modelfree.models.MFModelIso2sf;
+import org.nmrfx.chemistry.*;
+import org.nmrfx.chemistry.relax.*;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -12,21 +21,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
-import org.apache.commons.math3.optim.PointValuePair;
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.apache.commons.rng.UniformRandomProvider;
-import org.apache.commons.rng.simple.RandomSource;
-import org.apache.commons.rng.sampling.distribution.DirichletSampler;
-import org.comdnmr.modelfree.models.MFModelIso;
-import org.comdnmr.modelfree.models.MFModelIso2sf;
-import org.nmrfx.chemistry.Atom;
-import org.nmrfx.chemistry.MoleculeBase;
-import org.nmrfx.chemistry.MoleculeFactory;
-import org.nmrfx.chemistry.Polymer;
-import org.nmrfx.chemistry.relax.*;
-import org.nmrfx.chemistry.Residue;
 
 /**
  * @author brucejohnson
@@ -72,7 +66,10 @@ public class FitR1R2NOEModel extends FitModel {
                         Set<Long> fields = new HashSet<>();
                         for (var entry : relaxData.entrySet()) {
                             RelaxationData data = entry.getValue();
-                            fields.add(Math.round(data.getField()));
+                            RelaxationSet relaxationSet = entry.getKey();
+                            if (relaxationSet.active()) {
+                                fields.add(Math.round(relaxationSet.field()));
+                            }
                         }
                         for (var field : fields) {
                             Double r1 = null;
@@ -89,8 +86,12 @@ public class FitR1R2NOEModel extends FitModel {
                                 if (data.getResonanceSource().deleted()) {
                                     break;
                                 }
-                                if (Math.round(data.getField()) == field) {
-                                    switch (data.getExpType()) {
+                                RelaxationSet relaxationSet = entry.getKey();
+                                if (!relaxationSet.active()) {
+                                    continue;
+                                }
+                                if (Math.round(entry.getKey().field()) == field) {
+                                    switch (entry.getKey().relaxType()) {
                                         case R1 -> {
                                             r1 = data.getValue();
                                             r1Error = data.getError();
@@ -147,17 +148,6 @@ public class FitR1R2NOEModel extends FitModel {
         }
     }
 
-    public Optional<ModelFitResult> testIsoModelResidue(String searchKey, List<String> modelNames) {
-        Random random = new Random();
-        Map<String, MolDataValues> molData = getData(false);
-        MolDataValues molDataValue = molData.get(searchKey);
-        if (bootstrapMode != BootstrapMode.PARAMETRIC) {
-            return testModelsWithBootstrapAggregation(molDataValue, searchKey, modelNames, random);
-        } else {
-            return testModels(molDataValue, searchKey, modelNames, random);
-        }
-    }
-
     public Map<String, Double> estimateTau() {
         Map<String, MolDataValues> molData = getData(false);
         return estimateTau(molData);
@@ -189,36 +179,6 @@ public class FitR1R2NOEModel extends FitModel {
         }
     }
 
-    public void testIsoModel(MFModelIso model, Map<String, MolDataValues> molData, String matchSpec) {
-        Random random = new Random();
-        Map<String, MolDataValues> molDataRes = new TreeMap<>();
-        tau = estimateTau(molData).get("tau");
-        Map<String, String> extras = new HashMap<>();
-        MoleculeBase mol = MoleculeFactory.getActive();
-
-        for (String key : molData.keySet()) {
-            if ((matchSpec != null) && !key.equals(matchSpec)) {
-                continue;
-            }
-            molDataRes.clear();
-            MolDataValues resData = molData.get(key);
-            if (!resData.getData().isEmpty()) {
-                resData.setTestModel(model);
-                molDataRes.put(key, molData.get(key));
-                Score score = tryModel(molDataRes, model, tauFraction, fitTau, random);
-                double[] pars = score.getPars();
-                double orderPar = pars[0];
-                double rexValue = pars[1];
-                ResonanceSource resSource = new ResonanceSource(resData.atom);
-                RelaxationRex relaxData = new RelaxationRex("order", RelaxationData.relaxTypes.S2,
-                        resSource, 700.0, 298, orderPar, 0.0,
-                        rexValue, 0.0, extras);
-                Atom atom = mol.findAtom(key);
-                atom.addRelaxationData("order", relaxData);
-            }
-        }
-    }
-
     public  Map<String, ModelFitResult> testModels(Map<String, MolDataValues> molData, List<String> modelNames) {
         Random random = new Random();
         if (tau == null) {
@@ -227,6 +187,13 @@ public class FitR1R2NOEModel extends FitModel {
         AtomicInteger counts = new AtomicInteger();
         int n = molData.entrySet().size();
         Map<String, ModelFitResult> results = new HashMap<>();
+        MoleculeBase moleculeBase = MoleculeFactory.getActive();
+        Map<String, OrderParSet> orderParSetMap = moleculeBase.orderParSetMap();
+        for (var modelName : modelNames) {
+            OrderParSet orderParSet = orderParSetMap.computeIfAbsent("order_parameter_list_" + modelName, k -> new OrderParSet(k));
+        }
+        OrderParSet orderParSet = orderParSetMap.computeIfAbsent("order_parameter_list_1", k -> new OrderParSet(k));
+
         molData.entrySet().stream().sorted(Comparator.comparing(Map.Entry::getKey)).parallel().forEach(e -> {
             updateProgress((double) counts.get() / n);
             if (cancelled.get()) {
@@ -236,10 +203,10 @@ public class FitR1R2NOEModel extends FitModel {
             String key = e.getKey();
             if (!resData.getData().isEmpty()) {
                 if (bootstrapMode != BootstrapMode.PARAMETRIC) {
-                    Optional<ModelFitResult> result = testModelsWithBootstrapAggregation(resData, key, modelNames, random);
+                    Optional<ModelFitResult> result = testModelsWithBootstrapAggregation(orderParSetMap, resData, key, modelNames, random);
                     result.ifPresent(o -> results.put(key, o));
                 } else {
-                    Optional<ModelFitResult> result = testModels(resData, key, modelNames, random);
+                    Optional<ModelFitResult> result = testModels(orderParSetMap, resData, key, modelNames, random);
                     result.ifPresent(o -> results.put(key, o));
                 }
             }
@@ -248,14 +215,14 @@ public class FitR1R2NOEModel extends FitModel {
         return results;
     }
 
-    private OrderPar makeOrderPar(MolDataValues resData, Map<String, MolDataValues> molDataRes, String key,
+    private OrderPar makeOrderPar(OrderParSet orderParSet, MolDataValues resData, Map<String, MolDataValues> molDataRes, String key,
                                   Score bestScore, MFModelIso bestModel, double[][] repData) {
         ResonanceSource resSource = new ResonanceSource(resData.atom);
         Atom atom = resData.atom;
         var parNames = bestModel.getParNames();
         double[] pars = bestScore.getPars();
 
-        OrderPar orderPar = new OrderPar(resSource, bestScore.rss, bestScore.nValues, bestScore.nPars, bestModel.getName());
+        OrderPar orderPar = new OrderPar(orderParSet, resSource, bestScore.rss, bestScore.nValues, bestScore.nPars, bestModel.getName());
         for (int iPar = 0; iPar < parNames.size(); iPar++) {
             String parName = parNames.get(iPar);
             double parValue = pars[iPar];
@@ -274,7 +241,7 @@ public class FitR1R2NOEModel extends FitModel {
         if ((bestModel instanceof MFModelIso2sf) && useLambda()) {
             orderPar = orderPar.setModel();
         }
-        atom.addOrderPar("order", orderPar);
+        atom.addOrderPar(orderParSet, orderPar);
         double[][] jValues = resData.getJValues();
         SpectralDensity spectralDensity = new SpectralDensity(key, jValues);
         atom.addSpectralDensity(key, spectralDensity);
@@ -282,7 +249,7 @@ public class FitR1R2NOEModel extends FitModel {
 
     }
 
-    public Optional<ModelFitResult> testModels(MolDataValues resData, String key, List<String> modelNames, Random random) {
+    public Optional<ModelFitResult> testModels(Map<String, OrderParSet> orderParSetMap, MolDataValues resData, String key, List<String> modelNames, Random random) {
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
         molDataRes.put(key, resData);
 
@@ -291,9 +258,9 @@ public class FitR1R2NOEModel extends FitModel {
         double lowestAIC = Double.MAX_VALUE;
         boolean localFitTau;
         double localTauFraction;
-        if (overT2Limit(molDataRes, t2Limit)) {
+        if (fitTau(molDataRes)) {
+            localFitTau = true;
             localTauFraction = tauFraction;
-            localFitTau = fitTau;
         } else {
             localTauFraction = 0.0;
             localFitTau = false;
@@ -303,14 +270,15 @@ public class FitR1R2NOEModel extends FitModel {
                     localFitTau, tau, localTauFraction, fitExchange);
             resData.setTestModel(model);
             Score score = tryModel(molDataRes, model, localTauFraction, localFitTau, random);
+            OrderParSet orderParSet = orderParSetMap.get("order_parameter_list_"+ modelName);
             double[][] repData = null;
             if (nReplicates > 2) {
                 double[] pars = score.getPars();
                 repData = replicates(molDataRes, model, localTauFraction, localFitTau, pars, random);
-                OrderPar orderPar = makeOrderPar(resData, molDataRes, key, score, model, repData);
+                OrderPar orderPar = makeOrderPar(orderParSet, resData, molDataRes, key, score, model, repData);
             }
             if (score.aicc() < lowestAIC) {
-                lowestAIC = score.aic();
+                lowestAIC = score.aicc();
                 bestModel = model;
                 bestScore = score;
             }
@@ -324,23 +292,24 @@ public class FitR1R2NOEModel extends FitModel {
             if (nReplicates > 2) {
                 replicateData = replicates(molDataRes, bestModel, localTauFraction, localFitTau, pars, random);
             }
-            OrderPar orderPar = makeOrderPar(resData, molDataRes, key, bestScore, bestModel, replicateData);
+            OrderParSet orderParSet = orderParSetMap.get("order_parameter_list_1");
+            OrderPar orderPar = makeOrderPar(orderParSet, resData, molDataRes, key, bestScore, bestModel, replicateData);
             ModelFitResult modelFitResult = new ModelFitResult(orderPar, replicateData, null);
             result = Optional.of(modelFitResult);
         }
         return result;
     }
 
-    public Optional<ModelFitResult> testModelsWithBootstrapAggregation(MolDataValues resData, String key, List<String> modelNames, Random random) {
+    public Optional<ModelFitResult> testModelsWithBootstrapAggregation(Map<String, OrderParSet> orderParSetMap, MolDataValues resData, String key, List<String> modelNames, Random random) {
         Optional<ModelFitResult> result = Optional.empty();
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
         molDataRes.put(key, resData);
 
         boolean localFitTau;
         double localTauFraction;
-        if (overT2Limit(molDataRes, t2Limit)) {
+        if (fitTau(molDataRes)) {
+            localFitTau = true;
             localTauFraction = tauFraction;
-            localFitTau = fitTau;
         } else {
             localTauFraction = 0.0;
             localFitTau = false;
@@ -426,7 +395,8 @@ public class FitR1R2NOEModel extends FitModel {
                 rssSum += bestScores[i].rss;
             }
             double rss = rssSum /= nReplicates;
-            OrderPar orderPar = new OrderPar(resSource, rss, bestScores[0].nValues, parNames.length, bestModel.getName());
+            OrderParSet orderParSet = orderParSetMap.get("order_parameter_list_1");
+            OrderPar orderPar = new OrderPar(orderParSet, resSource, rss, bestScores[0].nValues, parNames.length, bestModel.getName());
             double[][] cov = new double[nJ][parNames.length];
             double[] bestPars = new double[parNames.length];
             for (int iPar = 0; iPar < parNames.length; iPar++) {
@@ -456,7 +426,7 @@ public class FitR1R2NOEModel extends FitModel {
             }
             orderPar = orderPar.set("model", (double) bestModel.getNumber(), null);
             Atom atom = resData.atom;
-            atom.addOrderPar("order", orderPar);
+            atom.addOrderPar(orderParSet, orderPar);
             double[][] jValues = resData.getJValues();
             SpectralDensity spectralDensity = new SpectralDensity(key, jValues);
             atom.addSpectralDensity(key, spectralDensity);
@@ -497,43 +467,6 @@ public class FitR1R2NOEModel extends FitModel {
             rssSum += scoreModel(molDataRes, pars2);
         }
         return rssSum / nReplicates;
-    }
-
-    public void testModel(Map<String, MolDataValues> molData, MFModelIso model) {
-        Map<String, MolDataValues> molDataRes = new TreeMap<>();
-        Random random = new Random();
-
-        for (String key : molData.keySet()) {
-            molDataRes.clear();
-            MolDataValues resData = molData.get(key);
-
-            if (!resData.getData().isEmpty()) {
-                resData.setTestModel(model);
-                molDataRes.put(key, molData.get(key));
-                Score score = tryModel(molDataRes, model, tauFraction, fitTau, random);
-                Atom atom = resData.atom;
-                double[] pars = score.getPars();
-                var parNames = model.getParNames();
-                ResonanceSource resSource = new ResonanceSource(resData.atom);
-
-                OrderPar orderPar = new OrderPar(resSource, score.rss, score.getN(), score.nPars, "model1");
-                for (int iPar = 0; iPar < parNames.size(); iPar++) {
-                    String parName = parNames.get(iPar);
-                    double parValue = pars[iPar];
-                    Double parError = null;
-                    orderPar = orderPar.set(parName, parValue, parError);
-                }
-                if (!fitTau) {
-                    orderPar = orderPar.set("Tau_e", tau, 0.0);
-                }
-                orderPar = orderPar.setModel();
-                atom.addOrderPar("order", orderPar);
-            }
-        }
-    }
-
-    boolean overT2Limit(Map<String, MolDataValues> molDataRes, double limit) {
-        return molDataRes.values().stream().anyMatch(v -> v.getData().stream().anyMatch(d -> d.R2 > limit));
     }
 
     Score tryModel(Map<String, MolDataValues> molDataRes, MFModelIso model, double localTauFraction, boolean localFitTau, Random random) {

@@ -6,10 +6,9 @@ import org.comdnmr.modelfree.models.MFModelIso1f;
 import org.comdnmr.modelfree.models.MFModelIso2f;
 import org.junit.Assert;
 import org.junit.Test;
+import org.nmrfx.chemistry.relax.OrderParSet;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class DeuteriumMappingTest {
     List<Double> fields = List.of(4.0E8, 5.0E8, 8.0E8, 9.0E8);
@@ -20,6 +19,14 @@ public class DeuteriumMappingTest {
             16.76840591, 0.207212294, 101.560506, 1.471771902, 13.32686669, 0.216933607, 90.1311929, 1.364259199,
             15.95096119, 0.236173794, 97.48258269, 0.666038741, 12.37328619, 0.311354286, 90.2230769, 1.396329853);
 
+    double[] jData = {0.14396154155955634, 0.0006369051034284281, 0.030580975942659305, 0.00031961342375130396,
+            0.023676600340742603, 0.00016091162757866681, 0.018672390133456666, 0.00021005282134957805,
+            0.025060175449248538, 0.00018443421375098252, 0.020363657310099783, 0.00010146672845124038
+    };
+
+    double[] jDataR = {0.14352, 0.00244, 0.02362, 0.00053, 0.01869, 0.00067, 0.03053, 0.00106, 0.02509, 0.00083, 0.02036, 0.00044};
+    double[] jFreq = {0.0, 72.9, 145.8, 291.6, 107.5, 215.0};
+    double[] jFreqR = {0.00000,0.91625,1.83251,0.45813,0.67513,1.35027};
     @Test
     public void testDeuteriumFit1Field() {
         List<Double> rValues = new ArrayList<>();
@@ -87,7 +94,7 @@ public class DeuteriumMappingTest {
         double rQ = rlxEq.RQ_D(jValues);
         double rAP = rlxEq.Rap_D(jValues);
         List<Double> rValues = List.of(r1, r2, rQ, rAP);
-        List<Double> rValuesErrs = List.of(r1*0.04, r2*0.03, rQ*0.05, rAP*0.02);
+        List<Double> rValuesErrs = List.of(r1 * 0.04, r2 * 0.03, rQ * 0.05, rAP * 0.02);
 
         var fields = List.of(rlxEq.getW()[1]);
         var jValuesCalc = DeuteriumMapping.jointMapping(rValues, rValuesErrs, fields);
@@ -106,12 +113,13 @@ public class DeuteriumMappingTest {
         double rQ = rlxEq.RQ_D(jValues);
         double rAP = rlxEq.Rap_D(jValues);
         List<Double> rValues = List.of(r1, r2, rQ, rAP);
-        List<Double> rValuesErrs = List.of(r1*0.04, r2*0.03, rQ*0.05, rAP*0.02);
+        List<Double> rValuesErrs = List.of(r1 * 0.04, r2 * 0.03, rQ * 0.05, rAP * 0.02);
 
         var fields = List.of(rlxEq.getW()[1]);
         var jValuesCalc = DeuteriumMapping.jointMapping(rValues, rValuesErrs, fields);
         Assert.assertArrayEquals(jValues, jValuesCalc[1], 1.0e-12);
     }
+
     @Test
     public void testModel1fFit() {
         DynamicsSource dynamicsSourceFactory = new DynamicsSource(true, true, true, true);
@@ -119,17 +127,22 @@ public class DeuteriumMappingTest {
         List<Double> rValues = new ArrayList<>();
         List<Double> rValueErrs = new ArrayList<>();
         double[] v = {0.0, 1.0, 2.0};
-        MolDataValues resData = new MolDataValues("3.CB",v, dynamicsSourceFactory);
+        MolDataValues resData = new MolDataValues("3.CB", v, dynamicsSourceFactory);
+        Map<String, OrderParSet> orderParSetMap = new HashMap<>();
+
+        OrderParSet orderParSet1 = orderParSetMap.computeIfAbsent("order_parameter_list_1", k -> new OrderParSet(k));
+        OrderParSet orderParSet = orderParSetMap.computeIfAbsent("order_parameter_list_D1f", k -> new OrderParSet(k));
+
         for (int i = 0; i < rValuesWithErrs.size(); i += 8) {
             double r1 = rValuesWithErrs.get(i);
-            double r1Error = rValuesWithErrs.get(i+1);
-            double r2 = rValuesWithErrs.get(i+2);
-            double r2Error = rValuesWithErrs.get(i+3);
-            double rQ = rValuesWithErrs.get(i+4);
-            double rQError = rValuesWithErrs.get(i+5);
-            double rAP = rValuesWithErrs.get(i+6);
-            double rAPError = rValuesWithErrs.get(i+7);
-            RelaxEquations relaxObj = RelaxEquations.getRelaxEquations(fields.get(i/8), "D", "C");
+            double r1Error = rValuesWithErrs.get(i + 1);
+            double r2 = rValuesWithErrs.get(i + 2);
+            double r2Error = rValuesWithErrs.get(i + 3);
+            double rQ = rValuesWithErrs.get(i + 4);
+            double rQError = rValuesWithErrs.get(i + 5);
+            double rAP = rValuesWithErrs.get(i + 6);
+            double rAPError = rValuesWithErrs.get(i + 7);
+            RelaxEquations relaxObj = RelaxEquations.getRelaxEquations(fields.get(i / 8), "D", "C");
 
 
             rValues.add(rValuesWithErrs.get(i));
@@ -146,7 +159,56 @@ public class DeuteriumMappingTest {
         fitModel.setFitJ(true);
         Random random = new Random();
         var modelNames = List.of("D1f");
-        var result = fitModel.testModels(resData, "tst", modelNames, random);
+        var result = fitModel.testModels(orderParSetMap, resData, "tst", modelNames, random);
+        double[][] jValues = resData.getJValues();
+        for (int i=0;i<jValues.length;i++) {
+            for (int j=0;j < jValues[i].length;j++) {
+                System.out.println(" " + jValues[i][j]);
+            }
+            System.out.println();
+        }
+        Assert.assertTrue(result.isPresent());
+        Assert.assertEquals(0.0, result.get().orderPar().getReducedChiSqr(), 3.0);
+    }
+
+    @Test
+    public void testModel1fFitJ() {
+        DynamicsSource dynamicsSourceFactory = new DynamicsSource(true, true, true, true);
+
+        List<Double> rValues = new ArrayList<>();
+        List<Double> rValueErrs = new ArrayList<>();
+        double[] v = {0.0, 1.0, 2.0};
+        MolDataValues resData = new MolDataValues("3.CB", v, dynamicsSourceFactory);
+        Map<String, OrderParSet> orderParSetMap = new HashMap<>();
+
+        OrderParSet orderParSet1 = orderParSetMap.computeIfAbsent("order_parameter_list_1", k -> new OrderParSet(k));
+        OrderParSet orderParSet1sf = orderParSetMap.computeIfAbsent("order_parameter_list_D1sf", k -> new OrderParSet(k));
+        OrderParSet orderParSet1f = orderParSetMap.computeIfAbsent("order_parameter_list_D1f", k -> new OrderParSet(k));
+        int nJ = jData.length / 2;
+        double[][] jValues = new double[4][nJ];
+        double scale = 1.83251 /291.6;
+        scale = 1.0;
+
+        for (int j = 0; j < nJ; j++) {
+            jValues[0][j] = jFreqR[j] * scale * 1.0e9;
+            jValues[1][j] = jDataR[j * 2] * 1.0e-9;
+            jValues[2][j] = jDataR[j * 2 + 1] * 1.0e-9 * 0.25;
+            jValues[3][j] = 1.0; // weights
+        }
+
+        resData.setJValues(jValues);
+
+
+        FitDeuteriumModel fitModel = new FitDeuteriumModel();
+        fitModel.setTau(7.0);
+        fitModel.setFitTau(true);
+        fitModel.setTauFraction(0.5);
+        fitModel.setNReplicates(0);
+        fitModel.setFitJ(true);
+        Random random = new Random();
+        var modelNames = List.of("D1f");
+        var result = fitModel.testModels(orderParSetMap, resData, "tst", modelNames, random);
+        System.out.println("order " + result.get().orderPar());
         Assert.assertTrue(result.isPresent());
         Assert.assertEquals(0.0, result.get().orderPar().getReducedChiSqr(), 3.0);
     }

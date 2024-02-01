@@ -1,389 +1,308 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.net.*?>
-<?import javafx.collections.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.image.*?>
-<?import org.comdnmr.gui.*?>
-<?import org.controlsfx.control.*?>
-<?import org.nmrfx.chart.XYChartPane?>
-
 
 <?language python?>
 
-<BorderPane fx:id="mainBox" styleClass="mainFxmlClass"
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import org.comdnmr.gui.XYPlotDataPane?>
+<?import org.controlsfx.control.StatusBar?>
+<BorderPane styleClass="mainFxmlClass"
             xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
             prefWidth="850" prefHeight="700"
             fx:controller="org.comdnmr.gui.PyController">
     <fx:script source="actions.py"/>
     <top>
         <HBox>
-            <children>
-                <MenuBar>
-                    <Menu text="File">
-                        <items>
-                            <Menu text="Load">
-                                <items>
-                                    <MenuItem text="Project File..." onAction="#loadParameterFile"
-                                              fx:id="loadMenuItem"/>
-                                    <MenuItem text="Setup Parameters..." onAction="#inputParameters"
-                                              fx:id="inputMenuItem"/>
-                                    <MenuItem text="Load from peak lists..." onAction="#loadFromPeakLists"/>
-                                    <MenuItem text="Relaxation Table..." onAction="#loadRelaxValues"/>
-                                    <MenuItem text="Secondary Structure..." onAction="#loadSecondaryStructure"
-                                              fx:id="loadSSMenuItem"/>
-                                    <MenuItem text="XY Chart  Data..." onAction="#loadSimData"/>
-                                    <Menu text="Molecule File...">
-                                        <items>
-                                            <MenuItem text="PDB File" onAction="#loadPDBFile" fx:id="loadPDBMenuItem"/>
-                                            <MenuItem text="STAR3 File" onAction="#loadSTARFile"
-                                                      fx:id="loadSTARMenuItem"/>
-                                            <MenuItem text="NEF File" onAction="#loadNEFFile" fx:id="loadNEFMenuItem"/>
-                                            <MenuItem text="mmCIF File" onAction="#loadCIFFile"
-                                                      fx:id="loadCIFMenuItem"/>
-                                        </items>
-                                    </Menu>
-                                </items>
-                            </Menu>
-                            <Menu text="Save">
-                                <items>
-                                    <MenuItem text="Save Analysis..." onAction="#saveParameters" fx:id="savePars"/>
-                                    <MenuItem text="Save R1/R2/NOE..." onAction="#saveR1R2NOE" fx:id="saveR1R2NOE"/>
-                                    <MenuItem text="Save Model Free..." onAction="#saveOrderParameters"
-                                              fx:id="saveModelFree"/>
-                                </items>
-                            </Menu>
+            <MenuBar>
+                <Menu text="File">
+                    <Menu text="Load">
+                        <MenuItem text="Project File..." onAction="#loadParameterFile"/>
+                        <MenuItem text="Setup Parameters..." onAction="#inputParameters"/>
+                        <MenuItem text="Load from peak lists..." onAction="#loadFromPeakLists"/>
+                        <MenuItem text="Relaxation Table..." onAction="#loadRelaxValues"/>
+                        <MenuItem text="Secondary Structure..." onAction="#loadSecondaryStructure"/>
+                        <MenuItem text="XY Chart  Data..." onAction="#loadSimData"/>
+                        <Menu text="Molecule File...">
+                            <MenuItem text="PDB File" onAction="#loadPDBFile"/>
+                            <MenuItem text="STAR3 File" onAction="#loadSTARFile"/>
+                            <MenuItem text="NEF File" onAction="#loadNEFFile"/>
+                            <MenuItem text="mmCIF File" onAction="#loadCIFFile"/>
+                        </Menu>
+                    </Menu>
+                    <Menu text="Save">
+                        <MenuItem text="Save Analysis..." onAction="#saveParameters"/>
+                        <MenuItem text="Save R1/R2/NOE..." onAction="#saveR1R2NOE" fx:id="saveR1R2NOE"/>
+                        <MenuItem text="Save Model Free..." onAction="#saveOrderParameters"/>
+                        <MenuItem text="Save Spectral Densities..." onAction="#saveSpectralDensities"
+                                  fx:id="saveSpectralDensities"/>
+                    </Menu>
 
-                            <Menu text="Prep/Save STAR3 File...">
-                                <items>
-                                    <MenuItem text="Add Results to Mol" onAction="#addRelaxResultsToMol"/>
-                                    <MenuItem text="Save STAR3 File..." onAction="#saveParametersSTAR"/>
-                                </items>
-                            </Menu>
-                            <Menu text="Export Graphics">
-                                <items>
-                                    <MenuItem text="XY to SVG..." onAction="#exportSVGAction"/>
-                                    <MenuItem text="XY to PNG..." onAction="#saveXYChart" fx:id="saveXYChartButton"/>
-                                    <MenuItem text="Residue to SVG..." onAction="#exportBarPlotSVGAction"/>
-                                    <MenuItem text="Residue to PNG..." onAction="#saveBarChart"
-                                              fx:id="saveBarChartButton"/>
-                                </items>
-                            </Menu>
-                            <Menu text="Save Interactive Charts...">
-                                <items>
-                                    <MenuItem text="XY to Grace..." onAction="#saveGraceFile" fx:id="saveGraceButton"/>
-                                    <MenuItem text="XY To Python..." onAction="#savePythonFile"
-                                              fx:id="savePythonButton"/>
-                                    <MenuItem text="XY To R..." onAction="#saveRFile" fx:id="saveRButton"/>
-                                    <MenuItem text="Residue To Python..." onAction="#saveBarToPythonFile"/>
-                                    <MenuItem text="Residue To R..." onAction="#saveBarToRFile"/>
-                                </items>
-                            </Menu>
-                            <MenuItem text="Connect to NMRFx Server..." onAction="#startServer" fx:id="serverMenuItem"/>
-                            <MenuItem text="Preferences..." onAction="#showPreferences"/>
-                            <MenuItem text="Show Console" onAction="#showConsole"/>
-                            <MenuItem text="Clear Secondary Structure..." onAction="#clearSecondaryStructure"
-                                      fx:id="clearSSMenuItem"/>
-                            <MenuItem text="Clear Project" onAction="#clearProject"/>
-                            <MenuItem text="Clear Molecule Order Pars" onAction="#clearOrderPars"/>
-                            <MenuItem text="Clear Molecule T1/T2/NOE Pars" onAction="#clearRelaxPars"/>
-                            <MenuItem text="Exit" onAction="#exitProgram"/>
+                    <Menu text="Prep/Save STAR3 File...">
+                        <MenuItem text="Add Results to Mol" onAction="#addRelaxResultsToMol"/>
+                        <MenuItem text="Save STAR3 File..." onAction="#saveParametersSTAR"/>
+                    </Menu>
+                    <Menu text="Export Graphics">
+                        <MenuItem text="XY to SVG..." onAction="#exportSVGAction"/>
+                        <MenuItem text="XY to PNG..." onAction="#saveXYChart"/>
+                        <MenuItem text="Residue to SVG..." onAction="#exportBarPlotSVGAction"/>
+                        <MenuItem text="Residue to PNG..." onAction="#saveBarChart"/>
+                    </Menu>
+                    <Menu text="Save Interactive Charts...">
+                        <MenuItem text="XY to Grace..." onAction="#saveGraceFile"/>
+                        <MenuItem text="XY To Python..." onAction="#savePythonFile"/>
+                        <MenuItem text="XY To R..." onAction="#saveRFile"/>
+                        <MenuItem text="Residue To Python..." onAction="#saveBarToPythonFile"/>
+                        <MenuItem text="Residue To R..." onAction="#saveBarToRFile"/>
+                    </Menu>
+                    <MenuItem text="Connect to NMRFx Server..." onAction="#startServer"/>
+                    <MenuItem text="Preferences..." onAction="#showPreferences"/>
+                    <MenuItem text="Show Console" onAction="#showConsole"/>
+                    <MenuItem text="Clear Secondary Structure..." onAction="#clearSecondaryStructure"/>
+                    <MenuItem text="Clear Project" onAction="#clearProject"/>
+                    <MenuItem text="Clear Molecule Order Pars" onAction="#clearOrderPars"/>
+                    <MenuItem text="Clear Molecule T1/T2/NOE Pars" onAction="#clearRelaxPars"/>
+                    <MenuItem text="Exit" onAction="#exitProgram"/>
 
-                        </items>
+                </Menu>
+                <Menu text="Chart" fx:id="chartMenu">
+                    <MenuItem text="New Chart" onAction="#addChart" fx:id="addChart"/>
+                    <MenuItem text="Remove Active Chart" onAction="#removeChart" fx:id="removeChart"/>
+                    <MenuItem text="Clear Active Chart" onAction="#clearChart" fx:id="clearChart"/>
+                    <Menu text="Add Experimental Data" fx:id="experimentalDataAxisMenu"/>
+                    <Menu text="Add Molecule Data" fx:id="moleculeDataAxisMenu"/>
+                    <Menu text="Groups" fx:id="groupsMenu">
+                        <MenuItem text="T1/T2/NOE" onAction="#showT1T2NoeData"/>
+                        <MenuItem text="ModelFree Pars" onAction="#showModelFreeData"/>
+                        <MenuItem text="ModelFree Pars - S2" onAction="#showModelFreeDataS2"/>
+                        <MenuItem text="ModelFree Pars - Tau" onAction="#showModelFreeDataTau"/>
+                        <Menu text="Order Par Sets" fx:id="orderParSetAxisMenu"/>
                     </Menu>
-                    <Menu text="Chart" fx:id="chartMenu">
-                        <items>
-                            <MenuItem text="New Chart" onAction="#addChart" fx:id="addChart"/>
-                            <MenuItem text="Remove Active Chart" onAction="#removeChart" fx:id="removeChart"/>
-                            <MenuItem text="Clear Active Chart" onAction="#clearChart" fx:id="clearChart"/>
-                            <Menu text="Add Experimental Data" fx:id="experimentalDataAxisMenu"/>
-                            <Menu text="Add Molecule Data" fx:id="moleculeDataAxisMenu"/>
-                            <Menu text="Groups">
-                                <items>
-                                    <MenuItem text="T1/T2/NOE" onAction="#showT1T2NoeData"/>
-                                    <MenuItem text="ModelFree Pars" onAction="#showModelFreeData"/>
-                                    <MenuItem text="ModelFree Pars - S2" onAction="#showModelFreeDataS2"/>
-                                    <MenuItem text="ModelFree Pars - Tau" onAction="#showModelFreeDataTau"/>
-                                </items>
-                            </Menu>
-                        </items>
-                    </Menu>
-                    <Menu text="Fitting">
-                        <items>
-                            <MenuItem text="Fit All" onAction="#fitResidues" fx:id="FitResidues"/>
-                            <MenuItem text="Fit Selected" onAction="#fitGroupResidues" fx:id="FitGroupResidues"/>
-                            <MenuItem text="Halt" onAction="#haltFit" fx:id="haltProcessButton"/>
-                            <MenuItem text="Monte Carlo Plot" onAction="#showMCplot" fx:id="MCPlot"/>
-                        </items>
-                    </Menu>
-                </MenuBar>
-            </children>
+                </Menu>
+                <Menu text="Fitting">
+                    <MenuItem text="Fit All" onAction="#fitResidues"/>
+                    <MenuItem text="Fit Selected" onAction="#fitGroupResidues"/>
+                    <MenuItem text="Halt" onAction="#haltFit"/>
+                    <MenuItem text="Monte Carlo Plot" onAction="#showMCplot"/>
+                </Menu>
+            </MenuBar>
         </HBox>
     </top>
 
     <center>
         <SplitPane orientation="vertical" fx:id="splitPane">
-            <items>
-                <SplitPane orientation="horizontal" prefHeight="550">
-                    <items>
-                        <StackPane fx:id="stackPane">
-                            <children>
-                                <XYPlotDataPane fx:id="chartPane" HBox.hgrow="ALWAYS"/>
-                                <ImageView>
-                                    <image>
-                                        <Image url="@/images/ring.png"/>
-                                    </image>
-                                </ImageView>
-                            </children>
-                        </StackPane>
-                        <VBox HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS">
-                            <TabPane fx:id="parTabPane" VBox.vgrow="ALWAYS">
-                                <Tab text="Parameters" closable="false">
-                                    <BorderPane HBox.hgrow="ALWAYS">
-                                        <top>
-                                            <VBox>
-                                                <HBox>
-                                                    <children>
-                                                        <ChoiceBox fx:id="equationChoice">
+            <SplitPane orientation="horizontal" prefHeight="550">
+                <StackPane fx:id="stackPane">
+                    <XYPlotDataPane fx:id="chartPane" HBox.hgrow="ALWAYS"/>
+                    <ImageView>
+                        <Image url="@/images/ring.png"/>
+                    </ImageView>
+                </StackPane>
+                <VBox HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS">
+                    <TabPane fx:id="parTabPane" VBox.vgrow="ALWAYS">
+                        <Tab text="Parameters" closable="false">
+                            <BorderPane HBox.hgrow="ALWAYS">
+                                <top>
+                                    <VBox>
+                                        <HBox>
+                                            <ChoiceBox fx:id="equationChoice">
 
-                                                        </ChoiceBox>
-                                                        <Button text="Set" onAction="#setBestEquation"/>
-                                                    </children>
-                                                </HBox>
-                                                <HBox>
-                                                    <children>
-                                                        <Label text="AIC: " fx:id="aicLabel1"/>
-                                                        <Label text="" fx:id="aicLabel"/>
-                                                        <Label text="  RMS: " fx:id="rmsLabel1"/>
-                                                        <Label text="" fx:id="rmsLabel"/>
-                                                        <Label text="  rChiSq: " fx:id="rChiSqLabel1"/>
-                                                        <Label text="" fx:id="rChiSqLabel"/>
-                                                    </children>
-                                                </HBox>
-                                            </VBox>
-                                        </top>
+                                            </ChoiceBox>
+                                            <Button text="Set" onAction="#setBestEquation"/>
+                                        </HBox>
+                                        <HBox>
+                                            <Label text="AIC: "/>
+                                            <Label fx:id="aicLabel"/>
+                                            <Pane prefWidth="10"/>
+                                            <Label text="AICC: "/>
+                                            <Label fx:id="aiccLabel"/>
+                                            <Pane prefWidth="10"/>
+                                            <Label text="  RMS: "/>
+                                            <Label fx:id="rmsLabel"/>
+                                            <Pane prefWidth="10"/>
+                                            <Label text="  rChiSq: "/>
+                                            <Label fx:id="rChiSqLabel"/>
+                                            <Pane prefWidth="10"/>
+                                            <Label text="  N: "/>
+                                            <Label fx:id="nLabel"/>
+                                        </HBox>
+                                    </VBox>
+                                </top>
 
-                                        <center>
-                                            <TableView fx:id="parameterTable" prefHeight="200" VBox.vgrow="ALWAYS">
-                                            </TableView>
-                                        </center>
-                                    </BorderPane>
-                                </Tab>
-                                <Tab text="Data" closable="false">
-                                    <BorderPane fx:id="dataPane">
-                                        <top>
-                                            <Button text="show NMRFx peak" onAction="#nmrFxMessage"
-                                                    fx:id="nmrFxPeakButton"/>
-                                        </top>
-                                        <center>
-                                            <TableView fx:id="resInfoTable" prefHeight="200" VBox.vgrow="ALWAYS">
-                                            </TableView>
-                                        </center>
-                                    </BorderPane>
-                                </Tab>
-                                <Tab text="Simulate" closable="false">
-                                    <BorderPane fx:id="simPane" HBox.hgrow="ALWAYS">
-                                        <padding>
-                                            <Insets top="5" right="5" left="5" bottom="5"/>
-                                        </padding>
-                                        <top>
-                                            <VBox HBox.hgrow="ALWAYS">
-                                                <children>
-                                                    <HBox>
-                                                        <children>
-                                                            <ChoiceBox fx:id="simChoice">
-                                                            </ChoiceBox>
-                                                            <Button text="Display" onAction="#displayEquation"
-                                                                    fx:id="DisplayEquation"/>
-                                                            <Button text="Gen" onAction="#showSimData" fx:id="Gen"/>
-                                                            <Button text="Guess" onAction="#guesses" fx:id="Guesses"/>
-                                                            <Button text="Fit" onAction="#fitEquation"
-                                                                    fx:id="FitEquation"/>
-                                                        </children>
-                                                    </HBox>
-                                                </children>
-                                            </VBox>
-                                        </top>
-                                    </BorderPane>
-                                </Tab>
-                                <Tab text="Options" closable="false">
+                                <center>
+                                    <TableView fx:id="parameterTable" prefHeight="200" VBox.vgrow="ALWAYS">
+                                    </TableView>
+                                </center>
+                            </BorderPane>
+                        </Tab>
+                        <Tab text="Data" closable="false">
+                            <BorderPane>
+                                <top>
+                                    <Button text="show NMRFx peak" onAction="#nmrFxMessage"
+                                            fx:id="nmrFxPeakButton"/>
+                                </top>
+                                <center>
+                                    <TableView fx:id="resInfoTable" prefHeight="200" VBox.vgrow="ALWAYS">
+                                    </TableView>
+                                </center>
+                            </BorderPane>
+                        </Tab>
+                        <Tab text="Simulate" closable="false">
+                            <BorderPane fx:id="simPane" HBox.hgrow="ALWAYS">
+                                <padding>
+                                    <Insets top="5" right="5" left="5" bottom="5"/>
+                                </padding>
+                                <top>
                                     <VBox HBox.hgrow="ALWAYS">
-                                        <children>
-                                            <Label text="Simulated Data Generation"/>
-                                            <HBox>
-                                                <children>
-                                                    <Label text="St. Dev.: " prefWidth="80"/>
-                                                    <TextField fx:id="genDataSDevTextField" prefWidth="80"/>
-                                                    <Label text="No. Pts: " fx:id="genDataNPtsLabel" prefWidth="80"/>
-                                                    <TextField fx:id="genDataNPtsTextField" prefWidth="80"/>
-                                                </children>
-                                            </HBox>
-                                            <HBox>
-                                                <children>
-                                                    <Label text="X Min: " prefWidth="80"/>
-                                                    <TextField fx:id="genDataXLBTextField" prefWidth="80"/>
-                                                    <Label text="X Max: " prefWidth="80"/>
-                                                    <TextField fx:id="genDataXUBTextField" prefWidth="80"/>
-                                                </children>
-                                            </HBox>
-                                            <HBox>
-                                                <children>
-                                                    <Label text="X Values: " prefWidth="80"/>
-                                                    <TextField fx:id="genDataXValTextField" prefWidth="400"/>
-                                                </children>
-                                            </HBox>
-                                            <Label text="Fitting"/>
-
-                                            <HBox>
-                                                <children>
-                                                </children>
-                                            </HBox>
-                                            <HBox>
-                                                <children>
-                                                    <CheckBox text="Calculate Errors          "
-                                                              fx:id="calcErrorsCheckBox"/>
-                                                    <CheckBox text="Slider Guess" fx:id="sliderGuessCheckBox"/>
-                                                </children>
-                                            </HBox>
-                                        </children>
-
+                                        <HBox>
+                                            <ChoiceBox fx:id="simChoice">
+                                            </ChoiceBox>
+                                            <Button text="Display" onAction="#displayEquation"/>
+                                            <Button text="Gen" onAction="#showSimData"/>
+                                            <Button text="Guess" onAction="#guesses"/>
+                                            <Button text="Fit" onAction="#fitEquation"/>
+                                        </HBox>
                                     </VBox>
-                                </Tab>
-                                <Tab text="Bounds" closable="false">
-                                    <VBox HBox.hgrow="ALWAYS">
-                                        <children>
-                                            <HBox>
-                                                <children>
-                                                </children>
-                                            </HBox>
-                                            <HBox>
-                                                <children>
-                                                    <Label text="X LB  " fx:id="xLowerBoundLabel"/>
-                                                    <TextField fx:id="xLowerBoundTextField" prefWidth="100"/>
-                                                    <Label text="  X UB  " fx:id="xUpperBoundLabel"/>
-                                                    <TextField fx:id="xUpperBoundTextField" prefWidth="100"/>
-                                                    <Label text="  X tick interval  " fx:id="xTickLabel"/>
-                                                    <TextField fx:id="xTickTextField" prefWidth="100"/>
-                                                </children>
-                                            </HBox>
-                                            <HBox>
-                                                <children>
-                                                    <Label text="Y LB  " fx:id="yLowerBoundLabel"/>
-                                                    <TextField fx:id="yLowerBoundTextField" prefWidth="100"/>
-                                                    <Label text="  Y UB  " fx:id="yUpperBoundLabel"/>
-                                                    <TextField fx:id="yUpperBoundTextField" prefWidth="100"/>
-                                                    <Label text="  Y tick interval  " fx:id="yTickLabel"/>
-                                                    <TextField fx:id="yTickTextField" prefWidth="100"/>
-                                                </children>
-                                            </HBox>
-                                            <Button text="Set Bounds" onAction="#setBounds" fx:id="setBoundsButton"/>
-                                            <Button text="Autoscale Bounds" onAction="#autoscaleBounds"
-                                                    fx:id="autoscaleBoundsButton"/>
-                                            <CheckBox text="Scale Data" fx:id="scalePlot"/>
-                                            <CheckBox text="Autoscale X" fx:id="autoscaleXCheckBox"/>
-                                            <CheckBox text="Autoscale Y" fx:id="autoscaleYCheckBox"/>
-                                            <CheckBox text="Start X at 0" fx:id="zeroXCheckBox"/>
-                                            <CheckBox text="Start Y at 0" fx:id="zeroYCheckBox"/>
-                                        </children>
+                                </top>
+                            </BorderPane>
+                        </Tab>
+                        <Tab text="Options" closable="false">
+                            <VBox HBox.hgrow="ALWAYS">
 
-                                    </VBox>
-                                </Tab>
-                                <Tab text="ModelFree" closable="false">
-                                    <VBox HBox.hgrow="ALWAYS" spacing="3">
-                                        <children>
-                                            <HBox>
-                                                <children>
-                                                    <Label text="R1:  " prefWidth="80"/>
-                                                    <ChoiceBox fx:id="t1Choice" prefWidth="150"/>
-                                                    <TextField fx:id="r1MedianField" prefWidth="80"/>
-                                                    <Label text="(1/s):" prefWidth="30"/>
-                                                </children>
-                                            </HBox>
-                                            <HBox>
-                                                <children>
-                                                    <Label text="R2:  " prefWidth="80"/>
-                                                    <ChoiceBox fx:id="t2Choice" prefWidth="150"/>
-                                                    <TextField fx:id="r2MedianField" prefWidth="80"/>
-                                                    <Label text="(1/s):" prefWidth="30"/>
-                                                </children>
-                                            </HBox>
-                                            <HBox spacing="10">
-                                                <children>
-                                                    <Label text="Tau:  " prefWidth="80"/>
-                                                    <Button text="Estimate Tau" onAction="#estimateCorrelationTime"
-                                                            fx:id="calcDiffusionButton" prefWidth="150"/>
-                                                    <TextField fx:id="tauCalcField" prefWidth="80"/>
-                                                    <Label text="(ns)" prefWidth="30"/>
-                                                </children>
-                                            </HBox>
-                                            <HBox spacing="10">
-                                                <children>
-                                                    <HBox fx:id="modelBox">
-                                                        <children>
-                                                            <Label text="Models:  " prefWidth="80"/>
-                                                        </children>
-                                                    </HBox>
-                                                    <CheckBox text="Fit Js: " fx:id="fitJCheckBox"/>
-                                                </children>
-                                            </HBox>
-                                            <HBox spacing="10">
-                                                <children>
-                                                    <Label text="Lambda-S" prefWidth="80"/>
-                                                    <Slider fx:id="sLambdaSlider" prefWidth="150"/>
-                                                    <Label fx:id="sLambdaLabel" prefWidth="50"/>
-                                                    <CheckBox text="Use Lambda: " fx:id="lambdaCheckBox"/>
-                                                </children>
-                                            </HBox>
-                                            <HBox spacing="10">
-                                                <children>
-                                                    <Label text="Lambda-Tau" prefWidth="80"/>
-                                                    <Slider fx:id="tauLambdaSlider" prefWidth="150"/>
-                                                    <Label fx:id="tauLambdaLabel" prefWidth="50"/>
-                                                </children>
-                                            </HBox>
-                                            <HBox spacing="10">
-                                                <children>
-                                                    <Label text="T2 Limit  " prefWidth="80"/>
-                                                    <Slider fx:id="t2LimitSlider" prefWidth="150"/>
-                                                    <Label fx:id="t2LimitLabel" prefWidth="50"/>
-                                                </children>
-                                            </HBox>
-                                            <HBox spacing="10">
-                                                <children>
-                                                    <Label text="Tau Fraction" prefWidth="80"/>
-                                                    <Slider fx:id="tauFractionSlider" prefWidth="150"/>
-                                                    <Label fx:id="tauFractionLabel" prefWidth="50"/>
-                                                </children>
-                                            </HBox>
-                                            <HBox spacing="10">
-                                                <children>
-                                                    <Label text="Bootstrap N" prefWidth="80"/>
-                                                    <Slider fx:id="nReplicatesSlider" prefWidth="150"/>
-                                                    <Label fx:id="bootstrapNLabel" prefWidth="50"/>
-                                                    <ChoiceBox  fx:id="bootStrapChoice"/>
-                                                </children>
-                                            </HBox>
-                                            <HBox>
-                                                <children>
-                                                    <Button text="Fit-Isotropic" onAction="#fitR1R2NOEModel"/>
-                                                    <Button text="Fit Deuterium-Isotropic"
-                                                            onAction="#fitDeuteriumModel"/>
-                                                </children>
-                                            </HBox>
-                                        </children>
-                                    </VBox>
-                                </Tab>
-                            </TabPane>
-                        </VBox>
-                    </items>
-                </SplitPane>
-                <ScrollPane fx:id="chartBox" VBox.vgrow="ALWAYS">
-                </ScrollPane>
+                                <Label text="Simulated Data Generation"/>
+                                <HBox>
+                                    <Label text="St. Dev.: " prefWidth="80"/>
+                                    <TextField fx:id="genDataSDevTextField" prefWidth="80"/>
+                                    <Label text="No. Pts: " prefWidth="80"/>
+                                    <TextField fx:id="genDataNPtsTextField" prefWidth="80"/>
+                                </HBox>
+                                <HBox>
+                                    <Label text="X Min: " prefWidth="80"/>
+                                    <TextField fx:id="genDataXLBTextField" prefWidth="80"/>
+                                    <Label text="X Max: " prefWidth="80"/>
+                                    <TextField fx:id="genDataXUBTextField" prefWidth="80"/>
+                                </HBox>
+                                <HBox>
+                                    <Label text="X Values: " prefWidth="80"/>
+                                    <TextField fx:id="genDataXValTextField" prefWidth="400"/>
+                                </HBox>
+                                <Label text="Fitting"/>
 
-            </items>
+                                <HBox>
+                                    <CheckBox text="Calculate Errors          "
+                                              fx:id="calcErrorsCheckBox"/>
+                                    <CheckBox text="Slider Guess" fx:id="sliderGuessCheckBox"/>
+                                </HBox>
+                            </VBox>
+                        </Tab>
+                        <Tab text="Bounds" closable="false">
+                            <VBox HBox.hgrow="ALWAYS">
+
+                                <HBox>
+                                    <Label text="X LB  "/>
+                                    <TextField fx:id="xLowerBoundTextField" prefWidth="100"/>
+                                    <Label text="  X UB  "/>
+                                    <TextField fx:id="xUpperBoundTextField" prefWidth="100"/>
+                                    <Label text="  X tick interval  "/>
+                                    <TextField fx:id="xTickTextField" prefWidth="100"/>
+                                </HBox>
+                                <HBox>
+                                    <Label text="Y LB  "/>
+                                    <TextField fx:id="yLowerBoundTextField" prefWidth="100"/>
+                                    <Label text="  Y UB  "/>
+                                    <TextField fx:id="yUpperBoundTextField" prefWidth="100"/>
+                                    <Label text="  Y tick interval  "/>
+                                    <TextField fx:id="yTickTextField" prefWidth="100"/>
+                                </HBox>
+                                <Button text="Set Bounds" onAction="#setBounds" fx:id="setBoundsButton"/>
+                                <Button text="Autoscale Bounds" onAction="#autoscaleBounds"/>
+                                <CheckBox text="Scale Data" fx:id="scalePlot"/>
+                                <CheckBox text="Autoscale X" fx:id="autoscaleXCheckBox"/>
+                                <CheckBox text="Autoscale Y" fx:id="autoscaleYCheckBox"/>
+                                <CheckBox text="Start X at 0" fx:id="zeroXCheckBox"/>
+                                <CheckBox text="Start Y at 0" fx:id="zeroYCheckBox"/>
+                            </VBox>
+                        </Tab>
+                        <Tab text="ModelFree" closable="false">
+                            <VBox HBox.hgrow="ALWAYS" spacing="3">
+                                <ToolBar>
+                                    <MenuButton text="Actions">
+                                        <items>
+                                            <MenuItem text="Fit-Isotropic" onAction="#fitR1R2NOEModel"/>
+                                            <MenuItem text="Fit Deuterium-Isotropic"
+                                                      onAction="#fitDeuteriumModel"/>
+                                            <MenuItem text="Interpolate Rates"
+                                                      onAction="#interpolateRates"/>
+                                            <MenuItem text="Calculate Spectral Densities"
+                                                      onAction="#calculateSpectralDensities"/>
+                                            <MenuItem text="Estimate Tau"
+                                                      onAction="#estimateCorrelationTime"/>
+                                        </items>
+                                    </MenuButton>
+                                    <MenuButton fx:id="relaxSetMenu" text="Fields"/>
+                                    <Label text="Bootstrap mode:"/>
+                                    <ChoiceBox fx:id="bootStrapChoice"/>
+                                </ToolBar>
+                                <HBox>
+                                    <Label text="R1:  " prefWidth="80"/>
+                                    <ChoiceBox fx:id="t1Choice" prefWidth="150"/>
+                                    <TextField fx:id="r1MedianField" prefWidth="80"/>
+                                    <Label text="(1/s):" prefWidth="30"/>
+                                </HBox>
+                                <HBox>
+                                    <Label text="R2:  " prefWidth="80"/>
+                                    <ChoiceBox fx:id="t2Choice" prefWidth="150"/>
+                                    <TextField fx:id="r2MedianField" prefWidth="80"/>
+                                    <Label text="(1/s):" prefWidth="30"/>
+                                </HBox>
+                                <HBox spacing="10">
+                                    <Label text="Tau:  " prefWidth="80"/>
+                                    <TextField fx:id="tauCalcField" prefWidth="80"/>
+                                    <Label text="(ns)" prefWidth="30"/>
+                                </HBox>
+                                <HBox spacing="10">
+                                    <HBox fx:id="modelBox">
+                                        <Label text="Models:  " prefWidth="80"/>
+                                    </HBox>
+                                    <CheckBox text="Fit Js: " fx:id="fitJCheckBox"/>
+                                </HBox>
+                                <HBox spacing="10">
+                                    <Label text="Lambda-S" prefWidth="80"/>
+                                    <Slider fx:id="sLambdaSlider" prefWidth="150"/>
+                                    <Label fx:id="sLambdaLabel" prefWidth="50"/>
+                                    <CheckBox text="Use Lambda: " fx:id="lambdaCheckBox"/>
+                                </HBox>
+                                <HBox spacing="10">
+                                    <Label text="Lambda-Tau" prefWidth="80"/>
+                                    <Slider fx:id="tauLambdaSlider" prefWidth="150"/>
+                                    <Label fx:id="tauLambdaLabel" prefWidth="50"/>
+                                </HBox>
+                                <HBox spacing="10">
+                                    <Label text="T2 Limit  " prefWidth="80"/>
+                                    <Slider fx:id="t2LimitSlider" prefWidth="150"/>
+                                    <Label fx:id="t2LimitLabel" prefWidth="50"/>
+                                </HBox>
+                                <HBox spacing="10">
+                                    <Label text="Tau Fraction" prefWidth="80"/>
+                                    <Slider fx:id="tauFractionSlider" prefWidth="150"/>
+                                    <Label fx:id="tauFractionLabel" prefWidth="50"/>
+                                </HBox>
+                                <HBox spacing="10">
+                                    <Label text="Bootstrap N" prefWidth="80"/>
+                                    <Slider fx:id="nReplicatesSlider" prefWidth="150"/>
+                                    <Label fx:id="bootstrapNLabel" prefWidth="50"/>
+                                </HBox>
+                            </VBox>
+                        </Tab>
+                    </TabPane>
+                </VBox>
+            </SplitPane>
+            <ScrollPane fx:id="chartBox" VBox.vgrow="ALWAYS">
+            </ScrollPane>
+
         </SplitPane>
 
     </center>
@@ -393,15 +312,13 @@
     </left>
     <bottom>
         <HBox>
-            <children>
-                <ToolBar fx:id="navigatorToolBar" orientation="HORIZONTAL" BorderPane.alignment="CENTER"/>
-                <StatusBar fx:id="statusBar" HBox.hgrow="ALWAYS"/>
-                <Pane prefWidth="20"/>
-                <ScrollBar fx:id="barScaleScrollBar" prefWidth="250"
-                           value="500" min="0" max="1000" visible="1000"/>
-                <Pane prefWidth="20"/>
-                <Slider fx:id="barScaleSlider" prefWidth="250" min="1.0" max="20.0" value="1.0"/>
-            </children>
+            <ToolBar fx:id="navigatorToolBar" BorderPane.alignment="CENTER"/>
+            <StatusBar fx:id="statusBar" HBox.hgrow="ALWAYS"/>
+            <Pane prefWidth="20"/>
+            <ScrollBar fx:id="barScaleScrollBar" prefWidth="250"
+                       value="500" max="1000" visible="1000"/>
+            <Pane prefWidth="20"/>
+            <Slider fx:id="barScaleSlider" prefWidth="250" min="1.0" max="20.0" value="1.0"/>
         </HBox>
     </bottom>
 

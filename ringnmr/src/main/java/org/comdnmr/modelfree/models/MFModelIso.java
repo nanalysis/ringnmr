@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
- /*
+/*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
@@ -23,23 +23,23 @@
 package org.comdnmr.modelfree.models;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
- *
  * @author brucejohnson
  */
 public abstract class MFModelIso extends MFModel {
     double sN = 1.0;
     double tauM;
     double rEX;
-    double tauFrac = 0.25;
+    double tauFrac;
 
     public MFModelIso(boolean fitTau, double targetTau, double tauFraction,
-            boolean includeEx) {
+                      boolean includeEx) {
         this.fitTau = fitTau;
         this.targetTau = targetTau;
-        this.tauFrac = tauFrac;
+        this.tauFrac = tauFraction;
         this.includeEx = includeEx;
         if (!fitTau) {
             tauM = targetTau;
@@ -59,9 +59,7 @@ public abstract class MFModelIso extends MFModel {
         if (fitTau) {
             parNames.add("Tau_e");
         }
-        for (var par : pars) {
-            parNames.add(par);
-        }
+        parNames.addAll(Arrays.asList(pars));
         if (includeEx) {
             parNames.add("Rex");
         }
@@ -98,40 +96,22 @@ public abstract class MFModelIso extends MFModel {
 
 
     public static MFModelIso buildModel(String modelName, boolean fitTau,
-            double tau, double tauFrac,
-            boolean fitExchange) {
+                                        double tau, double tauFrac,
+                                        boolean fitExchange) {
         MFModelIso model;
         if (modelName.startsWith("model")) {
             modelName = modelName.substring(5);
         }
-        switch (modelName) {
-            case "1":
-            case "D1":
-                model = new MFModelIso1(fitTau, tau, tauFrac, fitExchange);
-                break;
-            case "1f":
-            case "D1f":
-                model = new MFModelIso1f(fitTau, tau, tauFrac, fitExchange);
-                break;
-            case "1s":
-            case "D1s":
-                model = new MFModelIso1s(fitTau, tau, tauFrac, fitExchange);
-                break;
-            case "2s":
-            case "D2s":
-                model = new MFModelIso2s(fitTau, tau, tauFrac, fitExchange);
-                break;
-            case "2f":
-            case "D2f":
-                model = new MFModelIso2f(fitTau, tau, tauFrac, fitExchange);
-                break;
-            case "2sf":
-            case "D2sf":
-                model = new MFModelIso2sf(fitTau, tau, tauFrac, fitExchange);
-                break;
-            default:
-                model = null;
-        }
+        model = switch (modelName) {
+            case "1", "D1" -> new MFModelIso1(fitTau, tau, tauFrac, fitExchange);
+            case "1f", "D1f" -> new MFModelIso1f(fitTau, tau, tauFrac, fitExchange);
+            case "1s", "D1s" -> new MFModelIso1s(fitTau, tau, tauFrac, fitExchange);
+            case "2s", "D2s" -> new MFModelIso2s(fitTau, tau, tauFrac, fitExchange);
+            case "2f", "D2f" -> new MFModelIso2f(fitTau, tau, tauFrac, fitExchange);
+            case "1sf", "D1sf" -> new MFModelIso1sf(fitTau, tau, tauFrac, fitExchange);
+            case "2sf", "D2sf" -> new MFModelIso2sf(fitTau, tau, tauFrac, fitExchange);
+            default -> throw new IllegalArgumentException("Unknown model " + modelName);
+        };
         if (modelName.charAt(0) == 'D') {
             model.setSScale(9.0);
         }

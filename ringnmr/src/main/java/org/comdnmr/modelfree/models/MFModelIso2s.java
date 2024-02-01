@@ -76,6 +76,7 @@ public class MFModelIso2s extends MFModelIso1s {
         return calc(omegas);
     }
 
+    @Override
     public void pars(double[] pars) {
         int parStart = 0;
         if (fitTau) {

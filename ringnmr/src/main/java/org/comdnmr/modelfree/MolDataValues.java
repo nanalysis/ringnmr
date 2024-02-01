@@ -47,6 +47,9 @@ public class MolDataValues {
         this.specifier = atom.getFullName();
     }
 
+    public Atom getAtom() {
+        return atom;
+    }
     @Override
     public String toString() {
         StringBuilder sBuilder = new StringBuilder();
@@ -95,7 +98,11 @@ public class MolDataValues {
         jValues = null;
     }
 
-    private double[][] calcJ() {
+    public void clearJ() {
+        jValues = null;
+    }
+
+    public double[][] calcJ() {
         var dataOpt = dataValues.stream().findFirst();
         if (dataOpt.isPresent()) {
             if (dataOpt.get() instanceof DeuteriumDataValue) {
@@ -107,7 +114,11 @@ public class MolDataValues {
         return new double[0][0];
     }
 
-    double[][] getJValues() {
+    public void setJValues(double[][] jValuesSet) {
+        jValues = new double[jValuesSet.length][jValuesSet[0].length];
+    }
+
+    public double[][] getJValues() {
         if (jValues == null) {
             if (bootstrapSet != null) {
                 jValues = bootstrapAggregator.getBootStrapJ(calcJ(), bootstrapSet);

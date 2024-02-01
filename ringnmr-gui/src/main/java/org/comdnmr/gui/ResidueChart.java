@@ -17,23 +17,22 @@
  */
 package org.comdnmr.gui;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Orientation;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import org.comdnmr.data.ExperimentSet;
-import org.comdnmr.data.RelaxSet;
-import org.comdnmr.data.ValueSet;
+import org.nmrfx.chemistry.relax.RelaxationSet;
 import org.nmrfx.chart.Axis;
 import org.nmrfx.chart.XYCanvasBarChart;
 import org.nmrfx.chart.XYValue;
 import org.nmrfx.chemistry.MoleculeBase;
 import org.nmrfx.chemistry.MoleculeFactory;
 import org.nmrfx.chemistry.relax.ResonanceSource;
+import org.nmrfx.chemistry.relax.ValueSet;
 import org.nmrfx.graphicsio.GraphicsContextInterface;
 import org.nmrfx.graphicsio.GraphicsIOException;
 
@@ -44,6 +43,7 @@ import org.nmrfx.graphicsio.GraphicsIOException;
 public class ResidueChart extends XYCanvasBarChart {
 
     static Set<ResonanceSource> selectedResidues = new HashSet<>();
+    static List<String> mapNames = new ArrayList<>();
     public String currentSeriesName = "";
     ValueSet valueSet = null;
     Set<ResonanceSource> dynSources = new HashSet<>();
@@ -73,7 +73,7 @@ public class ResidueChart extends XYCanvasBarChart {
             String testSeries = seriesName.substring(mol.getName().length()+1, seriesName.indexOf("_RING"));
             if (ChartUtil.getResiduePropertyNames().contains(testSeries)) {
                 ValueSet valueSet = ChartUtil.getResidueProperty(testSeries);
-                seriesName = valueSet.getName() + '|' +
+                seriesName = valueSet.name() + '|' +
                         "EXPAB" + "|" + "0:0:0" + "|" + "R" + "|" + "0";
             }
         }
@@ -134,7 +134,7 @@ public class ResidueChart extends XYCanvasBarChart {
 
     public void setResProps(ValueSet valueSet) {
         this.valueSet = valueSet;
-        dynSources = valueSet.getDynamicsSources();
+        dynSources = valueSet.resonanceSources();
     }
 
     public Set<ResonanceSource> getSelectedSources() {
@@ -147,6 +147,7 @@ public class ResidueChart extends XYCanvasBarChart {
             if (resSource != null) {
                 selectedResidues.add(resSource);
             }
+            mapNames.clear();
         } else if (!selectedResidues.contains(resSource)) {
             if (resSource != null) {
                 selectedResidues.add(resSource);
@@ -156,8 +157,9 @@ public class ResidueChart extends XYCanvasBarChart {
         currentSeriesName = seriesName;
         String[] seriesNameParts = seriesName.split("\\|");
         String mapName = seriesNameParts[0];
+        mapNames.add(mapName);
         valueSet = ChartUtil.getResidueProperty(mapName);
-        dynSources = valueSet.getDynamicsSources();
+        dynSources = valueSet.resonanceSources();
         showInfo(seriesName);
         drawChart();
     }
@@ -165,8 +167,10 @@ public class ResidueChart extends XYCanvasBarChart {
     void showInfo() {
         String[] seriesNameParts = currentSeriesName.split("\\|");
         String mapName = seriesNameParts[0];
+        mapNames.clear();
+        mapNames.add(mapName);
         valueSet = ChartUtil.getResidueProperty(mapName);
-        dynSources = valueSet.getDynamicsSources();
+        dynSources = valueSet.resonanceSources();
         showInfo(currentSeriesName);
     }
 
@@ -188,7 +192,8 @@ public class ResidueChart extends XYCanvasBarChart {
         controller.chartInfo.valueSet = valueSet;
         controller.chartInfo.setResidues(resSources);
         controller.chartInfo.state = state;
-        controller.chartInfo.mapName = mapName;
+        controller.chartInfo.mapName.clear();
+        controller.chartInfo.mapName.addAll(mapNames);
         controller.chartInfo.equationName = equationName;
 
         if (valueSet instanceof ExperimentSet) {
@@ -196,7 +201,7 @@ public class ResidueChart extends XYCanvasBarChart {
                 ExperimentSet experimentSet = (ExperimentSet) valueSet;
                 controller.chartInfo.experimentalResult = experimentSet.getExperimentResult(resSources[0]);
             }
-        } else if (valueSet instanceof RelaxSet) {
+        } else if (valueSet instanceof RelaxationSet) {
         }
         controller.showInfo(controller.chartInfo, xyCanvasChart);
     }

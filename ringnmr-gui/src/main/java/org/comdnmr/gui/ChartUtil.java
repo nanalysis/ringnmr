@@ -55,15 +55,12 @@ import org.comdnmr.eqnfit.PlotEquation;
 import org.comdnmr.data.ExperimentResult;
 import org.comdnmr.data.ExperimentSet;
 import org.comdnmr.data.ExperimentData;
-import org.comdnmr.data.ValueSet;
 import org.nmrfx.chart.DataSeries;
 import org.nmrfx.chart.XYEValue;
 import org.nmrfx.chart.XYValue;
 import org.nmrfx.chemistry.Residue;
 import org.nmrfx.chemistry.io.MoleculeIOException;
-import org.nmrfx.chemistry.relax.RelaxationValues;
-import org.nmrfx.chemistry.relax.ResonanceSource;
-import org.nmrfx.chemistry.relax.SpectralDensity;
+import org.nmrfx.chemistry.relax.*;
 import org.nmrfx.peaks.PeakList;
 import org.nmrfx.star.ParseException;
 
@@ -379,7 +376,7 @@ public class ChartUtil {
         }
     }
 
-    public static ObservableList<DataSeries> getRelaxationDataSeries(List<RelaxationValues> values, String valueName, String setName, String parName) {
+    public static ObservableList<DataSeries> getRelaxationDataSeries(List<? extends RelaxationValues> values, String valueName, String setName, String parName) {
         ObservableList<DataSeries> data = FXCollections.observableArrayList();
 
         minRes = Integer.MAX_VALUE;
@@ -603,7 +600,7 @@ public class ChartUtil {
             alert.showAndWait();
             return;
         }
-        valueSets.put(resProp.getName(), resProp);
+        valueSets.put(resProp.name(), resProp);
         String parName = "Kex";
         String expMode = resProp.getExpMode();
         if (expMode.equals("r1") || expMode.equals("r2") || expMode.equals("rq") || expMode.equals("rap")) {
@@ -611,10 +608,10 @@ public class ChartUtil {
         } else if (expMode.equals("noe")) {
             parName = "NOE";
         }
-        ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
+        ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.name(), "best", "0:0:0", parName);
         PyController.mainController.setCurrentExperimentSet(resProp);
         PyController.mainController.makeAxisMenu();
-        PyController.mainController.setYAxisType(resProp.getExpMode(), resProp.getName(), "best", "0:0:0", parName, true);
+        PyController.mainController.setYAxisType(resProp.getExpMode(), resProp.name(), "best", "0:0:0", parName, true);
         reschartNode.setResProps(resProp);
         PyController.mainController.setControls();
     }
@@ -632,7 +629,7 @@ public class ChartUtil {
 
         ExperimentSet resProp = DataIO.processPeakList(peakList, dynamicsSourceFactory);
         if (resProp != null) {
-            valueSets.put(resProp.getName(), resProp);
+            valueSets.put(resProp.name(), resProp);
             String parName = "Kex";
             String expMode = resProp.getExpMode();
             if (expMode.equals("r1") || expMode.equals("r2") || expMode.equals("rq") || expMode.equals("rap")) {
@@ -640,10 +637,10 @@ public class ChartUtil {
             } else if (resProp.getExpMode().equals("noe")) {
                 parName = "NOE";
             }
-            ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
+            ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.name(), "best", "0:0:0", parName);
             PyController.mainController.setCurrentExperimentSet(resProp);
             PyController.mainController.makeAxisMenu();
-            PyController.mainController.setYAxisType(resProp.getExpMode(), resProp.getName(), "best", "0:0:0", parName, true);
+            PyController.mainController.setYAxisType(resProp.getExpMode(), resProp.name(), "best", "0:0:0", parName, true);
             reschartNode.setResProps(resProp);
             PyController.mainController.setControls();
         }

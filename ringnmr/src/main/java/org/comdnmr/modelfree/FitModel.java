@@ -215,6 +215,21 @@ public abstract class FitModel {
         tauFraction = value;
     }
 
+    public boolean fitTau(Map<String, MolDataValues> molDataRes) {
+        boolean localFitTau;
+
+        if (overT2Limit(molDataRes, t2Limit)) {
+            localFitTau = fitTau;
+        } else {
+            localFitTau = false;
+        }
+        return localFitTau;
+    }
+
+    boolean overT2Limit(Map<String, MolDataValues> molDataRes, double limit) {
+        return limit < 1.0e-6 || molDataRes.values().stream().anyMatch(v -> v.getData().stream().anyMatch(d -> d.R2 > limit));
+    }
+
     private class FitResidues {
 
         String script;

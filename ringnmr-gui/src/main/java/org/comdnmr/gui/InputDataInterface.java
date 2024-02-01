@@ -17,28 +17,11 @@
  */
 package org.comdnmr.gui;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -51,11 +34,23 @@ import org.controlsfx.dialog.ExceptionDialog;
 import org.nmrfx.chart.DataSeries;
 import org.nmrfx.chemistry.MoleculeBase;
 import org.nmrfx.chemistry.MoleculeFactory;
-import org.nmrfx.chemistry.relax.RelaxationData;
+import org.nmrfx.chemistry.relax.RelaxTypes;
 import org.nmrfx.datasets.DatasetBase;
 import org.nmrfx.peaks.PeakList;
 import org.nmrfx.utils.GUIUtils;
 import org.yaml.snakeyaml.Yaml;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -712,7 +707,7 @@ public class InputDataInterface {
 
                 }
                 reschartNode.getData().clear();
-                ChartUtil.addResidueProperty(experimentSet.getName(), experimentSet);
+                ChartUtil.addResidueProperty(experimentSet.name(), experimentSet);
                 String parName = "Kex";
                 if (expMode.equalsIgnoreCase("r1") || expMode.equalsIgnoreCase("r2") ||
                         expMode.equalsIgnoreCase("rq") || expMode.equalsIgnoreCase("rap")) {
@@ -720,15 +715,15 @@ public class InputDataInterface {
                 } else if (experimentSet.getExpMode().equalsIgnoreCase("noe")) {
                     parName = "NOE";
                 }
-                ObservableList<DataSeries> data = ChartUtil.getParMapData(experimentSet.getName(), "best", "0:0:0", parName);
+                ObservableList<DataSeries> data = ChartUtil.getParMapData(experimentSet.name(), "best", "0:0:0", parName);
                 PyController.mainController.setCurrentExperimentSet(experimentSet);
                 PyController.mainController.makeAxisMenu();
-                PyController.mainController.setYAxisType(experimentSet.getExpMode(), experimentSet.getName(),
+                PyController.mainController.setYAxisType(experimentSet.getExpMode(), experimentSet.name(),
                         "best", "0:0:0", parName, true);
                 reschartNode.setResProps(experimentSet);
                 PyController.mainController.setControls();
                 if (expMode.equalsIgnoreCase("noe")) {
-                    DataIO.addRelaxationFitResults(experimentSet, RelaxationData.relaxTypes.NOE);
+                    DataIO.addRelaxationFitResults(experimentSet, RelaxTypes.NOE);
                 } else {
                     if (autoFit) {
                         PyController.mainController.fitResiduesNow();
@@ -919,15 +914,15 @@ public class InputDataInterface {
 
         }
 //            ExperimentSet resProp = DataIO.loadParameters(fileName);
-        ChartUtil.addResidueProperty(resProp.getName(), resProp);
+        ChartUtil.addResidueProperty(resProp.name(), resProp);
         String parName = "Kex";
         if (expMode.equals("r1") || expMode.equals("r2") || expMode.equals("rq") || expMode.equals("rap")) {
             parName = "R";
         }
-        ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.getName(), "best", "0:0:0", parName);
+        ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.name(), "best", "0:0:0", parName);
         PyController.mainController.setCurrentExperimentSet(resProp);
         PyController.mainController.makeAxisMenu();
-        PyController.mainController.setYAxisType(resProp.getExpMode(), resProp.getName(),
+        PyController.mainController.setYAxisType(resProp.getExpMode(), resProp.name(),
                 "best", "0:0:0", parName, true);
         reschartNode.setResProps(resProp);
         PyController.mainController.setControls();

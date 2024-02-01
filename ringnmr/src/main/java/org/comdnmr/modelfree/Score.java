@@ -62,12 +62,12 @@ public class Score {
     }
 
     public double aic() {
-        return 2 * nPars + nValues * Math.log(rss);
+        return 2 * nPars + chiSq();
     }
 
     public double aicc() {
         int k = nPars;
-        return aic() + 2.0 * k * (k + 1) / (nValues - k - 1.0);
+        return aic() + 2.0 * k * (k + 1) / (nValues - k - 1);
     }
 
     public double chiSq() {
