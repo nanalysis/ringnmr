@@ -227,7 +227,7 @@ public abstract class FitModel {
     }
 
     boolean overT2Limit(Map<String, MolDataValues> molDataRes, double limit) {
-        return molDataRes.values().stream().anyMatch(v -> v.getData().stream().anyMatch(d -> d.R2 > limit));
+        return limit < 1.0e-6 || molDataRes.values().stream().anyMatch(v -> v.getData().stream().anyMatch(d -> d.R2 > limit));
     }
 
     private class FitResidues {
