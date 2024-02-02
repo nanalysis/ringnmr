@@ -116,6 +116,11 @@ public class MolDataValues {
 
     public void setJValues(double[][] jValuesSet) {
         jValues = new double[jValuesSet.length][jValuesSet[0].length];
+        for (int i=0;i<jValuesSet.length;i++) {
+            for (int j=0;j<jValuesSet[i].length;j++) {
+                jValues[i][j] = jValuesSet[i][j];
+            }
+        }
     }
 
     public double[][] getJValues() {
