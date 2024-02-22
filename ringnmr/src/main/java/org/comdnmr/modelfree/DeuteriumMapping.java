@@ -126,7 +126,7 @@ public class DeuteriumMapping {
         }
 
         try {
-            int nReplicates = 100;
+            int nReplicates = 500;
             double[][] jValuesRep = new double[nCols][nReplicates];
             double[][] errs = new double[nCols][nReplicates];
             double[] jValues = new double[nCols];
