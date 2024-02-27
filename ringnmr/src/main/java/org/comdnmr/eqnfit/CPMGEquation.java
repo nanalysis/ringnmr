@@ -22,6 +22,7 @@
  */
 package org.comdnmr.eqnfit;
 
+import org.apache.commons.math3.complex.Complex;
 import org.comdnmr.util.ANNLoader;
 import org.comdnmr.util.CoMDPreferences;
 import org.comdnmr.util.DataUtil;
@@ -273,6 +274,190 @@ public enum CPMGEquation implements EquationType {
     //                return value;
     //            }
     //        },
+    CPMGMQ("cpmgmq", 2, "kEx", "pA", "R2", "deltaHPPM", "deltaCPPM") {
+        @Override
+        public double calculate(double[] par, int[] map, double[] x, int idNum, double field) {
+            // See the following DOI:
+            // 10.1021/ja039587i
+
+            // TODO: acquire kEx, pA, R2, deltaHPPM, deltaCPPM
+            // TODO: from the par field (will require usage of `map`)
+            double kEx = 100.0;
+            double pA = 0.9;
+            double R2 = 20.0;
+            double deltaHPPM = 1.0;
+            double deltaCPPM = 1.0;
+            // ===========================================================
+
+            // TODO: also need to get number of CPMG cycles (n)
+            int n = 1;
+
+            double pB = 1.0 - pA;
+            double deltaH = 2.0 * Math.PI * deltaHPPM * field;
+            // To convert 13C chemical shift difference from ppm to Hz,
+            // need to scale the field (given as the 1H Larmor frequency)
+            // by the ratio of the 13C and 1H gyromagnetic ratios: 0.2515
+            double deltaC = 0.2515 * 2.0 * Math.PI * deltaCPPM * field;
+
+            // TODO check this
+            // N.B. (2 * delta) is the time between successive 13C 180 pulses
+            double vu = x[0];
+            double delta = 1.0 / (4.0 * vu);
+
+            // Building lambda1 (3.2 - 3.6)
+            // num1: (p_A - p_B)k_{ex} + i \Delta \omega_H
+            Complex num1 = new Complex((pA - pB) * kEx, deltaH);
+            Complex zeta = num1.multiply(-2.0 * deltaC);  // 3.6
+            Complex Psi = num1  // 3.5
+                    .pow(2.0)
+                    .subtract(Math.pow(deltaC, 2.0))
+                    .add(4.0 * pA * pB * Math.pow(kEx, 2.0));
+            Complex num2 = Psi  // num2: \sqrt{\Psi^2 + \zeta^2}
+                    .pow(2.0)
+                    .add(zeta.pow(2.0))
+                    .sqrt();
+            Complex etaPlus = num2  // 3.4
+                    .add(Psi)
+                    .sqrt()
+                    .multiply(Math.sqrt(2.0) * delta);
+            Complex etaMinus = num2  // 3.4
+                    .subtract(Psi)
+                    .sqrt()
+                    .multiply(Math.sqrt(2.0) * delta);
+            Complex DPlus = Psi  // 3.3
+                    .add(2.0 * Math.pow(deltaC, 2.0)).
+                    divide(num2).
+                    add(1.0).
+                    multiply(0.5);
+            Complex DMinus = Psi  // 3.3
+                    .add(2.0 * Math.pow(deltaC, 2.0))
+                    .divide(num2)
+                    .subtract(1.0)
+                    .multiply(0.5);
+            Complex num3 = etaPlus  // num3: D_{+} \cosh \eta_{+} - D_{-} \cos \eta_{-}
+                    .cosh()
+                    .multiply(DPlus)
+                    .subtract(etaMinus.cos().multiply(DMinus));
+            // N.B. arccosh = arccos(z) * (sqrt(z-1) / sqrt(1-z))
+            Complex lambda1 = num3  // 3.2
+                    .acos()
+                    .multiply(num3
+                            .subtract(1.0)
+                            .sqrt()
+                            .divide(num3
+                                    .multiply(-1.0)
+                                    .add(1.0)
+                                    .sqrt()
+                            )
+                    )
+                    .multiply(-1.0 / (2.0 * delta))
+                    .add(kEx)
+                    .multiply(0.5)
+                    .add(R2);
+
+            // Building Q (3.7 - 3.10)
+            Complex dPlus = new Complex(deltaH + deltaC, kEx);  // 3.10
+            Complex dMinus = new Complex(deltaH + deltaC, -kEx);  // 3.10
+            Complex zPlus = new Complex(deltaH - deltaC, kEx);  // 3.10
+            Complex zMinus = new Complex(deltaH - deltaC, -kEx);  // 3.10
+            // i k_{ex} \sqrt{p_A p_B}
+            Complex num4 = new Complex(0.0, kEx * Math.sqrt(pA * pB));
+            Complex mD = zPlus  // 3.8
+                    .add(zPlus
+                            .multiply(delta)
+                            .sin()
+                            .divide(dPlus
+                                    .add(zPlus)
+                                    .multiply(delta)
+                                    .sin()
+                            )
+                            .multiply(2.0 * deltaC)
+                    )
+                    .multiply(num4
+                            .divide(dPlus
+                                    .multiply(zPlus)
+                            )
+                    );
+            Complex mZ = dMinus  // 3.9
+                    .subtract(dMinus
+                            .multiply(delta)
+                            .sin()
+                            .divide(dMinus
+                                    .add(zMinus)
+                                    .multiply(delta)
+                                    .sin()
+                            )
+                            .multiply(2.0 * deltaC)
+                    )
+                    .multiply(num4
+                            .divide(dMinus
+                                    .multiply(zMinus)
+                            )
+                    )
+                    .multiply(-1.0);
+            double Q = mD  // 3.7
+                    .pow(2.0)
+                    .multiply(1.0)
+                    .add(1.0)
+                    .add(mD.multiply(mZ))
+                    .subtract(mZ.pow(2.0))
+                    .add(mD
+                            .add(mZ)
+                            .multiply(0.5 * pB / pA)
+                    )
+                    .getReal();
+
+            return lambda1.getReal() - Math.log(Q) / (4 * n * delta);
+        }
+
+        // TODO
+        @Override
+        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
+            return new double[0];
+        }
+
+        // TODO
+        @Override
+        public double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+            return new double[0][];
+        }
+
+        // TODO
+        @Override
+        public double getRex(double[] pars, int[] map, double field) {
+            return 0;
+        }
+
+        // TODO
+        @Override
+        public double getKex(double[] pars) {
+            return 0;
+        }
+
+        // TODO
+        @Override
+        public double getKex(double[] pars, int id) {
+            return 0;
+        }
+
+        // TODO
+        @Override
+        public int[][] makeMap(int n) {
+            return new int[0][];
+        }
+
+        // TODO
+        @Override
+        public int[][] makeMap(int n, int m) {
+            return new int[0][];
+        }
+
+        // TODO
+        @Override
+        public int[][] makeMap(int[] stateCount, int[][] states, int[] mask) {
+            return new int[0][];
+        }
+    },
     CPMGSLOW("cpmgslow", 2, "Kex", "pA", "R2", "dPPM") {
         @Override
         public double calculate(double[] par, int[] map, double[] x, int idNum, double field) {
@@ -473,7 +658,7 @@ public enum CPMGEquation implements EquationType {
     }
 
     public static String[] getEquationNames() {
-        String[] equationNames = {"NOEX", "CPMGFAST", "CPMGSLOW"};
+        String[] equationNames = {"NOEX", "CPMGFAST", "CPMGSLOW", "CPMGMQ"};
         return equationNames;
     }
 
