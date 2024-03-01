@@ -282,11 +282,12 @@ public enum CPMGEquation implements EquationType {
 
             // TODO: acquire kEx, pA, R2, deltaHPPM, deltaCPPM
             // TODO: from the par field (will require usage of `map`)
-            double kEx = 100.0;
-            double pA = 0.9;
-            double R2 = 20.0;
-            double deltaHPPM = 1.0;
-            double deltaCPPM = 1.0;
+            double kEx = par[map[0]];
+            double pA = par[map[1]]; // p1-p2
+            double R2 = par[map[2]];
+            double deltaHPPM = par[map[3]];
+            double deltaCPPM = par[map[4]];
+
             // ===========================================================
 
             // TODO: also need to get number of CPMG cycles (n)
@@ -413,49 +414,138 @@ public enum CPMGEquation implements EquationType {
         // TODO
         @Override
         public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
-            return new double[0];
+            int nPars = CPMGFitFunction.getNPars(map);
+            double[] guesses = new double[nPars];
+            double kExSum = 0.0;
+            double pa = 0.95;
+            for (int id = 0; id < map.length; id++) {
+                double minY = DataUtil.getMinValue(yValues, idNums, id);
+                double maxY = DataUtil.getMaxValue(yValues, idNums, id);
+                double mean = DataUtil.getMeanValue(yValues, idNums, id);
+                double vMid = DataUtil.getMidValue(yValues, xValues[0], idNums, id);
+                double r2 = minY * 0.95;
+                double rex = maxY - r2;
+                double tauMid = 1.0 / (2.0 * vMid);
+                double kex = 1.915 / (0.5 * tauMid); // 1.915 comes from solving equation iteratively at tcp rex 0.5 half max
+                if (kex > CoMDPreferences.getCPMGMaxFreq()) {
+                    kex = CoMDPreferences.getCPMGMaxFreq() * 0.9;
+                }
+                double field = fields[id];
+                double dw2 = rex / (pa * (1.0 - pa)) * kex;
+                double dPPMH = Math.sqrt(dw2) / (2.0 * Math.PI) / field;
+                double dPPMC = Math.sqrt(dw2) / (2.0 * Math.PI) / (field * 0.2515);
+                guesses[map[id][2]] = r2;
+                guesses[map[id][3]] = dPPMH;
+                guesses[map[id][4]] = dPPMC;
+                kExSum += kex;
+            }
+            guesses[0] = kExSum / map.length;
+            guesses[1] = pa;
+            return guesses;
         }
 
         // TODO
         @Override
         public double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
-            return new double[0][];
+            double[][] boundaries = new double[2][guesses.length];
+            // "Kex", "pA", "R2", "dPPMH, dPPMC"
+            for (int id = 0; id < map.length; id++) {
+                int iPar = map[id][0];
+                boundaries[0][iPar] = 0.0;
+                boundaries[1][iPar] = Math.min(guesses[iPar] * 4, CoMDPreferences.getCPMGMaxFreq());
+                iPar = map[id][1];
+                boundaries[0][iPar] = 0.5;
+                boundaries[1][iPar] = 0.999;
+                iPar = map[id][2];
+                boundaries[0][iPar] = 0.0;
+                boundaries[1][iPar] = guesses[iPar] * 4;
+                iPar = map[id][3];
+                boundaries[0][iPar] = 0.0;
+                boundaries[1][iPar] = guesses[iPar] * 4;
+                iPar = map[id][4];
+                boundaries[0][iPar] = 0.0;
+                boundaries[1][iPar] = guesses[iPar] * 4;
+            }
+            return boundaries;
         }
 
         // TODO
         @Override
         public double getRex(double[] pars, int[] map, double field) {
-            return 0;
+            double[] x = new double[1];
+            x[0] = 10.0;
+            double y0 = calculate(pars, map, x, 0, field);
+            x[0] = 1.0e4;
+            double y1 = calculate(pars, map, x, 0, field);
+            double rex = y0 - y1;
+            return rex;
         }
 
         // TODO
         @Override
         public double getKex(double[] pars) {
-            return 0;
+            return pars[0];
         }
 
         // TODO
         @Override
         public double getKex(double[] pars, int id) {
-            return 0;
+            return pars[0];
         }
 
         // TODO
         @Override
         public int[][] makeMap(int n) {
-            return new int[0][];
+            int[][] map = new int[n][5];
+            for (int i = 0; i < n; i++) {
+                map[i][0] = 0;
+                map[i][1] = 1;
+                map[i][2] = 3 * i + 2;
+                map[i][3] = 3 * i + 3;
+                map[i][4] = 3 * i + 4;
+            }
+            return map;
         }
 
         // TODO
         @Override
         public int[][] makeMap(int n, int m) {
-            return new int[0][];
+            int[][] map = new int[n][5];
+            for (int i = 0; i < n; i++) {
+                map[i][0] = 0;
+                map[i][1] = 1;
+                map[i][2] = 3 * i + 2;
+                map[i][3] = 3 * i + 3;
+                map[i][4] = 3 * i + 4;
+            }
+            return map;
         }
 
         // TODO
         @Override
-        public int[][] makeMap(int[] stateCount, int[][] states, int[] mask) {
-            return new int[0][];
+        public int[][] makeMap(int[] stateCount, int[][] states, int[] r2Mask) {
+            int n = states.length;
+            int[][] map = new int[n][5];
+            int lastCount = 0;
+            for (int i = 0; i < n; i++) {
+                map[i][0] = 0;
+                map[i][1] = 1;
+            }
+            int maxIndex = 0;
+            lastCount = 2;
+            for (int i = 0; i < n; i++) {
+                map[i][2] = CPMGFitter.getMapIndex(states[i], stateCount, r2Mask) + lastCount;
+                maxIndex = Math.max(map[i][2], maxIndex);
+            }
+            lastCount = maxIndex + 1;
+            for (int i = 0; i < n; i++) {
+                map[i][3] = CPMGFitter.getMapIndex(states[i], stateCount, 0, 3) + lastCount;
+            }
+            lastCount = maxIndex + 1;
+            for (int i = 0; i < n; i++) {
+                map[i][4] = CPMGFitter.getMapIndex(states[i], stateCount, 0, 3) + lastCount;
+            }
+            return map;
         }
     },
     CPMGSLOW("cpmgslow", 2, "Kex", "pA", "R2", "dPPM") {
