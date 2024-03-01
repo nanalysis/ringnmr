@@ -229,6 +229,18 @@ public class CPMGControls extends EquationControls {
                 DPPM.disabled(false);
                 DPPM.valueText.setDisable(false);
                 break;
+            case "CPMGMQ":
+                R2.disabled(false);
+                DPPMMIN.disabled(false);
+                DPPMMIN.valueText.setDisable(false);
+                KEX.disabled(false);
+                KEX.valueText.setDisable(false);
+                PA.disabled(false);
+                PA.valueText.setDisable(false);
+                DPPM.disabled(false);
+                DPPM.valueText.setDisable(false);
+                break;
+
             default:
                 return;
         }
@@ -294,6 +306,14 @@ public class CPMGControls extends EquationControls {
                 pars[2] = r2;
                 pars[3] = dPPM;
                 break;
+            case "CPMGMQ":
+                pars = new double[5];
+                pars[0] = kEx;
+                pars[1] = pA;
+                pars[2] = r2;
+                pars[3] = dPPMmin;
+                pars[4] = dPPM;
+                break;
             default:
                 pars = null;
         }
@@ -320,6 +340,14 @@ public class CPMGControls extends EquationControls {
                 pars[1] = parValues.get("pA").getValue();
                 pars[2] = parValues.get("R2").getValue();
                 pars[3] = parValues.get("dPPM").getValue();
+                break;
+            case "CPMGMQ":
+                pars = new double[5];
+                pars[0] = parValues.get("Kex").getValue();
+                pars[1] = parValues.get("pA").getValue();
+                pars[2] = parValues.get("R2").getValue();
+                pars[3] = parValues.get("dPPMmin").getValue();
+                pars[4] = parValues.get("dPPM").getValue();
                 break;
             default:
                 pars = null;
