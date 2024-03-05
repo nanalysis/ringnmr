@@ -38,6 +38,8 @@ import static org.comdnmr.gui.CPMGControls.PARS.PA;
 import static org.comdnmr.gui.CPMGControls.PARS.R2;
 import org.comdnmr.eqnfit.CPMGFitFunction;
 import org.comdnmr.util.CoMDPreferences;
+import org.nmrfx.datasets.Nuclei;
+
 import static org.comdnmr.gui.CPMGControls.PARS.DELTA1;
 import static org.comdnmr.gui.CPMGControls.PARS.DELTA2;
 
@@ -215,6 +217,8 @@ public class CPMGControls extends EquationControls {
                 DELTA1.disabled(true);
                 DELTA2.disabled(true);
                 FIELD2.disabled(true);
+                nucleiSelector.setValue(Nuclei.N15);
+                nucleiSelector.setDisable(false);
                 break;
 
             case "CPMGFAST":
@@ -225,6 +229,8 @@ public class CPMGControls extends EquationControls {
                 DELTA1.label.setText("δₘᵢₙ");
                 DELTA2.disabled(true);
                 FIELD2.disabled(true);
+                nucleiSelector.setValue(Nuclei.N15);
+                nucleiSelector.setDisable(false);
                 break;
 
             case "CPMGSLOW":
@@ -235,6 +241,8 @@ public class CPMGControls extends EquationControls {
                 DELTA1.label.setText("δ¹H");
                 DELTA2.disabled(true);
                 FIELD2.disabled(true);
+                nucleiSelector.setValue(Nuclei.N15);
+                nucleiSelector.setDisable(false);
                 break;
 
             case "CPMGMQ":
@@ -246,6 +254,8 @@ public class CPMGControls extends EquationControls {
                 DELTA2.disabled(false);
                 DELTA2.label.setText("δ¹³C");
                 FIELD2.disabled(true);
+                nucleiSelector.setValue(Nuclei.C13);
+                nucleiSelector.setDisable(true);
                 break;
 
             default:

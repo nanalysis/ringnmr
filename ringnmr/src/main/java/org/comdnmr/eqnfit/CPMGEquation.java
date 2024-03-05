@@ -288,19 +288,14 @@ public enum CPMGEquation implements EquationType {
             double deltaCPPM = par[map[4]];
 
             double pB = 1.0 - pA;
-            // To convert 13C chemical shift difference from ppm to Hz,
-            // need to scale the field (given as the 1H Larmor frequency)
-            // by the ratio of the 13C and 1H gyromagnetic ratios
-            double deltaH = 2.0 * Math.PI * deltaHPPM * field;
-            double gammaRatio = RelaxEquations.GAMMA_C / RelaxEquations.GAMMA_H;
-            double deltaC = gammaRatio * 2.0 * Math.PI * deltaCPPM * field;
 
-            // TODO: hack: field seems to be scaled bown by pi^2 currently
-            deltaH *= Math.pow(Math.PI, 2.0);
-            deltaC *= Math.pow(Math.PI, 2.0);
+            // field is provided as the 13C Larmor frequency, so need to scale for 1H
+            double gammaRatio = RelaxEquations.GAMMA_H / RelaxEquations.GAMMA_C;
+            double deltaH = gammaRatio * 2.0 * Math.PI * deltaHPPM * field;
+            double deltaC = 2.0 * Math.PI * deltaCPPM * field;
 
-            // TODO: need to get number of CPMG cycles (n)
-            // TODO or the total time of the CPMG elemnt (T) => n = T / (4 * delta)
+            // TODO: Need to get number of CPMG cycles (n)
+            // TODO: or the total time of the CPMG elemnt (T) => n = T / (4 * delta)
             double T = 0.04;
             double nuCPMG = x[0];
             // N.B. (2 * delta) is the time between successive 13C 180 pulses
@@ -411,8 +406,7 @@ public enum CPMGEquation implements EquationType {
                     .multiply(0.5 * Math.sqrt(pB / pA))
                 )
                 .getReal();
-            double rate = lambda1.getReal() - Math.log(Q) / (4 * n * delta);
-            return rate;
+            return lambda1.getReal() - Math.log(Q) / (4 * n * delta);
         }
 
         // TODO
