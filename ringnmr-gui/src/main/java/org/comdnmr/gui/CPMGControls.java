@@ -38,8 +38,8 @@ import static org.comdnmr.gui.CPMGControls.PARS.PA;
 import static org.comdnmr.gui.CPMGControls.PARS.R2;
 import org.comdnmr.eqnfit.CPMGFitFunction;
 import org.comdnmr.util.CoMDPreferences;
-import static org.comdnmr.gui.CPMGControls.PARS.DPPM;
-import static org.comdnmr.gui.CPMGControls.PARS.DPPMMIN;
+import static org.comdnmr.gui.CPMGControls.PARS.DELTA1;
+import static org.comdnmr.gui.CPMGControls.PARS.DELTA2;
 
 /**
  *
@@ -47,15 +47,23 @@ import static org.comdnmr.gui.CPMGControls.PARS.DPPMMIN;
  */
 public class CPMGControls extends EquationControls {
 
-    String[] parNames = {"R2", "Kex", "dPPMmin", "pA", "dPPM", "Field2"};
+    String[] parNames = {"R2", "Kex", "Hello", "pA", "dPPM", "Field2"};
 
     enum PARS implements ParControls {
-        R2("R2", 0.0, 50.0, 10.0, 10.0, 2),
-        KEX("Kex", 0.0, 20000, 500.0, 500.0, 1),
-        DPPMMIN("dPPMmin", 0.0, 5.0, 0.5, 0.5, 3),
-        PA("pA", 0.5, 0.999, 0.1, 0.9, 3),
-        DPPM("dPPM", 0.0, 5.0, 0.5, 0.5, 3),
-        FIELD2("Field2", 500.0, 1200.0, 100.0, 600.0, 1);
+        R2("R₂", 0.0, 50.0, 10.0, 10.0, 2),
+        KEX("Kₑₓ", 0.0, 20000, 500.0, 500.0, 1),
+        PA("pₐ", 0.5, 0.999, 0.1, 0.9, 3),
+        // DELTA1 is used for:
+        // * Fast regime: \\delta_{ppm}^{min} (see Eq 4 of RING-NMR paper)
+        // * Slow regime: \\delta \\omega_H
+        // * MQ: \\delta \\omega_H
+        DELTA1("", 0.0, 5.0, 0.5, 0.5, 3),
+        // DELTA2 is used for:
+        // * Fast regime: Nothing
+        // * Slow regime: Nothing
+        // * MQ: \\delta \\omega_C
+        DELTA2("", 0.0, 5.0, 0.5, 0.5, 3),
+        FIELD2("B₀", 500.0, 1200.0, 100.0, 600.0, 1);
 
         String name;
         Slider slider;
@@ -101,6 +109,10 @@ public class CPMGControls extends EquationControls {
         @Override
         public void disabled(boolean state) {
             slider.setDisable(state);
+            slider.setVisible(!state);
+            valueText.setDisable(state);
+            valueText.setVisible(!state);
+            label.setVisible(!state);
         }
 
         @Override
@@ -198,47 +210,42 @@ public class CPMGControls extends EquationControls {
         switch (equationName) {
             case "NOEX":
                 R2.disabled(false);
-                DPPMMIN.disabled(true);
-                DPPMMIN.valueText.setDisable(true);
                 KEX.disabled(true);
-                KEX.valueText.setDisable(true);
                 PA.disabled(true);
-                PA.valueText.setDisable(true);
-                DPPM.disabled(true);
-                DPPM.valueText.setDisable(true);
+                DELTA1.disabled(true);
+                DELTA2.disabled(true);
+                FIELD2.disabled(true);
                 break;
+
             case "CPMGFAST":
                 R2.disabled(false);
-                DPPMMIN.disabled(false);
-                DPPMMIN.valueText.setDisable(false);
                 KEX.disabled(false);
-                KEX.valueText.setDisable(false);
                 PA.disabled(true);
-                PA.valueText.setDisable(true);
-                DPPM.disabled(true);
-                DPPM.valueText.setDisable(true);
+                DELTA1.disabled(false);
+                DELTA1.label.setText("δₘᵢₙ");
+                DELTA2.disabled(true);
+                FIELD2.disabled(true);
                 break;
+
             case "CPMGSLOW":
                 R2.disabled(false);
-                DPPMMIN.disabled(true);
-                DPPMMIN.valueText.setDisable(true);
                 KEX.disabled(false);
-                KEX.valueText.setDisable(false);
                 PA.disabled(false);
-                PA.valueText.setDisable(false);
-                DPPM.disabled(false);
-                DPPM.valueText.setDisable(false);
+                DELTA1.disabled(false);
+                DELTA1.label.setText("δ¹H");
+                DELTA2.disabled(true);
+                FIELD2.disabled(true);
                 break;
+
             case "CPMGMQ":
                 R2.disabled(false);
-                DPPMMIN.disabled(false);
-                DPPMMIN.valueText.setDisable(false);
                 KEX.disabled(false);
-                KEX.valueText.setDisable(false);
                 PA.disabled(false);
-                PA.valueText.setDisable(false);
-                DPPM.disabled(false);
-                DPPM.valueText.setDisable(false);
+                DELTA1.disabled(false);
+                DELTA1.label.setText("δ¹H");
+                DELTA2.disabled(false);
+                DELTA2.label.setText("δ¹³C");
+                FIELD2.disabled(true);
                 break;
 
             default:
@@ -262,6 +269,7 @@ public class CPMGControls extends EquationControls {
 
     }
 
+    // TODO
     public void simSliderAction(String label) {
         if (updatingTable) {
             return;
@@ -282,37 +290,36 @@ public class CPMGControls extends EquationControls {
     double[] getPars(String equationName) {
         double r2 = R2.getValue();
         double kEx = KEX.getValue();
-        double dPPMmin = DPPMMIN.getValue();
         double pA = PA.getValue();
-        double dPPM = DPPM.getValue();
+        double delta1 = DELTA1.getValue();
+        double delta2 = DELTA2.getValue();
         double field2 = FIELD2.getValue();
         double[] pars;
         switch (equationName) {
             case "NOEX":
                 pars = new double[1];
                 pars[0] = r2;
-
                 break;
             case "CPMGFAST":
                 pars = new double[3];
                 pars[0] = kEx;
                 pars[1] = r2;
-                pars[2] = dPPMmin;
+                pars[2] = delta1;  // \\delta_{ppm}^{min}
                 break;
             case "CPMGSLOW":
                 pars = new double[4];
                 pars[0] = kEx;
                 pars[1] = pA;
                 pars[2] = r2;
-                pars[3] = dPPM;
+                pars[3] = delta1;  // \\delta \\omega_H
                 break;
             case "CPMGMQ":
                 pars = new double[5];
                 pars[0] = kEx;
                 pars[1] = pA;
                 pars[2] = r2;
-                pars[3] = dPPMmin;
-                pars[4] = dPPM;
+                pars[3] = delta1;  // \\delta \\omega_H
+                pars[4] = delta2;  // \\delta \\omega_C
                 break;
             default:
                 pars = null;
@@ -359,9 +366,9 @@ public class CPMGControls extends EquationControls {
     public double[] sliderGuess(String equationName, int[][] map) {
         double r2 = R2.getValue();
         double kEx = KEX.getValue();
-        double dPPMmin = DPPMMIN.getValue();
+        double dPPMmin = DELTA2.getValue();
         double pA = PA.getValue();
-        double dPPM = DPPM.getValue();
+        double dPPM = DELTA1.getValue();
         double field2 = FIELD2.getValue();
         int nPars = CPMGFitFunction.getNPars(map);
         double[] guesses = new double[nPars];
