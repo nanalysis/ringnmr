@@ -294,13 +294,12 @@ public enum CPMGEquation implements EquationType {
             double deltaH = gammaRatio * 2.0 * Math.PI * deltaHPPM * field;
             double deltaC = 2.0 * Math.PI * deltaCPPM * field;
 
+            double vcpmg = x[0];
             // TODO: Need to get number of CPMG cycles (n)
             // TODO: or the total time of the CPMG elemnt (T) => n = T / (4 * delta)
-            double T = 0.04;
-            double nuCPMG = x[0];
+            double T = 0.04;  //  double T = x[1];
             // N.B. (2 * delta) is the time between successive 13C 180 pulses
-            double delta = 1.0 / (4.0 * nuCPMG);
-            double n = T / (4 * delta);
+            double delta = 1.0 / (4.0 * vcpmg);
 
             // Building lambda1 (3.2 - 3.6)
             // num1: (p_A - p_B)k_{ex} + i \Delta \omega_H
@@ -339,17 +338,17 @@ public enum CPMGEquation implements EquationType {
                     .cos()
                     .multiply(DMinus)
                 );
+            // Using \cosh^{-1}(z) = \ln (z + \sqrt{z + 1}\sqrt{z - 1})
             Complex lambda1 = num3  // 3.2
-                .acos()
-                .multiply(num3
-                    .subtract(1.0)
-                    .sqrt()
-                )
-                .divide(num3
-                    .multiply(-1.0)
+                .add(num3
                     .add(1.0)
                     .sqrt()
+                    .multiply(num3
+                        .subtract(1.0)
+                        .sqrt()
+                    )
                 )
+                .log()
                 .divide(-2 * delta)
                 .add(kEx)
                 .multiply(0.5)
@@ -406,7 +405,7 @@ public enum CPMGEquation implements EquationType {
                     .multiply(0.5 * Math.sqrt(pB / pA))
                 )
                 .getReal();
-            return lambda1.getReal() - Math.log(Q) / (4 * n * delta);
+            return lambda1.getReal() - Math.log(Q) / T;
         }
 
         // TODO
@@ -567,16 +566,8 @@ public enum CPMGEquation implements EquationType {
             double dP = 0.5 * (d1 + 1);
             double dM = 0.5 * (d1 - 1);
             double ch = dP * Math.cosh(etaP) - dM * Math.cos(etaM);
-            if (Double.isInfinite(ch) || (ch > 1e40)) {
-                ch = 1e40;
-            }
             double rexContrib = 0.5 * (kEx - (1.0 / tauCP) * FastMath.acosh(ch));
-            double dR = (1.0 / tauCP) * FastMath.acosh(ch);
-            double value = r2 + rexContrib;
-            if (Double.isInfinite(value)) {
-                System.out.println("nu " + nu + "kex " + kEx + " pa " + pA + " r2 " + r2 + " dw " + dW + " psi " + psi + " rex " + rexContrib + " ch " + ch + " eta " + etaP + " " + etaM + " " + eta1 + " " + psi);
-            }
-            return value;
+            return r2 + rexContrib;
         }
 
         @Override

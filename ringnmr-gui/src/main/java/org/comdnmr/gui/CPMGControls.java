@@ -49,7 +49,7 @@ import static org.comdnmr.gui.CPMGControls.PARS.DELTA2;
  */
 public class CPMGControls extends EquationControls {
 
-    String[] parNames = {"R2", "Kex", "Hello", "pA", "dPPM", "Field2"};
+    String[] parNames = {"R2", "Kex", "pA", "delta1", "delta2", "Field2"};
 
     enum PARS implements ParControls {
         R2("R₂", 0.0, 50.0, 10.0, 10.0, 2),
@@ -238,7 +238,7 @@ public class CPMGControls extends EquationControls {
                 KEX.disabled(false);
                 PA.disabled(false);
                 DELTA1.disabled(false);
-                DELTA1.label.setText("δ¹H");
+                DELTA1.label.setText("δX");
                 DELTA2.disabled(true);
                 FIELD2.disabled(true);
                 nucleiSelector.setValue(Nuclei.N15);
@@ -279,7 +279,7 @@ public class CPMGControls extends EquationControls {
 
     }
 
-    // TODO
+    // TODO: what is going on here?
     public void simSliderAction(String label) {
         if (updatingTable) {
             return;
@@ -335,7 +335,6 @@ public class CPMGControls extends EquationControls {
                 pars = null;
         }
         return pars;
-
     }
 
     double[] getPars(String equationName, Map<String, ParValueInterface> parValues) {
@@ -349,22 +348,22 @@ public class CPMGControls extends EquationControls {
                 pars = new double[3];
                 pars[0] = parValues.get("Kex").getValue();
                 pars[1] = parValues.get("R2").getValue();
-                pars[2] = parValues.get("dPPMmin").getValue();
+                pars[2] = parValues.get("delta1").getValue();
                 break;
             case "CPMGSLOW":
                 pars = new double[4];
                 pars[0] = parValues.get("Kex").getValue();
                 pars[1] = parValues.get("pA").getValue();
                 pars[2] = parValues.get("R2").getValue();
-                pars[3] = parValues.get("dPPM").getValue();
+                pars[3] = parValues.get("delta1").getValue();
                 break;
             case "CPMGMQ":
                 pars = new double[5];
                 pars[0] = parValues.get("Kex").getValue();
                 pars[1] = parValues.get("pA").getValue();
                 pars[2] = parValues.get("R2").getValue();
-                pars[3] = parValues.get("dPPMmin").getValue();
-                pars[4] = parValues.get("dPPM").getValue();
+                pars[3] = parValues.get("delta1").getValue();
+                pars[4] = parValues.get("delta2").getValue();
                 break;
             default:
                 pars = null;
@@ -375,11 +374,10 @@ public class CPMGControls extends EquationControls {
 
     public double[] sliderGuess(String equationName, int[][] map) {
         double r2 = R2.getValue();
-        double kEx = KEX.getValue();
-        double dPPMmin = DELTA2.getValue();
         double pA = PA.getValue();
-        double dPPM = DELTA1.getValue();
-        double field2 = FIELD2.getValue();
+        double kEx = KEX.getValue();
+        double delta1 = DELTA1.getValue();
+        double delta2 = DELTA2.getValue();
         int nPars = CPMGFitFunction.getNPars(map);
         double[] guesses = new double[nPars];
         switch (equationName) {
@@ -391,21 +389,29 @@ public class CPMGControls extends EquationControls {
             case "CPMGFAST":
                 for (int id = 0; id < map.length; id++) {
                     guesses[map[id][1]] = r2;
-                    guesses[map[id][2]] = dPPMmin;
+                    guesses[map[id][2]] = delta1;  // \\delta_{ppm}^{min}
                 }
                 guesses[0] = kEx;
                 break;
             case "CPMGSLOW":
                 for (int id = 0; id < map.length; id++) {
                     guesses[map[id][2]] = r2;
-                    guesses[map[id][3]] = dPPM;
+                    guesses[map[id][3]] = delta1;  // \\delta_X
+                }
+                guesses[0] = kEx;
+                guesses[1] = pA;
+                break;
+            case "CPMGMQ":
+                for (int id = 0; id < map.length; id++) {
+                    guesses[map[id][2]] = r2;
+                    guesses[map[id][3]] = delta1;  // delta_H
+                    guesses[map[id][4]] = delta2;  // delta_C
                 }
                 guesses[0] = kEx;
                 guesses[1] = pA;
                 break;
         }
         return guesses;
-
     }
 
     @Override
@@ -466,14 +472,22 @@ public class CPMGControls extends EquationControls {
             case "CPMGFAST":
                 parNames1.add("Kex");
                 parNames1.add("R2");
-                parNames1.add("dPPMmin");
+                parNames1.add("delta1");
                 parNames1.add("Field2");
                 break;
             case "CPMGSLOW":
                 parNames1.add("Kex");
                 parNames1.add("pA");
                 parNames1.add("R2");
-                parNames1.add("dPPM");
+                parNames1.add("delta1");
+                parNames1.add("Field2");
+                break;
+            case "CPMGMQ":
+                parNames1.add("Kex");
+                parNames1.add("pA");
+                parNames1.add("R2");
+                parNames1.add("delta1");
+                parNames1.add("delta2");
                 parNames1.add("Field2");
                 break;
         }
