@@ -91,7 +91,7 @@ public class ExpFitFunction extends FitFunction {
         for (int i = 0; i < yValues.length; i++) {
             final double value;
             ax[0] = xValues[0][i];
-            value = equation.calculate(par, map[idNums[i]], ax, idNums[i], fieldValues[i]);
+            value = equation.calculate(par, map[idNums[i]], ax, idNums[i]);
             //System.out.println( "xxxxxxxxxxx " + value + " " + yValues[i] + " " + equation.name());
             double delta = (value - yValues[i]);
             if (weightFit) {
@@ -121,7 +121,7 @@ public class ExpFitFunction extends FitFunction {
         double[] x = new double[1];
         for (int i = 0; i < xValues[0].length; i++) {
             x[0] = xValues[0][i];
-            double yCalc = equation.calculate(par, map[idNums[i]], x, idNums[i], field);
+            double yCalc = equation.calculate(par, map[idNums[i]], x, idNums[i]);
             result.add(yCalc);
         }
         return result;

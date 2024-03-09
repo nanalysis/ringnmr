@@ -100,17 +100,17 @@ public class CESTEquations {
      *
      * @param X Matrix containing the offset values i.e. CEST irradiation
      * frequency (X[0]), the B1 field values (X[1]), and the Tex values (X[2]).
-     * @param fields Array containing the B0 field values.
      * @param deltaA0 deltaA0 value. Ground/Major state peak position.
      * @param R1A R1A value. Longitudinal relaxation rate for Ground/Major
      * state.
      * @param R2A R2A value. Transverse relaxation rate for Ground/Major state.
      * @return CEST intensity array.
      */
-    public static double[] noEx(double[][] X, double[] fields, double deltaA0, double R1A, double R2A) {
+    public static double[] noEx(double[][] X, double deltaA0, double R1A, double R2A) {
         double[] omegarf = X[0];
         double[] b1Field = X[1];
         double[] Tex = X[2];
+        double[] fields = X[3];
 
         double trad = Tex[0];//0.3;
         int size = omegarf.length;
@@ -156,7 +156,7 @@ public class CESTEquations {
      * @param R2B R2B value. Transverse relaxation rate for Excited/Minor state.
      * @return CEST intensity array.
      */
-    public static double[] exact0(double[][] X, double[] fields, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A, double R2B) {
+    public static double[] exact0(double[][] X, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A, double R2B) {
         // Performs an exact numerical calculation and returns CEST intensity ratio.
         //
         // X: array containing two arrays:
@@ -173,6 +173,7 @@ public class CESTEquations {
         double[] omegarf = X[0];
         double[] b1Field = X[1];
         double[] Tex = X[2];
+        double[] fields = X[3];
 
         // time delay is hard-coded below
         double tdelay = Tex[0];//0.3;
@@ -269,7 +270,7 @@ public class CESTEquations {
      * @param R2B R2B value. Transverse relaxation rate for Excited/Minor state.
      * @return CEST intensity array.
      */
-    public static double[] eigenExact1(double[][] X, double[] fields, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A, double R2B) {
+    public static double[] eigenExact1(double[][] X, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A, double R2B) {
         // Performs an exact numerical calculation and returns CEST intensity ratio.
         // Assumes R1A = R1B.
         //
@@ -287,6 +288,7 @@ public class CESTEquations {
         double[] omegarf = X[0];
         double[] b1Field = X[1];
         double[] Tex = X[2];
+        double[] fields = X[3];
 
         //double R1B = R1A;
         // time delay is hard-coded below
@@ -390,7 +392,7 @@ public class CESTEquations {
      * @param R2B R2B value. Transverse relaxation rate for Excited/Minor state.
      * @return CEST intensity array.
      */
-    public static double[] r1rhoApprox(String approx, double[][] X, double[] fields, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A, double R2B) {
+    public static double[] r1rhoApprox(String approx, double[][] X, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A, double R2B) {
 
         // X: array containing two arrays:
         //  omegarf: CEST irradiation frequency (ppm)
@@ -406,6 +408,7 @@ public class CESTEquations {
         double[] omegarf = X[0];
         double[] b1Field = X[1];
         double[] Tex = X[2];
+        double[] fields = X[3];
 
         double trad = Tex[0];//0.3;
 
@@ -565,16 +568,16 @@ public class CESTEquations {
      * Estimates CEST/R1rho peak positions and widths for initial guesses before
      * fitting.
      *
-     * @param xvals Array of the offset values i.e. CEST irradiation frequency.
-     * @param yvals Array of the CEST intensities.
-     * @param field B0 field value.
+     * @param xyvals Array of the offset values i.e. CEST irradiation frequency.
      * @param fitMode String "cest" or "r1rho" specifying CEST or R1rho data.
      * @return List of CESTPeak objects. The major state peak is listed first,
      * then the minor state peak, if any.
      */
-    public static List<CESTPeak> cestPeakGuess(double[] xvals, double[] yvals, double field, String fitMode) {
+    public static List<CESTPeak> cestPeakGuess(double[][] xyvals, String fitMode) {
         // Estimates CEST peak positions for initial guesses for before fitting.
-
+        double[] xvals = xyvals[0];
+        double[] yvals = xyvals[xyvals.length - 1];
+        double field = xyvals[xyvals.length-2][0];
         List<CESTPeak> peaks = new ArrayList<>();
 
         double[] syvals = new double[yvals.length];
@@ -703,7 +706,6 @@ public class CESTEquations {
                     }
                 }
             }
-
         }
 
         peaks.sort(Comparator.comparingDouble(CESTPeak::getDepth));
@@ -987,12 +989,14 @@ public class CESTEquations {
                 n++;
             }
         }
-        double[][] result = new double[2][n];
+        double[][] result = new double[xValues.length + 1][n];
         int j = 0;
         for (int i = 0; i < idNums.length; i++) {
             if (idNums[i] == id) {
-                result[0][j] = xValues[0][i];
-                result[1][j] = yValues[i];
+                for (int k=0;k<xValues.length;k++) {
+                    result[k][j] = xValues[k][i];
+                }
+                result[xValues.length][j] = yValues[i];
                 j++;
             }
         }

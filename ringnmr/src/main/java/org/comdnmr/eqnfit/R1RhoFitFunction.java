@@ -89,7 +89,7 @@ public class R1RhoFitFunction extends FitFunction {
         for (int id = 0; id < map.length; id++) {
             double[][] x = CESTEquations.getXValues(xValues, idNums, id);
             double[] fields = CESTEquations.getValues(fieldValues, idNums, id);
-            double[] yCalc1 = equation.calculate(par, map[id], x, id, fields);
+            double[] yCalc1 = equation.calculate(par, map[id], x, id);
             int[] indicies = CESTEquations.getIndicies(idNums, id);
             for (int i = 0; i < indicies.length; i++) {
                 yCalc[indicies[i]] = yCalc1[i];

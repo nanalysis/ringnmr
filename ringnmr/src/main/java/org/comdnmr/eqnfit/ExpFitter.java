@@ -17,18 +17,18 @@
  */
 package org.comdnmr.eqnfit;
 
-import org.comdnmr.util.CoMDPreferences;
-import org.comdnmr.data.ExperimentSet;
+import org.apache.commons.math3.optim.PointValuePair;
+import org.comdnmr.data.Experiment;
 import org.comdnmr.data.ExperimentData;
+import org.comdnmr.data.ExperimentSet;
+import org.comdnmr.util.CoMDOptions;
+import org.comdnmr.util.CoMDPreferences;
+import org.nmrfx.chemistry.relax.ResonanceSource;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import org.apache.commons.math3.optim.PointValuePair;
-import org.nmrfx.chemistry.relax.ResonanceSource;
-import org.comdnmr.data.Experiment;
-import org.comdnmr.util.CoMDOptions;
-import org.nmrfx.chemistry.Atom;
 
 /**
  *
@@ -95,7 +95,7 @@ public class ExpFitter implements EquationFitter {
     }
 
     @Override
-    public void setData(List<Double>[] allXValues, List<Double> yValues, List<Double> errValues, List<Double> fieldValues) {
+    public void setData(List<Double>[] allXValues, List<Double> yValues, List<Double> errValues) {
         xValues.clear();
         xValues.addAll(allXValues[0]);
         this.yValues.clear();
@@ -149,7 +149,6 @@ public class ExpFitter implements EquationFitter {
                     idValues.add(id);
                 }
                 id++;
-
             }
             resIndex++;
         }
@@ -295,8 +294,7 @@ public class ExpFitter implements EquationFitter {
         boolean useWeight = options.getWeightFit();
         CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs,
                 useNonParametric, sRadius, fRadius, tol, useWeight);
-        double[] usedFields = getFields(fieldValues, idValues);
-        return getResults(this, eqn, parNames, dynSources, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, true, curveStats);
+        return getResults(this, eqn, parNames, dynSources, map, states, null, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, true, curveStats);
     }
 
     @Override

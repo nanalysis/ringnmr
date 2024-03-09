@@ -17,6 +17,7 @@
  */
 package org.comdnmr.eqnfit;
 
+import org.comdnmr.data.CPMGExperiment;
 import org.comdnmr.data.ExperimentSet;
 import org.comdnmr.data.ExperimentData;
 import java.util.ArrayList;
@@ -41,10 +42,9 @@ public class CPMGFitter implements EquationFitter {
     CPMGFitFunction calcR;
     CoMDOptions options;
     static List<String> equationNameList = Arrays.asList(CPMGEquation.getEquationNames());
-    List<Double> xValues = new ArrayList<>();
+    List<Double>[] xValues = new ArrayList[4];
     List<Double> yValues = new ArrayList<>();
     List<Double> errValues = new ArrayList<>();
-    List<Double> fieldValues = new ArrayList<>();
     List<Integer> idValues = new ArrayList<>();
     int nCurves = 1;
     int nResidues = 1;
@@ -95,16 +95,16 @@ public class CPMGFitter implements EquationFitter {
     }
 
     @Override
-    public void setData(List<Double>[] allXValues, List<Double> yValues, List<Double> errValues, List<Double> fieldValues) {
-        xValues.clear();
-        xValues.addAll(allXValues[0]);
+    public void setData(List<Double>[] allXValues, List<Double> yValues, List<Double> errValues) {
+        for (int i = 0;i<allXValues.length;i++) {
+            xValues[i] = new ArrayList<>();
+            xValues[i].addAll(allXValues[i]);
+        }
         this.yValues.clear();
         this.yValues.addAll(yValues);
         this.errValues.clear();
         this.errValues.addAll(errValues);
-        this.fieldValues.clear();
         this.idValues.clear();
-        this.fieldValues.addAll(fieldValues);
         for (Double yValue : yValues) {
             this.idValues.add(0);
         }
@@ -121,7 +121,9 @@ public class CPMGFitter implements EquationFitter {
 
     @Override
     public void setData(ExperimentSet experimentSet, ResonanceSource[] dynSources) {
-        xValues.clear();
+        for (int i = 0;i<xValues.length;i++) {
+            xValues[i] = new ArrayList<>();
+        }
         this.dynSources = dynSources.clone();
         nResidues = dynSources.length;
 
@@ -133,22 +135,26 @@ public class CPMGFitter implements EquationFitter {
         int resIndex = 0;
         int id = 0;
         for (var dynSource : dynSources) {
-            for (Experiment expData : expDataList) {
-                ExperimentData experimentalData = expData.getResidueData(dynSource);
+            for (Experiment experiment : expDataList) {
+                CPMGExperiment cpmgExperiment = (CPMGExperiment) experiment;
+                ExperimentData experimentalData = experiment.getResidueData(dynSource);
                 if (experimentalData != null) {
 
-                    states[k++] = experimentSet.getStateIndices(resIndex, expData);
+                    states[k++] = experimentSet.getStateIndices(resIndex, experiment);
                     //  need peakRefs
-                    double field = expData.getNucleusField();
+                    double fieldX = experiment.getNucleusField();
+                    double fieldH = experiment.getB0Field();
                     double[][] x = experimentalData.getXValues();
                     double[] y = experimentalData.getYValues();
                     double[] err = experimentalData.getErrValues();
 
                     for (int i = 0; i < y.length; i++) {
-                        xValues.add(x[0][i]);
+                        xValues[0].add(x[0][i]);
+                        xValues[1].add(fieldX);
+                        xValues[2].add(fieldH);
+                        xValues[3].add(cpmgExperiment.getTau());
                         yValues.add(y[i]);
                         errValues.add(err[i]);
-                        fieldValues.add(field);
                         idValues.add(id);
                     }
                     id++;
@@ -189,17 +195,18 @@ public class CPMGFitter implements EquationFitter {
 
     @Override
     public void setupFit(String eqn) {
-        double[][] x = new double[1][yValues.size()];
+        double[][] x = new double[xValues.length][yValues.size()];
         double[] y = new double[yValues.size()];
         double[] err = new double[yValues.size()];
         int[] idNums = new int[yValues.size()];
-        double[] fields = new double[yValues.size()];
         for (int i = 0; i < x[0].length; i++) {
-            x[0][i] = xValues.get(i);
+            for (int j = 0;j < xValues.length;j++) {
+                if (xValues[j] != null) {
+                    x[j][i] = xValues[j].get(i);
+                }
+            }
             y[i] = yValues.get(i);
             err[i] = errValues.get(i);
-            //System.out.println(x[0][i]+", "+x[0][i]+", "+x[0][i]+", "+x[0][i]);
-            fields[i] = fieldValues.get(i);
             idNums[i] = idValues.get(i);
         }
         calcR.setEquation(eqn);
@@ -207,7 +214,6 @@ public class CPMGFitter implements EquationFitter {
         calcR.setXY(x, y);
         calcR.setIds(idNums);
         calcR.setErr(err);
-        calcR.setFieldValues(fields);
         calcR.setMap(stateCount, states);
     }
 
@@ -283,7 +289,8 @@ public class CPMGFitter implements EquationFitter {
         String[] parNames = calcR.getParNames();
         double[] errEstimates;
         double[][] simPars = null;
-        double[] rexValues = calcR.getRex(pars);
+        double field = calcR.xValues[1][0];
+        double[] rexValues = calcR.getRex(pars, field);
         boolean okRex = false;
         double rexRatio = options.getRexRatio();
         for (double rexValue : rexValues) {
@@ -345,8 +352,8 @@ public class CPMGFitter implements EquationFitter {
         boolean useWeight = options.getWeightFit();
         CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs,
                 useNonParametric, sRadius, fRadius, tol, useWeight);
-        double[] usedFields = getFields(fieldValues, idValues);
-        return getResults(this, eqn, parNames, dynSources, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, exchangeValid, curveStats);
+        double[][] extras = getFields(xValues, idValues);
+        return getResults(this, eqn, parNames, dynSources, map, states, extras, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, exchangeValid, curveStats);
     }
 
     @Override

@@ -35,30 +35,29 @@ import java.util.logging.Logger;
 public interface CESTEquationType extends EquationType {
 
     @Override
-    public default double calculate(double[] par, int[] map, double[] X, int idNum, double field) {
-        double[][] x = new double[3][1];
-        //System.out.println(x.length + " " + x[0].length + " X " + X.length);
+    public default double calculate(double[] par, int[] map, double[] X, int idNum) {
+        double[][] x = new double[4][1];
         x[0][0] = X[0];
         x[1][0] = X[1];
         x[2][0] = X[2];
-        double[] fields = {field};
-        double[] y = calculate(par, map, x, idNum, fields);
+        x[3][0] = X[3];
+        double[] y = calculate(par, map, x, idNum);
         return y[0];
     }
 
     @Override
-    public default double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
+    public default double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
         int nPars = CESTFitFunction.getNPars(map);
         double[] guesses = new double[nPars];
         if (CoMDPreferences.getNeuralNetworkGuess()) {
-            guesses = ANNguess(xValues, yValues, map, idNums, nID, fields);
+            guesses = ANNguess(xValues, yValues, map, idNums, nID);
         } else {
-            guesses = oldGuess(xValues, yValues, map, idNums, nID, fields);
+            guesses = oldGuess(xValues, yValues, map, idNums, nID);
         }
         return guesses;
     }
     
-    public default double[] ANNguess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
+    public default double[] ANNguess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
         int nPars = CESTFitFunction.getNPars(map);
         double[] guesses = new double[nPars];
         double[] annGuess = new double[map[0].length];
@@ -69,8 +68,8 @@ public interface CESTEquationType extends EquationType {
             double[][] xy = CESTEquations.getXYValues(xValues, yValues, idNums, id);
             double b1Field = xValues[1][0];
             double tEx = xValues[2][0];
-            double field = fields[id];
-            List<CESTPeak> peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], field, "cest");
+            double field = xValues[3][0];
+            List<CESTPeak> peaks = CESTEquations.cestPeakGuess(xy, "cest");
             try {
                 annGuess = CESTEquations.cestANNGuess(xy, peaks, tEx, b1Field);
             } catch (IOException ex) {
@@ -85,22 +84,22 @@ public interface CESTEquationType extends EquationType {
         return guesses;
     }
     
-    public default double[] oldGuess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
+    public default double[] oldGuess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
         int nPars = CESTFitFunction.getNPars(map);
         double[] guesses = new double[nPars];
         
         for (int id = 0; id < map.length; id++) {
             int[] map1 = map[id];
             double[][] xy = CESTEquations.getXYValues(xValues, yValues, idNums, id);
-            double field = fields[id];
+            int yIndex = xy.length - 1;
 
-            List<CESTPeak> peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], field, "cest");
+            List<CESTPeak> peaks = CESTEquations.cestPeakGuess(xy, "cest");
             if (peaks.size() > 0) {
                 double tex = xValues[2][0];
-                double[] r1 = CESTEquations.cestR1Guess(xy[1], tex, "cest");
-                double[][] r2 = CESTEquations.cestR2Guess(peaks, xy[1], "cest");
+                double[] r1 = CESTEquations.cestR1Guess(xy[yIndex], tex, "cest");
+                double[][] r2 = CESTEquations.cestR2Guess(peaks, xy[yIndex], "cest");
                 guesses[map1[0]] = CESTEquations.cestKexGuess(peaks, "cest"); //112.0; //kex
-                guesses[map1[1]] = CESTEquations.cestPbGuess(peaks, xy[1], "cest"); //0.1; //pb
+                guesses[map1[1]] = CESTEquations.cestPbGuess(peaks, xy[yIndex], "cest"); //0.1; //pb
                 guesses[map1[2]] = peaks.get(0).position; //-250 * 2.0 * Math.PI; //deltaB
                 guesses[map1[3]] = peaks.get(peaks.size() - 1).position; //400 * 2.0 * Math.PI; //deltaA
                 guesses[map1[4]] = r1[0]; //2.4; //R1A
@@ -115,14 +114,15 @@ public interface CESTEquationType extends EquationType {
     }
 
     @Override
-    public default double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+    public default double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
         double[][] boundaries = new double[2][guesses.length];
         for (int id = 0; id < map.length; id++) {
             int[] map1 = map[id];
             double[][] xy = CESTEquations.getXYValues(xValues, yValues, idNums, id);
-            List<CESTPeak> peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], field, "cest");
+            List<CESTPeak> peaks = CESTEquations.cestPeakGuess(xy, "cest");
             double dAbound = 0;
             double dBbound = 0;
+            double field = xValues[xValues.length -1][0];
             if (peaks.size() > 1) {
                 dAbound = (peaks.get(0).getWidths()[1] / field) / 2;
                 dBbound = (peaks.get(1).getWidths()[1] / field) / 2;

@@ -44,19 +44,18 @@ public class CESTFitFunction extends FitFunction {
         equation = CESTEquation.valueOf(eqName.toUpperCase());
     }
 
-    public CESTFitFunction(CoMDOptions options, double[][] x, double[] y, double[] err, double[] fieldValues) throws IllegalArgumentException {
-        this(options, x, y, err, fieldValues, new int[x.length]);
+    public CESTFitFunction(CoMDOptions options, double[][] x, double[] y, double[] err) throws IllegalArgumentException {
+        this(options, x, y, err, new int[x.length]);
     }
 
-    public CESTFitFunction(CoMDOptions options, double[][] x, double[] y, double[] err, double[] fieldValues, int[] idNums) throws IllegalArgumentException {
+    public CESTFitFunction(CoMDOptions options, double[][] x, double[] y, double[] err, int[] idNums) throws IllegalArgumentException {
         super(options);
         this.xValues = new double[x.length][];
-        this.xValues[0] = x[0].clone();
-        this.xValues[1] = x[1].clone();
-        this.xValues[2] = x[2].clone();
+        for (int j=0;j<x.length;j++) {
+            this.xValues[j] = x[j].clone();
+        }
         this.yValues = y.clone();
         this.errValues = err.clone();
-        this.fieldValues = fieldValues.clone();
         this.idNums = idNums.clone();
         this.idNums = new int[yValues.length];
         this.equation = CESTEquation.TROTT_PALMER;
@@ -89,8 +88,7 @@ public class CESTFitFunction extends FitFunction {
         double[] yCalc = new double[yValues.length];
         for (int id = 0; id < map.length; id++) {
             double[][] x = CESTEquations.getXValues(xValues, idNums, id);
-            double[] fields = CESTEquations.getValues(fieldValues, idNums, id);
-            double[] yCalc1 = equation.calculate(par, map[id], x, id, fields);
+            double[] yCalc1 = equation.calculate(par, map[id], x, id);
             int[] indicies = CESTEquations.getIndicies(idNums, id);
             for (int i = 0; i < indicies.length; i++) {
                 yCalc[indicies[i]] = yCalc1[i];
@@ -185,7 +183,7 @@ public class CESTFitFunction extends FitFunction {
 
         IntStream.range(0, nSim).parallel().forEach(i -> {
 //        IntStream.range(0, nSim).forEach(i -> {
-            CESTFitFunction rDisp = new CESTFitFunction(options, xValues, yPred, errValues, fieldValues, idNums);
+            CESTFitFunction rDisp = new CESTFitFunction(options, xValues, yPred, errValues, idNums);
             rDisp.setEquation(equation.getName());
             double[] newY = new double[yValues.length];
             for (int k = 0; k < yValues.length; k++) {
@@ -223,23 +221,21 @@ public class CESTFitFunction extends FitFunction {
         String optimizer = options.getBootStrapOptimizer();
 
         IntStream.range(0, nSim).parallel().forEach(i -> {
-            CESTFitFunction rDisp = new CESTFitFunction(options, xValues, yValues, errValues, fieldValues, idNums);
+            CESTFitFunction rDisp = new CESTFitFunction(options, xValues, yValues, errValues, idNums);
             rDisp.setEquation(equation.getName());
-            double[][] newX = new double[3][yValues.length];
+            double[][] newX = new double[xValues.length][yValues.length];
             double[] newY = new double[yValues.length];
             double[] newErr = new double[yValues.length];
-            double[] newFieldValues = new double[yValues.length];
             int[] newID = new int[yValues.length];
             int iTry = 0;
             do {
                 for (int k = 0; k < yValues.length; k++) {
                     int rI = random.nextInt(yValues.length);
-                    newX[0][k] = xValues[0][rI];
-                    newX[1][k] = xValues[1][rI];
-                    newX[2][k] = xValues[2][rI];
+                    for (int j=0;j<xValues.length;j++) {
+                        newX[j][k] = xValues[j][rI];
+                    }
                     newY[k] = yValues[rI];
                     newErr[k] = errValues[rI];
-                    newFieldValues[k] = fieldValues[rI];
                     newID[k] = idNums[rI];
                 }
                 iTry++;
@@ -247,7 +243,6 @@ public class CESTFitFunction extends FitFunction {
             // fixme  idNum should be set in above loop
             rDisp.setXY(newX, newY);
             rDisp.setErr(newErr);
-            rDisp.setFieldValues(newFieldValues);
             rDisp.setIds(newID);
             rDisp.setMap(map);
 

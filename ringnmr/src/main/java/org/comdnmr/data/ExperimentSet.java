@@ -36,10 +36,10 @@ public class ExperimentSet implements ValueSet {
     String fileName = null;
     Map<Double, Integer> fieldMap = new LinkedHashMap();
     Map<Double, Integer> tempMap = new LinkedHashMap();
-    Map<String, Integer> nucMap = new LinkedHashMap();
+    Map<Double, Integer> b1Map = new LinkedHashMap();
     List<Double> fieldList = new ArrayList<>();
     List<Double> tempList = new ArrayList<>();
-    List<String> nucList = new ArrayList<>();
+    List<Double> b1List = new ArrayList<>();
     private boolean absValueMode = false;
     private String bootStrapMode = "parametric";
     private String expMode = "cpmg";
@@ -123,7 +123,7 @@ public class ExperimentSet implements ValueSet {
     public List<String> getEquationNames() {
         Set<String> equationSet = new HashSet<>();
         resultMap.values().stream().forEach(rInfo -> {
-            equationSet.addAll(rInfo.curveSets.keySet());
+            equationSet.addAll(rInfo.curveFits.keySet());
         });
         List<String> equationNames = equationSet.stream().sorted().collect(Collectors.toList());
         return equationNames;
@@ -168,22 +168,27 @@ public class ExperimentSet implements ValueSet {
     public void setupMaps() {
         fieldMap.clear();
         tempMap.clear();
-        nucMap.clear();
+        b1Map.clear();
         fieldList.clear();
         tempList.clear();
-        nucList.clear();
-        for (Experiment expData : expMaps.values()) {
-            if (!fieldMap.containsKey(Math.floor(expData.getB0Field()))) {
-                fieldMap.put(Math.floor(expData.getB0Field()), fieldMap.size());
-                fieldList.add(expData.getB0Field());
+        b1List.clear();
+        for (Experiment experiment : expMaps.values()) {
+            if (!fieldMap.containsKey(Math.floor(experiment.getB0Field()))) {
+                fieldMap.put(Math.floor(experiment.getB0Field()), fieldMap.size());
+                fieldList.add(experiment.getB0Field());
             }
-            if (!tempMap.containsKey(Math.floor(expData.getTemperature()))) {
-                tempMap.put(Math.floor(expData.getTemperature()), tempMap.size());
-                tempList.add(expData.getTemperature());
+            if (!tempMap.containsKey(Math.floor(experiment.getTemperature()))) {
+                tempMap.put(Math.floor(experiment.getTemperature()), tempMap.size());
+                tempList.add(experiment.getTemperature());
             }
-            if (!nucMap.containsKey(expData.getNucleusName())) {
-                nucMap.put(expData.getNucleusName(), nucMap.size());
-                nucList.add(expData.getNucleusName());
+            double b1Field = 0.0;
+            if (experiment instanceof OffsetExperiment offsetExperiment) {
+                b1Field = offsetExperiment.getB1Field();
+            }
+            double b1Floor = Math.floor(b1Field);
+            if (!b1Map.containsKey(b1Floor)) {
+                b1Map.put(b1Floor, b1Map.size());
+                b1List.add(b1Field);
             }
         }
         for (Experiment expData : expMaps.values()) {
@@ -192,16 +197,22 @@ public class ExperimentSet implements ValueSet {
         }
     }
 
-    public int[] getStateIndices(int resIndex, Experiment expData) {
+    public int[] getStateIndices(int resIndex, Experiment experiment) {
         if (fieldMap.isEmpty()) {
             setupMaps();
         }
         int[] state = new int[4];
         state[0] = resIndex;
-        state[1] = fieldMap.get(Math.floor(expData.getB0Field()));
-        state[2] = tempMap.get(Math.floor(expData.getTemperature()));
-        state[3] = nucMap.get(expData.getNucleusName());
-//        System.out.println(resIndex + " " + expData.field + " " + expData.temperature + " " + expData.nucleus);
+        state[1] = fieldMap.get(Math.floor(experiment.getB0Field()));
+        state[2] = tempMap.get(Math.floor(experiment.getTemperature()));
+        double b1Field = 0.0;
+        if (experiment instanceof OffsetExperiment offsetExperiment) {
+            b1Field = offsetExperiment.getB1Field();
+        }
+        double b1Floor = Math.floor(b1Field);
+
+        state[3] = b1Map.get(b1Floor);
+//        System.out.println(resIndex + " " + experiment.field + " " + experiment.temperature + " " + experiment.nucleus);
 //        System.out.println("state index residue:" + state[0] + " field:" + state[1] + " temp:" + state[2] + " nuc:" + state[3]);
 
         return state;
@@ -215,7 +226,7 @@ public class ExperimentSet implements ValueSet {
         state[0] = nResidues;
         state[1] = fieldMap.size();
         state[2] = tempMap.size();
-        state[3] = nucMap.size();
+        state[3] = b1Map.size();
 //        System.out.println("state count residues:" + state[0] + " fields:" + state[1] + " temps:" + state[2] + " nucs:" + state[3]);
         return state;
     }
@@ -288,13 +299,13 @@ public class ExperimentSet implements ValueSet {
         return temperatures;
     }
 
-    public String[] getNuclei() {
-        String[] nuclei = new String[nucList.size()];
+    public double[] getB1Field() {
+        double[] b1Fields = new double[b1List.size()];
         int i = 0;
-        for (String nucleus : nucList) {
-            nuclei[i++] = nucleus;
+        for (double b1Field : b1List) {
+            b1Fields[i++] = b1Field;
         }
-        return nuclei;
+        return b1Fields;
     }
 
     public Map<Atom, Double> getParMapData(String eqnName, String state, String parName) {

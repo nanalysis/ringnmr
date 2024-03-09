@@ -23,19 +23,18 @@
 package org.comdnmr.eqnfit;
 
 import org.apache.commons.math3.complex.Complex;
-import org.comdnmr.modelfree.RelaxEquations;
+import org.apache.commons.math3.util.FastMath;
 import org.comdnmr.util.ANNLoader;
 import org.comdnmr.util.CoMDPreferences;
 import org.comdnmr.util.DataUtil;
 import org.comdnmr.util.Utilities;
+import org.ojalgo.ann.ArtificialNeuralNetwork;
+import org.ojalgo.matrix.store.MatrixStore;
+import org.ojalgo.structure.Access1D;
 
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.commons.math3.util.FastMath;
-import org.ojalgo.ann.ArtificialNeuralNetwork;
-import org.ojalgo.matrix.store.MatrixStore;
-import org.ojalgo.structure.Access1D;
 
 /**
  *
@@ -45,14 +44,14 @@ public enum CPMGEquation implements EquationType {
 
     NOEX("noex", 0, "R2") {
         @Override
-        public double calculate(double[] par, int[] map, double[] x, int idNum, double field) {
+        public double calculate(double[] par, int[] map, double[] x, int idNum) {
             double R2 = par[map[0]];
             double value = R2;
             return value;
         }
 
         @Override
-        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
+        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
             int nPars = CPMGFitFunction.getNPars(map);
             double[] guesses = new double[nPars];
             for (int id = 0; id < map.length; id++) {
@@ -63,7 +62,7 @@ public enum CPMGEquation implements EquationType {
         }
 
         @Override
-        public double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+        public double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
             double[][] boundaries = new double[2][guesses.length];
             for (int id = 0; id < guesses.length; id++) {
                 boundaries[0][id] = 0.0;
@@ -115,11 +114,12 @@ public enum CPMGEquation implements EquationType {
         }
     }, CPMGFAST("cpmgfast", 1, "Kex", "R2", "dPPMmin") {
         @Override
-        public double calculate(double[] par, int[] map, double[] x, int idNum, double field) {
+        public double calculate(double[] par, int[] map, double[] x, int idNum) {
             double kEx = par[map[0]];
             double R2 = par[map[1]];
             double dPPMmin = par[map[2]];
             double vu = x[0];
+            double field = x[1];
             double value;
             if (kEx <= 0.0) {
                 value = R2;
@@ -133,14 +133,14 @@ public enum CPMGEquation implements EquationType {
         }
 
         @Override
-        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
+        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
             int nPars = CPMGFitFunction.getNPars(map);
             double[] guesses = new double[nPars];
             if (CoMDPreferences.getNeuralNetworkGuess()) {
                 for (int id = 0; id < map.length; id++) {
                     double[] annGuess = new double[map[id].length];
                     double[][] xy = getXYValues(xValues, yValues, idNums, id);
-                    double[] fields2 = {fields[id]};
+                    double[] fields2 = xy[1];
                     try {
                         
                         annGuess = annCPMGGuesser("FAST", xy[0], xy[1], fields2);
@@ -163,7 +163,7 @@ public enum CPMGEquation implements EquationType {
                     if (rex < 0.0) {
                         rex = 0.0;
                     }
-                    double field = fields[id];
+                    double field = xValues[1][id];
                     guesses[map[id][1]] = r2;
                     double tauMid = 1.0 / (2.0 * vMid);
                     double kEx = 1.915 / (0.5 * tauMid);
@@ -184,7 +184,7 @@ public enum CPMGEquation implements EquationType {
         }
 
         @Override
-        public double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+        public double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
             double[][] boundaries = new double[2][guesses.length];
             for (int id = 0; id < map.length; id++) {
                 int iPar = map[id][0];
@@ -275,29 +275,29 @@ public enum CPMGEquation implements EquationType {
     //                return value;
     //            }
     //        },
-    CPMGMQ("cpmgmq", 2, "kEx", "pA", "R2", "deltaHPPM", "deltaCPPM") {
+    CPMGMQ("cpmgmq", 2, "kEx", "pA", "R2", "deltaCPPM", "deltaHPPM") {
         @Override
-        public double calculate(double[] par, int[] map, double[] x, int idNum, double field) {
+        public double calculate(double[] par, int[] map, double[] x, int idNum) {
             // See the following DOI:
             // 10.1021/ja039587i
             // References to equations and comments with LaTeX notation relate to this paper
             double kEx = par[map[0]];
             double pA = par[map[1]];
             double R2 = par[map[2]];
-            double deltaHPPM = par[map[3]];
-            double deltaCPPM = par[map[4]];
+            double deltaCPPM = par[map[3]];
+            double deltaHPPM = par[map[4]];
 
             double pB = 1.0 - pA;
-
-            // field is provided as the 13C Larmor frequency, so need to scale for 1H
-            double gammaRatio = RelaxEquations.GAMMA_H / RelaxEquations.GAMMA_C;
-            double deltaH = gammaRatio * 2.0 * Math.PI * deltaHPPM * field;
-            double deltaC = 2.0 * Math.PI * deltaCPPM * field;
-
             double vcpmg = x[0];
+            double fieldX = x[1];
+            double fieldH = x[2];
+            double tau = x[3];
+
+            double deltaC = 2.0 * Math.PI * deltaCPPM * fieldX;
+            double deltaH = fieldH > 1.0e-6 ?  2.0 * Math.PI * deltaHPPM * fieldH : 0.0;
+
             // TODO: Need to get number of CPMG cycles (n)
             // TODO: or the total time of the CPMG elemnt (T) => n = T / (4 * delta)
-            double T = 0.04;  //  double T = x[1];
             // N.B. (2 * delta) is the time between successive 13C 180 pulses
             double delta = 1.0 / (4.0 * vcpmg);
 
@@ -405,12 +405,16 @@ public enum CPMGEquation implements EquationType {
                     .multiply(0.5 * Math.sqrt(pB / pA))
                 )
                 .getReal();
-            return lambda1.getReal() - Math.log(Q) / T;
+            if (tau > 1.0e-6) {
+                return lambda1.getReal() - Math.log(Q) / tau;
+            } else {
+                return lambda1.getReal();
+            }
         }
 
         // TODO
         @Override
-        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
+        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
             int nPars = CPMGFitFunction.getNPars(map);
             double[] guesses = new double[nPars];
             double kExSum = 0.0;
@@ -427,13 +431,13 @@ public enum CPMGEquation implements EquationType {
                 if (kex > CoMDPreferences.getCPMGMaxFreq()) {
                     kex = CoMDPreferences.getCPMGMaxFreq() * 0.9;
                 }
-                double field = fields[id];
+                double fieldX = xValues[1][id];
                 double dw2 = rex / (pa * (1.0 - pa)) * kex;
-                double dPPMH = Math.sqrt(dw2) / (2.0 * Math.PI) / field;
-                double dPPMC = Math.sqrt(dw2) / (2.0 * Math.PI) / (field * 0.2515);
+                double dPPMC = Math.sqrt(dw2) / (2.0 * Math.PI) / fieldX;
+                double dPPMH = 0.1;
                 guesses[map[id][2]] = r2;
-                guesses[map[id][3]] = dPPMH;
-                guesses[map[id][4]] = dPPMC;
+                guesses[map[id][3]] = dPPMC;
+                guesses[map[id][4]] = dPPMH;
                 kExSum += kex;
             }
             guesses[0] = kExSum / map.length;
@@ -443,7 +447,7 @@ public enum CPMGEquation implements EquationType {
 
         // TODO
         @Override
-        public double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+        public double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
             double[][] boundaries = new double[2][guesses.length];
             // "Kex", "pA", "R2", "dPPMH, dPPMC"
             for (int id = 0; id < map.length; id++) {
@@ -468,12 +472,12 @@ public enum CPMGEquation implements EquationType {
 
         // TODO
         @Override
-        public double getRex(double[] pars, int[] map, double field) {
-            double[] x = new double[1];
+        public double getRex(double[] pars, int[] map, double fields) {
+            double[] x = {0, fields, 0.0, 0.0};
             x[0] = 10.0;
-            double y0 = calculate(pars, map, x, 0, field);
+            double y0 = calculate(pars, map, x, 0);
             x[0] = 1.0e4;
-            double y1 = calculate(pars, map, x, 0, field);
+            double y1 = calculate(pars, map, x, 0);
             double rex = y0 - y1;
             return rex;
         }
@@ -537,6 +541,7 @@ public enum CPMGEquation implements EquationType {
             lastCount = maxIndex + 1;
             for (int i = 0; i < n; i++) {
                 map[i][3] = CPMGFitter.getMapIndex(states[i], stateCount, 0, 3) + lastCount;
+                maxIndex = Math.max(map[i][3], maxIndex);
             }
             lastCount = maxIndex + 1;
             for (int i = 0; i < n; i++) {
@@ -547,7 +552,9 @@ public enum CPMGEquation implements EquationType {
     },
     CPMGSLOW("cpmgslow", 2, "Kex", "pA", "R2", "dPPM") {
         @Override
-        public double calculate(double[] par, int[] map, double[] x, int idNum, double field) {
+        public double calculate(double[] par, int[] map, double[] x, int idNum) {
+            double nu = x[0];
+            double field = x[1];
             double kEx = par[map[0]];
             double pA = par[map[1]]; // p1-p2
             double r2 = par[map[2]];
@@ -555,7 +562,6 @@ public enum CPMGEquation implements EquationType {
             double pB = 1.0 - pA;
             double pDelta = pA - pB;
             double dW = dPPM * field * 2.0 * Math.PI;
-            double nu = x[0];
             double tauCP = 1.0 / (2.0 * nu);
             double psi = (pDelta * kEx) * (pDelta * kEx) - dW * dW + 4.0 * pA * pB * kEx * kEx;
             double zeta = -2.0 * dW * kEx * pDelta;
@@ -571,14 +577,14 @@ public enum CPMGEquation implements EquationType {
         }
 
         @Override
-        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
+        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
             int nPars = CPMGFitFunction.getNPars(map);
             double[] guesses = new double[nPars];
             if (CoMDPreferences.getNeuralNetworkGuess()) {
                 for (int id = 0; id < map.length; id++) {
                     double[] annGuess = new double[map[id].length];
                     double[][] xy = getXYValues(xValues, yValues, idNums, id);
-                    double[] fields2 = {fields[id]};
+                    double[] fields2 = {xy[1][id]};
                     try {
                         
                         annGuess = annCPMGGuesser("SLOW", xy[0], xy[1], fields2);
@@ -604,7 +610,7 @@ public enum CPMGEquation implements EquationType {
                     if (kex > CoMDPreferences.getCPMGMaxFreq()) {
                         kex = CoMDPreferences.getCPMGMaxFreq() * 0.9;
                     }
-                    double field = fields[id];
+                    double field = xValues[1][id];
                     double dw2 = rex / (pa * (1.0 - pa)) * kex;
                     double dPPM = Math.sqrt(dw2) / (2.0 * Math.PI) / field;
                     guesses[map[id][2]] = r2;
@@ -619,7 +625,7 @@ public enum CPMGEquation implements EquationType {
         }
 
         @Override
-        public double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+        public double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
             double[][] boundaries = new double[2][guesses.length];
            // "Kex", "pA", "R2", "dPPM"
             for (int id = 0; id < map.length; id++) {
@@ -642,11 +648,11 @@ public enum CPMGEquation implements EquationType {
 
         @Override
         public double getRex(double[] pars, int[] map, double field) {
-            double[] x = new double[1];
+            double[] x = {0.0, field};
             x[0] = 10.0;
-            double y0 = calculate(pars, map, x, 0, field);
+            double y0 = calculate(pars, map, x, 0);
             x[0] = 1.0e4;
-            double y1 = calculate(pars, map, x, 0, field);
+            double y1 = calculate(pars, map, x, 0);
             double rex = y0 - y1;
 //            if (pars[map[3]] != 0.0) {
 //                rex = pars[map[1]] * (1.0 - pars[map[1]]) * pars[map[0]] / (1.0 + Math.pow(pars[map[0]] / pars[map[3]], 2));

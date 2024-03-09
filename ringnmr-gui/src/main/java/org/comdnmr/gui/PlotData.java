@@ -209,15 +209,15 @@ public class PlotData extends XYCanvasChart {
 
             double delta = (max - min) / (nIncr + 1);
             double[] extras = plotEquation.getExtras();
-            double[] ax = new double[extras.length];
+            double[] ax = new double[1 + extras.length];
             for (int i = 0; i < nIncr; i++) {
                 double xValue = min + (i + 1) * delta;
                 double x = xAxis.getDisplayPosition(xValue);
                 ax[0] = xValue;
-                for (int j = 1; j < extras.length; j++) {
-                    ax[j] = extras[j];
+                for (int j = 0; j < extras.length; j++) {
+                    ax[j + 1] = extras[j];
                 }
-                double yValue = plotEquation.calculate(ax, plotEquation.getExtra(0));
+                double yValue = plotEquation.calculate(ax);
                 yValue /= plotEquation.getScaleValue();
                 double y = yAxis.getDisplayPosition(yValue);
                 xValues[i] = x;
@@ -436,15 +436,16 @@ public class PlotData extends XYCanvasChart {
         double delta = (max - min) / nIncr;
         ArrayList<ArrayList<Double>> equationData = new ArrayList<>(nIncr - 1);
         double[] extras = plotEquation.getExtras();
-        double[] ax = new double[extras.length];
+        double[] ax = new double[1 + extras.length];
         for (int i = 1; i < nIncr - 1; i++) {
             ArrayList<Double> pointData = new ArrayList<>(3);
             double xValue = min + i * delta;
             ax[0] = xValue;
+            ax[1] = plotEquation.getExtra(0);
             for (int j = 1; j < extras.length; j++) {
                 ax[j] = extras[j];
             }
-            double yValue = plotEquation.calculate(ax, plotEquation.getExtra(0));// / fieldRef);
+            double yValue = plotEquation.calculate(ax);// / fieldRef);
             pointData.add(xValue);
             pointData.add(yValue);
             equationData.add(pointData);

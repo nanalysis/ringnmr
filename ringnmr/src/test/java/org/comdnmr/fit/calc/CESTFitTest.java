@@ -189,7 +189,12 @@ public class CESTFitTest {
         Nuclei nuc = Nuclei.findNuclei("C13");
         double field = CoMDPreferences.getRefField() * nuc.getFreqRatio();
         List<Double> fieldArray = Collections.nCopies(errarray.size(), field);
-        fitting.setData(fixOffset(offset, field), fixOffset(omega, 1.0), Texarray, intenarray, errarray, fieldArray);
+        List<Double>[] xValues = new List[4];
+        xValues[0] = fixOffset(offset, field);
+        xValues[1] = fixOffset(omega, 1.0);
+        xValues[2] = Texarray;
+        xValues[3] = fieldArray;
+        fitting.setData(xValues, intenarray, errarray);
 
         double[] guesses = {180.795, 0.103, 2.784, -1.193, 2.383, 11.569, 88.052};
 
@@ -230,7 +235,12 @@ public class CESTFitTest {
         Nuclei nuc = Nuclei.findNuclei("C13");
         double field = CoMDPreferences.getRefField() * nuc.getFreqRatio();
         List<Double> fieldArray = Collections.nCopies(errarray.size(), field);
-        fitting.setData(fixOffset(offset, field), fixOffset(omega, 1.0), Texarray, intenarray, errarray, fieldArray);
+        List<Double>[] xValues = new List[4];
+        xValues[0] = fixOffset(offset, field);
+        xValues[1] = fixOffset(omega, 1.0);
+        xValues[2] = Texarray;
+        xValues[3] = fieldArray;
+        fitting.setData(xValues, intenarray, errarray);
 
         double[] guesses = {180.795, 0.103, 2.784, -1.193, 2.383, 11.569, 88.052};
 
@@ -268,7 +278,12 @@ public class CESTFitTest {
         Nuclei nuc = Nuclei.findNuclei("C13");
         double field = CoMDPreferences.getRefField() * nuc.getFreqRatio();
         List<Double> fieldArray = Collections.nCopies(errarray.size(), field);
-        fitting.setData(fixOffset(offset, field), fixOffset(omega, 1.0), Texarray, intenarray, errarray, fieldArray);
+        List<Double>[] xValues = new List[4];
+        xValues[0] = fixOffset(offset, field);
+        xValues[1] = fixOffset(omega, 1.0);
+        xValues[2] = Texarray;
+        xValues[3] = fieldArray;
+        fitting.setData(xValues, intenarray, errarray);
 
         double[] guesses = {180.795, 0.103, 2.784, -1.193, 2.383, 11.569, 88.052};
 
@@ -307,7 +322,12 @@ public class CESTFitTest {
         Nuclei nuc = Nuclei.findNuclei("C13");
         double field = CoMDPreferences.getRefField() * nuc.getFreqRatio();
         List<Double> fieldArray = Collections.nCopies(errarray.size(), field);
-        fitting.setData(fixOffset(offset, field), fixOffset(omega, 1.0), Texarray, intenarray, errarray, fieldArray);
+        List<Double>[] xValues = new List[4];
+        xValues[0] = fixOffset(offset, field);
+        xValues[1] = fixOffset(omega, 1.0);
+        xValues[2] = Texarray;
+        xValues[3] = fieldArray;
+        fitting.setData(xValues, intenarray, errarray);
 
         double[] guesses = {180.795, 0.103, 2.784, -1.193, 2.383, 88.052};
 

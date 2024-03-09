@@ -32,16 +32,11 @@ import org.comdnmr.eqnfit.CPMGFitter;
 import org.comdnmr.eqnfit.ParValueInterface;
 import org.comdnmr.data.ExperimentResult;
 import org.comdnmr.data.ExperimentSet;
-import static org.comdnmr.gui.CPMGControls.PARS.FIELD2;
-import static org.comdnmr.gui.CPMGControls.PARS.KEX;
-import static org.comdnmr.gui.CPMGControls.PARS.PA;
-import static org.comdnmr.gui.CPMGControls.PARS.R2;
 import org.comdnmr.eqnfit.CPMGFitFunction;
 import org.comdnmr.util.CoMDPreferences;
 import org.nmrfx.datasets.Nuclei;
 
-import static org.comdnmr.gui.CPMGControls.PARS.DELTA1;
-import static org.comdnmr.gui.CPMGControls.PARS.DELTA2;
+import static org.comdnmr.gui.CPMGControls.PARS.*;
 
 /**
  *
@@ -65,7 +60,9 @@ public class CPMGControls extends EquationControls {
         // * Slow regime: Nothing
         // * MQ: \\delta \\omega_C
         DELTA2("", 0.0, 5.0, 0.5, 0.5, 3),
-        FIELD2("B₀", 500.0, 1200.0, 100.0, 600.0, 1);
+        FIELD2("B₀", 500.0, 1200.0, 100.0, 600.0, 1),
+        TAU("Tau", 0.0, 1.0, 0.2, 0.1, 2)
+        ;
 
         String name;
         Slider slider;
@@ -217,6 +214,7 @@ public class CPMGControls extends EquationControls {
                 DELTA1.disabled(true);
                 DELTA2.disabled(true);
                 FIELD2.disabled(true);
+                TAU.disabled(true);
                 nucleiSelector.setValue(Nuclei.N15);
                 nucleiSelector.setDisable(false);
                 break;
@@ -229,6 +227,7 @@ public class CPMGControls extends EquationControls {
                 DELTA1.label.setText("δₘᵢₙ");
                 DELTA2.disabled(true);
                 FIELD2.disabled(true);
+                TAU.disabled(true);
                 nucleiSelector.setValue(Nuclei.N15);
                 nucleiSelector.setDisable(false);
                 break;
@@ -241,6 +240,7 @@ public class CPMGControls extends EquationControls {
                 DELTA1.label.setText("δX");
                 DELTA2.disabled(true);
                 FIELD2.disabled(true);
+                TAU.disabled(true);
                 nucleiSelector.setValue(Nuclei.N15);
                 nucleiSelector.setDisable(false);
                 break;
@@ -250,10 +250,11 @@ public class CPMGControls extends EquationControls {
                 KEX.disabled(false);
                 PA.disabled(false);
                 DELTA1.disabled(false);
-                DELTA1.label.setText("δ¹H");
+                DELTA1.label.setText("δ¹³C");
                 DELTA2.disabled(false);
-                DELTA2.label.setText("δ¹³C");
+                DELTA2.label.setText("δ¹H");
                 FIELD2.disabled(true);
+                TAU.disabled(false);
                 nucleiSelector.setValue(Nuclei.C13);
                 nucleiSelector.setDisable(true);
                 break;
@@ -439,6 +440,11 @@ public class CPMGControls extends EquationControls {
         updatingTable = true;
         for (ParValueInterface parValue : parValues) {
             String parName = parValue.getName();
+            if (parName.equalsIgnoreCase("DPPMMIN") || parName.equalsIgnoreCase("DPPM") || parName.equalsIgnoreCase("DELTACPPM")) {
+                parName = "DELTA1";
+            } else if (parName.equalsIgnoreCase("DELTAHPPM")) {
+                parName = "DELTA2";
+            }
             ParControls control = PARS.valueOf(parName.toUpperCase());
             if (control != null) {
                 control.setValue(parValue.getValue());
@@ -503,13 +509,15 @@ public class CPMGControls extends EquationControls {
         if (experimentSet == null) {
             pars = getPars(equationName);
             double[] errs = new double[pars.length];
-            double[] extras = new double[1];
+            double[] extras = new double[3];
             extras[0] = CoMDPreferences.getRefField() * getNucleus().getFreqRatio();
+            extras[1] = CoMDPreferences.getRefField();
+            extras[2] = TAU.getValue();
             GUIPlotEquation plotEquation = new GUIPlotEquation("cpmg", equationName, pars, errs, extras);
             equations.add(plotEquation);
         } else {
             double[] fields = experimentSet.getFields();
-            double[] extras = new double[1];
+            double[] extras = new double[3];
             String currentState = stateSelector.getValue();
             if (resInfo != null) {
                 for (String state : stateSelector.getItems()) {
@@ -533,6 +541,8 @@ public class CPMGControls extends EquationControls {
                             continue;
                         }
                         extras[0] = fields[iField] * getNucleus().getFreqRatio();
+                        extras[1] = 0.0;
+                        extras[2] = 0.0;
                     }
                     double[] errs = new double[pars.length];
                     GUIPlotEquation plotEquation = new GUIPlotEquation("cpmg", equationName, pars, errs, extras);

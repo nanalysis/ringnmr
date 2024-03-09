@@ -994,7 +994,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     parMap.put("Equation", 1.0 + equationNames.indexOf(equationName));
                     PlotEquation plotEquation = new PlotEquation(fitMode, equationName, pars, errs, fields);
                     CurveFit curveSet = new CurveFit(stateString, dynSource, parMap, plotEquation);
-                    expResult.addCurveSet(curveSet, bestValue.equalsIgnoreCase("best"));
+                    expResult.addCurveFit(curveSet, bestValue.equalsIgnoreCase("best"));
                 }
             }
 
@@ -1086,7 +1086,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                         expData = new R1rhoOffsetExperiment(experimentSet, expName, nucleus, B0field, temperature, tau, B1field);
                         break;
                     case "cpmg":
-                        expData = new CPMGExperiment(experimentSet, expName, nucleus, B0field, temperature);
+                        expData = new CPMGExperiment(experimentSet, expName, nucleus, B0field, tau, temperature);
                         if (vcpmgList != null) {
                             double[] vcpmgs = new double[vcpmgList.size()];
                             for (int i = 0; i < vcpmgs.length; i++) {
@@ -1207,7 +1207,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     expData = new R1rhoOffsetExperiment(experimentSet, expName, nucleus, B0field, temperature, tau, B1field);
                     break;
                 case "cpmg":
-                    expData = new CPMGExperiment(experimentSet, expName, nucleus, B0field, temperature);
+                    expData = new CPMGExperiment(experimentSet, expName, nucleus, B0field, tau, temperature);
                     if (vcpmgList != null) {
                         double[] vcpmgs = new double[vcpmgList.size()];
                         for (int i = 0; i < vcpmgs.length; i++) {
@@ -1470,7 +1470,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                         value = expResult.value;
                         error = expResult.err;
                     } else {
-                        final Map<String, CurveFit> parMap = expResult.curveSets.get(expName);
+                        final Map<String, CurveFit> parMap = expResult.curveFits.get(expName);
                         final Object[] states = parMap.keySet().toArray();
                         if (expResults.indexOf(expResult) == 0) {
                             Arrays.sort(states, (a, b) -> a.toString().compareTo(b.toString()));

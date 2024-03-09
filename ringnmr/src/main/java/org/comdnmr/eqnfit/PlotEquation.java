@@ -31,7 +31,6 @@ import org.comdnmr.modelfree.models.MFModelIso;
  */
 public class PlotEquation {
 
-    //        CalcRDisp.CPMGEquation equation = CalcRDisp.CPMGEquation.CPMGFAST;
     String expType;
     String name;
     double[] pars;
@@ -43,9 +42,7 @@ public class PlotEquation {
         this.name = name;
         this.pars = pars.clone();
         this.errs = errs.clone();
-        //System.out.println("ploteq constructor " + extras.length);
         this.extras = extras.clone();
-        //            equation = CalcRDisp.CPMGEquation.valueOf(name);
     }
 
     @Override
@@ -77,24 +74,24 @@ public class PlotEquation {
         return errs;
     }
 
-    public double calculate(double[] pars, double[] xValue, double field) {
+    public double calculate(double[] pars, double[] xValue) {
         EquationType equationType = ResidueFitter.getEquationType(expType, name);
         int[][] map = equationType.makeMap(1);
-        return equationType.calculate(pars, map[0], xValue, 0, field);
+        return equationType.calculate(pars, map[0], xValue, 0);
     }
 
-    public double calculate(double[] xValue, double field) {
+    public double calculate(double[] xValue) {
         if (expType.startsWith("model")) {
-            return calculateSpectralDensity(xValue, field);
+            return calculateSpectralDensity(xValue);
         } else {
             EquationType equationType = ResidueFitter.getEquationType(expType, name);
             int[][] map = equationType.makeMap(1);
-            double y = equationType.calculate(pars, map[0], xValue, 0, field);
+            double y = equationType.calculate(pars, map[0], xValue, 0);
             return y;
         }
     }
 
-    private double calculateSpectralDensity(double[] xValue, double field) {
+    private double calculateSpectralDensity(double[] xValue) {
         var model = MFModelIso.buildModel(expType,true,0.0,0.0,false);
         double[] omegas = {xValue[0] * 1.0e9};
         double[] specDens = model.calc(omegas, pars);
@@ -108,7 +105,7 @@ public class PlotEquation {
         double[] ax = new double[extras.length];
         ax[0] = xValue;
         System.arraycopy(extras, 1, ax, 1, extras.length - 1);
-        double y = calculate(ax, getExtra(0));
+        double y = calculate(ax);
         return y;
     }
 
@@ -118,7 +115,6 @@ public class PlotEquation {
         } else {
             EquationType equationType = ResidueFitter.getEquationType(expType, name);
             if (equationType == null) {
-                System.out.println(expType + " " + name);
                 return 0.0;
             }
             return equationType.getMinX();

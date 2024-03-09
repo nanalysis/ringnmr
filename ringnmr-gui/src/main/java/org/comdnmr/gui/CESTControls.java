@@ -154,7 +154,6 @@ public class CESTControls extends EquationControls {
     }
 
     boolean updatingTable = false;
-//    PyController controller;
 
     @Override
     public VBox makeControls(PyController controller) {
@@ -219,7 +218,6 @@ public class CESTControls extends EquationControls {
         if (equationName == "") {
             equationName = equationSelector.getItems().get(0);
         }
-        //System.out.println("eqnAction eqnName = " + equationName);
         ExperimentResult resInfo = controller.chartInfo.getResult();
         if (resInfo != null) {
             updatingTable = true;
@@ -344,11 +342,7 @@ public class CESTControls extends EquationControls {
         if (updatingTable) {
             return;
         }
-//        System.out.println("simSlider");
         String equationName = equationSelector.getValue().toString();
-//        if (equationName.equals("CPMGSLOW") && label.equals("Rex")) {
-//            return;
-//        }
         double kex = KEX.getValue();
         double pb = PB.getValue();
         double deltaA0 = DELTAA0.getValue();
@@ -383,33 +377,15 @@ public class CESTControls extends EquationControls {
                 break;
             case "NOEX":
                 pars = new double[2][8];
-//                pars[0][0] = kex;
-//                pars[0][1] = pb;
                 pars[0][0] = deltaA0;
-//                pars[0][3] = deltaB0;
                 pars[0][1] = R1a;
-//                pars[0][5] = R1b;
                 pars[0][2] = R2a;
-//                pars[0][7] = R2b;
                 pars[1][0] = B1field;
                 pars[1][1] = Tex;
                 break;
             default:
                 return;
         }
-//        if (equationName.equals("CPMGSLOW")) {
-//            int[] map = {0, 1, 2, 3};
-//            rEx = CPMGEquation.CPMGSLOW.getRex(pars, map);
-//            REX.setValue(rEx);
-//        }
-
-//        double[] errs = new double[pars.length];
-//        int nFields = field2 > (defaultField + 10) ? 2 : 1; // addTo 10.0 to make sure slider set near to bottom gives 1 field
-//        double[] fields = new double[nFields];
-//        fields[0] = 1.0;
-//        if (nFields > 1) {
-//            fields[1] = field2 / defaultField;
-//        }
         updateEquations();
 
         //controller.updateChartEquations(equationName, pars, errs, fields);
@@ -457,14 +433,9 @@ public class CESTControls extends EquationControls {
                 break;
             case "NOEX":
                 pars = new double[2][8];
-//                pars[0][0] = kex;
-//                pars[0][1] = pb;
                 pars[0][0] = deltaA0;
-//                pars[0][3] = deltaB0;
                 pars[0][1] = R1a;
-//                pars[0][5] = R1b;
                 pars[0][2] = R2a;
-//                pars[0][7] = R2b;
                 pars[1][0] = B1field;
                 pars[1][1] = Tex;
                 break;
@@ -500,14 +471,9 @@ public class CESTControls extends EquationControls {
                 break;
             case "NOEX":
                 pars = new double[2][8];
-//                pars[0][0] = parValues.get("kex").getValue();
-//                pars[0][1] = parValues.get("pb").getValue();
                 pars[0][0] = parValues.get("deltaA0").getValue();
-//                pars[0][3] = parValues.get("deltaB0").getValue();
                 pars[0][1] = parValues.get("R1a").getValue();
-//                pars[0][5] = parValues.get("R1b").getValue();
                 pars[0][2] = parValues.get("R2a").getValue();
-//                pars[0][7] = parValues.get("R2b").getValue();
                 pars[1][0] = parValues.get("B1field").getValue();
                 pars[1][1] = parValues.get("Tex").getValue();
                 break;
@@ -586,14 +552,9 @@ public class CESTControls extends EquationControls {
                 break;
             case "NOEX":
                 for (int id = 0; id < map.length; id++) {
-//                    guesses[map[id][0]] = kex; //kex
-//                    guesses[map[id][1]] = pb; //pb
                     guesses[map[id][0]] = deltaA0; //deltaA
-//                    guesses[map[id][3]] = deltaA0; //deltaB
                     guesses[map[id][1]] = R1a; //R1A
-//                    guesses[map[id][5]] = R1a; //R1B
                     guesses[map[id][2]] = R2a; //R2A
-//                    guesses[map[id][7]] = R2a; //R2B
                 }
                 break;
         }
@@ -636,7 +597,6 @@ public class CESTControls extends EquationControls {
                 if (control.getName().equals("deltaA0") || control.getName().equals("deltaB0")) {
                     if (controller.getCurrentExperimentSet() != null) {
                         if (controller.getCurrentExperimentSet().getExperimentData() != null) {
-//                            double[] xVals = controller.currentResProps.getExperimentData().stream().findFirst().get().getXVals();
                             List<ExperimentResult> resVals = controller.getCurrentExperimentSet().getExperimentResults();
                             Collections.sort(resVals, (a,b) -> Integer.compare(a.getAtom().getIndex(), b.getAtom().getIndex()));
                             ResonanceSource resSource = resVals.get(0).getResonanceSource();
@@ -652,12 +612,6 @@ public class CESTControls extends EquationControls {
             }
         }
         ExperimentSet experimentSet = controller.getCurrentExperimentSet();
-//        if (experimentSet != null) {
-//            double[] fields = experimentSet.getFields();
-//            int iField = Integer.parseInt(stateSelector.getValue().substring(0, 1));
-//            FIELD2.setValue(fields[iField]);
-//            FIELD2.setText();
-//        }
         equationSelector.setValue(equationName);
 
         updatingTable = false;
@@ -713,8 +667,6 @@ public class CESTControls extends EquationControls {
                 parNames1.add("R2A");
                 break;
             case "NOEX":
-//                parNames1.add("Kex");
-//                parNames1.add("Pb");
                 parNames1.add("deltaA0");
                 parNames1.add("R1A");
                 parNames1.add("R2A");
@@ -724,7 +676,6 @@ public class CESTControls extends EquationControls {
     }
 
     void updateEquations() {
-//        System.out.println("CEST Controls updateEqns called.");
         ExperimentResult resInfo = controller.chartInfo.getResult();
         ExperimentSet experimentSet = controller.getCurrentExperimentSet();
         List<GUIPlotEquation> equations = new ArrayList<>();
@@ -744,13 +695,7 @@ public class CESTControls extends EquationControls {
                         extras[0] = expData.getNucleusField();
                         extras[1] = dataExtras.get(0);
                         extras[2] = dataExtras.get(1);
-//                        System.out.println("resInfo Res Num = " + resInfo.getSource());
-//                        System.out.println("extras size = " + expData.getExtras().size());
-                        //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[1] = " + extras[1]);
-//                        System.out.println("extras[1] = " + extras[1]);
-//                        System.out.println("extras[2] = " + extras[2]);
                         GUIPlotEquation plotEquation = new GUIPlotEquation("cest", equationName, pars, errs, extras);
-                        //equationCopy.setExtra(extras);
 
                         equations.add(plotEquation);
                     }
@@ -760,8 +705,6 @@ public class CESTControls extends EquationControls {
                     double[] extras = new double[1];
                     extras[0] = CoMDPreferences.getRefField() * getNucleus().getFreqRatio(); // fixme
                     GUIPlotEquation plotEquation = new GUIPlotEquation("cest", equationName, pars, errs, extras);
-                    //equationCopy.setExtra(extras);
-                    //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[0] = " + extras[0]);
                     equations.add(plotEquation);
                 }
             }
@@ -771,10 +714,9 @@ public class CESTControls extends EquationControls {
             extras1 = getPars(equationName)[1];
             double[] errs = new double[pars.length];
             double[] extras = new double[3];
-            extras[0] = CoMDPreferences.getRefField() * getNucleus().getFreqRatio(); // fixme
-            extras[1] = extras1[0]; //17.0 * 2 * Math.PI;
-            extras[2] = extras1[1]; //0.3;
-            //System.out.println("updateEquations got called without experimentSet; extras length = "+extras.length);
+            extras[0] = extras1[0]; //17.0 * 2 * Math.PI;
+            extras[1] = extras1[1]; //0.3;
+            extras[2] = CoMDPreferences.getRefField() * getNucleus().getFreqRatio(); // fixme
             GUIPlotEquation plotEquation = new GUIPlotEquation("cest", equationName, pars, errs, extras);
             equations.add(plotEquation);
         }

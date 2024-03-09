@@ -43,7 +43,7 @@ public class ExperimentResult {
 
     ExperimentSet experimentSet;
     ResonanceSource resonanceSource;
-    Map<String, Map<String, CurveFit>> curveSets = new LinkedHashMap<>();
+    Map<String, Map<String, CurveFit>> curveFits = new LinkedHashMap<>();
     Map<String, FitResult> fitResults = new LinkedHashMap<>();
     PlotEquation bestEquation = null;
     double[] extraValues;
@@ -75,7 +75,7 @@ public class ExperimentResult {
         }
 
         public double getValue(String equationName, String state) {
-            Double value = resInfo.curveSets.get(equationName).get(state).getParMap().get(parName);
+            Double value = resInfo.curveFits.get(equationName).get(state).getParMap().get(parName);
             if (value == null) {
                 return 0.0;
             } else {
@@ -85,12 +85,12 @@ public class ExperimentResult {
 
         @Override
         public double getValue() {
-            Double value = resInfo.curveSets.get(equationName).get(state).getParMap().get(parName);
+            Double value = resInfo.curveFits.get(equationName).get(state).getParMap().get(parName);
             return value;
         }
 
         public double getError(String key) {
-            Double value = resInfo.curveSets.get(equationName).get(state).getParMap().get(parName + ".sd");
+            Double value = resInfo.curveFits.get(equationName).get(state).getParMap().get(parName + ".sd");
             if (value == null) {
                 return 0.0;
             } else {
@@ -166,27 +166,27 @@ public class ExperimentResult {
     }
 
     public Collection<CurveFit> getCurveSets(String equationName) {
-        return curveSets.get(equationName).values();
+        return curveFits.get(equationName).values();
     }
 
-    public void addCurveSet(CurveFit curveSet, boolean best) {
-        Map<String, CurveFit> fitMap = curveSets.get(curveSet.getEquation().getName());
+    public void addCurveFit(CurveFit curveFit, boolean best) {
+        Map<String, CurveFit> fitMap = curveFits.get(curveFit.getEquation().getName());
         if (fitMap == null) {
             fitMap = new HashMap<>();
-            curveSets.put(curveSet.getEquation().getName(), fitMap);
+            curveFits.put(curveFit.getEquation().getName(), fitMap);
         }
-        fitMap.put(curveSet.getState(), curveSet);
+        fitMap.put(curveFit.getState(), curveFit);
         if (best) {
-            bestEquation = curveSet.getEquation();
+            bestEquation = curveFit.getEquation();
         }
     }
 
-    public CurveFit getCurveSet(String equationName, String state) {
+    public CurveFit getCurveFit(String equationName, String state) {
         CurveFit curveFit = null;
-        if (curveSets != null) {
-            Map<String, CurveFit> curveFits = curveSets.get(equationName);
+        if (curveFits != null) {
+            Map<String, CurveFit> curveFits = this.curveFits.get(equationName);
             if (curveFits != null) {
-                curveFit = curveSets.get(equationName).get(state);
+                curveFit = this.curveFits.get(equationName).get(state);
             }
         }
         return curveFit;
@@ -197,7 +197,7 @@ public class ExperimentResult {
     }
 
     public void setBestEquationName(String equationName) {
-        Map<String, CurveFit> curveFits = curveSets.get(equationName);
+        Map<String, CurveFit> curveFits = this.curveFits.get(equationName);
         for (CurveFit curveFit : curveFits.values()) {
             if (curveFit.getEquation().getName().equals(equationName)) {
                 bestEquation = curveFit.getEquation();
@@ -206,7 +206,7 @@ public class ExperimentResult {
     }
 
     public Double getParValue(String equationName, String state, String parName) {
-        Map<String, CurveFit> curveFits = curveSets.get(equationName);
+        Map<String, CurveFit> curveFits = this.curveFits.get(equationName);
         if (curveFits == null) {
             if (parName.endsWith(".sd")) {
                 return err;
@@ -230,7 +230,7 @@ public class ExperimentResult {
             useEquationName = equationName;
         }
         List<ParValueInterface> dataValues = new ArrayList<>();
-        Map<String, CurveFit> curveFits = curveSets.get(useEquationName);
+        Map<String, CurveFit> curveFits = this.curveFits.get(useEquationName);
         if (curveFits != null) {
             curveFits.values().stream().forEach(cf -> {
                 if (ExperimentSet.matchStateString(state, cf.getState())) {
@@ -272,7 +272,7 @@ public class ExperimentResult {
                 sBuilder.append(" ");
             }
         }
-        for (Map<String, CurveFit> fitMap : curveSets.values()) {
+        for (Map<String, CurveFit> fitMap : curveFits.values()) {
             for (CurveFit curveFit : fitMap.values()) {
                 if (curveFit.getParMap() != null) {
                     sBuilder.append('\n');
@@ -296,7 +296,7 @@ public class ExperimentResult {
         String commonString = sBuilder.toString();
         StringBuilder allBuilder = new StringBuilder();
         Double parValue;
-        for (Map<String, CurveFit> fitMap : curveSets.values()) {
+        for (Map<String, CurveFit> fitMap : curveFits.values()) {
             for (CurveFit curveFit : fitMap.values()) {
                 sBuilder.setLength(0);
                 sBuilder.append('\n');

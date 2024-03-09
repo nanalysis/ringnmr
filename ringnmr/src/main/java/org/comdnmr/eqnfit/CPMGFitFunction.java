@@ -43,17 +43,16 @@ public class CPMGFitFunction extends FitFunction {
         equation = CPMGEquation.valueOf(eqName.toUpperCase());
     }
 
-    public CPMGFitFunction(CoMDOptions options, double[][] x, double[] y, double[] err, double[] fieldValues) throws IllegalArgumentException {
-        this(options, x, y, err, fieldValues, new int[x.length]);
+    public CPMGFitFunction(CoMDOptions options, double[][] x, double[] y, double[] err) throws IllegalArgumentException {
+        this(options, x, y, err, new int[x.length]);
     }
 
-    public CPMGFitFunction(CoMDOptions options, double[][] x, double[] y, double[] err, double[] fieldValues, int[] idNums) throws IllegalArgumentException {
+    public CPMGFitFunction(CoMDOptions options, double[][] x, double[] y, double[] err, int[] idNums) throws IllegalArgumentException {
         super(options);
         this.xValues = new double[1][];
         this.xValues[0] = x[0].clone();
         this.yValues = y.clone();
         this.errValues = err.clone();
-        this.fieldValues = fieldValues.clone();
         this.idNums = idNums.clone();
         this.idNums = new int[yValues.length];
         this.equation = CPMGEquation.CPMGFAST;
@@ -87,11 +86,13 @@ public class CPMGFitFunction extends FitFunction {
         double[] par = deNormalize(normPar);
         double sumAbs = 0.0;
         double sumSq = 0.0;
-        double[] ax = new double[1];
+        double[] ax = new double[4];
         for (int i = 0; i < yValues.length; i++) {
             final double value;
-            ax[0] = xValues[0][i];
-            value = equation.calculate(par, map[idNums[i]], ax, idNums[i], fieldValues[i]);
+            for (int j = 0; j < xValues.length; j++) {
+                ax[j] = xValues[j][i];
+            }
+            value = equation.calculate(par, map[idNums[i]], ax, idNums[i]);
             //System.out.println( "xxxxxxxxxxx " + value + " " + yValues[i] + " " + equation.name());
             double delta = (value - yValues[i]);
             if (weightFit) {
@@ -120,21 +121,27 @@ public class CPMGFitFunction extends FitFunction {
 
     @Override
     public double[] simY(double[] par) {
-        double[] ax = new double[1];
+        double[] ax = new double[4];
         double[] yv = new double[yValues.length];
         for (int i = 0; i < yValues.length; i++) {
-            ax[0] = xValues[0][i];
-            yv[i] = equation.calculate(par, map[idNums[i]], ax, idNums[i], fieldValues[i]);
+            for (int j = 0; j < xValues.length; j++) {
+                ax[j] = xValues[j][i];
+            }
+            yv[i] = equation.calculate(par, map[idNums[i]], ax, idNums[i]);
         }
         return yv;
     }
 
-    public ArrayList<Double> simY(double[] par, double[][] xValues, double field) {
+    public ArrayList<Double> simY(double[] par, double[][] xValues) {
         ArrayList<Double> result = new ArrayList<>();
-        double[] ax = new double[1];
+        double[] ax = new double[4];
         for (int i = 0; i < yValues.length; i++) {
             ax[0] = xValues[0][i];
-            double yCalc = equation.calculate(par, map[idNums[i]], ax, idNums[i], field);
+            for (int j = 0; j < xValues.length; j++) {
+                ax[j] = xValues[j][i];
+            }
+
+            double yCalc = equation.calculate(par, map[idNums[i]], ax, idNums[i]);
             result.add(yCalc);
         }
         return result;
@@ -148,16 +155,16 @@ public class CPMGFitFunction extends FitFunction {
         return Math.exp(-(a - a * Math.sin(b / x) / (b / x) + c));
     }
 
-    public double[] getRex(double[] pars) {
+    public double[] getRex(double[] pars, double field) {
         double[] result = new double[nID];
         for (int i = 0; i < map.length; i++) {
-            result[i] = equation.getRex(pars, map[i], fieldValues[0]);
+            result[i] = equation.getRex(pars, map[i],field);
         }
         return result;
     }
 
-    public double getRex(double[] pars, int id) {
-        return equation.getRex(pars, map[id], fieldValues[0]);
+    public double getRex(double[] pars, int id, double field) {
+        return equation.getRex(pars, map[id], field);
     }
 
     public double[] getRexError() {
@@ -219,7 +226,7 @@ public class CPMGFitFunction extends FitFunction {
         for (int k = 0; k < yValues.length; k++) {
             newY[k] = yPred[k] + errValues[k] * random.nextGaussian();
         }
-        CPMGFitFunction rDisp = new CPMGFitFunction(options, xValues, newY, errValues, fieldValues, idNums);
+        CPMGFitFunction rDisp = new CPMGFitFunction(options, xValues, newY, errValues, idNums);
         rDisp.setEquation(equation.getName());
         rDisp.setXY(xValues, newY);
         rDisp.setIds(idNums);
@@ -228,21 +235,21 @@ public class CPMGFitFunction extends FitFunction {
     }
 
     private CPMGFitFunction setupNonParametricBootstrap(double[] yPred) {
-        CPMGFitFunction rDisp = new CPMGFitFunction(options, xValues, yValues, errValues, fieldValues, idNums);
+        CPMGFitFunction rDisp = new CPMGFitFunction(options, xValues, yValues, errValues, idNums);
         rDisp.setEquation(equation.getName());
-        double[][] newX = new double[1][yValues.length];
+        double[][] newX = new double[xValues.length][yValues.length];
         double[] newY = new double[yValues.length];
         double[] newErr = new double[yValues.length];
-        double[] newFieldValues = new double[yValues.length];
         int[] newID = new int[yValues.length];
         int iTry = 0;
         do {
             for (int k = 0; k < yValues.length; k++) {
                 int rI = random.nextInt(yValues.length);
-                newX[0][k] = xValues[0][rI];
+                for (int j=0;j<xValues.length;j++) {
+                    newX[j][k] = xValues[j][rI];
+                }
                 newY[k] = yValues[rI];
                 newErr[k] = errValues[rI];
-                newFieldValues[k] = fieldValues[rI];
                 newID[k] = idNums[rI];
             }
             iTry++;
@@ -250,7 +257,6 @@ public class CPMGFitFunction extends FitFunction {
         // fixme  idNum should be set in above loop
         rDisp.setXY(newX, newY);
         rDisp.setErr(newErr);
-        rDisp.setFieldValues(newFieldValues);
         rDisp.setIds(newID);
         rDisp.setMap(map);
         return rDisp;
@@ -285,7 +291,7 @@ public class CPMGFitFunction extends FitFunction {
 
             if (equation == CPMGEquation.CPMGSLOW) {
                 for (int j = 0; j < map.length; j++) {
-                    rexValues[j][i] = equation.getRex(result.getPoint(), map[j], fieldValues[0]);
+                    rexValues[j][i] = equation.getRex(result.getPoint(), map[j], xValues[1][0]);
                 }
             }
         });
