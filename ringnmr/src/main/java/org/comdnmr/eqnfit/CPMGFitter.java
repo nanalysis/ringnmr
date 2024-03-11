@@ -80,16 +80,10 @@ public class CPMGFitter implements EquationFitter {
 
     public static int getMapIndex(int[] state, int[] stateCount, int... mask) {
         int index = 0;
-//        System.out.println(state.length + " mask " + mask.length);
-//        for (int i = 0; i < state.length; i++) {
-//            System.out.print(" " + state[i]);
-//        }
-//        System.out.println("");
         double mult = 1.0;
-        for (int i = 0; i < mask.length; i++) {
-//            System.out.println("mask:" + mask[i] + " state[mask]:" + state[mask[i]] + " count:" + stateCount[mask[i]]);
-            index += mult * state[mask[i]];
-            mult *= stateCount[mask[i]];
+        for (int j : mask) {
+            index += mult * state[j];
+            mult *= stateCount[j];
         }
         return index;
     }
@@ -234,8 +228,7 @@ public class CPMGFitter implements EquationFitter {
 
     @Override
     public double rms(double[] pars) {
-        double rms = calcR.getRMS(pars);
-        return rms;
+        return calcR.getRMS(pars);
     }
 
     @Override
@@ -249,7 +242,6 @@ public class CPMGFitter implements EquationFitter {
         } else {
             guesses = calcR.guess();
         }
-//        System.out.println("dofit guesses = " + guesses);
         double[][] boundaries = calcR.boundaries(guesses);
         double sigma = options.getStartRadius();
         PointValuePair result = calcR.refine(guesses, boundaries[0],
@@ -259,30 +251,12 @@ public class CPMGFitter implements EquationFitter {
         for (int i = 0; i < pars.length; i++) {
             System.out.printf("%d %.3f %.3f %.3f %.3f\n", i, guesses[i], boundaries[0][i], pars[i], boundaries[1][i]);
         }
-        System.out.println("");
-        int nCurves = states.length;
+        System.out.println();
 
-        /*
-        for (int i = 0; i < map.length; i++) {
-            for (int j = 0; j < map[i].length; j++) {
-                System.out.printf(" %3d", map[i][j]);
-            }
-            System.out.println("");
-        }
-
-      
-        System.out.print("Fit " + x.length + " points");
-        System.out.print("Fit pars");
-        for (int i = 0; i < pars.length; i++) {
-            System.out.printf(" %.3f", pars[i]);
-        }
-        System.out.println("");
-         */
         double aic = calcR.getAICc(pars);
         double rms = calcR.getRMS(pars);
         double rChiSq = calcR.getReducedChiSq(pars);
         System.out.printf("%.3f %.3f %.3f\n", aic, rms, rChiSq);
-//        System.out.println("rms " + rms);
         int nGroupPars = calcR.getNGroupPars();
         sigma /= 2.0;
 
@@ -326,14 +300,12 @@ public class CPMGFitter implements EquationFitter {
                     for (double v : simPars[map[0][parIndex]]) {
                         sStat.addValue(v);
                     }
-                    // System.out.println(sStat.toString());
                     double alpha = tTest.tTest(0.0, simPars[map[0][parIndex]]);
                     double mean = sStat.getMean();
                     double sdev = sStat.getStandardDeviation();
                     if (!valid) {
                         exchangeValid = false;
                     }
-//                    System.out.println(parName + " " + parIndex + " " + valid + " " + alpha + " " + mean + " " + sdev);
                 }
             }
         } else {
@@ -360,10 +332,8 @@ public class CPMGFitter implements EquationFitter {
     public double[] getSimX(int nPts, double xLB, double xUB) {
         int nPoints = nPts;
         double[] x = new double[nPoints];
-        double firstValue = xLB;
-        double lastValue = xUB;
-        double delta = (lastValue - firstValue) / (nPoints + 1);
-        double value = firstValue;
+        double delta = (xUB - xLB) / (nPoints + 1);
+        double value = xLB;
         for (int i = 0; i < nPoints; i++) {
             x[i] = value;
             value += delta;

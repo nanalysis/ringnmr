@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
- /*
+/*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
@@ -23,15 +23,16 @@
 package org.comdnmr.eqnfit;
 
 import org.comdnmr.data.ExperimentSet;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.comdnmr.util.CoMDOptions;
 import org.nmrfx.chemistry.relax.ResonanceSource;
 
 /**
- *
  * @author Bruce Johnson
  */
 public interface EquationFitter {
@@ -58,8 +59,7 @@ public interface EquationFitter {
 
     int[][] getStates();
 
-//    public double[] getSimX();
-double[] getSimX(int nPts, double xLB, double xUB);
+    double[] getSimX(int nPts, double xLB, double xUB);
 
     double[] getSimXDefaults();
 
@@ -68,7 +68,7 @@ double[] getSimX(int nPts, double xLB, double xUB);
         int nExtra = xValues.length - 1;
         for (int i = 0; i < xValues[0].size(); i++) {
             double[] v = new double[nExtra];
-            for (int j=0;j<nExtra;j++) {
+            for (int j = 0; j < nExtra; j++) {
                 v[j] = xValues[j + 1].get(i);
             }
             fieldMap.put(idNums.get(i), v);
@@ -85,15 +85,11 @@ double[] getSimX(int nPts, double xLB, double xUB);
                                  boolean hasExchange, CurveFit.CurveFitStats curveStats) {
         int nNonGroup = parNames.length - nGroupPars;
         List<CurveFit> curveFits = new ArrayList<>();
-//        System.out.println("ning " + nCurves);
         Map<String, double[]> simsMap = new HashMap<>();
-        for (int i = 0; i < map.length; i++) {
-            for (int j = 0; j < map[i].length; j++) {
-                String key = parNames[j] + " " + (map[i][j] - map[0][j]);
-//                System.out.println(i + " " + j + " " + key + " " + map[i][j] + " " + pars[map[i][j]]);
-//                DescriptiveStatistics dStat = new DescriptiveStatistics(simPars[map[i][j]]);
-                simsMap.put(key, simPars[map[i][j]]);
-//                System.out.println(dStat);
+        for (int[] ints : map) {
+            for (int j = 0; j < ints.length; j++) {
+                String key = parNames[j] + " " + (ints[j] - map[0][j]);
+                simsMap.put(key, simPars[ints[j]]);
             }
         }
         simsMap.put("fit", simPars[simPars.length - 1]);
@@ -116,7 +112,6 @@ double[] getSimX(int nPts, double xLB, double xUB);
                 parArray[nGroupPars + j] = pars[k];
                 errArray[nGroupPars + j] = errEstimates[k];
             }
-//            System.out.println("res " + resNums[states[iCurve][0]] + " " + parValues.toString());
 
             HashMap<String, Double> parMap = new HashMap<>();
             for (ParValueInterface parValue : parValues) {
@@ -129,16 +124,13 @@ double[] getSimX(int nPts, double xLB, double xUB);
             FitFunction model = getFitModel();
 
             parMap.put("Equation", 1.0 + fitter.getEquationNameList().indexOf(eqn));
-            // fixme
 
-           double[] extras = allExtras == null ? new double[0] : allExtras[iCurve];
-//            System.out.println("getResults got called with extras length = " + extras.length);
+            double[] extras = allExtras == null ? new double[0] : allExtras[iCurve];
 
             PlotEquation plotEquation = new PlotEquation(fitter.getExpType(), eqn, parArray, errArray, extras);
             CurveFit curveFit = new CurveFit(stateString, dynSources[states[iCurve][0]], parMap, plotEquation);
             curveFits.add(curveFit);
         }
-        FitResult fitResult = new FitResult(parNames, curveFits, eqn, nGroupPars, aic, rms, rChiSq, simsMap, hasExchange, curveStats);
-        return fitResult;
+        return new FitResult(parNames, curveFits, eqn, nGroupPars, aic, rms, rChiSq, simsMap, hasExchange, curveStats);
     }
 }

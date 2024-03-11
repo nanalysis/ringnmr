@@ -40,10 +40,9 @@ public class ExpFitter implements EquationFitter {
 
     FitFunction expModel;
     CoMDOptions options;
-    List<Double> xValues = new ArrayList<>();
+    List<Double>[] xValues;
     List<Double> yValues = new ArrayList<>();
     List<Double> errValues = new ArrayList<>();
-    List<Double> fieldValues = new ArrayList<>();
     List<Integer> idValues = new ArrayList<>();
     int nCurves = 1;
     int nResidues = 1;
@@ -96,14 +95,15 @@ public class ExpFitter implements EquationFitter {
 
     @Override
     public void setData(List<Double>[] allXValues, List<Double> yValues, List<Double> errValues) {
-        xValues.clear();
-        xValues.addAll(allXValues[0]);
+        xValues = new ArrayList[allXValues.length];
+        for (int j=0;j<allXValues.length;j++) {
+            xValues[j] = new ArrayList<>();
+            xValues[j].addAll(allXValues[j]);
+        }
         this.yValues.clear();
         this.yValues.addAll(yValues);
         this.errValues.clear();
         this.errValues.addAll(errValues);
-        this.fieldValues.clear();
-        this.fieldValues.addAll(fieldValues);
         this.idValues.clear();
         yValues.forEach((_item) -> {
             this.idValues.add(0);
@@ -142,10 +142,11 @@ public class ExpFitter implements EquationFitter {
                 double[] y = experimentalData.getYValues();
                 double[] err = experimentalData.getErrValues();
                 for (int i = 0; i < y.length; i++) {
-                    xValues.add(x[0][i]);
+                    for (int j=0;j<xValues.length;j++) {
+                        xValues[j].add(x[j][i]);
+                    }
                     yValues.add(y[i]);
                     errValues.add(err[i]);
-                    fieldValues.add(field);
                     idValues.add(id);
                 }
                 id++;
@@ -190,20 +191,18 @@ public class ExpFitter implements EquationFitter {
         double[] y = new double[yValues.size()];
         double[] err = new double[yValues.size()];
         int[] idNums = new int[yValues.size()];
-        double[] fields = new double[yValues.size()];
         for (int i = 0; i < x[0].length; i++) {
-            x[0][i] = xValues.get(i);
+            for (int j=0;j<x.length;j++) {
+                x[j][i] = xValues[j].get(i);
+            }
             y[i] = yValues.get(i);
             err[i] = errValues.get(i);
-            //System.out.println(x[0][i]+", "+x[0][i]+", "+x[0][i]+", "+x[0][i]);
-            fields[i] = fieldValues.get(i);
             idNums[i] = idValues.get(i);
         }
         expModel.setEquation(eqn);
         expModel.setXY(x, y);
         expModel.setIds(idNums);
         expModel.setErr(err);
-        expModel.setFieldValues(fields);
         expModel.setMap(stateCount, states);
     }
 

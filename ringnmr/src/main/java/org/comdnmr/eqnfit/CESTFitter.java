@@ -50,7 +50,7 @@ public class CESTFitter implements EquationFitter {
     long errTime;
     static final String expType = "cest";
 
-    class StateCount {
+    static class StateCount {
 
         int[][] states;
         int[] stateCount;
@@ -76,16 +76,10 @@ public class CESTFitter implements EquationFitter {
 
     public static int getMapIndex(int[] state, int[] stateCount, int... mask) {
         int index = 0;
-//        System.out.println(state.length + " mask " + mask.length);
-//        for (int i = 0; i < state.length; i++) {
-//            System.out.print(" " + state[i]);
-//        }
-//        System.out.println("");
         double mult = 1.0;
-        for (int i = 0; i < mask.length; i++) {
-//            System.out.println("mask:" + mask[i] + " state[mask]:" + state[mask[i]] + " count:" + stateCount[mask[i]]);
-            index += mult * state[mask[i]];
-            mult *= stateCount[mask[i]];
+        for (int j : mask) {
+            index += mult * state[j];
+            mult *= stateCount[j];
         }
         return index;
     }
@@ -118,15 +112,14 @@ public class CESTFitter implements EquationFitter {
                     double[] y = experimentalData.getYValues();
                     double[] err = experimentalData.getErrValues();
                     for (int i = 0; i < y.length; i++) {
-                        xValues[0].add(x[0][i]);
-                        xValues[1].add(x[1][i]);
-                        xValues[2].add(x[2][i]);
-                        xValues[3].add(field);
+                        for (int j=0;j<x.length;j++) {
+                            xValues[j].add(x[j][i]);
+                        }
+                        xValues[xValues.length - 1].add(field);
                         yValues.add(y[i]);
                         errValues.add(err[i]);
                         idValues.add(id);
                     }
-                    // fixme ?? id++;
                     id++;
                 }
             }
@@ -143,17 +136,11 @@ public class CESTFitter implements EquationFitter {
         }
         this.yValues.addAll(yValues);
         this.errValues.addAll(errValues);
-        for (Double yValue : yValues) {
+        for (Double ignored : yValues) {
             idValues.add(0);
         }
         dynSources = new ResonanceSource[1];
         dynSources[0] = null;
-        //states = new int[1][];
-        //states[0] = new int[7];
-        //stateCount = new int[7];
-        //for (int i=0;i<states.length;i++) {
-        //    states[0][i] = i;
-        //}
 
         stateCount = new int[4];
         stateCount[0] = 1;
@@ -166,16 +153,6 @@ public class CESTFitter implements EquationFitter {
         states[0][1] = 0;
         states[0][2] = 0;
         states[0][3] = 0;
-
-        // states
-        // stateCount
-        //System.out.println(xValues[0]);
-        //System.out.println(xValues[1]);
-        //System.out.println(this.yValues);
-        //System.out.println(this.errValues);
-        //System.out.print(xValues[0].size() + "\n");
-        //System.out.print(xValues[1].size() + "\n");
-        //System.out.print(this.yValues.size() + "\n");
     }
 
     @Override
@@ -195,7 +172,7 @@ public class CESTFitter implements EquationFitter {
 
     public static List<String> getEquationNames() {
         List<String> activeEquations = CoMDPreferences.getActiveCESTEquations();
-        System.out.println(activeEquations.toString());
+        System.out.println(activeEquations);
         return activeEquations;
     }
 
@@ -211,7 +188,7 @@ public class CESTFitter implements EquationFitter {
 
     @Override
     public void setupFit(String eqn) {
-        double[][] x = new double[4][yValues.size()];
+        double[][] x = new double[xValues.length][yValues.size()];
         double[] y = new double[yValues.size()];
         double[] err = new double[yValues.size()];
         int[] idNums = new int[yValues.size()];
@@ -221,7 +198,6 @@ public class CESTFitter implements EquationFitter {
             }
             y[i] = yValues.get(i);
             err[i] = errValues.get(i);
-           // System.out.println(x[0][i]+", "+x[0][i]+", "+x[0][i]+", "+x[0][i]);
             idNums[i] = idValues.get(i);
         }
         calcCEST.setEquation(eqn);
@@ -251,8 +227,7 @@ public class CESTFitter implements EquationFitter {
 
     @Override
     public double rms(double[] pars) {
-        double rms = calcCEST.getRMS(pars);
-        return rms;
+        return calcCEST.getRMS(pars);
     }
 
     @Override
@@ -272,7 +247,7 @@ public class CESTFitter implements EquationFitter {
         double[][] xy = CESTEquations.getXYValues(xvals, yvals, idNums, 0);
         List<CESTPeak> peaks = CESTEquations.cestPeakGuess(xy, "cest");
 
-        if (peaks.size() >= 1) {
+        if (!peaks.isEmpty()) {
             setupFit(eqn);
             int[][] map = calcCEST.getMap();
             double[] guesses;
@@ -282,8 +257,6 @@ public class CESTFitter implements EquationFitter {
             } else {
                 guesses = calcCEST.guess();
             }
-            //        System.out.println("dofit guesses = " + guesses);
-            //        double[] guesses = setupFit(eqn, absMode);
             if (guesses != null) {
                 double[][] boundaries = calcCEST.boundaries(guesses);
                 double sigma = options.getStartRadius();
@@ -293,17 +266,17 @@ public class CESTFitter implements EquationFitter {
                 System.out.println(eqn);
 
                 for (int[] map1 : map) {
-                    for (int j = 0; j < map1.length; j++) {
-                        System.out.printf(" %3d", map1[j]);
+                    for (int i : map1) {
+                        System.out.printf(" %3d", i);
                     }
-                    System.out.println("");
+                    System.out.println();
                 }
 
                 System.out.print("Fit pars \n");
                 for (int i = 0; i < pars.length; i++) {
                     System.out.printf("%d %.3f %.3f %.3f %.3f\n", i, guesses[i], boundaries[0][i], pars[i], boundaries[1][i]);
                 }
-                System.out.println("");
+                System.out.println();
 
                 double aic = calcCEST.getAICc(pars);
                 double rms = calcCEST.getRMS(pars);
@@ -362,13 +335,10 @@ public class CESTFitter implements EquationFitter {
 
     @Override
     public double[] getSimX(int nPts, double xLB, double xUB) {
-        int nPoints = nPts;
-        double[] x = new double[nPoints];
-        double firstValue = xLB;
-        double lastValue = xUB;
-        double delta = (lastValue - firstValue) / (nPoints + 1);
-        double value = firstValue;
-        for (int i = 0; i < nPoints; i++) {
+        double[] x = new double[nPts];
+        double delta = (xUB - xLB) / (nPts + 1);
+        double value = xLB;
+        for (int i = 0; i < nPts; i++) {
             x[i] = value;
             value += delta;
 

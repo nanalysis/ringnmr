@@ -18,6 +18,7 @@
 package org.comdnmr.eqnfit;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.IntStream;
 import org.apache.commons.math3.optim.PointValuePair;
 import org.apache.commons.math3.random.RandomGenerator;
@@ -64,8 +65,8 @@ public class CPMGFitFunction extends FitFunction {
     public static int getNPars(int[][] map) {
         int maxIndex = 0;
         for (int[] map1 : map) {
-            for (int j = 0; j < map1.length; j++) {
-                maxIndex = Math.max(map1[j], maxIndex);
+            for (int i : map1) {
+                maxIndex = Math.max(i, maxIndex);
             }
         }
         return maxIndex + 1;
@@ -93,13 +94,10 @@ public class CPMGFitFunction extends FitFunction {
                 ax[j] = xValues[j][i];
             }
             value = equation.calculate(par, map[idNums[i]], ax, idNums[i]);
-            //System.out.println( "xxxxxxxxxxx " + value + " " + yValues[i] + " " + equation.name());
             double delta = (value - yValues[i]);
             if (weightFit) {
                 delta /= errValues[i];
             }
-            //System.out.print(xValues[i] + " " + yValues[i] + " " + value + " " + (delta*delta) + " ");
-            //double delta = (value - yValues[i]) / errValues[i];
             sumAbs += FastMath.abs(delta);
             sumSq += delta * delta;
         }
@@ -132,7 +130,7 @@ public class CPMGFitFunction extends FitFunction {
         return yv;
     }
 
-    public ArrayList<Double> simY(double[] par, double[][] xValues) {
+    public List<Double> simY(double[] par, double[][] xValues) {
         ArrayList<Double> result = new ArrayList<>();
         double[] ax = new double[4];
         for (int i = 0; i < yValues.length; i++) {
@@ -207,8 +205,6 @@ public class CPMGFitFunction extends FitFunction {
         double[] parSDev = new double[nPar];
         for (int i = 0; i < nPar; i++) {
             DescriptiveStatistics dStat = new DescriptiveStatistics(parValues[i]);
-            double p5 = dStat.getPercentile(5.0);
-            double p95 = dStat.getPercentile(95.0);
             parSDev[i] = dStat.getStandardDeviation();
         }
         if (equation == CPMGEquation.CPMGSLOW) {
@@ -273,7 +269,6 @@ public class CPMGFitFunction extends FitFunction {
         double[] yPred = simY(start);
         String optimizer = options.getBootStrapOptimizer();
         IntStream.range(0, nSim).parallel().forEach(i -> {
-//        IntStream.range(0, nSim).forEach(i -> {
             CPMGFitFunction rDisp;
             if (options.getNonParametricBootstrap()) {
                 rDisp = setupNonParametricBootstrap(yPred);

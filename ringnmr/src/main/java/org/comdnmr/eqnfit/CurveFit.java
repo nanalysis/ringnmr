@@ -58,7 +58,7 @@ public class CurveFit {
 
     public List<ParValueInterface> getParValues() {
         List<ParValueInterface> dataValues = new ArrayList<>();
-        parMap.keySet().stream().sorted().filter((parName) -> (parMap.containsKey(parName + ".sd"))).forEachOrdered((parName) -> {
+        parMap.keySet().stream().sorted().filter(parName -> (parMap.containsKey(parName + ".sd"))).forEachOrdered(parName -> {
             double value = parMap.get(parName);
             double err = parMap.get(parName + ".sd");
             dataValues.add(new ParValue(dynSource, state, parName, value, err));
@@ -130,8 +130,7 @@ public class CurveFit {
             sBuilder.append(finalRadius).append(sep);
             sBuilder.append(tolerance).append(sep);
             sBuilder.append(weight).append(sep);
-            String statString = sBuilder.toString();
-            return statString;
+            return sBuilder.toString();
         }
     }
 

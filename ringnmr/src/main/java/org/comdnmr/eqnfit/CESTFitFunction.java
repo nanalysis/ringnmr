@@ -32,7 +32,6 @@ public class CESTFitFunction extends FitFunction {
 
     int[] r2Mask = {0, 1, 3};
     double[] rexErrors = new double[nID];
-    CESTEquations cestEq = new CESTEquations();
 
     public CESTFitFunction(CoMDOptions options) {
         super(options);
@@ -67,8 +66,8 @@ public class CESTFitFunction extends FitFunction {
     public static int getNPars(int[][] map) {
         int maxIndex = 0;
         for (int[] map1 : map) {
-            for (int j = 0; j < map1.length; j++) {
-                maxIndex = Math.max(map1[j], maxIndex);
+            for (int i : map1) {
+                maxIndex = Math.max(i, maxIndex);
             }
         }
         return maxIndex + 1;
@@ -103,10 +102,6 @@ public class CESTFitFunction extends FitFunction {
             sumAbs += FastMath.abs(delta);
             sumSq += delta * delta;
         }
-//        for (double p:par) {
-//            System.out.print(p + " ");
-//        }
-//        System.out.println(Math.sqrt(sumSq/yValues.length));
         if (absMode) {
             return sumAbs / (yValues.length - par.length);
         } else {
@@ -116,8 +111,7 @@ public class CESTFitFunction extends FitFunction {
 
     @Override
     public double[] getPredicted(double[] par) {
-        double[] yPred = simY(par);
-        return yPred;
+        return simY(par);
     }
 
     @Override
@@ -133,7 +127,6 @@ public class CESTFitFunction extends FitFunction {
         parValues = new double[nPar + 1][nSim];
         double[] yPred = getPredicted(start);
         double[] yValuesOrig = yValues.clone();
-        double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
         String optimizer = options.getBootStrapOptimizer();
         for (int i = 0; i < nSim; i++) {
@@ -152,8 +145,6 @@ public class CESTFitFunction extends FitFunction {
         double[] parSDev = new double[nPar];
         for (int i = 0; i < nPar; i++) {
             DescriptiveStatistics dStat = new DescriptiveStatistics(parValues[i]);
-            double p5 = dStat.getPercentile(5.0);
-            double p95 = dStat.getPercentile(95.0);
             parSDev[i] = dStat.getStandardDeviation();
         }
         yValues = yValuesOrig;
@@ -163,7 +154,7 @@ public class CESTFitFunction extends FitFunction {
     @Override
     public double[] simBoundsStream(double[] start, double[] lowerBounds,
             double[] upperBounds, double inputSigma, CoMDOptions options) {
-        if (options.getNonParametricBootstrap()) {
+        if (Boolean.TRUE.equals(options.getNonParametricBootstrap())) {
             return simBoundsStreamNonParametric(start, lowerBounds, upperBounds, inputSigma, options);
         } else {
             return simBoundsStreamParametric(start, lowerBounds, upperBounds, inputSigma, options);
@@ -176,13 +167,11 @@ public class CESTFitFunction extends FitFunction {
         int nPar = start.length;
         int nSim = options.getSampleSize();
         parValues = new double[nPar + 1][nSim];
-        double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
         double[] yPred = getPredicted(start);
         String optimizer = options.getBootStrapOptimizer();
 
         IntStream.range(0, nSim).parallel().forEach(i -> {
-//        IntStream.range(0, nSim).forEach(i -> {
             CESTFitFunction rDisp = new CESTFitFunction(options, xValues, yPred, errValues, idNums);
             rDisp.setEquation(equation.getName());
             double[] newY = new double[yValues.length];
@@ -216,7 +205,6 @@ public class CESTFitFunction extends FitFunction {
         int nPar = start.length;
         int nSim = options.getSampleSize();
         parValues = new double[nPar + 1][nSim];
-        double[][] rexValues = new double[nID][nSim];
         rexErrors = new double[nID];
         String optimizer = options.getBootStrapOptimizer();
 

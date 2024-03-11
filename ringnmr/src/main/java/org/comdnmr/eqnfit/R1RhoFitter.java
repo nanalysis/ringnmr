@@ -109,7 +109,6 @@ public class R1RhoFitter implements EquationFitter {
         int k = 0;
         int resIndex = 0;
         int id = 0;
-        List<Double> fieldList = new ArrayList<>();
         constraints = new Map[nCurves];
         for (var atom : dynSources) {
             for (Experiment expData : expDataList) {
@@ -117,23 +116,19 @@ public class R1RhoFitter implements EquationFitter {
                 if (experimentalData != null) {
                     constraints[id] = expData.getConstraints();
                     states[k++] = experimentSet.getStateIndices(resIndex, expData);
-                    //  need peakRefs
-                    double field = expData.getNucleusField();
-                    fieldList.add(field);
                     double[][] x = experimentalData.getXValues();
-//                System.out.println("setData x length = " + x.length);
                     double[] y = experimentalData.getYValues();
                     double[] err = experimentalData.getErrValues();
+                    double field = expData.getNucleusField();
                     for (int i = 0; i < y.length; i++) {
-                        for (int j = 0;j<xValues.length-1;j++) {
+                        for (int j=0;j<x.length;j++) {
                             xValues[j].add(x[j][i]);
                         }
-                        xValues[3].add(field);
+                        xValues[xValues.length - 1].add(field);
                         yValues.add(y[i]);
                         errValues.add(err[i]);
                         idValues.add(id);
                     }
-                    // fixme ?? id++;
                     id++;
                 }
             }
@@ -155,12 +150,6 @@ public class R1RhoFitter implements EquationFitter {
         }
         dynSources = new ResonanceSource[1];
         dynSources[0] = null;
-        //states = new int[1][];
-        //states[0] = new int[7];
-        //stateCount = new int[7];
-        //for (int i=0;i<states.length;i++) {
-        //    states[0][i] = i;
-        //}
 
         stateCount = new int[4];
         stateCount[0] = 1;
@@ -173,16 +162,6 @@ public class R1RhoFitter implements EquationFitter {
         states[0][1] = 0;
         states[0][2] = 0;
         states[0][3] = 0;
-
-        // states
-        // stateCount
-        //System.out.println(xValues[0]);
-        //System.out.println(xValues[1]);
-        //System.out.println(this.yValues);
-        //System.out.println(this.errValues);
-        //System.out.print(xValues[0].size() + "\n");
-        //System.out.print(xValues[1].size() + "\n");
-        //System.out.print(this.yValues.size() + "\n");
     }
 
     @Override
@@ -224,18 +203,16 @@ public class R1RhoFitter implements EquationFitter {
 
     @Override
     public void setupFit(String eqn) {
-        double[][] x = new double[4][yValues.size()];
+        double[][] x = new double[xValues.length][yValues.size()];
         double[] y = new double[yValues.size()];
         double[] err = new double[yValues.size()];
         int[] idNums = new int[yValues.size()];
-        double[] fields = new double[yValues.size()];
         for (int i = 0; i < x[0].length; i++) {
             for (int j=0;j<xValues.length;j++) {
                 x[j][i] = xValues[j].get(i);
             }
             y[i] = yValues.get(i);
             err[i] = errValues.get(i);
-            //System.out.println(x[0][i]+", "+x[0][i]+", "+x[0][i]+", "+x[0][i]);
             idNums[i] = idValues.get(i);
         }
         calcR1Rho.setEquation(eqn);
@@ -295,8 +272,6 @@ public class R1RhoFitter implements EquationFitter {
             } else {
                 guesses = calcR1Rho.guess();
             }
-            //        System.out.println("dofit guesses = " + guesses);
-            //        double[] guesses = setupFit(eqn, absMode);
             if (guesses != null) {
                 double[][] boundaries = calcR1Rho.boundaries(guesses);
                 double sigma = options.getStartRadius();

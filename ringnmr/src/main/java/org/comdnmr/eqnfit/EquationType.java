@@ -42,7 +42,7 @@ public interface EquationType {
         return yValues;
     }
 
-    public default void constrain(String parName, double[] guesses, double[][] boundaries, int[][] map, int id, double lower, double upper) {
+    default void constrain(String parName, double[] guesses, double[][] boundaries, int[][] map, int id, double lower, double upper) {
         String[] parNames = getParNames();
         int index = -1;
         for (int i = 0; i < parNames.length; i++) {
@@ -75,17 +75,17 @@ public interface EquationType {
 
     int[][] makeMap(int[] stateCount, int[][] states, int[] mask);
 
-    public String[] getParNames();
+    String[] getParNames();
 
-    public int getNGroupPars();
+    int getNGroupPars();
 
-    public String getName();
+    String getName();
 
-    public default double getMinX() {
+    default double getMinX() {
         return -10000.0;
     }
 
-    public default double getMaxX() {
+    default double getMaxX() {
         return 10000.0;
     }
 

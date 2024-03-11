@@ -23,7 +23,7 @@
 package org.comdnmr.eqnfit;
 
 import org.comdnmr.util.CoMDPreferences;
-import java.io.IOException;
+
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,7 +35,7 @@ import java.util.logging.Logger;
 public interface CESTEquationType extends EquationType {
 
     @Override
-    public default double calculate(double[] par, int[] map, double[] X, int idNum) {
+    default double calculate(double[] par, int[] map, double[] X, int idNum) {
         double[][] x = new double[4][1];
         x[0][0] = X[0];
         x[1][0] = X[1];
@@ -46,10 +46,9 @@ public interface CESTEquationType extends EquationType {
     }
 
     @Override
-    public default double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
-        int nPars = CESTFitFunction.getNPars(map);
-        double[] guesses = new double[nPars];
-        if (CoMDPreferences.getNeuralNetworkGuess()) {
+    default double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
+        double[] guesses;
+        if (Boolean.TRUE.equals(CoMDPreferences.getNeuralNetworkGuess())) {
             guesses = ANNguess(xValues, yValues, map, idNums, nID);
         } else {
             guesses = oldGuess(xValues, yValues, map, idNums, nID);
@@ -57,7 +56,7 @@ public interface CESTEquationType extends EquationType {
         return guesses;
     }
     
-    public default double[] ANNguess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
+    default double[] ANNguess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
         int nPars = CESTFitFunction.getNPars(map);
         double[] guesses = new double[nPars];
         double[] annGuess = new double[map[0].length];
@@ -72,8 +71,6 @@ public interface CESTEquationType extends EquationType {
             List<CESTPeak> peaks = CESTEquations.cestPeakGuess(xy, "cest");
             try {
                 annGuess = CESTEquations.cestANNGuess(xy, peaks, tEx, b1Field);
-            } catch (IOException ex) {
-                Logger.getLogger(CESTEquation.class.getName()).log(Level.SEVERE, null, ex);
             } catch (Exception ex) {
                 Logger.getLogger(CESTEquation.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -84,7 +81,7 @@ public interface CESTEquationType extends EquationType {
         return guesses;
     }
     
-    public default double[] oldGuess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
+    default double[] oldGuess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
         int nPars = CESTFitFunction.getNPars(map);
         double[] guesses = new double[nPars];
         
@@ -94,7 +91,7 @@ public interface CESTEquationType extends EquationType {
             int yIndex = xy.length - 1;
 
             List<CESTPeak> peaks = CESTEquations.cestPeakGuess(xy, "cest");
-            if (peaks.size() > 0) {
+            if (!peaks.isEmpty()) {
                 double tex = xValues[2][0];
                 double[] r1 = CESTEquations.cestR1Guess(xy[yIndex], tex, "cest");
                 double[][] r2 = CESTEquations.cestR2Guess(peaks, xy[yIndex], "cest");
@@ -108,13 +105,14 @@ public interface CESTEquationType extends EquationType {
                 guesses[map1[7]] = r2[1][0]; //100.0; //R2B
             } else {
                 guesses = null;
+                break;
             }
         }
         return guesses;
     }
 
     @Override
-    public default double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
+    default double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
         double[][] boundaries = new double[2][guesses.length];
         for (int id = 0; id < map.length; id++) {
             int[] map1 = map[id];
@@ -161,22 +159,22 @@ public interface CESTEquationType extends EquationType {
     }
 
     @Override
-    public default double getRex(double[] pars, int[] map, double field) {
+    default double getRex(double[] pars, int[] map, double field) {
         return 0.0;
     }
 
     @Override
-    public default double getKex(double[] pars) {
+    default double getKex(double[] pars) {
         return pars[0];
     }
 
     @Override
-    public default double getKex(double[] pars, int id) {
+    default double getKex(double[] pars, int id) {
         return pars[0];
     }
 
     @Override
-    public default int[][] makeMap(int n) {
+    default int[][] makeMap(int n) {
         int nP = 8;
         int[][] map = new int[n][nP];
         for (int i = 0; i < n; i++) {
@@ -188,20 +186,18 @@ public interface CESTEquationType extends EquationType {
     }
 
     @Override
-    public default int[][] makeMap(int n, int m) {
-        int nP = m;
-        int[][] map = new int[n][nP];
+    default int[][] makeMap(int n, int m) {
+        int[][] map = new int[n][m];
         for (int i = 0; i < n; i++) {
-            for (int j = 0; j < nP; j++) {
-                map[i][0] = nP * i + j;
+            for (int j = 0; j < m; j++) {
+                map[i][0] = m * i + j;
             }
         }
         return map;
     }
 
     @Override
-    public default int[][] makeMap(int[] stateCount, int[][] states, int[] r2Mask) {
-        int[][] map = makeMap(1);
-        return map;
+    default int[][] makeMap(int[] stateCount, int[][] states, int[] r2Mask) {
+        return makeMap(1);
     }
 }

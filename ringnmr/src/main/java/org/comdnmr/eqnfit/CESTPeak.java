@@ -60,9 +60,9 @@ public class CESTPeak {
 
     public double[] getHalfWidths() {
         double[] halfWidths = new double[3];
-        halfWidths[0] = (width25LB > width25UB) ? width25UB : width25LB;
-        halfWidths[1] = (width50LB > width50UB) ? width50UB : width50LB;
-        halfWidths[2] = (width75LB > width75UB) ? width75UB : width75LB;
+        halfWidths[0] = Math.min(width25LB, width25UB);
+        halfWidths[1] = Math.min(width50LB, width50UB);
+        halfWidths[2] = Math.min(width75LB, width75UB);
         
         return halfWidths;
     }
