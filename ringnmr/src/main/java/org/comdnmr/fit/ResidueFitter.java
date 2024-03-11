@@ -147,9 +147,13 @@ public class ResidueFitter {
     void finishProcessing() {
         updateStatus("Done");
         try {
-            RelaxTypes relaxType = RelaxTypes.valueOf(experimentSet.getExpMode().toUpperCase());
-            DataIO.addRelaxationFitResults(experimentSet, relaxType);
+            String expMode = experimentSet.getExpMode().toUpperCase();
+            if (expMode.equals("R1") || expMode.equals("R2")) {
+                RelaxTypes relaxType = RelaxTypes.valueOf(experimentSet.getExpMode().toUpperCase());
+                DataIO.addRelaxationFitResults(experimentSet, relaxType);
+            }
         } catch (IllegalArgumentException iAE) {
+            iAE.printStackTrace();
 
         }
     }
