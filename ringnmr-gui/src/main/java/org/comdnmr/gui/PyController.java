@@ -2133,21 +2133,10 @@ public class PyController implements Initializable {
                     extras[1] = expData.getExtras().get(0);
                     extras[2] = expData.getExtras().get(1);
                     GUIPlotEquation plotEquation = new GUIPlotEquation(expType, equationName, pars, errs, extras);
-
                     equations.add(plotEquation);
                 }
             } else {
-                double[] pars = curveFit.getEquation().getPars(); //pars = getPars(equationName);
-                double[] errs = curveFit.getEquation().getErrs(); //double[] errs = new double[pars.length];
-                double[] extras = curveFit.getEquation().getExtras();
-                double[] simExtras = simControls.getExtras();
-                if (simExtras.length > 1) {
-                    extras = new double[simExtras.length + 1];
-                    extras[0] = CoMDPreferences.getRefField() * simControls.getNucleus().getFreqRatio();
-
-                    System.arraycopy(simExtras, 0, extras, 1, simExtras.length);
-                }
-                GUIPlotEquation plotEquation = new GUIPlotEquation(expType, equationName, pars, errs, extras);
+                GUIPlotEquation plotEquation = new GUIPlotEquation(expType, curveFit.getEquation());
                 equations.add(plotEquation);
 
             }
@@ -2539,10 +2528,12 @@ public class PyController implements Initializable {
     }
 
     void equationAction() {
+        System.out.println("eq act " + equationChoice.getUserData());
         if (equationChoice.getUserData() == null) {
             String equationName = equationChoice.getValue();
             if (!chartInfo.currentStates.isEmpty() && equationName != null) {
                 // copy it so it doesn't get cleared by clear call in updateTableWithPars
+                chartInfo.equationName = equationName;
                 updateTableWithPars(chartInfo);
                 showInfo(equationName);
             }
@@ -2803,17 +2794,30 @@ public class PyController implements Initializable {
         ArrayList<Double> yValues = getSimYData();
         ArrayList<Double> errValues = getSimErrData();
         double[] extras = simControls.getExtras();
-        int nX = 3;
-        ArrayList[] allXValues = new ArrayList[extras.length + nX];
+        int nX;
+        ArrayList[] allXValues;
         ArrayList<Double> fieldValuesX = new ArrayList<>();
-        ArrayList<Double> fieldValuesH = new ArrayList<>();
-        allXValues[0] = xValues;
-        allXValues[1] = fieldValuesX;
-        allXValues[2] = fieldValuesH;
-        for (int i = 0; i < yValues.size(); i++) {
-            double fieldValue = CoMDPreferences.getRefField() * simControls.getNucleus().getFreqRatio();
-            fieldValuesX.add(fieldValue);
-            fieldValuesH.add(CoMDPreferences.getRefField());
+        if (equationFitter instanceof CESTFitter) {
+            nX = 1;
+            allXValues = new ArrayList[extras.length + nX + 1];
+            allXValues[0] = xValues;
+            allXValues[3] = fieldValuesX;
+            for (int i = 0; i < yValues.size(); i++) {
+                double fieldValue = CoMDPreferences.getRefField() * simControls.getNucleus().getFreqRatio();
+                fieldValuesX.add(fieldValue);
+            }
+        } else {
+            nX = 3;
+            allXValues = new ArrayList[extras.length + nX];
+            ArrayList<Double> fieldValuesH = new ArrayList<>();
+            allXValues[0] = xValues;
+            allXValues[1] = fieldValuesX;
+            allXValues[2] = fieldValuesH;
+            for (int i = 0; i < yValues.size(); i++) {
+                double fieldValue = CoMDPreferences.getRefField() * simControls.getNucleus().getFreqRatio();
+                fieldValuesX.add(fieldValue);
+                fieldValuesH.add(CoMDPreferences.getRefField());
+            }
         }
         for (int j = 0; j < extras.length; j++) {
             ArrayList<Double> xValuesEx = new ArrayList<>();
