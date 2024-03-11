@@ -2941,7 +2941,7 @@ public class PyController implements Initializable {
                 yValue += Double.parseDouble(genDataSDevTextField.getText()) * rand.nextGaussian(); //sdev * rand.nextGaussian();
                 XYValue dataPoint = new XYEValue(xValue, yValue, Double.parseDouble(genDataSDevTextField.getText()));
                 dataPoint.setExtraValue(sdev);
-                series.getData().add(dataPoint);
+                series.add(dataPoint);
             }
         }
         allData.addAll(data);
@@ -2969,7 +2969,7 @@ public class PyController implements Initializable {
                         dataPoint = new XYValue(dataValues[0].get(i), dataValues[1].get(i));
 
                     }
-                    series.getData().add(dataPoint);
+                    series.add(dataPoint);
                 }
                 allData.addAll(data);
                 xychart.setData(allData);
