@@ -1484,6 +1484,7 @@ public class PyController implements Initializable {
                     if (resSource.equals(chartInfo.currentResidues[0])) {
                         simControls.updateStates(chartInfo.currentStates);
                         simControls.updateSliders(parValues, useEquationName);
+                        getCurrentExperimentSet().getExperimentData().stream().findFirst().ifPresent(e -> simControls.setNucleus(e.getNucleusName()));
                     }
 
                     allParValues.addAll(parValues);

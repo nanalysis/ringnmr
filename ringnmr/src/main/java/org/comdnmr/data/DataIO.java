@@ -89,6 +89,12 @@ public class DataIO {
                 return 1000.0 / (2.0 * value);
             }
         },
+        TAU4() {
+            @Override
+            double convert(double value, double[] pars, Experiment expData) {
+                return 1000.0 / (4.0 * value);
+            }
+        },
         PPMTOHZ() {
             @Override
             double convert(double value, double[] pars, Experiment expData) {
@@ -188,7 +194,11 @@ public class DataIO {
                 int offset = 0;
                 double refIntensity = 1.0;
                 double refNoise = 0.0;
-                if (expMode.equalsIgnoreCase("noe")) {
+                double tau = 0.0;
+                if (experiment instanceof CPMGExperiment cpmgExperiment) {
+                    tau = cpmgExperiment.getTau();
+                }
+                if (expMode.equalsIgnoreCase("noe") || expMode.equalsIgnoreCase("cpmg")) {
                     offset = 1;
                     refIntensity = v[0][0];
                     refNoise = v[1][0];
@@ -209,9 +219,11 @@ public class DataIO {
 
                 } else {
                     for (int i = offset; i < v[0].length; i++) {
-                        xValueList.add(xValues[i]);
+                        double xValue = xConv.convert(xValues[i],null, null );
+                        xValueList.add(xValue);
                         double expIntensity = v[0][i];
-                        yValueList.add(expIntensity / refIntensity);
+                        double yValue = yConv.convert(expIntensity, refIntensity, tau);
+                        yValueList.add(yValue);
                         if (expMode.equalsIgnoreCase("noe")) {
                             double expNoise = v[1][i];
                             double r1 = refNoise / refIntensity;
@@ -267,6 +279,9 @@ public class DataIO {
         double tau = 0.0;
         if (experiment instanceof OffsetExperiment) {
             tau = ((OffsetExperiment) experiment).getTau();
+        }
+        if (experiment instanceof CPMGExperiment cpmgExperiment) {
+            tau = cpmgExperiment.getTau();
         }
         if (experiment instanceof DoubleArrayExperiment) {
             xVals = ((DoubleArrayExperiment) experiment).getXVals();
