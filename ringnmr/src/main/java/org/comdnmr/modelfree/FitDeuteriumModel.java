@@ -245,6 +245,10 @@ public class FitDeuteriumModel extends FitModel {
             }
             orderPar = orderPar.set(parName, parValue, parError);
         }
+        Double sfValue = orderPar.getValue("Sf2");
+        if (sfValue == null) {
+            orderPar = orderPar.set("Sf2", 1.0, 0.0);
+        }
         if (!bestModel.fitTau()) {
             orderPar = orderPar.set("Tau_e", bestModel.getTau(), 0.0);
         }

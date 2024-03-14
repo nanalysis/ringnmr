@@ -1593,6 +1593,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             Optional<String> sepStr = Optional.empty();
             int iField = -1;
             int iRes = -1;
+            int iResName = -1;
             int iAtom = -1;
             Map<String, Integer> fieldMap = new HashMap<>();
             List<String> header;
@@ -1628,6 +1629,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     if (iRes == -1) {
                         iRes = header.indexOf("RESI");
                     }
+                    iResName = header.indexOf("RESNAME");
                     if (iRes == -1) {
                         iRes = 0;
                     }
@@ -1640,6 +1642,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 } else {
                     String[] fields = CSVRE.parseLine(sepStr.get(), line);
                     String residue = fields[iRes];
+                    String resName = iResName == -1 ? "" : fields[iResName];
                     double field = Double.parseDouble(fields[iField]);
                     String[] atomNames;
                     if (iAtom != -1) {
@@ -1658,7 +1661,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                             double error = Double.parseDouble(fields[index + 1]);
                             String id = fileName + "_" + type + "_" + Math.round(field);
                             Optional<ResonanceSource> resSourceOpt = dynamicsSourceFactory.
-                                    createFromSpecifiers(fileName + "." + residue, residue, atomNames);
+                                    createFromSpecifiers(fileName + "." + residue, resName+residue, atomNames);
                             RelaxTypes relaxType = RelaxTypes.valueOf(type);
                             RelaxationSet relaxationSet = setMap
                                     .computeIfAbsent(id, (k) -> new RelaxationSet(id, relaxType, field, 25, Collections.emptyMap()));

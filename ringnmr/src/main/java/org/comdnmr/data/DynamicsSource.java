@@ -25,7 +25,7 @@ import org.nmrfx.peaks.SpectralDim;
  */
 public class DynamicsSource {
 
-    private static final String RESIDUE_STR = "^(([a-zA-Z]+):)?(([a-zA-Z])?(-?[0-9]+)|([ij]))(\\.([a-zA-Z].*))";
+    private static final String RESIDUE_STR = "^(([a-zA-Z]+):)?(([a-zA-Z]+)?(-?[0-9]+)|([ij]))(\\.([a-zA-Z].*))";
     private static final String PEAK_STR = "^([a-zA-Z].*)\\.([0-9]+)";
     private static final Pattern RESIDUE_PATTERN = Pattern.compile(RESIDUE_STR);
     private static final Pattern PEAK_PATTERN = Pattern.compile(PEAK_STR);
@@ -102,7 +102,13 @@ public class DynamicsSource {
             atomName = matcher.group(8);
         }
         atomName = atomName.toUpperCase();
-        String resName = resChar == null ? "X" : PDBAtomParser.convert1To3(resChar);
+        String resName = resChar == null ? "X" : resChar;
+        if (resName.length() == 1) {
+            resName = PDBAtomParser.convert1To3(resName);
+            if (resName == null) {
+                resName = "X";
+            }
+        }
 
         Polymer polymer = null;
         if (!molecule.getPolymers().isEmpty()) {
@@ -115,6 +121,9 @@ public class DynamicsSource {
         if (polymer == null) {
             if (!createAtom) {
                 return empty;
+            }
+            if (chainName == null) {
+                chainName = "A";
             }
             polymer = new Polymer(chainName);
             molecule.addEntity(polymer);
