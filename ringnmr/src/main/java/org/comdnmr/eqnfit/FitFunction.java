@@ -226,7 +226,7 @@ public abstract class FitFunction implements MultivariateFunction {
     }
 
     public double[] simY(double[] par) {
-        double[] yCalc = equation.calculate(par, map[0], xValues, idNums[0], fieldValues);
+        double[] yCalc = equation.calculate(par, map[0], xValues, idNums[0]);
         return yCalc;
     }
 
@@ -283,29 +283,19 @@ public abstract class FitFunction implements MultivariateFunction {
         }
     }
 
-    public double[] getFields() {
-        double[] fields = new double[nID];
-        for (int i = 0; i < idNums.length; i++) {
-            int id = idNums[i];
-            fields[id] = fieldValues[i];
-        }
-        return fields;
-    }
-
     public double[] guess() {
-        double[] fields = getFields();
-        double[] guess = equation.guess(xValues, yValues, map, idNums, nID, fields);
+        double[] guess = equation.guess(xValues, yValues, map, idNums, nID);
         return guess;
     }
 
     public double[][] boundaries(double[] guesses) {
         //return equation.boundaries(xValues, yValues, fieldValues[0]);
-        double[][] boundaries = equation.boundaries(guesses, xValues, yValues, map, idNums, nID, fieldValues[0]);
+        double[][] boundaries = equation.boundaries(guesses, xValues, yValues, map, idNums, nID);
         return boundaries;
     }
 
-    public double calculate(double[] par, int[] map, double[] x, int idNum, double field) {
-        return equation.calculate(par, map, x, idNum, field);
+    public double calculate(double[] par, int[] map, double[] x, int idNum) {
+        return equation.calculate(par, map, x, idNum);
     }
 
     public double getRSS(double[] par) {
@@ -316,7 +306,7 @@ public abstract class FitFunction implements MultivariateFunction {
                 x[j] = xValues[j][i];
             }
             final double value;
-            value = calculate(par, map[idNums[i]], x, idNums[i], fieldValues[i]);
+            value = calculate(par, map[idNums[i]], x, idNums[i]);
             double delta = value - yValues[i];
             rss += delta * delta;
         }
@@ -331,7 +321,7 @@ public abstract class FitFunction implements MultivariateFunction {
                 x[j] = xValues[j][i];
             }
             final double value;
-            value = calculate(par, map[idNums[i]], x, idNums[i], fieldValues[i]);
+            value = calculate(par, map[idNums[i]], x, idNums[i]);
 
             double delta = value - yValues[i];
             rss += delta * delta;
@@ -356,7 +346,7 @@ public abstract class FitFunction implements MultivariateFunction {
                 x[j] = xValues[j][i];
             }
             final double value;
-            value = calculate(par, map[idNums[i]], x, idNums[i], fieldValues[i]);
+            value = calculate(par, map[idNums[i]], x, idNums[i]);
 
             double delta = (value - yValues[i]) / errValues[i];
             rss += delta * delta;
@@ -426,13 +416,13 @@ public abstract class FitFunction implements MultivariateFunction {
         return ok;
     }
 
-    public void dump(double[] par, double[][] xValues, double field) {
+/*    public void dump(double[] par, double[][] xValues, double field) {
         double[] x = new double[xValues.length];
         for (int i = 0; i < yValues.length; i++) {
             for (int j = 0; j < x.length; j++) {
                 x[j] = xValues[j][i];
             }
-            double yCalc = equation.calculate(par, map[idNums[i]], x, idNums[i], field);
+            double yCalc = equation.calculate(par, map[idNums[i]], x, idNums[i]);
             System.out.printf("%8.5f %8.5f %8.5f\n", x[0], yCalc, field);
         }
     }
@@ -462,5 +452,5 @@ public abstract class FitFunction implements MultivariateFunction {
         for (int i = 0; i < yValues.length; i++) {
             System.out.printf("%3d %8.3f %8.3f %8.3f %8.3f %3d\n", i, xValues[0][i], yValues[i], errValues[i], fieldValues[i], idNums[i]);
         }
-    }
+    }*/
 }

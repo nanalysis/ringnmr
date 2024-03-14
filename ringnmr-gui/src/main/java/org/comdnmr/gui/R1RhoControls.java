@@ -721,9 +721,9 @@ public class R1RhoControls extends EquationControls {
             extras1 = getPars(equationName)[1];
             double[] errs = new double[pars.length];
             double[] extras = new double[3];
-            extras[0] = CoMDPreferences.getRefField() * getNucleus().getFreqRatio(); // fixme
-            extras[1] = extras1[0]; //17.0 * 2 * Math.PI;
-            extras[2] = extras1[1]; //0.3;
+            extras[0] = extras1[0]; //17.0 * 2 * Math.PI;
+            extras[1] = extras1[1]; //0.3;
+            extras[2] = CoMDPreferences.getRefField() * getNucleus().getFreqRatio(); // fixme
             //System.out.println("updateEquations got called without experimentSet; extras length = "+extras.length);
             GUIPlotEquation plotEquation = new GUIPlotEquation("r1rho", equationName, pars, errs, extras);
             equations.add(plotEquation);

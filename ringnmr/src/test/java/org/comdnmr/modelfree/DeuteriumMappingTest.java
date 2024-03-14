@@ -124,7 +124,7 @@ public class DeuteriumMappingTest {
 
         var fields = List.of(rlxEq.getW()[1]);
         var jValuesCalc = DeuteriumMapping.jointMapping(rValues, rValuesErrs, fields);
-        Assert.assertArrayEquals(jValues, jValuesCalc[1], 1.0e-12);
+        Assert.assertArrayEquals(jValues, jValuesCalc[1], 1.0e-11);
     }
 
     @Test

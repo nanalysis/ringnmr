@@ -43,17 +43,16 @@ public class ExpFitFunction extends FitFunction {
         equation = ExpEquation.valueOf(eqName.toUpperCase());
     }
 
-    public ExpFitFunction(CoMDOptions options,double[][] x, double[] y, double[] err, double[] fieldValues) throws IllegalArgumentException {
-        this(options, x, y, err, fieldValues, new int[x.length]);
+    public ExpFitFunction(CoMDOptions options,double[][] x, double[] y, double[] err) throws IllegalArgumentException {
+        this(options, x, y, err, new int[x.length]);
     }
 
-    public ExpFitFunction(CoMDOptions options, double[][] x, double[] y, double[] err, double[] fieldValues, int[] idNums) throws IllegalArgumentException {
+    public ExpFitFunction(CoMDOptions options, double[][] x, double[] y, double[] err, int[] idNums) throws IllegalArgumentException {
         super(options);
         this.xValues = new double[1][];
         this.xValues[0] = x[0].clone();
         this.yValues = y.clone();
         this.errValues = err.clone();
-        this.fieldValues = fieldValues.clone();
         this.idNums = idNums.clone();
         this.idNums = new int[yValues.length];
         this.equation = ExpEquation.EXPAB;
@@ -91,7 +90,7 @@ public class ExpFitFunction extends FitFunction {
         for (int i = 0; i < yValues.length; i++) {
             final double value;
             ax[0] = xValues[0][i];
-            value = equation.calculate(par, map[idNums[i]], ax, idNums[i], fieldValues[i]);
+            value = equation.calculate(par, map[idNums[i]], ax, idNums[i]);
             //System.out.println( "xxxxxxxxxxx " + value + " " + yValues[i] + " " + equation.name());
             double delta = (value - yValues[i]);
             if (weightFit) {
@@ -121,7 +120,7 @@ public class ExpFitFunction extends FitFunction {
         double[] x = new double[1];
         for (int i = 0; i < xValues[0].length; i++) {
             x[0] = xValues[0][i];
-            double yCalc = equation.calculate(par, map[idNums[i]], x, idNums[i], field);
+            double yCalc = equation.calculate(par, map[idNums[i]], x, idNums[i]);
             result.add(yCalc);
         }
         return result;
@@ -185,7 +184,7 @@ public class ExpFitFunction extends FitFunction {
 
         IntStream.range(0, nSim).parallel().forEach(i -> {
 //        IntStream.range(0, nSim).forEach(i -> {
-            ExpFitFunction rDisp = new ExpFitFunction(options, xValues, yPred, errValues, fieldValues, idNums);
+            ExpFitFunction rDisp = new ExpFitFunction(options, xValues, yPred, errValues, idNums);
             rDisp.setEquation(equation.getName());
             double[] newY = new double[yValues.length];
             for (int k = 0; k < yValues.length; k++) {
@@ -223,12 +222,11 @@ public class ExpFitFunction extends FitFunction {
         String optimizer = options.getBootStrapOptimizer();
 
         IntStream.range(0, nSim).parallel().forEach(i -> {
-            ExpFitFunction rDisp = new ExpFitFunction(options, xValues, yValues, errValues, fieldValues, idNums);
+            ExpFitFunction rDisp = new ExpFitFunction(options, xValues, yValues, errValues, idNums);
             rDisp.setEquation(equation.getName());
             double[][] newX = new double[1][yValues.length];
             double[] newY = new double[yValues.length];
             double[] newErr = new double[yValues.length];
-            double[] newFieldValues = new double[yValues.length];
             int[] newID = new int[yValues.length];
             int iTry = 0;
             do {
@@ -237,7 +235,6 @@ public class ExpFitFunction extends FitFunction {
                     newX[0][k] = xValues[0][rI];
                     newY[k] = yValues[rI];
                     newErr[k] = errValues[rI];
-                    newFieldValues[k] = fieldValues[rI];
                     newID[k] = idNums[rI];
                 }
                 iTry++;
@@ -245,7 +242,6 @@ public class ExpFitFunction extends FitFunction {
             // fixme  idNum should be set in above loop
             rDisp.setXY(newX, newY);
             rDisp.setErr(newErr);
-            rDisp.setFieldValues(newFieldValues);
             rDisp.setIds(newID);
             rDisp.setMap(map);
 

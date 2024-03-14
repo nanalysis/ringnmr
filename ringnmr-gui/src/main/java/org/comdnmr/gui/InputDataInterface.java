@@ -53,7 +53,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
  * @author Martha Beckwith
  */
 public class InputDataInterface {
@@ -116,9 +115,9 @@ public class InputDataInterface {
                 peakLists.add(peakList);
                 ChoiceBox<String> typeChoice = new ChoiceBox<>();
                 choices.add(typeChoice);
-                typeChoice.getItems().addAll(Arrays.asList("", "R1", "R2", "NOE","RAP","RQ"));
-                inputInfoDisplay.add(peakListLabel,0,choices.size()-1);
-                inputInfoDisplay.add(typeChoice,1,choices.size()-1);
+                typeChoice.getItems().addAll(Arrays.asList("", "R1", "R2", "NOE", "RAP", "RQ", "CPMG"));
+                inputInfoDisplay.add(peakListLabel, 0, choices.size() - 1);
+                inputInfoDisplay.add(typeChoice, 1, choices.size() - 1);
                 typeChoice.setValue("");
             }
         });
@@ -142,6 +141,13 @@ public class InputDataInterface {
                     String nucleus;
                     double B0field;
                     double temperature;
+                    double tau = 0.0;
+                    if (type.equalsIgnoreCase("cpmg")) {
+                        String tauStr = GUIUtils.input("tau");
+                        if ((tauStr != null) && !tauStr.isBlank()) {
+                            tau = Double.parseDouble(tauStr);
+                        }
+                    }
                     DatasetBase dataset = DatasetBase.getDataset(peakList.fileName);
                     if (dataset == null) {
                         nucleus = peakList.getSpectralDim(0).getNucleus();
@@ -155,7 +161,7 @@ public class InputDataInterface {
                     nucChoice.setValue(nucleus);
                     B0fieldChoice.setValue(String.valueOf(B0field));
                     tempTextField.setText(String.valueOf(temperature));
-                    loadFromPeakList(peakList, type, nucleus, B0field, temperature, autoFit);
+                    loadFromPeakList(peakList, type, nucleus, B0field, temperature, tau, autoFit);
                 }
             }
         }
@@ -184,7 +190,7 @@ public class InputDataInterface {
         Label errPercentLabel = new Label("  Error Value:  ");
 
         Label[] labels = {fitModeLabel, peakListLabel, dirLabel, fileLabel, xpk2FileLabel, fitFileLabel, fieldLabel, tempLabel, pLabel,
-            tauLabel, B1FieldLabel, nucLabel, errModeLabel, errPercentLabel, xValLabel, delayLabel, yValLabel, yamlLabel};
+                tauLabel, B1FieldLabel, nucLabel, errModeLabel, errPercentLabel, xValLabel, delayLabel, yValLabel, yamlLabel};
 
         dirChoiceButton.setText("Browse");
         dirChoiceButton.setOnAction(this::chooseDirectory);
@@ -238,7 +244,7 @@ public class InputDataInterface {
         double xValAreaWidth = 150; //240;
 
         TextField[] textFields = {B1TextField, tauTextField, tempTextField, pTextField,
-            errPercentTextField};
+                errPercentTextField};
 
         for (TextField textField : textFields) {
             textField.setText("");
@@ -265,7 +271,7 @@ public class InputDataInterface {
 
         fitModeChoice.getItems().clear();
         fitModeChoice.getItems().addAll(Arrays.asList("Select", "R1", "R2", "NOE",
-                "CPMG", "CEST", "R1RHO","RAP","RQ"));
+                "CPMG", "CEST", "R1RHO", "RAP", "RQ"));
         fitModeChoice.setValue("Select");
 
         fitModeChoice.valueProperty().addListener(x -> updateInfoInterface());
@@ -406,7 +412,7 @@ public class InputDataInterface {
     public void updateInfoInterface() {
         Button[] buttons = {fileChoiceButton, xpk2ChoiceButton, paramFileChoiceButton, addButton, clearButton, loadButton};
         TextField[] textFields = {B1TextField, tauTextField, tempTextField, pTextField,
-            errPercentTextField, yamlTextField, chosenFileLabel, chosenXPK2FileLabel, chosenParamFileLabel};
+                errPercentTextField, yamlTextField, chosenFileLabel, chosenXPK2FileLabel, chosenParamFileLabel};
         if (fitModeChoice.getSelectionModel().getSelectedItem() != null) {
             if (fitModeChoice.getSelectionModel().getSelectedItem().equals("Select")) {
                 for (TextField textField : textFields) {
@@ -646,15 +652,16 @@ public class InputDataInterface {
         String expMode = fitModeChoice.getValue();
         double b0Field = Double.parseDouble(B0fieldChoice.getValue());
         Double temperatureK = getDouble(tempTextField.getText());
+        Double tau = getDouble("tau");
         String nucName = nucChoice.getValue();
-        loadFromPeakList(peakList, expMode, nucName, b0Field, temperatureK, false);
+        loadFromPeakList(peakList, expMode, nucName, b0Field, temperatureK, tau, false);
     }
 
-    void loadFromPeakList(PeakList peakList, String expMode, String nucName, double b0Field, double temperatureK,
+    void loadFromPeakList(PeakList peakList, String expMode, String nucName, double b0Field, double temperatureK, double tau,
                           boolean autoFit) {
         expMode = expMode.toLowerCase();
         if (peakList != null) {
-            
+
             MoleculeBase mol = MoleculeFactory.getActive();
             boolean dynCreateMol;
             if (mol == null) {
@@ -687,6 +694,9 @@ public class InputDataInterface {
                 case "noe":
                     expData = new NOEExperiment(experimentSet, peakList.getName(),
                             nucName, b0Field, temperatureK);
+                case "cpmg":
+                    expData = new CPMGExperiment(experimentSet, peakList.getName(),
+                            nucName, b0Field, tau, temperatureK);
                     break;
                 default:
                     expData = new Experiment(experimentSet, peakList.getName(),
@@ -694,10 +704,13 @@ public class InputDataInterface {
             }
 
             try {
-                String xConv = xConvChoice.getValue() == null ? "identity" :xConvChoice.getValue();
-                String yConv = yConvChoice.getValue() == null ? "identity" :yConvChoice.getValue();
+                String xConv = xConvChoice.getValue() == null ? "identity" : xConvChoice.getValue();
+                String yConv = yConvChoice.getValue() == null ? "identity" : yConvChoice.getValue();
                 if (expMode.equalsIgnoreCase("noe")) {
                     yConv = "normalize";
+                } else if (expMode.equalsIgnoreCase("cpmg")) {
+                    yConv = "rate";
+                    xConv = "tau4";
                 }
                 DataIO.loadFromPeakList(peakList, expData, experimentSet,
                         xConv, yConv, dynSource);

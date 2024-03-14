@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
- /*
+/*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
@@ -23,72 +23,73 @@
 package org.comdnmr.eqnfit;
 
 import org.comdnmr.data.ExperimentSet;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.comdnmr.util.CoMDOptions;
 import org.nmrfx.chemistry.relax.ResonanceSource;
 
 /**
- *
  * @author Bruce Johnson
  */
 public interface EquationFitter {
 
-    public List<String> getEquationNameList();
+    List<String> getEquationNameList();
 
-    public FitFunction getFitModel();
+    FitFunction getFitModel();
 
-    public String getExpType();
+    String getExpType();
 
-    public FitResult doFit(String eqn, double[] sliderGuesses, CoMDOptions options);
+    FitResult doFit(String eqn, double[] sliderGuesses, CoMDOptions options);
 
-    public void setupFit(String eqn);
+    void setupFit(String eqn);
 
-    public List<ParValueInterface> guessPars(String eqn);
+    List<ParValueInterface> guessPars(String eqn);
 
-    public double rms(double[] pars);
+    double rms(double[] pars);
 
-    public void setData(ExperimentSet experimentSet, ResonanceSource[] dynSources);
+    void setData(ExperimentSet experimentSet, ResonanceSource[] dynSources);
 
-    public void setData(List<Double>[] allXValues, List<Double> yValues, List<Double> errValues, List<Double> fieldValues);
+    void setData(List<Double>[] allXValues, List<Double> yValues, List<Double> errValues);
 
-    public int[] getStateCount();
+    int[] getStateCount();
 
-    public int[][] getStates();
+    int[][] getStates();
 
-//    public double[] getSimX();
-    public double[] getSimX(int nPts, double xLB, double xUB);
+    double[] getSimX(int nPts, double xLB, double xUB);
 
-    public double[] getSimXDefaults();
+    double[] getSimXDefaults();
 
-    default double[] getFields(List<Double> fieldValues, List<Integer> idNums) {
-        Map<Integer, Double> fieldMap = new HashMap<>();
-        for (int i = 0; i < fieldValues.size(); i++) {
-            fieldMap.put(idNums.get(i), fieldValues.get(i));
+    default double[][] getFields(List<Double>[] xValues, List<Integer> idNums) {
+        Map<Integer, double[]> fieldMap = new HashMap<>();
+        int nExtra = xValues.length - 1;
+        for (int i = 0; i < xValues[0].size(); i++) {
+            double[] v = new double[nExtra];
+            for (int j = 0; j < nExtra; j++) {
+                v[j] = xValues[j + 1].get(i);
+            }
+            fieldMap.put(idNums.get(i), v);
         }
-        double[] fields = new double[fieldMap.size()];
-        for (int i = 0; i < fields.length; i++) {
-            fields[i] = fieldMap.get(i);
+        double[][] values = new double[fieldMap.size()][nExtra];
+        for (int i = 0; i < fieldMap.size(); i++) {
+            values[i] = fieldMap.get(i);
         }
-        return fields;
+        return values;
     }
 
-    public default FitResult getResults(EquationFitter fitter, String eqn, String[] parNames, ResonanceSource[] dynSources, int[][] map, int[][] states,
-            double[] usedFields, int nGroupPars, double[] pars, double[] errEstimates, double aic, double rms, double rChiSq, double[][] simPars,
-            boolean hasExchange, CurveFit.CurveFitStats curveStats) {
+    default FitResult getResults(EquationFitter fitter, String eqn, String[] parNames, ResonanceSource[] dynSources, int[][] map, int[][] states,
+                                 double[][] allExtras, int nGroupPars, double[] pars, double[] errEstimates, double aic, double rms, double rChiSq, double[][] simPars,
+                                 boolean hasExchange, CurveFit.CurveFitStats curveStats) {
         int nNonGroup = parNames.length - nGroupPars;
         List<CurveFit> curveFits = new ArrayList<>();
-//        System.out.println("ning " + nCurves);
         Map<String, double[]> simsMap = new HashMap<>();
-        for (int i = 0; i < map.length; i++) {
-            for (int j = 0; j < map[i].length; j++) {
-                String key = parNames[j] + " " + (map[i][j] - map[0][j]);
-//                System.out.println(i + " " + j + " " + key + " " + map[i][j] + " " + pars[map[i][j]]);
-//                DescriptiveStatistics dStat = new DescriptiveStatistics(simPars[map[i][j]]);
-                simsMap.put(key, simPars[map[i][j]]);
-//                System.out.println(dStat);
+        for (int[] ints : map) {
+            for (int j = 0; j < ints.length; j++) {
+                String key = parNames[j] + " " + (ints[j] - map[0][j]);
+                simsMap.put(key, simPars[ints[j]]);
             }
         }
         simsMap.put("fit", simPars[simPars.length - 1]);
@@ -111,7 +112,6 @@ public interface EquationFitter {
                 parArray[nGroupPars + j] = pars[k];
                 errArray[nGroupPars + j] = errEstimates[k];
             }
-//            System.out.println("res " + resNums[states[iCurve][0]] + " " + parValues.toString());
 
             HashMap<String, Double> parMap = new HashMap<>();
             for (ParValueInterface parValue : parValues) {
@@ -124,15 +124,13 @@ public interface EquationFitter {
             FitFunction model = getFitModel();
 
             parMap.put("Equation", 1.0 + fitter.getEquationNameList().indexOf(eqn));
-            // fixme
-            double[] extras = new double[1];
-            extras[0] = usedFields[states[iCurve][1]];
-//            System.out.println("getResults got called with extras length = " + extras.length);
+
+            double[] extras = allExtras == null ? new double[0] : allExtras[iCurve];
+
             PlotEquation plotEquation = new PlotEquation(fitter.getExpType(), eqn, parArray, errArray, extras);
             CurveFit curveFit = new CurveFit(stateString, dynSources[states[iCurve][0]], parMap, plotEquation);
             curveFits.add(curveFit);
         }
-        FitResult fitResult = new FitResult(parNames, curveFits, eqn, nGroupPars, aic, rms, rChiSq, simsMap, hasExchange, curveStats);
-        return fitResult;
+        return new FitResult(parNames, curveFits, eqn, nGroupPars, aic, rms, rChiSq, simsMap, hasExchange, curveStats);
     }
 }

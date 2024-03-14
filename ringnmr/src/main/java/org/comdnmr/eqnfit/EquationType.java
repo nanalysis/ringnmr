@@ -28,21 +28,21 @@ package org.comdnmr.eqnfit;
  */
 public interface EquationType {
 
-    double calculate(double[] par, int[] map, double[] x, int idNum, double field);
+    double calculate(double[] par, int[] map, double[] x, int idNum);
 
-    default double[] calculate(double[] par, int[] map, double[][] x, int idNum, double[] fields) {
+    default double[] calculate(double[] par, int[] map, double[][] x, int idNum) {
         double[] yValues = new double[x[0].length];
         double[] ax = new double[x.length];
         for (int i = 0; i < x[0].length; i++) {
             for (int j = 0; j < ax.length; j++) {
                 ax[j] = x[j][i];
             }
-            yValues[i] = calculate(par, map, ax, idNum, fields[i]);
+            yValues[i] = calculate(par, map, ax, idNum);
         }
         return yValues;
     }
 
-    public default void constrain(String parName, double[] guesses, double[][] boundaries, int[][] map, int id, double lower, double upper) {
+    default void constrain(String parName, double[] guesses, double[][] boundaries, int[][] map, int id, double lower, double upper) {
         String[] parNames = getParNames();
         int index = -1;
         for (int i = 0; i < parNames.length; i++) {
@@ -59,9 +59,9 @@ public interface EquationType {
         }
     }
 
-    double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields);
-    
-    double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field);
+    double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID);
+
+    double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID);
 
     double getRex(double[] pars, int[] map, double field);
 
@@ -75,17 +75,17 @@ public interface EquationType {
 
     int[][] makeMap(int[] stateCount, int[][] states, int[] mask);
 
-    public String[] getParNames();
+    String[] getParNames();
 
-    public int getNGroupPars();
+    int getNGroupPars();
 
-    public String getName();
+    String getName();
 
-    public default double getMinX() {
+    default double getMinX() {
         return -10000.0;
     }
 
-    public default double getMaxX() {
+    default double getMaxX() {
         return 10000.0;
     }
 

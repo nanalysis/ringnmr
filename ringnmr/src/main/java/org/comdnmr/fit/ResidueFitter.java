@@ -48,7 +48,6 @@ import org.comdnmr.data.Experiment;
 import org.comdnmr.eqnfit.NOEEquation;
 import org.comdnmr.util.CoMDOptions;
 import org.nmrfx.chemistry.relax.RelaxTypes;
-import org.nmrfx.chemistry.relax.RelaxationData;
 import org.nmrfx.chemistry.relax.ResonanceSource;
 
 /**
@@ -148,9 +147,13 @@ public class ResidueFitter {
     void finishProcessing() {
         updateStatus("Done");
         try {
-            RelaxTypes relaxType = RelaxTypes.valueOf(experimentSet.getExpMode().toUpperCase());
-            DataIO.addRelaxationFitResults(experimentSet, relaxType);
+            String expMode = experimentSet.getExpMode().toUpperCase();
+            if (expMode.equals("R1") || expMode.equals("R2")) {
+                RelaxTypes relaxType = RelaxTypes.valueOf(experimentSet.getExpMode().toUpperCase());
+                DataIO.addRelaxationFitResults(experimentSet, relaxType);
+            }
         } catch (IllegalArgumentException iAE) {
+            iAE.printStackTrace();
 
         }
     }
@@ -343,8 +346,8 @@ public class ResidueFitter {
             for (int iCurve = 0; iCurve < nCurves; iCurve++) {
                 CurveFit curveFit = fitResult.getCurveFit(iCurve);
                 ResonanceSource dynSource = curveFit.getDynamicsSource();
-                ExperimentResult residueInfo = resMap.get(dynSource);
-                residueInfo.addCurveSet(curveFit, bestEquation.equals(equationName));
+                ExperimentResult experimentResult = resMap.get(dynSource);
+                experimentResult.addCurveFit(curveFit, bestEquation.equals(equationName));
             }
         }
         return resInfoList;

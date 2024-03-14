@@ -320,7 +320,6 @@ public class ChartUtil {
         ExperimentResult resInfo = residueProps.getExperimentResult(resSource);
         GUIPlotEquation equationCopy = null;
         String expType = expData.getExpMode();
-//            ExperimentData expData = residueProps.getExperimentData("cest"); // fixme
         Optional<Experiment> optionalData = Optional.empty();
         optionalData = residueProps.getExperimentData().stream().findFirst();
         if (resInfo != null) {
@@ -330,32 +329,16 @@ public class ChartUtil {
             } else {
                 useEquationName = equationName;
             }
-
-            CurveFit curveSet = resInfo.getCurveSet(useEquationName, state); // fixme
+            CurveFit curveSet = resInfo.getCurveFit(useEquationName, state); // fixme
             if (curveSet != null) {
                 PlotEquation equation = curveSet.getEquation();
                 if (optionalData.isPresent() && optionalData.get().getExtras().size() > 0) {
-//                        ExperimentData expData = optionalData.get();
                     double[] pars = curveSet.getEquation().getPars(); //pars = getPars(equationName);
                     double[] errs = curveSet.getEquation().getErrs(); //double[] errs = new double[pars.length];
                     double[] extras = new double[3];
-//                        for (int j = 0; j < expData.getExtras().size() / 2; j++) {
-//                        extras[0] = field;
-//                        extras[1] = expData.getExtras().get(j);
-//                        //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[1] = " + extras[1]);
-//                        PlotEquation equationCopy = equation.clone();
-//                        equationCopy.setExtra(extras);
-                    extras[0] = field;
-                    extras[1] = expData.getExtras().get(0);
-                    extras[2] = expData.getExtras().get(1);
-                    equationCopy = new GUIPlotEquation(expType, useEquationName, pars, errs, extras);
-                } else {
-                    double[] extras = new double[1];
-                    extras[0] = expData.getNucleusField();
                     equationCopy = new GUIPlotEquation(expType, equation);
-                    equationCopy.setExtra(extras);
-                    //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[0] = " + extras[0]);
-
+                } else {
+                    equationCopy = new GUIPlotEquation(expType, equation);
                 }
 
             }

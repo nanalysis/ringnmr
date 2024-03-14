@@ -23,7 +23,6 @@
 package org.comdnmr.eqnfit;
 
 import java.util.List;
-import org.comdnmr.eqnfit.CESTPeak;
 
 /**
  *
@@ -32,32 +31,32 @@ import org.comdnmr.eqnfit.CESTPeak;
 public interface R1RhoEquationType extends EquationType {
 
     @Override
-    public default double calculate(double[] par, int[] map, double[] X, int idNum, double field) {
-        double[][] x = new double[3][1];
+    public default double calculate(double[] par, int[] map, double[] X, int idNum) {
+        double[][] x = new double[4][1];
         //System.out.println(x.length + " " + x[0].length + " X " + X.length);
         x[0][0] = X[0];
         x[1][0] = X[1];
         x[2][0] = X[2];
-        double[] fields = {field};
-        double[] y = calculate(par, map, x, idNum, fields);
+        x[3][0] = X[3];
+        double[] y = calculate(par, map, x, idNum);
         return y[0];
     }
 
     @Override
-    public default double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
+    public default double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
         int nPars = R1RhoFitFunction.getNPars(map);
         double[] guesses = new double[nPars];
         for (int id = 0; id < map.length; id++) {
             int[] map1 = map[id];
             double[][] xy = CESTEquations.getXYValues(xValues, yValues, idNums, id);
-            double field = fields[id];
-            List<CESTPeak> peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], field, "r1rho");
+            int yIndex = xy.length - 1;
+            List<CESTPeak> peaks = CESTEquations.cestPeakGuess(xy, "r1rho");
             if (peaks.size() > 0) {
-                double tex = xValues[2][0];
-                double[] r1 = CESTEquations.cestR1Guess(xy[1], tex, "r1rho");
-                double[][] r2 = CESTEquations.cestR2Guess(peaks, xy[1], "r1rho");
+                double tex = xValues[4][0];
+                double[] r1 = CESTEquations.cestR1Guess(xy[yIndex], tex, "r1rho");
+                double[][] r2 = CESTEquations.cestR2Guess(peaks, xy[yIndex], "r1rho");
                 guesses[map1[0]] = CESTEquations.cestKexGuess(peaks, "r1rho"); //112.0; //kex
-                guesses[map1[1]] = CESTEquations.cestPbGuess(peaks, xy[1], "r1rho"); //0.1; //pb
+                guesses[map1[1]] = CESTEquations.cestPbGuess(peaks, xy[yIndex], "r1rho"); //0.1; //pb
                 guesses[map1[2]] = peaks.get(peaks.size() - 1).position; //-250 * 2.0 * Math.PI; //deltaA
                 guesses[map1[3]] = peaks.get(0).position; //400 * 2.0 * Math.PI; //deltaB
                 guesses[map1[4]] = r1[0]; //2.4; //R1A
@@ -73,14 +72,15 @@ public interface R1RhoEquationType extends EquationType {
     }
 
     @Override
-    public default double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+    public default double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
         double[][] boundaries = new double[2][guesses.length];
         for (int id = 0; id < map.length; id++) {
             int[] map1 = map[id];
             double[][] xy = CESTEquations.getXYValues(xValues, yValues, idNums, id);
-            List<CESTPeak> peaks = CESTEquations.cestPeakGuess(xy[0], xy[1], field, "r1rho");
+            List<CESTPeak> peaks = CESTEquations.cestPeakGuess(xy, "r1rho");
             double dAbound = 0;
             double dBbound = 0;
+            double field = xValues[xValues.length -1][0];
             if (peaks.size() > 1) {
                 dAbound = (peaks.get(0).getWidths()[1] / field) / 2.0;
                 dBbound = (peaks.get(1).getWidths()[1] / field) / 2.0;

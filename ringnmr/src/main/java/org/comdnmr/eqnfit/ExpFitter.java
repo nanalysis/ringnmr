@@ -17,18 +17,18 @@
  */
 package org.comdnmr.eqnfit;
 
-import org.comdnmr.util.CoMDPreferences;
-import org.comdnmr.data.ExperimentSet;
+import org.apache.commons.math3.optim.PointValuePair;
+import org.comdnmr.data.Experiment;
 import org.comdnmr.data.ExperimentData;
+import org.comdnmr.data.ExperimentSet;
+import org.comdnmr.util.CoMDOptions;
+import org.comdnmr.util.CoMDPreferences;
+import org.nmrfx.chemistry.relax.ResonanceSource;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import org.apache.commons.math3.optim.PointValuePair;
-import org.nmrfx.chemistry.relax.ResonanceSource;
-import org.comdnmr.data.Experiment;
-import org.comdnmr.util.CoMDOptions;
-import org.nmrfx.chemistry.Atom;
 
 /**
  *
@@ -40,10 +40,9 @@ public class ExpFitter implements EquationFitter {
 
     FitFunction expModel;
     CoMDOptions options;
-    List<Double> xValues = new ArrayList<>();
+    List<Double>[] xValues;
     List<Double> yValues = new ArrayList<>();
     List<Double> errValues = new ArrayList<>();
-    List<Double> fieldValues = new ArrayList<>();
     List<Integer> idValues = new ArrayList<>();
     int nCurves = 1;
     int nResidues = 1;
@@ -95,15 +94,16 @@ public class ExpFitter implements EquationFitter {
     }
 
     @Override
-    public void setData(List<Double>[] allXValues, List<Double> yValues, List<Double> errValues, List<Double> fieldValues) {
-        xValues.clear();
-        xValues.addAll(allXValues[0]);
+    public void setData(List<Double>[] allXValues, List<Double> yValues, List<Double> errValues) {
+        xValues = new ArrayList[allXValues.length];
+        for (int j=0;j<allXValues.length;j++) {
+            xValues[j] = new ArrayList<>();
+            xValues[j].addAll(allXValues[j]);
+        }
         this.yValues.clear();
         this.yValues.addAll(yValues);
         this.errValues.clear();
         this.errValues.addAll(errValues);
-        this.fieldValues.clear();
-        this.fieldValues.addAll(fieldValues);
         this.idValues.clear();
         yValues.forEach((_item) -> {
             this.idValues.add(0);
@@ -142,14 +142,14 @@ public class ExpFitter implements EquationFitter {
                 double[] y = experimentalData.getYValues();
                 double[] err = experimentalData.getErrValues();
                 for (int i = 0; i < y.length; i++) {
-                    xValues.add(x[0][i]);
+                    for (int j=0;j<xValues.length;j++) {
+                        xValues[j].add(x[j][i]);
+                    }
                     yValues.add(y[i]);
                     errValues.add(err[i]);
-                    fieldValues.add(field);
                     idValues.add(id);
                 }
                 id++;
-
             }
             resIndex++;
         }
@@ -191,20 +191,18 @@ public class ExpFitter implements EquationFitter {
         double[] y = new double[yValues.size()];
         double[] err = new double[yValues.size()];
         int[] idNums = new int[yValues.size()];
-        double[] fields = new double[yValues.size()];
         for (int i = 0; i < x[0].length; i++) {
-            x[0][i] = xValues.get(i);
+            for (int j=0;j<x.length;j++) {
+                x[j][i] = xValues[j].get(i);
+            }
             y[i] = yValues.get(i);
             err[i] = errValues.get(i);
-            //System.out.println(x[0][i]+", "+x[0][i]+", "+x[0][i]+", "+x[0][i]);
-            fields[i] = fieldValues.get(i);
             idNums[i] = idValues.get(i);
         }
         expModel.setEquation(eqn);
         expModel.setXY(x, y);
         expModel.setIds(idNums);
         expModel.setErr(err);
-        expModel.setFieldValues(fields);
         expModel.setMap(stateCount, states);
     }
 
@@ -295,8 +293,7 @@ public class ExpFitter implements EquationFitter {
         boolean useWeight = options.getWeightFit();
         CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs,
                 useNonParametric, sRadius, fRadius, tol, useWeight);
-        double[] usedFields = getFields(fieldValues, idValues);
-        return getResults(this, eqn, parNames, dynSources, map, states, usedFields, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, true, curveStats);
+        return getResults(this, eqn, parNames, dynSources, map, states, null, nGroupPars, pars, errEstimates, aic, rms, rChiSq, simPars, true, curveStats);
     }
 
     @Override

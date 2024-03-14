@@ -37,6 +37,7 @@ public class Experiment {
     protected final double B0field;
     protected final String nucleusName;
     protected final double nucleusField;
+
     protected final double temperature;
     final String expMode;
     HashMap<String, Object> errorPars;

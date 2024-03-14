@@ -34,7 +34,7 @@ public enum ExpEquation implements EquationType {
 
     EXPAB("ExpAB", 0, "A", "R") {
         @Override
-        public double calculate(double[] par, int[] map, double[] x, int idNum, double field) {
+        public double calculate(double[] par, int[] map, double[] x, int idNum) {
             double A = par[map[0]];
             double R = par[map[1]];
             double delay = x[0];
@@ -43,7 +43,7 @@ public enum ExpEquation implements EquationType {
         }
 
         @Override
-        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
+        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
             int nPars = ExpFitFunction.getNPars(map);
             double[] guesses = new double[nPars];
             for (int id = 0; id < map.length; id++) {
@@ -57,7 +57,7 @@ public enum ExpEquation implements EquationType {
         }
 
         @Override
-        public double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+        public double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
             double[][] boundaries = new double[2][guesses.length];
             for (int[] map1 : map) {
                 int iPar = map1[0];
@@ -123,7 +123,7 @@ public enum ExpEquation implements EquationType {
         }
     }, EXPABC("ExpABC", 0, "A", "R", "C") {
         @Override
-        public double calculate(double[] par, int[] map, double[] x, int idNum, double field) {
+        public double calculate(double[] par, int[] map, double[] x, int idNum) {
             double A = par[map[0]];
             double R = par[map[1]];
             double C = par[map[2]];
@@ -133,7 +133,7 @@ public enum ExpEquation implements EquationType {
         }
 
         @Override
-        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double[] fields) {
+        public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
             int nPars = ExpFitFunction.getNPars(map);
             double[] guesses = new double[nPars];
             for (int id = 0; id < map.length; id++) {
@@ -148,7 +148,7 @@ public enum ExpEquation implements EquationType {
         }
 
         @Override
-        public double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID, double field) {
+        public double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
             double[][] boundaries = new double[3][guesses.length];
             for (int[] map1 : map) {
                 int iPar = map1[0];

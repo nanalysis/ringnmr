@@ -75,17 +75,17 @@ public class ParValue implements ParValueInterface {
 
     @Override
     public String getAtomName() {
-        return dynSource.getAtom().getName();
+        return dynSource == null ? "X" : dynSource.getAtom().getName();
     }
 
     @Override
     public String getResidue() {
-        return String.valueOf(dynSource.getAtom().getResidueNumber());
+        return String.valueOf(dynSource == null ? "X" : dynSource.getAtom().getResidueNumber());
     }
 
     @Override
     public String getResName() {
-        return dynSource.getAtom().getResidueName();
+        return dynSource == null ? "X" : dynSource.getAtom().getResidueName();
     }
 
     @Override

@@ -17,8 +17,6 @@
  */
 package org.comdnmr.data;
 
-import java.util.HashMap;
-
 /**
  *
  * @author Bruce Johnson
@@ -27,9 +25,11 @@ public class CPMGExperiment extends Experiment {
 
     double[] fieldStrengths;
 
-    public CPMGExperiment(ExperimentSet experimentSet, String name, String nucleus, double field, double temperature) {
+    double tau;
+
+    public CPMGExperiment(ExperimentSet experimentSet, String name, String nucleus, double field, double tau, double temperature) {
         super(experimentSet, name, nucleus, field, temperature, "CPMG");
-        this.fieldStrengths = fieldStrengths;
+        this.tau = tau;
     }
 
     public void setXVals(double[] xVals) {
@@ -38,6 +38,10 @@ public class CPMGExperiment extends Experiment {
 
     public double[] getXVals() {
         return fieldStrengths;
+    }
+
+    public double getTau() {
+        return tau;
     }
 
 }

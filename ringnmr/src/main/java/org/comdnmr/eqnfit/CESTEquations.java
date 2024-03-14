@@ -32,7 +32,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-//import org.apache.commons.math3.linear.EigenDecomposition;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import static org.comdnmr.util.Utilities.TWO_PI;
 import org.ejml.data.Complex_F64;
@@ -44,55 +43,6 @@ import org.ojalgo.ann.ArtificialNeuralNetwork;
 import org.ojalgo.matrix.store.MatrixStore;
 import org.ojalgo.structure.Access1D;
 
-/**
- *
- * @author Martha Beckwith
- *
- *
- * Original Python script by Arthur Palmer.
- *
- *
- * Function definitions:
- *
- * R1rho functions:
- *
- * r1rhoLaguerre Second-order approximation, assuming R1A=R1B and R2A=R2B
- *
- * r1rhoPerturbation Perturbation analysis, assuming R1A=R1B, but R2A != R2B
- *
- * r1rhoBaldwinKay First-order approximation, assuming R1A=R1B, but R2A != R2B
- *
- * r1rhoExact Numerical determination of least negative eigenvalue of
- * Bloch-McConnell rate matrix. No restriction on R10 or R20
- *
- * CEST functions
- *
- * cestExact0 Numerical integration of thermalized Bloch-McConnell rate matrix.
- * No restriction on R10 or R20
- *
- * cestExact1 Numerical integration of thermalized Bloch-McConnell rate matrix.
- * R1A = R1B
- *
- * cestExact2 Numerical integration of thermalized Bloch-McConnell rate matrix.
- * R2A = R2B
- *
- * cestR1rhoN Uses Laguerre R1rho approximation to calculate CEST Second-order
- * approximation, assuming R1A=R1B and R2A=R2B
- *
- * cestR1rhoPerturbation Uses Trott perturbation R1rho approximation to
- * calculate CEST Assumes R1A=R1B
- *
- * cestR1rhoSD Uses perturbation R1rho approximation to calculate CEST
- * Second-order approximation, assuming R1A=R1B Averages over B1 inhomogeneity
- *
- *
- *
- * cestR1rhoBaldwinKay Uses first-order R1rho approximation to calculate CEST
- * Assumes R1A=R1B
- *
- * cestR1rhoExact1 Uses numerical determination of least negative eigenvalue to
- * calculate CEST Assumes R1A=R1B
- */
 public class CESTEquations {
 
     /**
@@ -100,19 +50,19 @@ public class CESTEquations {
      *
      * @param X Matrix containing the offset values i.e. CEST irradiation
      * frequency (X[0]), the B1 field values (X[1]), and the Tex values (X[2]).
-     * @param fields Array containing the B0 field values.
      * @param deltaA0 deltaA0 value. Ground/Major state peak position.
      * @param R1A R1A value. Longitudinal relaxation rate for Ground/Major
      * state.
      * @param R2A R2A value. Transverse relaxation rate for Ground/Major state.
      * @return CEST intensity array.
      */
-    public static double[] noEx(double[][] X, double[] fields, double deltaA0, double R1A, double R2A) {
+    public static double[] noEx(double[][] X, double deltaA0, double R1A, double R2A) {
         double[] omegarf = X[0];
         double[] b1Field = X[1];
         double[] Tex = X[2];
+        double[] fields = X[3];
 
-        double trad = Tex[0];//0.3;
+        double trad = Tex[0];
         int size = omegarf.length;
 
         double[] cos2t = new double[size];
@@ -125,7 +75,6 @@ public class CESTEquations {
             double we = Math.sqrt(omegaB1[i] * omegaB1[i] + omegaBar * omegaBar);
             cos2t[i] = (omegaBar / we) * (omegaBar / we);
         }
-        // System.out.println(b1Field[0] + " " + omegaB1[0] + " " + R2A + " " + field);
 
         double[] cest = new double[cos2t.length];
 
@@ -143,7 +92,6 @@ public class CESTEquations {
      *
      * @param X Matrix containing the offset values i.e. CEST irradiation
      * frequency (X[0]), the B1 field values (X[1]), and the Tex values (X[2]).
-     * @param fields Array containing the B0 field values.
      * @param pb pb value. Population of the Excited/Minor state.
      * @param kex kex value. Rate constant for Major-Minor state exchange.
      * @param deltaA0 deltaA0 value. Ground/Major state peak position.
@@ -156,7 +104,7 @@ public class CESTEquations {
      * @param R2B R2B value. Transverse relaxation rate for Excited/Minor state.
      * @return CEST intensity array.
      */
-    public static double[] exact0(double[][] X, double[] fields, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A, double R2B) {
+    public static double[] exact0(double[][] X, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A, double R2B) {
         // Performs an exact numerical calculation and returns CEST intensity ratio.
         //
         // X: array containing two arrays:
@@ -173,9 +121,10 @@ public class CESTEquations {
         double[] omegarf = X[0];
         double[] b1Field = X[1];
         double[] Tex = X[2];
+        double[] fields = X[3];
 
         // time delay is hard-coded below
-        double tdelay = Tex[0];//0.3;
+        double tdelay = Tex[0];
 
         double[] cest = new double[omegarf.length];
 
@@ -256,7 +205,6 @@ public class CESTEquations {
      *
      * @param X Matrix containing the offset values i.e. CEST irradiation
      * frequency (X[0]), the B1 field values (X[1]), and the Tex values (X[2]).
-     * @param fields Array containing the B0 field values.
      * @param pb pb value. Population of the Excited/Minor state.
      * @param kex kex value. Rate constant for Major-Minor state exchange.
      * @param deltaA0 deltaA0 value. Ground/Major state peak position.
@@ -269,7 +217,7 @@ public class CESTEquations {
      * @param R2B R2B value. Transverse relaxation rate for Excited/Minor state.
      * @return CEST intensity array.
      */
-    public static double[] eigenExact1(double[][] X, double[] fields, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A, double R2B) {
+    public static double[] eigenExact1(double[][] X, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A, double R2B) {
         // Performs an exact numerical calculation and returns CEST intensity ratio.
         // Assumes R1A = R1B.
         //
@@ -287,10 +235,9 @@ public class CESTEquations {
         double[] omegarf = X[0];
         double[] b1Field = X[1];
         double[] Tex = X[2];
+        double[] fields = X[3];
 
-        //double R1B = R1A;
-        // time delay is hard-coded below
-        double tdelay = Tex[0];//0.3;
+        double tdelay = Tex[0];
 
         double[] cest = new double[omegarf.length];
 
@@ -377,7 +324,6 @@ public class CESTEquations {
      *
      * @param X Matrix containing the offset values i.e. CEST irradiation
      * frequency (X[0]), the B1 field values (X[1]), and the Tex values (X[2]).
-     * @param fields Array containing the B0 field values.
      * @param pb pb value. Population of the Excited/Minor state.
      * @param kex kex value. Rate constant for Major-Minor state exchange.
      * @param deltaA0 deltaA0 value. Ground/Major state peak position.
@@ -390,7 +336,7 @@ public class CESTEquations {
      * @param R2B R2B value. Transverse relaxation rate for Excited/Minor state.
      * @return CEST intensity array.
      */
-    public static double[] r1rhoApprox(String approx, double[][] X, double[] fields, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A, double R2B) {
+    public static double[] r1rhoApprox(String approx, double[][] X, double pb, double kex, double deltaA0, double deltaB0, double R1A, double R1B, double R2A, double R2B) {
 
         // X: array containing two arrays:
         //  omegarf: CEST irradiation frequency (ppm)
@@ -406,8 +352,9 @@ public class CESTEquations {
         double[] omegarf = X[0];
         double[] b1Field = X[1];
         double[] Tex = X[2];
+        double[] fields = X[3];
 
-        double trad = Tex[0];//0.3;
+        double trad = Tex[0];
 
         double pa = 1.0 - pb;
         double[] deltaA = new double[omegarf.length];
@@ -432,49 +379,37 @@ public class CESTEquations {
 
         if (null != approx) {
             switch (approx) {
-                case "laguerre": {
-                    // if(R2.length == 1){
+                case "laguerre" -> {
                     double[] r1rho = R1RhoEquations.r1rhoLaguerre(trad, false, omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
-                    //double[] cest = new double[cos2t.length];
                     for (int i = 0; i < cos2t.length; i++) {
                         cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
                     }
-//            } else {
-//                System.out.print("Error: Incorrect number of values for R2. Input one value for R2.");
-//            } 
-                    break;
                 }
-                case "trott": {
+                case "trott" -> {
                     double[] r1rho = R1RhoEquations.r1rhoPerturbation(trad, false, omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
-                    //double[] cest = new double[cos2t.length];
                     for (int i = 0; i < cos2t.length; i++) {
                         cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
                     }
-                    break;
                 }
-                case "trottnoex": {
+                case "trottnoex" -> {
                     double[] r1rho = R1RhoEquations.r1rhoPerturbationNoEx(omegaB1, deltaA, R1A, R2A);
-                    //double[] cest = new double[cos2t.length];
                     for (int i = 0; i < cos2t.length; i++) {
                         cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
                     }
-                    break;
                 }
-                case "baldwinkay": {
+                case "baldwinkay" -> {
                     double[] r1rho = R1RhoEquations.r1rhoBaldwinKay(trad, false, omegaB1, pb, kex, deltaA, deltaB, R1A, R1B, R2A, R2B);
-                    //double[] cest = new double[cos2t.length];
                     for (int i = 0; i < cos2t.length; i++) {
                         cest[i] = cos2t[i] * Math.exp(-trad * r1rho[i]);
                     }
-                    break;
                 }
-                case "sd": {
+                case "sd" -> {
                     int wlen = 11;
                     double omegaSD = 0.2;   // fractional variation in B1
                     double[] omwt = {0.022, 0.0444, 0.0777, 0.1159, 0.1473, 0.1596, 0.1473, 0.1159, 0.0777, 0.0444, 0.0216};
                     double omwtsum = 0;
-                    for (int i = 0; i < omwt.length; i++) {
-                        omwtsum += omwt[i];
+                    for (double v : omwt) {
+                        omwtsum += v;
                     }
                     for (int i = 0; i < omwt.length; i++) {
                         omwt[i] = omwt[i] / omwtsum;
@@ -500,10 +435,9 @@ public class CESTEquations {
                         }
                     }
                     cest = magA;
-                    break;
                 }
-                default:
-                    break;
+                default -> {
+                }
             }
         }
 
@@ -527,8 +461,7 @@ public class CESTEquations {
         // Applies a Savitzky-Golay filter to the data for smoothing.
         SavitzkyGolay sg = new SavitzkyGolay();
         try {
-            double[] smoothed = sg.runningSavitzkyGolaySmoothing(vec, j1, j2, order, smoothSize, X);
-            return smoothed;
+            return sg.runningSavitzkyGolaySmoothing(vec, j1, j2, order, smoothSize, X);
         } catch (Exception e) {
             System.out.println("Smooth-size should be one of 5,7,9,...,25");
             return X;
@@ -557,24 +490,23 @@ public class CESTEquations {
                 }
             }
         }
-        double[] result = {maxValue, sDev};
-        return result;
+        return new double[]{maxValue, sDev};
     }
 
     /**
      * Estimates CEST/R1rho peak positions and widths for initial guesses before
      * fitting.
      *
-     * @param xvals Array of the offset values i.e. CEST irradiation frequency.
-     * @param yvals Array of the CEST intensities.
-     * @param field B0 field value.
+     * @param xyvals Array of the offset values i.e. CEST irradiation frequency.
      * @param fitMode String "cest" or "r1rho" specifying CEST or R1rho data.
      * @return List of CESTPeak objects. The major state peak is listed first,
      * then the minor state peak, if any.
      */
-    public static List<CESTPeak> cestPeakGuess(double[] xvals, double[] yvals, double field, String fitMode) {
+    public static List<CESTPeak> cestPeakGuess(double[][] xyvals, String fitMode) {
         // Estimates CEST peak positions for initial guesses for before fitting.
-
+        double[] xvals = xyvals[0];
+        double[] yvals = xyvals[xyvals.length - 1];
+        double field = xyvals[xyvals.length-2][0];
         List<CESTPeak> peaks = new ArrayList<>();
 
         double[] syvals = new double[yvals.length];
@@ -607,11 +539,9 @@ public class CESTEquations {
         double threshold = baseline - baseValues[1] * baseRatio;
         double yMin = (fitMode.equals("r1rho")) ? Double.MIN_VALUE : Double.MAX_VALUE;
 
-        double xAtYMin = 0.0;
         for (int i = nP; i < yvals.length - nP; i++) {
             if ((fitMode.equals("cest") && yvals[i] < yMin) || (fitMode.equals("r1rho") && yvals[i] > yMin)) {
                 yMin = yvals[i];
-                xAtYMin = xvals[i];
             }
             if ((fitMode.equals("cest") && yvals[i] < threshold) || (fitMode.equals("r1rho") && yvals[i] > threshold)) {
                 boolean ok = true;
@@ -668,11 +598,7 @@ public class CESTEquations {
                                 }
                                 j += iDir;
                             }
-                            if ((fitMode.equals("cest") && ((dLow == Double.MAX_VALUE) || (dUp == Double.MAX_VALUE))) || (fitMode.equals("r1rho") && ((dLow == Double.MIN_VALUE) || (dUp == Double.MIN_VALUE)))) {
-                                foundPos[w][k] = false;
-                            } else {
-                                foundPos[w][k] = true;
-                            }
+                            foundPos[w][k] = (!fitMode.equals("cest") || ((dLow != Double.MAX_VALUE) && (dUp != Double.MAX_VALUE))) && (!fitMode.equals("r1rho") || ((dLow != Double.MIN_VALUE) && (dUp != Double.MIN_VALUE)));
                             double delta = dLow + dUp;
                             widthpos[w][k] = xvals[iLow] * dUp / delta + xvals[iUp] * dLow / delta;
                         }
@@ -703,7 +629,6 @@ public class CESTEquations {
                     }
                 }
             }
-
         }
 
         peaks.sort(Comparator.comparingDouble(CESTPeak::getDepth));
@@ -731,14 +656,9 @@ public class CESTEquations {
         }
 
         peaks2.sort(Comparator.comparingDouble(CESTPeak::getDepth));
- //       for (int i = 0; i < peaks2.size(); i++) {
- //           System.out.println("peaks guess " + i + " x = " + peaks2.get(i).getPosition());
- //           System.out.println("peaks guess " + i + " y = " + peaks2.get(i).getDepth());
- //           System.out.println("peaks guess " + i + " width50 = " + peaks2.get(i).width50LB + " " + peaks2.get(i).width50UB);
- //       }
 
         List<CESTPeak> peaks1 = new ArrayList<>();
-        if (peaks2.size() >= 1) {
+        if (!peaks2.isEmpty()) {
             double peak1diff = Math.abs(peaks2.get(0).depth - baseline);
             double peak2diff = peak1diff;
             if (peaks2.size() == 2) {
@@ -751,9 +671,7 @@ public class CESTEquations {
                 }
                 peaks1.add(peaks2.get(index));
             } else {
-                for (int i = 0; i < peaks2.size(); i++) {
-                    peaks1.add(peaks2.get(i));
-                }
+                peaks1.addAll(peaks2);
             }
         } else {
             System.out.println("No peaks found by peak guesser.");
@@ -773,12 +691,6 @@ public class CESTEquations {
         // Estimates CEST pb values from peak intensities for initial guesses for before fitting.
         // Uses the output from cestPeakGuess as the input.
 
-//        System.out.println(peaks.length + " peaks found.");
-//        for (int i = 0; i < peaks.length; i++) {
-//            for (int j = 0; j < peaks[i].length; j++) {
-//                System.out.println(i + " " + j + " " + peaks[i][j]);
-//            }
-//        }
         double[] baseValues = getBaseline(yvals, fitMode);
         double baseline = baseValues[0];
 
@@ -862,11 +774,6 @@ public class CESTEquations {
                     r2[1][i] = Math.abs(bwidth - kb) / bfactor; //R2B
                 }
             }
-//            for (int i = 0; i < r2.length; i++) {
-//                for (int j = 0; j < r2[i].length; j++) {
-//                    System.out.println("R2 guess " + i + " " + j + " " + r2[i][j]);
-//                }
-//            }
             return r2;
         } else {
             double[][] r2 = new double[2][1];
@@ -903,9 +810,6 @@ public class CESTEquations {
                 double bwidth = peaks.get(2 * i).width50 / (2 * Math.PI);
                 kex[i] = (awidth + bwidth) / 2; //peaks[2 * i][2]/(2*Math.PI); //Kex
             }
-//            for (int i=0; i<kex.length; i++) {
-//                System.out.println("Kex guess " + i + " " + kex[i]);
-//            }
             return kex[0] / factor;
         } else {
             return peaks.get(0).width50 / (2 * Math.PI) / factor; //Kex;
@@ -929,8 +833,7 @@ public class CESTEquations {
             r1Updiff = 0.01;
         }
         double r1Up = -Math.log(r1Updiff) / tex;
-        double[] result = {r1Low, r1Up};
-        return result;
+        return new double[]{r1Low, r1Up};
     }
 
     /**
@@ -948,7 +851,7 @@ public class CESTEquations {
 
         double[] baseValues = getBaseline(yvals, fitMode);
         double baseline = baseValues[0];
-        double[] r1 = {-Math.log(baseline) / 0.3, -Math.log(baseline) / 0.3}; //{R1A, R1B}
+        double[] r1 = {-Math.log(baseline) / 0.3, -Math.log(baseline) / 0.3};
         if (fitMode.equals("r1rho")) {
             r1[0] = baseline; //R1A
             r1[1] = baseline; //R1B
@@ -962,9 +865,6 @@ public class CESTEquations {
                 }
             }
         }
-//        for (int i=0; i<r1.length; i++) {
-//           System.out.println("R1 guess " + i + " " + r1[i]); 
-//        }
         return r1;
     }
 
@@ -982,17 +882,19 @@ public class CESTEquations {
      */
     public static double[][] getXYValues(double[][] xValues, double[] yValues, int[] idNums, int id) {
         int n = 0;
-        for (int i = 0; i < idNums.length; i++) {
-            if (idNums[i] == id) {
+        for (int idNum : idNums) {
+            if (idNum == id) {
                 n++;
             }
         }
-        double[][] result = new double[2][n];
+        double[][] result = new double[xValues.length + 1][n];
         int j = 0;
         for (int i = 0; i < idNums.length; i++) {
             if (idNums[i] == id) {
-                result[0][j] = xValues[0][i];
-                result[1][j] = yValues[i];
+                for (int k=0;k<xValues.length;k++) {
+                    result[k][j] = xValues[k][i];
+                }
+                result[xValues.length][j] = yValues[i];
                 j++;
             }
         }
@@ -1010,8 +912,8 @@ public class CESTEquations {
      */
     public static int[] getIndicies(int[] idNums, int id) {
         int n = 0;
-        for (int i = 0; i < idNums.length; i++) {
-            if (idNums[i] == id) {
+        for (int idNum : idNums) {
+            if (idNum == id) {
                 n++;
             }
         }
@@ -1040,8 +942,8 @@ public class CESTEquations {
      */
     public static double[][] getXValues(double[][] xValues, int[] idNums, int id) {
         int n = 0;
-        for (int i = 0; i < idNums.length; i++) {
-            if (idNums[i] == id) {
+        for (int idNum : idNums) {
+            if (idNum == id) {
                 n++;
             }
         }
@@ -1070,8 +972,8 @@ public class CESTEquations {
      */
     public static double[] getValues(double[] values, int[] idNums, int id) {
         int n = 0;
-        for (int i = 0; i < idNums.length; i++) {
-            if (idNums[i] == id) {
+        for (int idNum : idNums) {
+            if (idNum == id) {
                 n++;
             }
         }
@@ -1102,9 +1004,6 @@ public class CESTEquations {
      * @throws java.io.IOException
      */
     public static double[] cestANNGuess(double[][] xy, List<CESTPeak> peaks, double tEx, double b1Field) throws IOException, Exception {
-        // ANN input : [peak(s), dep(s), widths, tEx, b1Field, basLine]
-        // # of input : 13
-        // # of output : 4
 
         double[] xValues = xy[0];
         double[] yValues = xy[1];

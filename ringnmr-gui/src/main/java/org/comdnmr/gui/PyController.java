@@ -1498,10 +1498,11 @@ public class PyController implements Initializable {
                     if (resSource.equals(chartInfo.currentResidues[0])) {
                         simControls.updateStates(chartInfo.currentStates);
                         simControls.updateSliders(parValues, useEquationName);
+                        getCurrentExperimentSet().getExperimentData().stream().findFirst().ifPresent(e -> simControls.setNucleus(e.getNucleusName()));
                     }
 
                     allParValues.addAll(parValues);
-                    CurveFit curveSet = chartInfo.experimentalResult.getCurveSet(useEquationName, chartInfo.state.replace("*", "0"));
+                    CurveFit curveSet = chartInfo.experimentalResult.getCurveFit(useEquationName, chartInfo.state.replace("*", "0"));
                     if (curveSet != null) {
                         Double aic = curveSet.getParMap().get("AIC");
                         Double rms = curveSet.getParMap().get("RMS");
@@ -2147,21 +2148,10 @@ public class PyController implements Initializable {
                     extras[1] = expData.getExtras().get(0);
                     extras[2] = expData.getExtras().get(1);
                     GUIPlotEquation plotEquation = new GUIPlotEquation(expType, equationName, pars, errs, extras);
-
                     equations.add(plotEquation);
                 }
             } else {
-                double[] pars = curveFit.getEquation().getPars(); //pars = getPars(equationName);
-                double[] errs = curveFit.getEquation().getErrs(); //double[] errs = new double[pars.length];
-                double[] extras = curveFit.getEquation().getExtras();
-                double[] simExtras = simControls.getExtras();
-                if (simExtras.length > 1) {
-                    extras = new double[simExtras.length + 1];
-                    extras[0] = CoMDPreferences.getRefField() * simControls.getNucleus().getFreqRatio();
-
-                    System.arraycopy(simExtras, 0, extras, 1, simExtras.length);
-                }
-                GUIPlotEquation plotEquation = new GUIPlotEquation(expType, equationName, pars, errs, extras);
+                GUIPlotEquation plotEquation = new GUIPlotEquation(expType, curveFit.getEquation());
                 equations.add(plotEquation);
 
             }
@@ -2553,10 +2543,12 @@ public class PyController implements Initializable {
     }
 
     void equationAction() {
+        System.out.println("eq act " + equationChoice.getUserData());
         if (equationChoice.getUserData() == null) {
             String equationName = equationChoice.getValue();
             if (!chartInfo.currentStates.isEmpty() && equationName != null) {
                 // copy it so it doesn't get cleared by clear call in updateTableWithPars
+                chartInfo.equationName = equationName;
                 updateTableWithPars(chartInfo);
                 showInfo(equationName);
             }
@@ -2664,7 +2656,7 @@ public class PyController implements Initializable {
         if (chartInfo.hasExperiments() && chartInfo.hasResidues()) {
             for (Experiment expData : ((ExperimentSet) chartInfo.getExperiments()).getExperimentData()) {
                 if (!ExperimentSet.matchStateString(chartInfo.state, expData.getState())) {
-                    continue;
+                   // continue;
                 }
                 String expName = expData.getName();
                 for (ResonanceSource resNum : chartInfo.getResidues()) {
@@ -2817,23 +2809,39 @@ public class PyController implements Initializable {
         ArrayList<Double> yValues = getSimYData();
         ArrayList<Double> errValues = getSimErrData();
         double[] extras = simControls.getExtras();
-        double[] fieldVals = new double[yValues.size()];
-        ArrayList[] allXValues = new ArrayList[extras.length + 1];
-        allXValues[0] = xValues;
-        ArrayList<Double> fieldValues = new ArrayList<>();
-        for (int i = 0; i < yValues.size(); i++) {
-            fieldVals[i] = CoMDPreferences.getRefField() * simControls.getNucleus().getFreqRatio();
-            fieldValues.add(fieldVals[i]);
+        int nX;
+        ArrayList[] allXValues;
+        ArrayList<Double> fieldValuesX = new ArrayList<>();
+        if (equationFitter instanceof CESTFitter) {
+            nX = 1;
+            allXValues = new ArrayList[extras.length + nX + 1];
+            allXValues[0] = xValues;
+            allXValues[3] = fieldValuesX;
+            for (int i = 0; i < yValues.size(); i++) {
+                double fieldValue = CoMDPreferences.getRefField() * simControls.getNucleus().getFreqRatio();
+                fieldValuesX.add(fieldValue);
+            }
+        } else {
+            nX = 3;
+            allXValues = new ArrayList[extras.length + nX];
+            ArrayList<Double> fieldValuesH = new ArrayList<>();
+            allXValues[0] = xValues;
+            allXValues[1] = fieldValuesX;
+            allXValues[2] = fieldValuesH;
+            for (int i = 0; i < yValues.size(); i++) {
+                double fieldValue = CoMDPreferences.getRefField() * simControls.getNucleus().getFreqRatio();
+                fieldValuesX.add(fieldValue);
+                fieldValuesH.add(CoMDPreferences.getRefField());
+            }
         }
         for (int j = 0; j < extras.length; j++) {
             ArrayList<Double> xValuesEx = new ArrayList<>();
             for (int i = 0; i < yValues.size(); i++) {
                 xValuesEx.add(extras[j]);
             }
-            allXValues[1 + j] = xValuesEx;
+            allXValues[nX + j] = xValuesEx;
         }
-        equationFitter.getFitModel().setFieldValues(fieldVals);
-        equationFitter.setData(allXValues, yValues, errValues, fieldValues);
+        equationFitter.setData(allXValues, yValues, errValues);
     }
 
     public void guessSimData() {
@@ -2937,18 +2945,18 @@ public class PyController implements Initializable {
         DataSeries series = new DataSeries();
         series.setName("sim" + ":" + "0");
         data.add(series);
+        int nX = 3;
         for (PlotEquation eqn : xychart.plotEquations) {
-            fieldRef = eqn.getExtra(0);
             double[] extras = eqn.getExtras();
-            double[] ax = new double[extras.length];
-            if (extras.length - 1 >= 0) System.arraycopy(extras, 1, ax, 1, extras.length - 1);
+            double[] ax = new double[1 + extras.length];
+            if (extras.length - 1 >= 0) System.arraycopy(extras, 0, ax, 1, extras.length);
             for (double xValue : xValues) {
                 ax[0] = xValue;
-                double yValue = eqn.calculate(sliderGuesses, ax, fieldRef);
+                double yValue = eqn.calculate(sliderGuesses, ax);
                 yValue += Double.parseDouble(genDataSDevTextField.getText()) * rand.nextGaussian(); //sdev * rand.nextGaussian();
                 XYValue dataPoint = new XYEValue(xValue, yValue, Double.parseDouble(genDataSDevTextField.getText()));
                 dataPoint.setExtraValue(sdev);
-                series.getData().add(dataPoint);
+                series.add(dataPoint);
             }
         }
         allData.addAll(data);
@@ -2976,7 +2984,7 @@ public class PyController implements Initializable {
                         dataPoint = new XYValue(dataValues[0].get(i), dataValues[1].get(i));
 
                     }
-                    series.getData().add(dataPoint);
+                    series.add(dataPoint);
                 }
                 allData.addAll(data);
                 xychart.setData(allData);
