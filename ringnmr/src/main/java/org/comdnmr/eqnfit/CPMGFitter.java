@@ -29,6 +29,7 @@ import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.stat.inference.TTest;
 import org.comdnmr.data.Experiment;
 import org.comdnmr.util.CoMDOptions;
+import org.comdnmr.util.CoMDPreferences;
 import org.nmrfx.chemistry.relax.ResonanceSource;
 
 /**
@@ -41,7 +42,6 @@ public class CPMGFitter implements EquationFitter {
 
     CPMGFitFunction calcR;
     CoMDOptions options;
-    static List<String> equationNameList = Arrays.asList(CPMGEquation.getEquationNames());
     List<Double>[] xValues = new ArrayList[4];
     List<Double> yValues = new ArrayList<>();
     List<Double> errValues = new ArrayList<>();
@@ -174,7 +174,9 @@ public class CPMGFitter implements EquationFitter {
     }
 
     public static List<String> getEquationNames() {
-        return equationNameList;
+        List<String> activeEquations = CoMDPreferences.getActiveCPMGEquations();
+        System.out.println(activeEquations);
+        return activeEquations;
     }
 
     @Override

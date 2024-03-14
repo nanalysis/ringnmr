@@ -63,6 +63,7 @@ public class PreferencesController implements Initializable {
     ChangeListener<String> bootStrapOptimizerListener;
     ChangeListener<Integer> nprocessListener;
     ChangeListener<Boolean> cestEqnListener;
+    ChangeListener<Boolean> cpmgEqnListener;
     ChangeListener<Boolean> r1rhoEqnListener;
     ChangeListener<Boolean> expEqnListener;
     Stage stage;
@@ -96,6 +97,11 @@ public class PreferencesController implements Initializable {
         cestEqnListener = (ObservableValue<? extends Boolean> observableValue, Boolean cest1, Boolean cest2) -> {
             BooleanOperationItem item = (BooleanOperationItem) observableValue;
             CoMDPreferences.setCESTEquationState(item.getName(), cest2);
+            PyController.mainController.updateEquationChoices();
+        };
+        cpmgEqnListener = (ObservableValue<? extends Boolean> observableValue, Boolean cpmg1, Boolean cpmg2) -> {
+            BooleanOperationItem item = (BooleanOperationItem) observableValue;
+            CoMDPreferences.setCPMGEquationState(item.getName(), cpmg2);
             PyController.mainController.updateEquationChoices();
         };
         r1rhoEqnListener = (ObservableValue<? extends Boolean> observableValue, Boolean r1rho1, Boolean r1rho2) -> {
@@ -139,6 +145,9 @@ public class PreferencesController implements Initializable {
         ArrayList<String> cestEqnChoices = new ArrayList<>();
         cestEqnChoices.addAll(Arrays.asList("NOEX", "TROTT_PALMER", "SD", "BALDWINKAY", "LAGUERRE",
                 "EIGENEXACT1", "EXACT0", "EXACT1", "EXACT2"));
+
+        ArrayList<String> cpmgEqnChoices = new ArrayList<>();
+        cpmgEqnChoices.addAll(Arrays.asList("NOEX", "CPMGFAST", "CPMGSLOW", "CPMGMQ"));
 
         ArrayList<String> r1rhoEqnChoices = new ArrayList<>();
         r1rhoEqnChoices.addAll(Arrays.asList("NOEX", "TROTT_PALMER", "BALDWINKAY", "LAGUERRE", "EXACT", "EXACT0"));
@@ -206,6 +215,11 @@ public class PreferencesController implements Initializable {
             boolean defaultState = CoMDPreferences.getCESTEquationState(eqn);
             BooleanOperationItem cestEqnListItem = new BooleanOperationItem(prefSheet, cestEqnListener, defaultState, "CEST Equations", eqn, "List of equations to use during CEST Fitting");
             prefSheet.getItems().add(cestEqnListItem);
+        }
+        for (String eqn : cpmgEqnChoices) {
+            boolean defaultState = CoMDPreferences.getCPMGEquationState(eqn);
+            BooleanOperationItem cpmgEqnListItem = new BooleanOperationItem(prefSheet, cpmgEqnListener, defaultState, "CPMG Equations", eqn, "List of equations to use during CPMG Fitting");
+            prefSheet.getItems().add(cpmgEqnListItem);
         }
         for (String eqn1 : r1rhoEqnChoices) {
             boolean defaultState = CoMDPreferences.getR1RhoEquationState(eqn1);

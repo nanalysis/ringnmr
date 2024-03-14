@@ -1489,7 +1489,7 @@ public class PyController implements Initializable {
                 if (resInfo != null) {
                     chartInfo.experimentalResult = resInfo;
                     final String useEquationName;
-                    if (chartInfo.equationName.equals("best")) {
+                    if (chartInfo.equationName.equals("best") || chartInfo.equationName.equals("+")) {
                         useEquationName = resInfo.getBestEquationName();
                     } else {
                         useEquationName = chartInfo.equationName;

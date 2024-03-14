@@ -50,9 +50,11 @@ public class CoMDPreferences {
     static private String optimizer = null;
     static private String bootStrapOptimizer = null;
     private static Map<String, Boolean> cestEqnMap = null;
+    private static Map<String, Boolean> cpmgEqnMap = null;
     private static Map<String, Boolean> r1rhoEqnMap = null;
     private static Map<String, Boolean> expEqnMap = null;
     private static Map<String, Boolean> noeEqnMap = null;
+    private static final String DEFAULT_CPMG_EQNS = "NOEX;true\nCPMGFAST;true\nCPMGSLOW;true";
     private static final String DEFAULT_CEST_EQNS = "NOEX;true\nTROTT_PALMER;true";
     private static final String DEFAULT_R1RHO_EQNS = "NOEX;true\nTROTT_PALMER;true";
     private static final String DEFAULT_EXP_EQNS = "EXPAB;true";
@@ -319,6 +321,15 @@ public class CoMDPreferences {
         }
     }
 
+    static Map<String, Boolean> getCPMGEqnMap() {
+        if (cpmgEqnMap == null) {
+            Preferences prefs = getPrefs();//Preferences.userNodeForPackage(ExperimentData.class);
+            String eqns = prefs.get("CPMG_EQNS", DEFAULT_CPMG_EQNS);
+            cpmgEqnMap = stringToMap(eqns);
+        }
+        return cpmgEqnMap;
+    }
+
     static Map<String, Boolean> getCESTEqnMap() {
         if (cestEqnMap == null) {
             Preferences prefs = getPrefs();//Preferences.userNodeForPackage(ExperimentData.class);
@@ -357,6 +368,9 @@ public class CoMDPreferences {
 
     public static void setCESTEqnMap(String eqns) {
         cestEqnMap = stringToMap(eqns);
+    }
+    public static void setCPMGEqnMap(String eqns) {
+        cpmgEqnMap = stringToMap(eqns);
     }
 
     public static void setR1RhoEqnMap(String eqns) {
@@ -401,6 +415,14 @@ public class CoMDPreferences {
         }
         prefs.put("CEST_EQNS", eqnString);
     }
+    public static void saveCPMGEqnPrefs() {
+        Preferences prefs = getPrefs();//Preferences.userNodeForPackage(ExperimentData.class);
+        String eqnString = DEFAULT_CPMG_EQNS;
+        if (cpmgEqnMap != null) {
+            eqnString = mapToString(getCPMGEqnMap());
+        }
+        prefs.put("CPMG_EQNS", eqnString);
+    }
 
     public static void saveR1RhoEqnPrefs() {
         Preferences prefs = getPrefs();//Preferences.userNodeForPackage(ExperimentData.class);
@@ -429,6 +451,16 @@ public class CoMDPreferences {
             }
         }
         return cestEqnList;
+    }
+    public static List<String> getActiveCPMGEquations() {
+        Map<String, Boolean> map = getCPMGEqnMap();
+        List<String> cpmgEqnList = new ArrayList<>();
+        for (String eqn : map.keySet()) {
+            if (map.get(eqn)) {
+                cpmgEqnList.add(eqn);
+            }
+        }
+        return cpmgEqnList;
     }
 
     public static List<String> getActiveR1RhoEquations() {
@@ -472,6 +504,21 @@ public class CoMDPreferences {
 
     public static boolean getCESTEquationState(String equation) {
         Map<String, Boolean> map = getCESTEqnMap();
+        boolean state = false;
+        if (map.containsKey(equation) && map.get(equation)) {
+            state = true;
+        }
+        return state;
+    }
+
+    public static void setCPMGEquationState(String equation, boolean state) {
+        Map<String, Boolean> map = getCPMGEqnMap();
+        map.put(equation, state);
+        saveCPMGEqnPrefs();
+    }
+
+    public static boolean getCPMGEquationState(String equation) {
+        Map<String, Boolean> map = getCPMGEqnMap();
         boolean state = false;
         if (map.containsKey(equation) && map.get(equation)) {
             state = true;
