@@ -72,7 +72,7 @@ public class SpectralDensityCalculator {
             List<Double> rValues = new ArrayList<>();
             List<Double> errValues = new ArrayList<>();
             List<Double> fields = new ArrayList<>();
-            boolean doIndependent = true;
+            boolean doIndependent = false;
 
             for (var value : dataValues) {
                 var dValue = (DeuteriumDataValue) value;

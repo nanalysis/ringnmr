@@ -620,8 +620,6 @@ public class PyController implements Initializable {
         if (ssPainter != null) {
             height -= ssPainter.getHeight();
         }
-        double chartHeight = height / barCharts.size();
-        double yPos = 0.0;
         double xMin = Double.MAX_VALUE;
         double xMax = Double.NEGATIVE_INFINITY;
         for (ResidueChart residueChart : barCharts) {
@@ -644,18 +642,34 @@ public class PyController implements Initializable {
             }
         }
         int iChart = 0;
+        double noAxisHeight = 0;
+        double withAxisHeight = 0;
         for (ResidueChart residueChart : barCharts) {
             residueChart.xAxis.setLowerBound(limitMin);
             residueChart.xAxis.setUpperBound(limitMax);
 
             residueChart.setWidth(width);
-            residueChart.setHeight(chartHeight);
-            residueChart.setYPos(yPos);
             residueChart.autoScale(false);
             iChart++;
             boolean xVisible = iChart == barCharts.size();
             residueChart.getXAxis().setLabelVisible(xVisible);
             residueChart.getXAxis().setTickLabelsVisible(xVisible);
+            if (xVisible) {
+                withAxisHeight = residueChart.getXAxis().getBorderSize();
+            } else {
+                noAxisHeight = residueChart.getXAxis().getBorderSize();
+            }
+        }
+        double extraHeight = withAxisHeight - noAxisHeight;
+        double chartHeight = (height -extraHeight) / barCharts.size();
+        double yPos = 0.0;
+        for (ResidueChart residueChart : barCharts) {
+            if (residueChart == barCharts.get(barCharts.size() - 1)) {
+                residueChart.setHeight(chartHeight + extraHeight);
+            } else {
+                residueChart.setHeight(chartHeight);
+            }
+            residueChart.setYPos(yPos);
             residueChart.drawChart();
             yPos += chartHeight;
         }
@@ -2237,7 +2251,7 @@ public class PyController implements Initializable {
         File file = fileChooser.showSaveDialog(MainApp.primaryStage);
         if (file != null) {
             try {
-                OrderPar.writeToFile(file);
+                OrderPar.writeToFile(file, ",");
             } catch (IOException e) {
                 ExceptionDialog exceptionDialog = new ExceptionDialog(e);
                 exceptionDialog.showAndWait();
@@ -2251,7 +2265,7 @@ public class PyController implements Initializable {
         File file = fileChooser.showSaveDialog(MainApp.primaryStage);
         if (file != null) {
             try {
-                SpectralDensity.writeToFile(file);
+                SpectralDensity.writeToFile(file, ",");
             } catch (IOException e) {
                 ExceptionDialog exceptionDialog = new ExceptionDialog(e);
                 exceptionDialog.showAndWait();
