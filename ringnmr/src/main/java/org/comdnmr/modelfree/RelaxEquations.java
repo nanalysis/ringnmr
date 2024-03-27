@@ -86,9 +86,9 @@ public class RelaxEquations {
     //   consider using scaled versions (smaller exponents)
     /**
      *
-     * @param sf double. 1H NMR Spectrometer frequency.
+     * @param sf double. 1H NMR Spectrometer frequency (MHz).
      * @param elem1 String. First element ("H" for 1H NMR).
-     * @param elem2 String. Second element (C, N, etc.)
+     * @param elem2 String. Second element ("C", "N", etc.)
      */
     public RelaxEquations(double sf, String elem1, String elem2) {
         gammaI = GAMMA_MAP.get(elem1);
@@ -103,10 +103,10 @@ public class RelaxEquations {
         r = R_MAP.get(elem1 + elem2);
         d = MU0 * (gammaI * gammaS * PLANCK) / (4.0 * Math.PI * r * r * r);
         d2 = d * d;
-        c = wS * SIGMA / Math.sqrt(3.0);
+        c = wS * SIGMA_MAP.get(elem2) / Math.sqrt(3.0);
         c2 = c * c;
         if (elem1.equals("D")) {
-            wValues = new double[]{0.0,wI, 2.0*wI};
+            wValues = new double[]{0.0, wI, 2.0 * wI};
         } else {
             wValues = new double[]{0.0, wS, wI - wS, wI, wI + wS};
 
@@ -775,4 +775,33 @@ public class RelaxEquations {
         return (4.0 / 3.0) * (J[0] / J[S]);
     }
 
+    // SOLID STATE STUFF
+
+    /**
+     *
+     * @param wr double. Rotating frame (MAS) frequency (rad s-1).
+     * @param we double. Spin-lock field frequency (rad s-1).
+     * @param tau double. Rotational correlation time (s).
+     * @param S2 double. Order parameter.
+     * @return double. R1rhoCSA: Contribution from CSA to R1rho.
+     */
+    public double R1rhoCSA(double wr, double we, double tau, double S2) {
+        // Spectral density used here is Eq. 23 in
+        // R. Kurbanov, T. Zinkevich, A. Krushelnitsky, J. Chem. Phys. 135, 184104 (2011)
+        // Using public double J(double w, double tau, double S2)
+        // To compute it, which requires S2 to be set to 1 - S2 to be valid.
+        double oneMinusS2 = 1.0 - S2;
+        // Usually R1rho experiments are performed with the locking field on resonance,
+        // such that theta_p is 90.
+        // In general, arccos(2 * pi * offset / we) should be used.
+        double theta_p = 0.5 * Math.PI;
+        double R1CSA = 2.25 * c2 * J(wS, tau, oneMinusS2);
+        double R1DeltaCSA = 0.5 * c2 * (
+            0.5 * J(we - 2 * wr, tau, oneMinusS2) +
+            J(we - wr, tau, oneMinusS2) +
+            J(we + wr, tau, oneMinusS2) +
+            0.5 * J(we + 2 * wr, tau, oneMinusS2)
+        );
+        return R1CSA + Math.pow(Math.sin(theta_p), 2.0) * (R1DeltaCSA - 0.5 * R1CSA);
+    }
 }
