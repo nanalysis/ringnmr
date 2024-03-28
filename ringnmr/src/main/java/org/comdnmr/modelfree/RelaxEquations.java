@@ -820,7 +820,7 @@ public class RelaxEquations {
      * @param S2 Order parameter.
      * @return R1rhoDD: Contribution from dipolar interaction to R1rho.
      */
-    public double R1rhoDDHetero(double wr, double we, double tau, double S2) {
+    public double R1rhoIS(double wr, double we, double tau, double S2) {
         // See applicable comments on omeMinusS2 and theta_p in R1rhoCSA
         double oneMinusS2 = 1.0 - S2;
         double theta_p = 0.5 * Math.PI;
@@ -837,6 +837,38 @@ public class RelaxEquations {
                 6.0 * J(wI + wS, tau, oneMinusS2) +
                 J(wI - wS, tau, oneMinusS2)
             )
+        );
+    }
+
+    public double R1rhoAA(double wr, double we, double tau, double S2) {
+        if (getGammaI() != getGammaS()) {
+            throw new RuntimeException("Expected the two nuclei to be the same.");
+        }
+        // See applicable comments on omeMinusS2 and theta_p in R1rhoCSA
+        double oneMinusS2 = 1.0 - S2;
+        double theta_p = 0.5 * Math.PI;
+        double sinSq2theta = Math.pow(Math.sin(2.0 * theta_p), 2.0);
+        double sinFourthTheta = Math.pow(Math.sin(theta_p), 4.0);
+        double threeCos2theta = 3.0 * Math.cos(2.0 * theta_p);
+        return 0.75 * d2 * (
+            0.125 * sinSq2theta * (
+                J(wr - we, tau, oneMinusS2) +
+                J(wr + we, tau, oneMinusS2)
+            ) +
+            0.5 * sinFourthTheta * (
+                J(wr - 2.0 * we, tau, oneMinusS2) +
+                J(wr + 2.0 * we, tau, oneMinusS2)
+            ) +
+            0.0625 * sinSq2theta * (
+                J(2.0 * wr - we, tau, oneMinusS2) +
+                J(2.0 * wr + we, tau, oneMinusS2)
+            ) +
+            0.25 * sinFourthTheta * (
+                J(2.0 * wr - 2.0 * we, tau, oneMinusS2) +
+                J(2.0 * wr + 2.0 * we, tau, oneMinusS2)
+            ) +
+            0.25 * (7.0 - threeCos2theta) * J(wI, tau, oneMinusS2) +
+            0.5 * (5.0 + threeCos2theta) * J(2.0 * wI, tau, oneMinusS2)
         );
     }
 }
