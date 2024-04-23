@@ -122,6 +122,10 @@ public class ExpFitter implements EquationFitter {
     // public void setData(Collection<ExperimentData> expDataList, String[] resNums) {
     @Override
     public void setData(ExperimentSet experimentSet, ResonanceSource[] dynSources) {
+        xValues = new ArrayList[1];
+        for (int j=0;j<1;j++) {
+            xValues[j] = new ArrayList<>();
+        }
         this.dynSources = dynSources.clone();
         nResidues = dynSources.length;
         int id = 0;
