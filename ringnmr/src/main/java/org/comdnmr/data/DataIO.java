@@ -1586,6 +1586,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         MoleculeBase mol = MoleculeFactory.getActive();
         if (mol == null) {
             mol = MoleculeFactory.newMolecule("noname");
+            MoleculeFactory.setActive(mol);
         }
         Map<String, RelaxationSet> setMap = mol.relaxationSetMap();
 
