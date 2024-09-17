@@ -12,8 +12,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.apache.commons.math3.analysis.polynomials.PolynomialFunction;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
+import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 import org.apache.commons.text.StringSubstitutor;
 
 import java.io.File;
@@ -23,21 +24,25 @@ import java.util.*;
 
 public class DataGenerator {
 
-    public static final ObjectMapper objectMapper = new ObjectMapper();
-    public final JsonNode config;
-    public final int nDatasets;
-    public String rootDirectoryTemplate;
-    public String dataPathTemplate;
-    public Iterator<String[]> iterator;
+    static final ObjectMapper objectMapper = new ObjectMapper();
+    final JsonNode config;
+    final int nDatasets;
+
+    Iterator<String[]> iterator;
     public String currentExperimentName;
     public String currentEnumName;
+
+    String rootDirectoryTemplate;
+    String dataDirectoryTemplate;
+    String dataPathTemplate;
 
     public DataGenerator(String configFile) throws IOException, ReflectiveOperationException {
         config = objectMapper.readTree(new File(configFile));
 
         nDatasets = config.get("n_datasets").asInt();
         rootDirectoryTemplate = config.get("root_dir").asText();
-        dataPathTemplate = config.get("data_path").asText();
+        dataDirectoryTemplate = config.get("data_dir").asText();
+        dataPathTemplate = config.get("ring_output_path").asText();
 
         ArrayList<String[]> dataIter = new ArrayList<>();
         Iterator<Map.Entry<String, JsonNode>> dataTypes = config.get("data_types").fields();
@@ -140,7 +145,7 @@ public class DataGenerator {
 
         // >>> interpolation information >>>
         ArrayList<Double> xValuesInterpolation = fetchSampler(experimentInfo.get("x_values_interpolation")).sample();
-        DataList<ArrayList<ArrayList<Double>>> profileInterpolationList = new DataList<>("profile interpolation");
+        DataList<ArrayList<ArrayList<Double>>> profileInterpolationList = new DataList<>("profile_interpolation");
         // <<< interpolation information <<<
 
         for (int n = 0; n < this.nDatasets; n++) {
@@ -191,6 +196,18 @@ public class DataGenerator {
             );
 
             profileList.add(profile2D);
+
+            if ((n + 1) % 1000 == 0 && (n + 1) != nDatasets) {
+                System.out.println(
+                    String.format(
+                        "[%s - %s]: %d/%d datasets created",
+                        currentExperimentName,
+                        currentEnumName,
+                        n + 1,
+                        nDatasets
+                    )
+                );
+            }
         }
 
         HashMap<String, Object> data = makeData(
@@ -201,18 +218,33 @@ public class DataGenerator {
             profileInterpolationList
         );
 
+        System.out.println(
+            String.format(
+                "[%s - %s]: Finished making %d datasets",
+                currentExperimentName,
+                currentEnumName,
+                nDatasets
+            )
+        );
+
         return data;
     }
 
-    public String getRootDir() {
+    public String getRootDirectory() {
         Map<String, String> sub = new HashMap<>();
         sub.put("name", String.format("%s-%s", currentExperimentName, currentEnumName));
         return StringSubstitutor.replace(rootDirectoryTemplate, sub, "{", "}");
     }
 
+    public String getDataDirectory() {
+        Map<String, String> sub = new HashMap<>();
+        sub.put("root_dir", getRootDirectory());
+        return StringSubstitutor.replace(dataDirectoryTemplate, sub, "{", "}");
+    }
+
     public String getDataPath() {
         Map<String, String> sub = new HashMap<>();
-        sub.put("root_dir", getRootDir());
+        sub.put("data_dir", getDataDirectory());
         return StringSubstitutor.replace(dataPathTemplate, sub, "{", "}");
     }
 
@@ -224,21 +256,22 @@ public class DataGenerator {
         ArrayList<ArrayList<Double>> profileInterpolated = new ArrayList<>();
         ArrayList<Double> profInterp;
         ArrayList<Double> prof;
-        double[] xValuesProfileArray = ArrayUtils.toPrimitive(xValuesProfile.toArray(new Double[xValuesProfile.size()]));
+        double[] xValues = ArrayUtils.toPrimitive(xValuesProfile.toArray(new Double[xValuesProfile.size()]));
         for (int i = 0; i < profile.size(); i++) {
             prof = profile.get(i);
-            double[] profArray = ArrayUtils.toPrimitive(prof.toArray(new Double[prof.size()]));
-            var coefficients = DataUtil.fitPoly(xValuesProfileArray, profArray, 6);
-            var polynomial = new PolynomialFunction(coefficients.toArray());
+            double[] yValues = ArrayUtils.toPrimitive(prof.toArray(new Double[prof.size()]));
+            SplineInterpolator splineInterpolator = new SplineInterpolator();
+            PolynomialSplineFunction spline = splineInterpolator.interpolate(xValues, yValues);
 
             profInterp = new ArrayList<Double>();
 
             for (Double xInterp : xValuesInterplation) {
-                profInterp.add(polynomial.value(xInterp));
+                profInterp.add(spline.value(xInterp));
             }
 
             profileInterpolated.add(profInterp);
         }
+
 
         return profileInterpolated;
     }
@@ -262,17 +295,11 @@ public class DataGenerator {
             constantMapList.add(constantList.asHashMap());
         }
 
-        HashMap<String, Object> profileMap = profileList.asHashMap();
-        profileMap.remove("name");
-
-        HashMap<String, Object> profileInterpolationMap = profileInterpolationList.asHashMap();
-        profileInterpolationMap.remove("name");
-
         data.put("parameters", parameterMapList);
         data.put("constants", constantMapList);
         data.put("variable", variableList.asHashMap());
-        data.put("profile", profileMap);
-        data.put("profile interpolation", profileInterpolationMap);
+        data.put("profile", profileList.asHashMap());
+        data.put("profile_interpolation", profileInterpolationList.asHashMap());
 
         return data;
     }
@@ -305,6 +332,17 @@ public class DataGenerator {
                 );
                 break;
 
+            case "RandomRange":
+                sampler = new RangeSampler(
+                    name,
+                    samplerInfo.get("minStart").asDouble(),
+                    samplerInfo.get("maxStart").asDouble(),
+                    samplerInfo.get("minStop").asDouble(),
+                    samplerInfo.get("maxStop").asDouble(),
+                    objectMapper.convertValue(samplerInfo.get("stepOptions"), ArrayList.class)
+                );
+                break;
+
             case "RandomLinspace":
                 sampler = new LinspaceSampler(
                     name,
@@ -314,6 +352,18 @@ public class DataGenerator {
                     samplerInfo.get("maxLast").asDouble(),
                     samplerInfo.get("minSamples").asInt(),
                     samplerInfo.get("maxSamples").asInt()
+                );
+                break;
+
+            case "RandomSegmentedLinspace":
+                sampler = new SegmentedLinspaceSampler(
+                    name,
+                    objectMapper.convertValue(samplerInfo.get("minFirsts"), ArrayList.class),
+                    objectMapper.convertValue(samplerInfo.get("maxFirsts"), ArrayList.class),
+                    objectMapper.convertValue(samplerInfo.get("minLasts"), ArrayList.class),
+                    objectMapper.convertValue(samplerInfo.get("maxLasts"), ArrayList.class),
+                    objectMapper.convertValue(samplerInfo.get("minSampless"), ArrayList.class),
+                    objectMapper.convertValue(samplerInfo.get("maxSampless"), ArrayList.class)
                 );
                 break;
 

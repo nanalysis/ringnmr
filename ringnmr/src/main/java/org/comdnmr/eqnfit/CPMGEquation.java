@@ -140,7 +140,7 @@ public enum CPMGEquation implements EquationType {
                     double[][] xy = getXYValues(xValues, yValues, idNums, id);
                     double[] fields2 = xy[1];
                     try {
-                        
+
                         annGuess = annCPMGGuesser("FAST", xy[0], xy[1], fields2);
                     } catch (Exception ex) {
                         Logger.getLogger(CPMGEquation.class.getName()).log(Level.SEVERE, null, ex);
@@ -580,7 +580,6 @@ public enum CPMGEquation implements EquationType {
                     double[][] xy = getXYValues(xValues, yValues, idNums, id);
                     double[] fields2 = {xy[1][id]};
                     try {
-                        
                         annGuess = annCPMGGuesser("SLOW", xy[0], xy[1], fields2);
                     } catch (Exception ex) {
                         Logger.getLogger(CPMGEquation.class.getName()).log(Level.SEVERE, null, ex);

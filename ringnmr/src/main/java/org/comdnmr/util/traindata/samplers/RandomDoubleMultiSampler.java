@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class RandomDoubleMultiSampler extends MultiSampler<Double> {
+    public String name;
     public double min;
     public double max;
     public int minSamples;
