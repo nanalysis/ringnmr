@@ -189,6 +189,7 @@ public class DataGenerator {
 
             profileInterpolationList.add(
                 getInterpolatedProfile(
+
                     profile2D,
                     xValues,
                     xValuesInterpolation
@@ -248,7 +249,7 @@ public class DataGenerator {
         return StringSubstitutor.replace(dataPathTemplate, sub, "{", "}");
     }
 
-    ArrayList<ArrayList<Double>> getInterpolatedProfile(
+    public static ArrayList<ArrayList<Double>> getInterpolatedProfile(
         ArrayList<ArrayList<Double>> profile,
         ArrayList<Double> xValuesProfile,
         ArrayList<Double> xValuesInterplation
