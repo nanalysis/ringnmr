@@ -1532,7 +1532,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
     }
 
     public static void writeSTAR3File(FileWriter chan) throws IOException, ParseException, InvalidMoleculeException, InvalidPeakException {
-        NMRStarWriter.writeAll(chan);
+        NMRStarWriter.writeAll(chan, null);
     }
 
     public static void clearRelaxationData() {
