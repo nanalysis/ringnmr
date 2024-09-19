@@ -220,18 +220,20 @@ public class DataIO {
                 } else {
                     for (int i = offset; i < v[0].length; i++) {
                         double xValue = xConv.convert(xValues[i],null, null );
-                        xValueList.add(xValue);
                         double expIntensity = v[0][i];
-                        double yValue = yConv.convert(expIntensity, refIntensity, tau);
-                        yValueList.add(yValue);
-                        if (expMode.equalsIgnoreCase("noe")) {
-                            double expNoise = v[1][i];
-                            double r1 = refNoise / refIntensity;
-                            double r2 = expNoise / expIntensity;
-                            double eValue = Math.abs(expIntensity / refIntensity) * Math.sqrt(r1 * r1 + r2 * r2);
-                            errValueList.add(eValue);
-                        } else {
-                            errValueList.add(0.0);
+                        Double yValue = yConv.convert(expIntensity, refIntensity, tau);
+                        if (yValue != null) {
+                            xValueList.add(xValue);
+                            yValueList.add(yValue);
+                            if (expMode.equalsIgnoreCase("noe")) {
+                                double expNoise = v[1][i];
+                                double r1 = refNoise / refIntensity;
+                                double r2 = expNoise / expIntensity;
+                                double eValue = Math.abs(expIntensity / refIntensity) * Math.sqrt(r1 * r1 + r2 * r2);
+                                errValueList.add(eValue);
+                            } else {
+                                errValueList.add(0.0);
+                            }
                         }
                     }
                 }
