@@ -1104,6 +1104,7 @@ public class PyController implements Initializable {
     @FXML
     void nmrFxMessage(ActionEvent e) {
         String peakString = getPeakNumFromTable();
+        System.out.println("show peak " + peakString);
         nmrfxFunction.apply("showpeak " + peakString);
     }
 
