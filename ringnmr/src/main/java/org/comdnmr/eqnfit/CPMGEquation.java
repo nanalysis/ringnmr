@@ -32,7 +32,7 @@ import org.apache.commons.math3.util.FastMath;
 import org.comdnmr.util.CoMDPreferences;
 import org.comdnmr.util.DataUtil;
 import org.comdnmr.util.Utilities;
-import org.comdnmr.util.training.DataGenerator;
+import org.comdnmr.util.traindata.DataGenerator;
 
 import org.tensorflow.SavedModelBundle;
 import org.tensorflow.Tensor;
@@ -41,10 +41,7 @@ import org.tensorflow.ndarray.NdArrays;
 import org.tensorflow.ndarray.Shape;
 import org.tensorflow.types.TFloat32;
 
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -62,8 +59,7 @@ public enum CPMGEquation implements EquationType {
 
         @Override
         public double[] guessRubric(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
-            int nPars = getNPars();
-            double[] guesses = new double[nPars];
+            double[] guesses = new double[getNPars(map)];
             for (int id = 0; id < map.length; id++) {
                 double mean = DataUtil.getMeanValue(yValues, idNums, id);
                 guesses[map[id][0]] = mean;
@@ -142,7 +138,7 @@ public enum CPMGEquation implements EquationType {
 
         @Override
         public double[] guessRubric(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
-            double[] guesses = new double[getNPars()];
+            double[] guesses = new double[getNPars(map)];
             double kExSum = 0.0;
             for (int id = 0; id < map.length; id++) {
                 double minY = DataUtil.getMinValue(yValues, idNums, id);
@@ -384,8 +380,7 @@ public enum CPMGEquation implements EquationType {
         // TODO
         @Override
         public double[] guessRubric(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
-            int nPars = CPMGFitFunction.getNPars(map);
-            double[] guesses = new double[nPars];
+            double[] guesses = new double[getNPars(map)];
             double kExSum = 0.0;
             double pa = 0.95;
             for (int id = 0; id < map.length; id++) {
@@ -548,8 +543,7 @@ public enum CPMGEquation implements EquationType {
 
         @Override
         public double[] guessRubric(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
-            int nPars = getNPars();
-            double[] guesses = new double[nPars];
+            double[] guesses = new double[getNPars(map)];
             double kExSum = 0.0;
             double pa = 0.95;
             for (int id = 0; id < map.length; id++) {
@@ -678,6 +672,10 @@ public enum CPMGEquation implements EquationType {
         this.nGroupPars = nGroupPars;
     }
 
+    String getGuesserPath(int nVariable) {
+        return String.format(guesserPathTemplate, getName(), nVariable);
+    }
+
     public static String[] getEquationNames() {
         String[] equationNames = {"NOEX", "CPMGFAST", "CPMGSLOW", "CPMGMQ"};
         return equationNames;
@@ -691,8 +689,16 @@ public enum CPMGEquation implements EquationType {
         return parNames;
     }
 
-    public int getNPars() {
-        return getParNames().length;
+    public int getNPars(int[][] map) {
+        return CPMGFitFunction.getNPars(map);
+    }
+
+    public int getNProfiles(int[] idNums) {
+        Set<Integer> idNumsSet = new HashSet<Integer>();
+        for (int i = 0; i < idNums.length; i++) {
+            idNumsSet.add(idNums[i]);
+        }
+        return idNumsSet.size();
     }
 
     public int getNGroupPars() {
@@ -700,255 +706,180 @@ public enum CPMGEquation implements EquationType {
     }
 
     @Override
-    public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
-        if (
-            Boolean.TRUE.equals(CoMDPreferences.getNeuralNetworkGuess())
-            && (getName() != "NOEX")
-        ) {
-            return guessNeuralNetwork(xValues, yValues, map, idNums, nID);
-        } else {
-            return guessRubric(xValues, yValues, map, idNums, nID);
-        }
-    }
-
-
-    @Override
     public double getMinX() {
         return 5.0;
     }
 
-    public double[] getNuCPMGsTraining () {
-        return nuCPMGsTraining;
-    }
-
-    String guesserPath(int nFields) {
-        // TODO make networks for 1 field and 2 fields:
-        // return String.format(guesserPathTemplate, getName(), nFields);
-        return String.format(guesserPathTemplate, getName(), nFields);
-    }
-
-    double[] getNuCPMGsTraining(int nFields) {
-        double[] nuCPMGs = getNuCPMGsTraining();
-        int nUniqueValues = nuCPMGs.length;
-        int nValues = nFields * nUniqueValues;
-        double[] result = new double[nValues];
-        for (int i = 0; i < nValues; i++) {
-            result[i] = nuCPMGs[i % nUniqueValues];
+    @Override
+    public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
+        double[] guess;
+        if (
+            Boolean.TRUE.equals(CoMDPreferences.getNeuralNetworkGuess())
+            && (getName() != "NOEX")
+        ) {
+            guess = guessNeuralNetwork(xValues, yValues, map, idNums, nID);
+        } else {
+            guess = guessRubric(xValues, yValues, map, idNums, nID);
         }
-        return result;
+        return guess;
     }
 
-    // Will not be called: Is overridden
+
+
+    // Will not be called: Is overridden by all enums of this class (see above)
     public double[] guessRubric(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
-        return new double[1];
+        return new double[0];
     }
 
     public double[] guessNeuralNetwork(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
-        double[] guesses = new double[getNPars()];
-        for (int id=0; id<map.length; id++) {
-            double[] nuCPMGs = xValues[0];
-            // xValues[2] corresponds to proton frequencies
-            double[] fields = getFields(xValues[2]);
-            double[] profiles = yValues;
-
-            guesses = runCPMGGuesser(nuCPMGs, profiles, fields);
-        }
-        return guesses;
+        TFloat32 input = constructNeuralNetworkInput(xValues, yValues);
+        int nProfiles = getNProfiles(idNums);
+        int nPars = getNPars(map);
+        double[] guess = runNeuralNetwork(input, nProfiles, nPars);
+        System.out.println(
+            String.format(
+                "guess:\n%s",
+                Arrays.toString(guess)
+            )
+        );
+        return guess;
     }
 
-    /**
-     * Construct a tensor of 32-bit floats for feeding to parameter-guessing
-     * neural network.
-     *
-     * For inputs of the form `profiles = {p11, p12, ..., p1N, p21, ..., p2N,
-     * ...}` and `fields = {f1, f2}`, the final ordering of values is given by
-     * `{p11, p12, ..., p1N, f1, p21, ..., p2N, f2, ...}`.
-     *
-     * @param profiles Values of CPMG proifles, concatenated.
-     * @param fields   Spectrometer fields used to acquire the profiles.
-     * @return         A 32-bit tensor (`TFloat32`) to provide to neural network.
-     */
-    static TFloat32 buildNNInput(double[] profiles, double[] fields) {
-        int nProfiles = fields.length;
-        int nProfileValues = profiles.length;
-        int nValues = nProfiles + nProfileValues;
-        int nValuesPerProfile = nValues / nProfiles;
-
-        // Neural Network requires 32-bit floats, so need to cast from
-        // `double[] -> float[]`.
-        float[] input = new float[nValues];
-
-        int inputIdx = 0;
-        int fieldIdx = 0;
-        int profileIdx = 0;
-
-        for (int i = 0; i < nValues; i++) {
-            if ((i + 1) % nValuesPerProfile == 0) {
-                // Field should be inserted here
-                input[inputIdx++] = (float) fields[fieldIdx++];
+    Map<Double, List<List<Double>>> separateDatasets(double[][] xValues, double[] yValues) {
+        Map<Double, List<List<Double>>> map = new TreeMap<>();
+        for (int i = 0; i < xValues[0].length; i++) {
+            Double nuCPMG = xValues[0][i];
+            Double fieldH = xValues[2][i];
+            Double profile = yValues[i];
+            List<Double> pair = Arrays.asList(nuCPMG, profile);
+            if (map.containsKey(fieldH)) {
+                // Add to list at sorted position.
+                // Could use binary search to be more efficient O(log n) vs O(n),
+                // but the sizes of the datasets means a noticable performance gain
+                // probably wouldn't be realised.
+                List<List<Double>> profileValues = map.get(fieldH);
+                int idx = 0;
+                while (idx < profileValues.size() && nuCPMG > profileValues.get(idx).get(0)) {
+                    idx++;
+                }
+                if (idx == profileValues.size()) {
+                    profileValues.add(pair);
+                } else {
+                    profileValues.add(idx, pair);
+                }
             } else {
-                // Profile value sould be inserted here
-                input[inputIdx++] = (float) profiles[profileIdx++];
+                List<List<Double>> newList = new ArrayList<>();
+                newList.add(Arrays.asList(nuCPMG, profile));
+                map.put(fieldH, newList);
             }
         }
-
-        FloatNdArray matrix = NdArrays.ofFloats(Shape.of(1, nValues));
-        matrix.set(TFloat32.vectorOf(input), 0);
-        return TFloat32.tensorOf(matrix);
+        return map;
     }
 
-    /**
-     * Determine whether the user-provided CPMG exchange type corresponds to a
-     * valid option.
-     *
-     * @param exchangeType String provided by the user.
-     * @return             The exchange type (captialized), if a valid value
-     *                     was provided by the user.
-     * @throws Exception   If {@code exchangeType} is invalid.
-     */
-    String checkExchangeType(String exchangeType) throws Exception {
-        String[] exchangeTypeOptions = getEquationNames();
-        ArrayUtils.removeElement(exchangeTypeOptions, "NOEX");
-
-        exchangeType = exchangeType.toUpperCase();
-
-        boolean validExchangeType = false;
-        for (String option : exchangeTypeOptions) {
-            if (option == exchangeType) {
-                validExchangeType = true;
-                break;
+    // TODO: This should be generic across CPMG/CEST/R1rho
+    Map<Double, List<Double>> interpolateDatasets(Map<Double, List<List<Double>>> datasets) {
+        Map<Double, List<Double>> result = new TreeMap<>();
+        for (Map.Entry<Double, List<List<Double>>> dataset : datasets.entrySet()) {
+            double variable = dataset.getKey();
+            List<List<Double>> xys = dataset.getValue();
+            List<Double> xValues = new ArrayList<>();
+            List<Double> yValues = new ArrayList<>();
+            for (List<Double> xy : xys) {
+                double x = xy.get(0);
+                double y = xy.get(1);
+                xValues.add(x);
+                yValues.add(y);
             }
-        }
 
-        if (!validExchangeType) {
-            String msg = String.format(
-                "Exchange type \"%s\" is not valid.\nAvailable options are:\n%s",
-                exchangeType,
-                String.join("\n", exchangeTypeOptions)
-            );
-            throw new Exception(msg);
-        } else {
-            return exchangeType;
+            // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+            // TODO: Hack to get this to work for datasets with nuCPMGs that do
+            // not extend out to spline interpolation requires the
+            // interpolating x-values to be within the true x-values
+            int xIdx = xValues.size() - 1;
+            int xInterpIdx = interpolationXs.size() - 1;
+            if (xValues.get(xIdx) < interpolationXs.get(xInterpIdx)) {
+                xValues.add(interpolationXs.get(xInterpIdx));
+                yValues.add(yValues.get(xIdx));
+            }
+            // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+            List<Double> yValuesInterpolated = DataGenerator.getInterpolatedProfile(yValues, xValues, interpolationXs);
+            result.put(variable, yValuesInterpolated);
         }
+        return result;
     }
 
-    public double[] interpolate(int nFields, double[] nuCPMGs, double[] profiles) {
-        int nValues = profiles.length;
-        int nPerProfile = nValues / nFields;
-        List<List<Double>> profilesList = new ArrayList<>();
+    TFloat32 constructNeuralNetworkInput(double[][] xValues, double[] yValues) {
+        Map<Double, List<List<Double>>> datasets = separateDatasets(xValues, yValues);
+        Map<Double, List<Double>> interpolatedDatasets = interpolateDatasets(datasets);
+        System.out.println(String.format("interpolatedDatasets: %s", interpolatedDatasets));
+        // Assuming tau is identical across samples
+        double tau = xValues[3][0];
 
+        int nProfiles = interpolatedDatasets.size();
+        int nValuesPerProfile = interpolatedDatasets.entrySet().iterator().next().getValue().size();
+        int inputSize = nProfiles * (nValuesPerProfile + 1) + 1;
+
+        float[] inputArray = new float[inputSize];
         int idx = 0;
-        for (int i = 0; i < nFields; i++) {
-            for (int j = 0; j < nPerProfile; j++) {
-                List<Double> profileList = new ArrayList<>();
-                profileList.add(profiles[idx++]);
-                x[j] = nuCPMGs[idxXY];
-                y[j] = profiles[idxXY];
-                idxXY++;
+
+        for (Map.Entry<Double, List<Double>> entry : interpolatedDatasets.entrySet()) {
+            // The Map used is a TreeMap, so the iteration run with the keys in
+            // order
+            double field = entry.getKey();
+            List<Double> profile = entry.getValue();
+            for (int i = 0; i < nValuesPerProfile; i++) {
+                double value = profile.get(i);
+                inputArray[idx++] = (float) value;
             }
-
-        double[] interpolation = new double[nValues];
-        double[] nuCPMGsTraining = getNuCPMGsTraining();
-        double[] x = new double[nPerProfile];
-        double[] y = new double[nPerProfile];
-
-        int idxXY = 0;
-        int idxInterp = 0;
-        for (int i=0; i<nFields; i++) {
-            for (int j=0; j<nPerProfile; j++) {
-                x[j] = nuCPMGs[idxXY];
-                y[j] = profiles[idxXY];
-                idxXY++;
-            }
-
-            double[] coeffs = DataUtil.fitPoly(x, y, 5).toArray();
-            PolynomialFunction polynomial = new PolynomialFunction(coeffs);
-
-            for (int j=0; j<nPerProfile; j++) {
-                interpolation[idxInterp++] = polynomial.value(nuCPMGsTraining[j]);
-            }
+            inputArray[idx++] = (float) field;
         }
-        return interpolation;
+        inputArray[idx] = (float) tau;
+
+        FloatNdArray inputNdArray = NdArrays.ofFloats(Shape.of(1, inputSize));
+        inputNdArray.set(TFloat32.vectorOf(inputArray), 0);
+        return TFloat32.tensorOf(inputNdArray);
     }
 
-    /**
-     * Generate an inital parameter guess using a Tensorflow neural network.
-     *
-     * @param nuCPMGs       The νCPMG values (i.e. x-values).
-     * @param profileValues The R2eff values (i.e. y-values).
-     * @param fields        The spectrometer fields used to acquire the CPMG profiles.
-     * @return              Initial parameter guess.
-     */
-    public double[] runCPMGGuesser(double[] nuCPMGs, double[] profiles, double[] fields) {
-        int nFields = fields.length;
-        double[] profilesInterp = getCPMGInterp(nFields, nuCPMGs, profiles);
-        SavedModelBundle guesser = SavedModelBundle.load(guesserPath(nFields), "serve");
-        TFloat32 input = buildNNInput(profilesInterp, fields);
-        TFloat32 outputTensor = (TFloat32) guesser
-            .function("serving_default")
-            .call(input);
+    // TODO: Once the hack is fixed (see below) won't need the `nPars` argument.
+    double[] runNeuralNetwork(TFloat32 input, int nVariable, int nPars) {
+        SavedModelBundle network = SavedModelBundle.load(guesserPath(nVariable), "serve");
+        TFloat32 outputTensor = (TFloat32) network.function("serving_default").call(input);
 
-        // Convert `TFloat32` to `double[]`
-        int size = getNPars();
-        double [] output = new double[size];
-        for (int i = 0; i < size; i++) { output[i] = (double) outputTensor.getFloat(0, i); }
+        // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        //
+        // TODO: HACK TIME - THIS NEEDS TO BE UPDATED ONCE THE NETWORKS HAVE
+        // BEEN FIXED
+        //
+        // Need to remake the networks to predict the R2 for each profile
+        // For now, I just restructure the output so it agrees with that
+        // required by the optimizer.
+        //
+        // CPMGFAST: duplicate element 1
+        // CPMGSLOW: duplicate element 2
+        // CPMGMQ: duplicate element 3
+        double [] output = new double[nPars];
+        int idx = 0;
+        int duplicate = 0;
+        switch (getName()) {
+            case "CPMGFAST": duplicate = 1; break;
+            case "CPMGSLOW": duplicate = 2; break;
+            case "CPMGMQ": duplicate = 2; break;
+        }
+
+        for (int i = 0; i < nPars; i++) {
+            output[i] = (double) outputTensor.getFloat(0, idx++);
+            if (i == duplicate) {
+                idx--;
+            }
+        }
+        // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
         return output;
     }
-
-    /**
-     * Combines CPMG x and y values into a single matrix.
-     *
-     * @param xValues Matrix containing the nvCPMGs values (X[0]),
-     * heteronuclear field strength (X[1]), proton field strength (X[2]), and
-     * tau (X[3]).
-     * @param yValues Array of the CPMG intensities.
-     * @param idNums Array of the ID numbers for the datasets.
-     * @param id Integer ID number to retrieve the x and y values.
-     * @return Matrix containing the nuCPMG (X) and intensity (Y) values. X
-     * values are in the first array, Y values are in the second.
-     */
-    public static double[][] getXYValues(double[][] xValues, double[] yValues, int[] idNums, int id) {
-        int n = 0;
-        for (int idNum : idNums) {
-            if (idNum == id) {
-                n++;
-            }
-        }
-        double[][] result = new double[2][n];
-        int j = 0;
-        for (int i = 0; i < idNums.length; i++) {
-            if (idNums[i] == id) {
-                result[0][j] = xValues[0][i];
-                result[1][j] = yValues[i];
-                j++;
-            }
-        }
-        return result;
-
-    }
-
-    static double[] getFields(double[] values) {
-        List<Double> fieldsList = new ArrayList<>();
-        double currentField = 0.0;
-        for (int i=0; i<values.length; i++) {
-           if (values[i] != currentField) {
-               currentField = values[i];
-               fieldsList.add(currentField);
-           }
-        }
-
-        int nFields = fieldsList.size();
-        double[] fields = new double[nFields];
-        for (int i = 0; i < nFields; i++) {
-            fields[i] = fieldsList.get(i);
-        }
-
-        return fields;
-    }
 }
 
-// TODO : Implement additional enum: Ishima-Torchia approximation
+// TODO ???: Implement additional enum: Ishima-Torchia approximation
 //
 //        ISHIMA("isima", "R2", "Rex", "PaDw", "Tau") {
 //            double calculate(double[] par, double tcp, double field) {

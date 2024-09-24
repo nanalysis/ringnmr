@@ -44,7 +44,7 @@ public class DataGenerator {
         dataDirectoryTemplate = config.get("data_dir").asText();
         dataPathTemplate = config.get("ring_output_path").asText();
 
-        ArrayList<String[]> dataIter = new ArrayList<>();
+        List<String[]> dataIter = new ArrayList<>();
         Iterator<Map.Entry<String, JsonNode>> dataTypes = config.get("data_types").fields();
         while (dataTypes.hasNext()) {
             Map.Entry<String, JsonNode> info = dataTypes.next();
@@ -100,7 +100,7 @@ public class DataGenerator {
             experimentInfo.get("constants"),
             new TypeReference<ArrayList<JsonNode>>() { }
         );
-        ArrayList<MultiSampler<Double>> constantSamplers = new ArrayList<MultiSampler<Double>>();
+        List<MultiSampler<Double>> constantSamplers = new ArrayList<MultiSampler<Double>>();
         for (JsonNode constantInfo : constantInfoList) {
             constantSamplers.add(fetchSampler(constantInfo));
         }
@@ -108,18 +108,18 @@ public class DataGenerator {
         List<RandomDoubleMultiSampler> parameterSamplers = getParameterSamplers(parameterInfo);
 
         // Stores a list of 1D double lists
-        DataList<ArrayList<Double>> variableList = new DataList<>(variableSampler.name);
+        DataList<List<Double>> variableList = new DataList<>(variableSampler.name);
 
         // Stores a list of 2D double lists
-        DataList<ArrayList<ArrayList<Double>>> profileList = new DataList<>("profile");
+        DataList<List<List<Double>>> profileList = new DataList<>("profile");
 
-        ArrayList<DataList<Double>> parameterLists = new ArrayList<>();
+        List<DataList<Double>> parameterLists = new ArrayList<>();
         for (RandomDoubleMultiSampler parameterSampler : parameterSamplers) {
             DataList<Double> parameterList = new DataList<>(parameterSampler.name);
             parameterLists.add(parameterList);
         }
 
-        ArrayList<DataList<Double>> constantLists = new ArrayList<>();
+        List<DataList<Double>> constantLists = new ArrayList<>();
         for (MultiSampler<Double> constantSampler : constantSamplers) {
             DataList<Double> constantList = new DataList<>(constantSampler.name);
             constantLists.add(constantList);
@@ -144,8 +144,8 @@ public class DataGenerator {
         double[] par = new double[parSize];
 
         // >>> interpolation information >>>
-        ArrayList<Double> xValuesInterpolation = fetchSampler(experimentInfo.get("x_values_interpolation")).sample();
-        DataList<ArrayList<ArrayList<Double>>> profileInterpolationList = new DataList<>("profile_interpolation");
+        List<Double> xValuesInterpolation = fetchSampler(experimentInfo.get("x_values_interpolation")).sample();
+        DataList<List<List<Double>>> profileInterpolationList = new DataList<>("profile_interpolation");
         // <<< interpolation information <<<
 
         for (int n = 0; n < this.nDatasets; n++) {
@@ -166,15 +166,16 @@ public class DataGenerator {
             }
             // <<< Add constants to `x` <<<
 
-            ArrayList<Double> xValues = xValuesSampler.sample();
+            List<Double> xValues = xValuesSampler.sample();
             // >>> Add constants to `x` >>>
-            ArrayList<Double> variables = variableSampler.sample();
+            List<Double> variables = variableSampler.sample();
 
             variableList.add(variables);
 
-            ArrayList<ArrayList<Double>> profile2D = new ArrayList<>();
+            List<List<Double>> profile2D = new ArrayList<>();
+            List<List<Double>> profileInterpolation2D = new ArrayList<>();
             for (int varIdx = 0; varIdx < variables.size(); varIdx++) {
-                ArrayList<Double> profile1D = new ArrayList<>();
+                List<Double> profile1D = new ArrayList<>();
                 x[1 + nDeps] = variables.get(varIdx);
                 for (int depIdx = 0; depIdx < nDeps; depIdx++) {
                     x[1 + depIdx] = dependantGenerators.get(depIdx).fetch(x[1 + nDeps]);
@@ -185,17 +186,16 @@ public class DataGenerator {
                     profile1D.add(cls.calculate(par, map, x, 0));
                 }
                 profile2D.add(profile1D);
-            }
 
-            profileInterpolationList.add(
-                getInterpolatedProfile(
-
-                    profile2D,
+                List<Double> profileInterpolation1D = getInterpolatedProfile(
+                    profile1D,
                     xValues,
                     xValuesInterpolation
-                )
-            );
+                );
+                profileInterpolation2D.add(profileInterpolation1D);
+            }
 
+            profileInterpolationList.add(profileInterpolation2D);
             profileList.add(profile2D);
 
             if ((n + 1) % 1000 == 0 && (n + 1) != nDatasets) {
@@ -249,49 +249,40 @@ public class DataGenerator {
         return StringSubstitutor.replace(dataPathTemplate, sub, "{", "}");
     }
 
-    public static ArrayList<ArrayList<Double>> getInterpolatedProfile(
-        ArrayList<ArrayList<Double>> profile,
-        ArrayList<Double> xValuesProfile,
-        ArrayList<Double> xValuesInterplation
+    public static List<Double> getInterpolatedProfile(
+        List<Double> yValues,
+        List<Double> xValues,
+        List<Double> xValuesInterpolation
     ) {
-        ArrayList<ArrayList<Double>> profileInterpolated = new ArrayList<>();
-        ArrayList<Double> profInterp;
-        ArrayList<Double> prof;
-        double[] xValues = ArrayUtils.toPrimitive(xValuesProfile.toArray(new Double[xValuesProfile.size()]));
-        for (int i = 0; i < profile.size(); i++) {
-            prof = profile.get(i);
-            double[] yValues = ArrayUtils.toPrimitive(prof.toArray(new Double[prof.size()]));
-            SplineInterpolator splineInterpolator = new SplineInterpolator();
-            PolynomialSplineFunction spline = splineInterpolator.interpolate(xValues, yValues);
+        int nValues = yValues.size();
+        double[] xValuesArray = ArrayUtils.toPrimitive(xValues.toArray(new Double[nValues]));
+        double[] yValuesArray = ArrayUtils.toPrimitive(yValues.toArray(new Double[nValues]));
+        SplineInterpolator splineInterpolator = new SplineInterpolator();
+        PolynomialSplineFunction spline = splineInterpolator.interpolate(xValuesArray, yValuesArray);
 
-            profInterp = new ArrayList<Double>();
-
-            for (Double xInterp : xValuesInterplation) {
-                profInterp.add(spline.value(xInterp));
-            }
-
-            profileInterpolated.add(profInterp);
+        List<Double> yInterpolated = new ArrayList<>();
+        for (Double xValueInterpolation : xValuesInterpolation) {
+            yInterpolated.add(spline.value(xValueInterpolation));
         }
 
-
-        return profileInterpolated;
+        return yInterpolated;
     }
 
     HashMap<String, Object> makeData(
-        ArrayList<DataList<Double>> parameterLists,
-        ArrayList<DataList<Double>> constantLists,
-        DataList<ArrayList<Double>> variableList,
-        DataList<ArrayList<ArrayList<Double>>> profileList,
-        DataList<ArrayList<ArrayList<Double>>> profileInterpolationList
+        List<DataList<Double>> parameterLists,
+        List<DataList<Double>> constantLists,
+        DataList<List<Double>> variableList,
+        DataList<List<List<Double>>> profileList,
+        DataList<List<List<Double>>> profileInterpolationList
     ) {
         HashMap<String, Object> data = new HashMap<>();
 
-        ArrayList<HashMap<String, Object>> parameterMapList = new ArrayList<>();
+        List<HashMap<String, Object>> parameterMapList = new ArrayList<>();
         for (DataList<Double> parameterList : parameterLists) {
             parameterMapList.add(parameterList.asHashMap());
         }
 
-        ArrayList<HashMap<String, Object>> constantMapList = new ArrayList<>();
+        List<HashMap<String, Object>> constantMapList = new ArrayList<>();
         for (DataList<Double> constantList : constantLists) {
             constantMapList.add(constantList.asHashMap());
         }
@@ -452,7 +443,7 @@ public class DataGenerator {
     }
 
     double getDoubleFromSampler(MultiSampler<Double> sampler) {
-        ArrayList<Double> valueList = sampler.sample();
+        List<Double> valueList = sampler.sample();
         double value = valueList.get(0);
         return value;
     }
