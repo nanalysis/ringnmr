@@ -630,18 +630,12 @@ public class PyController implements Initializable {
         }
         double xMin = Double.MAX_VALUE;
         double xMax = Double.NEGATIVE_INFINITY;
-        for (ResidueChart residueChart : barCharts) {
-            for (DataSeries series : residueChart.getData()) {
-                xMin = Math.min(xMin, series.getMinX() - 1.0);
-                xMax = Math.max(xMax, series.getMaxX() + 1.0);
-            }
-        }
-        if (xMin == Double.MAX_VALUE) {
-            xMin = Math.floor((ChartUtil.minRes - 2) / 5.0) * 5.0;
-            xMax = Math.ceil((ChartUtil.maxRes + 2) / 5.0) * 5.0;
-            barChartXMin = Optional.of(xMin);
-            barChartXMax = Optional.of(xMax);
-        }
+        xMin = Math.floor((ChartUtil.minRes - 2) / 5.0) * 5.0;
+        xMax = Math.ceil((ChartUtil.maxRes + 2) / 5.0) * 5.0;
+        barChartXMin = Optional.of(xMin);
+        barChartXMax = Optional.of(xMax);
+
+        System.out.println("xx " + xMin + " " + xMax);
         double limitMin = barCenter * (xMax - xMin) + xMin;
         double limitMax = fMax * (xMax - xMin) + xMin;
         for (ResidueChart residueChart : barCharts) {
@@ -1105,7 +1099,7 @@ public class PyController implements Initializable {
     void nmrFxMessage(ActionEvent e) {
         String peakString = getPeakNumFromTable();
         System.out.println("show peak " + peakString);
-        nmrfxFunction.apply("showpeak " + peakString);
+        nmrfxFunction.apply("nw.showPeak " + peakString);
     }
 
     public void updateXYChartLabels() {
