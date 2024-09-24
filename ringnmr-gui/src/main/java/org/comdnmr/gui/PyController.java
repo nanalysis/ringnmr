@@ -1500,9 +1500,10 @@ public class PyController implements Initializable {
                     CurveFit curveSet = chartInfo.experimentalResult.getCurveFit(useEquationName, chartInfo.state.replace("*", "0"));
                     if (curveSet != null) {
                         Double aic = curveSet.getParMap().get("AIC");
+                        Double aicc = curveSet.getParMap().get("AICc");
                         Double rms = curveSet.getParMap().get("RMS");
                         Double rChiSq = curveSet.getParMap().get("rChiSq");
-                        updateFitQuality(aic, null, rms, rChiSq, null);
+                        updateFitQuality(aic, aicc, rms, rChiSq, null);
                     }
                 }
             }
