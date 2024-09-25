@@ -192,6 +192,7 @@ public class InputDataInterface {
 
     }
     private void loadFromPeakLists(List<PeakList> peakLists, List<Choices> choices, boolean autoFit) {
+        ExperimentSet experimentSet = new ExperimentSet("peaks", "peaks");
         for (int i = 0; i < peakLists.size(); i++) {
             Choices choice = choices.get(i);
             String type = choice.typeChoice.getValue();
@@ -220,7 +221,7 @@ public class InputDataInterface {
                         B0field = dataset.getSf(0);
                         temperature = dataset.getTempK();
                     }
-                    loadFromPeakList(peakList, type, nucleus, B0field, temperature, tau, choice.xconvChoiceBox.getValue(), choice.yconvChoiceBox.getValue(), autoFit);
+                    loadFromPeakList(experimentSet, peakList, type, nucleus, B0field, temperature, tau, choice.xconvChoiceBox.getValue(), choice.yconvChoiceBox.getValue(), autoFit);
                 }
             }
         }
@@ -725,10 +726,11 @@ public class InputDataInterface {
             yConv = DataIO.YCONV.RATE;
             xConv = DataIO.XCONV.TAU4;
         }
-        loadFromPeakList(peakList, expMode, nucName, b0Field, temperatureK, tau, xConv, yConv, false);
+        ExperimentSet experimentSet = new ExperimentSet("peaks", "peaks");
+        loadFromPeakList(experimentSet, peakList, expMode, nucName, b0Field, temperatureK, tau, xConv, yConv, false);
     }
 
-    void loadFromPeakList(PeakList peakList, String expMode, String nucName, double b0Field, double temperatureK, double tau,
+    void loadFromPeakList(ExperimentSet experimentSet, PeakList peakList, String expMode, String nucName, double b0Field, double temperatureK, double tau,
                           DataIO.XCONV xConv, DataIO.YCONV yConv,
                           boolean autoFit) {
         expMode = expMode.toLowerCase();
@@ -748,7 +750,6 @@ public class InputDataInterface {
             boolean dynCreateAtom = true;
             DynamicsSource dynSource = new DynamicsSource(false, false, dynCreateMol, dynCreateAtom);
             String peakListName = peakList.getName();
-            ExperimentSet experimentSet = new ExperimentSet(peakListName, peakListName);
             experimentSet.setExpMode(expMode);
 
             Experiment expData;
