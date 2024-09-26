@@ -843,7 +843,7 @@ public enum CPMGEquation implements EquationType {
 
     // TODO: Once the hack is fixed (see below) won't need the `nPars` argument.
     double[] runNeuralNetwork(TFloat32 input, int nVariable, int nPars) {
-        SavedModelBundle network = SavedModelBundle.load(guesserPath(nVariable), "serve");
+        SavedModelBundle network = SavedModelBundle.load(getGuesserPath(nVariable), "serve");
         TFloat32 outputTensor = (TFloat32) network.function("serving_default").call(input);
 
         // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
