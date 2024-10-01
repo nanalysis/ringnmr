@@ -189,7 +189,7 @@ public class DataGenerator {
             profileList.add(profiles);
             profileInterpolatedList.add(profilesInterpolated);
 
-            printMilestoneMessage(n + 1);
+            printMilestoneMessage(n);
         }
 
         printCompleteMessage();
@@ -204,7 +204,7 @@ public class DataGenerator {
                     "[%s - %s]: %d/%d datasets created",
                     currentExperimentName,
                     currentEnumName,
-                    n,
+                    n + 1,
                     nDatasets
                 )
             );
@@ -250,15 +250,12 @@ public class DataGenerator {
         DependantGenerator generator = null;
 
         String name = dependantInfo.get("name").asText();
-        String generatorInfo = dependantInfo.get("relation").asText();
-        String[] arr = generatorInfo.split(":");
-        String generatorType = arr[0];
-        String generatorParams = arr[1];
+        String generatorType = dependantInfo.get("relation").asText();
 
         switch (generatorType) {
-            case "Mul":
-                double mul = Double.parseDouble(generatorParams);
-                generator = new Multiplier(mul);
+            case "Multiply":
+                Sampler sampler = fetchSampler(dependantInfo);
+                generator = new Multiplier(sampler);
                 break;
 
             default: throw new RuntimeException("Unknown dependant specification");
@@ -334,9 +331,9 @@ public class DataGenerator {
         for (Sampler sampler : samplers) {
             String name = sampler.name;
             if (isRelaxationRateSampler(sampler)) {
+                String nameTemplate = "%s-%d";
                 for (int i = 1; i <= varSize; i++) {
-                    name = String.format("%s-%d", name, i);
-                    lists.add(new DataList<Double>(name));
+                    lists.add(new DataList<Double>(String.format(nameTemplate, name, i)));
                 }
             } else {
                 lists.add(new DataList<Double>(name));
