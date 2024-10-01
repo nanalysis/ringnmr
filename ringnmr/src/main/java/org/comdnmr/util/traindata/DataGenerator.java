@@ -21,31 +21,83 @@ import java.io.File;
 import java.io.IOException;
 
 import java.util.*;
+import java.util.stream.IntStream;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 
 public class DataGenerator {
 
-    static final ObjectMapper objectMapper = new ObjectMapper();
-    final JsonNode config;
-    final int nDatasets;
+    static private final ObjectMapper objectMapper = new ObjectMapper();
+    private final JsonNode config;
+    private final int nDatasets;
+    private final Pattern relaxationRateMatcher = Pattern.compile("^R\\d.*");
 
-    Iterator<String[]> iterator;
+    private Iterator<String[]> iterator;
+
+    private Integer parSize;
+    private Integer depSize;
+    private Integer xSize;
+    private Integer varSize;
+    private List<Double> xValuesInterpolation;
+
     public String currentExperimentName;
     public String currentEnumName;
-
     String rootDirectoryTemplate;
     String dataDirectoryTemplate;
     String dataPathTemplate;
 
+    public static List<Double> getInterpolatedProfile(
+        List<Double> yValues,
+        List<Double> xValues,
+        List<Double> xValuesInterpolation
+    ) {
+        int nValues = yValues.size();
+        double[] xValuesArray = ArrayUtils.toPrimitive(xValues.toArray(new Double[nValues]));
+        double[] yValuesArray = ArrayUtils.toPrimitive(yValues.toArray(new Double[nValues]));
+        SplineInterpolator splineInterpolator = new SplineInterpolator();
+        PolynomialSplineFunction spline = splineInterpolator.interpolate(xValuesArray, yValuesArray);
+
+        List<Double> yInterpolated = new ArrayList<>();
+        for (Double xValueInterpolation : xValuesInterpolation) {
+            yInterpolated.add(spline.value(xValueInterpolation));
+        }
+
+        return yInterpolated;
+    }
+
     public DataGenerator(String configFile) throws IOException, ReflectiveOperationException {
         config = objectMapper.readTree(new File(configFile));
+        iterator = makeDataTypeIterator(config.get("data_types").fields());
 
         nDatasets = config.get("n_datasets").asInt();
         rootDirectoryTemplate = config.get("root_dir").asText();
         dataDirectoryTemplate = config.get("data_dir").asText();
         dataPathTemplate = config.get("ring_output_path").asText();
+    }
 
-        List<String[]> dataIter = new ArrayList<>();
-        Iterator<Map.Entry<String, JsonNode>> dataTypes = config.get("data_types").fields();
+    public String getRootDirectory() {
+        Map<String, String> sub = new HashMap<>();
+        sub.put("name", String.format("%s-%s", currentExperimentName, currentEnumName));
+        return StringSubstitutor.replace(rootDirectoryTemplate, sub, "{", "}");
+    }
+
+    public String getDataDirectory() {
+        Map<String, String> sub = new HashMap<>();
+        sub.put("root_dir", getRootDirectory());
+        return StringSubstitutor.replace(dataDirectoryTemplate, sub, "{", "}");
+    }
+
+    public String getDataPath() {
+        Map<String, String> sub = new HashMap<>();
+        sub.put("data_dir", getDataDirectory());
+        return StringSubstitutor.replace(dataPathTemplate, sub, "{", "}");
+    }
+
+    private Iterator<String[]> makeDataTypeIterator(Iterator<Map.Entry<String, JsonNode>> dataTypes) {
+        List<String[]> dataList = new ArrayList<>();
+
         while (dataTypes.hasNext()) {
             Map.Entry<String, JsonNode> info = dataTypes.next();
             String experimentName = info.getKey();
@@ -55,11 +107,11 @@ public class DataGenerator {
                 String[] dataInfo = new String[2];
                 dataInfo[0] = experimentName;
                 dataInfo[1] = enumName;
-                dataIter.add(dataInfo);
+                dataList.add(dataInfo);
             }
         }
 
-        this.iterator = dataIter.iterator();
+        return dataList.iterator();
     }
 
     public boolean hasAnotherDataset() {
@@ -82,143 +134,84 @@ public class DataGenerator {
             return null;
         }
 
+        // >>> CONSTRUCT CLASSES TO GENERATE EXPERIMENT AND MODEL PARAMETERS >>>
         JsonNode experimentInfo = config.get("data_types").get(currentExperimentName);
-        JsonNode parameterInfo = experimentInfo.get("enums").get(currentEnumName);
+        // Sampler for the x-values (nuCPMG for CPMG, transmitter offset for CEST)
+        Sampler xValuesSampler = getXValuesSampler(experimentInfo);
+        // Sampler for the variable (B0 for CPMG, B1 field for CEST)
+        Sampler variableSampler = getVariableSampler(experimentInfo);
+        // Constants are experiment parameters that are fixed for a given set
+        // of profiles. For example, tau in CPMG.
+        List<Sampler> constantSamplers = getConstantSamplers(experimentInfo);
+        // Generators for experiment parameters that are needed, but are
+        // directly related to the varaible.
+        //
+        // I included this specifically because `CPMGMQ` requires both the 1H
+        // field and the heteronucleus field, and the heteronucleus field is of
+        // course related to the 1H field by a scaling factor based on the
+        // relevant gyromagnetic ratios.
+        List<DependantGenerator> dependantGenerators = getDependantGenerators(experimentInfo);
+        // Samplers for the model parameters, for example R2, kEx, pA, deltaCPPM in CPMGSLOW
+        List<Sampler> parameterSamplers = getParameterSamplers(experimentInfo);
+        // x-values used to interpolate the data
+        xValuesInterpolation = getXValuesInterpolation(experimentInfo);
 
-        MultiSampler<Double> xValuesSampler = fetchSampler(experimentInfo.get("x_values"));
+        setVarSize(variableSampler);
+        setParSize(parameterSamplers);
+        setDepSize(dependantGenerators);
+        setXSize(constantSamplers);
 
-        JsonNode variableInfo = experimentInfo.get("variable");
-        MultiSampler<Double> variableSampler = fetchSampler(experimentInfo.get("variable"));
-
-        List<DependantGenerator> dependantGenerators = null;
-        JsonNode dependantInfo = variableInfo.get("dependants");
-        if (dependantInfo != null) {
-            dependantGenerators = getDependantGenerators(dependantInfo);
-        }
-
-        List<JsonNode> constantInfoList = objectMapper.convertValue(
-            experimentInfo.get("constants"),
-            new TypeReference<ArrayList<JsonNode>>() { }
-        );
-        List<MultiSampler<Double>> constantSamplers = new ArrayList<MultiSampler<Double>>();
-        for (JsonNode constantInfo : constantInfoList) {
-            constantSamplers.add(fetchSampler(constantInfo));
-        }
-
-        List<RandomDoubleMultiSampler> parameterSamplers = getParameterSamplers(parameterInfo);
-
-        // Stores a list of 1D double lists
+        // >>> CONSTRUCT LISTS TO STORE DATASETS >>>
         DataList<List<Double>> variableList = new DataList<>(variableSampler.name);
-
-        // Stores a list of 2D double lists
         DataList<List<List<Double>>> profileList = new DataList<>("profile");
-
-        List<DataList<Double>> parameterLists = new ArrayList<>();
-        for (RandomDoubleMultiSampler parameterSampler : parameterSamplers) {
-            DataList<Double> parameterList = new DataList<>(parameterSampler.name);
-            parameterLists.add(parameterList);
-        }
-
-        List<DataList<Double>> constantLists = new ArrayList<>();
-        for (MultiSampler<Double> constantSampler : constantSamplers) {
-            DataList<Double> constantList = new DataList<>(constantSampler.name);
-            constantLists.add(constantList);
-        }
+        DataList<List<List<Double>>> profileInterpolatedList = new DataList<>("profile_interpolation");
+        List<DataList<Double>> parameterLists = initializeLists(parameterSamplers);
+        List<DataList<Double>> constantLists = initializeLists(constantSamplers);
 
         EquationType cls = fetchEquationClass();
 
-        int xSize = 2 + constantSamplers.size();
-        int nDeps = 0;
-        if (dependantGenerators != null) {
-            nDeps = dependantGenerators.size();
-            xSize += nDeps;
-        }
-
-        double[] x = new double[xSize];
-
-        int parSize = parameterSamplers.size();
-        int[] map = new int[parSize];
-        for (int i = 0; i < parSize; i++) {
-            map[i] = i;
-        }
-        double[] par = new double[parSize];
-
-        // >>> interpolation information >>>
-        List<Double> xValuesInterpolation = fetchSampler(experimentInfo.get("x_values_interpolation")).sample();
-        DataList<List<List<Double>>> profileInterpolationList = new DataList<>("profile_interpolation");
-        // <<< interpolation information <<<
+        int[][] map = makeMaps(parameterSamplers);
 
         for (int n = 0; n < this.nDatasets; n++) {
-            // >>> Make `par` >>>
-            int parIdx = 0;
-            for (RandomDoubleMultiSampler parameterSampler : parameterSamplers) {
-                par[parIdx] = getDoubleFromSampler(parameterSampler);
-                parameterLists.get(parIdx).add(par[parIdx]);
-                parIdx += 1;
-            }
-
-            // >>> Add constants to `x` >>>
-            int constantIdx = 2 + nDeps;
-            for (MultiSampler<Double> constantSampler : constantSamplers) {
-                x[constantIdx] = getDoubleFromSampler(constantSampler);
-                constantLists.get(constantIdx - 2 - nDeps).add(x[constantIdx]);
-                constantIdx += 1;
-            }
-            // <<< Add constants to `x` <<<
-
             List<Double> xValues = xValuesSampler.sample();
-            // >>> Add constants to `x` >>>
             List<Double> variables = variableSampler.sample();
+            List<Double> constants = sampleConstants(constantSamplers);
+            List<List<Double>> dependants = generateDependants(variables, dependantGenerators);
 
+            double[] par = makePar(parameterSamplers, variables);
+            double[][][] x = makeX(xValues, variables, constants, dependants);
+            List<List<Double>> profiles = makeProfiles(cls, par, map, x);
+            List<List<Double>> profilesInterpolated = makeProfilesInterpolated(profiles, xValues);
+
+            appendToListOfDataLists(parameterLists, par);
             variableList.add(variables);
+            appendToListOfDataLists(constantLists, constants);
+            profileList.add(profiles);
+            profileInterpolatedList.add(profilesInterpolated);
 
-            List<List<Double>> profile2D = new ArrayList<>();
-            List<List<Double>> profileInterpolation2D = new ArrayList<>();
-            for (int varIdx = 0; varIdx < variables.size(); varIdx++) {
-                List<Double> profile1D = new ArrayList<>();
-                x[1 + nDeps] = variables.get(varIdx);
-                for (int depIdx = 0; depIdx < nDeps; depIdx++) {
-                    x[1 + depIdx] = dependantGenerators.get(depIdx).fetch(x[1 + nDeps]);
-                }
-                for (int xValueIdx = 0; xValueIdx < xValues.size(); xValueIdx++) {
-                    x[0] = xValues.get(xValueIdx);
-
-                    profile1D.add(cls.calculate(par, map, x, 0));
-                }
-                profile2D.add(profile1D);
-
-                List<Double> profileInterpolation1D = getInterpolatedProfile(
-                    profile1D,
-                    xValues,
-                    xValuesInterpolation
-                );
-                profileInterpolation2D.add(profileInterpolation1D);
-            }
-
-            profileInterpolationList.add(profileInterpolation2D);
-            profileList.add(profile2D);
-
-            if ((n + 1) % 1000 == 0 && (n + 1) != nDatasets) {
-                System.out.println(
-                    String.format(
-                        "[%s - %s]: %d/%d datasets created",
-                        currentExperimentName,
-                        currentEnumName,
-                        n + 1,
-                        nDatasets
-                    )
-                );
-            }
+            printMilestoneMessage(n + 1);
         }
 
-        HashMap<String, Object> data = makeData(
-            parameterLists,
-            constantLists,
-            variableList,
-            profileList,
-            profileInterpolationList
-        );
+        printCompleteMessage();
 
+        return bundleData(parameterLists, constantLists, variableList, profileList, profileInterpolatedList);
+    }
+
+    void printMilestoneMessage(int n) {
+        if ((n + 1) % 1000 == 0 && (n + 1) != nDatasets) {
+            System.out.println(
+                String.format(
+                    "[%s - %s]: %d/%d datasets created",
+                    currentExperimentName,
+                    currentEnumName,
+                    n,
+                    nDatasets
+                )
+            );
+        }
+    }
+
+    void printCompleteMessage() {
         System.out.println(
             String.format(
                 "[%s - %s]: Finished making %d datasets",
@@ -227,48 +220,258 @@ public class DataGenerator {
                 nDatasets
             )
         );
-
-        return data;
     }
 
-    public String getRootDirectory() {
-        Map<String, String> sub = new HashMap<>();
-        sub.put("name", String.format("%s-%s", currentExperimentName, currentEnumName));
-        return StringSubstitutor.replace(rootDirectoryTemplate, sub, "{", "}");
+    private Sampler getXValuesSampler(JsonNode experimentInfo) {
+        return fetchSampler(experimentInfo.get("x_values"));
     }
 
-    public String getDataDirectory() {
-        Map<String, String> sub = new HashMap<>();
-        sub.put("root_dir", getRootDirectory());
-        return StringSubstitutor.replace(dataDirectoryTemplate, sub, "{", "}");
+    private Sampler getVariableSampler(JsonNode experimentInfo) {
+        return fetchSampler(experimentInfo.get("variable"));
     }
 
-    public String getDataPath() {
-        Map<String, String> sub = new HashMap<>();
-        sub.put("data_dir", getDataDirectory());
-        return StringSubstitutor.replace(dataPathTemplate, sub, "{", "}");
-    }
-
-    public static List<Double> getInterpolatedProfile(
-        List<Double> yValues,
-        List<Double> xValues,
-        List<Double> xValuesInterpolation
-    ) {
-        int nValues = yValues.size();
-        double[] xValuesArray = ArrayUtils.toPrimitive(xValues.toArray(new Double[nValues]));
-        double[] yValuesArray = ArrayUtils.toPrimitive(yValues.toArray(new Double[nValues]));
-        SplineInterpolator splineInterpolator = new SplineInterpolator();
-        PolynomialSplineFunction spline = splineInterpolator.interpolate(xValuesArray, yValuesArray);
-
-        List<Double> yInterpolated = new ArrayList<>();
-        for (Double xValueInterpolation : xValuesInterpolation) {
-            yInterpolated.add(spline.value(xValueInterpolation));
+    private List<DependantGenerator> getDependantGenerators(JsonNode experimentInfo) {
+        JsonNode dependantInfo = experimentInfo.get("variable").get("dependants");
+        if (dependantInfo == null) {
+            return null;
         }
 
-        return yInterpolated;
+        Iterator<JsonNode> dependantIterator = dependantInfo.elements();
+        List<DependantGenerator> dependantGenerators = new ArrayList<DependantGenerator>();
+
+        while (dependantIterator.hasNext()) {
+            dependantGenerators.add(fetchDependantGenerator(dependantIterator.next()));
+        }
+
+        return dependantGenerators;
     }
 
-    HashMap<String, Object> makeData(
+    private DependantGenerator fetchDependantGenerator(JsonNode dependantInfo) {
+        DependantGenerator generator = null;
+
+        String name = dependantInfo.get("name").asText();
+        String generatorInfo = dependantInfo.get("relation").asText();
+        String[] arr = generatorInfo.split(":");
+        String generatorType = arr[0];
+        String generatorParams = arr[1];
+
+        switch (generatorType) {
+            case "Mul":
+                double mul = Double.parseDouble(generatorParams);
+                generator = new Multiplier(mul);
+                break;
+
+            default: throw new RuntimeException("Unknown dependant specification");
+        }
+
+        return generator;
+    }
+
+    private List<Sampler> getConstantSamplers(JsonNode experimentInfo) {
+        List<JsonNode> constantInfoList = objectMapper.convertValue(
+            experimentInfo.get("constants"),
+            new TypeReference<ArrayList<JsonNode>>() { }
+        );
+
+        List<Sampler> constantSamplers = new ArrayList<>();
+        for (JsonNode constantInfo : constantInfoList) {
+            constantSamplers.add(fetchSampler(constantInfo));
+        }
+        return constantSamplers;
+    }
+
+    private List<Sampler> getParameterSamplers(JsonNode experimentInfo) {
+        Iterator<JsonNode> parameterIterator = experimentInfo.get("enums").get(currentEnumName).elements();
+        List<Sampler> parameterSamplers = new ArrayList<>();
+
+        while (parameterIterator.hasNext()) {
+            JsonNode parameterInfo = parameterIterator.next();
+            String parameterName = parameterInfo.get(0).asText();
+            double parameterMin = parameterInfo.get(1).asDouble();
+            double parameterMax = parameterInfo.get(2).asDouble();
+            parameterSamplers.add(new RandomDoubleSampler(parameterName, parameterMin, parameterMax, 1, 1));
+        }
+
+        return parameterSamplers;
+    }
+
+    private void setVarSize(Sampler variableSampler) {
+        varSize = variableSampler.sample().size();
+    }
+
+    private boolean isRelaxationRateSampler(Sampler parameterSampler) {
+        return relaxationRateMatcher.matcher(parameterSampler.name).matches();
+    }
+
+    private void setParSize(List<Sampler> parameterSamplers) {
+        parSize = 0;
+        for (Sampler parameterSampler : parameterSamplers) {
+            // If the sampler is for a relaxation rate we need one parameter per profile.
+            // Otherwise, the parameter is global across profiles.
+            parSize += isRelaxationRateSampler(parameterSampler) ? varSize : 1;
+        }
+    }
+
+    private void setDepSize(List<DependantGenerator> dependantGenerators) {
+        depSize = dependantGenerators != null ? dependantGenerators.size() : 0;
+    }
+
+    private void setXSize(List<Sampler> constantSamplers) {
+        // The x-values provided per sample are:
+        // 0 --> x-value
+        // 1, ... --> dependencies
+        // 1 + n(dependencies) --> variable
+        // 2 + n(dependencies), ... --> constants
+        xSize = 2 + depSize + constantSamplers.size();
+    }
+
+    private List<Double> getXValuesInterpolation(JsonNode experimentInfo) {
+        return fetchSampler(experimentInfo.get("x_values_interpolation")).sample();
+    }
+
+    private List<DataList<Double>> initializeLists(List<Sampler> samplers) {
+       List<DataList<Double>> lists = new ArrayList<>();
+        for (Sampler sampler : samplers) {
+            String name = sampler.name;
+            if (isRelaxationRateSampler(sampler)) {
+                for (int i = 1; i <= varSize; i++) {
+                    name = String.format("%s-%d", name, i);
+                    lists.add(new DataList<Double>(name));
+                }
+            } else {
+                lists.add(new DataList<Double>(name));
+            }
+        }
+        return lists;
+    }
+
+    private List<Double> sampleConstants(List<Sampler> constantSamplers) {
+        List<Double> constants = new ArrayList<>();
+        for (Sampler constantSampler : constantSamplers) {
+            constants.add(constantSampler.sample().get(0));
+        }
+        return constants;
+    }
+
+    private List<List<Double>> generateDependants(List<Double> variables, List<DependantGenerator> dependantGenerators) {
+        if (dependantGenerators == null) {
+            return null;
+        }
+        List<List<Double>> dependants = new ArrayList<>();
+        for (double variable : variables) {
+            List<Double> dependantList = new ArrayList<>();
+            for (DependantGenerator dependantGenerator : dependantGenerators) {
+                dependantList.add(dependantGenerator.fetch(variable));
+            }
+            dependants.add(dependantList);
+        }
+
+        return dependants;
+    }
+
+    private int[][] makeMaps(List<Sampler> parameterSamplers) {
+        int[][] maps = new int[varSize][parameterSamplers.size()];
+        List<int[]> indices = new ArrayList<>();
+        int idx = 0;
+        for (Sampler parameterSampler : parameterSamplers) {
+            int[] array;
+            if (isRelaxationRateSampler(parameterSampler)) {
+                array = IntStream.range(idx, idx + varSize).toArray();
+                idx += varSize;
+            } else {
+                array = new int[]{idx++};
+            }
+            indices.add(array);
+        }
+        for (int i = 0; i < varSize; i++) {
+            for (int j = 0; j < indices.size(); j++) {
+                int[] idxs = indices.get(j);
+                maps[i][j] = idxs[i % idxs.length];
+            }
+        }
+
+        return maps;
+    }
+
+    private double[] makePar(List<Sampler> parameterSamplers, List<Double> variables) {
+        double[] par = new double[parSize];
+        int idx = 0;
+        for (Sampler parameterSampler : parameterSamplers) {
+            double parameter = parameterSampler.sample().get(0);
+            if (isRelaxationRateSampler(parameterSampler)) {
+                List<Double> rates = RelaxationRateGenerator.generate(parameter, variables, 5.0);
+                for (double rate : rates) {
+                    par[idx++] = rate;
+                }
+            } else {
+                par[idx++] = parameter;
+            }
+        }
+        return par;
+    }
+
+    private double[][][] makeX(
+        List<Double> xValues,
+        List<Double> variables,
+        List<Double> constants,
+        List<List<Double>> dependants
+    ) {
+        int xValSize = xValues.size();
+        double[][][] x = new double[varSize][xValSize][xSize];
+
+        for (int varIdx = 0; varIdx < varSize; varIdx++) {
+            double variable = variables.get(varIdx);
+            for (int xValIdx = 0; xValIdx < xValSize; xValIdx++) {
+                int idx = 0;
+                x[varIdx][xValIdx][idx++] = xValues.get(xValIdx);
+                if (dependants != null) {
+                    for (double dependant : dependants.get(varIdx)) {
+                        x[varIdx][xValIdx][idx++] = dependant;
+                    }
+                }
+                x[varIdx][xValIdx][idx++] = variable;
+                for (double constant : constants) {
+                    x[varIdx][xValIdx][idx++] = constant;
+                }
+            }
+        }
+
+        return x;
+    }
+
+    private void appendToListOfDataLists(List<DataList<Double>> lists, double[] data) {
+        for (int i = 0; i < data.length; i++) {
+            lists.get(i).add(data[i]);
+        }
+    }
+
+    private void appendToListOfDataLists(List<DataList<Double>> lists, List<Double> data) {
+        for (int i = 0; i < data.size(); i++) {
+            lists.get(i).add(data.get(i));
+        }
+    }
+
+    private List<List<Double>> makeProfiles(EquationType cls, double[] par, int[][] map, double[][][] x) {
+        List<List<Double>> profiles = new ArrayList<>();
+        for (int varIdx = 0; varIdx < varSize; varIdx++) {
+            List<Double> profile = new ArrayList<>();
+            for (int xValueIdx = 0; xValueIdx < x[0].length; xValueIdx++) {
+                profile.add(cls.calculate(par, map[varIdx], x[varIdx][xValueIdx], 0));
+            }
+            profiles.add(profile);
+        }
+        return profiles;
+    }
+
+    private List<List<Double>> makeProfilesInterpolated(List<List<Double>> profiles, List<Double> xValues) {
+        List<List<Double>> profilesInterpolated = new ArrayList<>();
+        for (List<Double> profile : profiles) {
+            profilesInterpolated.add(DataGenerator.getInterpolatedProfile(profile, xValues, xValuesInterpolation));
+        }
+        return profilesInterpolated;
+    }
+
+    private HashMap<String, Object> bundleData(
         List<DataList<Double>> parameterLists,
         List<DataList<Double>> constantLists,
         DataList<List<Double>> variableList,
@@ -297,16 +500,15 @@ public class DataGenerator {
     }
 
 
-    MultiSampler<Double> fetchSampler(JsonNode info) {
-        // Bit hacky, need to initialize `sampler` to something to avoid the
-        // compiler complaining.
-        MultiSampler<Double> sampler = new ExplicitSampler<Double>("DUMMY", 0.0);
+    private Sampler fetchSampler(JsonNode info) {
+        Sampler sampler = null;
+
         String name = info.get("name").asText();
         JsonNode samplerInfo = info.get("sampling");
 
         switch (samplerInfo.get("type").asText()) {
             case "RandomDouble":
-                sampler = new RandomDoubleMultiSampler(
+                sampler = new RandomDoubleSampler(
                     name,
                     samplerInfo.get("minValue").asDouble(),
                     samplerInfo.get("maxValue").asDouble(),
@@ -315,8 +517,8 @@ public class DataGenerator {
                 );
                 break;
 
-            case "Choose":
-                sampler = new ChooseSampler<Double>(
+            case "Choice":
+                sampler = new RandomChoiceSampler(
                     name,
                     objectMapper.convertValue(samplerInfo.get("options"), ArrayList.class),
                     samplerInfo.get("minSamples").asInt(),
@@ -324,19 +526,8 @@ public class DataGenerator {
                 );
                 break;
 
-            case "RandomRange":
-                sampler = new RangeSampler(
-                    name,
-                    samplerInfo.get("minStart").asDouble(),
-                    samplerInfo.get("maxStart").asDouble(),
-                    samplerInfo.get("minStop").asDouble(),
-                    samplerInfo.get("maxStop").asDouble(),
-                    objectMapper.convertValue(samplerInfo.get("stepOptions"), ArrayList.class)
-                );
-                break;
-
             case "RandomLinspace":
-                sampler = new LinspaceSampler(
+                sampler = new RandomLinspaceSampler(
                     name,
                     samplerInfo.get("minFirst").asDouble(),
                     samplerInfo.get("maxFirst").asDouble(),
@@ -347,8 +538,20 @@ public class DataGenerator {
                 );
                 break;
 
+
+            case "RandomLogspace":
+                sampler = new RandomLogspaceSampler(
+                    name,
+                    samplerInfo.get("minFirst").asDouble(),
+                    samplerInfo.get("maxFirst").asDouble(),
+                    samplerInfo.get("scale").asDouble(),
+                    samplerInfo.get("minSamples").asInt(),
+                    samplerInfo.get("maxSamples").asInt()
+                );
+                break;
+
             case "RandomSegmentedLinspace":
-                sampler = new SegmentedLinspaceSampler(
+                sampler = new RandomSegmentedLinspaceSampler(
                     name,
                     objectMapper.convertValue(samplerInfo.get("minFirsts"), ArrayList.class),
                     objectMapper.convertValue(samplerInfo.get("maxFirsts"), ArrayList.class),
@@ -359,65 +562,21 @@ public class DataGenerator {
                 );
                 break;
 
-            case "RandomLogspace":
-                sampler = new LogspaceSampler(
-                    name,
-                    samplerInfo.get("minFirst").asDouble(),
-                    samplerInfo.get("maxFirst").asDouble(),
-                    samplerInfo.get("scale").asDouble(),
-                    samplerInfo.get("minSamples").asInt(),
-                    samplerInfo.get("maxSamples").asInt()
-                );
-                break;
-
-            case "ExplicitValue":
-                sampler = new ExplicitSampler<Double>(
-                    name,
-                    samplerInfo.get("value").asDouble()
-                );
-                break;
-
-            case "ExplicitList":
-                sampler = new ExplicitSamplerList<Double>(
+            case "Explicit":
+                sampler = new ExplicitSampler(
                     name,
                     objectMapper.convertValue(samplerInfo.get("value"), ArrayList.class)
                 );
                 break;
 
-            case "ExplicitLinspace":
-                sampler = new ExplicitSamplerLinspace(
-                    name,
-                    samplerInfo.get("first").asDouble(),
-                    samplerInfo.get("last").asDouble(),
-                    samplerInfo.get("nSamples").asInt()
-                );
-                break;
-
-            default: throw new RuntimeException("Unknown sampler specification");
+            default: throw new RuntimeException("Unrecognised sampler.");
         }
 
         return sampler;
     }
 
-    List<RandomDoubleMultiSampler> getParameterSamplers(JsonNode parametersInfo) {
-        Iterator<JsonNode> parameterIterator = parametersInfo.elements();
-        List<RandomDoubleMultiSampler> parameterSamplers = new ArrayList<RandomDoubleMultiSampler>();
-
-        while (parameterIterator.hasNext()) {
-            JsonNode parameterInfo = parameterIterator.next();
-            String parameterName = parameterInfo.get(0).asText();
-            double parameterMin = parameterInfo.get(1).asDouble();
-            double parameterMax = parameterInfo.get(2).asDouble();
-            parameterSamplers.add(new RandomDoubleMultiSampler(parameterName, parameterMin, parameterMax, 1, 1));
-        }
-
-        return parameterSamplers;
-    }
-
-    EquationType fetchEquationClass() {
-        // Assign `cls` to any old class initially, so the compiler does not complain with:
-        // "variable might not have been initialized"
-        EquationType cls = CPMGEquation.CPMGMQ;
+    private EquationType fetchEquationClass() {
+        EquationType cls = null;
 
         switch (currentExperimentName) {
             case "CPMGEquation":
@@ -425,61 +584,44 @@ public class DataGenerator {
                     case "CPMGMQ": cls = CPMGEquation.CPMGMQ; break;
                     case "CPMGFAST": cls = CPMGEquation.CPMGFAST; break;
                     case "CPMGSLOW": cls = CPMGEquation.CPMGSLOW; break;
-                    default: throw new RuntimeException();
                 }
                 break;
 
             case "CESTEquation":
                 switch (currentEnumName) {
                     case "EXACT0": cls = CESTEquation.EXACT0; break;
-                    default: throw new RuntimeException();
                 }
                 break;
+        }
 
-            default: throw new RuntimeException();
+        if (cls == null) {
+            throw new RuntimeException("Unrecognised model.");
         }
 
         return cls;
     }
+}
 
-    double getDoubleFromSampler(MultiSampler<Double> sampler) {
-        List<Double> valueList = sampler.sample();
-        double value = valueList.get(0);
-        return value;
-    }
+class RelaxationRateGenerator {
 
-    List<DependantGenerator> getDependantGenerators(JsonNode info) {
-        Iterator<JsonNode> dependantIterator = info.elements();
-        List<DependantGenerator> dependantGenerators = new ArrayList<DependantGenerator>();
+    static List<Double> generate(double baseRate, List<Double> variable, double maxMultiplier) {
+        double minVariable = variable.get(0);
+        double currMax = baseRate;
+        RandomDoubleSampler sampler = new RandomDoubleSampler(0.0, maxMultiplier, 1, 1);
+        List<Double> rates = new ArrayList<>();
+        rates.add(baseRate);
+        for (int i = 1; i < variable.size(); i++) {
+            double scale = (variable.get(i) - minVariable) / minVariable;
+            double randomMultiplier = sampler.sampleUnwrapped();
 
-        while (dependantIterator.hasNext()) {
-            JsonNode dependantInfo = dependantIterator.next();
-            dependantGenerators.add(fetchDependantGenerator(dependantInfo));
+            // Ensure that rate for higher fields is always larger.
+            // This is at least the case for R2... may have to rethink this for R1.
+            double candidate = baseRate + randomMultiplier * scale;
+            if (candidate > currMax) {
+                currMax = candidate;
+                rates.add(candidate);
+            }
         }
-
-        return dependantGenerators;
-    }
-
-    DependantGenerator fetchDependantGenerator(JsonNode info) {
-        // Bit hacky, need to initialize `generator` to something to avoid the
-        // compiler complaining.
-        DependantGenerator generator = new Multiplier(1.0);
-
-        String name = info.get("name").asText();
-        String generatorInfo = info.get("relation").asText();
-        String[] arr = generatorInfo.split(":");
-        String generatorType = arr[0];
-        String generatorParams = arr[1];
-
-        switch (generatorType) {
-            case "Mul":
-                double mul = Double.parseDouble(generatorParams);
-                generator = new Multiplier(mul);
-                break;
-
-            default: throw new RuntimeException("Unknown dependant specification");
-        }
-
-        return generator;
+        return rates;
     }
 }

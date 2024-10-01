@@ -2,22 +2,27 @@ package org.comdnmr.util.traindata.samplers;
 
 import java.util.*;
 
-public class ExplicitSampler<T extends Comparable<T>> extends MultiSampler<T> {
-    public T value;
+public class ExplicitSampler extends Sampler {
+    List<Double> value;
 
-    public ExplicitSampler(String name, T value) {
-        this.name = name;
+    public ExplicitSampler(List<Double> value) {
         this.value = value;
     }
 
-    public ExplicitSampler(T value) {
-        this.value = value;
+    public ExplicitSampler(String name, List<Double> value) {
+        this(value);
+        this.name = name;
     }
 
     @Override
-    public ArrayList<T> sample() {
-        ArrayList<T> result = new ArrayList<T>();
-        result.add(this.value);
-        return result;
+    public List<Double> sample() {
+        return value;
+    }
+
+    public Double sampleUnwrapped() {
+        if (value.size() != 1) {
+            return null;
+        }
+        return value.get(0);
     }
 }
