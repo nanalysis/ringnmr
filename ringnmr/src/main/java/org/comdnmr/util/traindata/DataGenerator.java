@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 import org.apache.commons.text.StringSubstitutor;
@@ -21,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import java.util.regex.Matcher;
@@ -32,6 +34,7 @@ public class DataGenerator {
     static private final ObjectMapper objectMapper = new ObjectMapper();
     private final JsonNode config;
     private final int nDatasets;
+    private final int nNoiseDuplicates;
     private final Pattern relaxationRateMatcher = Pattern.compile("^R\\d.*");
 
     private Iterator<String[]> iterator;
@@ -72,6 +75,7 @@ public class DataGenerator {
         iterator = makeDataTypeIterator(config.get("data_types").fields());
 
         nDatasets = config.get("n_datasets").asInt();
+        nNoiseDuplicates = config.get("n_noise_duplicates").asInt();
         rootDirectoryTemplate = config.get("root_dir").asText();
         dataDirectoryTemplate = config.get("data_dir").asText();
         dataPathTemplate = config.get("ring_output_path").asText();
@@ -183,13 +187,16 @@ public class DataGenerator {
             List<List<Double>> profiles = makeProfiles(cls, par, map, x);
             List<List<Double>> profilesInterpolated = makeProfilesInterpolated(profiles, xValues);
 
-            appendToListOfDataLists(parameterLists, par);
-            variableList.add(variables);
-            appendToListOfDataLists(constantLists, constants);
-            profileList.add(profiles);
-            profileInterpolatedList.add(profilesInterpolated);
-
-            printMilestoneMessage(n);
+            for (int p = 0; p < nNoiseDuplicates; p++) {
+                List<List<Double>> noise = makeNoise(experimentInfo);
+                List<List<Double>> profilesInterpolatedNoisy = sumTwoDLists(profilesInterpolated, noise);
+                appendToListOfDataLists(parameterLists, par);
+                variableList.add(variables);
+                appendToListOfDataLists(constantLists, constants);
+                profileList.add(profiles);
+                profileInterpolatedList.add(profilesInterpolatedNoisy);
+                printMilestoneMessage(n, p);
+            }
         }
 
         printCompleteMessage();
@@ -197,15 +204,16 @@ public class DataGenerator {
         return bundleData(parameterLists, constantLists, variableList, profileList, profileInterpolatedList);
     }
 
-    void printMilestoneMessage(int n) {
-        if ((n + 1) % 1000 == 0 && (n + 1) != nDatasets) {
+    void printMilestoneMessage(int n, int p) {
+        int datasetNumber = n * nNoiseDuplicates + p;
+        if ((datasetNumber + 1) % 1000 == 0 && (datasetNumber + 1) != nDatasets * nNoiseDuplicates) {
             System.out.println(
                 String.format(
                     "[%s - %s]: %d/%d datasets created",
                     currentExperimentName,
                     currentEnumName,
-                    n + 1,
-                    nDatasets
+                    datasetNumber + 1,
+                    nDatasets * nNoiseDuplicates
                 )
             );
         }
@@ -217,7 +225,7 @@ public class DataGenerator {
                 "[%s - %s]: Finished making %d datasets",
                 currentExperimentName,
                 currentEnumName,
-                nDatasets
+                nDatasets * nNoiseDuplicates
             )
         );
     }
@@ -396,7 +404,7 @@ public class DataGenerator {
         for (Sampler parameterSampler : parameterSamplers) {
             double parameter = parameterSampler.sample().get(0);
             if (isRelaxationRateSampler(parameterSampler)) {
-                List<Double> rates = RelaxationRateGenerator.generate(parameter, variables, 5.0);
+                List<Double> rates = RelaxationRateGenerator.generate(parameter, variables, 3.0);
                 for (double rate : rates) {
                     par[idx++] = rate;
                 }
@@ -597,6 +605,55 @@ public class DataGenerator {
 
         return cls;
     }
+
+    private List<List<Double>> makeNoise(JsonNode experimentInfo) {
+        double maxVariance = experimentInfo.get("variance_max").asDouble();
+        RandomDoubleSampler varianceSampler = new RandomDoubleSampler(0.0, maxVariance, 1, 1);
+        List<List<Double>> noises = new ArrayList<>();
+        for (int i = 0; i < varSize; i++) {
+            noises.add(sampleAWGN(varianceSampler.sampleUnwrapped()));
+        }
+        return noises;
+    }
+
+    private List<Double> sampleAWGN(double variance) {
+        NormalDistribution sampler = new NormalDistribution(0.0, Math.sqrt(variance));
+        List<Double> noise = new ArrayList<>();
+        for (int i = 0; i < interpolationSize(); i++) {
+            noise.add(sampler.sample());
+        }
+        return noise;
+    }
+
+    private List<List<Double>> sumTwoDLists(List<List<Double>> l1, List<List<Double>> l2) {
+        List<List<Double>> sum = new ArrayList<>();
+        for (Map.Entry<List<Double>, List<Double>> vecPair : zipLists(l1, l2)) {
+            List<Double> vec1 = vecPair.getKey();
+            List<Double> vec2 = vecPair.getValue();
+            List<Double> vecSum = new ArrayList<>();
+            for (Map.Entry<Double, Double> valPair : zipLists(vec1, vec2)) {
+                double val1 = valPair.getKey();
+                double val2 = valPair.getValue();
+                vecSum.add(val1 + val2);
+            }
+            sum.add(vecSum);
+        }
+        return sum;
+    }
+
+    private static <A, B> List<Map.Entry<A, B>> zipLists(List<A> l1, List<B> l2) {
+        return IntStream.range(0, Math.min(l1.size(), l2.size()))
+            .mapToObj(i -> Map.entry(l1.get(i), l2.get(i)))
+            .collect(Collectors.toList());
+    }
+
+    private Integer interpolationSize() {
+        if (currentExperimentName == null) {
+            return null;
+        }
+        return xValuesInterpolation.size();
+    }
+
 }
 
 class RelaxationRateGenerator {
@@ -607,7 +664,8 @@ class RelaxationRateGenerator {
         RandomDoubleSampler sampler = new RandomDoubleSampler(0.0, maxMultiplier, 1, 1);
         List<Double> rates = new ArrayList<>();
         rates.add(baseRate);
-        for (int i = 1; i < variable.size(); i++) {
+        int i = 1;
+        while (i < variable.size()) {
             double scale = (variable.get(i) - minVariable) / minVariable;
             double randomMultiplier = sampler.sampleUnwrapped();
 
@@ -617,6 +675,7 @@ class RelaxationRateGenerator {
             if (candidate > currMax) {
                 currMax = candidate;
                 rates.add(candidate);
+                i++;
             }
         }
         return rates;
