@@ -1,3 +1,8 @@
+//ringnmr/src/main/java/org/comdnmr/util/traindata/DataGenerator.java
+//Simon Hulse
+//simonhulse@protonmail.com
+//Last Edited: Thu 03 Oct 2024 03:45:37 PM EDT
+
 package org.comdnmr.util.traindata;
 
 import org.comdnmr.util.DataUtil;
@@ -339,7 +344,7 @@ public class DataGenerator {
         for (Sampler sampler : samplers) {
             String name = sampler.name;
             if (isRelaxationRateSampler(sampler)) {
-                String nameTemplate = "%s-%d";
+                String nameTemplate = "%s<%d>";
                 for (int i = 1; i <= varSize; i++) {
                     lists.add(new DataList<Double>(String.format(nameTemplate, name, i)));
                 }
