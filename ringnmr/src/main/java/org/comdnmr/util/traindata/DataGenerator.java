@@ -1,7 +1,7 @@
 //ringnmr/src/main/java/org/comdnmr/util/traindata/DataGenerator.java
 //Simon Hulse
 //simonhulse@protonmail.com
-//Last Edited: Thu 03 Oct 2024 03:45:37 PM EDT
+//Last Edited: Wed 09 Oct 2024 05:51:15 PM EDT
 
 package org.comdnmr.util.traindata;
 
@@ -52,7 +52,6 @@ public class DataGenerator {
 
     public String currentExperimentName;
     public String currentEnumName;
-    String rootDirectoryTemplate;
     String dataDirectoryTemplate;
     String dataPathTemplate;
 
@@ -81,26 +80,25 @@ public class DataGenerator {
 
         nDatasets = config.get("n_datasets").asInt();
         nNoiseDuplicates = config.get("n_noise_duplicates").asInt();
-        rootDirectoryTemplate = config.get("root_dir").asText();
-        dataDirectoryTemplate = config.get("data_dir").asText();
-        dataPathTemplate = config.get("ring_output_path").asText();
-    }
+        dataDirectoryTemplate = config.get("enum_dir").asText();
 
-    public String getRootDirectory() {
         Map<String, String> sub = new HashMap<>();
-        sub.put("name", String.format("%s-%s", currentExperimentName, currentEnumName));
-        return StringSubstitutor.replace(rootDirectoryTemplate, sub, "{", "}");
+        sub.put("root_dir", config.get("root_dir").asText());
+        dataDirectoryTemplate = StringSubstitutor.replace(dataDirectoryTemplate, sub, "{", "}");
+
+        dataPathTemplate = config.get("ring_data_path").asText();
     }
 
     public String getDataDirectory() {
         Map<String, String> sub = new HashMap<>();
-        sub.put("root_dir", getRootDirectory());
+        sub.put("experiment", currentExperimentName);
+        sub.put("enum", currentEnumName);
         return StringSubstitutor.replace(dataDirectoryTemplate, sub, "{", "}");
     }
 
     public String getDataPath() {
         Map<String, String> sub = new HashMap<>();
-        sub.put("data_dir", getDataDirectory());
+        sub.put("enum_dir", getDataDirectory());
         return StringSubstitutor.replace(dataPathTemplate, sub, "{", "}");
     }
 

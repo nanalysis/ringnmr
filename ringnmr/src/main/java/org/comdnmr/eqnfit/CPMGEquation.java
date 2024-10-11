@@ -1,3 +1,8 @@
+//../ringnmr/ringnmr/src/main/java/org/comdnmr/eqnfit/CPMGEquation.java
+//Simon Hulse
+//simonhulse@protonmail.com
+//Last Edited: Thu 10 Oct 2024 01:30:19 PM EDT
+
 /*
  * CoMD/NMR Software : A Program for Analyzing NMR Dynamics Data
  * Copyright (C) 2018-2019 Bruce A Johnson
@@ -812,7 +817,6 @@ public enum CPMGEquation implements EquationType {
     TFloat32 constructNeuralNetworkInput(double[][] xValues, double[] yValues) {
         Map<Double, List<List<Double>>> datasets = separateDatasets(xValues, yValues);
         Map<Double, List<Double>> interpolatedDatasets = interpolateDatasets(datasets);
-        System.out.println(String.format("interpolatedDatasets: %s", interpolatedDatasets));
         // Assuming tau is identical across samples
         double tau = xValues[3][0];
 
