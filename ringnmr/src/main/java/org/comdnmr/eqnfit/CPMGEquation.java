@@ -1,7 +1,7 @@
 //ringnmr/src/main/java/org/comdnmr/eqnfit/CPMGEquation.java
 //Simon Hulse
 //simonhulse@protonmail.com
-//Last Edited: Wed 16 Oct 2024 11:16:34 AM EDT
+//Last Edited: Fri 18 Oct 2024 11:46:32 AM EDT
 
 /*
  * CoMD/NMR Software : A Program for Analyzing NMR Dynamics Data
@@ -34,6 +34,7 @@ import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.util.FastMath;
 
+import static org.comdnmr.modelfree.RelaxEquations.GAMMA_MAP;
 import org.comdnmr.util.CoMDPreferences;
 import org.comdnmr.util.DataUtil;
 import org.comdnmr.util.Utilities;
@@ -693,13 +694,14 @@ public enum CPMGEquation implements EquationType {
     final String equationName;
     final int nGroupPars;
     final String[] parNames;
-    // nuCPMG values used to generate training data for neural network guesser.
-    // Required to interpolate data acquired with different nuCPMG values.
-    // See Simon's `ringguess-java` repo for details:
-    // https://github.com/bjohnsonlab/ringguess-java
-    // Specifically, see the specification of `n_cycles` and `tau` in `config.json`.
-    final List<Double> interpolationXs = Arrays.asList(10.0, 20.0, 50.0, 100.0, 200.0, 400.0, 600.0, 800.0, 1000.0, 1100.0);
-    final String guesserPathTemplate = "/data/ringguess/CPMGEquation-%s/models/model_%d/";
+    // TODO: A better approach would be to store the interplation values with
+    // the model during training, and then to load the values in.
+    // That way, only one thing needs editing whenever I decide to change the
+    // values.
+    final List<Double> interpolationXs = Arrays.asList(
+        8.0, 10.0, 15.0, 20.0, 25.0, 30.0, 40.0, 60.0, 80.0,
+        100.0, 150.0, 200.0, 250.0, 300.0, 350.0, 400.0, 450.0);
+    final String guesserPathTemplate = "/data/ringguess/CPMGEquation-%s/%s/%s/model/export";
 
     CPMGEquation(String equationName, int nGroupPars, String... parNames) {
         this.equationName = equationName;
@@ -707,8 +709,8 @@ public enum CPMGEquation implements EquationType {
         this.nGroupPars = nGroupPars;
     }
 
-    String getGuesserPath(int nVariable) {
-        return String.format(guesserPathTemplate, getName(), nVariable);
+    String getGuesserPath(String nucleus, int nProfiles) {
+        return String.format(guesserPathTemplate, nucleus, getName(), nProfiles);
     }
 
     public static String[] getEquationNames() {
@@ -759,18 +761,21 @@ public enum CPMGEquation implements EquationType {
         return guess;
     }
 
-
-
-    // Will not be called: Is overridden by all enums of this class (see above)
+    // Will not be called: Is overridden by all enums (see above)
     public double[] guessRubric(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
         return new double[0];
     }
 
     public double[] guessNeuralNetwork(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
         TFloat32 input = constructNeuralNetworkInput(xValues, yValues);
-        int nProfiles = getNProfiles(idNums);
-        int nPars = getNPars(map);
-        double[] guess = runNeuralNetwork(input, nProfiles);
+
+        String networkPath = String.format(
+            guesserPathTemplate,
+            determineNucleus(xValues),  // Nucleus (13C or 15N)
+            getName(),                  // Enum name (CPMGFAST, CPMGSLOW, CPMGMQ)
+            getNProfiles(idNums));      // Number of profiles (1, 2, 3)
+
+        double[] guess = runNeuralNetwork(input, networkPath);
         System.out.println(
             String.format(
                 "guess:\n%s",
@@ -780,72 +785,72 @@ public enum CPMGEquation implements EquationType {
         return guess;
     }
 
-    Map<Double, List<List<Double>>> separateDatasets(double[][] xValues, double[] yValues) {
-        Map<Double, List<List<Double>>> map = new TreeMap<>();
+    Map<Double, Map<String, List<Double>>> separateDatasets(double[][] xValues, double[] yValues) {
+        Map<Double, Map<String, List<Double>>> map = new TreeMap<>();
         for (int i = 0; i < xValues[0].length; i++) {
-            Double nuCPMG = xValues[0][i];
+            Double x = xValues[0][i];
+            Double y = yValues[i];
             Double fieldH = xValues[2][i];
-            Double profile = yValues[i];
-            List<Double> pair = Arrays.asList(nuCPMG, profile);
+
             if (map.containsKey(fieldH)) {
                 // Add to list at sorted position.
                 // Could use binary search to be more efficient O(log n) vs O(n),
                 // but the sizes of the datasets means a noticable performance gain
                 // probably wouldn't be realised.
-                List<List<Double>> profileValues = map.get(fieldH);
+                Map<String, List<Double>> xyMap = map.get(fieldH);
+                List<Double> xs = xyMap.get("x");
+                List<Double> ys = xyMap.get("y");
                 int idx = 0;
-                while (idx < profileValues.size() && nuCPMG > profileValues.get(idx).get(0)) {
+                while (idx < xs.size() && x > xs.get(idx)) {
                     idx++;
                 }
-                if (idx == profileValues.size()) {
-                    profileValues.add(pair);
+                if (idx == xs.size()) {
+                    xs.add(x);
+                    ys.add(y);
                 } else {
-                    profileValues.add(idx, pair);
+                    xs.add(idx, x);
+                    ys.add(idx, y);
                 }
             } else {
-                List<List<Double>> newList = new ArrayList<>();
-                newList.add(Arrays.asList(nuCPMG, profile));
-                map.put(fieldH, newList);
+                Map<String, List<Double>> xyMap = new HashMap<>();
+                List<Double> xs = Arrays.asList(x);
+                List<Double> ys = Arrays.asList(y);
+                xyMap.put("x", xs);
+                xyMap.put("y", ys);
+                map.put(fieldH, xyMap);
             }
         }
         return map;
     }
 
     // TODO: This should be generic across CPMG/CEST/R1rho
-    Map<Double, List<Double>> interpolateDatasets(Map<Double, List<List<Double>>> datasets) {
+    Map<Double, List<Double>> interpolateDatasets(Map<Double, Map<String, List<Double>>> datasets) {
         Map<Double, List<Double>> result = new TreeMap<>();
-        for (Map.Entry<Double, List<List<Double>>> dataset : datasets.entrySet()) {
-            double variable = dataset.getKey();
-            List<List<Double>> xys = dataset.getValue();
-            List<Double> xValues = new ArrayList<>();
-            List<Double> yValues = new ArrayList<>();
-            for (List<Double> xy : xys) {
-                double x = xy.get(0);
-                double y = xy.get(1);
-                xValues.add(x);
-                yValues.add(y);
-            }
+        for (Map.Entry<Double, Map<String, List<Double>>> entry : datasets.entrySet()) {
+            double variable = entry.getKey();
+            List<Double> xs = entry.getValue().get("x");
+            List<Double> ys = entry.getValue().get("y");
 
             // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             // TODO: Hack to get this to work for datasets with nuCPMGs that do
             // not extend out to spline interpolation requires the
             // interpolating x-values to be within the true x-values
-            int xIdx = xValues.size() - 1;
+            int xIdx = xs.size() - 1;
             int xInterpIdx = interpolationXs.size() - 1;
-            if (xValues.get(xIdx) < interpolationXs.get(xInterpIdx)) {
-                xValues.add(interpolationXs.get(xInterpIdx));
-                yValues.add(yValues.get(xIdx));
+            if (xs.get(xIdx) < interpolationXs.get(xInterpIdx)) {
+                xs.add(interpolationXs.get(xInterpIdx));
+                ys.add(ys.get(xIdx));
             }
             // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-            List<Double> yValuesInterpolated = DataGenerator.getInterpolatedProfile(yValues, xValues, interpolationXs);
+            List<Double> yValuesInterpolated = DataGenerator.getInterpolatedProfile(ys, xs, interpolationXs);
             result.put(variable, yValuesInterpolated);
         }
         return result;
     }
 
     TFloat32 constructNeuralNetworkInput(double[][] xValues, double[] yValues) {
-        Map<Double, List<List<Double>>> datasets = separateDatasets(xValues, yValues);
+        Map<Double, Map<String, List<Double>>> datasets = separateDatasets(xValues, yValues);
         Map<Double, List<Double>> interpolatedDatasets = interpolateDatasets(datasets);
         // Assuming tau is identical across samples
         double tau = xValues[3][0];
@@ -875,8 +880,8 @@ public enum CPMGEquation implements EquationType {
         return TFloat32.tensorOf(inputNdArray);
     }
 
-    double[] runNeuralNetwork(TFloat32 input, int nVariable) {
-        SavedModelBundle network = SavedModelBundle.load(getGuesserPath(nVariable), "serve");
+    private double[] runNeuralNetwork(TFloat32 input, String networkPath) {
+        SavedModelBundle network = SavedModelBundle.load(networkPath, "serve");
         TFloat32 outputTensor = (TFloat32) network.function("serving_default").call(input);
 
         int size = (int) outputTensor.size();
@@ -886,6 +891,30 @@ public enum CPMGEquation implements EquationType {
         }
 
         return output;
+    }
+
+    private String determineNucleus(double[][] xValues)
+    throws IllegalArgumentException {
+        // Ratio of 1H field and heteronucleus field
+        float gammaProton = GAMMA_MAP.get("H").floatValue();
+        float targetGammaRatio = (float) (xValues[1][0] / xValues[2][0]);
+        float epsilon = 0.001f;
+
+        for (Map.Entry<String, Double> entry : GAMMA_MAP.entrySet()) {
+            float gammaRatio = entry.getValue().floatValue() / gammaProton;
+            if (Math.abs(gammaRatio - targetGammaRatio) < epsilon) {
+                // TODO: This is a bit hacky. Should unify nucleus descriptor
+                // i.e. 1H, 2H, 13C, 15N
+                // or H, D, C, N
+                String element = entry.getKey();
+                if (element == "C") {
+                    return "13C";
+                } else if (element == "N") {
+                    return "15N";
+                }
+            }
+        }
+        throw new IllegalArgumentException("Neural network guesser does not support the provided heteronucleus.");
     }
 }
 
