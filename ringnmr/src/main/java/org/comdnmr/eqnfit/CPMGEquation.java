@@ -1,7 +1,7 @@
-//../ringnmr/ringnmr/src/main/java/org/comdnmr/eqnfit/CPMGEquation.java
+//ringnmr/src/main/java/org/comdnmr/eqnfit/CPMGEquation.java
 //Simon Hulse
 //simonhulse@protonmail.com
-//Last Edited: Thu 10 Oct 2024 01:30:19 PM EDT
+//Last Edited: Wed 16 Oct 2024 11:16:34 AM EDT
 
 /*
  * CoMD/NMR Software : A Program for Analyzing NMR Dynamics Data
@@ -271,45 +271,60 @@ public enum CPMGEquation implements EquationType {
             // N.B. (2 * delta) is the time between successive 13C 180 pulses
             double delta = 1.0 / (4.0 * vcpmg);
 
-            // Building lambda1 (3.2 - 3.6)
+            // >>> Building lambda1 (3.2 - 3.6) >>>
+
             // num1: (p_A - p_B)k_{ex} + i \Delta \omega_H
             Complex num1 = new Complex((pA - pB) * kEx, deltaH);
-            Complex zeta = num1.multiply(-2.0 * deltaC);  // 3.6
-            Complex Psi = num1  // 3.5
+
+            // 3.6
+            Complex zeta = num1.multiply(-2.0 * deltaC);
+
+            // 3.5
+            Complex Psi = num1
                 .pow(2.0)
                 .subtract(Math.pow(deltaC, 2.0))
                 .add(4.0 * pA * pB * Math.pow(kEx, 2.0));
-            Complex num2 = Psi  // num2: \sqrt{\Psi^2 + \zeta^2}
+
+            // num2: \sqrt{\Psi^2 + \zeta^2}
+            Complex num2 = Psi
                 .pow(2.0)
                 .add(zeta.pow(2.0))
                 .sqrt();
-            Complex etaPlus = num2  // 3.4
+
+            // 3.4
+            Complex etaPlus = num2
                 .add(Psi)
                 .sqrt()
                 .multiply(Math.sqrt(2.0) * delta);
-            Complex etaMinus = num2  // 3.4
+            Complex etaMinus = num2
                 .subtract(Psi)
                 .sqrt()
                 .multiply(Math.sqrt(2.0) * delta);
-            Complex DPlus = Psi  // 3.3
+
+            // 3.3
+            Complex DPlus = Psi
                 .add(2.0 * Math.pow(deltaC, 2.0))
                 .divide(num2)
                 .add(1.0)
                 .multiply(0.5);
-            Complex DMinus = Psi  // 3.3
+            Complex DMinus = Psi
                 .add(2.0 * Math.pow(deltaC, 2.0))
                 .divide(num2)
                 .subtract(1.0)
                 .multiply(0.5);
-            Complex num3 = etaPlus  // num3: D_{+} \cosh \eta_{+} - D_{-} \cos \eta_{-}
+
+            // num3: D_{+} \cosh \eta_{+} - D_{-} \cos \eta_{-}
+            Complex num3 = etaPlus
                 .cosh()
                 .multiply(DPlus)
                 .subtract(etaMinus
                     .cos()
                     .multiply(DMinus)
                 );
+
+            // 3.2
             // Using \cosh^{-1}(z) = \ln (z + \sqrt{z + 1}\sqrt{z - 1})
-            Complex lambda1 = num3  // 3.2
+            Complex lambda1 = num3
                 .add(num3
                     .add(1.0)
                     .sqrt()
@@ -324,30 +339,21 @@ public enum CPMGEquation implements EquationType {
                 .multiply(0.5)
                 .add(R2);
 
-            // Building Q (3.7 - 3.10)
-            Complex dPlus = new Complex(deltaH + deltaC, kEx);  // 3.10
-            Complex dMinus = new Complex(deltaH + deltaC, -kEx);  // 3.10
-            Complex zPlus = new Complex(deltaH - deltaC, kEx);  // 3.10
-            Complex zMinus = new Complex(deltaH - deltaC, -kEx);  // 3.10
+            // <<< Building lambda1 (3.2 - 3.6) <<<
+
+            // >>> Building Q (3.7 - 3.10) >>>
+
+            // 3.10
+            Complex dPlus = new Complex(deltaH + deltaC, kEx);
+            Complex dMinus = new Complex(deltaH + deltaC, -kEx);
+            Complex zPlus = new Complex(deltaH - deltaC, kEx);
+            Complex zMinus = new Complex(deltaH - deltaC, -kEx);
+
             // num4: i k_{ex} \sqrt{p_A p_B}
             Complex num4 = new Complex(0.0, kEx * Math.sqrt(pA * pB));
-            Complex mD = zPlus  // 3.8
-                .add(zPlus
-                    .multiply(delta)
-                    .sin()
-                    .divide(dPlus
-                        .add(zPlus)
-                        .multiply(delta)
-                        .sin()
-                    )
-                    .multiply(2.0 * deltaC)
-                )
-                .multiply(num4
-                    .divide(dPlus
-                        .multiply(zPlus)
-                    )
-                );
-            Complex mZ = dMinus  // 3.9
+
+            // 3.9
+            Complex mZ = dMinus
                 .subtract(dMinus
                     .multiply(delta)
                     .sin()
@@ -364,7 +370,27 @@ public enum CPMGEquation implements EquationType {
                     )
                 )
                 .multiply(-1.0);
-            double Q = mD  // 3.7
+
+            // 3.8
+            Complex mD = zPlus
+                .add(zPlus
+                    .multiply(delta)
+                    .sin()
+                    .divide(dPlus
+                        .add(zPlus)
+                        .multiply(delta)
+                        .sin()
+                    )
+                    .multiply(2.0 * deltaC)
+                )
+                .multiply(num4
+                    .divide(dPlus
+                        .multiply(zPlus)
+                    )
+                );
+
+            // 3.7
+            double Q = mD
                 .pow(2.0)
                 .multiply(-1.0)
                 .add(1.0)
@@ -375,6 +401,10 @@ public enum CPMGEquation implements EquationType {
                     .multiply(0.5 * Math.sqrt(pB / pA))
                 )
                 .getReal();
+
+            // <<< Building Q (3.7 - 3.10) <<<
+
+            // 3.1
             if (tau > 1.0e-6) {
                 return lambda1.getReal() - Math.log(Q) / tau;
             } else {
@@ -740,7 +770,7 @@ public enum CPMGEquation implements EquationType {
         TFloat32 input = constructNeuralNetworkInput(xValues, yValues);
         int nProfiles = getNProfiles(idNums);
         int nPars = getNPars(map);
-        double[] guess = runNeuralNetwork(input, nProfiles, nPars);
+        double[] guess = runNeuralNetwork(input, nProfiles);
         System.out.println(
             String.format(
                 "guess:\n%s",
@@ -845,39 +875,15 @@ public enum CPMGEquation implements EquationType {
         return TFloat32.tensorOf(inputNdArray);
     }
 
-    // TODO: Once the hack is fixed (see below) won't need the `nPars` argument.
-    double[] runNeuralNetwork(TFloat32 input, int nVariable, int nPars) {
+    double[] runNeuralNetwork(TFloat32 input, int nVariable) {
         SavedModelBundle network = SavedModelBundle.load(getGuesserPath(nVariable), "serve");
         TFloat32 outputTensor = (TFloat32) network.function("serving_default").call(input);
 
-        // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-        //
-        // TODO: HACK TIME - THIS NEEDS TO BE UPDATED ONCE THE NETWORKS HAVE
-        // BEEN FIXED
-        //
-        // Need to remake the networks to predict the R2 for each profile
-        // For now, I just restructure the output so it agrees with that
-        // required by the optimizer.
-        //
-        // CPMGFAST: duplicate element 1
-        // CPMGSLOW: duplicate element 2
-        // CPMGMQ: duplicate element 3
-        double [] output = new double[nPars];
-        int idx = 0;
-        int duplicate = 0;
-        switch (getName()) {
-            case "CPMGFAST": duplicate = 1; break;
-            case "CPMGSLOW": duplicate = 2; break;
-            case "CPMGMQ": duplicate = 2; break;
+        int size = (int) outputTensor.size();
+        double [] output = new double[size];
+        for (int i = 0; i < size; i++) {
+            output[i] = outputTensor.getFloat(0, i);
         }
-
-        for (int i = 0; i < nPars; i++) {
-            output[i] = (double) outputTensor.getFloat(0, idx++);
-            if (i == duplicate) {
-                idx--;
-            }
-        }
-        // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
         return output;
     }

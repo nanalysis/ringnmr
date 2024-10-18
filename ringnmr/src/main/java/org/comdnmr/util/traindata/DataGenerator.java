@@ -1,7 +1,7 @@
 //ringnmr/src/main/java/org/comdnmr/util/traindata/DataGenerator.java
 //Simon Hulse
 //simonhulse@protonmail.com
-//Last Edited: Wed 09 Oct 2024 05:51:15 PM EDT
+//Last Edited: Tue 15 Oct 2024 01:32:22 PM EDT
 
 package org.comdnmr.util.traindata;
 
@@ -40,7 +40,8 @@ public class DataGenerator {
     private final JsonNode config;
     private final int nDatasets;
     private final int nNoiseDuplicates;
-    private final Pattern relaxationRateMatcher = Pattern.compile("^R\\d.*");
+    private final Pattern R1Matcher = Pattern.compile("^R1.*");
+    private final Pattern R2Matcher = Pattern.compile("^R2.*");
 
     private Iterator<String[]> iterator;
 
@@ -209,7 +210,7 @@ public class DataGenerator {
 
     void printMilestoneMessage(int n, int p) {
         int datasetNumber = n * nNoiseDuplicates + p;
-        if ((datasetNumber + 1) % 1000 == 0 && (datasetNumber + 1) != nDatasets * nNoiseDuplicates) {
+        if ((datasetNumber + 1) % 10000 == 0 && (datasetNumber + 1) != nDatasets * nNoiseDuplicates) {
             System.out.println(
                 String.format(
                     "[%s - %s]: %d/%d datasets created",
@@ -307,8 +308,14 @@ public class DataGenerator {
         varSize = variableSampler.sample().size();
     }
 
-    private boolean isRelaxationRateSampler(Sampler parameterSampler) {
-        return relaxationRateMatcher.matcher(parameterSampler.name).matches();
+    private int isRelaxationRateSampler(Sampler parameterSampler) {
+        if (R1Matcher.matcher(parameterSampler.name).matches()) {
+            return 1;
+        } else if (R2Matcher.matcher(parameterSampler.name).matches()) {
+            return 2;
+        } else {
+            return 0;
+        }
     }
 
     private void setParSize(List<Sampler> parameterSamplers) {
@@ -316,7 +323,7 @@ public class DataGenerator {
         for (Sampler parameterSampler : parameterSamplers) {
             // If the sampler is for a relaxation rate we need one parameter per profile.
             // Otherwise, the parameter is global across profiles.
-            parSize += isRelaxationRateSampler(parameterSampler) ? varSize : 1;
+            parSize += (isRelaxationRateSampler(parameterSampler) > 0) ? varSize : 1;
         }
     }
 
@@ -341,7 +348,7 @@ public class DataGenerator {
        List<DataList<Double>> lists = new ArrayList<>();
         for (Sampler sampler : samplers) {
             String name = sampler.name;
-            if (isRelaxationRateSampler(sampler)) {
+            if (isRelaxationRateSampler(sampler) > 0) {
                 String nameTemplate = "%s<%d>";
                 for (int i = 1; i <= varSize; i++) {
                     lists.add(new DataList<Double>(String.format(nameTemplate, name, i)));
@@ -383,7 +390,7 @@ public class DataGenerator {
         int idx = 0;
         for (Sampler parameterSampler : parameterSamplers) {
             int[] array;
-            if (isRelaxationRateSampler(parameterSampler)) {
+            if (isRelaxationRateSampler(parameterSampler) > 0) {
                 array = IntStream.range(idx, idx + varSize).toArray();
                 idx += varSize;
             } else {
@@ -406,15 +413,21 @@ public class DataGenerator {
         int idx = 0;
         for (Sampler parameterSampler : parameterSamplers) {
             double parameter = parameterSampler.sample().get(0);
-            if (isRelaxationRateSampler(parameterSampler)) {
-                List<Double> rates = RelaxationRateGenerator.generate(parameter, variables, 3.0);
+            int parameterSamplerType = isRelaxationRateSampler(parameterSampler);
+            if (parameterSamplerType == 0) {
+                par[idx++] = parameter;
+            }
+            else {
+                double rateScale = (parameterSamplerType == 1)
+                                 ? (config.get("R1_scale_factor").asDouble())
+                                 : (config.get("R2_scale_factor").asDouble());
+                List<Double> rates = RelaxationRateGenerator.generate(parameter, variables, rateScale);
                 for (double rate : rates) {
                     par[idx++] = rate;
                 }
-            } else {
-                par[idx++] = parameter;
             }
         }
+
         return par;
     }
 
@@ -472,6 +485,9 @@ public class DataGenerator {
     }
 
     private List<List<Double>> makeProfilesInterpolated(List<List<Double>> profiles, List<Double> xValues) {
+        if (xValues.equals(xValuesInterpolation)) {
+            return profiles;
+        }
         List<List<Double>> profilesInterpolated = new ArrayList<>();
         for (List<Double> profile : profiles) {
             profilesInterpolated.add(DataGenerator.getInterpolatedProfile(profile, xValues, xValuesInterpolation));
