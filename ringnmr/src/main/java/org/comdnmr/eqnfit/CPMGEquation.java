@@ -27,6 +27,19 @@
  */
 package org.comdnmr.eqnfit;
 
+import static java.lang.Math.abs;
+
+import java.io.InputStream;
+import java.io.IOException;
+
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.apache.commons.lang3.ArrayUtils;
 
 import org.apache.commons.math3.analysis.polynomials.PolynomialFunction;
@@ -47,9 +60,13 @@ import org.tensorflow.ndarray.NdArrays;
 import org.tensorflow.ndarray.Shape;
 import org.tensorflow.types.TFloat32;
 
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import static org.comdnmr.modelfree.RelaxEquations.GAMMA_MAP;
+
+import org.comdnmr.util.CoMDPreferences;
+import org.comdnmr.util.DataUtil;
+import org.comdnmr.util.Utilities;
+import static org.comdnmr.util.UnzipUtil.unzip;
+import static org.comdnmr.util.traindata.DataGenerator.getInterpolatedProfile;
 
 /**
  *
@@ -694,14 +711,21 @@ public enum CPMGEquation implements EquationType {
     final String equationName;
     final int nGroupPars;
     final String[] parNames;
-    // TODO: A better approach would be to store the interplation values with
-    // the model during training, and then to load the values in.
-    // That way, only one thing needs editing whenever I decide to change the
-    // values.
-    final List<Double> interpolationXs = Arrays.asList(
+
+    final String tmpDir = System.getProperty("java.io.tmpdir");
+    final InputStream networkZipResource = getClass().getResourceAsStream("/data/parameter-networks.zip");
+    final String networkZipFile = String.format("%s/parameter-networks.zip", tmpDir);
+    final String networkDirectory = tmpDir;
+
+    // Placeholders are for:
+    // 1. Heteronucleus ("13C", "15N")
+    // 2. Enum name (CPMGFAST, CPMGSLOW, CPMGMQ)
+    // 3. Number of separate profiles (1, 2, 3)
+    final String networkPathTemplate = tmpDir + "/parameter-networks/CPMGEquation-%s/%s/%d/";
+
+    final List<Double> networkInterpolationXs = Arrays.asList(
         8.0, 10.0, 15.0, 20.0, 25.0, 30.0, 40.0, 60.0, 80.0,
         100.0, 150.0, 200.0, 250.0, 300.0, 350.0, 400.0, 450.0);
-    final String guesserPathTemplate = "/data/ringguess/CPMGEquation-%s/%s/%s/model/export";
 
     CPMGEquation(String equationName, int nGroupPars, String... parNames) {
         this.equationName = equationName;
@@ -710,7 +734,7 @@ public enum CPMGEquation implements EquationType {
     }
 
     String getGuesserPath(String nucleus, int nProfiles) {
-        return String.format(guesserPathTemplate, nucleus, getName(), nProfiles);
+        return String.format(networkPathTemplate, nucleus, getName(), nProfiles);
     }
 
     public static String[] getEquationNames() {
@@ -767,15 +791,11 @@ public enum CPMGEquation implements EquationType {
     }
 
     public double[] guessNeuralNetwork(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
+        String tmpdir = System.getProperty("java.io.tmpdir");
         TFloat32 input = constructNeuralNetworkInput(xValues, yValues);
-
-        String networkPath = String.format(
-            guesserPathTemplate,
-            determineNucleus(xValues),  // Nucleus (13C or 15N)
-            getName(),                  // Enum name (CPMGFAST, CPMGSLOW, CPMGMQ)
-            getNProfiles(idNums));      // Number of profiles (1, 2, 3)
-
-        double[] guess = runNeuralNetwork(input, networkPath);
+        String networkPath = getNetworkPath(xValues, idNums);
+        SavedModelBundle network = fetchNetwork(networkPath);
+        double[] guess = runNeuralNetwork(input, network);
         System.out.println(
             String.format(
                 "guess:\n%s",
@@ -785,38 +805,76 @@ public enum CPMGEquation implements EquationType {
         return guess;
     }
 
+    private String getNetworkPath(double[][] xValues, int[] idNums) {
+        int nProfiles = getNProfiles(idNums);
+        String nucleus = determineNucleus(xValues[2][0], xValues[1][0], 0.001);
+        return String.format(networkPathTemplate, nucleus, getName(), nProfiles);
+    }
+
+    private SavedModelBundle fetchNetwork(String networkPath) {
+        copy(networkZipResource, networkZipFile);
+        unzip(networkZipFile, networkDirectory);
+        SavedModelBundle network = SavedModelBundle.load(networkPath, "serve");
+        return network;
+    }
+
+    private static boolean copy(InputStream source , String destination) {
+        boolean succeess = true;
+
+        try {
+            Files.copy(source, Paths.get(destination), StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException ex) {
+            succeess = false;
+        }
+
+        return succeess;
+    }
+
     Map<Double, Map<String, List<Double>>> separateDatasets(double[][] xValues, double[] yValues) {
         Map<Double, Map<String, List<Double>>> map = new TreeMap<>();
+
+        List<Double> xs;
+        List<Double> ys;
+        Map<String, List<Double>> xyMap;
+
+        double x;
+        double y;
+        double fieldH;
+
         for (int i = 0; i < xValues[0].length; i++) {
-            Double x = xValues[0][i];
-            Double y = yValues[i];
-            Double fieldH = xValues[2][i];
+            x = xValues[0][i];
+            y = yValues[i];
+            fieldH = xValues[2][i];
 
             if (map.containsKey(fieldH)) {
                 // Add to list at sorted position.
                 // Could use binary search to be more efficient O(log n) vs O(n),
                 // but the sizes of the datasets means a noticable performance gain
                 // probably wouldn't be realised.
-                Map<String, List<Double>> xyMap = map.get(fieldH);
-                List<Double> xs = xyMap.get("x");
-                List<Double> ys = xyMap.get("y");
+                xyMap = map.get(fieldH);
+                xs = xyMap.get("x");
+                ys = xyMap.get("y");
+
                 int idx = 0;
                 while (idx < xs.size() && x > xs.get(idx)) {
                     idx++;
                 }
-                if (idx == xs.size()) {
-                    xs.add(x);
-                    ys.add(y);
-                } else {
-                    xs.add(idx, x);
-                    ys.add(idx, y);
-                }
-            } else {
-                Map<String, List<Double>> xyMap = new HashMap<>();
-                List<Double> xs = Arrays.asList(x);
-                List<Double> ys = Arrays.asList(y);
+
+                xs.add(idx, x);
+                ys.add(idx, y);
+            }
+
+            else {
+                xyMap = new HashMap<>();
+
+                xs = new ArrayList<>();
+                xs.add(x);
                 xyMap.put("x", xs);
+
+                ys = new ArrayList<>();
+                ys.add(y);
                 xyMap.put("y", ys);
+
                 map.put(fieldH, xyMap);
             }
         }
@@ -826,49 +884,61 @@ public enum CPMGEquation implements EquationType {
     // TODO: This should be generic across CPMG/CEST/R1rho
     Map<Double, List<Double>> interpolateDatasets(Map<Double, Map<String, List<Double>>> datasets) {
         Map<Double, List<Double>> result = new TreeMap<>();
-        for (Map.Entry<Double, Map<String, List<Double>>> entry : datasets.entrySet()) {
-            double variable = entry.getKey();
-            List<Double> xs = entry.getValue().get("x");
-            List<Double> ys = entry.getValue().get("y");
+
+        double variable;
+        Map<String, List<Double>> xyMap;
+        List<Double> xs;
+        List<Double> ys;
+        List<Double> ysInterpolated;
+
+        for (Map.Entry<Double, Map<String, List<Double>>> dataset : datasets.entrySet()) {
+            variable = dataset.getKey();
+            xyMap = dataset.getValue();
+            xs = xyMap.get("x");
+            ys = xyMap.get("y");
 
             // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             // TODO: Hack to get this to work for datasets with nuCPMGs that do
-            // not extend out to spline interpolation requires the
-            // interpolating x-values to be within the true x-values
+            // not extend out to spline interpolation limits
             int xIdx = xs.size() - 1;
-            int xInterpIdx = interpolationXs.size() - 1;
-            if (xs.get(xIdx) < interpolationXs.get(xInterpIdx)) {
-                xs.add(interpolationXs.get(xInterpIdx));
+            int xInterpIdx = networkInterpolationXs.size() - 1;
+            if (xs.get(xIdx) < networkInterpolationXs.get(xInterpIdx)) {
+                xs.add(networkInterpolationXs.get(xInterpIdx));
                 ys.add(ys.get(xIdx));
             }
             // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-            List<Double> yValuesInterpolated = DataGenerator.getInterpolatedProfile(ys, xs, interpolationXs);
-            result.put(variable, yValuesInterpolated);
+            ysInterpolated = getInterpolatedProfile(ys, xs, networkInterpolationXs);
+            result.put(variable, ysInterpolated);
         }
+
         return result;
     }
 
     TFloat32 constructNeuralNetworkInput(double[][] xValues, double[] yValues) {
         Map<Double, Map<String, List<Double>>> datasets = separateDatasets(xValues, yValues);
         Map<Double, List<Double>> interpolatedDatasets = interpolateDatasets(datasets);
+
         // Assuming tau is identical across samples
         double tau = xValues[3][0];
 
         int nProfiles = interpolatedDatasets.size();
-        int nValuesPerProfile = interpolatedDatasets.entrySet().iterator().next().getValue().size();
+        int nValuesPerProfile = networkInterpolationXs.size();
         int inputSize = nProfiles * (nValuesPerProfile + 1) + 1;
 
         float[] inputArray = new float[inputSize];
         int idx = 0;
 
-        for (Map.Entry<Double, List<Double>> entry : interpolatedDatasets.entrySet()) {
-            // The Map used is a TreeMap, so the iteration run with the keys in
-            // order
-            double field = entry.getKey();
-            List<Double> profile = entry.getValue();
+        double field;
+        double value;
+        List<Double> profile;
+        for (Map.Entry<Double, List<Double>> dataset : interpolatedDatasets.entrySet()) {
+            // The Map used is a TreeMap, so the iteration will run with the fields in
+            // order, as desired
+            field = dataset.getKey();
+            profile = dataset.getValue();
             for (int i = 0; i < nValuesPerProfile; i++) {
-                double value = profile.get(i);
+                value = profile.get(i);
                 inputArray[idx++] = (float) value;
             }
             inputArray[idx++] = (float) field;
@@ -880,41 +950,44 @@ public enum CPMGEquation implements EquationType {
         return TFloat32.tensorOf(inputNdArray);
     }
 
-    private double[] runNeuralNetwork(TFloat32 input, String networkPath) {
-        SavedModelBundle network = SavedModelBundle.load(networkPath, "serve");
+    double[] runNeuralNetwork(TFloat32 input, SavedModelBundle network) {
         TFloat32 outputTensor = (TFloat32) network.function("serving_default").call(input);
-
-        int size = (int) outputTensor.size();
-        double [] output = new double[size];
-        for (int i = 0; i < size; i++) {
-            output[i] = outputTensor.getFloat(0, i);
-        }
-
+        double[] output = floatTensorToDoubleArray(outputTensor);
         return output;
     }
 
-    private String determineNucleus(double[][] xValues)
-    throws IllegalArgumentException {
-        // Ratio of 1H field and heteronucleus field
-        float gammaProton = GAMMA_MAP.get("H").floatValue();
-        float targetGammaRatio = (float) (xValues[1][0] / xValues[2][0]);
-        float epsilon = 0.001f;
+    private double[] floatTensorToDoubleArray(TFloat32 tensor) {
+        int size = (int) tensor.size();
+        double[] array = new double[size];
+        for (int i = 0; i < tensor.size(); i++) {
+            array[i] = tensor.getFloat(0, i);
+        }
+        return array;
+    }
 
-        for (Map.Entry<String, Double> entry : GAMMA_MAP.entrySet()) {
-            float gammaRatio = entry.getValue().floatValue() / gammaProton;
-            if (Math.abs(gammaRatio - targetGammaRatio) < epsilon) {
-                // TODO: This is a bit hacky. Should unify nucleus descriptor
-                // i.e. 1H, 2H, 13C, 15N
-                // or H, D, C, N
-                String element = entry.getKey();
+    private String determineNucleus(double fieldH, double fieldX, double epsilon) {
+        double targetGyroRatio = fieldX / fieldH;
+        double gyroH = GAMMA_MAP.get("H");
+
+        String element;
+        double gyroX;
+        double gyroRatio;
+        for (Map.Entry<String, Double> info : GAMMA_MAP.entrySet()) {
+            element = info.getKey();
+            gyroX = info.getValue();
+            gyroRatio = abs(gyroX / gyroH);
+            if (abs(gyroRatio - targetGyroRatio) < epsilon) {
                 if (element == "C") {
                     return "13C";
-                } else if (element == "N") {
+                }
+                else if (element == "N") {
                     return "15N";
                 }
             }
         }
-        throw new IllegalArgumentException("Neural network guesser does not support the provided heteronucleus.");
+
+        throw new IllegalArgumentException(
+            "Could not determine heteronucleus for neural network guesser.");
     }
 }
 
