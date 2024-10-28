@@ -1,8 +1,3 @@
-//ringnmr/src/main/java/org/comdnmr/eqnfit/CPMGEquation.java
-//Simon Hulse
-//simonhulse@protonmail.com
-//Last Edited: Fri 18 Oct 2024 11:46:32 AM EDT
-
 /*
  * CoMD/NMR Software : A Program for Analyzing NMR Dynamics Data
  * Copyright (C) 2018-2019 Bruce A Johnson
@@ -20,11 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package org.comdnmr.eqnfit;
 
 import static java.lang.Math.abs;
@@ -712,16 +703,11 @@ public enum CPMGEquation implements EquationType {
     final int nGroupPars;
     final String[] parNames;
 
-    final String tmpDir = System.getProperty("java.io.tmpdir");
-    final InputStream networkZipResource = getClass().getResourceAsStream("/data/parameter-networks.zip");
-    final String networkZipFile = String.format("%s/parameter-networks.zip", tmpDir);
-    final String networkDirectory = tmpDir;
-
     // Placeholders are for:
     // 1. Heteronucleus ("13C", "15N")
     // 2. Enum name (CPMGFAST, CPMGSLOW, CPMGMQ)
     // 3. Number of separate profiles (1, 2, 3)
-    final String networkPathTemplate = tmpDir + "/parameter-networks/CPMGEquation-%s/%s/%d/";
+    final String networkPathTemplate = "CPMGEquation-%s/%s/%d/";
 
     final List<Double> networkInterpolationXs = Arrays.asList(
         8.0, 10.0, 15.0, 20.0, 25.0, 30.0, 40.0, 60.0, 80.0,
@@ -778,7 +764,12 @@ public enum CPMGEquation implements EquationType {
             Boolean.TRUE.equals(CoMDPreferences.getNeuralNetworkGuess())
             && (getName() != "NOEX")
         ) {
-            guess = guessNeuralNetwork(xValues, yValues, map, idNums, nID);
+            try {
+                guess = guessNeuralNetwork(xValues, yValues, map, idNums, nID);
+            } catch (IOException exe) {
+                // Fallback to guessing uing rubric
+                guess = guessRubric(xValues, yValues, map, idNums, nID);
+            };
         } else {
             guess = guessRubric(xValues, yValues, map, idNums, nID);
         }
@@ -790,18 +781,12 @@ public enum CPMGEquation implements EquationType {
         return new double[0];
     }
 
-    public double[] guessNeuralNetwork(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
-        String tmpdir = System.getProperty("java.io.tmpdir");
+    public double[] guessNeuralNetwork(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) throws IOException {
         TFloat32 input = constructNeuralNetworkInput(xValues, yValues);
         String networkPath = getNetworkPath(xValues, idNums);
-        SavedModelBundle network = fetchNetwork(networkPath);
+        NetworkLoader networkLoader = NetworkLoader.getNetworkLoader();
+        SavedModelBundle network = networkLoader.fetchNetwork(networkPath);
         double[] guess = runNeuralNetwork(input, network);
-        System.out.println(
-            String.format(
-                "guess:\n%s",
-                Arrays.toString(guess)
-            )
-        );
         return guess;
     }
 
@@ -809,25 +794,6 @@ public enum CPMGEquation implements EquationType {
         int nProfiles = getNProfiles(idNums);
         String nucleus = determineNucleus(xValues[2][0], xValues[1][0], 0.001);
         return String.format(networkPathTemplate, nucleus, getName(), nProfiles);
-    }
-
-    private SavedModelBundle fetchNetwork(String networkPath) {
-        copy(networkZipResource, networkZipFile);
-        unzip(networkZipFile, networkDirectory);
-        SavedModelBundle network = SavedModelBundle.load(networkPath, "serve");
-        return network;
-    }
-
-    private static boolean copy(InputStream source , String destination) {
-        boolean succeess = true;
-
-        try {
-            Files.copy(source, Paths.get(destination), StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException ex) {
-            succeess = false;
-        }
-
-        return succeess;
     }
 
     Map<Double, Map<String, List<Double>>> separateDatasets(double[][] xValues, double[] yValues) {
