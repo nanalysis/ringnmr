@@ -30,6 +30,8 @@ import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -704,10 +706,14 @@ public enum CPMGEquation implements EquationType {
     final String[] parNames;
 
     // Placeholders are for:
-    // 1. Heteronucleus ("13C", "15N")
-    // 2. Enum name (CPMGFAST, CPMGSLOW, CPMGMQ)
-    // 3. Number of separate profiles (1, 2, 3)
-    final String networkPathTemplate = "CPMGEquation-%s/%s/%d/";
+    // 1. Enum name (CPMGFAST, CPMGSLOW, CPMGMQ)
+    // 2. Number of separate profiles (1, 2, 3)
+    final String networkPathTemplate = "CPMGEquation/%s/%d/";
+
+    // TODO: this is hard-coded currently.
+    // Is it possible to determine this at run-time, by inspecting the
+    // SavedModelBundle?
+    final int networkMaxInput = 16;
 
     final List<Double> networkInterpolationXs = Arrays.asList(
         8.0, 10.0, 15.0, 20.0, 25.0, 30.0, 40.0, 60.0, 80.0,
@@ -717,10 +723,6 @@ public enum CPMGEquation implements EquationType {
         this.equationName = equationName;
         this.parNames = parNames;
         this.nGroupPars = nGroupPars;
-    }
-
-    String getGuesserPath(String nucleus, int nProfiles) {
-        return String.format(networkPathTemplate, nucleus, getName(), nProfiles);
     }
 
     public static String[] getEquationNames() {
@@ -782,72 +784,64 @@ public enum CPMGEquation implements EquationType {
     }
 
     public double[] guessNeuralNetwork(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) throws IOException {
-        TFloat32 input = constructNeuralNetworkInput(xValues, yValues);
-        String networkPath = getNetworkPath(xValues, idNums);
+        String networkPath = getNetworkPath(idNums);
         NetworkLoader networkLoader = NetworkLoader.getNetworkLoader();
         SavedModelBundle network = networkLoader.fetchNetwork(networkPath);
+        TFloat32 input = constructNeuralNetworkInputExplicitXY(xValues, yValues);
         double[] guess = runNeuralNetwork(input, network);
         return guess;
     }
 
-    private String getNetworkPath(double[][] xValues, int[] idNums) {
+    private String getNetworkPath(int[] idNums) {
         int nProfiles = getNProfiles(idNums);
-        String nucleus = determineNucleus(xValues[2][0], xValues[1][0], 0.001);
-        return String.format(networkPathTemplate, nucleus, getName(), nProfiles);
+        return String.format(networkPathTemplate, getName(), nProfiles);
     }
 
-    Map<Double, Map<String, List<Double>>> separateDatasets(double[][] xValues, double[] yValues) {
-        Map<Double, Map<String, List<Double>>> map = new TreeMap<>();
+    List<ProfileInfo> separateDatasets(double[][] xValues, double[] yValues) {
+        Map<Double, ProfileInfo> map = new HashMap<>();
 
-        List<Double> xs;
-        List<Double> ys;
-        Map<String, List<Double>> xyMap;
-
-        double x;
-        double y;
+        ProfileInfo pInfo;
         double fieldH;
+        double fieldX;
+        double nuCPMG;
+        double R2;
 
         for (int i = 0; i < xValues[0].length; i++) {
-            x = xValues[0][i];
-            y = yValues[i];
             fieldH = xValues[2][i];
+            fieldX = xValues[1][i];
+            nuCPMG = xValues[0][i];
+            R2 = yValues[i];
 
             if (map.containsKey(fieldH)) {
-                // Add to list at sorted position.
-                // Could use binary search to be more efficient O(log n) vs O(n),
-                // but the sizes of the datasets means a noticable performance gain
-                // probably wouldn't be realised.
-                xyMap = map.get(fieldH);
-                xs = xyMap.get("x");
-                ys = xyMap.get("y");
-
-                int idx = 0;
-                while (idx < xs.size() && x > xs.get(idx)) {
-                    idx++;
-                }
-
-                xs.add(idx, x);
-                ys.add(idx, y);
+                pInfo = map.get(fieldH);
+                pInfo.addSample(nuCPMG, R2);
             }
 
             else {
-                xyMap = new HashMap<>();
-
-                xs = new ArrayList<>();
-                xs.add(x);
-                xyMap.put("x", xs);
-
-                ys = new ArrayList<>();
-                ys.add(y);
-                xyMap.put("y", ys);
-
-                map.put(fieldH, xyMap);
+                pInfo = new ProfileInfo(fieldH, fieldX);
+                map.put(fieldH, pInfo);
             }
         }
-        return map;
+
+        List<ProfileInfo> datasets = StreamSupport.stream(
+            map.values().spliterator(), false).collect(Collectors.toList());
+        Collections.sort(datasets);
+
+        // TODO: implement me!
+        datasets = filterDatasets(datasets);
+
+        return datasets;
+    }
+
+    // TODO: Should remopve any samples with nuCPMGs that are not present
+    // across all profiles, as the NNs are trained on sythetic data where
+    // nuCPMGs are consistent.
+    List<ProfileInfo> filterDatasets(List<ProfileInfo> datasets) {
+        return datasets;
     }
 
     // TODO: This should be generic across CPMG/CEST/R1rho
+    // TODO: Update
     Map<Double, List<Double>> interpolateDatasets(Map<Double, Map<String, List<Double>>> datasets) {
         Map<Double, List<Double>> result = new TreeMap<>();
 
@@ -881,40 +875,83 @@ public enum CPMGEquation implements EquationType {
         return result;
     }
 
-    TFloat32 constructNeuralNetworkInput(double[][] xValues, double[] yValues) {
-        Map<Double, Map<String, List<Double>>> datasets = separateDatasets(xValues, yValues);
-        Map<Double, List<Double>> interpolatedDatasets = interpolateDatasets(datasets);
+    TFloat32 constructNeuralNetworkInputExplicitXY(double[][] xValues, double[] yValues) {
+        List<ProfileInfo> datasets = separateDatasets(xValues, yValues);
 
         // Assuming tau is identical across samples
-        double tau = xValues[3][0];
+        float tau = (float) xValues[3][0];
+        float[] inputArray = buildInputArray(datasets, tau);
+        System.out.println(
+            String.format(
+                "inputArray:\n%s",
+                Arrays.toString(inputArray)
+            )
+        );
 
-        int nProfiles = interpolatedDatasets.size();
-        int nValuesPerProfile = networkInterpolationXs.size();
-        int inputSize = nProfiles * (nValuesPerProfile + 1) + 1;
-
-        float[] inputArray = new float[inputSize];
-        int idx = 0;
-
-        double field;
-        double value;
-        List<Double> profile;
-        for (Map.Entry<Double, List<Double>> dataset : interpolatedDatasets.entrySet()) {
-            // The Map used is a TreeMap, so the iteration will run with the fields in
-            // order, as desired
-            field = dataset.getKey();
-            profile = dataset.getValue();
-            for (int i = 0; i < nValuesPerProfile; i++) {
-                value = profile.get(i);
-                inputArray[idx++] = (float) value;
-            }
-            inputArray[idx++] = (float) field;
-        }
-        inputArray[idx] = (float) tau;
-
-        FloatNdArray inputNdArray = NdArrays.ofFloats(Shape.of(1, inputSize));
+        FloatNdArray inputNdArray = NdArrays.ofFloats(Shape.of(1, inputArray.length));
         inputNdArray.set(TFloat32.vectorOf(inputArray), 0);
         return TFloat32.tensorOf(inputNdArray);
     }
+
+    float[] buildInputArray(List<ProfileInfo> datasets, float tau) {
+        int nProfiles = datasets.size();
+        int inputSize = nProfiles * (2 * networkMaxInput + 2) + 1;
+
+        float[] inputArray = new float[inputSize];
+        int idx = 0;
+        for (ProfileInfo pInfo : datasets) {
+            for (int i = 0; i < networkMaxInput; i++) {
+                inputArray[idx++] = (float) pInfo.getNuCPMG(i);
+            }
+            for (int i = 0; i < networkMaxInput; i++) {
+                inputArray[idx++] = (float) pInfo.getR2(i);
+            }
+            inputArray[idx++] = (float) pInfo.getFieldH();
+            inputArray[idx++] = (float) pInfo.getFieldX();
+        }
+        inputArray[idx] = tau;
+
+        return inputArray;
+    }
+
+    // TODO: update
+    //
+    // TFloat32 constructNeuralNetworkInputInterpolate(double[][] xValues, double[] yValues) {
+    //     Map<Double, Map<String, List<Double>>> datasets = separateDatasets(xValues, yValues);
+    //     Map<Double, List<Double>> interpolatedDatasets = interpolateDatasets(datasets);
+
+    //     // Assuming tau is identical across samples
+    //     double tau = xValues[3][0];
+
+    //     int nProfiles = interpolatedDatasets.size();
+    //     int nValuesPerProfile = networkInterpolationXs.size();
+    //     int inputSize = nProfiles * (nValuesPerProfile + 1) + 1;
+
+    //         field = pInfo.getKey();
+    //         profile = dataset.getValue();
+    //     float[] inputArray = new float[inputSize];
+    //     int idx = 0;
+
+    //     double field;
+    //     double value;
+    //     List<Double> profile;
+    //     for (Map.Entry<Double, List<Double>> dataset : interpolatedDatasets.entrySet()) {
+    //         // The Map used is a TreeMap, so the iteration will run with the fields in
+    //         // order, as desired
+    //         field = dataset.getKey();
+    //         profile = dataset.getValue();
+    //         for (int i = 0; i < nValuesPerProfile; i++) {
+    //             value = profile.get(i);
+    //             inputArray[idx++] = (float) value;
+    //         }
+    //         inputArray[idx++] = (float) field;
+    //     }
+    //     inputArray[idx] = (float) tau;
+
+    //     FloatNdArray inputNdArray = NdArrays.ofFloats(Shape.of(1, inputSize));
+    //     inputNdArray.set(TFloat32.vectorOf(inputArray), 0);
+    //     return TFloat32.tensorOf(inputNdArray);
+    // }
 
     double[] runNeuralNetwork(TFloat32 input, SavedModelBundle network) {
         TFloat32 outputTensor = (TFloat32) network.function("serving_default").call(input);
@@ -931,6 +968,10 @@ public enum CPMGEquation implements EquationType {
         return array;
     }
 
+    // TODO: might as well remove this method?
+    // I wrote this when each NN was for a specific nucleus.
+    // Now individual NNs can cope with both 13C and 15N, so this is not
+    // actually used anywhere in RING
     private String determineNucleus(double fieldH, double fieldX, double epsilon) {
         double targetGyroRatio = fieldX / fieldH;
         double gyroH = GAMMA_MAP.get("H");
@@ -954,6 +995,63 @@ public enum CPMGEquation implements EquationType {
 
         throw new IllegalArgumentException(
             "Could not determine heteronucleus for neural network guesser.");
+    }
+}
+
+class ProfileInfo implements Comparable<ProfileInfo> {
+    double fieldH;
+    double fieldX;
+    List<Double> nuCPMGs;
+    List<Double> profile;
+
+    ProfileInfo(double fieldH, double fieldX) {
+        this.fieldH = fieldH;
+        this.fieldX = fieldX;
+        nuCPMGs = new ArrayList<>();
+        profile = new ArrayList<>();
+    }
+
+    public void addSample(double nuCPMG, double R2) {
+        int idx = 0;
+        while (idx < nuCPMGs.size() - 1 && nuCPMG > nuCPMGs.get(idx)) {
+            idx++;
+        }
+        nuCPMGs.add(idx, nuCPMG);
+        profile.add(idx, R2);
+    }
+
+    public double getFieldH() {
+        return fieldH;
+    }
+
+    public double getFieldX() {
+        return fieldX;
+    }
+
+    public double getNuCPMG(int idx) {
+        if (idx < size()) return nuCPMGs.get(idx);
+        else return 0.0;
+    }
+
+    public double getR2(int idx) {
+        if (idx < size()) return profile.get(idx);
+        else return 0.0;
+    }
+
+    public int size() {
+        return nuCPMGs.size();
+    }
+
+    @Override
+    public int compareTo(ProfileInfo other) {
+        return Double.compare(getFieldH(), other.getFieldH());
+    }
+
+    @Override
+    public String toString() {
+        return String.format(
+            "ProfileInfo:\n\tfieldH: %s\n\tfieldX: %s\n\tnuCPMGS: %s\n\tprofile: %s\n",
+            getFieldH(), getFieldX(), nuCPMGs, profile);
     }
 }
 
