@@ -1,7 +1,7 @@
-//ringnmr/src/main/java/org/comdnmr/util/traindata/DataGenerator.java
-//Simon Hulse
-//simonhulse@protonmail.com
-//Last Edited: Tue 15 Oct 2024 01:32:22 PM EDT
+/**
+ *
+ *  @author simonhulse
+ */
 
 package org.comdnmr.util.traindata;
 
@@ -137,7 +137,7 @@ public class DataGenerator {
         }
     }
 
-    public HashMap<String, Object> generateDataset() {
+    public Map<String, Object> generateDataset() {
         if (currentExperimentName == null) {
             return null;
         }
@@ -163,6 +163,7 @@ public class DataGenerator {
         List<Sampler> parameterSamplers = getParameterSamplers(experimentInfo);
         // x-values used to interpolate the data
         xValuesInterpolation = getXValuesInterpolation(experimentInfo);
+        // <<<
 
         setVarSize(variableSampler);
         setParSize(parameterSamplers);
@@ -170,11 +171,17 @@ public class DataGenerator {
         setXSize(constantSamplers);
 
         // >>> CONSTRUCT LISTS TO STORE DATASETS >>>
-        DataList<List<Double>> variableList = new DataList<>(variableSampler.name);
+        DataList<List<Double>> xValueList = new DataList<>(xValuesSampler.name);
+
         DataList<List<List<Double>>> profileList = new DataList<>("profile");
+        DataList<List<List<Double>>> profileNoisyList = new DataList<>("profile_noisy");
         DataList<List<List<Double>>> profileInterpolatedList = new DataList<>("profile_interpolation");
-        List<DataList<Double>> parameterLists = initializeLists(parameterSamplers);
-        List<DataList<Double>> constantLists = initializeLists(constantSamplers);
+
+        List<DataList<Double>> parameterLists = initializeListsFromSamplers(parameterSamplers);
+        DataList<List<Double>> variableList = new DataList<>(variableSampler.name);
+        List<DataList<List<Double>>> dependantLists = initializeListsFromGenerators(dependantGenerators);
+        List<DataList<Double>> constantLists = initializeListsFromSamplers(constantSamplers);
+        // <<<
 
         EquationType cls = fetchEquationClass();
 
@@ -189,23 +196,37 @@ public class DataGenerator {
             double[] par = makePar(parameterSamplers, variables);
             double[][][] x = makeX(xValues, variables, constants, dependants);
             List<List<Double>> profiles = makeProfiles(cls, par, map, x);
-            List<List<Double>> profilesInterpolated = makeProfilesInterpolated(profiles, xValues);
 
             for (int p = 0; p < nNoiseDuplicates; p++) {
-                List<List<Double>> noise = makeNoise(experimentInfo);
-                List<List<Double>> profilesInterpolatedNoisy = sumTwoDLists(profilesInterpolated, noise);
-                appendToListOfDataLists(parameterLists, par);
-                variableList.add(variables);
-                appendToListOfDataLists(constantLists, constants);
+                List<List<Double>> noise = makeNoise(experimentInfo, profiles);
+                List<List<Double>> profilesNoisy = sumTwoDLists(profiles, noise);
+                List<List<Double>> profilesInterpolated = makeProfilesInterpolated(profilesNoisy, xValues);
+
                 profileList.add(profiles);
-                profileInterpolatedList.add(profilesInterpolatedNoisy);
+                profileNoisyList.add(profilesNoisy);
+                profileInterpolatedList.add(profilesInterpolated);
+
+                xValueList.add(xValues);
+                variableList.add(variables);
+
+                appendToListOfDataLists(dependantLists, dependants);
+                appendToListOfDataLists(parameterLists, par);
+                appendToListOfDataLists(constantLists, constants);
                 printMilestoneMessage(n, p);
             }
         }
 
         printCompleteMessage();
 
-        return bundleData(parameterLists, constantLists, variableList, profileList, profileInterpolatedList);
+        return bundleData(
+            parameterLists,
+            constantLists,
+            variableList,
+            dependantLists,
+            xValueList,
+            profileList,
+            profileNoisyList,
+            profileInterpolatedList);
     }
 
     void printMilestoneMessage(int n, int p) {
@@ -267,7 +288,7 @@ public class DataGenerator {
         switch (generatorType) {
             case "Multiply":
                 Sampler sampler = fetchSampler(dependantInfo);
-                generator = new Multiplier(sampler);
+                generator = new Multiplier(name, sampler);
                 break;
 
             default: throw new RuntimeException("Unknown dependant specification");
@@ -344,10 +365,10 @@ public class DataGenerator {
         return fetchSampler(experimentInfo.get("x_values_interpolation")).sample();
     }
 
-    private List<DataList<Double>> initializeLists(List<Sampler> samplers) {
+    private List<DataList<Double>> initializeListsFromSamplers(List<Sampler> samplers) {
        List<DataList<Double>> lists = new ArrayList<>();
         for (Sampler sampler : samplers) {
-            String name = sampler.name;
+            String name = sampler.getName();
             if (isRelaxationRateSampler(sampler) > 0) {
                 String nameTemplate = "%s<%d>";
                 for (int i = 1; i <= varSize; i++) {
@@ -356,6 +377,15 @@ public class DataGenerator {
             } else {
                 lists.add(new DataList<Double>(name));
             }
+        }
+        return lists;
+    }
+
+    private List<DataList<List<Double>>> initializeListsFromGenerators(List<DependantGenerator> generators) {
+       List<DataList<List<Double>>> lists = new ArrayList<>();
+        for (DependantGenerator generator : generators) {
+            String name = generator.getName();
+            lists.add(new DataList<List<Double>>(name));
         }
         return lists;
     }
@@ -373,9 +403,10 @@ public class DataGenerator {
             return null;
         }
         List<List<Double>> dependants = new ArrayList<>();
-        for (double variable : variables) {
+        for (DependantGenerator dependantGenerator : dependantGenerators) {
+            dependantGenerator.updateState();
             List<Double> dependantList = new ArrayList<>();
-            for (DependantGenerator dependantGenerator : dependantGenerators) {
+            for (double variable : variables) {
                 dependantList.add(dependantGenerator.fetch(variable));
             }
             dependants.add(dependantList);
@@ -446,8 +477,9 @@ public class DataGenerator {
                 int idx = 0;
                 x[varIdx][xValIdx][idx++] = xValues.get(xValIdx);
                 if (dependants != null) {
-                    for (double dependant : dependants.get(varIdx)) {
-                        x[varIdx][xValIdx][idx++] = dependant;
+                    for (List<Double> dependantList : dependants) {
+                        double dep = dependantList.get(varIdx);
+                        x[varIdx][xValIdx][idx++] = dep;
                     }
                 }
                 x[varIdx][xValIdx][idx++] = variable;
@@ -466,8 +498,8 @@ public class DataGenerator {
         }
     }
 
-    private void appendToListOfDataLists(List<DataList<Double>> lists, List<Double> data) {
-        for (int i = 0; i < data.size(); i++) {
+    private <T> void appendToListOfDataLists(List<DataList<T>> lists, List<T> data) {
+        for (int i = 0; i < lists.size(); i++) {
             lists.get(i).add(data.get(i));
         }
     }
@@ -495,29 +527,40 @@ public class DataGenerator {
         return profilesInterpolated;
     }
 
-    private HashMap<String, Object> bundleData(
+    private Map<String, Object> bundleData(
         List<DataList<Double>> parameterLists,
         List<DataList<Double>> constantLists,
         DataList<List<Double>> variableList,
+        List<DataList<List<Double>>> dependantLists,
+        DataList<List<Double>> xValueList,
         DataList<List<List<Double>>> profileList,
+        DataList<List<List<Double>>> profileNoisyList,
         DataList<List<List<Double>>> profileInterpolationList
     ) {
-        HashMap<String, Object> data = new HashMap<>();
+        Map<String, Object> data = new HashMap<>();
 
-        List<HashMap<String, Object>> parameterMapList = new ArrayList<>();
+        List<Map<String, Object>> parameterMapList = new ArrayList<>();
         for (DataList<Double> parameterList : parameterLists) {
             parameterMapList.add(parameterList.asHashMap());
         }
 
-        List<HashMap<String, Object>> constantMapList = new ArrayList<>();
+        List<Map<String, Object>> constantMapList = new ArrayList<>();
         for (DataList<Double> constantList : constantLists) {
             constantMapList.add(constantList.asHashMap());
         }
 
+        List<Map<String, Object>> dependantMapList = new ArrayList<>();
+        for (DataList<List<Double>> dependantList : dependantLists) {
+            dependantMapList.add(dependantList.asHashMap());
+        }
+
         data.put("parameters", parameterMapList);
         data.put("constants", constantMapList);
+        data.put("dependants", dependantMapList);
         data.put("variable", variableList.asHashMap());
+        data.put("x_values", xValueList.asHashMap());
         data.put("profile", profileList.asHashMap());
+        data.put("profile_noisy", profileNoisyList.asHashMap());
         data.put("profile_interpolation", profileInterpolationList.asHashMap());
 
         return data;
@@ -625,20 +668,21 @@ public class DataGenerator {
         return cls;
     }
 
-    private List<List<Double>> makeNoise(JsonNode experimentInfo) {
+    private List<List<Double>> makeNoise(JsonNode experimentInfo, List<List<Double>> profiles) {
         double maxVariance = experimentInfo.get("variance_max").asDouble();
+        int nValues = profiles.get(0).size();
         RandomDoubleSampler varianceSampler = new RandomDoubleSampler(0.0, maxVariance, 1, 1);
         List<List<Double>> noises = new ArrayList<>();
         for (int i = 0; i < varSize; i++) {
-            noises.add(sampleAWGN(varianceSampler.sampleUnwrapped()));
+            noises.add(sampleAWGN(varianceSampler.sampleUnwrapped(), nValues));
         }
         return noises;
     }
 
-    private List<Double> sampleAWGN(double variance) {
+    private List<Double> sampleAWGN(double variance, int nValues) {
         NormalDistribution sampler = new NormalDistribution(0.0, Math.sqrt(variance));
         List<Double> noise = new ArrayList<>();
-        for (int i = 0; i < interpolationSize(); i++) {
+        for (int i = 0; i < nValues; i++) {
             noise.add(sampler.sample());
         }
         return noise;
@@ -700,3 +744,4 @@ class RelaxationRateGenerator {
         return rates;
     }
 }
+

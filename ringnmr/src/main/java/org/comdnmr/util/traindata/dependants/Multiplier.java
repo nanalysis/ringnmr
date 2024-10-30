@@ -4,14 +4,19 @@ import org.comdnmr.util.traindata.samplers.Sampler;
 
 public class Multiplier extends DependantGenerator {
     Sampler sampler;
+    double factor;
 
-    public Multiplier(Sampler sampler) {
+    public Multiplier(String name, Sampler sampler) {
+        this.name = name;
         this.sampler = sampler;
+        this.factor = 0.0;
     }
 
-    @Override
+    public void updateState() {
+        factor = sampler.sample().get(0);
+    }
+
     public double fetch(double value) {
-        double mul = sampler.sample().get(0);
-        return value * mul;
+        return value * factor;
     }
 }

@@ -1,7 +1,11 @@
 package org.comdnmr.util.traindata.dependants;
 
-public class DependantGenerator {
-    public double fetch(double value) {
-        return value;
-    }
+public abstract class DependantGenerator {
+    String name;
+
+    final public String getName() { return name; }
+
+    abstract public void updateState();
+
+    abstract public double fetch(double value);
 }
