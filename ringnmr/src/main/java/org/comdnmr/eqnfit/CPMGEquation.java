@@ -797,121 +797,23 @@ public enum CPMGEquation implements EquationType {
         return String.format(networkPathTemplate, getName(), nProfiles);
     }
 
-    List<ProfileInfo> separateDatasets(double[][] xValues, double[] yValues) {
-        Map<Double, ProfileInfo> map = new HashMap<>();
-
-        ProfileInfo pInfo;
-        double fieldH;
-        double fieldX;
-        double nuCPMG;
-        double R2;
-
-        for (int i = 0; i < xValues[0].length; i++) {
-            fieldH = xValues[2][i];
-            fieldX = xValues[1][i];
-            nuCPMG = xValues[0][i];
-            R2 = yValues[i];
-
-            if (map.containsKey(fieldH)) {
-                pInfo = map.get(fieldH);
-                pInfo.addSample(nuCPMG, R2);
-            }
-
-            else {
-                pInfo = new ProfileInfo(fieldH, fieldX);
-                map.put(fieldH, pInfo);
-            }
-        }
-
-        List<ProfileInfo> datasets = StreamSupport.stream(
-            map.values().spliterator(), false).collect(Collectors.toList());
-        Collections.sort(datasets);
-
-        // TODO: implement me!
-        datasets = filterDatasets(datasets);
-
-        return datasets;
-    }
-
-    // TODO: Should remopve any samples with nuCPMGs that are not present
-    // across all profiles, as the NNs are trained on sythetic data where
-    // nuCPMGs are consistent.
-    List<ProfileInfo> filterDatasets(List<ProfileInfo> datasets) {
-        return datasets;
-    }
-
-    // TODO: This should be generic across CPMG/CEST/R1rho
-    // TODO: Update
-    Map<Double, List<Double>> interpolateDatasets(Map<Double, Map<String, List<Double>>> datasets) {
-        Map<Double, List<Double>> result = new TreeMap<>();
-
-        double variable;
-        Map<String, List<Double>> xyMap;
-        List<Double> xs;
-        List<Double> ys;
-        List<Double> ysInterpolated;
-
-        for (Map.Entry<Double, Map<String, List<Double>>> dataset : datasets.entrySet()) {
-            variable = dataset.getKey();
-            xyMap = dataset.getValue();
-            xs = xyMap.get("x");
-            ys = xyMap.get("y");
-
-            // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-            // TODO: Hack to get this to work for datasets with nuCPMGs that do
-            // not extend out to spline interpolation limits
-            int xIdx = xs.size() - 1;
-            int xInterpIdx = networkInterpolationXs.size() - 1;
-            if (xs.get(xIdx) < networkInterpolationXs.get(xInterpIdx)) {
-                xs.add(networkInterpolationXs.get(xInterpIdx));
-                ys.add(ys.get(xIdx));
-            }
-            // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-            ysInterpolated = getInterpolatedProfile(ys, xs, networkInterpolationXs);
-            result.put(variable, ysInterpolated);
-        }
-
-        return result;
-    }
-
     TFloat32 constructNeuralNetworkInputExplicitXY(double[][] xValues, double[] yValues) {
         List<ProfileInfo> datasets = separateDatasets(xValues, yValues);
+        datasets = filterXValuesNotInAllProfiles(datasets);
 
         // Assuming tau is identical across samples
         float tau = (float) xValues[3][0];
         float[] inputArray = buildInputArray(datasets, tau);
-        System.out.println(
-            String.format(
-                "inputArray:\n%s",
-                Arrays.toString(inputArray)
-            )
-        );
 
         FloatNdArray inputNdArray = NdArrays.ofFloats(Shape.of(1, inputArray.length));
         inputNdArray.set(TFloat32.vectorOf(inputArray), 0);
         return TFloat32.tensorOf(inputNdArray);
     }
 
-    float[] buildInputArray(List<ProfileInfo> datasets, float tau) {
-        int nProfiles = datasets.size();
-        int inputSize = nProfiles * (2 * networkMaxInput + 2) + 1;
-
-        float[] inputArray = new float[inputSize];
-        int idx = 0;
-        for (ProfileInfo pInfo : datasets) {
-            for (int i = 0; i < networkMaxInput; i++) {
-                inputArray[idx++] = (float) pInfo.getNuCPMG(i);
-            }
-            for (int i = 0; i < networkMaxInput; i++) {
-                inputArray[idx++] = (float) pInfo.getR2(i);
-            }
-            inputArray[idx++] = (float) pInfo.getFieldH();
-            inputArray[idx++] = (float) pInfo.getFieldX();
-        }
-        inputArray[idx] = tau;
-
-        return inputArray;
+    double[] runNeuralNetwork(TFloat32 input, SavedModelBundle network) {
+        TFloat32 outputTensor = (TFloat32) network.function("serving_default").call(input);
+        double[] output = floatTensorToDoubleArray(outputTensor);
+        return output;
     }
 
     // TODO: update
@@ -953,11 +855,126 @@ public enum CPMGEquation implements EquationType {
     //     return TFloat32.tensorOf(inputNdArray);
     // }
 
-    double[] runNeuralNetwork(TFloat32 input, SavedModelBundle network) {
-        TFloat32 outputTensor = (TFloat32) network.function("serving_default").call(input);
-        double[] output = floatTensorToDoubleArray(outputTensor);
-        return output;
+    List<ProfileInfo> separateDatasets(double[][] xValues, double[] yValues) {
+        Map<Double, ProfileInfo> map = new HashMap<>();
+
+        ProfileInfo pInfo;
+        double fieldH;
+        double fieldX;
+        double nuCPMG;
+        double R2;
+
+        for (int i = 0; i < xValues[0].length; i++) {
+            fieldH = xValues[2][i];
+            fieldX = xValues[1][i];
+            nuCPMG = xValues[0][i];
+            R2 = yValues[i];
+
+            if (map.containsKey(fieldH)) {
+                pInfo = map.get(fieldH);
+                pInfo.addSample(nuCPMG, R2);
+            }
+
+            else {
+                pInfo = new ProfileInfo(fieldH, fieldX);
+                map.put(fieldH, pInfo);
+            }
+        }
+
+        List<ProfileInfo> datasets = StreamSupport.stream(
+            map.values().spliterator(), false).collect(Collectors.toList());
+        Collections.sort(datasets);
+
+        return datasets;
     }
+
+    List<ProfileInfo> filterXValuesNotInAllProfiles(List<ProfileInfo> dataset) {
+        Set<Double> allNuCPMGs = new HashSet<>();
+        for (ProfileInfo profile : dataset) {
+            allNuCPMGs.addAll(profile.getNuCPMG());
+        }
+
+        for (double nu : allNuCPMGs) {
+            // Check if in all profiles
+            boolean inAllProfiles = true;
+            for (ProfileInfo pInfo : dataset) {
+                if (!pInfo.getNuCPMG().contains(nu)) {
+                    inAllProfiles = false;
+                    break;
+                }
+            }
+            if (!inAllProfiles) {
+                for (ProfileInfo pInfo : dataset) {
+                    List<Double> nuCPMG = pInfo.getNuCPMG();
+                    List<Double> profile = pInfo.getR2();
+                    int idx = nuCPMG.indexOf(nu);
+                    while (idx != -1) {
+                        nuCPMG.remove(idx);
+                        profile.remove(idx);
+                        idx = nuCPMG.indexOf(nu);
+                    }
+                }
+            }
+        }
+        return dataset;
+    }
+
+    // TODO: This should be generic across CPMG/CEST/R1rho
+    // TODO: Update
+    Map<Double, List<Double>> interpolateDatasets(Map<Double, Map<String, List<Double>>> datasets) {
+        Map<Double, List<Double>> result = new TreeMap<>();
+
+        double variable;
+        Map<String, List<Double>> xyMap;
+        List<Double> xs;
+        List<Double> ys;
+        List<Double> ysInterpolated;
+
+        for (Map.Entry<Double, Map<String, List<Double>>> dataset : datasets.entrySet()) {
+            variable = dataset.getKey();
+            xyMap = dataset.getValue();
+            xs = xyMap.get("x");
+            ys = xyMap.get("y");
+
+            // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+            // TODO: Hack to get this to work for datasets with nuCPMGs that do
+            // not extend out to spline interpolation limits
+            int xIdx = xs.size() - 1;
+            int xInterpIdx = networkInterpolationXs.size() - 1;
+            if (xs.get(xIdx) < networkInterpolationXs.get(xInterpIdx)) {
+                xs.add(networkInterpolationXs.get(xInterpIdx));
+                ys.add(ys.get(xIdx));
+            }
+            // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+            ysInterpolated = getInterpolatedProfile(ys, xs, networkInterpolationXs);
+            result.put(variable, ysInterpolated);
+        }
+
+        return result;
+    }
+
+    float[] buildInputArray(List<ProfileInfo> datasets, float tau) {
+        int nProfiles = datasets.size();
+        int inputSize = nProfiles * (2 * networkMaxInput + 2) + 1;
+
+        float[] inputArray = new float[inputSize];
+        int idx = 0;
+        for (ProfileInfo pInfo : datasets) {
+            for (int i = 0; i < networkMaxInput; i++) {
+                inputArray[idx++] = (float) pInfo.getNuCPMG(i);
+            }
+            for (int i = 0; i < networkMaxInput; i++) {
+                inputArray[idx++] = (float) pInfo.getR2(i);
+            }
+            inputArray[idx++] = (float) pInfo.getFieldH();
+            inputArray[idx++] = (float) pInfo.getFieldX();
+        }
+        inputArray[idx] = tau;
+
+        return inputArray;
+    }
+
 
     private double[] floatTensorToDoubleArray(TFloat32 tensor) {
         int size = (int) tensor.size();
@@ -1033,9 +1050,17 @@ class ProfileInfo implements Comparable<ProfileInfo> {
         else return 0.0;
     }
 
+    public List<Double> getNuCPMG() {
+        return nuCPMGs;
+    }
+
     public double getR2(int idx) {
         if (idx < size()) return profile.get(idx);
         else return 0.0;
+    }
+
+    public List<Double> getR2() {
+        return profile;
     }
 
     public int size() {

@@ -17,25 +17,34 @@ import org.nmrfx.utilities.UnZipper;
  *
  * @author simonhulse
  */
+
+// TODO: currently, NetworkLoader is specifically used to load CPMG parameter
+// prediction NNs, however it could be generalised to any zipfile containing
+// tensorflow SavedModelBundle models.
 class NetworkLoader {
     private static NetworkLoader instance = null;
 
     private Map<String, SavedModelBundle> loadedNetworks;
 
-    private File zipSrc = new File("/data/parameter-networks.zip");
-    private File zipDst = new File(System.getProperty("java.io.tmpdir"), "parameter-networks.zip");
+    private String name = "parameter-networks";
+
+    private File zipSrc = new File(String.format("/data/%s.zip", name));
+    private File zipDst = new File(System.getProperty("java.io.tmpdir"), String.format("%s.zip", name));
     private File zipDstParent = zipDst.getParentFile();
-    private File rootDir = new File(zipDstParent, "parameter-networks");
+    private File rootDir = new File(zipDstParent, name);
 
     private NetworkLoader() throws IOException {
-        if (!zipDst.exists()) {
-            // TODO: Gracfully handle IOException
+        if (!rootDir.exists()) {
+            // TODO: Gracefully handle IOException
             Files.copy(
                 getClass().getResourceAsStream(zipSrc.getPath()),
                 zipDst.toPath(),
                 StandardCopyOption.REPLACE_EXISTING);
+
             UnZipper unZipper = new UnZipper(zipDstParent, zipDst.getPath());
             unZipper.unzip();
+
+            Files.deleteIfExists(zipDst.toPath());
         }
 
         loadedNetworks = new HashMap<>();
