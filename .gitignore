@@ -28,3 +28,4 @@
 #################
 .lvimrc
 *.swp
+!ringnmr/src/main/resources/data/parameter-networks.zip
