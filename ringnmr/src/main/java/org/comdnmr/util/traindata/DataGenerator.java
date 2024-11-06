@@ -1,3 +1,8 @@
+//ringnmr/src/main/java/org/comdnmr/util/traindata/DataGenerator.java
+//Simon Hulse
+//simonhulse@protonmail.com
+//Last Edited: Tue 05 Nov 2024 03:47:56 PM EST
+
 /**
  *
  *  @author simonhulse
@@ -442,8 +447,49 @@ public class DataGenerator {
     private double[] makePar(List<Sampler> parameterSamplers, List<Double> variables) {
         double[] par = new double[parSize];
         int idx = 0;
+        double kEx = 0.0;
+        double pA = 0.0;
+        double thold = 0.0;
+        double maxVariable = Collections.max(variables);
         for (Sampler parameterSampler : parameterSamplers) {
             double parameter = parameterSampler.sample().get(0);
+
+            // TODO: more elegant solution to this?
+            if (idx == 0) {
+                kEx = parameter;
+            }
+            else if (idx == 1) {
+                pA = parameter;
+            }
+            else {
+                switch (currentEnumName) {
+                    case "CPMGSLOW":
+                        if (idx == 2 + variables.size()) {
+                            // Ensure slow regime is adhered to
+                            // Only accept deltaXPPM when it is greater than:
+                            // 5 kEx / 2 pi B0max
+                            thold = (5.0 * kEx) / (2.0 * Math.PI * maxVariable);
+                            while (parameter < thold) {
+                                parameter = parameterSampler.sample().get(0);
+                            }
+                        }
+                        break;
+
+                    case "CPMGFAST":
+                        if (idx == 1 + variables.size()) {
+                            // Ensure fast regime is adhered to
+                            // Only accept deltaPPMmin when it is less than:
+                            // 5 kEx / 2 pi B0max
+                            // N.B. Factor of 1/2 is for max(sqrt(pa pb))
+                            thold = (5.0 * kEx) / (2.0 * Math.PI * maxVariable);
+                            while (parameter > thold) {
+                                parameter = parameterSampler.sample().get(0);
+                            }
+                        }
+                        break;
+                }
+            }
+
             int parameterSamplerType = isRelaxationRateSampler(parameterSampler);
             if (parameterSamplerType == 0) {
                 par[idx++] = parameter;
