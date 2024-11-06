@@ -708,7 +708,7 @@ public enum CPMGEquation implements EquationType {
     // Placeholders are for:
     // 1. Enum name (CPMGFAST, CPMGSLOW, CPMGMQ)
     // 2. Number of separate profiles (1, 2, 3)
-    final String networkPathTemplate = "CPMGEquation-15N/%s/%d/";
+    final String networkPathTemplate = "CPMGEquation/%s/%d/";
 
     // TODO: this is hard-coded currently.
     // Is it possible to determine this at run-time, by inspecting the
@@ -872,13 +872,13 @@ public enum CPMGEquation implements EquationType {
 
             if (map.containsKey(fieldH)) {
                 pInfo = map.get(fieldH);
-                pInfo.addSample(nuCPMG, R2);
             }
 
             else {
                 pInfo = new ProfileInfo(fieldH, fieldX);
                 map.put(fieldH, pInfo);
             }
+            pInfo.addSample(nuCPMG, R2);
         }
 
         List<ProfileInfo> datasets = StreamSupport.stream(
