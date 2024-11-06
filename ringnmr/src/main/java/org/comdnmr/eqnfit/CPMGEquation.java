@@ -708,12 +708,12 @@ public enum CPMGEquation implements EquationType {
     // Placeholders are for:
     // 1. Enum name (CPMGFAST, CPMGSLOW, CPMGMQ)
     // 2. Number of separate profiles (1, 2, 3)
-    final String networkPathTemplate = "CPMGEquation/%s/%d/";
+    final String networkPathTemplate = "CPMGEquation-15N/%s/%d/";
 
     // TODO: this is hard-coded currently.
     // Is it possible to determine this at run-time, by inspecting the
     // SavedModelBundle?
-    final int networkMaxInput = 16;
+    final int networkMaxInput = 7;
 
     final List<Double> networkInterpolationXs = Arrays.asList(
         8.0, 10.0, 15.0, 20.0, 25.0, 30.0, 40.0, 60.0, 80.0,
