@@ -443,7 +443,7 @@ public class PlotData extends XYCanvasChart {
             ax[0] = xValue;
             ax[1] = plotEquation.getExtra(0);
             for (int j = 1; j < extras.length; j++) {
-                ax[j] = extras[j];
+                ax[j + 1] = extras[j];
             }
             double yValue = plotEquation.calculate(ax);// / fieldRef);
             pointData.add(xValue);
