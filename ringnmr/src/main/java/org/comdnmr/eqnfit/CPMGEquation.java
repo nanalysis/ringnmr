@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
 import org.apache.commons.math3.analysis.polynomials.PolynomialFunction;
 import org.apache.commons.math3.complex.Complex;
@@ -754,6 +755,10 @@ public enum CPMGEquation implements EquationType {
         return nGroupPars;
     }
 
+    private String getNetworkPath(int nProfiles) {
+        return String.format(networkPathTemplate, getName(), nProfiles);
+    }
+
     @Override
     public double getMinX() {
         return 5.0;
@@ -784,30 +789,49 @@ public enum CPMGEquation implements EquationType {
     }
 
     public double[] guessNeuralNetwork(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) throws IOException {
-        String networkPath = getNetworkPath(idNums);
+        List<TFloat32> inputs = constructNeuralNetworkInputExplicitXY(xValues, yValues, map, idNums);
         NetworkLoader networkLoader = NetworkLoader.getNetworkLoader();
-        SavedModelBundle network = networkLoader.fetchNetwork(networkPath);
-        TFloat32 input = constructNeuralNetworkInputExplicitXY(xValues, yValues);
-        double[] guess = runNeuralNetwork(input, network);
+        double[] guess = new double[getNPars(map)];
+
+        // TODO currently faulty: need to add guess values to correct positions
+        // based on `map`
+        for (TFloat32 input : inputs) {
+            // TODO: Make nProfiles computation more robust
+            // This equation is simply hard-coded for CPMG - subject to change
+            int nProfiles = ((int) input.size() - 1) / (2 * networkMaxInput + 2);
+
+            String networkPath = getNetworkPath(nProfiles);
+            SavedModelBundle network = networkLoader.fetchNetwork(networkPath);
+            guess = runNeuralNetwork(input, network);
+        }
         return guess;
     }
 
-    private String getNetworkPath(int[] idNums) {
-        int nProfiles = getNProfiles(idNums);
-        return String.format(networkPathTemplate, getName(), nProfiles);
-    }
-
-    TFloat32 constructNeuralNetworkInputExplicitXY(double[][] xValues, double[] yValues) {
-        List<ProfileInfo> datasets = separateDatasets(xValues, yValues);
-        datasets = filterXValuesNotInAllProfiles(datasets);
+    List<TFloat32> constructNeuralNetworkInputExplicitXY(
+        double[][] xValues, double[] yValues, int[][] map, int[] idNums)
+    {
+        List<List<ProfileInfo>> residues = separateDatasets(xValues, yValues, idNums, map);
 
         // Assuming tau is identical across samples
         float tau = (float) xValues[3][0];
-        float[] inputArray = buildInputArray(datasets, tau);
 
-        FloatNdArray inputNdArray = NdArrays.ofFloats(Shape.of(1, inputArray.length));
-        inputNdArray.set(TFloat32.vectorOf(inputArray), 0);
-        return TFloat32.tensorOf(inputNdArray);
+        float[] inputArray;
+        FloatNdArray inputNdArray;
+        TFloat32 inputTensor;
+
+        List<TFloat32> residueTensors = new ArrayList<>();
+        for (List<ProfileInfo> residue : residues) {
+            residue = filterXValuesNotInAllProfiles(residue);
+            inputArray = buildInputArray(residue, tau);
+
+            inputNdArray = NdArrays.ofFloats(Shape.of(1, inputArray.length));
+            inputNdArray.set(TFloat32.vectorOf(inputArray), 0);
+            inputTensor = TFloat32.tensorOf(inputNdArray);
+
+            residueTensors.add(inputTensor);
+        }
+
+        return residueTensors;
     }
 
     double[] runNeuralNetwork(TFloat32 input, SavedModelBundle network) {
@@ -855,8 +879,14 @@ public enum CPMGEquation implements EquationType {
     //     return TFloat32.tensorOf(inputNdArray);
     // }
 
-    List<ProfileInfo> separateDatasets(double[][] xValues, double[] yValues) {
-        Map<Double, ProfileInfo> map = new HashMap<>();
+    List<List<ProfileInfo>> separateDatasets(
+        double[][] xValues,
+        double[] yValues,
+        int[] idNums,
+        int[][] map)
+    {
+        Map<Integer, Pair<Integer, Integer>> idToProfileMap = getIdToProfileMap(map);
+        List<List<ProfileInfo>> profiles = initProfiles(idToProfileMap);
 
         ProfileInfo pInfo;
         double fieldH;
@@ -864,28 +894,109 @@ public enum CPMGEquation implements EquationType {
         double nuCPMG;
         double R2;
 
+        int id;
+        Pair<Integer, Integer> indices;
+        int residueIdx;
+        int profileIdx;
+
         for (int i = 0; i < xValues[0].length; i++) {
             fieldH = xValues[2][i];
             fieldX = xValues[1][i];
             nuCPMG = xValues[0][i];
             R2 = yValues[i];
 
-            if (map.containsKey(fieldH)) {
-                pInfo = map.get(fieldH);
+            id = idNums[i];
+            indices = idToProfileMap.get(id);
+            residueIdx = indices.getLeft();
+            profileIdx = indices.getRight();
+
+            ProfileInfo profileInfo = profiles.get(residueIdx).get(profileIdx);
+            if (profileInfo == null) {
+                profileInfo = new ProfileInfo(fieldH, fieldX);
             }
 
-            else {
-                pInfo = new ProfileInfo(fieldH, fieldX);
-                map.put(fieldH, pInfo);
-            }
-            pInfo.addSample(nuCPMG, R2);
+            profileInfo.addSample(nuCPMG, R2);
+            profiles.get(residueIdx).set(profileIdx, profileInfo);
         }
 
-        List<ProfileInfo> datasets = StreamSupport.stream(
-            map.values().spliterator(), false).collect(Collectors.toList());
-        Collections.sort(datasets);
+        profiles = rmNulls(profiles);
 
-        return datasets;
+        return profiles;
+    }
+
+    Map<Integer, Pair<Integer, Integer>> getIdToProfileMap(int[][] map) {
+        Map<Integer, Integer> residueTracker = new HashMap<>();
+        Map<Integer, Integer> profileTracker = new HashMap<>();
+        Map<Integer, Pair<Integer, Integer>> residueIDs = new HashMap<>();
+
+        int shiftIdx = map[0].length - 1;
+        int residueCount = 0;
+
+        int idx1;
+        int idx2;
+
+        for (int i = 0; i < map.length; i++) {
+            int id = map[i][shiftIdx];
+
+            if (!residueTracker.containsKey(id)) {
+                residueTracker.put(id, residueCount);
+                residueCount += 1;
+            }
+
+            idx1 = residueTracker.get(id);
+
+            if (!profileTracker.containsKey(id)) {
+                profileTracker.put(id, 0);
+            }
+            else {
+                profileTracker.put(id, profileTracker.get(id) + 1);
+            }
+
+            idx2 = profileTracker.get(id);
+
+            residueIDs.put(i, Pair.of(idx1, idx2));
+        }
+
+        return residueIDs;
+    }
+
+    List<List<ProfileInfo>> initProfiles(
+        Map<Integer, Pair<Integer, Integer>> idToProfileMap)
+    {
+        int nResidues = 0;
+        int nProfiles = 0;
+        int residueIdx = 0;
+        int profileIdx = 0;
+
+        for (Pair<Integer, Integer> indices : idToProfileMap.values()) {
+            residueIdx = indices.getLeft();
+            profileIdx = indices.getRight();
+
+            if (residueIdx >= nResidues) {
+                nResidues = residueIdx + 1;
+            }
+            if (profileIdx >= nProfiles) {
+                nProfiles = profileIdx + 1;
+            }
+
+        }
+
+        List<List<ProfileInfo>> profiles = new ArrayList<>();
+        for (int i = 0; i < nResidues; i++) {
+            profiles.add(new ArrayList<>());
+            for (int j = 0; j < nProfiles; j++) {
+                profiles.get(i).add(null);
+            }
+        }
+
+        return profiles;
+    }
+
+    List<List<ProfileInfo>> rmNulls(List<List<ProfileInfo>> profiles) {
+        for (List<ProfileInfo> residue : profiles) {
+            residue.removeAll(Collections.singleton(null));
+        }
+        return profiles;
     }
 
     List<ProfileInfo> filterXValuesNotInAllProfiles(List<ProfileInfo> dataset) {
@@ -1014,6 +1125,7 @@ public enum CPMGEquation implements EquationType {
             "Could not determine heteronucleus for neural network guesser.");
     }
 }
+
 
 class ProfileInfo implements Comparable<ProfileInfo> {
     double fieldH;
