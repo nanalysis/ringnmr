@@ -185,6 +185,25 @@ public enum CPMGEquation implements EquationType {
         }
 
         @Override
+        public double[] updateGuess(int i, double[] current, double[] addition, int[] map) {
+            // kex is always at index 0
+            double kexCurrent = current[0];
+            double kexResidue = addition[0];
+            double kex = i * kexCurrent / (i + 1) + kexResidue / (i + 1);
+            current[0] = kex;
+
+            // R2s
+            for (int idx = 1; idx < map.length - 1; idx++) {
+                current[map[idx]] = addition[idx];
+            }
+
+            // deltaPPMmin
+            current[map[map.length - 1]] = addition[map.length - 1];
+
+            return current;
+        }
+
+        @Override
         public double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
             double[][] boundaries = new double[2][guesses.length];
             for (int[] ints : map) {
@@ -456,6 +475,34 @@ public enum CPMGEquation implements EquationType {
         }
         int idxInterp = 0;
 
+        @Override
+        public double[] updateGuess(int i, double[] current, double[] addition, int[] map) {
+            // kex is always at index 0
+            double kexCurrent = current[0];
+            double kexResidue = addition[0];
+            double kex = i * kexCurrent / (i + 1) + kexResidue / (i + 1);
+            current[0] = kex;
+
+            // pa is always at index 1
+            double paCurrent = current[1];
+            double paResidue = addition[1];
+            double pa = i * paCurrent / (i + 1) + paResidue / (i + 1);
+            current[1] = pa;
+
+            // R2s
+            for (int idx = 2; idx < map.length - 2; idx++) {
+                current[map[idx]] = addition[idx];
+            }
+
+            // deltaX
+            current[map[map.length - 2]] = addition[map.length - 2];
+
+            // deltaH
+            current[map[map.length - 1]] = addition[map.length - 1];
+
+            return current;
+        }
+
         // TODO
         @Override
         public double[][] boundaries(double[] guesses, double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
@@ -614,6 +661,31 @@ public enum CPMGEquation implements EquationType {
             guesses[0] = kExSum / map.length;
             guesses[1] = pa;
             return guesses;
+        }
+
+        @Override
+        public double[] updateGuess(int i, double[] current, double[] addition, int[] map) {
+            // kex is always at index 0
+            double kexCurrent = current[0];
+            double kexResidue = addition[0];
+            double kex = i * kexCurrent / (i + 1) + kexResidue / (i + 1);
+            current[0] = kex;
+
+            // pa is always at index 1
+            double paCurrent = current[1];
+            double paResidue = addition[1];
+            double pa = i * paCurrent / (i + 1) + paResidue / (i + 1);
+            current[1] = pa;
+
+            // R2s
+            for (int idx = 2; idx < map.length - 1; idx++) {
+                current[map[idx]] = addition[idx];
+            }
+
+            // deltaX
+            current[map[map.length - 1]] = addition[map.length - 1];
+
+            return current;
         }
 
         @Override
@@ -788,56 +860,35 @@ public enum CPMGEquation implements EquationType {
         return new double[0];
     }
 
+    // TODO: Will never be called: Is overridden by all enums (see above)
+    public double[] updateGuess(int i, double[] current, double[] addition, int[] map) {
+        return current;
+    }
+
     public double[] guessNeuralNetwork(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) throws IOException {
-        List<TFloat32> inputs = constructNeuralNetworkInputExplicitXY(xValues, yValues, map, idNums);
+        NNData nnData = new NNData(xValues, yValues, map, idNums, networkMaxInput);
         NetworkLoader networkLoader = NetworkLoader.getNetworkLoader();
         double[] guess = new double[getNPars(map)];
 
-        // TODO currently faulty: need to add guess values to correct positions
-        // based on `map`
-        for (TFloat32 input : inputs) {
-            // TODO: Make nProfiles computation more robust
-            // This equation is simply hard-coded for CPMG - subject to change
-            int nProfiles = ((int) input.size() - 1) / (2 * networkMaxInput + 2);
-
+        for (int residue = 0; residue < nnData.getNResidues(); residue++) {
+            TFloat32 input = nnData.getInput(residue);
+            int nProfiles = nnData.getNProfiles(residue);
             String networkPath = getNetworkPath(nProfiles);
             SavedModelBundle network = networkLoader.fetchNetwork(networkPath);
-            guess = runNeuralNetwork(input, network);
+            TFloat32 residueGuessTF32 = (TFloat32) network.function("serving_default").call(input);
+
+            // TFloat32 -> double[]
+            int size = (int) residueGuessTF32.size();
+            double[] residueGuess = new double[size];
+            for (int i = 0; i < residueGuessTF32.size(); i++) {
+                residueGuess[i] = residueGuessTF32.getFloat(0, i);
+            }
+
+            int[] residueMap = nnData.getResidueMap(residue);
+            guess = updateGuess(residue, guess, residueGuess, residueMap);
         }
+
         return guess;
-    }
-
-    List<TFloat32> constructNeuralNetworkInputExplicitXY(
-        double[][] xValues, double[] yValues, int[][] map, int[] idNums)
-    {
-        List<List<ProfileInfo>> residues = separateDatasets(xValues, yValues, idNums, map);
-
-        // Assuming tau is identical across samples
-        float tau = (float) xValues[3][0];
-
-        float[] inputArray;
-        FloatNdArray inputNdArray;
-        TFloat32 inputTensor;
-
-        List<TFloat32> residueTensors = new ArrayList<>();
-        for (List<ProfileInfo> residue : residues) {
-            residue = filterXValuesNotInAllProfiles(residue);
-            inputArray = buildInputArray(residue, tau);
-
-            inputNdArray = NdArrays.ofFloats(Shape.of(1, inputArray.length));
-            inputNdArray.set(TFloat32.vectorOf(inputArray), 0);
-            inputTensor = TFloat32.tensorOf(inputNdArray);
-
-            residueTensors.add(inputTensor);
-        }
-
-        return residueTensors;
-    }
-
-    double[] runNeuralNetwork(TFloat32 input, SavedModelBundle network) {
-        TFloat32 outputTensor = (TFloat32) network.function("serving_default").call(input);
-        double[] output = floatTensorToDoubleArray(outputTensor);
-        return output;
     }
 
     // TODO: update
@@ -879,157 +930,6 @@ public enum CPMGEquation implements EquationType {
     //     return TFloat32.tensorOf(inputNdArray);
     // }
 
-    List<List<ProfileInfo>> separateDatasets(
-        double[][] xValues,
-        double[] yValues,
-        int[] idNums,
-        int[][] map)
-    {
-        Map<Integer, Pair<Integer, Integer>> idToProfileMap = getIdToProfileMap(map);
-        List<List<ProfileInfo>> profiles = initProfiles(idToProfileMap);
-
-        ProfileInfo pInfo;
-        double fieldH;
-        double fieldX;
-        double nuCPMG;
-        double R2;
-
-        int id;
-        Pair<Integer, Integer> indices;
-        int residueIdx;
-        int profileIdx;
-
-        for (int i = 0; i < xValues[0].length; i++) {
-            fieldH = xValues[2][i];
-            fieldX = xValues[1][i];
-            nuCPMG = xValues[0][i];
-            R2 = yValues[i];
-
-            id = idNums[i];
-            indices = idToProfileMap.get(id);
-            residueIdx = indices.getLeft();
-            profileIdx = indices.getRight();
-
-            ProfileInfo profileInfo = profiles.get(residueIdx).get(profileIdx);
-            if (profileInfo == null) {
-                profileInfo = new ProfileInfo(fieldH, fieldX);
-            }
-
-            profileInfo.addSample(nuCPMG, R2);
-            profiles.get(residueIdx).set(profileIdx, profileInfo);
-        }
-
-        profiles = rmNulls(profiles);
-
-        return profiles;
-    }
-
-    Map<Integer, Pair<Integer, Integer>> getIdToProfileMap(int[][] map) {
-        Map<Integer, Integer> residueTracker = new HashMap<>();
-        Map<Integer, Integer> profileTracker = new HashMap<>();
-        Map<Integer, Pair<Integer, Integer>> residueIDs = new HashMap<>();
-
-        int shiftIdx = map[0].length - 1;
-        int residueCount = 0;
-
-        int idx1;
-        int idx2;
-
-        for (int i = 0; i < map.length; i++) {
-            int id = map[i][shiftIdx];
-
-            if (!residueTracker.containsKey(id)) {
-                residueTracker.put(id, residueCount);
-                residueCount += 1;
-            }
-
-            idx1 = residueTracker.get(id);
-
-            if (!profileTracker.containsKey(id)) {
-                profileTracker.put(id, 0);
-            }
-            else {
-                profileTracker.put(id, profileTracker.get(id) + 1);
-            }
-
-            idx2 = profileTracker.get(id);
-
-            residueIDs.put(i, Pair.of(idx1, idx2));
-        }
-
-        return residueIDs;
-    }
-
-    List<List<ProfileInfo>> initProfiles(
-        Map<Integer, Pair<Integer, Integer>> idToProfileMap)
-    {
-        int nResidues = 0;
-        int nProfiles = 0;
-        int residueIdx = 0;
-        int profileIdx = 0;
-
-        for (Pair<Integer, Integer> indices : idToProfileMap.values()) {
-            residueIdx = indices.getLeft();
-            profileIdx = indices.getRight();
-
-            if (residueIdx >= nResidues) {
-                nResidues = residueIdx + 1;
-            }
-            if (profileIdx >= nProfiles) {
-                nProfiles = profileIdx + 1;
-            }
-
-        }
-
-        List<List<ProfileInfo>> profiles = new ArrayList<>();
-        for (int i = 0; i < nResidues; i++) {
-            profiles.add(new ArrayList<>());
-            for (int j = 0; j < nProfiles; j++) {
-                profiles.get(i).add(null);
-            }
-        }
-
-        return profiles;
-    }
-
-    List<List<ProfileInfo>> rmNulls(List<List<ProfileInfo>> profiles) {
-        for (List<ProfileInfo> residue : profiles) {
-            residue.removeAll(Collections.singleton(null));
-        }
-        return profiles;
-    }
-
-    List<ProfileInfo> filterXValuesNotInAllProfiles(List<ProfileInfo> dataset) {
-        Set<Double> allNuCPMGs = new HashSet<>();
-        for (ProfileInfo profile : dataset) {
-            allNuCPMGs.addAll(profile.getNuCPMG());
-        }
-
-        for (double nu : allNuCPMGs) {
-            // Check if in all profiles
-            boolean inAllProfiles = true;
-            for (ProfileInfo pInfo : dataset) {
-                if (!pInfo.getNuCPMG().contains(nu)) {
-                    inAllProfiles = false;
-                    break;
-                }
-            }
-            if (!inAllProfiles) {
-                for (ProfileInfo pInfo : dataset) {
-                    List<Double> nuCPMG = pInfo.getNuCPMG();
-                    List<Double> profile = pInfo.getR2();
-                    int idx = nuCPMG.indexOf(nu);
-                    while (idx != -1) {
-                        nuCPMG.remove(idx);
-                        profile.remove(idx);
-                        idx = nuCPMG.indexOf(nu);
-                    }
-                }
-            }
-        }
-        return dataset;
-    }
-
     // TODO: This should be generic across CPMG/CEST/R1rho
     // TODO: Update
     Map<Double, List<Double>> interpolateDatasets(Map<Double, Map<String, List<Double>>> datasets) {
@@ -1065,36 +965,6 @@ public enum CPMGEquation implements EquationType {
         return result;
     }
 
-    float[] buildInputArray(List<ProfileInfo> datasets, float tau) {
-        int nProfiles = datasets.size();
-        int inputSize = nProfiles * (2 * networkMaxInput + 2) + 1;
-
-        float[] inputArray = new float[inputSize];
-        int idx = 0;
-        for (ProfileInfo pInfo : datasets) {
-            for (int i = 0; i < networkMaxInput; i++) {
-                inputArray[idx++] = (float) pInfo.getNuCPMG(i);
-            }
-            for (int i = 0; i < networkMaxInput; i++) {
-                inputArray[idx++] = (float) pInfo.getR2(i);
-            }
-            inputArray[idx++] = (float) pInfo.getFieldH();
-            inputArray[idx++] = (float) pInfo.getFieldX();
-        }
-        inputArray[idx] = tau;
-
-        return inputArray;
-    }
-
-
-    private double[] floatTensorToDoubleArray(TFloat32 tensor) {
-        int size = (int) tensor.size();
-        double[] array = new double[size];
-        for (int i = 0; i < tensor.size(); i++) {
-            array[i] = tensor.getFloat(0, i);
-        }
-        return array;
-    }
 
     // TODO: might as well remove this method?
     // I wrote this when each NN was for a specific nucleus.
@@ -1189,6 +1059,264 @@ class ProfileInfo implements Comparable<ProfileInfo> {
         return String.format(
             "ProfileInfo:\n\tfieldH: %s\n\tfieldX: %s\n\tnuCPMGS: %s\n\tprofile: %s\n",
             getFieldH(), getFieldX(), nuCPMGs, profile);
+    }
+}
+
+class NNData {
+    private double[][] xData;
+    private double[] yData;
+    private int[][] profileMap;
+    private int[] idNums;
+    private int maxProfileSize;
+    private float tau;
+
+    private Map<Integer, Pair<Integer, Integer>> idToProfileMap;
+    private List<List<ProfileInfo>> residues;
+    private List<TFloat32> inputs;
+    private int[][] residueMap;
+
+    public NNData(double[][] xData, double[] yData, int[][] profileMap, int[] idNums, int maxProfileSize) {
+        this.xData = xData;
+        this.yData = yData;
+        this.profileMap = profileMap;
+        this.idNums = idNums;
+        this.maxProfileSize = maxProfileSize;
+        this.tau = (float) xData[3][0];
+
+        idToProfileMap = getIdToProfileMap();
+        residues = separateDatasets();
+        inputs = constructInputs();
+        residueMap = constructResidueMap();
+    }
+
+    public int getNResidues() {
+        return inputs.size();
+    }
+
+    public int getNProfiles(int residue) {
+        return residues.get(residue).size();
+    }
+
+    public TFloat32 getInput(int residue) {
+        return inputs.get(residue);
+    }
+
+    public int[] getResidueMap(int residue) {
+        return residueMap[residue];
+    }
+
+    private Map<Integer, Pair<Integer, Integer>> getIdToProfileMap() {
+        Map<Integer, Integer> residueTracker = new HashMap<>();
+        Map<Integer, Integer> profileTracker = new HashMap<>();
+        Map<Integer, Pair<Integer, Integer>> idToProfileMap = new HashMap<>();
+
+        int shiftIdx = profileMap[0].length - 1;
+        int residueCount = 0;
+
+        int id;
+        int idx1;
+        int idx2;
+
+        for (int i = 0; i < profileMap.length; i++) {
+            id = profileMap[i][shiftIdx];
+
+            if (!residueTracker.containsKey(id)) {
+                residueTracker.put(id, residueCount);
+                residueCount += 1;
+            }
+            idx1 = residueTracker.get(id);
+
+            if (!profileTracker.containsKey(id)) {
+                profileTracker.put(id, 0);
+            }
+            else {
+                profileTracker.put(id, profileTracker.get(id) + 1);
+            }
+            idx2 = profileTracker.get(id);
+
+            idToProfileMap.put(i, Pair.of(idx1, idx2));
+        }
+
+        return idToProfileMap;
+    }
+
+    private List<List<ProfileInfo>> separateDatasets() {
+        List<List<ProfileInfo>> residues = initProfiles();
+
+        ProfileInfo pInfo;
+        double fieldH;
+        double fieldX;
+        double nuCPMG;
+        double R2;
+
+        int id;
+        Pair<Integer, Integer> indices;
+        int residueIdx;
+        int profileIdx;
+
+        for (int i = 0; i < xData[0].length; i++) {
+            fieldH = xData[2][i];
+            fieldX = xData[1][i];
+            nuCPMG = xData[0][i];
+            R2 = yData[i];
+
+            id = idNums[i];
+            indices = idToProfileMap.get(id);
+            residueIdx = indices.getLeft();
+            profileIdx = indices.getRight();
+
+            ProfileInfo profileInfo = residues.get(residueIdx).get(profileIdx);
+            if (profileInfo == null) {
+                profileInfo = new ProfileInfo(fieldH, fieldX);
+            }
+
+            profileInfo.addSample(nuCPMG, R2);
+            residues.get(residueIdx).set(profileIdx, profileInfo);
+        }
+
+        return residues;
+    }
+
+    private List<List<ProfileInfo>> initProfiles()
+    {
+        int nResidues = 0;
+        int nProfiles = 0;
+        int residueIdx = 0;
+        int profileIdx = 0;
+
+        for (Pair<Integer, Integer> indices : idToProfileMap.values()) {
+            residueIdx = indices.getLeft();
+            profileIdx = indices.getRight();
+
+            if (residueIdx >= nResidues) {
+                nResidues = residueIdx + 1;
+            }
+            if (profileIdx >= nProfiles) {
+                nProfiles = profileIdx + 1;
+            }
+
+        }
+
+        List<List<ProfileInfo>> profiles = new ArrayList<>();
+        for (int i = 0; i < nResidues; i++) {
+            profiles.add(new ArrayList<>());
+            for (int j = 0; j < nProfiles; j++) {
+                profiles.get(i).add(null);
+            }
+        }
+
+        return profiles;
+    }
+
+    private List<ProfileInfo> filterXValuesNotInAllProfiles(List<ProfileInfo> dataset) {
+        Set<Double> allNuCPMGs = new HashSet<>();
+        for (ProfileInfo profile : dataset) {
+            allNuCPMGs.addAll(profile.getNuCPMG());
+        }
+
+        for (double nu : allNuCPMGs) {
+            // Check if in all profiles
+            boolean inAllProfiles = true;
+            for (ProfileInfo pInfo : dataset) {
+                if (!pInfo.getNuCPMG().contains(nu)) {
+                    inAllProfiles = false;
+                    break;
+                }
+            }
+            if (!inAllProfiles) {
+                for (ProfileInfo pInfo : dataset) {
+                    List<Double> nuCPMG = pInfo.getNuCPMG();
+                    List<Double> profile = pInfo.getR2();
+                    int idx = nuCPMG.indexOf(nu);
+                    while (idx != -1) {
+                        nuCPMG.remove(idx);
+                        profile.remove(idx);
+                        idx = nuCPMG.indexOf(nu);
+                    }
+                }
+            }
+        }
+        return dataset;
+    }
+
+    private List<TFloat32> constructInputs()
+    {
+        // Assuming tau is identical across samples
+
+        float[] inputArray;
+        FloatNdArray inputNdArray;
+        TFloat32 inputTensor;
+
+        List<TFloat32> residueTensors = new ArrayList<>();
+        for (List<ProfileInfo> residue : residues) {
+            residue = filterXValuesNotInAllProfiles(residue);
+            inputArray = buildInputArray(residue);
+
+            inputNdArray = NdArrays.ofFloats(Shape.of(1, inputArray.length));
+            inputNdArray.set(TFloat32.vectorOf(inputArray), 0);
+            inputTensor = TFloat32.tensorOf(inputNdArray);
+
+            residueTensors.add(inputTensor);
+        }
+
+        return residueTensors;
+    }
+
+    private float[] buildInputArray(List<ProfileInfo> profiles) {
+        int nProfiles = profiles.size();
+        int inputSize = nProfiles * 2 * (1 * maxProfileSize + 1) + 1;
+
+        float[] inputArray = new float[inputSize];
+        int idx = 0;
+        for (ProfileInfo pInfo : profiles) {
+            for (int i = 0; i < maxProfileSize; i++) {
+                inputArray[idx++] = (float) pInfo.getNuCPMG(i);
+            }
+            for (int i = 0; i < maxProfileSize; i++) {
+                inputArray[idx++] = (float) pInfo.getR2(i);
+            }
+            inputArray[idx++] = (float) pInfo.getFieldH();
+            inputArray[idx++] = (float) pInfo.getFieldX();
+        }
+        inputArray[idx] = tau;
+
+        return inputArray;
+    }
+
+    private int[][] constructResidueMap() {
+        Map<Integer, SortedSet<Integer>> lookup = new HashMap<>();
+        SortedSet<Integer> residueMapSet;
+        for (Map.Entry<Integer, Pair<Integer, Integer>> entry : idToProfileMap.entrySet()) {
+            int id = entry.getKey();
+            int[] pMap = profileMap[id];
+
+            int residueId = entry.getValue().getLeft();
+
+            if (lookup.containsKey(residueId)) {
+                residueMapSet = lookup.get(residueId);
+            }
+            else {
+                // Use of linked hash set to ensure correct iteration ordering
+                // First into set = first in iteration
+                residueMapSet = new TreeSet<>();
+                lookup.put(residueId, residueMapSet);
+            }
+
+            for (int i = 0; i < pMap.length; i++) {
+                residueMapSet.add(pMap[i]);
+            }
+        }
+
+        int nResidues = lookup.size();
+        int nParams = lookup.get(0).size();
+        int[][] residueMap = new int[nResidues][nParams];
+        for (int r = 0; r < nResidues; r++) {
+            int p = 0;
+            for (int mapValue : lookup.get(r)) {
+                residueMap[r][p++] = mapValue;
+            }
+        }
+        return residueMap;
     }
 }
 
