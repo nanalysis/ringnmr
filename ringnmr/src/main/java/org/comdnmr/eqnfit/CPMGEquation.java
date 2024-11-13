@@ -47,6 +47,7 @@ import org.comdnmr.util.DataUtil;
 import org.comdnmr.util.Utilities;
 import org.comdnmr.util.traindata.DataGenerator;
 
+import org.tensorflow.GraphOperation;
 import org.tensorflow.SavedModelBundle;
 import org.tensorflow.Tensor;
 import org.tensorflow.ndarray.FloatNdArray;
@@ -778,25 +779,64 @@ public enum CPMGEquation implements EquationType {
     final int nGroupPars;
     final String[] parNames;
 
+    // >>> Neural Network stuff >>>
+
     // Placeholders are for:
     // 1. Enum name (CPMGFAST, CPMGSLOW, CPMGMQ)
     // 2. Number of separate profiles (1, 2, 3)
     final String networkPathTemplate = "CPMGEquation/%s/%d/";
-
-    // TODO: this is hard-coded currently.
-    // Is it possible to determine this at run-time, by inspecting the
-    // SavedModelBundle?
-    final int networkMaxInput = 7;
-
+    // Largest permitted profile size.
+    // Currently hard-coded, though might be ideal to do this in the future:
+    //
+    // Determined at runtime by analysing the size of the input layer of a
+    // neural network.
+    // See `fetchMaxProfileSize()`
+    //
+    final int maxProfileSize = 16;
+    // nuCPMG values to interpolate of using neural networks which rely on
+    // interpolation
     final List<Double> networkInterpolationXs = Arrays.asList(
         8.0, 10.0, 15.0, 20.0, 25.0, 30.0, 40.0, 60.0, 80.0,
         100.0, 150.0, 200.0, 250.0, 300.0, 350.0, 400.0, 450.0);
+
+    // <<< Neural Network stuff <<<
 
     CPMGEquation(String equationName, int nGroupPars, String... parNames) {
         this.equationName = equationName;
         this.parNames = parNames;
         this.nGroupPars = nGroupPars;
+        // TODO: see `fetchMaxProfileSize()` below
+        // this.maxProfileSize = fetchMaxProfileSize();
     }
+
+    // TODO: may be worth looking at in the future
+    // private Integer fetchMaxProfileSize() {
+    //     try {
+    //         // Setup network loader
+    //         NetworkLoader networkLoader = NetworkLoader.getNetworkLoader();
+    //         // Open network which considers a single CPMG profile
+    //         String networkPath = getNetworkPath("CPMGFAST", 1);
+    //         SavedModelBundle network = networkLoader.fetchNetwork(networkPath);
+
+    //         Iterator<GraphOperation> ops = network.graph().operations();
+    //         while (ops.hasNext()) {
+    //             GraphOperation op = ops.next();
+    //             System.out.println(String.format("op.name(): %s", op.name()));
+    //         }
+    //         // // FIXME: `Shape.size(int i)` has been deprecated.
+    //         // // This will likely not work in the future.
+    //         // int inputSize = (int) network.graph().operation("serving_default").output(0).shape().size(1);
+
+    //         // For a single profile network: inputSize = 2 * maxProfileSize + 2 + 1
+    //         // (2 * maxProfileSize) for x- and y-data
+    //         // 2 For fieldH and fieldX
+    //         // 1 For tau
+    //         return 16;
+    //         // return (inputSize - 3) / 2;
+    //     } catch (IOException exe) {
+    //         return null;
+    //     }
+    // }
 
     public static String[] getEquationNames() {
         String[] equationNames = {"NOEX", "CPMGFAST", "CPMGSLOW", "CPMGMQ"};
@@ -831,6 +871,10 @@ public enum CPMGEquation implements EquationType {
         return String.format(networkPathTemplate, getName(), nProfiles);
     }
 
+    private String getNetworkPath(String name, int nProfiles) {
+        return String.format(networkPathTemplate, name, nProfiles);
+    }
+
     @Override
     public double getMinX() {
         return 5.0;
@@ -860,19 +904,21 @@ public enum CPMGEquation implements EquationType {
         return new double[0];
     }
 
-    // TODO: Will never be called: Is overridden by all enums (see above)
+    // Will never be called: Is overridden by all enums (see above)
     public double[] updateGuess(int i, double[] current, double[] addition, int[] map) {
         return current;
     }
 
-    public double[] guessNeuralNetwork(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) throws IOException {
-        NNData nnData = new NNData(xValues, yValues, map, idNums, networkMaxInput);
+    public double[] guessNeuralNetwork(
+        double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID
+    ) throws IOException {
+        NNDataCPMG data = new NNDataCPMG(xValues, yValues, map, idNums, maxProfileSize);
         NetworkLoader networkLoader = NetworkLoader.getNetworkLoader();
         double[] guess = new double[getNPars(map)];
 
-        for (int residue = 0; residue < nnData.getNResidues(); residue++) {
-            TFloat32 input = nnData.getInput(residue);
-            int nProfiles = nnData.getNProfiles(residue);
+        for (int residue = 0; residue < data.getNResidues(); residue++) {
+            TFloat32 input = data.getInput(residue);
+            int nProfiles = data.getNProfiles(residue);
             String networkPath = getNetworkPath(nProfiles);
             SavedModelBundle network = networkLoader.fetchNetwork(networkPath);
             TFloat32 residueGuessTF32 = (TFloat32) network.function("serving_default").call(input);
@@ -884,7 +930,7 @@ public enum CPMGEquation implements EquationType {
                 residueGuess[i] = residueGuessTF32.getFloat(0, i);
             }
 
-            int[] residueMap = nnData.getResidueMap(residue);
+            int[] residueMap = data.getResidueMap(residue);
             guess = updateGuess(residue, guess, residueGuess, residueMap);
         }
 
@@ -1062,7 +1108,7 @@ class ProfileInfo implements Comparable<ProfileInfo> {
     }
 }
 
-class NNData {
+class NNDataCPMG {
     private double[][] xData;
     private double[] yData;
     private int[][] profileMap;
@@ -1075,7 +1121,7 @@ class NNData {
     private List<TFloat32> inputs;
     private int[][] residueMap;
 
-    public NNData(double[][] xData, double[] yData, int[][] profileMap, int[] idNums, int maxProfileSize) {
+    public NNDataCPMG(double[][] xData, double[] yData, int[][] profileMap, int[] idNums, int maxProfileSize) {
         this.xData = xData;
         this.yData = yData;
         this.profileMap = profileMap;
