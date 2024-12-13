@@ -94,6 +94,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.comdnmr.gui.MainApp.preferencesController;
@@ -269,6 +270,8 @@ public class PyController implements Initializable {
     File initialDir = null;
     SeriesComparator seriesComparator = new SeriesComparator();
 
+    Function<String, String> nmrfxFunction;
+
     @FXML
     private void pyAction(ActionEvent event) {
         Node node = (Node) event.getSource();
@@ -280,6 +283,11 @@ public class PyController implements Initializable {
 
         }
         //MainApp.interpreter.exec("onAction(" + node + ")");
+    }
+
+    public void setNMRFxFunction(Function<String, String> nmrfxFunction) {
+        this.nmrfxFunction = nmrfxFunction;
+        nmrFxPeakButton.setDisable(false);
     }
 
     @FXML
@@ -622,18 +630,11 @@ public class PyController implements Initializable {
         }
         double xMin = Double.MAX_VALUE;
         double xMax = Double.NEGATIVE_INFINITY;
-        for (ResidueChart residueChart : barCharts) {
-            for (DataSeries series : residueChart.getData()) {
-                xMin = Math.min(xMin, series.getMinX() - 1.0);
-                xMax = Math.max(xMax, series.getMaxX() + 1.0);
-            }
-        }
-        if (xMin == Double.MAX_VALUE) {
-            xMin = Math.floor((ChartUtil.minRes - 2) / 5.0) * 5.0;
-            xMax = Math.ceil((ChartUtil.maxRes + 2) / 5.0) * 5.0;
-            barChartXMin = Optional.of(xMin);
-            barChartXMax = Optional.of(xMax);
-        }
+        xMin = Math.floor((ChartUtil.minRes - 2) / 5.0) * 5.0;
+        xMax = Math.ceil((ChartUtil.maxRes + 2) / 5.0) * 5.0;
+        barChartXMin = Optional.of(xMin);
+        barChartXMax = Optional.of(xMax);
+
         double limitMin = barCenter * (xMax - xMin) + xMin;
         double limitMax = fMax * (xMax - xMin) + xMin;
         for (ResidueChart residueChart : barCharts) {
@@ -661,7 +662,7 @@ public class PyController implements Initializable {
             }
         }
         double extraHeight = withAxisHeight - noAxisHeight;
-        double chartHeight = (height -extraHeight) / barCharts.size();
+        double chartHeight = (height - extraHeight) / barCharts.size();
         double yPos = 0.0;
         for (ResidueChart residueChart : barCharts) {
             if (residueChart == barCharts.get(barCharts.size() - 1)) {
@@ -1095,22 +1096,9 @@ public class PyController implements Initializable {
 
     @FXML
     void nmrFxMessage(ActionEvent e) {
-        String peakNum = getPeakNumFromTable();
-        NMRFxClient cl = PyController.mainController.getClient();
-        try {
-            String[] peakSplit = peakNum.split("\\.");
-            String peakName = peakSplit[0];
-            String peakNumber = peakSplit[1];
-            String peakString;
-            if (!peakName.equals("")) {
-                peakString = peakNumber + "/" + peakName;
-            } else {
-                peakString = peakNumber;
-            }
-            cl.sendMessage("showpeak/" + peakString);
-        } catch (IOException ioE) {
-            System.out.println(ioE.getMessage());
-        }
+        String peakString = getPeakNumFromTable();
+        System.out.println("show peak " + peakString);
+        nmrfxFunction.apply("nw.showPeak " + peakString);
     }
 
     public void updateXYChartLabels() {
@@ -1505,9 +1493,10 @@ public class PyController implements Initializable {
                     CurveFit curveSet = chartInfo.experimentalResult.getCurveFit(useEquationName, chartInfo.state.replace("*", "0"));
                     if (curveSet != null) {
                         Double aic = curveSet.getParMap().get("AIC");
+                        Double aicc = curveSet.getParMap().get("AICc");
                         Double rms = curveSet.getParMap().get("RMS");
                         Double rChiSq = curveSet.getParMap().get("rChiSq");
-                        updateFitQuality(aic, null, rms, rChiSq,null);
+                        updateFitQuality(aic, aicc, rms, rChiSq, null);
                     }
                 }
             }
@@ -1730,7 +1719,7 @@ public class PyController implements Initializable {
         Set<Integer> fieldSets = new HashSet<>();
         if (moleculeBase != null) {
             var relaxSets = moleculeBase.relaxationSetMap();
-            for (var entry:relaxSets.entrySet()) {
+            for (var entry : relaxSets.entrySet()) {
                 int field = (int) entry.getValue().field();
                 if (!fieldSets.contains(field)) {
                     CheckMenuItem checkMenuItem = new CheckMenuItem(String.valueOf(field));
@@ -1789,6 +1778,7 @@ public class PyController implements Initializable {
             }
         }
     }
+
     void addOrderParDataToAxisMenu(Map<String, OrderParSet> molResProps) {
         for (var entry : molResProps.entrySet()) {
             String setName = entry.getKey();
@@ -1811,7 +1801,7 @@ public class PyController implements Initializable {
 
     void addOrderParSetsToAxisMenu() {
         System.out.println("add order");
-        Map<String, OrderParSet>  molResProps = DataIO.getOrderParSetFromMolecule();
+        Map<String, OrderParSet> molResProps = DataIO.getOrderParSetFromMolecule();
         orderParSetAxisMenu.getItems().clear();
         for (var entry : molResProps.entrySet()) {
             String setName = entry.getKey();
@@ -1938,6 +1928,7 @@ public class PyController implements Initializable {
             Collections.sort(residueChart.getData(), seriesComparator);
         }
     }
+
     class SeriesComparator implements Comparator<DataSeries> {
 
         @Override
@@ -2656,7 +2647,7 @@ public class PyController implements Initializable {
         if (chartInfo.hasExperiments() && chartInfo.hasResidues()) {
             for (Experiment expData : ((ExperimentSet) chartInfo.getExperiments()).getExperimentData()) {
                 if (!ExperimentSet.matchStateString(chartInfo.state, expData.getState())) {
-                   // continue;
+                    // continue;
                 }
                 String expName = expData.getName();
                 for (ResonanceSource resNum : chartInfo.getResidues()) {
@@ -3141,6 +3132,7 @@ public class PyController implements Initializable {
             OrderParameterTool.interpolateRates(field);
         }
     }
+
     public void calculateSpectralDensities() {
         OrderParameterTool.calculateSpectralDensities();
     }
