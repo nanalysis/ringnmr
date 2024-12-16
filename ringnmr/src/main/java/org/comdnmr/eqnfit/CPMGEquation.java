@@ -933,6 +933,9 @@ public enum CPMGEquation implements EquationType {
             int[] residueMap = data.getResidueMap(residue);
             guess = updateGuess(residue, guess, residueGuess, residueMap);
         }
+        for (var v : guess) {
+            System.out.println(v);
+        }
 
         return guess;
     }
