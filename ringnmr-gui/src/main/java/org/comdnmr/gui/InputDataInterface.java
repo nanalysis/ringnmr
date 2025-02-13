@@ -192,12 +192,12 @@ public class InputDataInterface {
 
     }
     private void loadFromPeakLists(List<PeakList> peakLists, List<Choices> choices, boolean autoFit) {
-        ExperimentSet experimentSet = new ExperimentSet("peaks", "peaks");
         for (int i = 0; i < peakLists.size(); i++) {
             Choices choice = choices.get(i);
             String type = choice.typeChoice.getValue();
             if (!type.isBlank()) {
                 PeakList peakList = peakLists.get(i);
+                ExperimentSet experimentSet = new ExperimentSet(peakList.getName(), peakList.getName());
                 if (peakList != null) {
                     int peakDim = 1;
                     String nucleus;
@@ -726,7 +726,7 @@ public class InputDataInterface {
             yConv = DataIO.YCONV.RATE;
             xConv = DataIO.XCONV.TAU4;
         }
-        ExperimentSet experimentSet = new ExperimentSet("peaks", "peaks");
+        ExperimentSet experimentSet = new ExperimentSet(peakList.getName(), peakList.getName());
         loadFromPeakList(experimentSet, peakList, expMode, nucName, b0Field, temperatureK, tau, xConv, yConv, false);
     }
 
