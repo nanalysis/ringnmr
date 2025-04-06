@@ -38,6 +38,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -71,6 +72,7 @@ import org.nmrfx.chemistry.relax.*;
 import org.nmrfx.datasets.DatasetBase;
 import org.nmrfx.chemistry.utilities.CSVRE;
 import org.nmrfx.peaks.InvalidPeakException;
+import org.nmrfx.peaks.Peak;
 import org.nmrfx.peaks.PeakList;
 import org.nmrfx.star.ParseException;
 import org.yaml.snakeyaml.Yaml;
@@ -132,16 +134,43 @@ public class DataIO {
                 }
                 return result;
             }
+
+            Double[] convert(double value, double refValue, double eValue, double refEValue, double tau) {
+                Double result = null;
+                Double error = null;
+                if ((value < refValue) && (value > 0.0)) {
+                    double r1 = refEValue / refValue;
+                    double r2 = eValue / value;
+                    double normValue = value / refEValue;
+                    double ratioError = Math.abs(normValue) * Math.sqrt(r1 * r1 + r2 * r2);
+                    error = Math.abs(ratioError / normValue) / tau;
+                    result = -Math.log(normValue) / tau;
+                }
+                return new Double[]{result, error};
+            }
         },
         NORMALIZE() {
             @Override
             Double convert(double value, double refValue, double tau) {
                 return value / refValue;
             }
+
+            Double[] convert(double value, double refValue, double eValue, double refEValue, double tau) {
+                double r1 = refEValue / refValue;
+                double r2 = eValue / value;
+                double normValue = value / refValue;
+                double error = Math.abs(normValue) * Math.sqrt(r1 * r1 + r2 * r2);
+                return new Double[]{normValue, error};
+
+            }
         };
 
         Double convert(double value, double refValue, double tau) {
             return value;
+        }
+
+        Double[] convert(double value, double refValue, double eValue, double refEValue, double tau) {
+            return new Double[]{value, eValue};
         }
     }
 
@@ -151,14 +180,84 @@ public class DataIO {
     }
 
     public static void loadFromPeakList(PeakList peakList, Experiment expData,
-                                        ExperimentSet resProp, String xConvStr, String yConvStr, DynamicsSource dynamicsSourceFactory) {
+                                        ExperimentSet resProp, String xConvStr, String yConvStr, ErrorMode errorMode, DynamicsSource dynamicsSourceFactory) {
         loadFromPeakList(peakList, expData, resProp, XCONV.valueOf(xConvStr.toUpperCase()),
-                YCONV.valueOf(yConvStr.toUpperCase()), dynamicsSourceFactory);
+                YCONV.valueOf(yConvStr.toUpperCase()), errorMode, dynamicsSourceFactory);
 
     }
 
+    public record XYErrValue(double x, double y, double err) {
+    }
+
+    record XArrayYErrValue(double[] x, double y, double err) {
+    }
+
+    public record ErrorMode(String mode, double percent) {
+        public double percentFrac() {
+            return percent / 100.0;
+        }
+    }
+
+    public static List<XYErrValue> getPeakValuesAndError(Peak peak, String expMode, double[] xValues,
+                                                         double tau, XCONV xConv, YCONV yConv, ErrorMode errorMode) {
+        List<XYErrValue> xyeValueList = new ArrayList<>();
+
+        if (peak.getMeasures().isPresent()) {
+            double[][] v = peak.getMeasures().get();
+            int offset = 0;
+            double refIntensity = 1.0;
+            double refNoise = 0.0;
+            if (yConv == YCONV.NORMALIZE) {
+                offset = 1;
+                refIntensity = v[0][0];
+                refNoise = v[1][0];
+                if (errorMode.mode().equalsIgnoreCase("percent")) {
+                    refNoise = Math.abs(refIntensity * errorMode.percentFrac());
+                }
+            }
+            double max = 0.0;
+            for (int i = offset; i < v.length; i++) {
+                max = Math.max(max, Math.abs(v[0][i]));
+            }
+            double percentNoise = max * errorMode.percentFrac();
+            if (expMode.equalsIgnoreCase("noe") && (xValues.length > 3)) {
+                double noes[] = new double[xValues.length / 2];
+                for (int i = 0; i < noes.length; i++) {
+                    if (xValues[i * 2] > 0.5) {
+                        noes[i] = v[0][i * 2] / v[0][i * 2 + 1];
+                    } else {
+                        noes[i] = v[0][i * 2 + 1] / v[0][i * 2];
+                    }
+                }
+                DescriptiveStatistics dStat = new DescriptiveStatistics(noes);
+                XYErrValue xyErrValue = new XYErrValue(1.0, dStat.getMean(), dStat.getStandardDeviation());
+                xyeValueList.add(xyErrValue);
+
+            } else {
+                for (int i = offset; i < v[0].length; i++) {
+                    double xValue = xConv.convert(xValues[i], null, null);
+                    double expIntensity = v[0][i];
+                    double expNoise = v[1][i];
+                    if (errorMode.mode().equalsIgnoreCase("percent")) {
+                        expNoise = Math.abs(max * errorMode.percentFrac());
+                    }
+
+                    Double[] yValueError = yConv.convert(expIntensity, refIntensity, expNoise, refNoise, tau);
+                    System.out.println(i + " " + xValue + " " + refIntensity + " " + expIntensity + " " + yValueError[0]);
+                    if (yValueError[0] != null) {
+                        XYErrValue xyErrValue = new XYErrValue(xValue, yValueError[0], yValueError[1]);
+                        xyeValueList.add(xyErrValue);
+                    }
+                }
+            }
+        }
+
+        return xyeValueList;
+    }
+
     public static void loadFromPeakList(PeakList peakList, Experiment experiment,
-                                        ExperimentSet experimentSet, XCONV xConv, YCONV yConv, DynamicsSource dynamicsSourceFactory) {
+                                        ExperimentSet experimentSet, XCONV xConv, YCONV yConv, ErrorMode errorMode,
+                                        DynamicsSource dynamicsSourceFactory) {
         String expMode = experiment.getExpMode();
         DatasetBase dataset = DatasetBase.getDataset(peakList.fileName);
         final double[] xValues;
@@ -184,67 +283,22 @@ public class DataIO {
         if (peakList.peaks().stream().filter(p -> p.getMeasures().isEmpty()).findAny().isPresent()) {
             throw new IllegalArgumentException("Some peaks don't have measured values");
         }
+        final double tau;
+        if (experiment instanceof CPMGExperiment cpmgExperiment) {
+            tau = cpmgExperiment.getTau();
+        } else {
+            tau = 0.0;
+        }
+        AtomicBoolean anyWithouErrors = new AtomicBoolean(false);
         peakList.peaks().stream().filter(peak -> peak.getStatus() >= 0).forEach(peak -> {
-            List<Double> xValueList = new ArrayList<>();
-            List<Double> yValueList = new ArrayList<>();
-            List<Double> errValueList = new ArrayList<>();
-
-            if (peak.getMeasures().isPresent()) {
-                double[][] v = peak.getMeasures().get();
-                int offset = 0;
-                double refIntensity = 1.0;
-                double refNoise = 0.0;
-                double tau = 0.0;
-                if (experiment instanceof CPMGExperiment cpmgExperiment) {
-                    tau = cpmgExperiment.getTau();
-                }
-                if (expMode.equalsIgnoreCase("noe") || expMode.equalsIgnoreCase("cpmg")) {
-                    offset = 1;
-                    refIntensity = v[0][0];
-                    refNoise = v[1][0];
-                }
-                if (expMode.equalsIgnoreCase("noe") && (xValues.length > 3)) {
-                    double noes[] = new double[xValues.length / 2];
-                    for (int i = 0; i < noes.length; i++) {
-                        if (xValues[i * 2] > 0.5) {
-                            noes[i] = v[0][i * 2] / v[0][i * 2 + 1];
-                        } else {
-                            noes[i] = v[0][i * 2 + 1] / v[0][i * 2];
-                        }
-                    }
-                    DescriptiveStatistics dStat = new DescriptiveStatistics(noes);
-                    xValueList.add(1.0);
-                    yValueList.add(dStat.getMean());
-                    errValueList.add(dStat.getStandardDeviation());
-
-                } else {
-                    for (int i = offset; i < v[0].length; i++) {
-                        double xValue = xConv.convert(xValues[i],null, null );
-                        double expIntensity = v[0][i];
-                        Double yValue = yConv.convert(expIntensity, refIntensity, tau);
-                        if (yValue != null) {
-                            xValueList.add(xValue);
-                            yValueList.add(yValue);
-                            if (expMode.equalsIgnoreCase("noe")) {
-                                double expNoise = v[1][i];
-                                double r1 = refNoise / refIntensity;
-                                double r2 = expNoise / expIntensity;
-                                double eValue = Math.abs(expIntensity / refIntensity) * Math.sqrt(r1 * r1 + r2 * r2);
-                                errValueList.add(eValue);
-                            } else {
-                                errValueList.add(0.0);
-                            }
-                        }
-                    }
-                }
-            }
+            List<XYErrValue> xyErrValueList = getPeakValuesAndError(peak, expMode, xValues, tau, xConv, yConv, errorMode);
             Optional<ResonanceSource> resSourceOpt = dynamicsSourceFactory.createFromPeak(peak, nucNames);
             if (resSourceOpt.isPresent()) {
                 ResonanceSource resSource = resSourceOpt.get();
                 if (expMode.equalsIgnoreCase("cest")) {
-                    processCESTData((CESTExperiment) experiment, resSource, xValueList, yValueList, errValueList);
+                    processCESTData((CESTExperiment) experiment, resSource, xyErrValueList);
                 } else {
-                    ExperimentData residueData = new ExperimentData(experiment, resSource, xValueList, yValueList, errValueList);
+                    ExperimentData residueData = new ExperimentData(experiment, resSource, xyErrValueList);
                     experiment.addResidueData(resSource, residueData);
                 }
 
@@ -255,16 +309,19 @@ public class DataIO {
                     experimentSet.addExperimentResult(resSource, residueInfo);
                 }
                 if (expMode.equalsIgnoreCase("noe")) {
-                    residueInfo.value = yValueList.get(0);
-                    residueInfo.err = errValueList.get(0);
+                    residueInfo.value = xyErrValueList.get(0).x();
+                    residueInfo.err = xyErrValueList.get(0).err();
+                }
+                boolean hasAllErrors = xyErrValueList.stream().mapToDouble(v -> v.err()).filter(v -> Math.abs(v) < 1.0e-9).findAny().isEmpty();
+                if (!hasAllErrors) {
+                    anyWithouErrors.set(true);
                 }
             }
         });
-        if (!eSet) {
+        if (errorMode.mode().equalsIgnoreCase("replicates")) {
             double errValue = estimateErrors(experiment);
             setErrors(experiment, errValue);
         }
-
     }
 
     public static void loadPeakFile(String fileName, Experiment experiment,
@@ -471,9 +528,7 @@ public class DataIO {
                         }
 
                     }
-                    List<Double> xValueList = new ArrayList<>();
-                    List<Double> yValueList = new ArrayList<>();
-                    List<Double> errValueList = new ArrayList<>();
+                    List<XYErrValue> xyErrValueList = new ArrayList<>();
                     boolean ok = true;
                     int iX = 0;
                     for (int i = offset; i < sfields.length; i++) {
@@ -494,8 +549,6 @@ public class DataIO {
                             ok = false;
                             continue;
                         }
-                        xValueList.add(xValues[iX]);
-                        yValueList.add(yValue);
 
                         double eValue = 0.0;
                         if (hasErrColumns) {
@@ -562,7 +615,8 @@ public class DataIO {
                                 eValue = noise;
                             }
                         }
-                        errValueList.add(eValue);
+                        XYErrValue xyErrValue = new XYErrValue(xValues[iX], yValue, eValue);
+                        xyErrValueList.add(xyErrValue);
                         iX++;
                     }
                     if (!ok) {
@@ -574,9 +628,9 @@ public class DataIO {
                     }
                     ResonanceSource dynSource = resSourceOpt.get();
                     if (expMode.equalsIgnoreCase("cest")) {
-                        processCESTData((CESTExperiment) experiment, dynSource, xValueList, yValueList, errValueList);
+                        processCESTData((CESTExperiment) experiment, dynSource, xyErrValueList);
                     } else {
-                        ExperimentData residueData = new ExperimentData(experiment, dynSource, xValueList, yValueList, errValueList);
+                        ExperimentData residueData = new ExperimentData(experiment, dynSource, xyErrValueList);
                         experiment.addResidueData(dynSource, residueData);
                     }
                     ExperimentResult residueInfo = experimientSet.getExperimentResult(dynSource);
@@ -587,8 +641,8 @@ public class DataIO {
                         experimientSet.addExperimentResult(dynSource, residueInfo);
                     }
                     if (expMode.equalsIgnoreCase("noe")) {
-                        residueInfo.value = yValueList.get(0);
-                        residueInfo.err = errValueList.get(0);
+                        residueInfo.value = xyErrValueList.get(0).x();
+                        residueInfo.err = xyErrValueList.get(0).err();
                     }
 
                     fakeRes++;
@@ -601,16 +655,15 @@ public class DataIO {
         }
     }
 
-    public static void processCESTData(OffsetExperiment expData, ResonanceSource dynSource,
-                                       List<Double> xValueList, List<Double> yValueList, List<Double> errValueList) {
+    public static void processCESTData(OffsetExperiment expData, ResonanceSource dynSource, List<XYErrValue> xyErrValueList) {
         Double B1field = expData.getB1Field();
         List<Double> B1fieldList = new ArrayList<>();
-        xValueList.forEach((_item) -> {
+        xyErrValueList.forEach((_item) -> {
             B1fieldList.add(B1field);
         });
         double tau = expData.getTau();
         List<Double> tauList = new ArrayList<>();
-        xValueList.forEach((_item) -> {
+        xyErrValueList.forEach((_item) -> {
             tauList.add(tau);
         });
         List<Double> bFieldUniqueValue = new ArrayList<>();
@@ -618,11 +671,15 @@ public class DataIO {
         List<Double> tauList1 = new ArrayList<>();
         tauList1.add(tauList.get(0));
         List<Double>[] xValueLists = new ArrayList[3];
-        xValueLists[0] = xValueList;
-        xValueLists[1] = B1fieldList;
-        xValueLists[2] = tauList;
+        List<XArrayYErrValue> xArrayYErrValues = new ArrayList<>();
+        for (XYErrValue xyErrValue : xyErrValueList) {
+            double[] xvalues = {xyErrValue.x(), B1field, tau};
+            XArrayYErrValue xArrayYErrValue = new XArrayYErrValue(xvalues, xyErrValue.y(), xyErrValue.err());
+            xArrayYErrValues.add(xArrayYErrValue);
 
-        ExperimentData residueData = new ExperimentData(expData, dynSource, xValueLists, yValueList, errValueList);
+        }
+
+        ExperimentData residueData = new ExperimentData(expData, dynSource, xArrayYErrValues, 3);
         expData.addResidueData(dynSource, residueData);
         expData.getExtras().clear();
         expData.setExtras(bFieldUniqueValue);
@@ -667,9 +724,7 @@ public class DataIO {
             throws IOException, IllegalArgumentException {
         boolean gotHeader = false;
         int nValues = 0;
-        List<Double> xValueList = new ArrayList<>();
-        List<Double> yValueList = new ArrayList<>();
-        List<Double> errValueList = new ArrayList<>();
+        List<XYErrValue> xyErrValueList = new ArrayList<>();
         System.out.println("Load XY file " + fileName + " for res " + residueNum + " atom " + atomName);
 
         experimentSet.addExperimentData(expData.getName(), expData);
@@ -713,9 +768,8 @@ public class DataIO {
                         }
                         offsetFreq = xConv.convert(offsetFreq, null, expData);
                         intensity = yConv.convert(intensity, refIntensity, 0.0);
-                        xValueList.add(offsetFreq);
-                        yValueList.add(intensity);
-                        errValueList.add(error);
+                        XYErrValue xyErrValue = new XYErrValue(offsetFreq, intensity, error);
+                        xyErrValueList.add(xyErrValue);
                     } catch (NumberFormatException nFE) {
                         System.out.println(nFE.getMessage());
 //                        continue;
@@ -733,7 +787,7 @@ public class DataIO {
         }
         ResonanceSource resSource = resSourceOpt.get();
 
-        processCESTData((OffsetExperiment) expData, resSource, xValueList, yValueList, errValueList);
+        processCESTData((OffsetExperiment) expData, resSource, xyErrValueList);
         ExperimentResult expResult = experimentSet.getExperimentResult(resSource);
         if (expResult == null) {
             expResult = new ExperimentResult(experimentSet, resSource, 0, 0, 0);
@@ -826,9 +880,19 @@ public class DataIO {
     public static void setErrors(Experiment expData, double error) {
         for (ExperimentData residueData : expData.experimentalDataSets.values()) {
             double[] errValues = residueData.getErrValues();
-            Arrays.fill(errValues, error);
+            if (error < 1.0e-9) {
+                double[] yValues = residueData.getYValues();
+                double max = 0.0;
+                for (int i = 0; i < yValues.length; i++) {
+                    max = Math.max(max, yValues[i]);
+                }
+                for (int i = 0; i < errValues.length; i++) {
+                    errValues[i] = max * 0.05;
+                }
+            } else {
+                Arrays.fill(errValues, error);
+            }
         }
-
     }
 
     public static double estimateErrors(Experiment expData) {
@@ -1119,8 +1183,9 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     default:
                 }
 
+                ErrorMode errorMode = new ErrorMode("replicates", 0.0);
                 loadFromPeakList(peakList, expData, experimentSet,
-                        XCONV.IDENTITY, YCONV.IDENTITY, dynamicsSourceFactory);
+                        XCONV.IDENTITY, YCONV.IDENTITY, errorMode, dynamicsSourceFactory);
             }
         }
         return experimentSet;
@@ -1664,7 +1729,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                             double error = Double.parseDouble(fields[index + 1]);
                             String id = fileName + "_" + type + "_" + Math.round(field);
                             Optional<ResonanceSource> resSourceOpt = dynamicsSourceFactory.
-                                    createFromSpecifiers(fileName + "." + residue, resName+residue, atomNames);
+                                    createFromSpecifiers(fileName + "." + residue, resName + residue, atomNames);
                             RelaxTypes relaxType = RelaxTypes.valueOf(type);
                             RelaxationSet relaxationSet = setMap
                                     .computeIfAbsent(id, (k) -> new RelaxationSet(id, relaxType, field, 25, Collections.emptyMap()));

@@ -2690,19 +2690,16 @@ public class PyController implements Initializable {
                 Map<String, SpectralDensity> spectralDensityMap = atom.getSpectralDensity();
                 var sdData = ChartUtil.getSpectralDensityData(spectralDensityMap);
                 allData.addAll(sdData);
-                List<Double> xV = new ArrayList<>();
-                List<Double> yV = new ArrayList<>();
-                List<Double> eV = new ArrayList<>();
+                List<DataIO.XYErrValue> xyErrValueList = new ArrayList<>();
                 for (var v : sdData) {
                     var d = v.getData();
                     for (var dv : d) {
                         if (dv instanceof XYEValue xye) {
-                            xV.add(xye.getXValue());
-                            yV.add(xye.getYValue());
-                            eV.add(xye.getError());
+                            DataIO.XYErrValue xyErrValue = new DataIO.XYErrValue(xye.getXValue(), xye.getYValue(), xye.getError());
+                            xyErrValueList.add(xyErrValue);
                         }
                     }
-                    ExperimentData sdExpData = new ExperimentData(null, resonanceSource, xV, yV, eV);
+                    ExperimentData sdExpData = new ExperimentData(null, resonanceSource, xyErrValueList);
                     experimentalDataSets.add(sdExpData);
                 }
                 var orderPars = atom.getOrderPars();
