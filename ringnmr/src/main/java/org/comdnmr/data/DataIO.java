@@ -97,6 +97,7 @@ public class DataIO {
                 return result;
             }
 
+            @Override
             Double[] convert(double value, double refValue, double eValue, double refEValue, double tau) {
                 Double result = null;
                 Double error = null;
@@ -117,6 +118,7 @@ public class DataIO {
                 return value / refValue;
             }
 
+            @Override
             Double[] convert(double value, double refValue, double eValue, double refEValue, double tau) {
                 double r1 = refEValue / refValue;
                 double r2 = eValue / value;
@@ -183,7 +185,7 @@ public class DataIO {
             }
             double percentNoise = max * errorMode.percentFrac();
             if (expMode.equalsIgnoreCase("noe") && (xValues.length > 3)) {
-                double noes[] = new double[xValues.length / 2];
+                double[] noes = new double[xValues.length / 2];
                 for (int i = 0; i < noes.length; i++) {
                     if (xValues[i * 2] > 0.5) {
                         noes[i] = v[0][i * 2] / v[0][i * 2 + 1];
@@ -242,7 +244,7 @@ public class DataIO {
         } else {
             nucNames = new String[]{nucName};
         }
-        if (peakList.peaks().stream().filter(p -> p.getMeasures().isEmpty()).findAny().isPresent()) {
+        if (peakList.peaks().stream().anyMatch(p -> p.getMeasures().isEmpty())) {
             throw new IllegalArgumentException("Some peaks don't have measured values");
         }
         final double tau;
@@ -298,14 +300,14 @@ public class DataIO {
         String expMode = experiment.getExpMode();
         double[] xVals = null;
         double tau = 0.0;
-        if (experiment instanceof OffsetExperiment) {
-            tau = ((OffsetExperiment) experiment).getTau();
+        if (experiment instanceof OffsetExperiment offsetExperiment) {
+            tau = offsetExperiment.getTau();
         }
         if (experiment instanceof CPMGExperiment cpmgExperiment) {
             tau = cpmgExperiment.getTau();
         }
-        if (experiment instanceof DoubleArrayExperiment) {
-            xVals = ((DoubleArrayExperiment) experiment).getXVals();
+        if (experiment instanceof DoubleArrayExperiment doubleArrayExperiment) {
+            xVals = doubleArrayExperiment.getXVals();
         }
         experimientSet.addExperimentData(experiment.getName(), experiment);
         boolean eSet = false;
@@ -349,7 +351,7 @@ public class DataIO {
                     break;
                 }
                 String sline = line.trim();
-                if (sline.length() == 0) {
+                if (sline.isEmpty()) {
                     continue;
                 }
                 if (sline.charAt(0) == '#') {
@@ -495,7 +497,7 @@ public class DataIO {
                     int iX = 0;
                     for (int i = offset; i < sfields.length; i++) {
                         String valueStr = sfields[i].trim();
-                        if ((valueStr.length() == 0) || valueStr.equalsIgnoreCase("NA")) {
+                        if ((valueStr.isEmpty()) || valueStr.equalsIgnoreCase("NA")) {
                             continue;
                         }
                         Double yValue;
@@ -620,19 +622,14 @@ public class DataIO {
     public static void processCESTData(OffsetExperiment expData, ResonanceSource dynSource, List<XYErrValue> xyErrValueList) {
         Double B1field = expData.getB1Field();
         List<Double> B1fieldList = new ArrayList<>();
-        xyErrValueList.forEach((_item) -> {
-            B1fieldList.add(B1field);
-        });
+        xyErrValueList.forEach((_item) -> B1fieldList.add(B1field));
         double tau = expData.getTau();
         List<Double> tauList = new ArrayList<>();
-        xyErrValueList.forEach((_item) -> {
-            tauList.add(tau);
-        });
+        xyErrValueList.forEach(_item -> tauList.add(tau));
         List<Double> bFieldUniqueValue = new ArrayList<>();
         bFieldUniqueValue.add(B1fieldList.get(0));
         List<Double> tauList1 = new ArrayList<>();
         tauList1.add(tauList.get(0));
-        List<Double>[] xValueLists = new ArrayList[3];
         List<XArrayYErrValue> xArrayYErrValues = new ArrayList<>();
         for (XYErrValue xyErrValue : xyErrValueList) {
             double[] xvalues = {xyErrValue.x(), B1field, tau};
@@ -702,7 +699,7 @@ public class DataIO {
 
 //            String line = fileReader.readLine();
                 String sline = line.trim();
-                if (sline.length() == 0) {
+                if (sline.isEmpty()) {
                     continue;
                 }
                 if (sline.charAt(0) == '#') {
@@ -831,7 +828,7 @@ public class DataIO {
     }
 
     public static void setPercentileErrors(Experiment expData, double fraction) {
-        expData.experimentalDataSets.values().forEach((residueData) -> {
+        expData.experimentalDataSets.values().forEach(residueData -> {
             double[] yValues = residueData.getYValues();
             for (int i = 0; i < yValues.length; i++) {
                 residueData.setErrValue(i, yValues[i] * fraction);
@@ -912,9 +909,8 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 if (line == null) {
                     break;
                 }
-//            String line = fileReader.readLine();
                 String sline = line.trim();
-                if (sline.length() == 0) {
+                if (sline.isEmpty()) {
                     continue;
                 }
                 if (sline.startsWith("#")) {
@@ -1021,7 +1017,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     //parMap.put("Kex", 0.0); // Set Kex to 0.0.  Overwritten below if exists in output file
 
                     for (int i = parStart; i < header.length; i++) {
-                        if (sfields[i].trim().length() > 0) {
+                        if (!sfields[i].trim().isEmpty()) {
                             String parName = header[i].trim();
                             double parValue = Double.parseDouble(sfields[i].trim());
                             parMap.put(parName, parValue);
@@ -1430,7 +1426,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 }
 
                 String sline = line.trim();
-                if (sline.length() == 0) {
+                if (sline.isEmpty()) {
                     continue;
                 }
                 if (sline.contains("#")) {
@@ -1507,7 +1503,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 extras.put("coherenceType", coherenceType);
                 extras.put("units", units);
                 RelaxationSet relaxationSet = new RelaxationSet(datasetName, expType, dField, temperature, extras);
-                expResults.forEach((expResult) -> {
+                expResults.forEach(expResult -> {
                     Double value;
                     Double error;
                     if (expType == RelaxTypes.NOE) {
@@ -1694,7 +1690,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                                     createFromSpecifiers(fileName + "." + residue, resName + residue, atomNames);
                             RelaxTypes relaxType = RelaxTypes.valueOf(type);
                             RelaxationSet relaxationSet = setMap
-                                    .computeIfAbsent(id, (k) -> new RelaxationSet(id, relaxType, field, 25, Collections.emptyMap()));
+                                    .computeIfAbsent(id, k -> new RelaxationSet(id, relaxType, field, 25, Collections.emptyMap()));
 
                             if (!resSourceOpt.isPresent()) {
                                 throw new IllegalArgumentException("Can't generate resonance source from peak " + fileName + "." + residue);
