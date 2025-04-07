@@ -269,7 +269,7 @@ public class PyController implements Initializable {
     static Random rand = new Random();
     File initialDir = null;
     SeriesComparator seriesComparator = new SeriesComparator();
-
+    Map<Atom, CorrelationTime.TauR1R2Result> tauR1R2ResultMap = new HashMap<>();
     Function<String, String> nmrfxFunction;
 
     @FXML
@@ -1348,12 +1348,12 @@ public class PyController implements Initializable {
         ValueSet valueSet1 = ChartUtil.getResidueProperty(r1SetName);
         ValueSet valueSet2 = ChartUtil.getResidueProperty(r2SetName);
         Map<String, Double> result = Collections.EMPTY_MAP;
-        if (valueSet1 instanceof ExperimentSet) {
-            if (valueSet2 instanceof ExperimentSet) {
-                ExperimentSet r1Set = (ExperimentSet) valueSet1;
-                ExperimentSet r2Set = (ExperimentSet) valueSet2;
+        if ((valueSet1 instanceof ExperimentSet r1Set) && (valueSet2 instanceof ExperimentSet r2Set)) {
+            result = CorrelationTime.estimateTau(r1Set, r2Set);
+            tauR1R2ResultMap = CorrelationTime.estimateTauPerResidue(r1Set, r2Set);
+        } else if ((valueSet1 instanceof RelaxationSet r1Set) && (valueSet2 instanceof RelaxationSet r2Set)) {
                 result = CorrelationTime.estimateTau(r1Set, r2Set);
-            }
+                tauR1R2ResultMap = CorrelationTime.estimateTauPerResidue(r1Set, r2Set);
         } else {
             FitR1R2NOEModel fitR1R2NOEModel = new FitR1R2NOEModel();
             result = fitR1R2NOEModel.estimateTau();
@@ -1363,6 +1363,15 @@ public class PyController implements Initializable {
             r1MedianField.setText(String.format("%.3f", result.get("R1")));
             r2MedianField.setText(String.format("%.3f", result.get("R2")));
             tauCalcField.setText(String.format("%.2f", result.get("tau")));
+        }
+    }
+
+    public void writeR1R2Tau() throws IOException {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save R1/R2/Tau File");
+        File file = fileChooser.showSaveDialog(MainApp.primaryStage);
+        if (file != null) {
+            DataIO.writeR1R2Tau(file, tauR1R2ResultMap);
         }
     }
 
@@ -1706,7 +1715,7 @@ public class PyController implements Initializable {
         Collection<String> setNames = ChartUtil.getResiduePropertyNames();
         for (var setName : setNames) {
             ValueSet valueSet = ChartUtil.getResidueProperty(setName);
-            if (valueSet instanceof ExperimentSet) {
+            if (valueSet instanceof ExperimentSet || valueSet instanceof RelaxationSet) {
                 t1Choice.getItems().add(setName);
                 t2Choice.getItems().add(setName);
             }
