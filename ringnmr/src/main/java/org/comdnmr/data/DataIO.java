@@ -17,63 +17,25 @@
  */
 package org.comdnmr.data;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Pattern;
-
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.comdnmr.eqnfit.CESTEquation;
-import org.comdnmr.eqnfit.CESTFitter;
-import org.comdnmr.eqnfit.CPMGEquation;
-import org.comdnmr.eqnfit.CPMGFitter;
-import org.comdnmr.eqnfit.CurveFit;
-import org.comdnmr.eqnfit.EquationType;
-import org.comdnmr.eqnfit.ExpEquation;
-import org.comdnmr.eqnfit.ExpFitter;
-import org.comdnmr.eqnfit.PlotEquation;
-import org.comdnmr.eqnfit.R1RhoEquation;
-import org.comdnmr.eqnfit.R1RhoFitter;
-import org.nmrfx.chemistry.Atom;
-import org.nmrfx.chemistry.Entity;
-import org.nmrfx.chemistry.InvalidMoleculeException;
-import org.nmrfx.chemistry.MoleculeBase;
-import org.nmrfx.chemistry.MoleculeFactory;
-import org.nmrfx.chemistry.Polymer;
-import org.nmrfx.chemistry.Residue;
-import org.nmrfx.chemistry.io.MMcifReader;
-import org.nmrfx.chemistry.io.MoleculeIOException;
-import org.nmrfx.chemistry.io.NMRNEFReader;
-import org.nmrfx.chemistry.io.NMRStarReader;
-import org.nmrfx.chemistry.io.NMRStarWriter;
-import org.nmrfx.chemistry.io.PDBFile;
+import org.comdnmr.eqnfit.*;
+import org.comdnmr.modelfree.CorrelationTime;
+import org.nmrfx.chemistry.*;
+import org.nmrfx.chemistry.io.*;
 import org.nmrfx.chemistry.relax.*;
-import org.nmrfx.datasets.DatasetBase;
 import org.nmrfx.chemistry.utilities.CSVRE;
+import org.nmrfx.datasets.DatasetBase;
 import org.nmrfx.peaks.InvalidPeakException;
 import org.nmrfx.peaks.PeakList;
 import org.nmrfx.star.ParseException;
 import org.yaml.snakeyaml.Yaml;
+
+import java.io.*;
+import java.nio.file.*;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 /**
  * @author Bruce Johnson
@@ -219,7 +181,7 @@ public class DataIO {
 
                 } else {
                     for (int i = offset; i < v[0].length; i++) {
-                        double xValue = xConv.convert(xValues[i],null, null );
+                        double xValue = xConv.convert(xValues[i], null, null);
                         double expIntensity = v[0][i];
                         Double yValue = yConv.convert(expIntensity, refIntensity, tau);
                         if (yValue != null) {
@@ -1470,7 +1432,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         if (mol != null) {
             double temperature = 25.0;
             for (int f = 0; f < fields.length; f++) {
-                int field = (int) fields[f];
+                double dField = fields[f];
                 final int iList = f;
                 List<ExperimentResult> expResults = expSet.getExperimentResults();
                 Collections.sort(expResults, (a, b) -> Integer.compare(a.getAtom().getIndex(), b.getAtom().getIndex()));
@@ -1479,7 +1441,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 String units = "s-1";
                 extras.put("coherenceType", coherenceType);
                 extras.put("units", units);
-                RelaxationSet relaxationSet = new RelaxationSet(datasetName, expType, f, temperature, extras);
+                RelaxationSet relaxationSet = new RelaxationSet(datasetName, expType, dField, temperature, extras);
                 expResults.forEach((expResult) -> {
                     Double value;
                     Double error;
@@ -1664,7 +1626,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                             double error = Double.parseDouble(fields[index + 1]);
                             String id = fileName + "_" + type + "_" + Math.round(field);
                             Optional<ResonanceSource> resSourceOpt = dynamicsSourceFactory.
-                                    createFromSpecifiers(fileName + "." + residue, resName+residue, atomNames);
+                                    createFromSpecifiers(fileName + "." + residue, resName + residue, atomNames);
                             RelaxTypes relaxType = RelaxTypes.valueOf(type);
                             RelaxationSet relaxationSet = setMap
                                     .computeIfAbsent(id, (k) -> new RelaxationSet(id, relaxType, field, 25, Collections.emptyMap()));
@@ -1679,6 +1641,42 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     }
                 }
             }
+        }
+    }
+
+    static String toFileString(CorrelationTime.TauR1R2Result tr1, String sepChar) {
+        String format = "%.3f";
+
+        String outStr = String.format(format + sepChar + format + sepChar + format + sepChar + format + sepChar + format + sepChar + format, tr1.r1(), tr1.r1_err(), tr1.r2(), tr1.r2_err(), tr1.tau(), tr1.tauEst());
+        return outStr;
+    }
+
+    public static void writeR1R2Tau(File file, Map<Atom, CorrelationTime.TauR1R2Result> tauR1R2ResultMap) throws IOException {
+
+        String sepChar = "\t";
+        try (FileWriter fileWriter = new FileWriter(file)) {
+            fileWriter.write("Chain" + sepChar + "Residue" + sepChar + "Atom" + sepChar + "field");
+            String[] typeList = {"r1","r1err","r2","r2err","tau","tauEst"};
+            for (var type : typeList) {
+                fileWriter.write(sepChar + type);
+            }
+            fileWriter.write("\n");
+            tauR1R2ResultMap.entrySet().stream().sorted(Comparator.comparingInt(a -> ((Residue) (a.getKey().getEntity())).getResNum())).forEach(e -> {
+                CorrelationTime.TauR1R2Result tauR1R2Result = e.getValue();
+                Atom atom = e.getKey();
+                String polymer = atom.getTopEntity().getName();
+                polymer = polymer == null ? "A" : polymer;
+                String resNum = String.valueOf(atom.getResidueNumber());
+                try {
+                    String b0Str = String.format("%.3f", tauR1R2Result.b0());
+                    fileWriter.write(polymer + sepChar + resNum + sepChar + atom.getName() + sepChar + b0Str + sepChar);
+                    fileWriter.write(toFileString(tauR1R2Result, sepChar));
+                    fileWriter.write("\n");
+                } catch (IOException ex) {
+                }
+            });
+        } catch (IOException ioException) {
+
         }
     }
 }

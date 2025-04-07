@@ -546,6 +546,7 @@ public class RelaxEquations {
      * R2:R1 ratio calculation.
      *
      * @param tau double. The correlation time.
+     *            Kay, Torchia and Bax (1989) Biochemistry 28:8972-8879
      * @return double. R2/R1 value.
      */
     public double r2r1Ratio(double tau) {
