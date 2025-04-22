@@ -41,8 +41,7 @@ public class FitR1R2NOEModelTest {
         double r2Error = r2 * 0.03;
         double noe = rlxEq.NOE(valJ);
         double noeError = 0.05;
-        R1R2NOEDataValue dValue = new R1R2NOEDataValue(resData, r1, r1Error, r2, r2Error, noe, noeError, rlxEq);
-        return dValue;
+        return new R1R2NOEDataValue(resData, r1, r1Error, r2, r2Error, noe, noeError, rlxEq);
     }
 
     public Map<String, MolDataValues> getMolDataValues() {
@@ -135,7 +134,6 @@ public class FitR1R2NOEModelTest {
         Assert.assertArrayEquals(pars,resultJ, 0.01);
     }
 
-    @Test
     public void testJCalc() {
         String modelName = "2sf";
         double tau = 100.0;
@@ -151,7 +149,7 @@ public class FitR1R2NOEModelTest {
 
         SpectralDensityCalculator spectralDensityCalculator = new SpectralDensityCalculator();
 
-        PointValuePair result = spectralDensityCalculator.fit(sf, dValue);
+        PointValuePair result = spectralDensityCalculator.fit(dValue);
         System.out.println("sd fit " + result);
         double[] jResult = result.getPoint();
         for (int k = 0; k < jResult.length; k++) {

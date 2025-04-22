@@ -10,60 +10,51 @@ import java.util.List;
 public class SpectralDensityCalculator {
 
     R1R2NOEDataValue relaxDataValue;
-    RelaxEquations relaxEquations;
 
-    public double value(double[] jValues, double[][] values) {
+    public double value(double[] pars, double[][] values) {
         RelaxEquations relaxEquation = relaxDataValue.relaxObj;
-        double penalty = 1.0;
-        double penaltySum = 0.0;
-        if (jValues[0] < jValues[1]) {
-            penaltySum += penalty;
-        }
-        if (jValues[1] < jValues[2]) {
-            penaltySum += penalty;
-        }
-
-        double delta32 = jValues[3] - jValues[2];
-        double delta43 = jValues[4] - jValues[3];
+        double ratio = RelaxEquations.GAMMA_N/ RelaxEquations.GAMMA_H;
+        double f1 = 1.0 - ratio;
+        double f2 = 1.0 + ratio;
 
 
-        if (delta32 < 0.0) {
-            penaltySum += penalty;
-        }
-        if (delta43 < 0.0) {
-            penaltySum += penalty;
-        }
-        if (delta43 < delta32) {
-            penaltySum += penalty;
-        }
+        double jH = pars[2];
+        double jHmN = jH  / Math.pow(f1,1.5);
+        double jHpN = jH /  Math.pow(f2,1.5);
 
+        double[] jValues = {pars[0], pars[1], jHmN, jH, jHpN};
         double r1 = relaxEquation.R1(jValues);
         double r2 = relaxEquation.R2(jValues, 0.0);
         double noe = relaxEquation.NOE(jValues);
-       // System.out.println(" " + penaltySum);
-        double delta2 = relaxDataValue.score2(r1, r2, noe);
-        delta2 += penaltySum;
-        return delta2;
+
+        return relaxDataValue.score2(r1, r2, noe);
     }
 
-    public PointValuePair fit(double sf, R1R2NOEDataValue dValue) {
+    public PointValuePair fit(R1R2NOEDataValue dValue) {
         this.relaxDataValue = dValue;
         Fitter fitter = Fitter.getArrayFitter(this::value);
         double[][] jValues = calcJR1R2NOE(List.of(dValue));
         double j0 = jValues[1][0];
         double jN = jValues[1][2];
-        double jH87 = jValues[1][1];
-        System.out.println("jh87 " + jH87);
-        double jH = jH87;
-        double jHmN = jH * 1.1;
-        double jHpN = jH * 0.9;
+        double jH = jValues[1][1];
+        double ratio = RelaxEquations.GAMMA_N/ RelaxEquations.GAMMA_H;
+        double f1 = 1.0 - ratio;
+        double f2 = 1.0 + ratio;
 
-        double[] start = {j0, jN, jHmN, jH, jHpN};
-        double[] lower = {j0 * 0.5, jN * 0.5, jHmN * 0.5, jH * 0.5, jHpN * 0.5};
-        double[] upper = {j0 * 1.5, jN * 1.5, jHmN * 1.5, jH * 1.5, jHpN * 1.5};
+        double[] start = {j0, jN, jH};
+        double[] lower = {j0 * 0.5, jN*0.5, jH*0.5};
+        double[] upper = {j0 * 1.5, jN * 1.5, jH * 1.5};
 
         try {
-            return fitter.fit(start, lower, upper, 10.0);
+            PointValuePair pointValuePair = fitter.fit(start, lower, upper, 10.0);
+            double[] j = pointValuePair.getPoint();
+
+            double jHr = j[2];
+            double jHmN = jHr  / Math.pow(f1,1.5);
+            double jHpN = jHr /  Math.pow(f2,1.5);
+
+            double[] jResult = {j[0], j[1], jHmN, jHr, jHpN};
+            return new PointValuePair(jResult, pointValuePair.getValue());
         } catch (Exception ex) {
             ex.printStackTrace();
             return null;
