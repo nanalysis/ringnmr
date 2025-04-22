@@ -43,5 +43,12 @@ public class MFModelTest {
         double[][] jValues = getJForModels("1s", pars2sf, parsTest);
         Assert.assertArrayEquals(jValues[0], jValues[1], 1.0e-9);
     }
+    @Test
+    public void test2s() {
+        double[] parsTest = {0.7, 0.9, 1.0};
+        double[] pars2sf = {0.7, 0.0, 1.0, 0.9};
+        double[][] jValues = getJForModels("2s", pars2sf, parsTest);
+        Assert.assertArrayEquals(jValues[0], jValues[1], 1.0e-9);
+    }
 
 }
