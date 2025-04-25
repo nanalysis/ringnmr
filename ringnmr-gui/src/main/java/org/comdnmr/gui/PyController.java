@@ -271,7 +271,7 @@ public class PyController implements Initializable {
     SeriesComparator seriesComparator = new SeriesComparator();
     Map<Atom, CorrelationTime.TauR1R2Result> tauR1R2ResultMap = new HashMap<>();
     Function<String, String> nmrfxFunction;
-
+    List<MenuData> menuDataList = new ArrayList<>();
     @FXML
     private void pyAction(ActionEvent event) {
         Node node = (Node) event.getSource();
@@ -1758,6 +1758,7 @@ public class PyController implements Initializable {
         makeT1T2Menu();
         experimentalDataAxisMenu.getItems().clear();
         moleculeDataAxisMenu.getItems().clear();
+        menuDataList.clear();
         addMoleculeDataToAxisMenu();
         addResiduePropertiesToAxisMenu();
     }
@@ -1956,8 +1957,26 @@ public class PyController implements Initializable {
         }
     }
 
+    record MenuData(String expMode, String setName, String eqnName, String state, String parName) {}
+
+    void showAllR() {
+        System.out.println("show all " + menuDataList);
+
+        List<String> chartNames = menuDataList.stream().map( menuData -> menuData.setName()).toList();
+        var chartMap = setupCharts(chartNames);
+
+        for (MenuData menuData : menuDataList) {
+            activeChart = chartMap.get(menuData.setName());
+            setYAxisType(menuData.expMode, menuData.setName, menuData.eqnName(), menuData.state(),  menuData.parName(), true);
+        }
+        sortChartSeries();
+        resizeBarPlotCanvas();
+    }
     void addResiduePropertiesToAxisMenu() {
         Collection<String> setNames = ChartUtil.getResiduePropertyNames();
+        MenuItem addAllItem = new MenuItem("All");
+        addAllItem.setOnAction(e -> showAllR());
+        experimentalDataAxisMenu.getItems().add(addAllItem);
         setNames.stream().sorted().forEach(setName -> {
             var valueSet = ChartUtil.getResidueProperty(setName);
             if (valueSet instanceof ExperimentSet) {
@@ -1985,6 +2004,10 @@ public class PyController implements Initializable {
                             MenuItem cmItem1 = new MenuItem(parType);
                             cmItem1.setOnAction(e -> setYAxisType(expMode, setName, equationName, "0:0:0", parType, true));
                             cascade.getItems().add(cmItem1);
+                            if (parType.equals("R") || parType.equals("Kex")) {
+                                MenuData menuData = new MenuData(expMode, setName, "best", "0:0:0", parType);
+                                menuDataList.add(menuData);
+                            }
                         } else {
 
                             Menu cascade2 = new Menu(parType);
@@ -2001,6 +2024,10 @@ public class PyController implements Initializable {
                                 cascade2.getItems().add(cmItem1);
 
                             } else {
+                                if (parType.equals("R") || parType.equals("Kex")) {
+                                    MenuData menuData = new MenuData(expMode, setName, "best", "0:0:0", parType);
+                                    menuDataList.add(menuData);
+                                }
 
                                 for (String equationName : equationNames) {
                                     if ((stateStrings.size() < 2) || parType.equals("RMS") || parType.equals("AIC") || parType.equals("Equation")) {
