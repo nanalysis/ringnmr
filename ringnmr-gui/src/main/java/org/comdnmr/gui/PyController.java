@@ -39,6 +39,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -488,6 +489,7 @@ public class PyController implements Initializable {
         chartBox.setContent(barPlotCanvas);
         addChart();
         barPlotCanvas.setOnMouseClicked(this::mouseClickedOnBarCanvas);
+        barPlotCanvas.setOnKeyPressed(this::keyPressedOnBarCanvas);
 //        mainController.setOnHidden(e -> Platform.exit());
         PauseTransition logoTransition = new PauseTransition(Duration.seconds(5));
         logoTransition.setOnFinished(e -> removeLogo());
@@ -704,9 +706,19 @@ public class PyController implements Initializable {
         }
     }
 
+    void keyPressedOnBarCanvas(KeyEvent keyEvent) {
+
+        switch(keyEvent.getCode()) {
+            case DELETE, BACK_SPACE -> removeItem();
+            case RIGHT -> nextResidue(null);
+            case LEFT -> previousResidue(null);
+        }
+    }
+
     void mouseClickedOnBarCanvas(MouseEvent e) {
         double x = e.getX();
         double y = e.getY();
+        barPlotCanvas.requestFocus();
         for (ResidueChart residueChart : barCharts) {
             Axis xAxis = residueChart.xAxis;
             Axis yAxis = residueChart.yAxis;
@@ -933,7 +945,12 @@ public class PyController implements Initializable {
     }
 
     void removeItem(ActionEvent event) {
-        if (chartInfo != null) {
+        removeItem();
+    }
+
+
+    void removeItem() {
+        if ((chartInfo != null) && chartInfo.hasResidues()) {
             for (var resonanceSource : chartInfo.getResidues()) {
                 resonanceSource.deleted(!resonanceSource.deleted());
             }
@@ -2747,7 +2764,12 @@ public class PyController implements Initializable {
                             continue;
                         }
                         String modelName = orderPar.getModel();
-                        var model = MFModelIso.buildModel(modelName, true, 0.0, 0.0, false);
+                        MFModelIso model = null;
+                        try {
+                            model = MFModelIso.buildModel(modelName, true, 0.0, 0.0, false);
+                        } catch (IllegalArgumentException illegalArgumentException) {
+                            continue;
+                        }
                         var parNames = model.getParNames();
                         double[] pars = new double[parNames.size()];
                         double[] errs = new double[parNames.size()];
