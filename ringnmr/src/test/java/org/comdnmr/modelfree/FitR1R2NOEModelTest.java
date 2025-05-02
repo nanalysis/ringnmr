@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class FitR1R2NOEModelTest {
 
@@ -70,11 +71,16 @@ public class FitR1R2NOEModelTest {
         double[] lower = model.getLower();
         double[] upper = model.getUpper();
         resData.setTestModel(model);
-        PointValuePair fitResult = relaxFit.fitResidueToModel(start, lower, upper);
-        for (int i = 0; i < start.length; i++) {
-            System.out.printf("%d %4.2f %4.2f %4.2f %4.2f %4.2f\n", i, start[i], lower[i], upper[i], fitResult.getPoint()[i], pars[i]);
+        Optional<PointValuePair> fitResultOpt = relaxFit.fitResidueToModel(start, lower, upper);
+        if (fitResultOpt.isPresent()) {
+            PointValuePair fitResult = fitResultOpt.get();
+            for (int i = 0; i < start.length; i++) {
+                System.out.printf("%d %4.2f %4.2f %4.2f %4.2f %4.2f\n", i, start[i], lower[i], upper[i], fitResult.getPoint()[i], pars[i]);
+            }
+            return fitResult;
+        } else {
+            return null;
         }
-        return fitResult;
     }
 
     double[] clearTau(double[] pars, double[] result) {
