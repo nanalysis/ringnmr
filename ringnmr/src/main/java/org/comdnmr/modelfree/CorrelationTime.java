@@ -50,6 +50,9 @@ import org.nmrfx.chemistry.relax.*;
  */
 public class CorrelationTime {
 
+    public static double lowerPercentile = 20.0;
+    public static double upperPercentile = 80.0;
+
     public static double estimateTau(Map<Atom, ExperimentSet> residueProps) {
         Map<String, Experiment> t1Map = new HashMap<>();
         Map<String, Experiment> t2Map = new HashMap<>();
@@ -140,8 +143,8 @@ public class CorrelationTime {
                                                           Map<Atom, ValueWithError> r1Map, Map<Atom, ValueWithError> r2Map) {
         DescriptiveStatistics stats = new DescriptiveStatistics();
         r2Map.values().stream().forEach(v -> stats.addValue(v.value()));
-        double perLower = stats.getPercentile(40.0);
-        double perUpper = stats.getPercentile(90.0);
+        double perLower = stats.getPercentile(lowerPercentile);
+        double perUpper = stats.getPercentile(upperPercentitle);
 
         stats.clear();
         DescriptiveStatistics tauStats = new DescriptiveStatistics();
@@ -191,8 +194,8 @@ public class CorrelationTime {
                                                   Map<Atom, ValueWithError> r1Map, Map<Atom, ValueWithError> r2Map) {
         DescriptiveStatistics stats = new DescriptiveStatistics();
         r2Map.values().stream().forEach(v -> stats.addValue(v.value()));
-        double perLower = stats.getPercentile(40.0);
-        double perUpper = stats.getPercentile(90.0);
+        double perLower = stats.getPercentile(lowerPercentile);
+        double perUpper = stats.getPercentile(upperPercentitle);
 
         stats.clear();
         DescriptiveStatistics r1Stats = new DescriptiveStatistics();
@@ -223,8 +226,8 @@ public class CorrelationTime {
         DescriptiveStatistics stats = new DescriptiveStatistics();
         values.stream().forEach(v -> stats.addValue(v.R2)
         );
-        double perLower = stats.getPercentile(40.0);
-        double perUpper = stats.getPercentile(90.0);
+        double perLower = stats.getPercentile(lowerPercentile);
+        double perUpper = stats.getPercentile(upperPercentitle);
 
         stats.clear();
         DescriptiveStatistics r1Stats = new DescriptiveStatistics();
