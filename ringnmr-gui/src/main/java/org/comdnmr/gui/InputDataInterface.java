@@ -197,13 +197,19 @@ public class InputDataInterface {
     }
 
     void updateConv(Choices choices) {
-        choices.yconvChoiceBox().setValue(DataIO.YCONV.IDENTITY);
         choices.xconvChoiceBox().setValue(DataIO.XCONV.IDENTITY);
-        choices.tauField.setDisable(true);
         switch (choices.typeChoice.getValue()) {
             case "CPMG" -> {
                 choices.tauField.setDisable(false);
                 choices.yconvChoiceBox().setValue(DataIO.YCONV.RATE);
+            }
+            case "NOE" -> {
+                choices.tauField.setDisable(true);
+                choices.yconvChoiceBox().setValue(DataIO.YCONV.NORMALIZE);
+            }
+            default -> {
+                choices.tauField.setDisable(true);
+                choices.yconvChoiceBox().setValue(DataIO.YCONV.IDENTITY);
             }
         }
     }

@@ -207,7 +207,6 @@ public class DataIO {
                     }
 
                     Double[] yValueError = yConv.convert(expIntensity, refIntensity, expNoise, refNoise, tau);
-                    System.out.println(i + " " + xValue + " " + refIntensity + " " + expIntensity + " " + yValueError[0]);
                     if (yValueError[0] != null) {
                         XYErrValue xyErrValue = new XYErrValue(xValue, yValueError[0], yValueError[1]);
                         xyeValueList.add(xyErrValue);
@@ -273,7 +272,7 @@ public class DataIO {
                     experimentSet.addExperimentResult(resSource, residueInfo);
                 }
                 if (expMode.equalsIgnoreCase("noe")) {
-                    residueInfo.value = xyErrValueList.get(0).x();
+                    residueInfo.value = xyErrValueList.get(0).y();
                     residueInfo.err = xyErrValueList.get(0).err();
                 }
                 boolean hasAllErrors = xyErrValueList.stream().mapToDouble(v -> v.err()).filter(v -> Math.abs(v) < 1.0e-9).findAny().isEmpty();

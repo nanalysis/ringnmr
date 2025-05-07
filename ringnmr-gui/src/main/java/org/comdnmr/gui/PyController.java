@@ -2014,6 +2014,10 @@ public class PyController implements Initializable {
                     MenuItem cmItem1 = new MenuItem("R");
                     cmItem1.setOnAction(e -> setYAxisType(expMode, experimentSet.name(), "best", "0:0:0", parName, true));
                     cascade.getItems().add(cmItem1);
+                    if (parName.equalsIgnoreCase("R") || parName.equalsIgnoreCase("Kex") || parName.equalsIgnoreCase("NOE")) {
+                        MenuData menuData = new MenuData(expMode, setName, "best", "0:0:0", parName);
+                        menuDataList.add(menuData);
+                    }
                 } else {
                     for (String parType : parTypes) {
                         if (experimentSet.getEquationNames().size() == 1) {
@@ -2021,7 +2025,7 @@ public class PyController implements Initializable {
                             MenuItem cmItem1 = new MenuItem(parType);
                             cmItem1.setOnAction(e -> setYAxisType(expMode, setName, equationName, "0:0:0", parType, true));
                             cascade.getItems().add(cmItem1);
-                            if (parType.equals("R") || parType.equals("Kex")) {
+                            if (parType.equalsIgnoreCase("R") || parType.equalsIgnoreCase("Kex") || parType.equalsIgnoreCase("NOE")) {
                                 MenuData menuData = new MenuData(expMode, setName, "best", "0:0:0", parType);
                                 menuDataList.add(menuData);
                             }
@@ -2039,9 +2043,11 @@ public class PyController implements Initializable {
                                 MenuItem cmItem1 = new MenuItem(experimentSet.name());
                                 cmItem1.setOnAction(e -> setYAxisType(expMode, experimentSet.name(), "best", "0:0:0", "R", true));
                                 cascade2.getItems().add(cmItem1);
+                                MenuData menuData = new MenuData(expMode, setName, "best", "0:0:0", parType);
+                                menuDataList.add(menuData);
 
                             } else {
-                                if (parType.equals("R") || parType.equals("Kex")) {
+                                if (parType.equalsIgnoreCase("R") || parType.equalsIgnoreCase("Kex") || parType.equalsIgnoreCase("NOE")) {
                                     MenuData menuData = new MenuData(expMode, setName, "best", "0:0:0", parType);
                                     menuDataList.add(menuData);
                                 }
