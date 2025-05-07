@@ -144,7 +144,7 @@ public class CorrelationTime {
         DescriptiveStatistics stats = new DescriptiveStatistics();
         r2Map.values().stream().forEach(v -> stats.addValue(v.value()));
         double perLower = stats.getPercentile(lowerPercentile);
-        double perUpper = stats.getPercentile(upperPercentitle);
+        double perUpper = stats.getPercentile(upperPercentile);
 
         stats.clear();
         DescriptiveStatistics tauStats = new DescriptiveStatistics();
@@ -195,7 +195,7 @@ public class CorrelationTime {
         DescriptiveStatistics stats = new DescriptiveStatistics();
         r2Map.values().stream().forEach(v -> stats.addValue(v.value()));
         double perLower = stats.getPercentile(lowerPercentile);
-        double perUpper = stats.getPercentile(upperPercentitle);
+        double perUpper = stats.getPercentile(upperPercentile);
 
         stats.clear();
         DescriptiveStatistics r1Stats = new DescriptiveStatistics();
@@ -227,7 +227,7 @@ public class CorrelationTime {
         values.stream().forEach(v -> stats.addValue(v.R2)
         );
         double perLower = stats.getPercentile(lowerPercentile);
-        double perUpper = stats.getPercentile(upperPercentitle);
+        double perUpper = stats.getPercentile(upperPercentile);
 
         stats.clear();
         DescriptiveStatistics r1Stats = new DescriptiveStatistics();
