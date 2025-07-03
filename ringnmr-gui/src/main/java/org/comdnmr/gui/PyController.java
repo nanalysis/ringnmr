@@ -1977,20 +1977,26 @@ public class PyController implements Initializable {
         MenuItem addAllItem = new MenuItem("All");
         addAllItem.setOnAction(e -> showAllR());
         experimentalDataAxisMenu.getItems().add(addAllItem);
+        System.out.println("addres");
         setNames.stream().sorted().forEach(setName -> {
             var valueSet = ChartUtil.getResidueProperty(setName);
+            System.out.println("setname " + setName);
             if (valueSet instanceof ExperimentSet) {
                 ExperimentSet experimentSet = (ExperimentSet) valueSet;
                 Menu cascade = new Menu(setName);
                 experimentalDataAxisMenu.getItems().add(cascade);
                 String expMode = experimentSet.getExpMode();
+                System.out.println("expmodeA " + expMode);
                 String[] parTypes = getParTypes(experimentSet.getExpMode());
                 if (experimentSet.getEquationNames().size() == 0) {
                     final String parName;
+                    System.out.println("expset0");
                     if (expMode.equals("r1") || expMode.equals("r2") || expMode.equals("rq") || expMode.equals("rap")) {
                         parName = "R";
                     } else if (experimentSet.getExpMode().equals("noe")) {
                         parName = "NOE";
+                        MenuData menuData = new MenuData(expMode, setName, "best", "0:0:0", parName);
+                        menuDataList.add(menuData);
                     } else {
                         parName = "Kex";
                     }
@@ -1999,17 +2005,17 @@ public class PyController implements Initializable {
                     cascade.getItems().add(cmItem1);
                 } else {
                     for (String parType : parTypes) {
+                        System.out.println("expmodeB " + parType + " " + experimentSet.getEquationNames().size());
                         if (experimentSet.getEquationNames().size() == 1) {
                             String equationName = experimentSet.getEquationNames().get(0);
                             MenuItem cmItem1 = new MenuItem(parType);
                             cmItem1.setOnAction(e -> setYAxisType(expMode, setName, equationName, "0:0:0", parType, true));
                             cascade.getItems().add(cmItem1);
-                            if (parType.equals("R") || parType.equals("Kex")) {
+                            if (parType.equalsIgnoreCase("R") || parType.equalsIgnoreCase("Kex") || parType.equalsIgnoreCase("noe")) {
                                 MenuData menuData = new MenuData(expMode, setName, "best", "0:0:0", parType);
                                 menuDataList.add(menuData);
                             }
                         } else {
-
                             Menu cascade2 = new Menu(parType);
                             cascade.getItems().add(cascade2);
                             ArrayList<String> equationNames = new ArrayList<>();
@@ -2018,13 +2024,15 @@ public class PyController implements Initializable {
                             }
                             equationNames.addAll(experimentSet.getEquationNames());
                             List<String> stateStrings = experimentSet.getStateStrings();
+                            System.out.println("expmodeC " + parType + " " + equationNames.size());
+
                             if (equationNames.size() == 0) {
                                 MenuItem cmItem1 = new MenuItem(experimentSet.name());
                                 cmItem1.setOnAction(e -> setYAxisType(expMode, experimentSet.name(), "best", "0:0:0", "R", true));
                                 cascade2.getItems().add(cmItem1);
 
                             } else {
-                                if (parType.equals("R") || parType.equals("Kex")) {
+                                if (parType.equalsIgnoreCase("R") || parType.equalsIgnoreCase("Kex") || parType.equalsIgnoreCase("noe")) {
                                     MenuData menuData = new MenuData(expMode, setName, "best", "0:0:0", parType);
                                     menuDataList.add(menuData);
                                 }

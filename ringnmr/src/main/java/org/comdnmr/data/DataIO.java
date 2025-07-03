@@ -207,8 +207,8 @@ public class DataIO {
                     }
 
                     Double[] yValueError = yConv.convert(expIntensity, refIntensity, expNoise, refNoise, tau);
-                    System.out.println(i + " " + xValue + " " + refIntensity + " " + expIntensity + " " + yValueError[0]);
-                    if (yValueError[0] != null) {
+                    System.out.println(i + " " + xValue + " " + refIntensity + " " + expIntensity + " " + yValueError[0] + " " + yValueError[1]);
+                    if ((yValueError[0] != null)  && Double.isFinite(yValueError[1])){
                         XYErrValue xyErrValue = new XYErrValue(xValue, yValueError[0], yValueError[1]);
                         xyeValueList.add(xyErrValue);
                     }
@@ -253,11 +253,12 @@ public class DataIO {
         } else {
             tau = 0.0;
         }
+        System.out.println("load");
         AtomicBoolean anyWithouErrors = new AtomicBoolean(false);
         peakList.peaks().stream().filter(peak -> peak.getStatus() >= 0).forEach(peak -> {
             List<XYErrValue> xyErrValueList = getPeakValuesAndError(peak, expMode, xValues, tau, xConv, yConv, errorMode);
             Optional<ResonanceSource> resSourceOpt = dynamicsSourceFactory.createFromPeak(peak, nucNames);
-            if (resSourceOpt.isPresent()) {
+            if (resSourceOpt.isPresent() && !xyErrValueList.isEmpty()) {
                 ResonanceSource resSource = resSourceOpt.get();
                 if (expMode.equalsIgnoreCase("cest")) {
                     processCESTData((CESTExperiment) experiment, resSource, xyErrValueList);
@@ -272,9 +273,11 @@ public class DataIO {
                     residueInfo = new ExperimentResult(experimentSet, resSource, 0, 0, 0);
                     experimentSet.addExperimentResult(resSource, residueInfo);
                 }
+                System.out.println(expMode);
                 if (expMode.equalsIgnoreCase("noe")) {
-                    residueInfo.value = xyErrValueList.get(0).x();
+                    residueInfo.value = xyErrValueList.get(0).y();
                     residueInfo.err = xyErrValueList.get(0).err();
+                    System.out.println(residueInfo.value + " " + residueInfo.err);
                 }
                 boolean hasAllErrors = xyErrValueList.stream().mapToDouble(v -> v.err()).filter(v -> Math.abs(v) < 1.0e-9).findAny().isEmpty();
                 if (!hasAllErrors) {
