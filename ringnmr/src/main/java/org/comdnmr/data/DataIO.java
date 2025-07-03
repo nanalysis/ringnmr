@@ -207,7 +207,6 @@ public class DataIO {
                     }
 
                     Double[] yValueError = yConv.convert(expIntensity, refIntensity, expNoise, refNoise, tau);
-                    System.out.println(i + " " + xValue + " " + refIntensity + " " + expIntensity + " " + yValueError[0] + " " + yValueError[1]);
                     if ((yValueError[0] != null)  && Double.isFinite(yValueError[1])){
                         XYErrValue xyErrValue = new XYErrValue(xValue, yValueError[0], yValueError[1]);
                         xyeValueList.add(xyErrValue);
@@ -253,7 +252,6 @@ public class DataIO {
         } else {
             tau = 0.0;
         }
-        System.out.println("load");
         AtomicBoolean anyWithouErrors = new AtomicBoolean(false);
         peakList.peaks().stream().filter(peak -> peak.getStatus() >= 0).forEach(peak -> {
             List<XYErrValue> xyErrValueList = getPeakValuesAndError(peak, expMode, xValues, tau, xConv, yConv, errorMode);
@@ -273,11 +271,9 @@ public class DataIO {
                     residueInfo = new ExperimentResult(experimentSet, resSource, 0, 0, 0);
                     experimentSet.addExperimentResult(resSource, residueInfo);
                 }
-                System.out.println(expMode);
                 if (expMode.equalsIgnoreCase("noe")) {
                     residueInfo.value = xyErrValueList.get(0).y();
                     residueInfo.err = xyErrValueList.get(0).err();
-                    System.out.println(residueInfo.value + " " + residueInfo.err);
                 }
                 boolean hasAllErrors = xyErrValueList.stream().mapToDouble(v -> v.err()).filter(v -> Math.abs(v) < 1.0e-9).findAny().isEmpty();
                 if (!hasAllErrors) {
@@ -429,7 +425,6 @@ public class DataIO {
                     }
                     xValues = new double[nValues];
                     peakRefs = new String[nValues];
-                    System.out.println("off " + offset + " " + nfields + " " + hasErrColumns);
                     int iX = 0;
                     for (int i = offset; i < nfields; i++) {
                         // fixme assumes first vcpmg is the 0 ref   
@@ -687,7 +682,6 @@ public class DataIO {
         boolean gotHeader = false;
         int nValues = 0;
         List<XYErrValue> xyErrValueList = new ArrayList<>();
-        System.out.println("Load XY file " + fileName + " for res " + residueNum + " atom " + atomName);
 
         experimentSet.addExperimentData(expData.getName(), expData);
         String splitPattern = "\t";
@@ -882,7 +876,6 @@ public class DataIO {
             error2 = Math.sqrt(sumDelta2 / (2.0 * nDups));
             errorA = Math.sqrt(Math.PI / 2.0) * sumAbs / (2.0 * nDups);
         }
-        System.out.println("data " + expData.name + " errors " + error2 + "errorA " + errorA + " ndup " + nDups);
         return error2;
     }
 
@@ -1055,8 +1048,6 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             if (bootStrapMode != null) {
                 resProp.setBootStrapMode(bootStrapMode);
             }
-
-            System.out.println("absmode " + absValueMode + " bootstrap " + bootStrapMode);
         }
     }
 
@@ -1202,7 +1193,6 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
 
             HashMap<String, Object> errorPars = (HashMap<String, Object>) dataMap3.get("error");
             Object delayField = dataMap3.get("delays");
-            System.out.println("delays " + delayField);
             double[] delayCalc = {0.0, 0.0, 1.0};
             if (delayField instanceof Map) {
                 Map<String, Object> delayMap = (Map<String, Object>) delayField;
@@ -1210,7 +1200,6 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 delayCalc[1] = getDoubleValue(delayMap, "c0", 0.0);
                 delayCalc[2] = getDoubleValue(delayMap, "delta", 1.0);
             }
-            System.out.println("err " + errorPars);
             String dataFileName = (String) dataMap3.get("file");
             File dataFile = null;
             String fileTail = null;
@@ -1334,7 +1323,6 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 Map dataMap = (HashMap<String, Object>) data;
                 Map dataMap2 = (HashMap<String, Object>) dataMap.get("fit");
                 if (dataMap2 != null) {
-                    System.out.println(dataMap2.toString());
                     String expMode = (String) dataMap2.get("mode");
                     if (expMode == null) {
                         throw new IOException("No mode value in .yaml file");

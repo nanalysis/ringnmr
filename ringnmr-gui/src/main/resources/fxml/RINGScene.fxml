@@ -56,8 +56,6 @@
                         <MenuItem text="XY to Grace..." onAction="#saveGraceFile"/>
                         <MenuItem text="XY To Python..." onAction="#savePythonFile"/>
                         <MenuItem text="XY To R..." onAction="#saveRFile"/>
-                        <MenuItem text="Residue To Python..." onAction="#saveBarToPythonFile"/>
-                        <MenuItem text="Residue To R..." onAction="#saveBarToRFile"/>
                     </Menu>
                     <MenuItem text="Connect to NMRFx Server..." onAction="#startServer"/>
                     <MenuItem text="Preferences..." onAction="#showPreferences"/>
