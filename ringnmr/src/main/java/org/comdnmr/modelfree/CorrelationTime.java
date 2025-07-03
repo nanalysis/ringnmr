@@ -50,6 +50,9 @@ import org.nmrfx.chemistry.relax.*;
  */
 public class CorrelationTime {
 
+    public static double lowerPercentile = 20.0;
+    public static double upperPercentile = 80.0;
+
     public static double estimateTau(Map<Atom, ExperimentSet> residueProps) {
         Map<String, Experiment> t1Map = new HashMap<>();
         Map<String, Experiment> t2Map = new HashMap<>();
@@ -140,8 +143,8 @@ public class CorrelationTime {
                                                           Map<Atom, ValueWithError> r1Map, Map<Atom, ValueWithError> r2Map) {
         DescriptiveStatistics stats = new DescriptiveStatistics();
         r2Map.values().stream().forEach(v -> stats.addValue(v.value()));
-        double perLower = stats.getPercentile(40.0);
-        double perUpper = stats.getPercentile(90.0);
+        double perLower = stats.getPercentile(lowerPercentile);
+        double perUpper = stats.getPercentile(upperPercentile);
 
         stats.clear();
         DescriptiveStatistics tauStats = new DescriptiveStatistics();
@@ -153,11 +156,13 @@ public class CorrelationTime {
 
 
         r1Map.entrySet().stream().sorted(Comparator.comparingInt(a -> ((Residue) (a.getKey().getEntity())).getResNum())).forEach(e -> {
-            Double r1 = e.getValue().value();
-            Double r2 = r2Map.get(e.getKey()).value();
-            if ((r1 != null) && (r2 != null)) {
-                double r1err = r1Map.get(e.getKey()).error();
-                double r2err = r2Map.get(e.getKey()).error();
+            ValueWithError r1ValueWithError = e.getValue();
+            ValueWithError r2ValueWithError = r2Map.get(e.getKey());
+            if ((r1ValueWithError != null) && (r2ValueWithError != null)) {
+                double r1err = r1ValueWithError.error();
+                double r2err = r2ValueWithError.error();
+                double r1 = r1ValueWithError.value();
+                double r2 = r2ValueWithError.value();
                 Atom atom = e.getKey();
                 ResonanceSource resSource = new ResonanceSource(atom);
 
@@ -189,16 +194,18 @@ public class CorrelationTime {
                                                   Map<Atom, ValueWithError> r1Map, Map<Atom, ValueWithError> r2Map) {
         DescriptiveStatistics stats = new DescriptiveStatistics();
         r2Map.values().stream().forEach(v -> stats.addValue(v.value()));
-        double perLower = stats.getPercentile(40.0);
-        double perUpper = stats.getPercentile(90.0);
+        double perLower = stats.getPercentile(lowerPercentile);
+        double perUpper = stats.getPercentile(upperPercentile);
 
         stats.clear();
         DescriptiveStatistics r1Stats = new DescriptiveStatistics();
         DescriptiveStatistics r2Stats = new DescriptiveStatistics();
         for (Atom atom : r1Map.keySet()) {
-            Double r1 = r1Map.get(atom).value();
-            Double r2 = r2Map.get(atom).value();
-            if ((r1 != null) && (r2 != null)) {
+            ValueWithError r1ValueWithError = r1Map.get(atom);
+            ValueWithError r2ValueWithError = r2Map.get(atom);
+            if ((r1ValueWithError != null) && (r2ValueWithError != null)) {
+                double r1 = r1ValueWithError.value();
+                double r2 = r2ValueWithError.value();
                 if ((r2 > perLower) && (r2 < perUpper)) {
                     r1Stats.addValue(r1);
                     r2Stats.addValue(r2);
@@ -219,8 +226,8 @@ public class CorrelationTime {
         DescriptiveStatistics stats = new DescriptiveStatistics();
         values.stream().forEach(v -> stats.addValue(v.R2)
         );
-        double perLower = stats.getPercentile(40.0);
-        double perUpper = stats.getPercentile(90.0);
+        double perLower = stats.getPercentile(lowerPercentile);
+        double perUpper = stats.getPercentile(upperPercentile);
 
         stats.clear();
         DescriptiveStatistics r1Stats = new DescriptiveStatistics();

@@ -39,6 +39,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -488,6 +489,7 @@ public class PyController implements Initializable {
         chartBox.setContent(barPlotCanvas);
         addChart();
         barPlotCanvas.setOnMouseClicked(this::mouseClickedOnBarCanvas);
+        barPlotCanvas.setOnKeyPressed(this::keyPressedOnBarCanvas);
 //        mainController.setOnHidden(e -> Platform.exit());
         PauseTransition logoTransition = new PauseTransition(Duration.seconds(5));
         logoTransition.setOnFinished(e -> removeLogo());
@@ -704,9 +706,19 @@ public class PyController implements Initializable {
         }
     }
 
+    void keyPressedOnBarCanvas(KeyEvent keyEvent) {
+
+        switch(keyEvent.getCode()) {
+            case DELETE, BACK_SPACE -> removeItem();
+            case RIGHT -> nextResidue(null);
+            case LEFT -> previousResidue(null);
+        }
+    }
+
     void mouseClickedOnBarCanvas(MouseEvent e) {
         double x = e.getX();
         double y = e.getY();
+        barPlotCanvas.requestFocus();
         for (ResidueChart residueChart : barCharts) {
             Axis xAxis = residueChart.xAxis;
             Axis yAxis = residueChart.yAxis;
@@ -933,7 +945,12 @@ public class PyController implements Initializable {
     }
 
     void removeItem(ActionEvent event) {
-        if (chartInfo != null) {
+        removeItem();
+    }
+
+
+    void removeItem() {
+        if ((chartInfo != null) && chartInfo.hasResidues()) {
             for (var resonanceSource : chartInfo.getResidues()) {
                 resonanceSource.deleted(!resonanceSource.deleted());
             }
@@ -2003,6 +2020,10 @@ public class PyController implements Initializable {
                     MenuItem cmItem1 = new MenuItem("R");
                     cmItem1.setOnAction(e -> setYAxisType(expMode, experimentSet.name(), "best", "0:0:0", parName, true));
                     cascade.getItems().add(cmItem1);
+                    if (parName.equalsIgnoreCase("R") || parName.equalsIgnoreCase("Kex") || parName.equalsIgnoreCase("NOE")) {
+                        MenuData menuData = new MenuData(expMode, setName, "best", "0:0:0", parName);
+                        menuDataList.add(menuData);
+                    }
                 } else {
                     for (String parType : parTypes) {
                         System.out.println("expmodeB " + parType + " " + experimentSet.getEquationNames().size());
@@ -2011,7 +2032,7 @@ public class PyController implements Initializable {
                             MenuItem cmItem1 = new MenuItem(parType);
                             cmItem1.setOnAction(e -> setYAxisType(expMode, setName, equationName, "0:0:0", parType, true));
                             cascade.getItems().add(cmItem1);
-                            if (parType.equalsIgnoreCase("R") || parType.equalsIgnoreCase("Kex") || parType.equalsIgnoreCase("noe")) {
+                            if (parType.equalsIgnoreCase("R") || parType.equalsIgnoreCase("Kex") || parType.equalsIgnoreCase("NOE")) {
                                 MenuData menuData = new MenuData(expMode, setName, "best", "0:0:0", parType);
                                 menuDataList.add(menuData);
                             }
@@ -2030,9 +2051,11 @@ public class PyController implements Initializable {
                                 MenuItem cmItem1 = new MenuItem(experimentSet.name());
                                 cmItem1.setOnAction(e -> setYAxisType(expMode, experimentSet.name(), "best", "0:0:0", "R", true));
                                 cascade2.getItems().add(cmItem1);
+                                MenuData menuData = new MenuData(expMode, setName, "best", "0:0:0", parType);
+                                menuDataList.add(menuData);
 
                             } else {
-                                if (parType.equalsIgnoreCase("R") || parType.equalsIgnoreCase("Kex") || parType.equalsIgnoreCase("noe")) {
+                                if (parType.equalsIgnoreCase("R") || parType.equalsIgnoreCase("Kex") || parType.equalsIgnoreCase("NOE")) {
                                     MenuData menuData = new MenuData(expMode, setName, "best", "0:0:0", parType);
                                     menuDataList.add(menuData);
                                 }
@@ -2755,7 +2778,12 @@ public class PyController implements Initializable {
                             continue;
                         }
                         String modelName = orderPar.getModel();
-                        var model = MFModelIso.buildModel(modelName, true, 0.0, 0.0, false);
+                        MFModelIso model = null;
+                        try {
+                            model = MFModelIso.buildModel(modelName, true, 0.0, 0.0, false);
+                        } catch (IllegalArgumentException illegalArgumentException) {
+                            continue;
+                        }
                         var parNames = model.getParNames();
                         double[] pars = new double[parNames.size()];
                         double[] errs = new double[parNames.size()];
