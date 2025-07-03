@@ -627,7 +627,7 @@ public class PyController implements Initializable {
     void filterSeries() {
         for (ResidueChart residueChart : barCharts) {
             for (DataSeries series : residueChart.getData()) {
-                var copyOfValues = List.copyOf(series.getValues());
+                var copyOfValues = List.copyOf(series.getData());
                 series.clear();
                 for (var v : copyOfValues) {
                     Object obj = v.getExtraValue();
@@ -727,6 +727,9 @@ public class PyController implements Initializable {
         GraphicsContext gC = barPlotCanvas.getGraphicsContext2D();
         gC.clearRect(0, 0, barPlotCanvas.getWidth(), barPlotCanvas.getHeight());
         for (ResidueChart residueChart : barCharts) {
+            if (!residueChart.getData().isEmpty()) {
+                System.out.println("chart size " + residueChart.getData().get(0).getData().size());
+            }
             residueChart.drawChart();
         }
         if (ssPainter != null) {
@@ -1439,6 +1442,14 @@ public class PyController implements Initializable {
             activeChart = barCharts.get(0);
             resizeBarPlotCanvas();
         }
+    }
+
+    void removeAllCharts() {
+        int n = barCharts.size();
+        for (int i= n-1;i>=0;i--) {
+            barCharts.remove(i);
+        }
+        addChart();
     }
 
     public void updateTable(List<ExperimentData> experimentalDataSets, String fitMode) {
@@ -2705,8 +2716,8 @@ public class PyController implements Initializable {
             xychart.getData().clear();
         }
         clearSecondaryStructure();
-        barCharts.remove(activeChart);
-        addChart();
+        removeAllCharts();
+        refreshResidueCharts();
     }
 
     @FXML
