@@ -281,6 +281,16 @@ public class RelaxEquations {
         return new double[]{J0, JS, JIminusS, JI, JIplusS};
     }
 
+    public double[] getOmegas() {
+        double[] result = new double[5];
+        result[0] = 0.0;
+        result[S] = wS;
+        result[ImS] = wI-wS;
+        result[I] = wI;
+        result[IpS] = wI + wS;
+        return result;
+    }
+
     // Note: tauM = tm in Art Palmer's code, and taui in Relax. tau = ts in Art Palmer's code (taue in the paper), and taue in Relax.
 
     /**

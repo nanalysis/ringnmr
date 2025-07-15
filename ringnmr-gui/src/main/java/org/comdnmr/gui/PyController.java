@@ -486,11 +486,12 @@ public class PyController implements Initializable {
         updateEquationChoices(getFittingMode());
         equationChoice.valueProperty().addListener(e -> equationAction());
 
-        simChoice.getItems().add("Simulate CPMG");
-        simChoice.getItems().add("Simulate EXP");
-        simChoice.getItems().add("Simulate CEST");
-        simChoice.getItems().add("Simulate R1Rho");
-        simChoice.setValue("Simulate CPMG");
+        simChoice.getItems().add("CPMG");
+        simChoice.getItems().add("EXP");
+        simChoice.getItems().add("CEST");
+        simChoice.getItems().add("R1Rho");
+        simChoice.getItems().add("ModelFree");
+        simChoice.setValue("CPMG");
         simChoice.valueProperty().addListener(s -> simAction());
 
         splitPane.setDividerPositions(0.4, 0.7);
@@ -864,6 +865,17 @@ public class PyController implements Initializable {
             genDataXUBTextField.setText("8.0");
             genDataXValTextField.setDisable(true);
             genDataXValTextField.setText("");
+        } else if (getSimMode().equals("modelfree") && !(simControls instanceof ModelFreeControls)) {
+            simControls = new ModelFreeControls();
+            update = true;
+            genDataNPtsTextField.setDisable(false);
+            genDataNPtsTextField.setText("100");
+            genDataXLBTextField.setDisable(false);
+            genDataXLBTextField.setText("-8.0");
+            genDataXUBTextField.setDisable(false);
+            genDataXUBTextField.setText("8.0");
+            genDataXValTextField.setDisable(true);
+            genDataXValTextField.setText("");
         }
         if (update) {
             updateEquationChoices(getSimMode());
@@ -1160,6 +1172,16 @@ public class PyController implements Initializable {
             yUpperBoundTextField.setText("65.0");
             xTickTextField.setText("100.0");
             yTickTextField.setText("5.0");
+        } else if ((simControls instanceof ModelFreeControls)) {
+            xychart.setNames("Spectral Density", "\u03C9 (1/ns)", "log10[J(\u03C9)/1ns]", "0");
+            xychart.setBounds(0.0, 5.0, -3.0, 1.0, 1.0, 1);
+            xLowerBoundTextField.setText("0.0");
+            xUpperBoundTextField.setText("5.0");
+            yLowerBoundTextField.setText("-3.0");
+            yUpperBoundTextField.setText("1.0");
+            xTickTextField.setText("1.0");
+            yTickTextField.setText("1.0");
+
         } else if ((simControls instanceof ExpControls)) {
             xychart.setNames("Exp", "Time (s)", "Intensity", "0");
             xychart.setBounds(0.0, 1.25, 0.0, 100, 0.25, 10.0);
@@ -2660,7 +2682,7 @@ public class PyController implements Initializable {
         if (simSelected == null) {
             return "cpmg";
         }
-        return simSelected.substring(9).toLowerCase();
+        return simSelected.toLowerCase();
     }
 
     void simAction() {
