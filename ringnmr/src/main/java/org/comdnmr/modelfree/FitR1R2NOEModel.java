@@ -484,16 +484,20 @@ public class FitR1R2NOEModel extends FitModel {
         int nTries = 3;
         PointValuePair best = null;
         for (int i = 0; i < nTries; i++) {
-            PointValuePair fitResult = relaxFit.fitResidueToModel(start, lower, upper);
-            if ((i == 0) || (fitResult.getValue() < best.getValue())) {
-                best = fitResult;
+            Optional<PointValuePair> fitResultOpt = relaxFit.fitResidueToModel(start, lower, upper);
+            if (fitResultOpt.isPresent() && ((i == 0) || (fitResultOpt.get().getValue() < best.getValue()))) {
+                best = fitResultOpt.get();
             }
             for (int j = 0; j < start.length; j++) {
                 start[j] = keepStart[j] + random.nextGaussian() * 0.1 * (upper[j] - lower[j]);
             }
         }
-        var score = relaxFit.score(best.getPoint(), true);
-        return score;
+        if (best != null) {
+            var score = relaxFit.score(best.getPoint(), true);
+            return score;
+        } else {
+            return null;
+        }
     }
 
     public void setTauFraction(double value) {

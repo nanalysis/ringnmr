@@ -39,6 +39,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -49,6 +50,7 @@ import javafx.scene.shape.Circle;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.util.Callback;
 import javafx.util.Duration;
 import org.comdnmr.data.*;
 import org.comdnmr.eqnfit.*;
@@ -65,10 +67,7 @@ import org.comdnmr.util.ProcessingStatus;
 import org.comdnmr.utils.NMRFxClient;
 import org.controlsfx.control.StatusBar;
 import org.controlsfx.dialog.ExceptionDialog;
-import org.nmrfx.chart.Axis;
-import org.nmrfx.chart.DataSeries;
-import org.nmrfx.chart.XYEValue;
-import org.nmrfx.chart.XYValue;
+import org.nmrfx.chart.*;
 import org.nmrfx.chemistry.Atom;
 import org.nmrfx.chemistry.InvalidMoleculeException;
 import org.nmrfx.chemistry.MoleculeBase;
@@ -94,6 +93,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.comdnmr.gui.MainApp.preferencesController;
@@ -268,6 +268,42 @@ public class PyController implements Initializable {
     static Random rand = new Random();
     File initialDir = null;
     SeriesComparator seriesComparator = new SeriesComparator();
+    Map<Atom, CorrelationTime.TauR1R2Result> tauR1R2ResultMap = new HashMap<>();
+    Function<String, String> nmrfxFunction;
+    List<MenuData> menuDataList = new ArrayList<>();
+
+    public class ColumnFormatter<T> {
+
+        private final DecimalFormat format;
+
+        public ColumnFormatter(int digits) {
+            StringBuilder pattern = new StringBuilder("0.");
+            for (int i = 0; i < digits; i++) {
+                pattern.append("#");
+            }
+            this.format = new DecimalFormat(pattern.toString());
+        }
+
+        public void applyTo(TableColumn<T, Double> column) {
+            column.setCellFactory(new Callback<>() {
+                @Override
+                public TableCell<T, Double> call(TableColumn<T, Double> param) {
+                    return new TableCell<>() {
+                        @Override
+                        protected void updateItem(Double item, boolean empty) {
+                            super.updateItem(item, empty);
+                            if (empty || item == null) {
+                                setText(null);
+                            } else {
+                                setText(format.format(item));
+                            }
+                        }
+                    };
+                }
+            });
+        }
+    }
+
 
     @FXML
     private void pyAction(ActionEvent event) {
@@ -280,6 +316,11 @@ public class PyController implements Initializable {
 
         }
         //MainApp.interpreter.exec("onAction(" + node + ")");
+    }
+
+    public void setNMRFxFunction(Function<String, String> nmrfxFunction) {
+        this.nmrfxFunction = nmrfxFunction;
+        nmrFxPeakButton.setDisable(false);
     }
 
     @FXML
@@ -480,6 +521,7 @@ public class PyController implements Initializable {
         chartBox.setContent(barPlotCanvas);
         addChart();
         barPlotCanvas.setOnMouseClicked(this::mouseClickedOnBarCanvas);
+        barPlotCanvas.setOnKeyPressed(this::keyPressedOnBarCanvas);
 //        mainController.setOnHidden(e -> Platform.exit());
         PauseTransition logoTransition = new PauseTransition(Duration.seconds(5));
         logoTransition.setOnFinished(e -> removeLogo());
@@ -585,7 +627,7 @@ public class PyController implements Initializable {
     void filterSeries() {
         for (ResidueChart residueChart : barCharts) {
             for (DataSeries series : residueChart.getData()) {
-                var copyOfValues = List.copyOf(series.getValues());
+                var copyOfValues = List.copyOf(series.getData());
                 series.clear();
                 for (var v : copyOfValues) {
                     Object obj = v.getExtraValue();
@@ -622,18 +664,11 @@ public class PyController implements Initializable {
         }
         double xMin = Double.MAX_VALUE;
         double xMax = Double.NEGATIVE_INFINITY;
-        for (ResidueChart residueChart : barCharts) {
-            for (DataSeries series : residueChart.getData()) {
-                xMin = Math.min(xMin, series.getMinX() - 1.0);
-                xMax = Math.max(xMax, series.getMaxX() + 1.0);
-            }
-        }
-        if (xMin == Double.MAX_VALUE) {
-            xMin = Math.floor((ChartUtil.minRes - 2) / 5.0) * 5.0;
-            xMax = Math.ceil((ChartUtil.maxRes + 2) / 5.0) * 5.0;
-            barChartXMin = Optional.of(xMin);
-            barChartXMax = Optional.of(xMax);
-        }
+        xMin = Math.floor((ChartUtil.minRes - 2) / 5.0) * 5.0;
+        xMax = Math.ceil((ChartUtil.maxRes + 2) / 5.0) * 5.0;
+        barChartXMin = Optional.of(xMin);
+        barChartXMax = Optional.of(xMax);
+
         double limitMin = barCenter * (xMax - xMin) + xMin;
         double limitMax = fMax * (xMax - xMin) + xMin;
         for (ResidueChart residueChart : barCharts) {
@@ -661,7 +696,7 @@ public class PyController implements Initializable {
             }
         }
         double extraHeight = withAxisHeight - noAxisHeight;
-        double chartHeight = (height -extraHeight) / barCharts.size();
+        double chartHeight = (height - extraHeight) / barCharts.size();
         double yPos = 0.0;
         for (ResidueChart residueChart : barCharts) {
             if (residueChart == barCharts.get(barCharts.size() - 1)) {
@@ -692,6 +727,9 @@ public class PyController implements Initializable {
         GraphicsContext gC = barPlotCanvas.getGraphicsContext2D();
         gC.clearRect(0, 0, barPlotCanvas.getWidth(), barPlotCanvas.getHeight());
         for (ResidueChart residueChart : barCharts) {
+            if (!residueChart.getData().isEmpty()) {
+                System.out.println("chart size " + residueChart.getData().get(0).getData().size());
+            }
             residueChart.drawChart();
         }
         if (ssPainter != null) {
@@ -703,17 +741,24 @@ public class PyController implements Initializable {
         }
     }
 
+    void keyPressedOnBarCanvas(KeyEvent keyEvent) {
+
+        switch(keyEvent.getCode()) {
+            case DELETE, BACK_SPACE -> removeItem();
+            case RIGHT -> nextResidue(null);
+            case LEFT -> previousResidue(null);
+        }
+    }
+
     void mouseClickedOnBarCanvas(MouseEvent e) {
         double x = e.getX();
         double y = e.getY();
+        barPlotCanvas.requestFocus();
         for (ResidueChart residueChart : barCharts) {
             Axis xAxis = residueChart.xAxis;
             Axis yAxis = residueChart.yAxis;
             if (residueChart.mouseClicked(e)) {
                 activeChart = residueChart;
-                System.out.println("sources " + residueChart.getSelectedSources());
-                System.out.println("chartinfo " + chartInfo);
-
                 break;
             } else if ((x > xAxis.getXOrigin()) && (x < xAxis.getXOrigin() + xAxis.getWidth())) {
                 if ((y < yAxis.getYOrigin()) && (y > xAxis.getYOrigin() - yAxis.getHeight())) {
@@ -932,7 +977,12 @@ public class PyController implements Initializable {
     }
 
     void removeItem(ActionEvent event) {
-        if (chartInfo != null) {
+        removeItem();
+    }
+
+
+    void removeItem() {
+        if ((chartInfo != null) && chartInfo.hasResidues()) {
             for (var resonanceSource : chartInfo.getResidues()) {
                 resonanceSource.deleted(!resonanceSource.deleted());
             }
@@ -1095,22 +1145,9 @@ public class PyController implements Initializable {
 
     @FXML
     void nmrFxMessage(ActionEvent e) {
-        String peakNum = getPeakNumFromTable();
-        NMRFxClient cl = PyController.mainController.getClient();
-        try {
-            String[] peakSplit = peakNum.split("\\.");
-            String peakName = peakSplit[0];
-            String peakNumber = peakSplit[1];
-            String peakString;
-            if (!peakName.equals("")) {
-                peakString = peakNumber + "/" + peakName;
-            } else {
-                peakString = peakNumber;
-            }
-            cl.sendMessage("showpeak/" + peakString);
-        } catch (IOException ioE) {
-            System.out.println(ioE.getMessage());
-        }
+        String peakString = getPeakNumFromTable();
+        System.out.println("show peak " + peakString);
+        nmrfxFunction.apply("nw.showPeak " + peakString);
     }
 
     public void updateXYChartLabels() {
@@ -1360,12 +1397,12 @@ public class PyController implements Initializable {
         ValueSet valueSet1 = ChartUtil.getResidueProperty(r1SetName);
         ValueSet valueSet2 = ChartUtil.getResidueProperty(r2SetName);
         Map<String, Double> result = Collections.EMPTY_MAP;
-        if (valueSet1 instanceof ExperimentSet) {
-            if (valueSet2 instanceof ExperimentSet) {
-                ExperimentSet r1Set = (ExperimentSet) valueSet1;
-                ExperimentSet r2Set = (ExperimentSet) valueSet2;
+        if ((valueSet1 instanceof ExperimentSet r1Set) && (valueSet2 instanceof ExperimentSet r2Set)) {
+            result = CorrelationTime.estimateTau(r1Set, r2Set);
+            tauR1R2ResultMap = CorrelationTime.estimateTauPerResidue(r1Set, r2Set);
+        } else if ((valueSet1 instanceof RelaxationSet r1Set) && (valueSet2 instanceof RelaxationSet r2Set)) {
                 result = CorrelationTime.estimateTau(r1Set, r2Set);
-            }
+                tauR1R2ResultMap = CorrelationTime.estimateTauPerResidue(r1Set, r2Set);
         } else {
             FitR1R2NOEModel fitR1R2NOEModel = new FitR1R2NOEModel();
             result = fitR1R2NOEModel.estimateTau();
@@ -1375,6 +1412,15 @@ public class PyController implements Initializable {
             r1MedianField.setText(String.format("%.3f", result.get("R1")));
             r2MedianField.setText(String.format("%.3f", result.get("R2")));
             tauCalcField.setText(String.format("%.2f", result.get("tau")));
+        }
+    }
+
+    public void writeR1R2Tau() throws IOException {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save R1/R2/Tau File");
+        File file = fileChooser.showSaveDialog(MainApp.primaryStage);
+        if (file != null) {
+            DataIO.writeR1R2Tau(file, tauR1R2ResultMap);
         }
     }
 
@@ -1398,6 +1444,14 @@ public class PyController implements Initializable {
         }
     }
 
+    void removeAllCharts() {
+        int n = barCharts.size();
+        for (int i= n-1;i>=0;i--) {
+            barCharts.remove(i);
+        }
+        addChart();
+    }
+
     public void updateTable(List<ExperimentData> experimentalDataSets, String fitMode) {
         ObservableList<ExperimentData.DataValue> data = FXCollections.observableArrayList();
         for (ExperimentData experimentalData : experimentalDataSets) {
@@ -1409,7 +1463,7 @@ public class PyController implements Initializable {
         TableColumn<ExperimentData.DataValue, String> resColumn = new TableColumn<>("Residue");
         TableColumn<ExperimentData.DataValue, String> resNameColumn = new TableColumn<>("ResName");
         TableColumn<ExperimentData.DataValue, String> atomNameColumn = new TableColumn<>("AtomName");
-        TableColumn<ExperimentData.DataValue, String> errColumn = new TableColumn<>("Error");
+        TableColumn<ExperimentData.DataValue, Double> errColumn = new TableColumn<>("Error");
         TableColumn<ExperimentData.DataValue, String> peakColumn = new TableColumn<>("Peak");
 
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("Name"));
@@ -1442,6 +1496,17 @@ public class PyController implements Initializable {
             resInfoTable.getColumns().addAll(nameColumn, resNameColumn, resColumn, atomNameColumn,
                     //                    t1Column, t2Column, t1RhoColumn,
                     xColumn, yColumn, errColumn, peakColumn);
+        } else if (fitMode.equals("noe")) {
+            TableColumn<ExperimentData.DataValue, Double> yColumn = new TableColumn<>("NOE");
+
+            yColumn.setCellValueFactory(new PropertyValueFactory<>("Y"));
+            ColumnFormatter<ExperimentData.DataValue> formatter = new ColumnFormatter<>(3);
+            formatter.applyTo(yColumn);
+            formatter.applyTo(errColumn);
+            resInfoTable.getColumns().clear();
+            resInfoTable.getColumns().addAll(nameColumn, resNameColumn, resColumn, atomNameColumn,
+                    //                    t1Column, t2Column, t1RhoColumn,
+                    yColumn, errColumn, peakColumn);
         } else if (fitMode.equals("cest")) {
             TableColumn<ExperimentData.DataValue, Double> x0Column = new TableColumn<>("Offset");
             TableColumn<ExperimentData.DataValue, Double> x1Column = new TableColumn<>("B1 Field");
@@ -1505,9 +1570,10 @@ public class PyController implements Initializable {
                     CurveFit curveSet = chartInfo.experimentalResult.getCurveFit(useEquationName, chartInfo.state.replace("*", "0"));
                     if (curveSet != null) {
                         Double aic = curveSet.getParMap().get("AIC");
+                        Double aicc = curveSet.getParMap().get("AICc");
                         Double rms = curveSet.getParMap().get("RMS");
                         Double rChiSq = curveSet.getParMap().get("rChiSq");
-                        updateFitQuality(aic, null, rms, rChiSq,null);
+                        updateFitQuality(aic, aicc, rms, rChiSq, null);
                     }
                 }
             }
@@ -1717,7 +1783,7 @@ public class PyController implements Initializable {
         Collection<String> setNames = ChartUtil.getResiduePropertyNames();
         for (var setName : setNames) {
             ValueSet valueSet = ChartUtil.getResidueProperty(setName);
-            if (valueSet instanceof ExperimentSet) {
+            if (valueSet instanceof ExperimentSet || valueSet instanceof RelaxationSet) {
                 t1Choice.getItems().add(setName);
                 t2Choice.getItems().add(setName);
             }
@@ -1730,7 +1796,7 @@ public class PyController implements Initializable {
         Set<Integer> fieldSets = new HashSet<>();
         if (moleculeBase != null) {
             var relaxSets = moleculeBase.relaxationSetMap();
-            for (var entry:relaxSets.entrySet()) {
+            for (var entry : relaxSets.entrySet()) {
                 int field = (int) entry.getValue().field();
                 if (!fieldSets.contains(field)) {
                     CheckMenuItem checkMenuItem = new CheckMenuItem(String.valueOf(field));
@@ -1760,6 +1826,7 @@ public class PyController implements Initializable {
         makeT1T2Menu();
         experimentalDataAxisMenu.getItems().clear();
         moleculeDataAxisMenu.getItems().clear();
+        menuDataList.clear();
         addMoleculeDataToAxisMenu();
         addResiduePropertiesToAxisMenu();
     }
@@ -1789,6 +1856,7 @@ public class PyController implements Initializable {
             }
         }
     }
+
     void addOrderParDataToAxisMenu(Map<String, OrderParSet> molResProps) {
         for (var entry : molResProps.entrySet()) {
             String setName = entry.getKey();
@@ -1810,8 +1878,7 @@ public class PyController implements Initializable {
     }
 
     void addOrderParSetsToAxisMenu() {
-        System.out.println("add order");
-        Map<String, OrderParSet>  molResProps = DataIO.getOrderParSetFromMolecule();
+        Map<String, OrderParSet> molResProps = DataIO.getOrderParSetFromMolecule();
         orderParSetAxisMenu.getItems().clear();
         for (var entry : molResProps.entrySet()) {
             String setName = entry.getKey();
@@ -1938,6 +2005,7 @@ public class PyController implements Initializable {
             Collections.sort(residueChart.getData(), seriesComparator);
         }
     }
+
     class SeriesComparator implements Comparator<DataSeries> {
 
         @Override
@@ -1956,8 +2024,24 @@ public class PyController implements Initializable {
         }
     }
 
+    record MenuData(String expMode, String setName, String eqnName, String state, String parName) {}
+
+    void showAllR() {
+        List<String> chartNames = menuDataList.stream().map( menuData -> menuData.setName()).toList();
+        var chartMap = setupCharts(chartNames);
+
+        for (MenuData menuData : menuDataList) {
+            activeChart = chartMap.get(menuData.setName());
+            setYAxisType(menuData.expMode, menuData.setName, menuData.eqnName(), menuData.state(),  menuData.parName(), true);
+        }
+        sortChartSeries();
+        resizeBarPlotCanvas();
+    }
     void addResiduePropertiesToAxisMenu() {
         Collection<String> setNames = ChartUtil.getResiduePropertyNames();
+        MenuItem addAllItem = new MenuItem("All");
+        addAllItem.setOnAction(e -> showAllR());
+        experimentalDataAxisMenu.getItems().add(addAllItem);
         setNames.stream().sorted().forEach(setName -> {
             var valueSet = ChartUtil.getResidueProperty(setName);
             if (valueSet instanceof ExperimentSet) {
@@ -1978,6 +2062,10 @@ public class PyController implements Initializable {
                     MenuItem cmItem1 = new MenuItem("R");
                     cmItem1.setOnAction(e -> setYAxisType(expMode, experimentSet.name(), "best", "0:0:0", parName, true));
                     cascade.getItems().add(cmItem1);
+                    if (parName.equalsIgnoreCase("R") || parName.equalsIgnoreCase("Kex") || parName.equalsIgnoreCase("NOE")) {
+                        MenuData menuData = new MenuData(expMode, setName, "best", "0:0:0", parName);
+                        menuDataList.add(menuData);
+                    }
                 } else {
                     for (String parType : parTypes) {
                         if (experimentSet.getEquationNames().size() == 1) {
@@ -1985,8 +2073,11 @@ public class PyController implements Initializable {
                             MenuItem cmItem1 = new MenuItem(parType);
                             cmItem1.setOnAction(e -> setYAxisType(expMode, setName, equationName, "0:0:0", parType, true));
                             cascade.getItems().add(cmItem1);
+                            if (parType.equalsIgnoreCase("R") || parType.equalsIgnoreCase("Kex") || parType.equalsIgnoreCase("NOE")) {
+                                MenuData menuData = new MenuData(expMode, setName, "best", "0:0:0", parType);
+                                menuDataList.add(menuData);
+                            }
                         } else {
-
                             Menu cascade2 = new Menu(parType);
                             cascade.getItems().add(cascade2);
                             ArrayList<String> equationNames = new ArrayList<>();
@@ -1995,12 +2086,19 @@ public class PyController implements Initializable {
                             }
                             equationNames.addAll(experimentSet.getEquationNames());
                             List<String> stateStrings = experimentSet.getStateStrings();
+
                             if (equationNames.size() == 0) {
                                 MenuItem cmItem1 = new MenuItem(experimentSet.name());
                                 cmItem1.setOnAction(e -> setYAxisType(expMode, experimentSet.name(), "best", "0:0:0", "R", true));
                                 cascade2.getItems().add(cmItem1);
+                                MenuData menuData = new MenuData(expMode, setName, "best", "0:0:0", parType);
+                                menuDataList.add(menuData);
 
                             } else {
+                                if (parType.equalsIgnoreCase("R") || parType.equalsIgnoreCase("Kex") || parType.equalsIgnoreCase("NOE")) {
+                                    MenuData menuData = new MenuData(expMode, setName, "best", "0:0:0", parType);
+                                    menuDataList.add(menuData);
+                                }
 
                                 for (String equationName : equationNames) {
                                     if ((stateStrings.size() < 2) || parType.equals("RMS") || parType.equals("AIC") || parType.equals("Equation")) {
@@ -2269,7 +2367,6 @@ public class PyController implements Initializable {
         File file = fileChooser.showSaveDialog(MainApp.primaryStage);
         if (file != null) {
             DataIO.writeSTAR3File(file.getAbsolutePath());
-            System.out.println("wrote " + file.getAbsolutePath());
         }
     }
 
@@ -2543,7 +2640,6 @@ public class PyController implements Initializable {
     }
 
     void equationAction() {
-        System.out.println("eq act " + equationChoice.getUserData());
         if (equationChoice.getUserData() == null) {
             String equationName = equationChoice.getValue();
             if (!chartInfo.currentStates.isEmpty() && equationName != null) {
@@ -2620,8 +2716,8 @@ public class PyController implements Initializable {
             xychart.getData().clear();
         }
         clearSecondaryStructure();
-        barCharts.remove(activeChart);
-        addChart();
+        removeAllCharts();
+        refreshResidueCharts();
     }
 
     @FXML
@@ -2656,7 +2752,7 @@ public class PyController implements Initializable {
         if (chartInfo.hasExperiments() && chartInfo.hasResidues()) {
             for (Experiment expData : ((ExperimentSet) chartInfo.getExperiments()).getExperimentData()) {
                 if (!ExperimentSet.matchStateString(chartInfo.state, expData.getState())) {
-                   // continue;
+                    // continue;
                 }
                 String expName = expData.getName();
                 for (ResonanceSource resNum : chartInfo.getResidues()) {
@@ -2695,23 +2791,19 @@ public class PyController implements Initializable {
             fitMode = "modelfree";
             for (ResonanceSource resonanceSource : chartInfo.getResidues()) {
                 Atom atom = resonanceSource.getAtom();
-                System.out.println("ressourc " + resonanceSource + " " + atom.getFullName());
                 Map<String, SpectralDensity> spectralDensityMap = atom.getSpectralDensity();
                 var sdData = ChartUtil.getSpectralDensityData(spectralDensityMap);
                 allData.addAll(sdData);
-                List<Double> xV = new ArrayList<>();
-                List<Double> yV = new ArrayList<>();
-                List<Double> eV = new ArrayList<>();
+                List<DataIO.XYErrValue> xyErrValueList = new ArrayList<>();
                 for (var v : sdData) {
                     var d = v.getData();
                     for (var dv : d) {
                         if (dv instanceof XYEValue xye) {
-                            xV.add(xye.getXValue());
-                            yV.add(xye.getYValue());
-                            eV.add(xye.getError());
+                            DataIO.XYErrValue xyErrValue = new DataIO.XYErrValue(xye.getXValue(), xye.getYValue(), xye.getError());
+                            xyErrValueList.add(xyErrValue);
                         }
                     }
-                    ExperimentData sdExpData = new ExperimentData(null, resonanceSource, xV, yV, eV);
+                    ExperimentData sdExpData = new ExperimentData(null, resonanceSource, xyErrValueList);
                     experimentalDataSets.add(sdExpData);
                 }
                 var orderPars = atom.getOrderPars();
@@ -2723,7 +2815,12 @@ public class PyController implements Initializable {
                             continue;
                         }
                         String modelName = orderPar.getModel();
-                        var model = MFModelIso.buildModel(modelName, true, 0.0, 0.0, false);
+                        MFModelIso model = null;
+                        try {
+                            model = MFModelIso.buildModel(modelName, true, 0.0, 0.0, false);
+                        } catch (IllegalArgumentException illegalArgumentException) {
+                            continue;
+                        }
                         var parNames = model.getParNames();
                         double[] pars = new double[parNames.size()];
                         double[] errs = new double[parNames.size()];
@@ -3141,6 +3238,7 @@ public class PyController implements Initializable {
             OrderParameterTool.interpolateRates(field);
         }
     }
+
     public void calculateSpectralDensities() {
         OrderParameterTool.calculateSpectralDensities();
     }

@@ -11,10 +11,7 @@ import org.apache.commons.rng.simple.RandomSource;
 import org.comdnmr.modelfree.models.MFModelIso;
 import org.comdnmr.util.ProcessingStatus;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
@@ -151,8 +148,11 @@ public abstract class FitModel {
         model.setTauFraction(localTauFraction);
         double[] lower = model.getLower();
         double[] upper = model.getUpper();
-        PointValuePair fitResult = relaxFit.fitResidueToModel(pars, lower, upper);
-        return relaxFit.score(fitResult.getPoint(), true);
+        Optional<PointValuePair> fitResultOpt = relaxFit.fitResidueToModel(pars, lower, upper);
+        if (fitResultOpt.isPresent()) {
+            return relaxFit.score(fitResultOpt.get().getPoint(), true);
+        }
+        return null;
     }
 
     public void setUseMedian(boolean value) {
