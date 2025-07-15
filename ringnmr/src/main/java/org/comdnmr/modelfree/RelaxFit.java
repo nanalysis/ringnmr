@@ -1,9 +1,7 @@
 package org.comdnmr.modelfree;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
+
 import org.apache.commons.math3.geometry.euclidean.threed.NotARotationMatrixException;
 import org.apache.commons.math3.geometry.euclidean.threed.Rotation;
 import org.apache.commons.math3.geometry.euclidean.threed.RotationConvention;
@@ -689,13 +687,13 @@ public class RelaxFit {
 
     }
 
-    public PointValuePair fitResidueToModel(double[] start, double[] lower, double[] upper) {
+    public Optional<PointValuePair> fitResidueToModel(double[] start, double[] lower, double[] upper) {
         Fitter fitter = Fitter.getArrayFitter(this::value);
         try {
-            return fitter.fit(start, lower, upper, 10.0);
+            return Optional.of(fitter.fit(start, lower, upper, 10.0));
         } catch (Exception ex) {
             ex.printStackTrace();
-            return null;
+            return Optional.empty();
         }
     }
 

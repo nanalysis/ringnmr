@@ -380,9 +380,9 @@ public class FitDeuteriumModel extends FitModel {
         PointValuePair best = null;
         for (int i = 0; i < nTries; i++) {
             try {
-                PointValuePair fitResult = relaxFit.fitResidueToModel(start, lower, upper);
-                if ((best == null) || (fitResult.getValue() < best.getValue())) {
-                    best = fitResult;
+                Optional<PointValuePair> fitResultOpt = relaxFit.fitResidueToModel(start, lower, upper);
+                if (fitResultOpt.isPresent() && ((best == null) || (fitResultOpt.get().getValue() < best.getValue()))) {
+                    best = fitResultOpt.get();
                 }
             } catch (Exception iaE) {
             }
@@ -436,11 +436,11 @@ public class FitDeuteriumModel extends FitModel {
         model.setTauFraction(localTauFraction);
         double[] lower = model.getLower();
         double[] upper = model.getUpper();
-        PointValuePair fitResult = relaxFit.fitResidueToModel(pars, lower, upper);
-        if (fitResult == null) {
+        Optional<PointValuePair> fitResultOpt = relaxFit.fitResidueToModel(pars, lower, upper);
+        if (fitResultOpt.isEmpty()) {
             return null;
         } else {
-            return relaxFit.score(fitResult.getPoint(), true);
+            return relaxFit.score(fitResultOpt.get().getPoint(), true);
         }
     }
 

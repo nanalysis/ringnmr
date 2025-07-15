@@ -197,13 +197,19 @@ public class InputDataInterface {
     }
 
     void updateConv(Choices choices) {
-        choices.yconvChoiceBox().setValue(DataIO.YCONV.IDENTITY);
         choices.xconvChoiceBox().setValue(DataIO.XCONV.IDENTITY);
-        choices.tauField.setDisable(true);
         switch (choices.typeChoice.getValue()) {
             case "CPMG" -> {
                 choices.tauField.setDisable(false);
                 choices.yconvChoiceBox().setValue(DataIO.YCONV.RATE);
+            }
+            case "NOE" -> {
+                choices.tauField.setDisable(true);
+                choices.yconvChoiceBox().setValue(DataIO.YCONV.NORMALIZE);
+            }
+            default -> {
+                choices.tauField.setDisable(true);
+                choices.yconvChoiceBox().setValue(DataIO.YCONV.IDENTITY);
             }
         }
     }
@@ -780,29 +786,18 @@ public class InputDataInterface {
             String peakListName = peakList.getName();
             experimentSet.setExpMode(expMode);
 
-            Experiment expData;
-            switch (expMode) {
-                case "rq":
-                case "rap":
-                case "r1":
-                    expData = new T1Experiment(experimentSet, peakList.getName(),
-                            nucName, b0Field, temperatureK);
-                    break;
-                case "r2":
-                    expData = new T2Experiment(experimentSet, peakList.getName(),
-                            nucName, b0Field, temperatureK);
-                    break;
-                case "noe":
-                    expData = new NOEExperiment(experimentSet, peakList.getName(),
-                            nucName, b0Field, temperatureK);
-                case "cpmg":
-                    expData = new CPMGExperiment(experimentSet, peakList.getName(),
-                            nucName, b0Field, tau, temperatureK);
-                    break;
-                default:
-                    expData = new Experiment(experimentSet, peakList.getName(),
-                            nucName, b0Field, temperatureK, expMode);
-            }
+            Experiment expData = switch (expMode) {
+                case "rq", "rap", "r1" -> new T1Experiment(experimentSet, peakList.getName(),
+                        nucName, b0Field, temperatureK);
+                case "r2" -> new T2Experiment(experimentSet, peakList.getName(),
+                        nucName, b0Field, temperatureK);
+                case "noe" -> new NOEExperiment(experimentSet, peakList.getName(),
+                        nucName, b0Field, temperatureK);
+                case "cpmg" -> new CPMGExperiment(experimentSet, peakList.getName(),
+                        nucName, b0Field, tau, temperatureK);
+                default -> new Experiment(experimentSet, peakList.getName(),
+                        nucName, b0Field, temperatureK, expMode);
+            };
 
             try {
                 DataIO.loadFromPeakList(peakList, expData, experimentSet,
