@@ -23,3 +23,9 @@
 ._*
 .Spotlight-V100
 /testrelax.py
+
+# Simon's stuff #
+#################
+.lvimrc
+*.swp
+!ringnmr/src/main/resources/data/parameter-networks.zip

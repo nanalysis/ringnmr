@@ -423,13 +423,6 @@ public class PlotData extends XYCanvasChart {
 
     public ArrayList<ArrayList<Double>> returnEquation(int iLine) {
         PlotEquation plotEquation = plotEquations.get(iLine);
-        double fieldRef;
-        if (iLine == 0) {
-            fieldRef = plotEquation.getExtra(0);
-        } else { //Prevents another call if iLine = 0; probably an easier way to do this
-            PlotEquation refEquation = plotEquations.get(0);
-            fieldRef = refEquation.getExtra(0);
-        }
         double min = xAxis.getLowerBound();
         double max = xAxis.getUpperBound();
         int nIncr = 100;
@@ -441,9 +434,11 @@ public class PlotData extends XYCanvasChart {
             ArrayList<Double> pointData = new ArrayList<>(3);
             double xValue = min + i * delta;
             ax[0] = xValue;
-            ax[1] = plotEquation.getExtra(0);
+            if (extras.length > 0) {
+                ax[1] = extras[0];
+            }
             for (int j = 1; j < extras.length; j++) {
-                ax[j] = extras[j];
+                ax[j + 1] = extras[j];
             }
             double yValue = plotEquation.calculate(ax);// / fieldRef);
             pointData.add(xValue);
