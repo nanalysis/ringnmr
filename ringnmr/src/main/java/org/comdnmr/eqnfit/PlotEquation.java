@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
- /*
+/*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
@@ -27,7 +27,6 @@ import org.comdnmr.modelfree.RelaxEquations;
 import org.comdnmr.modelfree.models.MFModelIso;
 
 /**
- *
  * @author Bruce Johnson
  */
 public class PlotEquation {
@@ -75,10 +74,14 @@ public class PlotEquation {
         return errs;
     }
 
-    public double calculate(double[] pars, double[] xValue) {
-        EquationType equationType = ResidueFitter.getEquationType(expType, name);
-        int[][] map = equationType.makeMap(1);
-        return equationType.calculate(pars, map[0], xValue, 0);
+    public double calculate(double[] simPars, double[] xValue) {
+        if (expType.startsWith("model")) {
+            return calculateSpectralDensity(xValue, simPars);
+        } else {
+            EquationType equationType = ResidueFitter.getEquationType(expType, name);
+            int[][] map = equationType.makeMap(1);
+            return equationType.calculate(simPars, map[0], xValue, 0);
+        }
     }
 
     public double calculate(double[] xValue) {
@@ -92,15 +95,19 @@ public class PlotEquation {
     }
 
     private double calculateSpectralDensity(double[] xValue) {
-        var model = MFModelIso.buildModel(expType,true,0.0,0.0,false);
+        return calculateSpectralDensity(xValue, pars);
+    }
+
+    private double calculateSpectralDensity(double[] xValue, double[] simPars) {
+        var model = MFModelIso.buildModel(expType, true, 0.0, 0.0, false);
         double[] omegas = {xValue[0] * 1.0e9};
-        double[] specDens = model.calc(omegas, pars);
+        double[] specDens = model.calc(omegas, simPars);
         return Math.log10(specDens[0] * 1.0e9);
     }
 
     private double calculateR(double[] xValue) {
-        var model = MFModelIso.buildModel(expType,true,0.0,0.0,false);
-        RelaxEquations relaxEquations = new RelaxEquations(800.0e6,"H", "N");
+        var model = MFModelIso.buildModel(expType, true, 0.0, 0.0, false);
+        RelaxEquations relaxEquations = new RelaxEquations(800.0e6, "H", "N");
 
         double[] omegas = relaxEquations.getOmegas();
         double[] specDens = model.calc(omegas, pars);

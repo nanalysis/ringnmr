@@ -874,8 +874,8 @@ public class PyController implements Initializable {
             genDataXLBTextField.setText("-8.0");
             genDataXUBTextField.setDisable(false);
             genDataXUBTextField.setText("8.0");
-            genDataXValTextField.setDisable(true);
-            genDataXValTextField.setText("");
+            genDataXValTextField.setDisable(false);
+            genDataXValTextField.setText("0 1 2 3 4 5");
         }
         if (update) {
             updateEquationChoices(getSimMode());
@@ -3034,10 +3034,14 @@ public class PyController implements Initializable {
         ObservableList<DataSeries> allData = FXCollections.observableArrayList();
         String equationName = simControls.getEquation();
         String simMode = getSimMode();
-        EquationType eType = ResidueFitter.getEquationType(simMode, equationName);
-        int[][] map = eType.makeMap(1);
-        EquationFitter equationFitter = getFitter();
-        equationFitter.getFitModel().setMap(map);
+        EquationFitter equationFitter = null;
+        int[][] map = null;
+        if (!simMode.equals("modelfree")) {
+            EquationType eType = ResidueFitter.getEquationType(simMode, equationName);
+            map = eType.makeMap(1);
+            equationFitter = getFitter();
+            equationFitter.getFitModel().setMap(map);
+        }
         double[] sliderGuesses = simControls.sliderGuess(equationName, map);
         double[] yBounds = xychart.getYBounds();
         double sdev = Math.abs(yBounds[1] - yBounds[0]) * 0.02;
@@ -3045,7 +3049,7 @@ public class PyController implements Initializable {
             genDataSDevTextField.setText(String.valueOf(sdev));
         }
         double[] xValues;
-        if (simMode.equals("cest") || simMode.equals("r1rho")) {
+        if ((equationFitter != null) && (simMode.equals("cest") || simMode.equals("r1rho"))) {
             int nPts = Integer.parseInt(genDataNPtsTextField.getText());
             double xLB = Double.parseDouble(genDataXLBTextField.getText());
             double xUB = Double.parseDouble(genDataXUBTextField.getText());
