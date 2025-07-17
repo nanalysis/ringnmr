@@ -52,6 +52,7 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Callback;
 import javafx.util.Duration;
+import org.comdnmr.BasicFitter;
 import org.comdnmr.data.*;
 import org.comdnmr.eqnfit.*;
 import org.comdnmr.fit.ResidueFitter;
@@ -2167,7 +2168,7 @@ public class PyController implements Initializable {
             guessSimData();
         } else {
             try {
-                EquationFitter equationFitter = getFitter();
+                BasicFitter equationFitter = getFitter();
                 ResonanceSource[] resNums = {chartInfo.getSource()};
                 equationFitter.setData(getCurrentExperimentSet(), resNums);
                 String equationName = simControls.getEquation();
@@ -2186,9 +2187,9 @@ public class PyController implements Initializable {
 
     public Optional<Double> rms() {
         Optional<Double> rms = Optional.empty();
-        if (hasExperimentSet()) {
+        BasicFitter basicFitter = getFitter();
+        if (hasExperimentSet() && (basicFitter instanceof EquationFitter equationFitter)) {
             try {
-                EquationFitter equationFitter = getFitter();
                 if (chartInfo.hasResult()) {
                     ResonanceSource[] resNums = {chartInfo.getSource()};
                     equationFitter.setData(getCurrentExperimentSet(), resNums);
@@ -2211,22 +2212,24 @@ public class PyController implements Initializable {
     public void fitEquation() {
         fitResult = null;
         try {
-            EquationFitter equationFitter = getFitter();
+            BasicFitter basicFitter = getFitter();
             if (!hasExperimentSet()) {
                 fitSimData();
             } else {
-                ResonanceSource[] resNums = {chartInfo.getSource()};
-                equationFitter.setData(getCurrentExperimentSet(), resNums);
-                String equationName = simControls.getEquation();
-                equationFitter.setupFit(equationName);
-                int[][] map = equationFitter.getFitModel().getMap();
-                double[] sliderGuesses = null;
-                if (sliderGuessCheckBox.isSelected()) {
-                    sliderGuesses = simControls.sliderGuess(equationName, map);
+                if (basicFitter instanceof EquationFitter equationFitter) {
+                    ResonanceSource[] resNums = {chartInfo.getSource()};
+                    equationFitter.setData(getCurrentExperimentSet(), resNums);
+                    String equationName = simControls.getEquation();
+                    equationFitter.setupFit(equationName);
+                    int[][] map = equationFitter.getFitModel().getMap();
+                    double[] sliderGuesses = null;
+                    if (sliderGuessCheckBox.isSelected()) {
+                        sliderGuesses = simControls.sliderGuess(equationName, map);
+                    }
+                    CoMDOptions options = new CoMDOptions(true);
+                    fitResult = equationFitter.doFit(equationName, sliderGuesses, options);
+                    updateAfterFit(fitResult);
                 }
-                CoMDOptions options = new CoMDOptions(true);
-                fitResult = equationFitter.doFit(equationName, sliderGuesses, options);
-                updateAfterFit(fitResult);
             }
         } catch (NullPointerException npE2) {
             npE2.printStackTrace();
@@ -2596,7 +2599,7 @@ public class PyController implements Initializable {
         return fitMode.toLowerCase();
     }
 
-    public EquationFitter getFitter() {
+    public BasicFitter getFitter() {
         CoMDOptions options = new CoMDOptions(true);
         if (getFittingMode().equals("exp")) {
             return new ExpFitter(options);
@@ -2606,6 +2609,8 @@ public class PyController implements Initializable {
             return new CESTFitter(options);
         } else if (getFittingMode().equals("r1rho")) {
             return new R1RhoFitter(options);
+        } else if (getFittingMode().equals("modelfree")) {
+            return new FitR1R2NOEModel();
         }
         return null;
     }
@@ -2923,7 +2928,7 @@ public class PyController implements Initializable {
         return maxValue;
     }
 
-    public void setSimData(EquationFitter equationFitter) {
+    public void setSimData(BasicFitter basicFitter) {
         ArrayList<Double> xValues = getSimXData();
         ArrayList<Double> yValues = getSimYData();
         ArrayList<Double> errValues = getSimErrData();
@@ -2931,7 +2936,7 @@ public class PyController implements Initializable {
         int nX;
         ArrayList[] allXValues;
         ArrayList<Double> fieldValuesX = new ArrayList<>();
-        if (equationFitter instanceof CESTFitter) {
+        if (basicFitter instanceof CESTFitter) {
             nX = 1;
             allXValues = new ArrayList[extras.length + nX + 1];
             allXValues[0] = xValues;
@@ -2960,14 +2965,16 @@ public class PyController implements Initializable {
             }
             allXValues[nX + j] = xValuesEx;
         }
-        equationFitter.setData(allXValues, yValues, errValues);
+        if (basicFitter != null) {
+            basicFitter.setData(allXValues, yValues, errValues);
+        }
     }
 
     public void guessSimData() {
-        EquationFitter equationFitter = getFitter();
-        setSimData(equationFitter);
+        BasicFitter basicFitter = getFitter();
+        setSimData(basicFitter);
         String equationName = simControls.getEquation();
-        List<ParValueInterface> guesses = equationFitter.guessPars(equationName);
+        List<ParValueInterface> guesses = basicFitter.guessPars(equationName);
         if (guesses != null) {
             simControls.updateSliders(guesses, equationName);
             simControls.simSliderAction("");
@@ -2975,18 +2982,20 @@ public class PyController implements Initializable {
     }
 
     public void fitSimData() {
-        EquationFitter equationFitter = getFitter();
-        setSimData(equationFitter);
+        BasicFitter basicFitter = getFitter();
+        setSimData(basicFitter);
         String equationName = simControls.getEquation();
-        equationFitter.setupFit(equationName);
-        int[][] map = equationFitter.getFitModel().getMap();
-        double[] sliderGuesses = null;
-        if (sliderGuessCheckBox.isSelected()) {
-            sliderGuesses = simControls.sliderGuess(equationName, map);
+        if (basicFitter instanceof EquationFitter equationFitter) {
+            equationFitter.setupFit(equationName);
+            int[][] map = equationFitter.getFitModel().getMap();
+            double[] sliderGuesses = null;
+            if (sliderGuessCheckBox.isSelected()) {
+                sliderGuesses = simControls.sliderGuess(equationName, map);
+            }
+            CoMDOptions options = new CoMDOptions(true);
+            fitResult = equationFitter.doFit(equationName, sliderGuesses, options);
+            updateAfterFit(fitResult);
         }
-        CoMDOptions options = new CoMDOptions(true);
-        fitResult = equationFitter.doFit(equationName, sliderGuesses, options);
-        updateAfterFit(fitResult);
     }
 
     ArrayList<Double> getSimXData() {
@@ -3034,12 +3043,11 @@ public class PyController implements Initializable {
         ObservableList<DataSeries> allData = FXCollections.observableArrayList();
         String equationName = simControls.getEquation();
         String simMode = getSimMode();
-        EquationFitter equationFitter = null;
+        BasicFitter basicFitter = getFitter();
         int[][] map = null;
-        if (!simMode.equals("modelfree")) {
+        if (!simMode.equals("modelfree") && (basicFitter instanceof EquationFitter equationFitter)) {
             EquationType eType = ResidueFitter.getEquationType(simMode, equationName);
             map = eType.makeMap(1);
-            equationFitter = getFitter();
             equationFitter.getFitModel().setMap(map);
         }
         double[] sliderGuesses = simControls.sliderGuess(equationName, map);
@@ -3049,7 +3057,7 @@ public class PyController implements Initializable {
             genDataSDevTextField.setText(String.valueOf(sdev));
         }
         double[] xValues;
-        if ((equationFitter != null) && (simMode.equals("cest") || simMode.equals("r1rho"))) {
+        if ((basicFitter instanceof EquationFitter equationFitter) && (simMode.equals("cest") || simMode.equals("r1rho"))) {
             int nPts = Integer.parseInt(genDataNPtsTextField.getText());
             double xLB = Double.parseDouble(genDataXLBTextField.getText());
             double xUB = Double.parseDouble(genDataXUBTextField.getText());
