@@ -727,9 +727,6 @@ public class PyController implements Initializable {
         GraphicsContext gC = barPlotCanvas.getGraphicsContext2D();
         gC.clearRect(0, 0, barPlotCanvas.getWidth(), barPlotCanvas.getHeight());
         for (ResidueChart residueChart : barCharts) {
-            if (!residueChart.getData().isEmpty()) {
-                System.out.println("chart size " + residueChart.getData().get(0).getData().size());
-            }
             residueChart.drawChart();
         }
         if (ssPainter != null) {
