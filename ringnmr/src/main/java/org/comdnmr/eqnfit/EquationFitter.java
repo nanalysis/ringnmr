@@ -24,10 +24,7 @@ package org.comdnmr.eqnfit;
 
 import org.comdnmr.data.ExperimentSet;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.comdnmr.fit.FitQuality;
 import org.comdnmr.util.CoMDOptions;
@@ -44,7 +41,7 @@ public interface EquationFitter {
 
     String getExpType();
 
-    FitResult doFit(String eqn, double[] sliderGuesses, CoMDOptions options);
+    Optional<FitResult> doFit(String eqn, double[] sliderGuesses, CoMDOptions options);
 
     void setupFit(String eqn);
 

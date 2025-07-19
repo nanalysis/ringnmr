@@ -2200,8 +2200,11 @@ public class PyController implements Initializable {
                     sliderGuesses = simControls.sliderGuess(equationName, map);
                 }
                 CoMDOptions options = new CoMDOptions(true);
-                fitResult = equationFitter.doFit(equationName, sliderGuesses, options);
-                updateAfterFit(fitResult);
+                var fitResultOpt = equationFitter.doFit(equationName, sliderGuesses, options);
+                if (fitResultOpt.isPresent()) {
+                    fitResult = fitResultOpt.get();
+                    updateAfterFit(fitResult);
+                }
             }
         } catch (NullPointerException npE2) {
             npE2.printStackTrace();
@@ -2960,8 +2963,11 @@ public class PyController implements Initializable {
             sliderGuesses = simControls.sliderGuess(equationName, map);
         }
         CoMDOptions options = new CoMDOptions(true);
-        fitResult = equationFitter.doFit(equationName, sliderGuesses, options);
-        updateAfterFit(fitResult);
+        var fitResultOpt = equationFitter.doFit(equationName, sliderGuesses, options);
+        if (fitResultOpt.isPresent()) {
+         fitResult = fitResultOpt.get();
+         updateAfterFit(fitResult);
+        }
     }
 
     ArrayList<Double> getSimXData() {

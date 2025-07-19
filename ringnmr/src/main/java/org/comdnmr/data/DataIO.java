@@ -1495,37 +1495,40 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 extras.put("units", units);
                 RelaxationSet relaxationSet = new RelaxationSet(datasetName, expType, dField, temperature, extras);
                 expResults.forEach(expResult -> {
-                    Double value;
-                    Double error;
+                    Double value = null;
+                    Double error = null;
                     if (expType == RelaxTypes.NOE) {
                         value = expResult.value;
                         error = expResult.err;
                     } else {
                         final Map<String, CurveFit> parMap = expResult.curveFits.get(expName);
-                        final Object[] states = parMap.keySet().toArray();
-                        if (expResults.indexOf(expResult) == 0) {
-                            Arrays.sort(states, (a, b) -> a.toString().compareTo(b.toString()));
-                        }
-                        CurveFit curveFit = parMap.get(states[iList].toString());
-                        Map<String, Double> fitPars = curveFit.getParMap();
-                        value = fitPars.get("R");
-                        error = fitPars.get("R.sd");
-                    }
-
-                    ResonanceSource resonanceSource = expResult.getResonanceSource();
-                    if (!resonanceSource.deleted()) {
-                        Atom atom = resonanceSource.getAtom();
-                        switch (expType) {
-                            case R1:
-                            case NOE: {
-                                RelaxationData relaxData = new RelaxationData(relaxationSet, resonanceSource, value, error);
-                                atom.getRelaxationData().put(relaxationSet, relaxData);
-                                break;
+                        if (parMap != null) {
+                            final Object[] states = parMap.keySet().toArray();
+                            if (expResults.indexOf(expResult) == 0) {
+                                Arrays.sort(states, (a, b) -> a.toString().compareTo(b.toString()));
                             }
-                            default: {
-                                RelaxationRex relaxData = new RelaxationRex(relaxationSet, resonanceSource, value, error, null, null);
-                                atom.getRelaxationData().put(relaxationSet, relaxData);
-                                break;
+                            CurveFit curveFit = parMap.get(states[iList].toString());
+                            Map<String, Double> fitPars = curveFit.getParMap();
+                            value = fitPars.get("R");
+                            error = fitPars.get("R.sd");
+                        }
+                    }
+                    if ((value != null)) {
+                        ResonanceSource resonanceSource = expResult.getResonanceSource();
+                        if (!resonanceSource.deleted()) {
+                            Atom atom = resonanceSource.getAtom();
+                            switch (expType) {
+                                case R1:
+                                case NOE: {
+                                    RelaxationData relaxData = new RelaxationData(relaxationSet, resonanceSource, value, error);
+                                    atom.getRelaxationData().put(relaxationSet, relaxData);
+                                    break;
+                                }
+                                default: {
+                                    RelaxationRex relaxData = new RelaxationRex(relaxationSet, resonanceSource, value, error, null, null);
+                                    atom.getRelaxationData().put(relaxationSet, relaxData);
+                                    break;
+                                }
                             }
                         }
                     }
