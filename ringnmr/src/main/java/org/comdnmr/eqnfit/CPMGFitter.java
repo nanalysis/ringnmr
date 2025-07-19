@@ -20,10 +20,9 @@ package org.comdnmr.eqnfit;
 import org.comdnmr.data.CPMGExperiment;
 import org.comdnmr.data.ExperimentSet;
 import org.comdnmr.data.ExperimentData;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+
+import java.util.*;
+
 import org.apache.commons.math3.optim.PointValuePair;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.stat.inference.TTest;
@@ -235,7 +234,7 @@ public class CPMGFitter implements EquationFitter {
     }
 
     @Override
-    public FitResult doFit(String eqn, double[] sliderguesses, CoMDOptions options) {
+    public Optional<FitResult> doFit(String eqn, double[] sliderguesses, CoMDOptions options) {
         setupFit(eqn);
         int[][] map = calcR.getMap();
         double[] guesses;
@@ -247,8 +246,15 @@ public class CPMGFitter implements EquationFitter {
         }
         double[][] boundaries = calcR.boundaries(guesses);
         double sigma = options.getStartRadius();
-        PointValuePair result = calcR.refine(guesses, boundaries[0],
+        var resultOpt = calcR.refine(guesses, boundaries[0],
                 boundaries[1], sigma, options.getOptimizer());
+        PointValuePair result;
+        if (resultOpt.isEmpty()) {
+            return Optional.empty();
+        } else {
+            result = resultOpt.get();
+        }
+
         double[] pars = result.getPoint();
         System.out.print("Fit pars \n");
         for (int i = 0; i < pars.length; i++) {
@@ -262,7 +268,6 @@ public class CPMGFitter implements EquationFitter {
         sigma /= 2.0;
 
         String[] parNames = calcR.getParNames();
-        double[] errEstimates;
         double[][] simPars = null;
         double field = calcR.xValues[1][0];
         double[] rexValues = calcR.getRex(pars, field);
@@ -275,42 +280,45 @@ public class CPMGFitter implements EquationFitter {
             }
         }
         boolean exchangeValid = okRex;
+        double[] errEstimates = new double[pars.length];
 
         if (FitFunction.getCalcError()) {
             long startTime = System.currentTimeMillis();
-            errEstimates = calcR.simBoundsStream(pars.clone(),
+            var errOpt = calcR.simBoundsStream(pars.clone(),
                     boundaries[0], boundaries[1], sigma, options);
-            long endTime = System.currentTimeMillis();
-            errTime = endTime - startTime;
-            simPars = calcR.getSimPars();
-            TTest tTest = new TTest();
-            for (String parName : parNames) {
-                int parIndex = -1;
-                if (parName.equals("Kex")) {
-                    parIndex = 0;
-                    if (pars[parIndex] < errEstimates[parIndex]) {
-                        exchangeValid = false;
+            if (errOpt.isPresent()) {
+                errEstimates = errOpt.get();
+
+                long endTime = System.currentTimeMillis();
+                errTime = endTime - startTime;
+                simPars = calcR.getSimPars();
+                TTest tTest = new TTest();
+                for (String parName : parNames) {
+                    int parIndex = -1;
+                    if (parName.equals("Kex")) {
+                        parIndex = 0;
+                        if (pars[parIndex] < errEstimates[parIndex]) {
+                            exchangeValid = false;
+                        }
                     }
-                }
-                if (parName.equals("dPPMmin")) {
-                    parIndex = 2;
-                }
-                if (parIndex != -1) {
-                    boolean valid = tTest.tTest(0.0, simPars[map[0][parIndex]], 0.02);
-                    SummaryStatistics sStat = new SummaryStatistics();
-                    for (double v : simPars[map[0][parIndex]]) {
-                        sStat.addValue(v);
+                    if (parName.equals("dPPMmin")) {
+                        parIndex = 2;
                     }
-                    double alpha = tTest.tTest(0.0, simPars[map[0][parIndex]]);
-                    double mean = sStat.getMean();
-                    double sdev = sStat.getStandardDeviation();
-                    if (!valid) {
-                        exchangeValid = false;
+                    if (parIndex != -1) {
+                        boolean valid = tTest.tTest(0.0, simPars[map[0][parIndex]], 0.02);
+                        SummaryStatistics sStat = new SummaryStatistics();
+                        for (double v : simPars[map[0][parIndex]]) {
+                            sStat.addValue(v);
+                        }
+                        double alpha = tTest.tTest(0.0, simPars[map[0][parIndex]]);
+                        double mean = sStat.getMean();
+                        double sdev = sStat.getStandardDeviation();
+                        if (!valid) {
+                            exchangeValid = false;
+                        }
                     }
                 }
             }
-        } else {
-            errEstimates = new double[pars.length];
         }
         String refineOpt = options.getOptimizer();
         String bootstrapOpt = options.getBootStrapOptimizer();
@@ -326,7 +334,7 @@ public class CPMGFitter implements EquationFitter {
         CurveFit.CurveFitStats curveStats = new CurveFit.CurveFitStats(refineOpt, bootstrapOpt, fitTime, bootTime, nSamples, useAbs,
                 useNonParametric, sRadius, fRadius, tol, useWeight);
         double[][] extras = getFields(xValues, idValues);
-        return getResults(this, eqn, parNames, dynSources, map, states, extras, nGroupPars, pars, errEstimates, fitQuality, simPars, exchangeValid, curveStats);
+        return Optional.of(getResults(this, eqn, parNames, dynSources, map, states, extras, nGroupPars, pars, errEstimates, fitQuality, simPars, exchangeValid, curveStats));
     }
 
     @Override
