@@ -25,6 +25,7 @@ import static org.comdnmr.modelfree.RelaxFit.DiffusionType;
 import static org.comdnmr.modelfree.RelaxFit.DiffusionType.ISOTROPIC;
 
 /**
+ *
  * @author brucejohnson
  */
 public class RelaxEquations {
@@ -43,12 +44,13 @@ public class RelaxEquations {
     public final static double GAMMA_H = 2.6752218744e8;
     public final static double GAMMA_D = 4.1065e7;
 
-    public final static double PLANCK = 1.0546e-34;
+    public final static double HBAR = 1.054571817e-34;
+    public final static double R_HH = 3.0e-10; // Simon chucked this in in order for some tests to work.
     public final static double R_HN = 1.02e-10;
     public final static double R_HC = 1.09e-10;
     public final static double R_CC = 1.51e-10;
-    public final static double SIGMA = -172.0e-6;
-    public final static double QCC = Math.PI * 167.0e3 / 2.0;
+    public final static double SIGMA = -172.0e-6;  // N.B. this is for Δσ = (3/2)σ = σzz - (1/2) (σxx + σyy)
+    public final static double QCC = Math.PI*167.0e3/2.0;
     public final static double QCC2 = QCC * QCC;
 
     public final static Map<String, Double> GAMMA_MAP = new HashMap<>();
@@ -60,6 +62,7 @@ public class RelaxEquations {
         GAMMA_MAP.put("N", GAMMA_N);
         GAMMA_MAP.put("C", GAMMA_C);
         GAMMA_MAP.put("D", GAMMA_D);
+        R_MAP.put("HH", R_HH);  // Simon chucked this in in order for some tests to work.
         R_MAP.put("HN", R_HN);
         R_MAP.put("NH", R_HN);
         R_MAP.put("HC", R_HC);
@@ -73,8 +76,9 @@ public class RelaxEquations {
     private final double r;
     private final double d;
     private final double d2;
-    private final double c;
-    private final double c2;
+    private final double c;  // (ωΔσ) / √3
+    private final double c2;   // (ω²Δσ²) / 3
+
     private final double gammaS;
     private final double gammaI;
     private final double sf;
@@ -83,11 +87,11 @@ public class RelaxEquations {
     double[] wValues;
 
     //   consider using scaled versions (smaller exponents)
-
     /**
-     * @param sf    double. 1H NMR Spectrometer frequency.
+     *
+     * @param sf double. 1H NMR Spectrometer frequency (MHz).
      * @param elem1 String. First element ("H" for 1H NMR).
-     * @param elem2 String. Second element (C, N, etc.)
+     * @param elem2 String. Second element ("C", "N", etc.)
      */
     public RelaxEquations(double sf, String elem1, String elem2) {
         gammaI = GAMMA_MAP.get(elem1);
@@ -100,17 +104,15 @@ public class RelaxEquations {
             wS = wI * gammaS / gammaI;
         }
         r = R_MAP.get(elem1 + elem2);
-        d = MU0 * (gammaI * gammaS * PLANCK) / (4.0 * Math.PI * r * r * r);
+        d = -MU0 * (gammaI * gammaS * HBAR) / (4.0 * Math.PI * Math.pow(r, 3.0));
         d2 = d * d;
-        c = wS * SIGMA / Math.sqrt(3.0);
+        c = wS * SIGMA_MAP.get(elem2) / Math.sqrt(3.0);
         c2 = c * c;
         if (elem1.equals("D")) {
             wValues = new double[]{0.0, wI, 2.0 * wI};
         } else {
             wValues = new double[]{0.0, wS, wI - wS, wI, wI + wS};
-
         }
-
         this.sf = sf;
     }
 
@@ -125,20 +127,18 @@ public class RelaxEquations {
     }
 
     public static void setR(String elem1, String elem2, double value) {
-        R_MAP.put(elem1 + elem2, value);
-        R_MAP.put(elem2 + elem1, value);
+        R_MAP.put(elem1+elem2, value);
+        R_MAP.put(elem2+elem1, value);
         relaxMap.clear();
     }
-
     public static double getR(String elem1, String elem2) {
-        return R_MAP.get(elem1 + elem2);
+        return R_MAP.get(elem1+elem2);
     }
 
     public static void setSigma(String elem1, double value) {
         SIGMA_MAP.put(elem1, value);
         relaxMap.clear();
     }
-
     public static double getSigma(String elem1) {
         return SIGMA_MAP.get(elem1);
     }
@@ -188,14 +188,13 @@ public class RelaxEquations {
     }
 
     // Note: tauM = tm in Art Palmer's code, and taui in Relax. 
-
     /**
      * Model Free spectral density function, J(omega), calculation using Model
      * 1.
      *
-     * @param w    double. The frequency, omega.
+     * @param w double. The frequency, omega.
      * @param tauM double. The overall correlation time.
-     * @param s2   double. The order parameter S^2.
+     * @param s2 double. The order parameter S^2.
      * @return J(w) value.
      */
     public double JModelFree(double w, double tauM, double s2) {
@@ -205,15 +204,14 @@ public class RelaxEquations {
 
     // Note: tauM = tm in Art Palmer's code, and taui in Relax. 
     // tau = ts in Art Palmer's code (taue in the paper: Phys Chem Chem Phys, 2016, 18, 5839-5849), and taue in Relax.
-
     /**
      * Model Free spectral density function, J(omega), calculation using Model
      * 2.
      *
-     * @param w    double. The frequency, omega.
-     * @param tau  double. The internal correlation time.
+     * @param w double. The frequency, omega.
+     * @param tau double. The internal correlation time.
      * @param tauM double. The overall correlation time.
-     * @param s2   double. The order parameter S^2.
+     * @param s2 double. The order parameter S^2.
      * @return J(w) value.
      */
     public double JModelFree(double w, double tau, double tauM, double s2) {
@@ -223,17 +221,16 @@ public class RelaxEquations {
     }
 
     // Note: tauM = tm in Art Palmer's code. tau = ts in Art Palmer's code.
-
     /**
      * Model Free spectral density function, J(omega), calculation using Model
      * 5.
      *
-     * @param w    double. The frequency, omega.
-     * @param tau  double. The internal correlation time.
+     * @param w double. The frequency, omega.
+     * @param tau double. The internal correlation time.
      * @param tauM double. The overall correlation time.
-     * @param s2   double. The order parameter S^2.
-     * @param sf2  double. The order parameter for intramolecular motions with
-     *             fast correlation times.
+     * @param s2 double. The order parameter S^2.
+     * @param sf2 double. The order parameter for intramolecular motions with
+     * fast correlation times.
      * @return J(w) value.
      */
     public double JModelFree(double w, double tau, double tauM, double s2, double sf2) {
@@ -246,13 +243,13 @@ public class RelaxEquations {
      * Model Free spectral density function, J(omega), calculation using Model
      * 6.
      *
-     * @param w    double. The frequency, omega.
+     * @param w double. The frequency, omega.
      * @param tauF double. The internal fast correlation time.
      * @param tauM double. The overall correlation time.
      * @param tauS double. The internal slow correlation time.
-     * @param s2   double. The order parameter S^2.
-     * @param sf2  double. The order parameter for intramolecular motions with
-     *             fast correlation times.
+     * @param s2 double. The order parameter S^2.
+     * @param sf2 double. The order parameter for intramolecular motions with
+     * fast correlation times.
      * @return J(w) value.
      */
     public double JModelFree(double w, double tauF, double tauM, double tauS, double s2, double sf2) {
@@ -263,13 +260,12 @@ public class RelaxEquations {
     }
 
     // Note: tauM = tm in Art Palmer's code, and taui in Relax. 
-
     /**
      * Model Free spectral density function, J(omega), calculations using Model
      * 1.
      *
      * @param tauM double. The overall correlation time.
-     * @param s2   double. The order parameter S^2.
+     * @param s2 double. The order parameter S^2.
      * @return double[]. Array of J(w) values.
      */
     public double[] getJModelFree(double tauM, double s2) {
@@ -292,14 +288,13 @@ public class RelaxEquations {
     }
 
     // Note: tauM = tm in Art Palmer's code, and taui in Relax. tau = ts in Art Palmer's code (taue in the paper), and taue in Relax.
-
     /**
      * Model Free spectral density function, J(omega), calculations using Model
      * 2.
      *
-     * @param tau  double. The internal correlation time.
+     * @param tau double. The internal correlation time.
      * @param tauM double. The overall correlation time.
-     * @param s2   double. The order parameter S^2.
+     * @param s2 double. The order parameter S^2.
      * @return double[]. Array of J(w) values.
      */
     public double[] getJModelFree(double tau, double tauM, double s2) {
@@ -312,16 +307,15 @@ public class RelaxEquations {
     }
 
     // Note: tauM = tm in Art Palmer's code. tau = ts in Art Palmer's code.
-
     /**
      * Model Free spectral density function, J(omega), calculations using Model
      * 5.
      *
-     * @param tau  double. The internal correlation time.
+     * @param tau double. The internal correlation time.
      * @param tauM double. The overall correlation time.
-     * @param s2   double. The order parameter S^2.
-     * @param sf2  double. The order parameter for intramolecular motions with
-     *             fast correlation times.
+     * @param s2 double. The order parameter S^2.
+     * @param sf2 double. The order parameter for intramolecular motions with
+     * fast correlation times.
      * @return double[]. Array of J(w) values.
      */
     public double[] getJModelFree(double tau, double tauM, double s2, double sf2) {
@@ -340,9 +334,9 @@ public class RelaxEquations {
      * @param tauF double. The internal fast correlation time.
      * @param tauM double. The overall correlation time.
      * @param tauS double. The internal slow correlation time.
-     * @param s2   double. The order parameter S^2.
-     * @param sf2  double. The order parameter for intramolecular motions with
-     *             fast correlation times.
+     * @param s2 double. The order parameter S^2.
+     * @param sf2 double. The order parameter for intramolecular motions with
+     * fast correlation times.
      * @return double[]. Array of J(w) values.
      */
     public double[] getJModelFree(double tauF, double tauM, double tauS, double s2, double sf2) {
@@ -360,17 +354,17 @@ public class RelaxEquations {
      * Longhini, A.; Dayie, T. K. and Fushman, D., J. Biomol NMR, 2013.
      *
      * @param diffType DiffusionType. The type of diffusion: anisotropic,
-     *                 prolate, or oblate.
-     * @param w        double. The frequency, omega.
-     * @param D        double[][]. The diagonalized diffusion matrix.
-     * @param VT       double[][]. The transposed orthonormal matrix of the
-     *                 eigenvectors of D.
-     * @param v        double[]. The unit vector for the SI bond.
-     * @param s2       double. The order parameter S^2.
-     * @param tauF     Double. The internal fast correlation time.
-     * @param sf2      Double. The order parameter for intramolecular motions with
-     *                 fast correlation times.
-     * @param tauS     Double. The internal slow correlation time.
+     * prolate, or oblate.
+     * @param w double. The frequency, omega.
+     * @param D double[][]. The diagonalized diffusion matrix.
+     * @param VT double[][]. The transposed orthonormal matrix of the
+     * eigenvectors of D.
+     * @param v double[]. The unit vector for the SI bond.
+     * @param s2 double. The order parameter S^2.
+     * @param tauF Double. The internal fast correlation time.
+     * @param sf2 Double. The order parameter for intramolecular motions with
+     * fast correlation times.
+     * @param tauS Double. The internal slow correlation time.
      * @return J(w) value.
      */
     private double JDiffusion(DiffusionType diffType, double w, double[][] D, double[][] VT, double[] v, double s2, Double tauF, Double sf2, Double tauS) {
@@ -427,22 +421,21 @@ public class RelaxEquations {
     }
 
     // Note: tauM = tm in Art Palmer's code, and taui in Relax. 
-
     /**
      * Model Free spectral density function, J(omega), calculations using
      * ModelFree Model 1, 2, 5, or 6.
      *
      * @param diffType DiffusionType. The type of diffusion: anisotropic,
-     *                 prolate, or oblate.
-     * @param D        double[][]. The diagonalized diffusion matrix.
-     * @param VT       double[][]. The transposed orthonormal matrix of the
-     *                 eigenvectors of D.
-     * @param v        double[]. The unit vector for the SI bond.
-     * @param s2       double. The order parameter S^2.
-     * @param tauF     Double. The internal fast correlation time.
-     * @param sf2      Double. The order parameter for intramolecular motions with
-     *                 fast correlation times.
-     * @param tauS     Double. The internal slow correlation time.
+     * prolate, or oblate.
+     * @param D double[][]. The diagonalized diffusion matrix.
+     * @param VT double[][]. The transposed orthonormal matrix of the
+     * eigenvectors of D.
+     * @param v double[]. The unit vector for the SI bond.
+     * @param s2 double. The order parameter S^2.
+     * @param tauF Double. The internal fast correlation time.
+     * @param sf2 Double. The order parameter for intramolecular motions with
+     * fast correlation times.
+     * @param tauS Double. The internal slow correlation time.
      * @return double[]. Array of J(w) values.
      */
     public double[] getJDiffusion(DiffusionType diffType, double[][] D, double[][] VT, double[] v, double s2, Double tauF, Double sf2, Double tauS) {
@@ -457,7 +450,7 @@ public class RelaxEquations {
     /**
      * Spectral density function calculation.
      *
-     * @param w   double. The frequency, omega.
+     * @param w double. The frequency, omega.
      * @param tau double. The correlation time.
      * @return double. The spectral density, J(w).
      */
@@ -468,9 +461,9 @@ public class RelaxEquations {
     /**
      * Spectral density function calculation.
      *
-     * @param w   double. The frequency, omega.
+     * @param w double. The frequency, omega.
      * @param tau double. The correlation time.
-     * @param S2  double. The order parameter.
+     * @param S2 double. The order parameter.
      * @return double. The spectral density, J(w).
      */
     public double J(double w, double tau, double S2) {
@@ -549,7 +542,7 @@ public class RelaxEquations {
      * Spectral density function calculations.
      *
      * @param tau double. The correlation time.
-     * @param S   double. The order parameter.
+     * @param S double. The order parameter.
      * @return double[]. Array of J(w) values.
      */
     public double[] getJ(double tau, double S) {
@@ -564,7 +557,6 @@ public class RelaxEquations {
      * R2:R1 ratio calculation.
      *
      * @param tau double. The correlation time.
-     *            Kay, Torchia and Bax (1989) Biochemistry 28:8972-8879
      * @return double. R2/R1 value.
      */
     public double r2r1Ratio(double tau) {
@@ -620,37 +612,25 @@ public class RelaxEquations {
      * @return double. R1 value.
      */
     public double R1(double[] J) {
-        return R1dipolar(J) + R1csa(J);
-    }
-
-    public double R1dipolar(double[] J) {
-        return d2 / 4.0 * (J[ImS] + 3.0 * J[S]
+        double dipolarContrib = d2 / 4.0 * (J[ImS] + 3.0 * J[S]
                 + 6.0 * J[IpS]);
-    }
-
-    public double R1csa(double[] J) {
-        return c2 * J[S];
+        double csaContrib = c2 * J[S];
+        return dipolarContrib + csaContrib;
     }
 
     /**
      * R2 calculation
      *
-     * @param J   double[]. Array of spectral density function values, J(w).
+     * @param J double[]. Array of spectral density function values, J(w).
      * @param Rex double. Rate of exchange, Rex, value.
      * @return double. R2 value.
      */
     public double R2(double[] J, double Rex) {
-        return R2dipolar(J) + R2csa(J) + Rex;
-    }
-
-    public double R2dipolar(double[] J) {
-        return d2 / 8.0 * (4.0 * J[0] + J[ImS]
+        double dipolarContrib = d2 / 8.0 * (4.0 * J[0] + J[ImS]
                 + 3.0 * J[S]
                 + 6.0 * J[I] + 6.0 * J[IpS]);
-    }
-
-    public double R2csa(double[] J) {
-        return c2 / 6 * (4.0 * J[0] + 3.0 * J[S]);
+        double csaContrib = c2 / 6 * (4.0 * J[0] + 3.0 * J[S]);
+        return dipolarContrib + csaContrib + Rex;
     }
 
     public double R1_D(double[] J) {
@@ -705,7 +685,7 @@ public class RelaxEquations {
     /**
      * Gamma calculation
      *
-     * @param J   double[]. Array of spectral density function values, J(w).
+     * @param J double[]. Array of spectral density function values, J(w).
      * @param Rex double. Rate of exchange, Rex, value.
      * @return double. Gamma value.
      */
@@ -721,7 +701,7 @@ public class RelaxEquations {
 
         double ddN = 160.0e-6;
         double theta = 17.0 * Math.PI / 180.0;
-        double p = MU0 * gammaI * gammaS * PLANCK / (8.0 * Math.PI * SQRT2 * r * r * r);
+        double p = MU0 * gammaI * gammaS * HBAR / (8.0 * Math.PI * SQRT2 * r * r * r);
         double dN = gammaS * B0 * ddN / (3.0 * SQRT2);
 
         double cosTheta = Math.cos(theta);
@@ -733,10 +713,10 @@ public class RelaxEquations {
      * Calculate rhoExp from Eqn 6 in Berlin K.; Longhini, A.; Dayie, T. K. and
      * Fushman, D., J. Biomol NMR, 2013.
      *
-     * @param R1  double. Experimentally measured R1 value.
-     * @param R2  double. Experimentally measured R2 value.
+     * @param R1 double. Experimentally measured R1 value.
+     * @param R2 double. Experimentally measured R2 value.
      * @param NOE double. Experimentally measured NOE value.
-     * @param J   double[]. Array of spectral density function values, J(w).
+     * @param J double[]. Array of spectral density function values, J(w).
      * @return double. RhoExp.
      */
     public double calcRhoExp(double R1, double R2, double NOE, double[] J) {
@@ -749,16 +729,16 @@ public class RelaxEquations {
     /**
      * Calculate the standard deviation error in rhoExp.
      *
-     * @param R1     double. Experimentally measured R1 value.
-     * @param R2     double. Experimentally measured R2 value.
-     * @param NOE    double. Experimentally measured NOE value.
-     * @param J      double[]. Array of spectral density function values, J(w).
-     * @param R1err  double. Error value for the experimentally measured R1
-     *               value.
-     * @param R2err  double. Error value for the experimentally measured R2
-     *               value.
+     * @param R1 double. Experimentally measured R1 value.
+     * @param R2 double. Experimentally measured R2 value.
+     * @param NOE double. Experimentally measured NOE value.
+     * @param J double[]. Array of spectral density function values, J(w).
+     * @param R1err double. Error value for the experimentally measured R1
+     * value.
+     * @param R2err double. Error value for the experimentally measured R2
+     * value.
      * @param NOEerr double. Error value for the experimentally measured NOE
-     *               value.
+     * value.
      * @param rhoExp double. Calculated rhoExp value.
      * @return double. RhoExp sigma squared error.
      */
@@ -780,10 +760,10 @@ public class RelaxEquations {
      * Calculate rhoExp from function computeRho() in RotDif code
      * (..../relax/RelaxationDatum.java).
      *
-     * @param R1  double. Experimentally measured R1 value.
-     * @param R2  double. Experimentally measured R2 value.
+     * @param R1 double. Experimentally measured R1 value.
+     * @param R2 double. Experimentally measured R2 value.
      * @param NOE double. Experimentally measured NOE value.
-     * @param J   double[]. Array of spectral density function values, J(w).
+     * @param J double[]. Array of spectral density function values, J(w).
      * @return double. RhoExp.
      */
     public double calcRhoExpCode(double R1, double R2, double NOE, double[] J) {
@@ -806,4 +786,99 @@ public class RelaxEquations {
         return (4.0 / 3.0) * (J[0] / J[S]);
     }
 
+    // SOLID STATE STUFF
+
+    /**
+    * Compute the CSA contribution to R1rho relaxation in the solid-state context.
+    * <p>
+    * Computes Eq. 39 in J. Phys. Chem. B 2017, 121, 25, 6117–6130.
+    *
+    * @param wr Rotating frame (MAS) frequency (rad s-1).
+    * @param we Spin-lock field frequency (rad s-1).
+    * @param tau Rotational correlation time (s).
+    * @param S2 Order parameter.
+    * @return R1rhoCSA: Contribution from CSA to R1rho.
+    */
+    public double R1rhoCSA(double wr, double we, double tau, double S2) {
+        // Using public double J(double w, double tau, double S2)
+        double oneMinusS2 = 1.0 - S2;
+        // Usually, R1rho experiments are performed with the locking field on resonance,
+        // such that theta_p is 90.
+        // In general, arccos(2 * pi * offset / we) should be used.
+        double theta_p = 0.5 * Math.PI;
+        // N.B. c2 is equivalent to (ω² Δσ²) / 3
+        return c2 * (
+            0.1111111111 * Math.pow(Math.sin(theta_p), 2.0) * (
+                J(we - 2 * wr, tau, oneMinusS2) +
+                2.0 * J(we - wr, tau, oneMinusS2) +
+                2.0 * J(we + wr, tau, oneMinusS2) +
+                J(we + 2 * wr, tau, oneMinusS2)
+            ) +
+            0.25 * (3.0 + Math.cos(2 * theta_p)) * J(wS, tau, oneMinusS2)
+        );
+    }
+
+    /**
+     * Compute the heteronuclear dipolar contribution to R1rho relaxation in the
+     * solid-state context.
+     * <p>
+     * Computes Eq. 33 in J. Phys. Chem. B 2017, 121, 25, 6117–6130.
+     *
+     * @param wr Rotating frame (MAS) frequency (rad s-1).
+     * @param we Spin-lock field frequency (rad s-1).
+     * @param tau Rotational correlation time (s).
+     * @param S2 Order parameter.
+     * @return R1rhoDD: Contribution from dipolar interaction to R1rho.
+     */
+    public double R1rhoIS(double wr, double we, double tau, double S2) {
+        // See applicable comments on omeMinusS2 and theta_p in R1rhoCSA
+        double oneMinusS2 = 1.0 - S2;
+        double theta_p = 0.5 * Math.PI;
+        return 0.25 * d2 * (
+            0.3333333333 * Math.pow(Math.sin(theta_p), 2.0) * (
+                J(we - 2 * wr, tau, oneMinusS2) +
+                2.0 * J(we - wr, tau, oneMinusS2) +
+                2.0 * J(we + wr, tau, oneMinusS2) +
+                J(we + 2 * wr, tau, oneMinusS2) +
+                9.0 * J(wS, tau, oneMinusS2)
+            ) +
+            0.25 * (3.0 + Math.cos(2 * theta_p)) * (
+                3.0 * J(wI, tau, oneMinusS2) +
+                6.0 * J(wI + wS, tau, oneMinusS2) +
+                J(wI - wS, tau, oneMinusS2)
+            )
+        );
+    }
+
+    public double R1rhoAA(double wr, double we, double tau, double S2) {
+        if (getGammaI() != getGammaS()) {
+            throw new RuntimeException("Expected the two nuclei to be the same.");
+        }
+        // See applicable comments on omeMinusS2 and theta_p in R1rhoCSA
+        double oneMinusS2 = 1.0 - S2;
+        double theta_p = 0.5 * Math.PI;
+        double sinSq2theta = Math.pow(Math.sin(2.0 * theta_p), 2.0);
+        double sinFourthTheta = Math.pow(Math.sin(theta_p), 4.0);
+        double threeCos2theta = 3.0 * Math.cos(2.0 * theta_p);
+        return 0.75 * d2 * (
+            0.125 * sinSq2theta * (
+                J(wr - we, tau, oneMinusS2) +
+                J(wr + we, tau, oneMinusS2)
+            ) +
+            0.5 * sinFourthTheta * (
+                J(wr - 2.0 * we, tau, oneMinusS2) +
+                J(wr + 2.0 * we, tau, oneMinusS2)
+            ) +
+            0.0625 * sinSq2theta * (
+                J(2.0 * wr - we, tau, oneMinusS2) +
+                J(2.0 * wr + we, tau, oneMinusS2)
+            ) +
+            0.25 * sinFourthTheta * (
+                J(2.0 * wr - 2.0 * we, tau, oneMinusS2) +
+                J(2.0 * wr + 2.0 * we, tau, oneMinusS2)
+            ) +
+            0.25 * (7.0 - threeCos2theta) * J(wI, tau, oneMinusS2) +
+            0.5 * (5.0 + threeCos2theta) * J(2.0 * wI, tau, oneMinusS2)
+        );
+    }
 }
