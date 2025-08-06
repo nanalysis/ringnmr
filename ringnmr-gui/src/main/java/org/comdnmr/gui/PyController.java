@@ -492,6 +492,7 @@ public class PyController implements Initializable {
         simChoice.getItems().add("CEST");
         simChoice.getItems().add("R1Rho");
         simChoice.getItems().add("ModelFree");
+        simChoice.getItems().add("R1Rho Solid State");
         simChoice.setValue("CPMG");
         simChoice.valueProperty().addListener(s -> simAction());
 
@@ -2224,7 +2225,7 @@ public class PyController implements Initializable {
                         sliderGuesses = simControls.sliderGuess(equationName, map);
                     }
                     CoMDOptions options = new CoMDOptions(true);
-                    fitResult = equationFitter.doFit(equationName, sliderGuesses, options);
+                    fitResult = equationFitter.doFit(equationName, sliderGuesses, options).get();
                     updateAfterFit(fitResult);
                 }
             }
@@ -2990,7 +2991,7 @@ public class PyController implements Initializable {
                 sliderGuesses = simControls.sliderGuess(equationName, map);
             }
             CoMDOptions options = new CoMDOptions(true);
-            fitResult = equationFitter.doFit(equationName, sliderGuesses, options);
+            fitResult = equationFitter.doFit(equationName, sliderGuesses, options).get();
             updateAfterFit(fitResult);
         }
     }

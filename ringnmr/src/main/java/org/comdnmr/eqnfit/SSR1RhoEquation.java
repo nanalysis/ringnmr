@@ -126,11 +126,16 @@ public enum SSR1RhoEquation implements EquationType {
     final String equationName;
     final int nGroupPars;
     String[] parNames;
+    static final String[] equationNames = {"CSA"};
 
     SSR1RhoEquation(String equationName, int nGroupPars, String... parNames) {
         this.equationName = equationName;
         this.parNames = parNames;
         this.nGroupPars = nGroupPars;
+    }
+
+    public static String[] getAllEquationNames() {
+        return equationNames;
     }
 
     @Override
