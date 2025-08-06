@@ -1697,6 +1697,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 }
             }
         }
+        System.out.println("added releax data");
     }
 
     static String toFileString(CorrelationTime.TauR1R2Result tr1, String sepChar) {
