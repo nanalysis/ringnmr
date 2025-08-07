@@ -492,7 +492,7 @@ public class PyController implements Initializable {
         simChoice.getItems().add("CEST");
         simChoice.getItems().add("R1Rho");
         simChoice.getItems().add("ModelFree");
-        simChoice.getItems().add("R1Rho Solid State");
+        simChoice.getItems().add("SSR1Rho");
         simChoice.setValue("CPMG");
         simChoice.valueProperty().addListener(s -> simAction());
 
@@ -742,7 +742,6 @@ public class PyController implements Initializable {
     }
 
     void keyPressedOnBarCanvas(KeyEvent keyEvent) {
-
         switch(keyEvent.getCode()) {
             case DELETE, BACK_SPACE -> removeItem();
             case RIGHT -> nextResidue(null);
@@ -786,6 +785,9 @@ public class PyController implements Initializable {
             update = true;
         } else if (getFittingMode().equals("r1rho") && !(simControls instanceof R1RhoControls)) {
             simControls = new R1RhoControls();
+            update = true;
+        } else if (getFittingMode().equals("ssr1rho") && !(simControls instanceof SSR1RhoControls)) {
+            simControls = new SSR1RhoControls();
             update = true;
         }
         if (update) {
@@ -863,6 +865,17 @@ public class PyController implements Initializable {
             genDataXUBTextField.setDisable(false);
             genDataXUBTextField.setText("8.0");
             genDataXValTextField.setDisable(true);
+            genDataXValTextField.setText("");
+        } else if (getSimMode().equals("ssr1rho") && !(simControls instanceof SSR1RhoControls)) {
+            simControls = new SSR1RhoControls();
+            update = true;
+            genDataNPtsTextField.setDisable(false);
+            genDataNPtsTextField.setText("100");
+            genDataXLBTextField.setDisable(false);
+            genDataXLBTextField.setText("3.0");
+            genDataXUBTextField.setDisable(false);
+            genDataXUBTextField.setText("40.0");
+            genDataXValTextField.setDisable(false);
             genDataXValTextField.setText("");
         } else if (getSimMode().equals("modelfree") && !(simControls instanceof ModelFreeControls)) {
             simControls = new ModelFreeControls();
@@ -1220,7 +1233,7 @@ public class PyController implements Initializable {
             xTickTextField.setText("2.0");
             yTickTextField.setText("0.25");
         } else if ((simControls instanceof R1RhoControls)) {
-            xychart.setNames("R1Rho", "Offset (PPM)", "R1Rho", "20");
+            xychart.setNames("R1Rho", "Offset (PPM)", "R1ρ (s⁻¹)", "20");
             xychart.setBounds(-20, 20, 0.0, 50.0, 2.0, 5.0);
             xLowerBoundTextField.setText("-20.0");
             xUpperBoundTextField.setText("20.0");
@@ -1239,6 +1252,25 @@ public class PyController implements Initializable {
             yUpperBoundTextField.setText("50.0");
             xTickTextField.setText("2.0");
             yTickTextField.setText("5.0");
+        } else if (simControls instanceof SSR1RhoControls) {
+            xychart.setNames("R1ρ Solid State", "ω1 (rad s⁻¹)", "R1ρ (s⁻¹)", "20");
+            xychart.setBounds(
+                2.0 * Math.PI * 1.0e3,
+                40.0 * Math.PI * 1.0e3,
+                0.0,
+                1000.0,
+                2.0 * Math.PI * 5.0e3,
+                100.0
+            );
+            xLowerBoundTextField.setText("3.0");
+            xUpperBoundTextField.setText("40.0");
+            if (hasExperimentSet()) {
+                // TODO
+            }
+            yLowerBoundTextField.setText("0.0");
+            yUpperBoundTextField.setText("1000.0");
+            xTickTextField.setText("5.0");
+            yTickTextField.setText("100.0");
         }
     }
 
@@ -1336,8 +1368,6 @@ public class PyController implements Initializable {
 
     public void showEquations(List<GUIPlotEquation> equations) {
         xychart.setEquations(equations);
-//        Optional<Double> rms = rms();
-
     }
 
     public void fitR1R2NOEModel() {

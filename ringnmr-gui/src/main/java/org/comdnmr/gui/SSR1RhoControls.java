@@ -32,7 +32,7 @@ public class SSR1RhoControls extends EquationControls {
     // TODO this is largely parroting the relevant code in R1RhoControls...
     // Should this be generalized?
     enum PARS implements ParControls {
-        TAUC("τc", 0.0, 1.0e-5, 1.0e-6, 67.0e-6, 3),
+        TAUC("τc", 0.0, 1.0e-4, 1.0e-6, 1.0e-5, 10),
         S2("S²", 0.0, 1.0, 0.01, 0.3285, 3),
         // TODO currently, ω1 is fixed as the independent variable
         // OMEGA1("ω1", OMEGA_1_MIN, OMEGA_1_MAX, 1.0e3, 2.0 * Math.PI * 10.0e3, 2),

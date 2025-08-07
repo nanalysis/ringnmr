@@ -428,6 +428,7 @@ public class ResidueFitter {
                 break;
             case "ssr1rho":
                 equationType = SSR1RhoEquation.valueOf(name);
+                break;
             case "noe":
                 equationType = NOEEquation.valueOf(name);
                 break;
