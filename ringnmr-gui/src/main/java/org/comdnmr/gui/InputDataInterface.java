@@ -244,7 +244,7 @@ public class InputDataInterface {
                     }
                     DatasetBase dataset = DatasetBase.getDataset(peakList.fileName);
                     if (dataset == null) {
-                        nucleus = peakList.getSpectralDim(0).getNucleus();
+                        nucleus = peakList.getSpectralDim(peakDim).getNucleus();
                         B0field = peakList.getSpectralDim(0).getSf();
                         temperature = 298.14;
                     } else {
