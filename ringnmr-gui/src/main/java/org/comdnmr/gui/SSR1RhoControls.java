@@ -26,17 +26,15 @@ public class SSR1RhoControls extends EquationControls {
     static PyController controller = PyController.mainController;
     static final double OMEGA_1_MIN = 2.0 * Math.PI * 2.0e3;  // ν1 (min) = 2kHz
     static final double OMEGA_1_MAX = 2.0 * Math.PI * 40.0e3;  // ν1 (max) = 40kHz
-    static final double OMEGA_R_MIN = 2.0 * Math.PI * 2.0e3;  // νR (min) = 2kHz
-    static final double OMEGA_R_MAX = 2.0 * Math.PI * 40.0e3;  // νR (max) = 40kHz
+    static final double NU_R_MIN = 1.0;  // νR (min) = 1kHz
+    static final double NU_R_MAX = 50.0;  // νR (max) = 50kHz
 
     // TODO this is largely parroting the relevant code in R1RhoControls...
     // Should this be generalized?
     enum PARS implements ParControls {
-        TAUC("τc", 0.0, 1.0e-4, 1.0e-6, 1.0e-5, 10),
-        S2("S²", 0.0, 1.0, 0.01, 0.3285, 3),
-        // TODO currently, ω1 is fixed as the independent variable
-        // OMEGA1("ω1", OMEGA_1_MIN, OMEGA_1_MAX, 1.0e3, 2.0 * Math.PI * 10.0e3, 2),
-        OMEGAR("ωR", OMEGA_R_MIN, OMEGA_R_MAX, 1.0e3, 2.0 * Math.PI * 10.0e3, 2);
+        TAUC("log₁₀(τc)", -8.0, -1.0, 1.0, -4.174, 3),
+        S2("S²", 0.0, 1.0, 0.1, 0.3285, 4),
+        OMEGAR("νR (kHz)", NU_R_MIN, NU_R_MAX, 5.0, 10.0, 2);
 
         String name;
         Slider slider;
@@ -278,13 +276,13 @@ public class SSR1RhoControls extends EquationControls {
         double[][] pars;
         switch (equationName) {
             case "CSA":
-                double tauc = PARS.TAUC.getValue();
+                double tauc = Math.pow(10.0, PARS.TAUC.getValue());
                 double s2 = PARS.S2.getValue();
-                double omegaR = PARS.OMEGAR.getValue();
+                double nuRkHz = PARS.OMEGAR.getValue();
                 pars = new double[2][2];
                 pars[0][0] = tauc;
                 pars[0][1] = s2;
-                pars[1][0] = omegaR;
+                pars[1][0] = nuRkHz;
                 break;
             default:
                 pars = null;

@@ -1253,24 +1253,17 @@ public class PyController implements Initializable {
             xTickTextField.setText("2.0");
             yTickTextField.setText("5.0");
         } else if (simControls instanceof SSR1RhoControls) {
-            xychart.setNames("R1ρ Solid State", "ω1 (rad s⁻¹)", "R1ρ (s⁻¹)", "20");
-            xychart.setBounds(
-                2.0 * Math.PI * 1.0e3,
-                40.0 * Math.PI * 1.0e3,
-                0.0,
-                1000.0,
-                2.0 * Math.PI * 5.0e3,
-                100.0
-            );
-            xLowerBoundTextField.setText("3.0");
-            xUpperBoundTextField.setText("40.0");
+            xychart.setNames("R1ρ Solid State", "ν1 (kHz)", "log₁₀[R1ρ (s⁻¹)]", "20");
+            xychart.setBounds(1.0, 50.0, -1.0, 5.0, 5.0, 1.0);
+            xLowerBoundTextField.setText("1.0");
+            xUpperBoundTextField.setText("50.0");
+            xTickTextField.setText("5.0");
+            yLowerBoundTextField.setText("-1.0");
+            yUpperBoundTextField.setText("5.0");
+            yTickTextField.setText("1.0");
             if (hasExperimentSet()) {
                 // TODO
             }
-            yLowerBoundTextField.setText("0.0");
-            yUpperBoundTextField.setText("1000.0");
-            xTickTextField.setText("5.0");
-            yTickTextField.setText("100.0");
         }
     }
 

@@ -75,24 +75,21 @@ public class PlotEquation {
     }
 
     public double calculate(double[] simPars, double[] xValue) {
+        double val;
         if (expType.startsWith("model")) {
-            return calculateSpectralDensity(xValue, simPars);
+            val = calculateSpectralDensity(xValue, simPars);
         } else {
             EquationType equationType = ResidueFitter.getEquationType(expType, name);
             int[][] map = equationType.makeMap(1);
-            return equationType.calculate(simPars, map[0], xValue, 0);
+            val = equationType.calculate(simPars, map[0], xValue, 0);
+            if (expType.equals("ssr1rho")) {
+                val = Math.log10(val);
+            }
         }
+        return val;
     }
 
-    public double calculate(double[] xValue) {
-        if (expType.startsWith("model")) {
-            return calculateSpectralDensity(xValue);
-        } else {
-            EquationType equationType = ResidueFitter.getEquationType(expType, name);
-            int[][] map = equationType.makeMap(1);
-            return equationType.calculate(pars, map[0], xValue, 0);
-        }
-    }
+    public double calculate(double[] xValue) { return calculate(pars, xValue); }
 
     private double calculateSpectralDensity(double[] xValue) {
         return calculateSpectralDensity(xValue, pars);
