@@ -52,6 +52,7 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Callback;
 import javafx.util.Duration;
+import org.comdnmr.BasicFitter;
 import org.comdnmr.data.*;
 import org.comdnmr.eqnfit.*;
 import org.comdnmr.fit.ResidueFitter;
@@ -486,11 +487,13 @@ public class PyController implements Initializable {
         updateEquationChoices(getFittingMode());
         equationChoice.valueProperty().addListener(e -> equationAction());
 
-        simChoice.getItems().add("Simulate CPMG");
-        simChoice.getItems().add("Simulate EXP");
-        simChoice.getItems().add("Simulate CEST");
-        simChoice.getItems().add("Simulate R1Rho");
-        simChoice.setValue("Simulate CPMG");
+        simChoice.getItems().add("CPMG");
+        simChoice.getItems().add("EXP");
+        simChoice.getItems().add("CEST");
+        simChoice.getItems().add("R1Rho");
+        simChoice.getItems().add("ModelFree");
+        simChoice.getItems().add("SSR1Rho");
+        simChoice.setValue("CPMG");
         simChoice.valueProperty().addListener(s -> simAction());
 
         splitPane.setDividerPositions(0.4, 0.7);
@@ -739,7 +742,6 @@ public class PyController implements Initializable {
     }
 
     void keyPressedOnBarCanvas(KeyEvent keyEvent) {
-
         switch(keyEvent.getCode()) {
             case DELETE, BACK_SPACE -> removeItem();
             case RIGHT -> nextResidue(null);
@@ -783,6 +785,9 @@ public class PyController implements Initializable {
             update = true;
         } else if (getFittingMode().equals("r1rho") && !(simControls instanceof R1RhoControls)) {
             simControls = new R1RhoControls();
+            update = true;
+        } else if (getFittingMode().equals("ssr1rho") && !(simControls instanceof SSR1RhoControls)) {
+            simControls = new SSR1RhoControls();
             update = true;
         }
         if (update) {
@@ -861,6 +866,28 @@ public class PyController implements Initializable {
             genDataXUBTextField.setText("8.0");
             genDataXValTextField.setDisable(true);
             genDataXValTextField.setText("");
+        } else if (getSimMode().equals("ssr1rho") && !(simControls instanceof SSR1RhoControls)) {
+            simControls = new SSR1RhoControls();
+            update = true;
+            genDataNPtsTextField.setDisable(false);
+            genDataNPtsTextField.setText("100");
+            genDataXLBTextField.setDisable(false);
+            genDataXLBTextField.setText("3.0");
+            genDataXUBTextField.setDisable(false);
+            genDataXUBTextField.setText("40.0");
+            genDataXValTextField.setDisable(false);
+            genDataXValTextField.setText("");
+        } else if (getSimMode().equals("modelfree") && !(simControls instanceof ModelFreeControls)) {
+            simControls = new ModelFreeControls();
+            update = true;
+            genDataNPtsTextField.setDisable(false);
+            genDataNPtsTextField.setText("100");
+            genDataXLBTextField.setDisable(false);
+            genDataXLBTextField.setText("-8.0");
+            genDataXUBTextField.setDisable(false);
+            genDataXUBTextField.setText("8.0");
+            genDataXValTextField.setDisable(false);
+            genDataXValTextField.setText("0 1 2 3 4 5");
         }
         if (update) {
             updateEquationChoices(getSimMode());
@@ -1157,6 +1184,16 @@ public class PyController implements Initializable {
             yUpperBoundTextField.setText("65.0");
             xTickTextField.setText("100.0");
             yTickTextField.setText("5.0");
+        } else if ((simControls instanceof ModelFreeControls)) {
+            xychart.setNames("Spectral Density", "\u03C9 (1/ns)", "log10[J(\u03C9)/1ns]", "0");
+            xychart.setBounds(0.0, 5.0, -3.0, 1.0, 1.0, 1);
+            xLowerBoundTextField.setText("0.0");
+            xUpperBoundTextField.setText("5.0");
+            yLowerBoundTextField.setText("-3.0");
+            yUpperBoundTextField.setText("1.0");
+            xTickTextField.setText("1.0");
+            yTickTextField.setText("1.0");
+
         } else if ((simControls instanceof ExpControls)) {
             xychart.setNames("Exp", "Time (s)", "Intensity", "0");
             xychart.setBounds(0.0, 1.25, 0.0, 100, 0.25, 10.0);
@@ -1196,7 +1233,7 @@ public class PyController implements Initializable {
             xTickTextField.setText("2.0");
             yTickTextField.setText("0.25");
         } else if ((simControls instanceof R1RhoControls)) {
-            xychart.setNames("R1Rho", "Offset (PPM)", "R1Rho", "20");
+            xychart.setNames("R1Rho", "Offset (PPM)", "R1ρ (s⁻¹)", "20");
             xychart.setBounds(-20, 20, 0.0, 50.0, 2.0, 5.0);
             xLowerBoundTextField.setText("-20.0");
             xUpperBoundTextField.setText("20.0");
@@ -1215,6 +1252,25 @@ public class PyController implements Initializable {
             yUpperBoundTextField.setText("50.0");
             xTickTextField.setText("2.0");
             yTickTextField.setText("5.0");
+        } else if (simControls instanceof SSR1RhoControls) {
+            xychart.setNames("R1ρ Solid State", "ω1 (rad s⁻¹)", "R1ρ (s⁻¹)", "20");
+            xychart.setBounds(
+                2.0 * Math.PI * 1.0e3,
+                40.0 * Math.PI * 1.0e3,
+                0.0,
+                1000.0,
+                2.0 * Math.PI * 5.0e3,
+                100.0
+            );
+            xLowerBoundTextField.setText("3.0");
+            xUpperBoundTextField.setText("40.0");
+            if (hasExperimentSet()) {
+                // TODO
+            }
+            yLowerBoundTextField.setText("0.0");
+            yUpperBoundTextField.setText("1000.0");
+            xTickTextField.setText("5.0");
+            yTickTextField.setText("100.0");
         }
     }
 
@@ -1312,8 +1368,6 @@ public class PyController implements Initializable {
 
     public void showEquations(List<GUIPlotEquation> equations) {
         xychart.setEquations(equations);
-//        Optional<Double> rms = rms();
-
     }
 
     public void fitR1R2NOEModel() {
@@ -2142,7 +2196,7 @@ public class PyController implements Initializable {
             guessSimData();
         } else {
             try {
-                EquationFitter equationFitter = getFitter();
+                BasicFitter equationFitter = getFitter();
                 ResonanceSource[] resNums = {chartInfo.getSource()};
                 equationFitter.setData(getCurrentExperimentSet(), resNums);
                 String equationName = simControls.getEquation();
@@ -2161,9 +2215,9 @@ public class PyController implements Initializable {
 
     public Optional<Double> rms() {
         Optional<Double> rms = Optional.empty();
-        if (hasExperimentSet()) {
+        BasicFitter basicFitter = getFitter();
+        if (hasExperimentSet() && (basicFitter instanceof EquationFitter equationFitter)) {
             try {
-                EquationFitter equationFitter = getFitter();
                 if (chartInfo.hasResult()) {
                     ResonanceSource[] resNums = {chartInfo.getSource()};
                     equationFitter.setData(getCurrentExperimentSet(), resNums);
@@ -2186,23 +2240,22 @@ public class PyController implements Initializable {
     public void fitEquation() {
         fitResult = null;
         try {
-            EquationFitter equationFitter = getFitter();
+            BasicFitter basicFitter = getFitter();
             if (!hasExperimentSet()) {
                 fitSimData();
             } else {
-                ResonanceSource[] resNums = {chartInfo.getSource()};
-                equationFitter.setData(getCurrentExperimentSet(), resNums);
-                String equationName = simControls.getEquation();
-                equationFitter.setupFit(equationName);
-                int[][] map = equationFitter.getFitModel().getMap();
-                double[] sliderGuesses = null;
-                if (sliderGuessCheckBox.isSelected()) {
-                    sliderGuesses = simControls.sliderGuess(equationName, map);
-                }
-                CoMDOptions options = new CoMDOptions(true);
-                var fitResultOpt = equationFitter.doFit(equationName, sliderGuesses, options);
-                if (fitResultOpt.isPresent()) {
-                    fitResult = fitResultOpt.get();
+                if (basicFitter instanceof EquationFitter equationFitter) {
+                    ResonanceSource[] resNums = {chartInfo.getSource()};
+                    equationFitter.setData(getCurrentExperimentSet(), resNums);
+                    String equationName = simControls.getEquation();
+                    equationFitter.setupFit(equationName);
+                    int[][] map = equationFitter.getFitModel().getMap();
+                    double[] sliderGuesses = null;
+                    if (sliderGuessCheckBox.isSelected()) {
+                        sliderGuesses = simControls.sliderGuess(equationName, map);
+                    }
+                    CoMDOptions options = new CoMDOptions(true);
+                    fitResult = equationFitter.doFit(equationName, sliderGuesses, options).get();
                     updateAfterFit(fitResult);
                 }
             }
@@ -2574,7 +2627,7 @@ public class PyController implements Initializable {
         return fitMode.toLowerCase();
     }
 
-    public EquationFitter getFitter() {
+    public BasicFitter getFitter() {
         CoMDOptions options = new CoMDOptions(true);
         if (getFittingMode().equals("exp")) {
             return new ExpFitter(options);
@@ -2584,6 +2637,8 @@ public class PyController implements Initializable {
             return new CESTFitter(options);
         } else if (getFittingMode().equals("r1rho")) {
             return new R1RhoFitter(options);
+        } else if (getFittingMode().equals("modelfree")) {
+            return new FitR1R2NOEModel();
         }
         return null;
     }
@@ -2660,7 +2715,7 @@ public class PyController implements Initializable {
         if (simSelected == null) {
             return "cpmg";
         }
-        return simSelected.substring(9).toLowerCase();
+        return simSelected.toLowerCase();
     }
 
     void simAction() {
@@ -2901,7 +2956,7 @@ public class PyController implements Initializable {
         return maxValue;
     }
 
-    public void setSimData(EquationFitter equationFitter) {
+    public void setSimData(BasicFitter basicFitter) {
         ArrayList<Double> xValues = getSimXData();
         ArrayList<Double> yValues = getSimYData();
         ArrayList<Double> errValues = getSimErrData();
@@ -2909,7 +2964,7 @@ public class PyController implements Initializable {
         int nX;
         ArrayList[] allXValues;
         ArrayList<Double> fieldValuesX = new ArrayList<>();
-        if (equationFitter instanceof CESTFitter) {
+        if (basicFitter instanceof CESTFitter) {
             nX = 1;
             allXValues = new ArrayList[extras.length + nX + 1];
             allXValues[0] = xValues;
@@ -2938,14 +2993,16 @@ public class PyController implements Initializable {
             }
             allXValues[nX + j] = xValuesEx;
         }
-        equationFitter.setData(allXValues, yValues, errValues);
+        if (basicFitter != null) {
+            basicFitter.setData(allXValues, yValues, errValues);
+        }
     }
 
     public void guessSimData() {
-        EquationFitter equationFitter = getFitter();
-        setSimData(equationFitter);
+        BasicFitter basicFitter = getFitter();
+        setSimData(basicFitter);
         String equationName = simControls.getEquation();
-        List<ParValueInterface> guesses = equationFitter.guessPars(equationName);
+        List<ParValueInterface> guesses = basicFitter.guessPars(equationName);
         if (guesses != null) {
             simControls.updateSliders(guesses, equationName);
             simControls.simSliderAction("");
@@ -2953,20 +3010,19 @@ public class PyController implements Initializable {
     }
 
     public void fitSimData() {
-        EquationFitter equationFitter = getFitter();
-        setSimData(equationFitter);
+        BasicFitter basicFitter = getFitter();
+        setSimData(basicFitter);
         String equationName = simControls.getEquation();
-        equationFitter.setupFit(equationName);
-        int[][] map = equationFitter.getFitModel().getMap();
-        double[] sliderGuesses = null;
-        if (sliderGuessCheckBox.isSelected()) {
-            sliderGuesses = simControls.sliderGuess(equationName, map);
-        }
-        CoMDOptions options = new CoMDOptions(true);
-        var fitResultOpt = equationFitter.doFit(equationName, sliderGuesses, options);
-        if (fitResultOpt.isPresent()) {
-         fitResult = fitResultOpt.get();
-         updateAfterFit(fitResult);
+        if (basicFitter instanceof EquationFitter equationFitter) {
+            equationFitter.setupFit(equationName);
+            int[][] map = equationFitter.getFitModel().getMap();
+            double[] sliderGuesses = null;
+            if (sliderGuessCheckBox.isSelected()) {
+                sliderGuesses = simControls.sliderGuess(equationName, map);
+            }
+            CoMDOptions options = new CoMDOptions(true);
+            fitResult = equationFitter.doFit(equationName, sliderGuesses, options).get();
+            updateAfterFit(fitResult);
         }
     }
 
@@ -3015,10 +3071,13 @@ public class PyController implements Initializable {
         ObservableList<DataSeries> allData = FXCollections.observableArrayList();
         String equationName = simControls.getEquation();
         String simMode = getSimMode();
-        EquationType eType = ResidueFitter.getEquationType(simMode, equationName);
-        int[][] map = eType.makeMap(1);
-        EquationFitter equationFitter = getFitter();
-        equationFitter.getFitModel().setMap(map);
+        BasicFitter basicFitter = getFitter();
+        int[][] map = null;
+        if (!simMode.equals("modelfree") && (basicFitter instanceof EquationFitter equationFitter)) {
+            EquationType eType = ResidueFitter.getEquationType(simMode, equationName);
+            map = eType.makeMap(1);
+            equationFitter.getFitModel().setMap(map);
+        }
         double[] sliderGuesses = simControls.sliderGuess(equationName, map);
         double[] yBounds = xychart.getYBounds();
         double sdev = Math.abs(yBounds[1] - yBounds[0]) * 0.02;
@@ -3026,7 +3085,7 @@ public class PyController implements Initializable {
             genDataSDevTextField.setText(String.valueOf(sdev));
         }
         double[] xValues;
-        if (simMode.equals("cest") || simMode.equals("r1rho")) {
+        if ((basicFitter instanceof EquationFitter equationFitter) && (simMode.equals("cest") || simMode.equals("r1rho"))) {
             int nPts = Integer.parseInt(genDataNPtsTextField.getText());
             double xLB = Double.parseDouble(genDataXLBTextField.getText());
             double xUB = Double.parseDouble(genDataXUBTextField.getText());

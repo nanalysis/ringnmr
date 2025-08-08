@@ -24,6 +24,7 @@ import org.comdnmr.eqnfit.ExpEquation;
 import org.comdnmr.eqnfit.EquationType;
 import org.comdnmr.eqnfit.FitResult;
 import org.comdnmr.eqnfit.R1RhoEquation;
+import org.comdnmr.eqnfit.SSR1RhoEquation;
 import org.comdnmr.eqnfit.CESTFitter;
 import org.comdnmr.eqnfit.CurveFit;
 import org.comdnmr.eqnfit.ExpFitter;
@@ -424,6 +425,9 @@ public class ResidueFitter {
                 break;
             case "r1rho":
                 equationType = R1RhoEquation.valueOf(name);
+                break;
+            case "ssr1rho":
+                equationType = SSR1RhoEquation.valueOf(name);
                 break;
             case "noe":
                 equationType = NOEEquation.valueOf(name);
