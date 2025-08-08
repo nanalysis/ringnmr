@@ -22,8 +22,8 @@
  */
 package org.comdnmr.eqnfit;
 
-import java.util.Arrays;
 import org.comdnmr.modelfree.RelaxEquations;
+import org.comdnmr.util.CoMDPreferences;
 
 /**
  *
@@ -34,18 +34,25 @@ public enum SSR1RhoEquation implements EquationType {
     CSA("SSR1RhoCSA", 0, "tauc", "s2") {
 
         @Override
+        // nu1 and nuR are both provided in kHz
         public double calculate(double[] par, int[] map, double[] x, int idNum) {
-            double tauc = par[map[0]];
-            double s2 = par[map[1]];
-            double omega1 = x[0];
-            double omegaR = x[1];
+            // FIXME: During simulations, getting map = [1, 0]... not sure why
+            // expected tauc = par[map[0]] and s2 = par[map[1]]
+            double tauc = par[map[1]];
+            double s2 = par[map[0]];
+            double nu1kHz = x[0];
+            double nuRkHz = x[1];
+            double omega1 = 2.0e3 * Math.PI * nu1kHz;
+            double omegaR = 2.0e3 * Math.PI * nuRkHz;
 
             // TODO: Check that this line is facilitated in the GUI, in order
             // to vary SIGMA.
             // N.B. Δσ = 3/2 δ
             RelaxEquations.setSigma("C", (3.0 / 2.0) * -36.77e-6);
-            var relaxEquations = new RelaxEquations(400.0e6, "H", "C");
-            return relaxEquations.r1RhoCSA(omegaR, omega1, tauc, s2);
+            double b0 = 1.0e6 * CoMDPreferences.getRefField();
+            RelaxEquations relaxEquations = new RelaxEquations(b0, "H", "C");
+            double r1rho = relaxEquations.r1RhoCSA(omegaR, omega1, tauc, s2);
+            return r1rho;
         }
 
         @Override
@@ -151,5 +158,13 @@ public enum SSR1RhoEquation implements EquationType {
     @Override
     public int getNGroupPars() {
         return nGroupPars;
+    }
+
+    public double getMinX() {
+        return 1.0;
+    }
+
+    public double getMaxX() {
+        return 50.0;
     }
 }
