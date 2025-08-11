@@ -69,6 +69,7 @@ public class RelaxEquations {
         R_MAP.put("CH", R_HC);
         R_MAP.put("DC", R_HC);
         R_MAP.put("CD", R_HC);
+        SIGMA_MAP.put("H", 0.0);  // Simon put this in to support R1RhoAA
         SIGMA_MAP.put("N", SIGMA);
         SIGMA_MAP.put("C", SIGMA);
     }
@@ -860,7 +861,7 @@ public class RelaxEquations {
         double sinSq2theta = Math.pow(Math.sin(2.0 * theta_p), 2.0);
         double sinFourthTheta = Math.pow(Math.sin(theta_p), 4.0);
         double threeCos2theta = 3.0 * Math.cos(2.0 * theta_p);
-        return 0.75 * d2 * (
+        double r1Rho = 0.75 * d2 * (
             0.125 * sinSq2theta * (
                 J(wr - we, tau, oneMinusS2) +
                 J(wr + we, tau, oneMinusS2)
@@ -880,5 +881,38 @@ public class RelaxEquations {
             0.25 * (7.0 - threeCos2theta) * J(wI, tau, oneMinusS2) +
             0.5 * (5.0 + threeCos2theta) * J(2.0 * wI, tau, oneMinusS2)
         );
+        return r1Rho;
+    }
+
+    public double r1RhoAB(double wr, double we, double tau, double S2) {
+        if (getGammaI() != getGammaS()) {
+            throw new RuntimeException("Expected the two nuclei to be the same.");
+        }
+        // See applicable comments on omeMinusS2 and theta_p in R1rhoCSA
+        double oneMinusS2 = 1.0 - S2;
+        double theta_p = 0.5 * Math.PI;
+        double cos2theta = Math.cos(2.0 * theta_p);
+        double cosSq2theta = Math.pow(cos2theta, 2.0);
+        double sinSq2theta = Math.pow(Math.sin(2.0 * theta_p), 2.0);
+        double sinFourthTheta = Math.pow(Math.sin(theta_p), 4.0);
+        double r1Rho = (1.0 / 4.0) * d2 * (
+            (1.0 / 24.0) * (1.0 + 3.0 * cosSq2theta) * J(wr, tau, oneMinusS2) +
+            (1.0 / 48.0) * (1.0 + 3.0 * cosSq2theta) * J(2.0 * wr, tau, oneMinusS2) +
+            (3.0 / 4.0) * sinFourthTheta * (
+                J(2.0 * we + wr, tau, oneMinusS2) +
+                0.5 * J(2.0 * we + 2.0 * wr, tau, oneMinusS2) +
+                0.5 * J(2.0 * we - 2.0 * wr, tau, oneMinusS2) +
+                J(2.0 * we - wr, tau, oneMinusS2)
+            ) +
+            (3.0 / 8.0) * sinSq2theta * (
+                J(we + wr, tau, oneMinusS2) +
+                0.5 * J(we + 2.0 * wr, tau, oneMinusS2) +
+                0.5 * J(we - 2.0 * wr, tau, oneMinusS2) +
+                J(we - wr, tau, oneMinusS2)
+            ) +
+            (3.0 / 4.0) * (5.0 - cos2theta) * J(wI, tau, oneMinusS2) +
+            1.5 * (3.0 + cos2theta) * J(2.0 * wI, tau, oneMinusS2)
+        );
+        return r1Rho;
     }
 }

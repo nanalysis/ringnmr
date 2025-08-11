@@ -199,7 +199,7 @@ public class SSR1RhoControls extends EquationControls {
         // <<<<<<<<<<
 
     switch (equationName) {
-            case "CSA":
+            case "CSA", "DIPOLAR_IS", "DIPOLAR_AB", "DIPOLAR_AA":
                 for (PARS par: PARS.values()) {
                     par.disabled(false);
                     par.valueText.setDisable(false);
@@ -275,7 +275,7 @@ public class SSR1RhoControls extends EquationControls {
     double[][] getPars(String equationName) {
         double[][] pars;
         switch (equationName) {
-            case "CSA":
+            case "CSA", "DIPOLAR_IS", "DIPOLAR_AB", "DIPOLAR_AA":
                 double tauc = Math.pow(10.0, PARS.TAUC.getValue());
                 double s2 = PARS.S2.getValue();
                 double nuRkHz = PARS.OMEGAR.getValue();
@@ -314,7 +314,7 @@ public class SSR1RhoControls extends EquationControls {
         double s2 = PARS.S2.getValue();
         double[] guesses = new double[2];
         switch (equationName) {
-            case "CSA":
+            case "CSA", "DIPOLAR_IS", "DIPOLAR_AB", "DIPOLAR_AA":
                 for (int id = 0; id < map.length; id++) {
                     guesses[map[id][0]] = tauc;
                     guesses[map[id][1]] = s2;
