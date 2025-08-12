@@ -2578,6 +2578,15 @@ public class PyController implements Initializable {
         exportExecutable("graph.r", "r", true);
     }
 
+    public void saveEquationFile() {
+        try {
+            xychart.saveEquationData();
+        } catch (IOException e) {
+            ExceptionDialog exceptionDialog = new ExceptionDialog(e);
+            exceptionDialog.showAndWait();
+        }
+    }
+
     public void snapit(Node node, File file) throws IOException {
         double scale = 4.0;
         final Bounds bounds = node.getLayoutBounds();
