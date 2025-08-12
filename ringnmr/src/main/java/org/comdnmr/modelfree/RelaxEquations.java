@@ -809,7 +809,7 @@ public class RelaxEquations {
         double theta_p = 0.5 * Math.PI;
         // N.B. c2 is equivalent to (ω² Δσ²) / 3
         return c2 * (
-            0.1111111111 * Math.pow(Math.sin(theta_p), 2.0) * (
+            (1.0 / 9.0) * Math.pow(Math.sin(theta_p), 2.0) * (
                 J(we - 2 * wr, tau, oneMinusS2) +
                 2.0 * J(we - wr, tau, oneMinusS2) +
                 2.0 * J(we + wr, tau, oneMinusS2) +
@@ -836,7 +836,7 @@ public class RelaxEquations {
         double oneMinusS2 = 1.0 - S2;
         double theta_p = 0.5 * Math.PI;
         return 0.25 * d2 * (
-            0.3333333333 * Math.pow(Math.sin(theta_p), 2.0) * (
+            (1.0 / 3.0) * Math.pow(Math.sin(theta_p), 2.0) * (
                 J(we - 2 * wr, tau, oneMinusS2) +
                 2.0 * J(we - wr, tau, oneMinusS2) +
                 2.0 * J(we + wr, tau, oneMinusS2) +
@@ -895,7 +895,7 @@ public class RelaxEquations {
         double cosSq2theta = Math.pow(cos2theta, 2.0);
         double sinSq2theta = Math.pow(Math.sin(2.0 * theta_p), 2.0);
         double sinFourthTheta = Math.pow(Math.sin(theta_p), 4.0);
-        double r1Rho = (1.0 / 4.0) * d2 * (
+        double r1Rho = 0.25 * d2 * (
             (1.0 / 24.0) * (1.0 + 3.0 * cosSq2theta) * J(wr, tau, oneMinusS2) +
             (1.0 / 48.0) * (1.0 + 3.0 * cosSq2theta) * J(2.0 * wr, tau, oneMinusS2) +
             (3.0 / 4.0) * sinFourthTheta * (

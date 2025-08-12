@@ -45,11 +45,8 @@ public enum SSR1RhoEquation implements EquationType {
             double omega1 = 2.0e3 * Math.PI * nu1kHz;
             double omegaR = 2.0e3 * Math.PI * nuRkHz;
 
-            // TODO: Check that this line is facilitated in the GUI, in order
-            // to vary SIGMA.
-            // N.B. Δσ = 3/2 δ
-            RelaxEquations.setSigma("C", (3.0 / 2.0) * -36.77e-6);
             double b0 = 1.0e6 * CoMDPreferences.getRefField();
+            // TODO: currently fixed to carbon
             RelaxEquations relaxEquations = new RelaxEquations(b0, "H", "C");
             double r1rho = relaxEquations.r1RhoCSA(omegaR, omega1, tauc, s2);
             return r1rho;
