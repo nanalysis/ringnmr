@@ -133,7 +133,6 @@ public abstract class FitFunction implements MultivariateFunction {
         PointValuePair result = null;
 
         try {
-            System.out.println("do fit");
             result = optimizer.optimize(
                     new CMAESOptimizer.PopulationSize(lambda),
                     new CMAESOptimizer.Sigma(sigma),
