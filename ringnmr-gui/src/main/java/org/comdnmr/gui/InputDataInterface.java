@@ -105,10 +105,10 @@ public class InputDataInterface {
         pyController = controller;
     }
 
-    record Choices (ChoiceBox<String> typeChoice,
-                    ChoiceBox<DataIO.XCONV> xconvChoiceBox, ChoiceBox<DataIO.YCONV> yconvChoiceBox,
-                    TextField tauField, SimpleDoubleProperty tauProperty, ChoiceBox<String> errModeChoiceBox,
-                    TextField percentField, SimpleDoubleProperty percentProperty) {
+    record Choices(ChoiceBox<String> typeChoice,
+                   ChoiceBox<DataIO.XCONV> xconvChoiceBox, ChoiceBox<DataIO.YCONV> yconvChoiceBox,
+                   TextField tauField, SimpleDoubleProperty tauProperty, ChoiceBox<String> errModeChoiceBox,
+                   TextField percentField, SimpleDoubleProperty percentProperty) {
 
     }
 
@@ -118,6 +118,7 @@ public class InputDataInterface {
         inputInfoDisplay.setHgap(10);
         inputInfoDisplay.setVgap(5);
     }
+
     public void createPeakListInterface() {
         infoStage.setTitle("Load from Peak Lists");
         borderPane.setCenter(inputInfoDisplay);
@@ -213,6 +214,7 @@ public class InputDataInterface {
             }
         }
     }
+
     void updatePercent(Choices choices) {
         choices.percentField.setDisable(true);
         switch (choices.errModeChoiceBox().getValue()) {
@@ -222,14 +224,22 @@ public class InputDataInterface {
         }
 
     }
+
     private void loadFromPeakLists(List<PeakList> peakLists, List<Choices> choices, boolean autoFit) {
+        Map<String, ExperimentSet> experimentSetMap = new HashMap<>();
         for (int i = 0; i < peakLists.size(); i++) {
             Choices choice = choices.get(i);
             String type = choice.typeChoice.getValue();
             if (!type.isBlank()) {
                 PeakList peakList = peakLists.get(i);
-                ExperimentSet experimentSet = new ExperimentSet(peakList.getName(), peakList.getName());
                 if (peakList != null) {
+                    String name = peakList.getName();
+                    ExperimentSet experimentSet;
+                    if (type.equalsIgnoreCase("cpmg") || type.equalsIgnoreCase("cest") || type.equalsIgnoreCase("r1rho")) {
+                        experimentSet = experimentSetMap.computeIfAbsent(type, k -> new ExperimentSet(name, name));
+                    } else {
+                        experimentSet = new ExperimentSet(name, name);
+                    }
                     int peakDim = 1;
                     String nucleus;
                     double B0field;
@@ -752,7 +762,7 @@ public class InputDataInterface {
         Double tau = getDouble("tau");
         String nucName = nucChoice.getValue();
         DataIO.XCONV xConv = xConvChoice.getValue() == null ? DataIO.XCONV.IDENTITY : DataIO.XCONV.valueOf(xConvChoice.getValue());
-        DataIO.YCONV yConv = yConvChoice.getValue() == null ? DataIO.YCONV.IDENTITY :  DataIO.YCONV.valueOf(yConvChoice.getValue());
+        DataIO.YCONV yConv = yConvChoice.getValue() == null ? DataIO.YCONV.IDENTITY : DataIO.YCONV.valueOf(yConvChoice.getValue());
         if (expMode.equalsIgnoreCase("noe")) {
             yConv = DataIO.YCONV.NORMALIZE;
         } else if (expMode.equalsIgnoreCase("cpmg")) {
