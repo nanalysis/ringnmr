@@ -109,10 +109,10 @@ public abstract class FitFunction implements MultivariateFunction {
         this.upperBounds = upperBounds.clone();
         startTime = System.currentTimeMillis();
         DEFAULT_RANDOMGENERATOR.setSeed(1);
-        double lambdaMul = 3.0;
+        double lambdaMul = 5.0;
         int lambda = (int) (lambdaMul * FastMath.round(4 + 3 * FastMath.log(guess.length)));
         //int nSteps = guess.length*1000;
-        int nSteps = 2000;
+        int nSteps = 4000;
         double stopFitness = 0.0;
         int diagOnly = 0;
         double tol = options.getTolerance();
