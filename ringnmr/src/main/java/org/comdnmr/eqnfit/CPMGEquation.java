@@ -210,7 +210,7 @@ public enum CPMGEquation implements EquationType {
             for (int[] ints : map) {
                 int iPar = ints[0];
                 boundaries[0][iPar] = 0.0;
-                boundaries[1][iPar] = Math.min(guesses[iPar] * 4, CoMDPreferences.getCPMGMaxFreq());
+                boundaries[1][iPar] = CoMDPreferences.getCPMGMaxFreq();
                 iPar = ints[1];
                 boundaries[0][iPar] = 0.0;
                 boundaries[1][iPar] = guesses[iPar] * 4;
@@ -512,7 +512,7 @@ public enum CPMGEquation implements EquationType {
             for (int[] ints : map) {
                 int iPar = ints[0];
                 boundaries[0][iPar] = 0.0;
-                boundaries[1][iPar] = Math.min(guesses[iPar] * 4, CoMDPreferences.getCPMGMaxFreq());
+                boundaries[1][iPar] = CoMDPreferences.getCPMGMaxFreq();
                 iPar = ints[1];
                 boundaries[0][iPar] = 0.5;
                 boundaries[1][iPar] = 0.999;
@@ -695,7 +695,7 @@ public enum CPMGEquation implements EquationType {
             for (int[] ints : map) {
                 int iPar = ints[0];
                 boundaries[0][iPar] = 0.0;
-                boundaries[1][iPar] = Math.min(guesses[iPar] * 4, CoMDPreferences.getCPMGMaxFreq());
+                boundaries[1][iPar] = CoMDPreferences.getCPMGMaxFreq();
                 iPar = ints[1];
                 boundaries[0][iPar] = 0.5;
                 boundaries[1][iPar] = 0.999;

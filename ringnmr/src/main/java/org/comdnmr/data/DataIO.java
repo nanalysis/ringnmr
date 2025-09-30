@@ -104,7 +104,7 @@ public class DataIO {
                 if ((value < refValue) && (value > 0.0)) {
                     double r1 = refEValue / refValue;
                     double r2 = eValue / value;
-                    double normValue = value / refEValue;
+                    double normValue = value / refValue;
                     double ratioError = Math.abs(normValue) * Math.sqrt(r1 * r1 + r2 * r2);
                     error = Math.abs(ratioError / normValue) / tau;
                     result = -Math.log(normValue) / tau;
@@ -171,7 +171,7 @@ public class DataIO {
             int offset = 0;
             double refIntensity = 1.0;
             double refNoise = 0.0;
-            if (yConv == YCONV.NORMALIZE) {
+            if ((yConv == YCONV.NORMALIZE) || (yConv == YCONV.RATE)){
                 offset = 1;
                 refIntensity = v[0][0];
                 refNoise = v[1][0];
@@ -1697,6 +1697,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                 }
             }
         }
+        System.out.println("added releax data");
     }
 
     static String toFileString(CorrelationTime.TauR1R2Result tr1, String sepChar) {

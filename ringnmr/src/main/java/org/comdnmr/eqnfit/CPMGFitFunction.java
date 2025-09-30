@@ -312,7 +312,9 @@ public class CPMGFitFunction extends FitFunction {
             double[] parSDev = new double[nPar];
             for (int i = 0; i < nPar; i++) {
                 DescriptiveStatistics dStat = new DescriptiveStatistics(parValues[i]);
-                parSDev[i] = dStat.getStandardDeviation();
+                double v25 = dStat.getPercentile(25);
+                double v75 = dStat.getPercentile(75.0);
+                parSDev[i] = (v75 - v25) / 1.349;
             }
             if (equation == CPMGEquation.CPMGSLOW) {
                 for (int j = 0; j < nID; j++) {

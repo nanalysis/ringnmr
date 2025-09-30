@@ -60,7 +60,10 @@ public class RelaxEquations {
     static {
         GAMMA_MAP.put("H", GAMMA_H);
         GAMMA_MAP.put("N", GAMMA_N);
+        GAMMA_MAP.put("1H", GAMMA_H);
+        GAMMA_MAP.put("15N", GAMMA_N);
         GAMMA_MAP.put("C", GAMMA_C);
+        GAMMA_MAP.put("13C", GAMMA_C);
         GAMMA_MAP.put("D", GAMMA_D);
         R_MAP.put("HH", R_HH);  // Simon chucked this in in order for some tests to work.
         R_MAP.put("HN", R_HN);
