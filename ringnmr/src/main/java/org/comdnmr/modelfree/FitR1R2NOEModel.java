@@ -19,6 +19,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -186,7 +187,7 @@ public class FitR1R2NOEModel extends FitModel {
         }
         AtomicInteger counts = new AtomicInteger();
         int n = molData.entrySet().size();
-        Map<String, ModelFitResult> results = new HashMap<>();
+        Map<String, ModelFitResult> results = new ConcurrentHashMap<>();
         MoleculeBase moleculeBase = MoleculeFactory.getActive();
         Map<String, OrderParSet> orderParSetMap = moleculeBase.orderParSetMap();
         for (var modelName : modelNames) {
@@ -336,6 +337,7 @@ public class FitR1R2NOEModel extends FitModel {
         double[][] replicateData = new double[maxPars][nReplicates];
         MFModelIso[] bestModels = new MFModelIso[nReplicates];
         Score[] bestScores = new Score[nReplicates];
+        double[] weights = null;
 
         int[] totalCounts = new int[nJ];
         for (int iRep = 0; iRep < nReplicates; iRep++) {
@@ -343,7 +345,7 @@ public class FitR1R2NOEModel extends FitModel {
                 return result;
             }
             if (bootstrapMode == BootstrapMode.BAYESIAN) {
-                double[] weights = dirichlet.sample();
+                weights = dirichlet.sample();
                 scaleWeights(weights);
                 for (var molData : molDataRes.values()) {
                     molData.weight(weights);
@@ -354,7 +356,7 @@ public class FitR1R2NOEModel extends FitModel {
                 for (var molData : molDataRes.values()) {
                     molData.setBootstrapAggregator(bootstrapAggregator);
                     molData.setBootstrapSet(bootStrapSet);
-                    molData.weight(null);
+                    molData.weight(weights);
                 }
                 BootstrapAggregator.incrCounts(totalCounts, bootstrapAggregator.getY(bootStrapSet));
             }
@@ -365,6 +367,7 @@ public class FitR1R2NOEModel extends FitModel {
                         localFitTau, tau, localTauFraction, fitExchange);
                 resData.setTestModel(model);
                 Score score = tryModel(molDataRes, model, localTauFraction, localFitTau, random);
+                score.setWeights(weights);
                 scores.add(score);
                 models.add(model);
             }

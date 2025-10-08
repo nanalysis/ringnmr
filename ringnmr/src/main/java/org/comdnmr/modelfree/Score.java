@@ -9,6 +9,7 @@ public class Score {
     final double complexityS;
     final double complexityTau;
     final double[] pars;
+    private double[] weights;
 
     public Score(double rss, int nValues, int nPars, boolean parsOK, double complexityS, double complexityTau) {
         this(rss, nValues, nPars, parsOK, complexityS, complexityTau, null);
@@ -23,6 +24,10 @@ public class Score {
         this.complexityTau = complexityTau;
         this.pars = pars;
     }
+
+    public void setWeights(double[] w) { weights = w; }
+
+    public double[] getWeights() { return weights; }
 
     public double[] getPars() {
         return pars;
