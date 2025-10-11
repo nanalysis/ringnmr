@@ -1721,6 +1721,9 @@ public class PyController implements Initializable {
             ObservableList<DataSeries> data = ChartUtil.getRelaxationDataSeries(values, valueName, setName, parName);
             String yLabel = valueName.equalsIgnoreCase(parName) ? parName
                     : valueName.toUpperCase() + ": " + parName;
+            if (parName.equals("S2")) {
+                yLabel = parName;
+            }
 
             addSeries(data, setName, yLabel, true);
         }
