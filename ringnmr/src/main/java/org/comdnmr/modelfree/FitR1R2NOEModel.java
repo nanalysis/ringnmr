@@ -328,7 +328,8 @@ public class FitR1R2NOEModel extends FitModel {
         List<Integer> iRepList = null;
         DirichletSampler dirichlet = null;
         if (bootstrapMode == BootstrapMode.BAYESIAN) {
-            dirichlet = DirichletSampler.symmetric(getRandomSource(), nJ, 4.0);
+            // New sampler with same seed each time for reproducibility
+            dirichlet = DirichletSampler.symmetric(getRandomSource(true), nJ, 4.0);
         } else {
             nReplicates = Math.min(nReplicates, bootstrapAggregator.getN());
             iRepList = IntStream.range(0, bootstrapAggregator.getN()).boxed().collect(Collectors.toList());

@@ -33,8 +33,7 @@ public class MFModelIso2sf extends MFModelIso2f {
     double complexityS = 0.0;
     double complexityTau = 0.0;
 
-    private static double psi = Math.log10(30.0e-12);
-    private static double tenToPsi = Math.pow(10.0, psi);
+    private static double tauPrime = 30.0e-12;
 
     public MFModelIso2sf(boolean fitTau, double targetTau, double tauFraction,
             boolean includeEx) {
@@ -76,9 +75,8 @@ public class MFModelIso2sf extends MFModelIso2f {
 
         complexityS = Math.abs(1.0 - sf2) + Math.abs(1.0 - ss2);
         complexityTau =
-            Math.log10(tauSx + tenToPsi) +
-            Math.log10(tauFx + tenToPsi) -
-            2 * psi;
+            Math.log10((tauSx + tauPrime) / tauPrime) +
+            Math.log10((tauFx + tauPrime) / tauPrime);
 
         return J;
     }
@@ -183,8 +181,7 @@ public class MFModelIso2sf extends MFModelIso2f {
         if (includeEx) {
             return getParValues(tauUpper(), 1.0, targetTau / 2.0, 1.0, targetTau / 2.0, 100.0);
         } else {
-            return getParValues(tauUpper(), 1.0, targetTau / 2.0, 1.0, targetTau / 2.0);
-
+            return getParValues(tauUpper(), 1.0, SLOW_LIMIT, 1.0, targetTau / 2.0);
         }
     }
 

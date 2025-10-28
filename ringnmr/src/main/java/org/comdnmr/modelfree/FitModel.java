@@ -49,8 +49,13 @@ public abstract class FitModel {
     }
 
     public static UniformRandomProvider getRandomSource() {
-        if (rng == null) {
-            rng = RandomSource.XO_RO_SHI_RO_128_PP.create();
+        return getRandomSource(false);
+    }
+
+    public static UniformRandomProvider getRandomSource(boolean init) {
+        if (init || rng == null) {
+            final int[] seed = new int[] { 196, 9, 0, 226 };
+            rng = RandomSource.XO_RO_SHI_RO_128_PP.create(seed);
         }
         return rng;
     }
