@@ -2034,6 +2034,10 @@ public class PyController implements Initializable {
                         }
                     }
                 });
+        if (usedSet.contains("S2") && !(usedSet.contains("Sf2") && usedSet.contains("Ss2"))) {
+            usedSet.remove("Sf2");
+            usedSet.remove("Ss2");
+        }
         for (String chartName : chartNames) {
             if (!usedSet.contains(chartName)) {
                 ResidueChart resChart = chartMap.get(chartName);
