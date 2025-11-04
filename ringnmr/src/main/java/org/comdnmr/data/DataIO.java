@@ -1702,11 +1702,16 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                         int index = typeMap.get(type);
                         double value = Double.parseDouble(fields[index]);
                         double error = Double.parseDouble(fields[index + 1]);
+                        if (error < 1.0e-6) {
+                            error = 1.0e-6;
+                        }
                         final Double b0Field;
                         final String subType;
                         if (iField == -1) {
                             Matcher matcher = typeFieldPattern.matcher(type.trim());
-
+                            if (!matcher.matches()) {
+                                throw new IllegalArgumentException("Type doesn't match " + type);
+                            }
                             subType = matcher.group(1);
                             b0Field = Double.parseDouble(matcher.group(2));
                         } else {
