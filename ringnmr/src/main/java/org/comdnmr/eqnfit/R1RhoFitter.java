@@ -179,7 +179,6 @@ public class R1RhoFitter implements EquationFitter {
 
     public static List<String> getEquationNames() {
         List<String> activeEquations = CoMDPreferences.getActiveR1RhoEquations();
-        System.out.println(activeEquations.toString());
         return activeEquations;
     }
 
