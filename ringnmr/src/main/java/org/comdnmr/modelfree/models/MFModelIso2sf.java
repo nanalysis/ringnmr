@@ -29,7 +29,7 @@ import java.util.List;
  * @author brucejohnson
  */
 public class MFModelIso2sf extends MFModelIso2f {
-    protected static double tauPrime = 30.0e-12;
+    protected static double tauPrime = 30.0e-3;
     double tauS;
     double complexityS = 0.0;
     double complexityTau = 0.0;
@@ -55,28 +55,26 @@ public class MFModelIso2sf extends MFModelIso2f {
 
     @Override
     public double[] calc(double[] omegas) {
-        double tauMx = tauM * 1.0e-9;
-        double tauFx = tauF * 1.0e-9;
-        double tauSx = tauS * 1.0e-9;
         double[] J = new double[omegas.length];
         int j = 0;
         double ss2 = this.ss2;
         double sf2 = this.sf2 / sN;
         double s2 = ss2 * sf2;
         for (double omega : omegas) {
+            omega *= 1.0e-9;
             double omega2 = omega * omega;
-            double vM = s2 / (1.0 + omega2 * tauMx * tauMx);
-            double vMF = ((1.0 - sf2) * tauFx * (tauMx + tauFx))
-                    / (omega2 * tauMx * tauMx * tauFx * tauFx + (tauMx + tauFx) * (tauMx + tauFx));
-            double vMS = (sf2 * (1.0 - ss2) * tauSx * (tauMx + tauSx))
-                    / (omega2 * tauMx * tauMx * tauSx * tauSx + (tauMx + tauSx) * (tauMx + tauSx));
-            J[j++] = 0.4 * tauMx * (vM + vMF + vMS);
+            double vM = s2 / (1.0 + omega2 * tauM * tauM);
+            double vMF = ((1.0 - sf2) * tauF * (tauM + tauF))
+                    / (omega2 * tauM * tauM * tauF * tauF + (tauM + tauF) * (tauM + tauF));
+            double vMS = (sf2 * (1.0 - ss2) * tauS * (tauM + tauS))
+                    / (omega2 * tauM * tauM * tauS * tauS + (tauM + tauS) * (tauM + tauS));
+            J[j++] = 0.4 * tauM * 1.0e-9 *  (vM + vMF + vMS);
         }
 
         complexityS = Math.abs(1.0 - sf2) + Math.abs(1.0 - ss2);
         complexityTau =
-                Math.log10((tauSx + tauPrime) / tauPrime) +
-                        Math.log10((tauFx + tauPrime) / tauPrime);
+                Math.log10((tauS + tauPrime) / tauPrime) +
+                        Math.log10((tauF + tauPrime) / tauPrime);
         return J;
     }
 
