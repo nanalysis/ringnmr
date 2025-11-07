@@ -3025,11 +3025,14 @@ public class PyController implements Initializable {
             equationFitter.setupFit(equationName);
             int[][] map = equationFitter.getFitModel().getMap();
             double[] sliderGuesses = null;
+            boolean isSel = sliderGuessCheckBox.isSelected();
+            int x = 0;
             if (sliderGuessCheckBox.isSelected()) {
                 sliderGuesses = simControls.sliderGuess(equationName, map);
             }
             CoMDOptions options = new CoMDOptions(true);
             fitResult = equationFitter.doFit(equationName, sliderGuesses, options).get();
+
             updateAfterFit(fitResult);
         }
     }

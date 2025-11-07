@@ -123,7 +123,7 @@ public class R1RhoFitFunction extends FitFunction {
         return parValues;
     }
 
-    // TODO: This has no uses. Any need for it?
+    // TODO: This has no usages. Any need for it?
     @Override
     public Optional<double[]> simBounds(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma, CoMDOptions options) {
         reportFitness = false;

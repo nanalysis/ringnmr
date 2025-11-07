@@ -31,7 +31,7 @@ import org.comdnmr.util.CoMDPreferences;
  */
 public enum SSR1RhoEquation implements EquationType {
 
-    CSA("SSR1RhoCSA", 0, "tauc", "s2") {
+    CSA("CSA", 0, "tauc", "s2") {
 
         @Override
         // nu1 and nuR are both provided in kHz
@@ -53,7 +53,7 @@ public enum SSR1RhoEquation implements EquationType {
         }
     },
 
-    DIPOLAR_IS("SSR1RhoDIS", 0, "tauc", "s2") {
+    DIPOLAR_IS("DIPOLAR_IS", 0, "tauc", "s2") {
         @Override
         public double calculate(double[] par, int[] map, double[] x, int idNum) {
             double tauc = par[map[1]];
@@ -71,7 +71,7 @@ public enum SSR1RhoEquation implements EquationType {
         }
     },
 
-    DIPOLAR_AB("SSR1RhoDAB", 0, "tauc", "s2") {
+    DIPOLAR_AB("DIPOLAR_AB", 0, "tauc", "s2") {
         @Override
         public double calculate(double[] par, int[] map, double[] x, int idNum) {
             double tauc = par[map[1]];
@@ -89,7 +89,7 @@ public enum SSR1RhoEquation implements EquationType {
         }
     },
 
-    DIPOLAR_AA("SSR1RhoDAA", 0, "tauc", "s2") {
+    DIPOLAR_AA("DIPOLAR_AA", 0, "tauc", "s2") {
         @Override
         public double calculate(double[] par, int[] map, double[] x, int idNum) {
             double tauc = par[map[1]];
@@ -151,7 +151,7 @@ public enum SSR1RhoEquation implements EquationType {
         int n = X[0].length;
         double[] yCalc = new double[n];
         for (int i = 0; i < n; i++) {
-            double[] x = new double[] {X[0][i], X[1][i]};
+            double[] x = new double[] {X[0][i], X[X.length - 1][i]};
             yCalc[i] = calculate(par, map, x, idNum);
         }
         return yCalc;
@@ -165,13 +165,12 @@ public enum SSR1RhoEquation implements EquationType {
         int[][] map,
         int[] idNums,
         int nID) {
-        return new double[][]{{0.0, 0.0}, {1.0, 1.0}};
+        return new double[][]{{0.0, 0.0}, {1.0e-3, 1.0}};
     }
 
     @Override
     public double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
-        // TODO: Anything sensible possible here?
-        return new double[2];
+        return new double[]{1.0e-6, 1.0};
     }
 
     @Override
