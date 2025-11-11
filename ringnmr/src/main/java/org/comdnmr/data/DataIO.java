@@ -37,6 +37,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -104,7 +105,7 @@ public class DataIO {
                 if ((value < refValue) && (value > 0.0)) {
                     double r1 = refEValue / refValue;
                     double r2 = eValue / value;
-                    double normValue = value / refEValue;
+                    double normValue = value / refValue;
                     double ratioError = Math.abs(normValue) * Math.sqrt(r1 * r1 + r2 * r2);
                     error = Math.abs(ratioError / normValue) / tau;
                     result = -Math.log(normValue) / tau;
@@ -171,7 +172,7 @@ public class DataIO {
             int offset = 0;
             double refIntensity = 1.0;
             double refNoise = 0.0;
-            if (yConv == YCONV.NORMALIZE) {
+            if ((yConv == YCONV.NORMALIZE) || (yConv == YCONV.RATE)) {
                 offset = 1;
                 refIntensity = v[0][0];
                 refNoise = v[1][0];
@@ -207,7 +208,7 @@ public class DataIO {
                     }
 
                     Double[] yValueError = yConv.convert(expIntensity, refIntensity, expNoise, refNoise, tau);
-                    if ((yValueError[0] != null)  && Double.isFinite(yValueError[1])){
+                    if ((yValueError[0] != null) && Double.isFinite(yValueError[1])) {
                         XYErrValue xyErrValue = new XYErrValue(xValue, yValueError[0], yValueError[1]);
                         xyeValueList.add(xyErrValue);
                     }
@@ -1596,6 +1597,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
 
     public static void loadRelaxationTextFile(File file) throws IOException, IllegalArgumentException {
         Path path = file.toPath();
+        Pattern typeFieldPattern = Pattern.compile("^([A-Z0-9]+)_([0-9.]+)(_ERR)?$");
         String[] types = {"R1", "R2", "NOE", "RQ", "RAP"};
         String fileName = file.getName();
         int dotIndex = fileName.lastIndexOf(".");
@@ -1616,6 +1618,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
             int iResName = -1;
             int iAtom = -1;
             Map<String, Integer> fieldMap = new HashMap<>();
+            Map<String, Integer> typeMap = new HashMap<>();
             List<String> header;
             DynamicsSource dynamicsSourceFactory = new DynamicsSource(true, true, true, true);
             while (true) {
@@ -1653,17 +1656,33 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                     if (iRes == -1) {
                         iRes = 0;
                     }
-                    for (var type : types) {
-                        int typeIndex = header.indexOf(type);
-                        if (typeIndex != -1) {
-                            fieldMap.put(type, header.indexOf(type));
+                    if (iField == -1) {
+                        int index = 0;
+                        for (String headerField : header) {
+                            Matcher matcher = typeFieldPattern.matcher(headerField);
+                            if (matcher.matches()) {
+                                String errGroup = matcher.group(3);
+                                if (errGroup == null) {
+                                    typeMap.put(matcher.group(), index);
+                                }
+                            }
+                            index++;
+                        }
+                    } else {
+                        for (var type : types) {
+                            int typeIndex = header.indexOf(type);
+                            if (typeIndex != -1) {
+                                typeMap.put(type, header.indexOf(type));
+                            }
                         }
                     }
                 } else {
                     String[] fields = CSVRE.parseLine(sepStr.get(), line);
                     String residue = fields[iRes];
+                    if (residue.indexOf(".") != -1) {
+                        residue = residue.substring(0, residue.indexOf("."));
+                    }
                     String resName = iResName == -1 ? "" : fields[iResName];
-                    double field = Double.parseDouble(fields[iField]);
                     String[] atomNames;
                     if (iAtom != -1) {
                         atomNames = new String[1];
@@ -1673,30 +1692,43 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
                         atomNames[0] = "N";
                         atomNames[1] = "H";
                     }
-
-                    for (var type : types) {
-                        if (fieldMap.containsKey(type)) {
-                            int index = fieldMap.get(type);
-                            double value = Double.parseDouble(fields[index]);
-                            double error = Double.parseDouble(fields[index + 1]);
-                            String id = fileName + "_" + type + "_" + Math.round(field);
-                            Optional<ResonanceSource> resSourceOpt = dynamicsSourceFactory.
-                                    createFromSpecifiers(fileName + "." + residue, resName + residue, atomNames);
-                            RelaxTypes relaxType = RelaxTypes.valueOf(type);
-                            RelaxationSet relaxationSet = setMap
-                                    .computeIfAbsent(id, k -> new RelaxationSet(id, relaxType, field, 25, Collections.emptyMap()));
-
-                            if (!resSourceOpt.isPresent()) {
-                                throw new IllegalArgumentException("Can't generate resonance source from peak " + fileName + "." + residue);
-                            }
-                            ResonanceSource dynSource = resSourceOpt.get();
-
-                            RelaxationData.add(relaxationSet, dynSource, value, error);
+                    Optional<ResonanceSource> resSourceOpt = dynamicsSourceFactory.
+                            createFromSpecifiers(fileName + "." + residue, resName + residue, atomNames);
+                    if (!resSourceOpt.isPresent()) {
+                        throw new IllegalArgumentException("Can't generate resonance source from peak " + fileName + "." + residue);
+                    }
+                    ResonanceSource dynSource = resSourceOpt.get();
+                    for (String type : typeMap.keySet()) {
+                        int index = typeMap.get(type);
+                        double value = Double.parseDouble(fields[index]);
+                        double error = Double.parseDouble(fields[index + 1]);
+                        if (error < 1.0e-6) {
+                            error = 1.0e-6;
                         }
+                        final Double b0Field;
+                        final String subType;
+                        if (iField == -1) {
+                            Matcher matcher = typeFieldPattern.matcher(type.trim());
+                            if (!matcher.matches()) {
+                                throw new IllegalArgumentException("Type doesn't match " + type);
+                            }
+                            subType = matcher.group(1);
+                            b0Field = Double.parseDouble(matcher.group(2));
+                        } else {
+                                b0Field = Double.parseDouble(fields[iField]);
+                                subType = type;
+                        }
+                        String id = fileName + "_" + subType + "_" + Math.round(b0Field);
+                        RelaxTypes relaxType = RelaxTypes.valueOf(subType);
+                        RelaxationSet relaxationSet = setMap
+                                .computeIfAbsent(id, k -> new RelaxationSet(id, relaxType, b0Field, 25, Collections.emptyMap()));
+                        RelaxationData.add(relaxationSet, dynSource, value, error);
+
                     }
                 }
             }
         }
+        System.out.println("added relaxation data");
     }
 
     static String toFileString(CorrelationTime.TauR1R2Result tr1, String sepChar) {
@@ -1711,7 +1743,7 @@ Residue	 Peak	GrpSz	Group	Equation	   RMS	   AIC	Best	     R2	  R2.sd	    Rex	 R
         String sepChar = "\t";
         try (FileWriter fileWriter = new FileWriter(file)) {
             fileWriter.write("Chain" + sepChar + "Residue" + sepChar + "Atom" + sepChar + "field");
-            String[] typeList = {"r1","r1err","r2","r2err","tau","tauEst"};
+            String[] typeList = {"r1", "r1err", "r2", "r2err", "tau", "tauEst"};
             for (var type : typeList) {
                 fileWriter.write(sepChar + type);
             }

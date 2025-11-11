@@ -1768,6 +1768,9 @@ public class PyController implements Initializable {
             ObservableList<DataSeries> data = ChartUtil.getRelaxationDataSeries(values, valueName, setName, parName);
             String yLabel = valueName.equalsIgnoreCase(parName) ? parName
                     : valueName.toUpperCase() + ": " + parName;
+            if (parName.equals("S2")) {
+                yLabel = parName;
+            }
 
             addSeries(data, setName, yLabel, true);
         }
@@ -2034,6 +2037,10 @@ public class PyController implements Initializable {
                         }
                     }
                 });
+        if (usedSet.contains("S2") && !(usedSet.contains("Sf2") && usedSet.contains("Ss2"))) {
+            usedSet.remove("Sf2");
+            usedSet.remove("Ss2");
+        }
         for (String chartName : chartNames) {
             if (!usedSet.contains(chartName)) {
                 ResidueChart resChart = chartMap.get(chartName);
@@ -2576,6 +2583,15 @@ public class PyController implements Initializable {
 
     public void saveBarToRFile() throws ScriptException {
         exportExecutable("graph.r", "r", true);
+    }
+
+    public void saveEquationFile() {
+        try {
+            xychart.saveEquationData();
+        } catch (IOException e) {
+            ExceptionDialog exceptionDialog = new ExceptionDialog(e);
+            exceptionDialog.showAndWait();
+        }
     }
 
     public void snapit(Node node, File file) throws IOException {

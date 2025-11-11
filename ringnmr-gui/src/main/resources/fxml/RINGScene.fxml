@@ -57,6 +57,10 @@
                         <MenuItem text="XY To Python..." onAction="#savePythonFile"/>
                         <MenuItem text="XY To R..." onAction="#saveRFile"/>
                     </Menu>
+                    <Menu text="Save XY Chart Data...">
+                        <MenuItem text="Equation..." onAction="#saveEquationFile"/>
+                    </Menu>
+
                     <MenuItem text="Connect to NMRFx Server..." onAction="#startServer"/>
                     <MenuItem text="Preferences..." onAction="#showPreferences"/>
                     <MenuItem text="Show Console" onAction="#showConsole"/>
