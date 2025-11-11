@@ -2034,6 +2034,10 @@ public class PyController implements Initializable {
                         }
                     }
                 });
+        if (usedSet.contains("S2") && !(usedSet.contains("Sf2") && usedSet.contains("Ss2"))) {
+            usedSet.remove("Sf2");
+            usedSet.remove("Ss2");
+        }
         for (String chartName : chartNames) {
             if (!usedSet.contains(chartName)) {
                 ResidueChart resChart = chartMap.get(chartName);
@@ -2578,6 +2582,15 @@ public class PyController implements Initializable {
         exportExecutable("graph.r", "r", true);
     }
 
+    public void saveEquationFile() {
+        try {
+            xychart.saveEquationData();
+        } catch (IOException e) {
+            ExceptionDialog exceptionDialog = new ExceptionDialog(e);
+            exceptionDialog.showAndWait();
+        }
+    }
+
     public void snapit(Node node, File file) throws IOException {
         double scale = 4.0;
         final Bounds bounds = node.getLayoutBounds();
@@ -2632,6 +2645,8 @@ public class PyController implements Initializable {
             return new R1RhoFitter(options);
         } else if (getFittingMode().equals("modelfree")) {
             return new FitR1R2NOEModel();
+        } else if (getFittingMode().equals("ssr1rho")) {
+            return new SSR1RhoFitter(options);
         }
         return null;
     }
@@ -3010,11 +3025,14 @@ public class PyController implements Initializable {
             equationFitter.setupFit(equationName);
             int[][] map = equationFitter.getFitModel().getMap();
             double[] sliderGuesses = null;
+            boolean isSel = sliderGuessCheckBox.isSelected();
+            int x = 0;
             if (sliderGuessCheckBox.isSelected()) {
                 sliderGuesses = simControls.sliderGuess(equationName, map);
             }
             CoMDOptions options = new CoMDOptions(true);
             fitResult = equationFitter.doFit(equationName, sliderGuesses, options).get();
+
             updateAfterFit(fitResult);
         }
     }
@@ -3072,13 +3090,15 @@ public class PyController implements Initializable {
             equationFitter.getFitModel().setMap(map);
         }
         double[] sliderGuesses = simControls.sliderGuess(equationName, map);
+        // HACK: this is a nasty hack that should be fixed
         double[] yBounds = xychart.getYBounds();
         double sdev = Math.abs(yBounds[1] - yBounds[0]) * 0.02;
         if (genDataSDevTextField.getText().equals("")) {
             genDataSDevTextField.setText(String.valueOf(sdev));
         }
         double[] xValues;
-        if ((basicFitter instanceof EquationFitter equationFitter) && (simMode.equals("cest") || simMode.equals("r1rho"))) {
+
+        if ((basicFitter instanceof EquationFitter equationFitter) && (simMode.equals("cest") || simMode.equals("r1rho") || simMode.equals("ssr1rho"))) {
             int nPts = Integer.parseInt(genDataNPtsTextField.getText());
             double xLB = Double.parseDouble(genDataXLBTextField.getText());
             double xUB = Double.parseDouble(genDataXUBTextField.getText());
@@ -3091,13 +3111,11 @@ public class PyController implements Initializable {
             }
             xValues = xVals;
         }
-        double fieldRef;
 
         List<DataSeries> data = new ArrayList<>();
         DataSeries series = new DataSeries();
         series.setName("sim" + ":" + "0");
         data.add(series);
-        int nX = 3;
         for (PlotEquation eqn : xychart.plotEquations) {
             double[] extras = eqn.getExtras();
             double[] ax = new double[1 + extras.length];
@@ -3105,7 +3123,7 @@ public class PyController implements Initializable {
             for (double xValue : xValues) {
                 ax[0] = xValue;
                 double yValue = eqn.calculate(sliderGuesses, ax);
-                yValue += Double.parseDouble(genDataSDevTextField.getText()) * rand.nextGaussian(); //sdev * rand.nextGaussian();
+                yValue += Double.parseDouble(genDataSDevTextField.getText()) * rand.nextGaussian();
                 XYValue dataPoint = new XYEValue(xValue, yValue, Double.parseDouble(genDataSDevTextField.getText()));
                 dataPoint.setExtraValue(sdev);
                 series.add(dataPoint);

@@ -24,8 +24,6 @@ public class SSR1RhoControls extends EquationControls {
     String[] parNames = {"tauc", "s2", "omega1", "omegaR"};
 
     static PyController controller = PyController.mainController;
-    static final double OMEGA_1_MIN = 2.0 * Math.PI * 2.0e3;  // ν1 (min) = 2kHz
-    static final double OMEGA_1_MAX = 2.0 * Math.PI * 40.0e3;  // ν1 (max) = 40kHz
     static final double NU_R_MIN = 1.0;  // νR (min) = 1kHz
     static final double NU_R_MAX = 50.0;  // νR (max) = 50kHz
 
@@ -199,7 +197,7 @@ public class SSR1RhoControls extends EquationControls {
         // <<<<<<<<<<
 
     switch (equationName) {
-            case "CSA":
+            case "CSA", "DIPOLAR_IS", "DIPOLAR_AB", "DIPOLAR_AA":
                 for (PARS par: PARS.values()) {
                     par.disabled(false);
                     par.valueText.setDisable(false);
@@ -272,10 +270,10 @@ public class SSR1RhoControls extends EquationControls {
         controller.showEquations(equations);
     }
 
-    double[][] getPars(String equationName) {
+    public double[][] getPars(String equationName) {
         double[][] pars;
         switch (equationName) {
-            case "CSA":
+            case "CSA", "DIPOLAR_IS", "DIPOLAR_AB", "DIPOLAR_AA":
                 double tauc = Math.pow(10.0, PARS.TAUC.getValue());
                 double s2 = PARS.S2.getValue();
                 double nuRkHz = PARS.OMEGAR.getValue();
@@ -310,15 +308,13 @@ public class SSR1RhoControls extends EquationControls {
     }
 
     public double[] sliderGuess(String equationName, int[][] map) {
-        double tauc = PARS.TAUC.getValue();
+        double tauc = Math.pow(10.0, PARS.TAUC.getValue());
         double s2 = PARS.S2.getValue();
         double[] guesses = new double[2];
         switch (equationName) {
-            case "CSA":
-                for (int id = 0; id < map.length; id++) {
-                    guesses[map[id][0]] = tauc;
-                    guesses[map[id][1]] = s2;
-                }
+            case "CSA", "DIPOLAR_IS", "DIPOLAR_AB", "DIPOLAR_AA":
+                guesses[0] = tauc;
+                guesses[1] = s2;
                 break;
         }
         return guesses;
