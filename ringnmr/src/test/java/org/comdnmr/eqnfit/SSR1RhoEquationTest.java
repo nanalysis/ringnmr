@@ -21,17 +21,17 @@ public class SSR1RhoEquationTest {
             omega1s[i] = 2.0 * Math.PI * (start + i * step) * 1.0e3;
             omegaRs[i] = omegaR;
         }
-        double[][] X = new double[2][n];
+        double[][] X = new double[4][n];
         X[0] = omega1s;
-        X[1] = omegaRs;
+        X[3] = omegaRs;
 
         int[] map = new int[]{0, 1};
         System.out.printf("X[0]:%n%s%n", Arrays.toString(X[0]));
         for (double tauc : taucs) {
             double[] par = new double[]{tauc, s2};
             double[] r1RhoCSA = SSR1RhoEquation.CSA.calculate(par, map, X, 0);
-            System.out.printf("tauc: %s%n", tauc);
-            System.out.printf("%s%n%n", Arrays.toString(r1RhoCSA));
+            //System.out.printf("tauc: %s%n", tauc);
+            //System.out.printf("%s%n%n", Arrays.toString(r1RhoCSA));
         }
     }
 }
