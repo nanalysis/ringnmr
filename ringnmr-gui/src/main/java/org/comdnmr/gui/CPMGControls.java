@@ -186,6 +186,7 @@ public class CPMGControls extends EquationControls {
 
         equationSelector.valueProperty().addListener(e -> {
             equationAction();
+            updateEquations();
         });
         stateSelector.valueProperty().addListener(e -> {
             stateAction();

@@ -8,6 +8,8 @@ import org.apache.commons.math3.optim.PointValuePair;
 import org.apache.commons.rng.UniformRandomProvider;
 import org.apache.commons.rng.sampling.distribution.DirichletSampler;
 import org.apache.commons.rng.simple.RandomSource;
+import org.comdnmr.BasicFitter;
+import org.comdnmr.eqnfit.ParValueInterface;
 import org.comdnmr.modelfree.models.MFModelIso;
 import org.comdnmr.util.ProcessingStatus;
 
@@ -15,7 +17,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
-public abstract class FitModel {
+public abstract class FitModel implements BasicFitter {
     public static UniformRandomProvider rng = null;
 
     Double tau;
@@ -47,6 +49,27 @@ public abstract class FitModel {
         AGGREGATE,
         BAYESIAN
     }
+
+    @Override
+    public double rms(double[] pars) {
+        return 0;
+    }
+
+    @Override
+    public void setData(List<Double>[] allXValues, List<Double> yValues, List<Double> errValues) {
+
+    }
+
+    @Override
+    public List<ParValueInterface> guessPars(String eqn) {
+        return List.of();
+    }
+
+    @Override
+    public double[] getSimXDefaults() {
+        return new double[0];
+    }
+
 
     public static UniformRandomProvider getRandomSource() {
         if (rng == null) {
