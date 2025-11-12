@@ -162,6 +162,7 @@ public class SSR1RhoControls extends EquationControls {
 
         equationSelector.valueProperty().addListener(e -> {
             equationAction();
+            updateEquations();
         });
 
         stateSelector.valueProperty().addListener(e -> {
@@ -259,9 +260,10 @@ public class SSR1RhoControls extends EquationControls {
             pars = allPars[0];
             double[] extras1 = allPars[1];
             errs = new double[pars.length];
-            extras = new double[2];
-            extras[0] = extras1[0]; // omegaR
-            extras[1] =  CoMDPreferences.getRefField() * getNucleus().getFreqRatio();
+            extras = new double[3];
+            extras[0] = CoMDPreferences.getRefField() * getNucleus().getFreqRatio();
+            extras[1] = CoMDPreferences.getRefField();
+            extras[2] = allPars[1][0]; // omegaR
 
             GUIPlotEquation plotEquation = new GUIPlotEquation("ssr1rho", getEquation(), pars, errs, extras);
             equations.add(plotEquation);
@@ -331,7 +333,11 @@ public class SSR1RhoControls extends EquationControls {
             String parName = parValue.getName();
             ParControls control = PARS.valueOf(parName.toUpperCase());
             if (control != null) {
-                control.setValue(parValue.getValue());
+                if (parName.toUpperCase().equals("TAUC")) {
+                    control.setValue(Math.log10(parValue.getValue()));
+                } else {
+                    control.setValue(parValue.getValue());
+                }
             }
         }
         equationSelector.setValue(equationName);

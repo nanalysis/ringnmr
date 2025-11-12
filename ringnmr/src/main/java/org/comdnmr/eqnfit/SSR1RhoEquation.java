@@ -38,10 +38,10 @@ public enum SSR1RhoEquation implements EquationType {
         public double calculate(double[] par, int[] map, double[] x, int idNum) {
             // FIXME: During simulations, getting map = [1, 0]... not sure why
             // expected tauc = par[map[0]] and s2 = par[map[1]]
-            double tauc = par[map[1]];
-            double s2 = par[map[0]];
+            double tauc = par[map[0]];
+            double s2 = par[map[1]];
             double nu1kHz = x[0];
-            double nuRkHz = x[1];
+            double nuRkHz = x[3];
             double omega1 = 2.0e3 * Math.PI * nu1kHz;
             double omegaR = 2.0e3 * Math.PI * nuRkHz;
 
@@ -56,10 +56,10 @@ public enum SSR1RhoEquation implements EquationType {
     DIPOLAR_IS("DIPOLAR_IS", 0, "tauc", "s2") {
         @Override
         public double calculate(double[] par, int[] map, double[] x, int idNum) {
-            double tauc = par[map[1]];
-            double s2 = par[map[0]];
+            double tauc = par[map[0]];
+            double s2 = par[map[1]];
             double nu1kHz = x[0];
-            double nuRkHz = x[1];
+            double nuRkHz = x[3];
             double omega1 = 2.0e3 * Math.PI * nu1kHz;
             double omegaR = 2.0e3 * Math.PI * nuRkHz;
 
@@ -74,10 +74,10 @@ public enum SSR1RhoEquation implements EquationType {
     DIPOLAR_AB("DIPOLAR_AB", 0, "tauc", "s2") {
         @Override
         public double calculate(double[] par, int[] map, double[] x, int idNum) {
-            double tauc = par[map[1]];
-            double s2 = par[map[0]];
+            double tauc = par[map[0]];
+            double s2 = par[map[1]];
             double nu1kHz = x[0];
-            double nuRkHz = x[1];
+            double nuRkHz = x[3];
             double omega1 = 2.0e3 * Math.PI * nu1kHz;
             double omegaR = 2.0e3 * Math.PI * nuRkHz;
 
@@ -92,10 +92,10 @@ public enum SSR1RhoEquation implements EquationType {
     DIPOLAR_AA("DIPOLAR_AA", 0, "tauc", "s2") {
         @Override
         public double calculate(double[] par, int[] map, double[] x, int idNum) {
-            double tauc = par[map[1]];
-            double s2 = par[map[0]];
+            double tauc = par[map[0]];
+            double s2 = par[map[1]];
             double nu1kHz = x[0];
-            double nuRkHz = x[1];
+            double nuRkHz = x[3];
             double omega1 = 2.0e3 * Math.PI * nu1kHz;
             double omegaR = 2.0e3 * Math.PI * nuRkHz;
 
@@ -150,8 +150,11 @@ public enum SSR1RhoEquation implements EquationType {
         // TODO: should this be X.length or X[0].length?
         int n = X[0].length;
         double[] yCalc = new double[n];
+        double[] x = new double[X.length];
         for (int i = 0; i < n; i++) {
-            double[] x = new double[] {X[0][i], X[X.length - 1][i]};
+            for (int j=0;j<x.length;j++) {
+                x[j] = X[j][i];
+            }
             yCalc[i] = calculate(par, map, x, idNum);
         }
         return yCalc;
@@ -191,25 +194,6 @@ public enum SSR1RhoEquation implements EquationType {
     // TODO: For Bruce
     @Override
     public int[][] makeMap(int[] stateCount, int[][] states, int[] r2Mask) {
-        int[][] map = makeMap(1);
-        return map;
-    }
-
-    // TODO: For Bruce
-    @Override
-    public int[][] makeMap(int n) {
-        return makeMap(n, 2);
-    }
-
-    // TODO: For Bruce
-    @Override
-    public int[][] makeMap(int n, int m) {
-        int[][] map = new int[n][m];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < m; j++) {
-                map[i][0] = m * i + j;
-            }
-        }
-        return map;
+        return makeMap(1);
     }
 }
