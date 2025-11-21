@@ -486,7 +486,8 @@ public class FitR1R2NOEModel extends FitModel {
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setRelaxData(molDataRes);
         relaxFit.setLambdaS(lambdaS);
-        relaxFit.setLambdaTau(lambdaTau);
+        relaxFit.setLambdaTauF(lambdaTauF);
+        relaxFit.setLambdaTauS(lambdaTauS);
         relaxFit.setUseLambda(useLambda);
         relaxFit.setFitJ(fitJ);
         model.setTauFraction(localTauFraction);

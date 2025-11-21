@@ -221,9 +221,13 @@ public class PyController implements Initializable {
     @FXML
     Label sLambdaLabel;
     @FXML
-    Slider tauLambdaSlider;
+    Slider tauLambdaFSlider;
     @FXML
-    Label tauLambdaLabel;
+    Slider tauLambdaSSlider;
+    @FXML
+    Label tauLambdaFLabel;
+    @FXML
+    Label tauLambdaSLabel;
     @FXML
     CheckBox fitJCheckBox;
     @FXML
@@ -555,17 +559,30 @@ public class PyController implements Initializable {
         sLambdaSlider.valueProperty().addListener(v
                 -> sLambdaLabel.setText(String.format("%.1f", sLambdaSlider.getValue())));
 
-        tauLambdaSlider.setMin(0.0);
-        tauLambdaSlider.setMax(2.0);
-        tauLambdaSlider.setValue(0.0);
-        tauLambdaLabel.setText("0.0");
-        tauLambdaSlider.setBlockIncrement(0.05);
-        tauLambdaSlider.setMajorTickUnit(0.5);
-        tauLambdaSlider.setMinorTickCount(4);
-        tauLambdaSlider.setShowTickMarks(true);
-        tauLambdaSlider.setShowTickLabels(true);
-        tauLambdaSlider.valueProperty().addListener(v
-                -> tauLambdaLabel.setText(String.format("%.1f", tauLambdaSlider.getValue())));
+        tauLambdaFSlider.setMin(0.0);
+        tauLambdaFSlider.setMax(2.0);
+        tauLambdaFSlider.setValue(0.0);
+        tauLambdaFLabel.setText("0.0");
+        tauLambdaFSlider.setBlockIncrement(0.05);
+        tauLambdaFSlider.setMajorTickUnit(0.5);
+        tauLambdaFSlider.setMinorTickCount(4);
+        tauLambdaFSlider.setShowTickMarks(true);
+        tauLambdaFSlider.setShowTickLabels(true);
+        tauLambdaFSlider.valueProperty().addListener(v
+                -> tauLambdaFLabel.setText(String.format("%.1f", tauLambdaFSlider.getValue())));
+
+
+        tauLambdaSSlider.setMin(0.0);
+        tauLambdaSSlider.setMax(2.0);
+        tauLambdaSSlider.setValue(0.0);
+        tauLambdaSLabel.setText("0.0");
+        tauLambdaSSlider.setBlockIncrement(0.05);
+        tauLambdaSSlider.setMajorTickUnit(0.5);
+        tauLambdaSSlider.setMinorTickCount(4);
+        tauLambdaSSlider.setShowTickMarks(true);
+        tauLambdaSSlider.setShowTickLabels(true);
+        tauLambdaSSlider.valueProperty().addListener(v
+                -> tauLambdaSLabel.setText(String.format("%.1f", tauLambdaSSlider.getValue())));
 
 
         t2LimitSlider.setMin(0.0);
@@ -1332,7 +1349,8 @@ public class PyController implements Initializable {
 
     public void fitIsotropicModel(FitModel fitModel, String prefix) {
         double lambdaS = sLambdaSlider.getValue();
-        double lambdaTau = tauLambdaSlider.getValue();
+        double lambdaTauF = tauLambdaFSlider.getValue();
+        double lambdaTauS = tauLambdaSSlider.getValue();
 
         String tauText = tauCalcField.getText();
         Double tau = null;
@@ -1348,7 +1366,8 @@ public class PyController implements Initializable {
         DataIO.clearSpectralDensities();
         boolean fitJ = fitJCheckBox.isSelected();
         fitModel.setLambdaS(lambdaS);
-        fitModel.setLambdaTau(lambdaTau);
+        fitModel.setLambdaTauF(lambdaTauF);
+        fitModel.setLambdaTauS(lambdaTauS);
         fitModel.setUseLambda(lambdaCheckBox.isSelected());
         fitModel.setTau(tau);
         double tauFraction = tauFractionSlider.getValue();
@@ -2704,7 +2723,8 @@ public class PyController implements Initializable {
             fitJCheckBox.setSelected(true);
             if (sLambdaSlider.getValue() < 1.0e-5) {
                 sLambdaSlider.setValue(0.5);
-                tauLambdaSlider.setValue(0.5);
+                tauLambdaFSlider.setValue(0.5);
+                tauLambdaSSlider.setValue(0.1);
             }
             modelCheckBoxes.forEach(checkBox -> checkBox.setSelected(false));
             modelCheckBoxes.get(modelCheckBoxes.size() - 1).setSelected(true);

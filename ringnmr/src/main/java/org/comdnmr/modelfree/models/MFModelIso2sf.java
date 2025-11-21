@@ -31,7 +31,9 @@ import java.util.List;
 public class MFModelIso2sf extends MFModelIso2f {
     double tauS;
     double complexityS = 0.0;
-    double complexityTau = 0.0;
+    double complexityTauF = 0.0;
+    double complexityTauS = 0.0;
+    final double tauSFactor = 0.2;
 
     private static double tauPrime = 30.0e-12;
 
@@ -74,9 +76,8 @@ public class MFModelIso2sf extends MFModelIso2f {
         }
 
         complexityS = Math.abs(1.0 - sf2) + Math.abs(1.0 - ss2);
-        complexityTau =
-            Math.log10((tauSx + tauPrime) / tauPrime) +
-            Math.log10((tauFx + tauPrime) / tauPrime);
+        complexityTauF = Math.log10((tauFx + tauPrime) / tauPrime);
+        complexityTauS = Math.log10((tauSx + tauPrime) / tauPrime);
 
         return J;
     }
@@ -140,8 +141,13 @@ public class MFModelIso2sf extends MFModelIso2f {
     }
 
     @Override
-    public double getComplexityTau() {
-        return complexityTau;
+    public double getComplexityTauF() {
+        return complexityTauF;
+    }
+
+    @Override
+    public double getComplexityTauS() {
+        return complexityTauS;
     }
 
     public double[] calc(double[] omegas, double sf2, double tauF, double ss2, double tauS) {

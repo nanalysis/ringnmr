@@ -7,21 +7,23 @@ public class Score {
     final int nPars;
     final boolean parsOK;
     final double complexityS;
-    final double complexityTau;
+    final double complexityTauF;
+    final double complexityTauS;
     final double[] pars;
     private double[] weights;
 
-    public Score(double rss, int nValues, int nPars, boolean parsOK, double complexityS, double complexityTau) {
-        this(rss, nValues, nPars, parsOK, complexityS, complexityTau, null);
+    public Score(double rss, int nValues, int nPars, boolean parsOK, double complexityS, double complexityTauF, double complexityTauS) {
+        this(rss, nValues, nPars, parsOK, complexityS, complexityTauF, complexityTauS, null);
     }
 
-    public Score(double rss, int nValues, int nPars, boolean parsOK, double complexityS, double complexityTau, double[] pars) {
+    public Score(double rss, int nValues, int nPars, boolean parsOK, double complexityS, double complexityTauF, double complexityTauS, double[] pars) {
         this.rss = rss;
         this.nValues = nValues;
         this.nPars = nPars;
         this.parsOK = parsOK;
         this.complexityS = complexityS;
-        this.complexityTau = complexityTau;
+        this.complexityTauF = complexityTauF;
+        this.complexityTauS = complexityTauS;
         this.pars = pars;
     }
 
@@ -42,15 +44,15 @@ public class Score {
     }
 
     public double value() {
-        return value(0.0, 0.0);
+        return value(0.0, 0.0, 0.0);
     }
 
-    public double value(double lambdaS, double lambdaTau) {
+    public double value(double lambdaS, double lambdaTauF, double lambdaTauS) {
         double score = rms();
         if (!parsOK) {
             score += nValues * 10.0;
         }
-        score += complexityS * lambdaS + complexityTau * lambdaTau;
+        score += complexityS * lambdaS + complexityTauF * lambdaTauF + complexityTauS * lambdaTauS;
         return score;
     }
 
@@ -58,8 +60,12 @@ public class Score {
         return complexityS;
     }
 
-    public double complexityTau() {
-        return complexityTau;
+    public double complexityTauF() {
+        return complexityTauF;
+    }
+
+    public double complexityTauS() {
+        return complexityTauS;
     }
 
     public boolean parsOK() {

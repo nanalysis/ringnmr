@@ -26,7 +26,8 @@ public abstract class FitModel {
     boolean fitExchange = false;
     double tauFraction = 0.25;
     double lambdaS = 0.0;
-    double lambdaTau = 0.0;
+    double lambdaTauF = 0.0;
+    double lambdaTauS = 0.0;
     boolean useLambda = false;
     double t2Limit = 0.0;
     int nReplicates = 0;
@@ -98,7 +99,8 @@ public abstract class FitModel {
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setRelaxData(molDataRes);
         relaxFit.setLambdaS(lambdaS);
-        relaxFit.setLambdaTau(lambdaTau);
+        relaxFit.setLambdaTauF(lambdaTauF);
+        relaxFit.setLambdaTauS(lambdaTauS);
         relaxFit.setUseLambda(useLambda);
         relaxFit.setFitJ(fitJ);
         var score = relaxFit.score(pars, true);
@@ -144,7 +146,8 @@ public abstract class FitModel {
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setRelaxData(molDataRes);
         relaxFit.setLambdaS(lambdaS);
-        relaxFit.setLambdaTau(lambdaTau);
+        relaxFit.setLambdaTauF(lambdaTauF);
+        relaxFit.setLambdaTauS(lambdaTauS);
         relaxFit.setUseLambda(useLambda);
         relaxFit.setFitJ(fitJ);
         Map<String, MolDataValues> molDataMap = relaxFit.genBootstrap(random, model, pars);
@@ -184,8 +187,12 @@ public abstract class FitModel {
         this.lambdaS = value;
     }
 
-    public void setLambdaTau(double value) {
-        this.lambdaTau = value;
+    public void setLambdaTauF(double value) {
+        this.lambdaTauF = value;
+    }
+
+    public void setLambdaTauS(double value) {
+        this.lambdaTauS = value;
     }
 
     public void setUseLambda(boolean value) {
@@ -193,7 +200,7 @@ public abstract class FitModel {
     }
 
     public boolean useLambda() {
-        return useLambda && (lambdaS > 1.0e-8 || lambdaTau > 1.0e-8);
+        return useLambda && (lambdaS > 1.0e-8 || lambdaTauF > 1.0e-8 || lambdaTauS > 1.0e-8);
     }
 
     public void setFitJ(boolean value) {

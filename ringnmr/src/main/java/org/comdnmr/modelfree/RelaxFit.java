@@ -31,7 +31,8 @@ import org.comdnmr.modelfree.models.MFModelIso2sf;
 public class RelaxFit {
 
     double lambdaS = 0.0;
-    double lambdaTau = 0.0;
+    double lambdaTauF = 0.0;
+    double lambdaTauS = 0.0;
     boolean useLambda = false;
     boolean logJMode = false;
     boolean fitJ = false;
@@ -102,12 +103,20 @@ public class RelaxFit {
         this.lambdaS = value;
     }
 
-    public double getLambdaTau() {
-        return useLambda ? lambdaTau : 0.0;
+    public double getLambdaTauF() {
+        return useLambda ? lambdaTauF : 0.0;
     }
 
-    public void setLambdaTau(double value) {
-        this.lambdaTau = value;
+    public void setLambdaTauF(double value) {
+        this.lambdaTauF = value;
+    }
+
+    public double getLambdaTauS() {
+        return useLambda ? lambdaTauS : 0.0;
+    }
+
+    public void setLambdaTauS(double value) {
+        this.lambdaTauS = value;
     }
 
     public void setUseLambda(boolean value) {
@@ -115,7 +124,7 @@ public class RelaxFit {
     }
 
     public boolean useLambda() {
-        return useLambda && (lambdaS > 1.0e-8 || lambdaTau > 1.0e-8);
+        return useLambda && (lambdaS > 1.0e-8 || lambdaTauF > 1.0e-8 || lambdaTauS > 1.0e-8);
     }
 
     public static double[] getDValues(double isoD) {
@@ -391,12 +400,14 @@ public class RelaxFit {
         }
        // System.out.println(Math.sqrt(sumSq/jCalc.length));
         double complexityS = testModel.getComplexityS();
-        double complexityTau = testModel.getComplexityTau();
-        return new double[]{sumSq, complexityS, complexityTau, jCalc.length};
+        double complexityTauF = testModel.getComplexityTauF();
+        double complexityTauS = testModel.getComplexityTauS();
+        return new double[]{sumSq, complexityS, complexityTauF, complexityTauS, jCalc.length};
     }
     double[] calcDeltaSqR(MolDataValues molData, double[] resPars, MFModel testModel) {
         double sumComplexityS = 0.0;
-        double sumComplexityTau = 0.0;
+        double sumComplexityTauF = 0.0;
+        double sumComplexityTauS = 0.0;
         double sumSq = 0.0;
         int nPar = 0;
         for (RelaxDataValue value : molData.getData()) {
@@ -404,7 +415,8 @@ public class RelaxFit {
             RelaxEquations relaxObj = dValue.relaxObj;
             double[] J = testModel.calc(relaxObj.wValues, resPars);
             sumComplexityS += testModel.getComplexityS();
-            sumComplexityTau += testModel.getComplexityTau();
+            sumComplexityTauF += testModel.getComplexityTauF();
+            sumComplexityTauS += testModel.getComplexityTauS();
             double r1 = relaxObj.R1(J);
             // fixme rEx should be field dependent
             double rEx = testModel.includesEx() ? resPars[resPars.length - 1] : 0.0;
@@ -414,7 +426,7 @@ public class RelaxFit {
             sumSq += delta2;
             nPar += 3;
         }
-        return new double[]{sumSq, sumComplexityS, sumComplexityTau, nPar};
+        return new double[]{sumSq, sumComplexityS, sumComplexityTauF, sumComplexityTauS, nPar};
     }
 
     double[] calcDeltaSq(MolDataValues molData, double[] resPars, MFModel testModel) {
@@ -431,7 +443,8 @@ public class RelaxFit {
         int nComplex = 0;
         boolean parsOK = true;
         double sumComplexityS = 0.0;
-        double sumComplexityTau = 0.0;
+        double sumComplexityTauF = 0.0;
+        double sumComplexityTauS = 0.0;
         for (MolDataValues molData : molDataValues.values()) {
             MFModel testModel = molData.getTestModel();
             double[] resPars;
@@ -446,7 +459,8 @@ public class RelaxFit {
             double[] resResult = calcDeltaSq(molData, resPars, testModel);
             sumSq += resResult[0];
             sumComplexityS += resResult[1];
-            sumComplexityTau += resResult[2];
+            sumComplexityTauF += resResult[2];
+            sumComplexityTauS += resResult[3];
             if (fitJ) {
                 nComplex++;
             } else {
@@ -459,12 +473,13 @@ public class RelaxFit {
             }
         }
         double avgComplexityS = sumComplexityS / nComplex;
-        double avgComplexityTau = sumComplexityTau / nComplex;
+        double avgComplexityTauF = sumComplexityTauF / nComplex;
+        double avgComplexityTauS = sumComplexityTauS / nComplex;
         Score score;
         if (keepPars) {
-            score = new Score(sumSq, n, pars.length, parsOK, avgComplexityS, avgComplexityTau, pars.clone());
+            score = new Score(sumSq, n, pars.length, parsOK, avgComplexityS, avgComplexityTauF, avgComplexityTauS, pars.clone());
         } else {
-            score = new Score(sumSq, n, pars.length, parsOK, avgComplexityS, avgComplexityTau);
+            score = new Score(sumSq, n, pars.length, parsOK, avgComplexityS, avgComplexityTauF, avgComplexityTauS);
         }
         return score;
     }
@@ -523,7 +538,7 @@ public class RelaxFit {
 
     public double value(double[] pars, double[][] values) {
         var score = score(pars, false);
-        return score.value(getLambdaS(), getLambdaTau());
+        return score.value(getLambdaS(), getLambdaTauF(), getLambdaTauS());
     }
 
     public double valueMultiResidue(double[] pars, double[][] values) {

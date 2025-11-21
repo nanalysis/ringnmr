@@ -66,7 +66,11 @@ public abstract class MFModel {
         return 0.0;
     }
 
-    public double getComplexityTau() {
+    public double getComplexityTauF() {
+        return 0.0;
+    }
+
+    public double getComplexityTauS() {
         return 0.0;
     }
 

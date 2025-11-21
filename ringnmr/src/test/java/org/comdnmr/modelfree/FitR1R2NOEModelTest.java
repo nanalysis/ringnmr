@@ -14,8 +14,9 @@ public class FitR1R2NOEModelTest {
 
     RelaxFit makeRelaxFit() {
         RelaxFit relaxFit = new RelaxFit();
-        relaxFit.setLambdaS(0.001);
-        relaxFit.setLambdaTau(0.01);
+        relaxFit.setLambdaS(0.0);
+        relaxFit.setLambdaTauF(0.0);
+        relaxFit.setLambdaTauS(0.0);
         relaxFit.setUseLambda(false);
         relaxFit.setLogJMode(false);
         boolean fitJ = false;
