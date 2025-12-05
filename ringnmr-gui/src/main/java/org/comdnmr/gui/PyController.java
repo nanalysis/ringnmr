@@ -56,10 +56,7 @@ import org.comdnmr.BasicFitter;
 import org.comdnmr.data.*;
 import org.comdnmr.eqnfit.*;
 import org.comdnmr.fit.ResidueFitter;
-import org.comdnmr.modelfree.CorrelationTime;
-import org.comdnmr.modelfree.FitDeuteriumModel;
-import org.comdnmr.modelfree.FitModel;
-import org.comdnmr.modelfree.FitR1R2NOEModel;
+import org.comdnmr.modelfree.*;
 import org.comdnmr.modelfree.models.MFModelIso;
 import org.comdnmr.modelfree.models.OrderParameterTool;
 import org.comdnmr.util.CoMDOptions;
@@ -231,6 +228,8 @@ public class PyController implements Initializable {
     ChoiceBox<FitModel.BootstrapMode> bootStrapChoice;
     @FXML
     CheckBox lambdaCheckBox;
+    @FXML
+    CheckBox useRQCheckBox;
     @FXML
     Slider tauFractionSlider;
     @FXML
@@ -1374,6 +1373,7 @@ public class PyController implements Initializable {
         if (modelCheckBoxes.stream().filter(CheckBox::isSelected).findAny().isEmpty()) {
             modelCheckBoxes.stream().filter(m -> m.getText().equals("1f")).findAny().ifPresent(m -> m.setSelected(true));
         }
+        SpectralDensityCalculator.setUseRQ(useRQCheckBox.isSelected());
         fitIsotropicModel(modelFitter, "D");
     }
 

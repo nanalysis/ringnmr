@@ -282,6 +282,7 @@
                                     <Label text="Lambda-Tau" prefWidth="80"/>
                                     <Slider fx:id="tauLambdaSlider" prefWidth="150"/>
                                     <Label fx:id="tauLambdaLabel" prefWidth="50"/>
+                                    <CheckBox text="Use RQ: " fx:id="useRQCheckBox" selected="true"/>
                                 </HBox>
                                 <HBox spacing="10">
                                     <Label text="T2 Limit  " prefWidth="80"/>
