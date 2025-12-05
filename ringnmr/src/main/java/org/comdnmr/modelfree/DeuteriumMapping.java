@@ -54,13 +54,26 @@ public class DeuteriumMapping {
         return new double[][]{dFields, jValues, errors};
     }
 
-    public static double[][] jointMapping(List<Double> rValueList, List<Double> errValueList, List<Double> fields) {
+    public static double[][] jointMapping(List<Double> rValueList, List<Double> errValueList, List<Double> fields, boolean[] typeUsage) {
         int nRows = rValueList.size();
         double[] rValues = rValueList.stream()
                 .mapToDouble(Double::doubleValue)
                 .toArray();
+        int nTypes = 0;
+        for (boolean use : typeUsage) {
+            if (use) {
+                nTypes++;
+            }
+        }
+        int[] typeMap = new int[nTypes];
+        int k = 0;
+        for (int i=0;i<typeUsage.length;i++) {
+            if (typeUsage[i]) {
+                typeMap[k++] = i;
+            }
+        }
 
-        int nFreqs = nRows / 4;
+        int nFreqs = nRows / nTypes;
 
         List<Double> fieldList = new ArrayList<>();
         fieldList.add(0.0);
@@ -97,21 +110,21 @@ public class DeuteriumMapping {
         Array2DRowRealMatrix matrix = new Array2DRowRealMatrix(nRows, nCols);
 
         for (int iFreq = 0; iFreq < nFreqs; iFreq++) {
-            for (int iType = 0; iType < 4; iType++) {
-                int row = iFreq * 4 + iType;
-                matrix.setEntry(row, 0, elements[iType][0]);
+            for (int iType = 0; iType < nTypes; iType++) {
+                int row = iFreq * nTypes + iType;
+                matrix.setEntry(row, 0, elements[typeMap[iType]][0]);
             }
         }
         for (int iFreq = 0; iFreq < nFreqs; iFreq++) {
             int singleColumn = singleColumns[iFreq];
             int doubleColumn = doubleColumns[iFreq];
-            for (int iType = 0; iType < 4; iType++) {
-                int row = iFreq * 4 + iType;
-                matrix.setEntry(row, singleColumn, elements[iType][1]);
+            for (int iType = 0; iType < nTypes; iType++) {
+                int row = iFreq * nTypes + iType;
+                matrix.setEntry(row, singleColumn, elements[typeMap[iType]][1]);
             }
-            for (int iType = 0; iType < 4; iType++) {
-                int row = iFreq * 4 + iType;
-                matrix.setEntry(row, doubleColumn, elements[iType][2]);
+            for (int iType = 0; iType < nTypes; iType++) {
+                int row = iFreq * nTypes + iType;
+                matrix.setEntry(row, doubleColumn, elements[typeMap[iType]][2]);
             }
         }
 
