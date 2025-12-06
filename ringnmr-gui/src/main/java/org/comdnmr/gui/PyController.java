@@ -41,10 +41,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.stage.FileChooser;
@@ -243,7 +240,9 @@ public class PyController implements Initializable {
     @FXML
     Label bootstrapNLabel;
     @FXML
-    HBox modelBox;
+    GridPane modelBox;
+
+    ChoiceBox<String> modelAtoms = new ChoiceBox<>();
     List<CheckBox> modelCheckBoxes = new ArrayList<>();
 
     BootstrapSamplePlots bootstrapSamplePlots = null;
@@ -598,14 +597,21 @@ public class PyController implements Initializable {
         bootStrapChoice.valueProperty().addListener(e -> bootStrapChanged(bootStrapChoice.getValue()));
         lambdaCheckBox.selectedProperty().addListener(e -> lambdaChanged(lambdaCheckBox.isSelected()));
 
-        modelBox.setSpacing(10);
+        modelBox.add(new Label("Models"), 0, 0);
         String[] modelNames = {"1", "1f", "1s", "2f", "2s", "1sf", "2sf"};
+        int iModel = 0;
         for (var modelName : modelNames) {
             var checkBox = new CheckBox(modelName);
-            checkBox.setMinWidth(40.0);
-            modelBox.getChildren().add(checkBox);
+            checkBox.setMinWidth(50.0);
+            int column = iModel % 4 + 1;
+            int row = iModel / 4;
+            modelBox.add(checkBox,column, row);
             modelCheckBoxes.add(checkBox);
+            iModel++;
         }
+        modelAtoms.getItems().addAll("H-N", "D-C");
+        modelAtoms.setValue("H-N");
+        modelBox.add(modelAtoms, 4,1, 2, 1);
     }
 
     public Stage getStage() {
@@ -1360,6 +1366,14 @@ public class PyController implements Initializable {
 
     public void showEquations(List<GUIPlotEquation> equations) {
         xychart.setEquations(equations);
+    }
+
+    public void fitModelFree() {
+       if (modelAtoms.getValue().equalsIgnoreCase("H-N")) {
+           fitR1R2NOEModel();
+       } else {
+           fitDeuteriumModel();
+       }
     }
 
     public void fitR1R2NOEModel() {
