@@ -62,6 +62,7 @@ public class InputDataInterface {
 
     static final String INACTIVE_TEXT_STYLE = "-fx-control-inner-background: red;";
     PyController pyController;
+    static final String[] typeChoiceNames = {"", "R1", "R2", "NOE", "RAP", "RQ", "CPMG"};
 
     BorderPane borderPane = new BorderPane();
     GridPane inputInfoDisplay = new GridPane();
@@ -94,6 +95,7 @@ public class InputDataInterface {
     Button clearButton = new Button();
     Button yamlButton = new Button();
     Button loadButton = new Button();
+    Button guessButton = new Button();
     Path dirPath = null;
     ChoiceBox<String> xConvChoice = new ChoiceBox<>();
     ChoiceBox<String> yConvChoice = new ChoiceBox<>();
@@ -151,7 +153,7 @@ public class InputDataInterface {
                 Label peakListLabel = new Label(peakList.getName());
                 peakLists.add(peakList);
                 ChoiceBox<String> typeChoice = new ChoiceBox<>();
-                typeChoice.getItems().addAll(Arrays.asList("", "R1", "R2", "NOE", "RAP", "RQ", "CPMG"));
+                typeChoice.getItems().addAll(Arrays.asList(typeChoiceNames));
                 inputInfoDisplay.add(peakListLabel, 0, choices.size() + delta);
                 inputInfoDisplay.add(typeChoice, 1, choices.size() + delta);
                 ChoiceBox<DataIO.XCONV> xconvChoiceBox = new ChoiceBox<>();
@@ -186,12 +188,15 @@ public class InputDataInterface {
             }
         });
         CheckBox autoFit = new CheckBox("Auto Fit");
+        guessButton.setOnAction(e -> guessPeakListTypes(peakLists, choices));
+        guessButton.setText("Guess Types");
+        guessButton.setDisable(false);
         loadButton.setOnAction(e -> loadFromPeakLists(peakLists, choices, autoFit.isSelected()));
         loadButton.setText("Load");
         loadButton.setDisable(false);
         ToolBar toolBar = new ToolBar();
         borderPane.setBottom(toolBar);
-        toolBar.getItems().addAll(autoFit, loadButton);
+        toolBar.getItems().addAll(autoFit, guessButton, loadButton);
         infoStage.setScene(inputScene);
         infoStage.show();
         infoStage.toFront();
@@ -223,6 +228,45 @@ public class InputDataInterface {
             }
         }
 
+    }
+
+    private void guessPeakListTypes(List<PeakList> peakLists, List<Choices> choices) {
+        boolean gotR1 = peakLists.stream().anyMatch(peakList -> (peakList.getName().toUpperCase().contains("R1") || peakList.getName().toUpperCase().contains("T1") ) && !peakList.getName().toUpperCase().contains("RHO"));
+        System.out.println("got r1 " + gotR1);
+
+        for (int i = 0; i < peakLists.size(); i++) {
+            Choices choice = choices.get(i);
+            String type = choice.typeChoice.getValue();
+            if (type.isBlank()) {
+                PeakList peakList = peakLists.get(i);
+                if (peakList != null) {
+                    String name = peakList.getName().toUpperCase();
+                    if (name.contains("R2") || name.contains("T2")) {
+                        choice.typeChoice.setValue("R2");
+                    } else if (name.contains("R1RHO") || name.contains("T1RHO")) {
+                        if (gotR1) {
+                            choice.typeChoice.setValue("R2");
+                        } else {
+                            // choice.typeChoice.setValue("R1rho");
+                        }
+                    } else if (name.contains("R1") || name.contains("T1")) {
+                        choice.typeChoice.setValue("R1");
+                        gotR1 = true;
+                    } else if (name.contains("NOE")) {
+                        choice.typeChoice.setValue("NOE");
+                    } else if (name.contains("Q")) {
+                        choice.typeChoice.setValue("RQ");
+                    } else if (name.contains("RAP") || name.contains("DXYDZ")) {
+                        choice.typeChoice.setValue("RAP");
+                    } else if (name.contains("CPMG")) {
+                        choice.typeChoice.setValue("CPMG");
+                    }
+                    if (!choice.typeChoice.getValue().isBlank()) {
+                        updateConv(choice);
+                    }
+                }
+            }
+        }
     }
 
     private void loadFromPeakLists(List<PeakList> peakLists, List<Choices> choices, boolean autoFit) {
