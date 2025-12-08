@@ -59,7 +59,6 @@ import org.comdnmr.modelfree.models.OrderParameterTool;
 import org.comdnmr.util.CoMDOptions;
 import org.comdnmr.util.CoMDPreferences;
 import org.comdnmr.util.ProcessingStatus;
-import org.comdnmr.utils.NMRFxClient;
 import org.controlsfx.control.StatusBar;
 import org.controlsfx.dialog.ExceptionDialog;
 import org.nmrfx.chart.*;
@@ -79,13 +78,9 @@ import org.nmrfx.utils.GUIUtils;
 
 import javax.imageio.ImageIO;
 import javax.script.ScriptException;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.function.Function;
@@ -249,7 +244,6 @@ public class PyController implements Initializable {
 
     BootstrapSamplePlots bootstrapSamplePlots = null;
     InputDataInterface inputDataInterface = null;
-    NMRFxClient cl;
 
     ResidueFitter residueFitter;
     FitModel modelFitter;
@@ -1145,34 +1139,6 @@ public class PyController implements Initializable {
         inputDataInterface.createPeakListInterface();
     }
 
-    @FXML
-    public void startServer() {
-        String tempDir = System.getProperty("java.io.tmpdir");
-        String userName = System.getProperty("user.name");
-        Path path = FileSystems.getDefault().getPath(tempDir, "NMRFx_" + userName + "_port.txt");
-        File f = path.toFile(); //new File(tempDir + "/NMRFx_" + userName + "_port.txt");
-        int port = 8021;
-        if (!f.exists() && !f.isDirectory()) {
-            Alert alert = new Alert(Alert.AlertType.WARNING, "NMRFx Server port file " + "\n" + f + "\ndoesn't exist. \nCreate NMRFx server first in NMRFxProcessor GUI.");
-            alert.showAndWait();
-        } else {
-            try {
-                BufferedReader reader = new BufferedReader(new FileReader(f));
-                String text;
-                while ((text = reader.readLine()) != null) {
-                    port = Integer.parseInt(text);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            cl = NMRFxClient.makeClient(port);
-            nmrFxPeakButton.setDisable(false);
-        }
-    }
-
-    public NMRFxClient getClient() {
-        return cl;
-    }
 
     @FXML
     void nmrFxMessage(ActionEvent e) {
