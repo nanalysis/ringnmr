@@ -230,16 +230,22 @@ public class InputDataInterface {
 
     }
 
+
+
     private void guessPeakListTypes(List<PeakList> peakLists, List<Choices> choices) {
         boolean gotR1 = peakLists.stream().anyMatch(peakList -> (peakList.getName().toUpperCase().contains("R1") || peakList.getName().toUpperCase().contains("T1") ) && !peakList.getName().toUpperCase().contains("RHO"));
         System.out.println("got r1 " + gotR1);
-
         for (int i = 0; i < peakLists.size(); i++) {
             Choices choice = choices.get(i);
             String type = choice.typeChoice.getValue();
             if (type.isBlank()) {
                 PeakList peakList = peakLists.get(i);
                 if (peakList != null) {
+                    double[] measuresX = peakList.getMeasureValues();
+                    int nDups = measuresX == null ? 0 : DataIO.countDups(measuresX);
+                    if (nDups > 0) {
+                        choice.errModeChoiceBox.setValue("replicates");
+                    }
                     String name = peakList.getName().toUpperCase();
                     if (name.contains("R2") || name.contains("T2")) {
                         choice.typeChoice.setValue("R2");
