@@ -192,7 +192,7 @@ public class FitR1R2NOEModel extends FitModel {
         for (var modelName : modelNames) {
             OrderParSet orderParSet = orderParSetMap.computeIfAbsent("order_parameter_list_" + modelName, k -> new OrderParSet(k));
         }
-        OrderParSet orderParSet = orderParSetMap.computeIfAbsent("order_parameter_list_1", k -> new OrderParSet(k));
+        OrderParSet orderParSet = orderParSetMap.computeIfAbsent("order_parameter_list_best", k -> new OrderParSet(k));
 
         molData.entrySet().stream().sorted(Comparator.comparing(Map.Entry::getKey)).parallel().forEach(e -> {
             updateProgress((double) counts.get() / n);
@@ -292,7 +292,7 @@ public class FitR1R2NOEModel extends FitModel {
             if (nReplicates > 2) {
                 replicateData = replicates(molDataRes, bestModel, localTauFraction, localFitTau, pars, random);
             }
-            OrderParSet orderParSet = orderParSetMap.get("order_parameter_list_1");
+            OrderParSet orderParSet = orderParSetMap.get("order_parameter_list_best");
             OrderPar orderPar = makeOrderPar(orderParSet, resData, molDataRes, key, bestScore, bestModel, replicateData);
             ModelFitResult modelFitResult = new ModelFitResult(orderPar, replicateData, null);
             result = Optional.of(modelFitResult);
@@ -395,7 +395,7 @@ public class FitR1R2NOEModel extends FitModel {
                 rssSum += bestScores[i].rss;
             }
             double rss = rssSum /= nReplicates;
-            OrderParSet orderParSet = orderParSetMap.get("order_parameter_list_1");
+            OrderParSet orderParSet = orderParSetMap.get("order_parameter_list_best");
             OrderPar orderPar = new OrderPar(orderParSet, resSource, rss, bestScores[0].nValues, parNames.length, bestModel.getName());
             double[][] cov = new double[nJ][parNames.length];
             double[] bestPars = new double[parNames.length];

@@ -41,10 +41,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.stage.FileChooser;
@@ -235,6 +232,8 @@ public class PyController implements Initializable {
     @FXML
     Label tauFractionLabel;
     @FXML
+    TextField tauField;
+    @FXML
     Slider t2LimitSlider;
     @FXML
     Label t2LimitLabel;
@@ -243,7 +242,9 @@ public class PyController implements Initializable {
     @FXML
     Label bootstrapNLabel;
     @FXML
-    HBox modelBox;
+    GridPane modelBox;
+
+    ChoiceBox<String> modelAtoms = new ChoiceBox<>();
     List<CheckBox> modelCheckBoxes = new ArrayList<>();
 
     BootstrapSamplePlots bootstrapSamplePlots = null;
@@ -598,14 +599,21 @@ public class PyController implements Initializable {
         bootStrapChoice.valueProperty().addListener(e -> bootStrapChanged(bootStrapChoice.getValue()));
         lambdaCheckBox.selectedProperty().addListener(e -> lambdaChanged(lambdaCheckBox.isSelected()));
 
-        modelBox.setSpacing(10);
+        modelBox.add(new Label("Models"), 0, 0);
         String[] modelNames = {"1", "1f", "1s", "2f", "2s", "1sf", "2sf"};
+        int iModel = 0;
         for (var modelName : modelNames) {
             var checkBox = new CheckBox(modelName);
-            checkBox.setMinWidth(40.0);
-            modelBox.getChildren().add(checkBox);
+            checkBox.setMinWidth(50.0);
+            int column = iModel % 4 + 1;
+            int row = iModel / 4;
+            modelBox.add(checkBox,column, row);
             modelCheckBoxes.add(checkBox);
+            iModel++;
         }
+        modelAtoms.getItems().addAll("H-N", "D-C");
+        modelAtoms.setValue("H-N");
+        modelBox.add(modelAtoms, 4,1, 2, 1);
     }
 
     public Stage getStage() {
@@ -1362,6 +1370,14 @@ public class PyController implements Initializable {
         xychart.setEquations(equations);
     }
 
+    public void fitModelFree() {
+       if (modelAtoms.getValue().equalsIgnoreCase("H-N")) {
+           fitR1R2NOEModel();
+       } else {
+           fitDeuteriumModel();
+       }
+    }
+
     public void fitR1R2NOEModel() {
         modelFitter = new FitR1R2NOEModel();
         fitIsotropicModel(modelFitter, "");
@@ -1381,7 +1397,7 @@ public class PyController implements Initializable {
         double lambdaS = sLambdaSlider.getValue();
         double lambdaTau = tauLambdaSlider.getValue();
 
-        String tauText = tauCalcField.getText();
+        String tauText = tauField.getText();
         Double tau = null;
         if (!tauText.isBlank()) {
             try {
@@ -1429,6 +1445,7 @@ public class PyController implements Initializable {
         Double tauFit = modelFitter.getTau();
         if (tauFit != null) {
             tauCalcField.setText(String.format("%.2f", tauFit));
+            tauField.setText(tauCalcField.getText());
         }
         addMoleculeDataToAxisMenu();
         showModelFreeData();
@@ -1456,6 +1473,8 @@ public class PyController implements Initializable {
             r1MedianField.setText(String.format("%.3f", result.get("R1")));
             r2MedianField.setText(String.format("%.3f", result.get("R2")));
             tauCalcField.setText(String.format("%.2f", result.get("tau")));
+            tauField.setText(tauCalcField.getText());
+
         }
     }
 
@@ -1905,10 +1924,14 @@ public class PyController implements Initializable {
     }
 
     void addOrderParDataToAxisMenu(Map<String, OrderParSet> molResProps) {
+        boolean hasBest = molResProps.keySet().stream().anyMatch(setName -> setName.endsWith("best"));
         for (var entry : molResProps.entrySet()) {
             String setName = entry.getKey();
-            ChartUtil.addResidueProperty(setName, molResProps.get(setName));
             OrderParSet relaxSet = entry.getValue();
+            if (hasBest) {
+                relaxSet.active(setName.endsWith("best"));
+            }
+            ChartUtil.addResidueProperty(setName, molResProps.get(setName));
             Menu cascade = new Menu(setName);
             var values = relaxSet.values();
             if (!values.isEmpty()) {

@@ -852,6 +852,18 @@ public class DataIO {
         }
     }
 
+    public static int  countDups(double[] xValues) {
+        int nDups = 0;
+        for (int i = 0; i < xValues.length - 1; i++) {
+            for (int j = (i + 1); j < xValues.length; j++) {
+                if (xValues[i] == xValues[j]) {
+                    nDups++;
+                }
+            }
+        }
+        return nDups;
+    }
+
     public static double estimateErrors(Experiment expData) {
         int nDups = 0;
         double sumDelta2 = 0.0;
