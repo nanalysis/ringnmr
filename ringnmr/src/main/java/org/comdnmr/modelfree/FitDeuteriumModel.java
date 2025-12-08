@@ -154,7 +154,7 @@ public class FitDeuteriumModel extends FitModel {
         for (var modelName : modelNames) {
             orderParSetMap.computeIfAbsent("order_parameter_list_" + modelName, OrderParSet::new);
         }
-        orderParSetMap.computeIfAbsent("order_parameter_list_1", OrderParSet::new);
+        orderParSetMap.computeIfAbsent("order_parameter_list_best", OrderParSet::new);
 
         molData.entrySet().stream().sorted(Map.Entry.comparingByKey()).parallel().forEach(e -> {
             updateProgress((double) counts.getAndIncrement() / n);
@@ -222,7 +222,7 @@ public class FitDeuteriumModel extends FitModel {
             if (nReplicates > 2) {
                 replicateData = replicates(molDataRes, bestModel, localTauFraction, localFitTau, bestScore.getPars(), random);
             }
-            OrderParSet orderParSet = orderParSetMap.get("order_parameter_list_1");
+            OrderParSet orderParSet = orderParSetMap.get("order_parameter_list_best");
             OrderPar orderPar = makeOrderPar(orderParSet, resSource, bestScore, bestModel, bestModel.getParNames(), bestScore.getPars(), replicateData);
             atom.addOrderPar(orderParSet, orderPar);
             atom.addSpectralDensity(key, spectralDensity);
@@ -334,7 +334,7 @@ public class FitDeuteriumModel extends FitModel {
                 rssSum += bestScores[i].rss;
             }
             double rss = rssSum / nReplicates;
-            OrderParSet orderParSet = orderParSetMap.get("order_parameter_list_1");
+            OrderParSet orderParSet = orderParSetMap.get("order_parameter_list_best");
             OrderPar orderPar = new OrderPar(orderParSet, resSource, rss, bestScores[0].nValues, parNames.length, bestModel.getName());
             double[] bestPars = new double[parNames.length];
             for (int iPar = 0; iPar < parNames.length; iPar++) {

@@ -232,6 +232,8 @@ public class PyController implements Initializable {
     @FXML
     Label tauFractionLabel;
     @FXML
+    TextField tauField;
+    @FXML
     Slider t2LimitSlider;
     @FXML
     Label t2LimitLabel;
@@ -1395,7 +1397,7 @@ public class PyController implements Initializable {
         double lambdaS = sLambdaSlider.getValue();
         double lambdaTau = tauLambdaSlider.getValue();
 
-        String tauText = tauCalcField.getText();
+        String tauText = tauField.getText();
         Double tau = null;
         if (!tauText.isBlank()) {
             try {
@@ -1443,6 +1445,7 @@ public class PyController implements Initializable {
         Double tauFit = modelFitter.getTau();
         if (tauFit != null) {
             tauCalcField.setText(String.format("%.2f", tauFit));
+            tauField.setText(tauCalcField.getText());
         }
         addMoleculeDataToAxisMenu();
         showModelFreeData();
@@ -1470,6 +1473,8 @@ public class PyController implements Initializable {
             r1MedianField.setText(String.format("%.3f", result.get("R1")));
             r2MedianField.setText(String.format("%.3f", result.get("R2")));
             tauCalcField.setText(String.format("%.2f", result.get("tau")));
+            tauField.setText(tauCalcField.getText());
+
         }
     }
 
@@ -1919,10 +1924,14 @@ public class PyController implements Initializable {
     }
 
     void addOrderParDataToAxisMenu(Map<String, OrderParSet> molResProps) {
+        boolean hasBest = molResProps.keySet().stream().anyMatch(setName -> setName.endsWith("best"));
         for (var entry : molResProps.entrySet()) {
             String setName = entry.getKey();
-            ChartUtil.addResidueProperty(setName, molResProps.get(setName));
             OrderParSet relaxSet = entry.getValue();
+            if (hasBest) {
+                relaxSet.active(setName.endsWith("best"));
+            }
+            ChartUtil.addResidueProperty(setName, molResProps.get(setName));
             Menu cascade = new Menu(setName);
             var values = relaxSet.values();
             if (!values.isEmpty()) {

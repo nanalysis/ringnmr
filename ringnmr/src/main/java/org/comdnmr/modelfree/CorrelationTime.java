@@ -152,7 +152,7 @@ public class CorrelationTime {
         Map<Atom, TauR1R2Result> tauMap = new HashMap<>();
         MoleculeBase moleculeBase = MoleculeFactory.getActive();
         Map<String, OrderParSet> orderParSetMap = moleculeBase.orderParSetMap();
-        OrderParSet orderParSet = orderParSetMap.computeIfAbsent("order_parameter_list_1", k -> new OrderParSet(k));
+        OrderParSet orderParSet = orderParSetMap.computeIfAbsent("order_parameter_list_best", k -> new OrderParSet(k));
 
 
         r1Map.entrySet().stream().sorted(Comparator.comparingInt(a -> ((Residue) (a.getKey().getEntity())).getResNum())).forEach(e -> {
