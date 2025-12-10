@@ -369,12 +369,9 @@ public class RelaxFit {
 
     double[] calcDeltaSqJ(MolDataValues molData, double[] resPars, MFModel testModel) {
         double sumSq = 0.0;
-        int nValues = SpectralDensityCalculator.getNData(molData.getData());
         double[][] jValues = molData.getJValues();
-        if (nValues == 0) {
-            nValues = jValues.length;
-        }
         double[] jCalc = testModel.calc(jValues[0], resPars);
+        int nValues = jCalc.length;
         double[] weights = jValues[jValues.length - 1];
         for (int i=0;i< jCalc.length;i++) {
             double jErr;

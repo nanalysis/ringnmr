@@ -277,11 +277,12 @@ public class FitR1R2NOEModel extends FitModel {
                 repData = replicates(molDataRes, model, localTauFraction, localFitTau, pars, random);
                 OrderPar orderPar = makeOrderPar(orderParSet, resData, molDataRes, key, score, model, repData);
             }
-            if (score.aicc() < lowestAIC) {
-                lowestAIC = score.aicc();
+            if (useLambda || (modelNames.size() == 1) || (score.aicc().isPresent() && ((bestScore == null) || (score.aicc().get() < lowestAIC))))  {
+                lowestAIC = score.aicc().isPresent() ? score.aicc().get() : null;
                 bestModel = model;
                 bestScore = score;
             }
+
         }
         Optional<ModelFitResult> result = Optional.empty();
         double[][] replicateData;

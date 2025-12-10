@@ -2263,13 +2263,7 @@ public class PyController implements Initializable {
             CurveFit curveFit = fitResult.getCurveFit(iCurve);
             List<ParValueInterface> parValues = curveFit.getParValues();
             equationChoice.getSelectionModel().select(fitResult.getEquationName());
-            String aic = String.format("%.2f", fitResult.getAicc());
-            String rms = String.format("%.3f", fitResult.getRms());
-            String rChiSq = String.format("%.2f", fitResult.getRChiSq());
             updateFitQuality(null, fitResult.getAicc(), fitResult.getRms(), fitResult.getRChiSq(), null);
-            aiccLabel.setText(aic);
-            rmsLabel.setText(rms);
-            rChiSqLabel.setText(rChiSq);
             updateTableWithPars(parValues);
             simControls.updateSliders(parValues, fitResult.getEquationName());
             String equationName = fitResult.getEquationName(); //equationSelector.getValue();
@@ -2888,7 +2882,8 @@ public class PyController implements Initializable {
                             parValues.add(parValue);
                             iPar++;
                         }
-                        Double aicc = orderPar.getAICC();
+                        Optional<Double> aiccOpt = orderPar.getAICC();
+                        Double aicc = aiccOpt.isPresent() ? aiccOpt.get() : null;
                         Double aic = orderPar.getAIC();
                         Double rms = orderPar.getRMS();
                         Double rChiSq = orderPar.getReducedChiSqr();
