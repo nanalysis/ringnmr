@@ -71,20 +71,6 @@
                     <MenuItem text="Clear Molecule Order Pars" onAction="#clearOrderPars"/>
                     <MenuItem text="Clear Molecule T1/T2/NOE Pars" onAction="#clearRelaxPars"/>
                 </Menu>
-                <Menu text="Chart" fx:id="chartMenu">
-                    <MenuItem text="New Chart" onAction="#addChart" fx:id="addChart"/>
-                    <MenuItem text="Remove Active Chart" onAction="#removeChart" fx:id="removeChart"/>
-                    <MenuItem text="Clear Active Chart" onAction="#clearChart" fx:id="clearChart"/>
-                    <Menu text="Add Experimental Data" fx:id="experimentalDataAxisMenu"/>
-                    <Menu text="Add Molecule Data" fx:id="moleculeDataAxisMenu"/>
-                    <Menu text="Groups" fx:id="groupsMenu">
-                        <MenuItem text="T1/T2/NOE" onAction="#showT1T2NoeData"/>
-                        <MenuItem text="ModelFree Pars" onAction="#showModelFreeData"/>
-                        <MenuItem text="ModelFree Pars - S2" onAction="#showModelFreeDataS2"/>
-                        <MenuItem text="ModelFree Pars - Tau" onAction="#showModelFreeDataTau"/>
-                        <Menu text="Order Par Sets" fx:id="orderParSetAxisMenu"/>
-                    </Menu>
-                </Menu>
                 <Menu text="Fitting">
                     <MenuItem text="Fit All" onAction="#fitResidues"/>
                     <MenuItem text="Fit Selected" onAction="#fitGroupResidues"/>
@@ -341,15 +327,34 @@
     <left>
     </left>
     <bottom>
-        <HBox>
-            <ToolBar fx:id="navigatorToolBar" BorderPane.alignment="CENTER"/>
-            <StatusBar fx:id="statusBar" HBox.hgrow="ALWAYS"/>
-            <Pane prefWidth="20"/>
-            <ScrollBar fx:id="barScaleScrollBar" prefWidth="250"
-                       value="500" max="1000" visible="1000"/>
-            <Pane prefWidth="20"/>
-            <Slider fx:id="barScaleSlider" prefWidth="250" min="1.0" max="20.0" value="1.0"/>
-        </HBox>
+        <VBox>
+            <ToolBar BorderPane.alignment="CENTER">
+                <Button text="New Chart" onAction="#addChart" fx:id="addChart"/>
+                <Button text="Remove Active Chart" onAction="#removeChart" fx:id="removeChart"/>
+                <Button text="Clear Active Chart" onAction="#clearChart" fx:id="clearChart"/>
+                <MenuButton text="Add Experimental Data" fx:id="experimentalDataAxisMenu"/>
+                <MenuButton text="Add Molecule Data" fx:id="moleculeDataAxisMenu"/>
+                <MenuButton text="Add Group" fx:id="groupsMenu">
+                    <items>
+                        <MenuItem text="T1/T2/NOE" onAction="#showT1T2NoeData"/>
+                        <MenuItem text="ModelFree Pars" onAction="#showModelFreeData"/>
+                        <MenuItem text="ModelFree Pars - S2" onAction="#showModelFreeDataS2"/>
+                        <MenuItem text="ModelFree Pars - Tau" onAction="#showModelFreeDataTau"/>
+                    </items>
+                </MenuButton>
+                <MenuButton text="Order Par Sets" fx:id="orderParSetAxisMenu"/>
+            </ToolBar>
+
+            <HBox>
+                <ToolBar fx:id="navigatorToolBar" BorderPane.alignment="CENTER"/>
+                <StatusBar fx:id="statusBar" HBox.hgrow="ALWAYS"/>
+                <Pane prefWidth="20"/>
+                <ScrollBar fx:id="barScaleScrollBar" prefWidth="250"
+                           value="500" max="1000" visible="1000"/>
+                <Pane prefWidth="20"/>
+                <Slider fx:id="barScaleSlider" prefWidth="250" min="1.0" max="20.0" value="1.0"/>
+            </HBox>
+        </VBox>
     </bottom>
 
 

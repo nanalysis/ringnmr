@@ -136,13 +136,13 @@ public class PyController implements Initializable {
     @FXML
     Menu chartMenu;
     @FXML
-    Menu experimentalDataAxisMenu;
+    MenuButton experimentalDataAxisMenu;
     @FXML
-    Menu moleculeDataAxisMenu;
+    MenuButton moleculeDataAxisMenu;
     @FXML
-    Menu groupsMenu;
+    MenuButton groupsMenu;
     @FXML
-    Menu orderParSetAxisMenu;
+    MenuButton orderParSetAxisMenu;
     @FXML
     BorderPane simPane;
 
@@ -247,7 +247,7 @@ public class PyController implements Initializable {
 
     ResidueFitter residueFitter;
     FitModel modelFitter;
-    List<ResonanceSource> fittingResidues = new ArrayList<>();
+    List<ResidueChart.SelectionValue> fittingResidues = new ArrayList<>();
     boolean simulate = true;
     ChartInfo chartInfo = new ChartInfo();
 
@@ -266,6 +266,7 @@ public class PyController implements Initializable {
     Map<Atom, CorrelationTime.TauR1R2Result> tauR1R2ResultMap = new HashMap<>();
     Function<String, String> nmrfxFunction;
     List<MenuData> menuDataList = new ArrayList<>();
+    ResonanceSource lastDeleted = null;
 
     public class ColumnFormatter<T> {
 
@@ -360,7 +361,7 @@ public class PyController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         mainController = this;
         makeAxisMenu();
-        groupsMenu.showingProperty().addListener(e -> addOrderParSetsToAxisMenu());
+        orderParSetAxisMenu.showingProperty().addListener(e -> addOrderParSetsToAxisMenu());
 
         if (getFittingMode().equals("cpmg")) {
             simControls = new CPMGControls();
@@ -523,7 +524,7 @@ public class PyController implements Initializable {
         PauseTransition logoTransition = new PauseTransition(Duration.seconds(5));
         logoTransition.setOnFinished(e -> removeLogo());
         logoTransition.play();
-        chartMenu.setOnShowing(e -> makeAxisMenu());
+    //    chartMenu.setOnShowing(e -> makeAxisMenu());
         barScaleSlider.valueProperty().addListener(e -> resizeBarPlotCanvas());
         barScaleScrollBar.valueProperty().addListener(e -> resizeBarPlotCanvas());
 
@@ -631,16 +632,13 @@ public class PyController implements Initializable {
     void filterSeries() {
         for (ResidueChart residueChart : barCharts) {
             for (DataSeries series : residueChart.getData()) {
-                var copyOfValues = List.copyOf(series.getData());
-                series.clear();
-                for (var v : copyOfValues) {
+                for (var v : series.getData()) {
                     Object obj = v.getExtraValue();
                     if (obj instanceof ResonanceSource resonanceSource) {
-                        if (!resonanceSource.deleted()) {
-                            series.add(v);
-                        }
+                        v.setDisabled(resonanceSource.deleted());
                     }
                 }
+                series.autoScale();
             }
         }
     }
@@ -684,8 +682,8 @@ public class PyController implements Initializable {
         double noAxisHeight = 0;
         double withAxisHeight = 0;
         for (ResidueChart residueChart : barCharts) {
-            residueChart.xAxis.setLowerBound(limitMin);
-            residueChart.xAxis.setUpperBound(limitMax);
+            residueChart.getXAxis().setLowerBound(limitMin);
+            residueChart.getXAxis().setUpperBound(limitMax);
 
             residueChart.setWidth(width);
             residueChart.autoScale(false);
@@ -735,7 +733,7 @@ public class PyController implements Initializable {
         }
         if (ssPainter != null) {
             double ssHeight = ssPainter.getHeight();
-            Axis axis = activeChart.xAxis;
+            Axis axis = activeChart.getXAxis();
             ssPainter.paintSS(axis.getXOrigin(), barPlotCanvas.getHeight() - ssHeight,
                     axis.getWidth(),
                     axis.getLowerBound(), axis.getUpperBound());
@@ -750,13 +748,31 @@ public class PyController implements Initializable {
         }
     }
 
+    boolean inChart(ResidueChart residueChart, double x, double y) {
+        Axis xAxis = residueChart.getXAxis();
+        Axis yAxis = residueChart.getYAxis();
+        double x1 = xAxis.getXOrigin();
+        double x2 = xAxis.getXOrigin() + xAxis.getWidth();
+        double y2 = yAxis.getYOrigin();
+        double y1 = yAxis.getYOrigin() - yAxis.getHeight();
+        if ((x > x1) && (x < x2)) {
+            if ((y > y1) && (y < y2)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     void mouseClickedOnBarCanvas(MouseEvent e) {
         double x = e.getX();
         double y = e.getY();
         barPlotCanvas.requestFocus();
         for (ResidueChart residueChart : barCharts) {
-            Axis xAxis = residueChart.xAxis;
-            Axis yAxis = residueChart.yAxis;
+            if (!inChart(residueChart, x, y)) {
+                continue;
+            }
+            Axis xAxis = residueChart.getXAxis();
+            Axis yAxis = residueChart.getYAxis();
             if (residueChart.mouseClicked(e)) {
                 activeChart = residueChart;
                 break;
@@ -950,26 +966,41 @@ public class PyController implements Initializable {
         bButton = GlyphsDude.createIconButton(FontAwesomeIcon.FAST_FORWARD, "", iconSize, fontSize, ContentDisplay.GRAPHIC_ONLY);
         bButton.setOnAction(this::lastResidue);
         buttons.add(bButton);
-        bButton = GlyphsDude.createIconButton(FontAwesomeIcon.REMOVE, "", iconSize, fontSize, ContentDisplay.GRAPHIC_ONLY);
-        bButton.setOnAction(this::removeItem);
-        buttons.add(bButton);
+        SplitMenuButton splitMenuButton = new SplitMenuButton();
+        MenuItem undoItem = new MenuItem("Undo");
+        undoItem.setOnAction(e -> undoRemove());
+        MenuItem resetItem = new MenuItem("Reset");
+        resetItem.setOnAction(e -> resetRemove());
+        splitMenuButton.getItems().addAll(undoItem, resetItem);
+        splitMenuButton.setGraphic(GlyphsDude.createIcon(FontAwesomeIcon.REMOVE));
+        splitMenuButton.setOnAction(this::removeItem);
 
         navigatorToolBar.getItems().addAll(buttons);
+        navigatorToolBar.getItems().add(splitMenuButton);
     }
 
     private void incrResidue(int delta) {
         var currentSet = getCurrentExperimentSet();
-        if (currentSet == null) {
-            return;
-        }
-        List<ExperimentResult> resInfo = currentSet.getExperimentResults();
         List<ResonanceSource> resSources = new ArrayList<>();
-        for (ExperimentResult experimentResult : resInfo) {
-            resSources.add(experimentResult.getResonanceSource());
+        if (currentSet == null) {
+            System.out.println(chartInfo.valueSet);
+            if (chartInfo.valueSet instanceof OrderParSet orderParSet) {
+                for (var resSource : orderParSet.resonanceSources()) {
+                    resSources.add(resSource);
+                }
+            } else {
+                return;
+            }
+        } else {
+            List<ExperimentResult> resInfo = currentSet.getExperimentResults();
+            for (ExperimentResult experimentResult : resInfo) {
+                resSources.add(experimentResult.getResonanceSource());
+            }
         }
         Collections.sort(resSources);
-        if (chartInfo.hasResidue()) {
-            int resIndex = resSources.indexOf(chartInfo.getSource());
+        ResidueChart.SelectionValue[] currentResSources = chartInfo.getCurrentSelections();
+        if ((currentResSources != null) && (currentResSources.length > 0)) {
+            int resIndex = resSources.indexOf(currentResSources[0].resonanceSource());
             resIndex += delta;
             if (resIndex <= 0) {
                 resIndex = 0;
@@ -1007,13 +1038,42 @@ public class PyController implements Initializable {
 
 
     void removeItem() {
+        lastDeleted = null;
         if ((chartInfo != null) && chartInfo.hasResidues()) {
-            for (var resonanceSource : chartInfo.getResidues()) {
+            for (var selectionValue : chartInfo.getCurrentSelections()) {
+                ResonanceSource resonanceSource = selectionValue.resonanceSource();
                 resonanceSource.deleted(!resonanceSource.deleted());
+                if (resonanceSource.deleted()) {
+                    lastDeleted = resonanceSource;
+                }
             }
             filterSeries();
             refreshResidueCharts();
         }
+    }
+
+    void undoRemove() {
+        if (lastDeleted != null) {
+            lastDeleted.deleted(false);
+            lastDeleted = null;
+            filterSeries();
+            refreshResidueCharts();
+        }
+    }
+
+    void resetRemove() {
+        for (ResidueChart residueChart : barCharts) {
+            for (DataSeries series : residueChart.getData()) {
+                for (var v : series.getData()) {
+                    Object obj = v.getExtraValue();
+                    if (obj instanceof ResonanceSource resonanceSource) {
+                        resonanceSource.deleted(false);
+                    }
+                }
+            }
+        }
+        filterSeries();
+        refreshResidueCharts();
     }
 
     public void loadParameterFile() {
@@ -1306,19 +1366,19 @@ public class PyController implements Initializable {
     }
 
     public void autoscaleX(boolean autoX) {
-        xychart.xAxis.setAutoRanging(autoX);
+        xychart.getXAxis().setAutoRanging(autoX);
     }
 
     public void autoscaleY(boolean autoY) {
-        xychart.yAxis.setAutoRanging(autoY);
+        xychart.getYAxis().setAutoRanging(autoY);
     }
 
     public void includeXZero(boolean xZero) {
-        xychart.xAxis.setZeroIncluded(xZero);
+        xychart.getXAxis().setZeroIncluded(xZero);
     }
 
     public void includeYZero(boolean yZero) {
-        xychart.yAxis.setZeroIncluded(yZero);
+        xychart.getYAxis().setZeroIncluded(yZero);
     }
 
     public void updateChartEquations(String equationName, double[] pars, double[] errs, double[] fields) {
@@ -1413,6 +1473,17 @@ public class PyController implements Initializable {
             tauCalcField.setText(String.format("%.2f", tauFit));
             tauField.setText(tauCalcField.getText());
         }
+
+        Map<String, OrderParSet> molResProps = DataIO.getOrderParSetFromMolecule();
+        boolean hasBest = molResProps.keySet().stream().anyMatch(setName -> setName.endsWith("best"));
+        for (var entry : molResProps.entrySet()) {
+            String setName = entry.getKey();
+            OrderParSet orderParSet = entry.getValue();
+            if (hasBest) {
+                orderParSet.active(setName.endsWith("best"));
+            }
+        }
+
         addMoleculeDataToAxisMenu();
         showModelFreeData();
         nReplicatesSlider.setValue(modelFitter.getNReplicates());
@@ -1578,8 +1649,8 @@ public class PyController implements Initializable {
     public void updateTableWithPars(ChartInfo chartInfo) {
         List<ParValueInterface> allParValues = new ArrayList<>();
         if (chartInfo.hasResidues() && chartInfo.hasExperiments()) {
-            for (ResonanceSource resSource : chartInfo.getResidues()) {
-                ExperimentResult resInfo = ChartUtil.getResInfo(chartInfo.mapName.get(0), resSource);
+            for (ResidueChart.SelectionValue selectionValue : chartInfo.getCurrentSelections()) {
+                ExperimentResult resInfo = ChartUtil.getResInfo(chartInfo.mapName.get(0), selectionValue.resonanceSource());
                 if (resInfo != null) {
                     chartInfo.experimentalResult = resInfo;
                     final String useEquationName;
@@ -1589,7 +1660,7 @@ public class PyController implements Initializable {
                         useEquationName = chartInfo.equationName;
                     }
                     List<ParValueInterface> parValues = resInfo.getParValues(useEquationName, chartInfo.state);
-                    if (resSource.equals(chartInfo.currentResidues[0])) {
+                    if (selectionValue.equals(chartInfo.currentSelections[0])) {
                         simControls.updateStates(chartInfo.currentStates);
                         simControls.updateSliders(parValues, useEquationName);
                         getCurrentExperimentSet().getExperimentData().stream().findFirst().ifPresent(e -> simControls.setNucleus(e.getNucleusName()));
@@ -1629,11 +1700,11 @@ public class PyController implements Initializable {
 
     }
 
-    public void updateEquation(String mapName, ResonanceSource[] residues, String equationName) {
+    public void updateEquation(String mapName, List<ResonanceSource> resonanceSources, String equationName) {
         String setEquation = "";
-        for (ResonanceSource resNum : residues) {
+        for (ResonanceSource resonanceSource : resonanceSources) {
             final String useEquationName;
-            ExperimentResult resInfo = ChartUtil.getResInfo(mapName, resNum);
+            ExperimentResult resInfo = ChartUtil.getResInfo(mapName, resonanceSource);
             if (resInfo != null) {
                 if (equationName.equals("best")) {
                     useEquationName = resInfo.getBestEquationName();
@@ -1781,8 +1852,8 @@ public class PyController implements Initializable {
             series.setFill(PlotData.colors[i++ % PlotData.colors.length]);
         }
         chart.currentSeriesName = data.get(0).getName();
-        Axis xAxis = chart.xAxis;
-        Axis yAxis = chart.yAxis;
+        Axis xAxis = chart.getXAxis();
+        Axis yAxis = chart.getYAxis();
         xAxis.setAutoRanging(false);
         chart.autoScale(false);
         double xMin = Math.floor((ChartUtil.minRes - 2) / 5.0) * 5.0;
@@ -1798,7 +1869,7 @@ public class PyController implements Initializable {
         } else {
             yAxis.setAutoRanging(true);
         }
-        chart.yAxis.setLabel(yLabel);
+        chart.getYAxis().setLabel(yLabel);
 
         chart.setTitle(setName);
         setCurrentExperimentSet(ChartUtil.getResidueProperty(setName));
@@ -1890,13 +1961,9 @@ public class PyController implements Initializable {
     }
 
     void addOrderParDataToAxisMenu(Map<String, OrderParSet> molResProps) {
-        boolean hasBest = molResProps.keySet().stream().anyMatch(setName -> setName.endsWith("best"));
         for (var entry : molResProps.entrySet()) {
             String setName = entry.getKey();
             OrderParSet relaxSet = entry.getValue();
-            if (hasBest) {
-                relaxSet.active(setName.endsWith("best"));
-            }
             ChartUtil.addResidueProperty(setName, molResProps.get(setName));
             Menu cascade = new Menu(setName);
             var values = relaxSet.values();
@@ -1921,14 +1988,15 @@ public class PyController implements Initializable {
             if (!entry.getValue().values().isEmpty()) {
                 CheckMenuItem checkMenuItem = new CheckMenuItem(setName);
                 checkMenuItem.setSelected(entry.getValue().active());
-                checkMenuItem.setOnAction(e -> activateOrderParSet(entry.getValue(), checkMenuItem.isSelected()));
+                checkMenuItem.setOnAction(e -> activateOrderParSet(entry.getValue(), checkMenuItem));
                 orderParSetAxisMenu.getItems().add(checkMenuItem);
             }
         }
     }
 
-    private void activateOrderParSet(OrderParSet orderParSet, boolean state) {
-        orderParSet.active(state);
+    private void activateOrderParSet(OrderParSet orderParSet, CheckMenuItem item) {
+        orderParSet.active(item.isSelected());
+        showModelFreeData();
     }
 
     public Map<String, ResidueChart> setupCharts(List<String> chartNames) {
@@ -2314,8 +2382,8 @@ public class PyController implements Initializable {
             fitResult = null;
             List<List<ResonanceSource>> allResidues = new ArrayList<>();
             fittingResidues.clear();
-            fittingResidues.addAll(ResidueChart.selectedResidues);
-            List<ResonanceSource> groupResidues = new ArrayList<>(ResidueChart.selectedResidues);
+            fittingResidues.addAll(ResidueChart.getSelections());
+            List<ResonanceSource> groupResidues = new ArrayList<>(ResidueChart.getSelectedSources());
             if (!groupResidues.isEmpty()) {
                 allResidues.add(groupResidues);
                 residueFitter.fitResidues(getCurrentExperimentSet(), allResidues);
@@ -2326,8 +2394,8 @@ public class PyController implements Initializable {
 
     public void refreshFit() {
         ResidueChart chart = getActiveChart();
-        ResidueChart.selectedResidues.clear();
-        ResidueChart.selectedResidues.addAll(fittingResidues);
+        ResidueChart.clearSelections();
+        ResidueChart.addSelections(fittingResidues);
         refreshResidueCharts();
         chart.showInfo();
         makeAxisMenu();
@@ -2677,8 +2745,8 @@ public class PyController implements Initializable {
 
     @FXML
     void setBestEquation() {
-        for (ResonanceSource resSource : chartInfo.currentResidues) {
-            ExperimentResult resInfo = ChartUtil.getResInfo(chartInfo.mapName.get(0), resSource);
+        for (ResidueChart.SelectionValue selectionValue : chartInfo.currentSelections) {
+            ExperimentResult resInfo = ChartUtil.getResInfo(chartInfo.mapName.get(0), selectionValue.resonanceSource());
             if (resInfo != null) {
                 String equationName = equationChoice.getValue();
                 resInfo.setBestEquationName(equationName);
@@ -2804,15 +2872,20 @@ public class PyController implements Initializable {
                     // continue;
                 }
                 String expName = expData.getName();
-                for (ResonanceSource resNum : chartInfo.getResidues()) {
-                    if (expData.getResidueData(resNum) != null) {
-                        experimentalDataSets.add(expData.getResidueData(resNum));
-                        DataSeries series = ChartUtil.getMapData(chartInfo.mapName.get(0), expName, resNum);
+                for (ResidueChart.SelectionValue selectionValue : chartInfo.getCurrentSelections()) {
+                    ResonanceSource resonanceSource = selectionValue.resonanceSource();
+                    if (expData.getResidueData(resonanceSource) != null) {
+                        experimentalDataSets.add(expData.getResidueData(resonanceSource));
+                        String seriesName = selectionValue.seriesName();
+                        String[] sParts = seriesName.split("\\|");
+                        String seriesRoot = sParts[0];
+
+                        DataSeries series = ChartUtil.getMapData(seriesRoot, expName, resonanceSource);
                         series.setStroke(PlotData.colors[iSeries % 8]);
                         series.setFill(PlotData.colors[iSeries % 8]);
                         allData.add(series);
                         GUIPlotEquation equation = ChartUtil.getEquation(expData,
-                                chartInfo.mapName.get(0), resNum, chartInfo.equationName, expData.getState(),
+                                seriesRoot, resonanceSource, chartInfo.equationName, expData.getState(),
                                 expData.getNucleusField());
                         double maxY = 1.0;
                         if (equation != null) {
@@ -2838,7 +2911,8 @@ public class PyController implements Initializable {
             }
         } else {
             fitMode = "modelfree";
-            for (ResonanceSource resonanceSource : chartInfo.getResidues()) {
+            for (ResidueChart.SelectionValue selectionValue : chartInfo.getCurrentSelections()) {
+                ResonanceSource resonanceSource = selectionValue.resonanceSource();
                 Atom atom = resonanceSource.getAtom();
                 Map<String, SpectralDensity> spectralDensityMap = atom.getSpectralDensity();
                 var sdData = ChartUtil.getSpectralDensityData(spectralDensityMap);
@@ -2910,7 +2984,7 @@ public class PyController implements Initializable {
             } else {
                 updateTableWithPars(chartInfo);
             }
-            updateEquation(chartInfo.mapName.get(0), chartInfo.getResidues(), chartInfo.equationName);
+            updateEquation(chartInfo.mapName.get(0), chartInfo.getCurrentResonanceSources(), chartInfo.equationName);
         }
         plotData.setData(allData);
         setBounds();
@@ -3262,7 +3336,7 @@ public class PyController implements Initializable {
         }
         if (ssPainter != null) {
             double ssHeight = ssPainter.getHeight();
-            Axis axis = activeChart.xAxis;
+            Axis axis = activeChart.getXAxis();
             ssPainter.paintSS(svgGC, axis.getXOrigin(), barPlotCanvas.getHeight() - ssHeight,
                     axis.getWidth(),
                     axis.getLowerBound(), axis.getUpperBound());

@@ -188,6 +188,7 @@ public class InputDataInterface {
             }
         });
         CheckBox autoFit = new CheckBox("Auto Fit");
+        autoFit.setSelected(true);
         guessButton.setOnAction(e -> guessPeakListTypes(peakLists, choices));
         guessButton.setText("Guess Types");
         guessButton.setDisable(false);
@@ -318,6 +319,10 @@ public class InputDataInterface {
                 }
             }
         }
+        if (autoFit) {
+            pyController.showAllR();
+        }
+        infoStage.hide();
     }
 
     public void inputParameters() {

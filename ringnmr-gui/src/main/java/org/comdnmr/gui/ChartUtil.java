@@ -622,7 +622,7 @@ public class ChartUtil {
 //                    }
 //                    Collection<ExperimentData> expDataSets = resProp.getExperimentData();
 //                    for (ExperimentData expData : expDataSets) {
-//                        for (String resNumS : expData.getResidues()) {
+//                        for (String resNumS : expData.getCurrentSelections()) {
 //                            int resNum = Integer.parseInt(resNumS);
 //                            ExperimentData experimentalData = expData.getResidueData(resNumS);
 //                        }

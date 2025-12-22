@@ -390,7 +390,7 @@ public class FitDeuteriumModel extends FitModel {
             }
         }
         if (best != null) {
-            return relaxFit.score(best.getPoint(), true);
+            return relaxFit.score(best.getPoint(), true, false);
         }
         return null;
     }
