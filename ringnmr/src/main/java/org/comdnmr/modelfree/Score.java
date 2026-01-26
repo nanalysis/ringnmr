@@ -36,7 +36,8 @@ public class Score {
     }
 
     public double rms() {
-        return Math.sqrt(rss / nValues);
+        double rms = Math.sqrt(rss / nValues);
+        return rms;
     }
 
     public int getN() {

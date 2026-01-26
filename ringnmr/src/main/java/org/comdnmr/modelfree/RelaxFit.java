@@ -466,7 +466,7 @@ public class RelaxFit {
             } else {
                 nComplex += molData.getData().size();
             }
-            n += (int) Math.round(resResult[3]);
+            n += (int) Math.round(resResult[4]);
 
             if (!testModel.checkParConstraints()) {
                 parsOK = false;
