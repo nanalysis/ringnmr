@@ -10,7 +10,7 @@ public class Score {
     final double complexityTauF;
     final double complexityTauS;
     final double[] pars;
-    private double[] weights;
+    protected double[] weights;
 
     public Score(double rss, int nValues, int nPars, boolean parsOK, double complexityS, double complexityTauF, double complexityTauS) {
         this(rss, nValues, nPars, parsOK, complexityS, complexityTauF, complexityTauS, null);

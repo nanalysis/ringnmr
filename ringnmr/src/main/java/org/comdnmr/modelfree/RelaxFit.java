@@ -8,6 +8,8 @@ import org.apache.commons.math3.geometry.euclidean.threed.RotationConvention;
 import org.apache.commons.math3.geometry.euclidean.threed.RotationOrder;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.optim.PointValuePair;
+import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.CMAESOptimizer;
+import org.comdnmr.data.CMAESFitResult;
 import org.comdnmr.data.Fitter;
 import static org.comdnmr.modelfree.RelaxFit.DiffusionType.ANISOTROPIC;
 import static org.comdnmr.modelfree.RelaxFit.DiffusionType.OBLATE;
@@ -437,6 +439,52 @@ public class RelaxFit {
         }
     }
 
+    public SimonsScore simonsScore(CMAESFitResult fit) {
+        double sumSq = 0.0;
+        int n = 0;
+        int nComplex = 0;
+        boolean parsOK = true;
+        double sumComplexityS = 0.0;
+        double sumComplexityTauF = 0.0;
+        double sumComplexityTauS = 0.0;
+
+        double[] pars = fit.result().getPoint();
+        for (MolDataValues molData : molDataValues.values()) {
+            MFModel testModel = molData.getTestModel();
+            double[] resPars;
+            if (useGlobalTau) {
+                int nResPars = testModel.getNPars();
+                resPars = new double[nResPars + 1];
+                resPars[0] = globalTau;
+                System.arraycopy(pars, 0, resPars, 1, nResPars);
+            } else {
+                resPars = pars;
+            }
+            double[] resResult = calcDeltaSq(molData, resPars, testModel);
+            sumSq += resResult[0];
+            sumComplexityS += resResult[1];
+            sumComplexityTauF += resResult[2];
+            sumComplexityTauS += resResult[3];
+            if (fitJ) {
+                nComplex++;
+            } else {
+                nComplex += molData.getData().size();
+            }
+            n += (int) Math.round(resResult[4]);
+
+            if (!testModel.checkParConstraints()) {
+                parsOK = false;
+            }
+        }
+        double avgComplexityS = sumComplexityS / nComplex;
+        double avgComplexityTauF = sumComplexityTauF / nComplex;
+        double avgComplexityTauS = sumComplexityTauS / nComplex;
+        SimonsScore score;
+        CMAESOptimizer opt = fit.optimizer();
+        score = new SimonsScore(sumSq, n, pars.length, parsOK, avgComplexityS, avgComplexityTauF, avgComplexityTauS, pars.clone(), opt);
+        return score;
+    }
+
     public Score score(double[] pars, boolean keepPars) {
         double sumSq = 0.0;
         int n = 0;
@@ -706,6 +754,16 @@ public class RelaxFit {
         Fitter fitter = Fitter.getArrayFitter(this::value);
         try {
             return Optional.of(fitter.fit(start, lower, upper, 10.0));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return Optional.empty();
+        }
+    }
+
+    public Optional<CMAESFitResult> simonsFitResidueToModel(double[] start, double[] lower, double[] upper) {
+        Fitter fitter = Fitter.getArrayFitter(this::value);
+        try {
+            return Optional.of(fitter.simonsFit(start, lower, upper, 10.0));
         } catch (Exception ex) {
             ex.printStackTrace();
             return Optional.empty();

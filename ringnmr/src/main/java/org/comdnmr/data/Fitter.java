@@ -83,6 +83,25 @@ public class Fitter {
         return result;
     }
 
+    // INSERTED BY SIMON FOR RESEARCH PURPOSES.
+    // NOT TO BE USED IN PRODUCTION
+    public CMAESFitResult simonsFit(
+         double[] start,
+         double[] lowerBounds,
+         double[] upperBounds,
+         double inputSigma
+     ) throws Exception {
+        this.start = start;
+        this.lowerBounds = lowerBounds.clone();
+        this.upperBounds = upperBounds.clone();
+        this.inputSigma = inputSigma;
+        Optimizer opt = new Optimizer();
+        if (xValues != null) {
+            opt.setXYE(xValues, yValues, errValues);
+        }
+        return opt.simonsRefineCMAES(start, inputSigma);
+    }
+
     public void setXYE(double[][] xValues, double[] yValues, double[] errValues) {
         this.xValues = xValues;
         this.yValues = yValues;
@@ -215,6 +234,49 @@ public class Fitter {
 
             return deNormResult;
         }
+
+        public CMAESFitResult simonsRefineCMAES(double[] guess, double inputSigma) throws Exception {
+            startTime = System.currentTimeMillis();
+            random.setSeed(1);
+            double lambdaMul = 10.0;
+            int lambda = (int) (lambdaMul * FastMath.round(4 + 3 * FastMath.log(guess.length)));
+            //int nSteps = guess.length*1000;
+            int nSteps = 2000;
+            double stopFitness = 0.0;
+            int diagOnly = 0;
+            double[] normLower = new double[guess.length];
+            double[] normUpper = new double[guess.length];
+            double[] sigma = new double[guess.length];
+            Arrays.fill(normLower, 0.0);
+            Arrays.fill(normUpper, 100.0);
+            Arrays.fill(sigma, inputSigma);
+            double[] normGuess = normalize(guess);
+            fixGuesses(normGuess);
+
+            //new Checker(100 * Precision.EPSILON, 100 * Precision.SAFE_MIN, nSteps));
+            CMAESOptimizer cmaesOptimizer = new CMAESOptimizer(nSteps, stopFitness, true, diagOnly, 0,
+                    random, true,
+                    new Checker(tol, tol, nSteps));
+            PointValuePair result = null;
+
+            try {
+                result = cmaesOptimizer.optimize(
+                        new CMAESOptimizer.PopulationSize(lambda),
+                        new CMAESOptimizer.Sigma(sigma),
+                        new MaxEval(2000000),
+                        new ObjectiveFunction(this), GoalType.MINIMIZE,
+                        new SimpleBounds(normLower, normUpper),
+                        new InitialGuess(normGuess));
+            } catch (DimensionMismatchException | NotPositiveException | NotStrictlyPositiveException | TooManyEvaluationsException e) {
+                throw new Exception("failure to fit data " + e.getMessage());
+            }
+            endTime = System.currentTimeMillis();
+            fitTime = endTime - startTime;
+            PointValuePair deNormResult = new PointValuePair(deNormalize(result.getPoint()), result.getValue());
+
+            return new CMAESFitResult(deNormResult, cmaesOptimizer);
+        }
+
 
         public PointValuePair refineBOBYQA(double[] guess, double inputSigma) {
             startTime = System.currentTimeMillis();

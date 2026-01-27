@@ -120,6 +120,20 @@ public abstract class FitModel {
         return iBest;
     }
 
+    int simonsBestScore(List<SimonsScore> scores) {
+        double lowestAIC = Double.MAX_VALUE;
+        int iBest = -1;
+        int i = 0;
+        for (var score : scores) {
+            if (score.aic() < lowestAIC) {
+                lowestAIC = score.aic();
+                iBest = i;
+            }
+            i++;
+        }
+        return iBest;
+    }
+
     public void updaters(Function<Double, Double> updaterFunction, Function<ProcessingStatus, Double> statusFunction) {
         this.updaterFunction = updaterFunction;
         this.statusFunction = statusFunction;
