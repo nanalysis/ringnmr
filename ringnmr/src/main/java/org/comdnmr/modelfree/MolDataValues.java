@@ -114,6 +114,26 @@ public class MolDataValues {
         return new double[0][0];
     }
 
+    public List<double[][]> calcIndependentJ() {
+        var dataOpt = dataValues.stream().findFirst();
+        List<double[][]> result = new ArrayList<>();
+        if (dataOpt.isPresent()) {
+            if (dataOpt.get() instanceof DeuteriumDataValue) {
+                for (RelaxDataValue relaxDataValue : dataValues) {
+                    double[][] jValues = SpectralDensityCalculator.calcJDeuterium(List.of(relaxDataValue));
+                    result.add(jValues);
+                }
+            } else {
+                for (RelaxDataValue relaxDataValue : dataValues) {
+                    double[][] jValues = SpectralDensityCalculator.calcJR1R2NOE(List.of(relaxDataValue));
+                    result.add(jValues);
+                }
+                result.add(jValues);
+            }
+        }
+        return result;
+    }
+
     public void setJValues(double[][] jValuesSet) {
         jValues = new double[jValuesSet.length][jValuesSet[0].length];
         for (int i=0;i<jValuesSet.length;i++) {

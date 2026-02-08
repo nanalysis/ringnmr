@@ -180,7 +180,7 @@ public class SpectralDensityCalculator {
                 }
                 fields.add(dValue.relaxObj.getSF() * RelaxEquations.GAMMA_D / RelaxEquations.GAMMA_H * 2.0 * Math.PI);
             }
-            if (doIndependent && dataValues.size() == 1) {
+            if (doIndependent || dataValues.size() == 1) {
                 result = DeuteriumMapping.independentMapping(rValues, errValues, fields);
             } else {
                 result = DeuteriumMapping.jointMapping(rValues, errValues, fields, typeUsage);
