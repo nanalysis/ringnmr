@@ -27,11 +27,8 @@ import org.comdnmr.util.ANNLoader;
 import org.comdnmr.util.SavitzkyGolay;
 import org.comdnmr.util.Utilities;
 import java.io.IOException;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
+import java.util.*;
+
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import static org.comdnmr.util.Utilities.TWO_PI;
 import org.ejml.data.Complex_F64;
@@ -493,6 +490,24 @@ public class CESTEquations {
         return new double[]{maxValue, sDev};
     }
 
+    static double[][] makeSortedArrays(double[] xvals, double[] yvals) {
+        Integer[] indices = new Integer[xvals.length];
+        for (int i = 0; i < xvals.length; i++) {
+            indices[i] = i;
+        }
+
+        Arrays.sort(indices, (a, b) -> Double.compare(xvals[b], xvals[a]));
+
+        double[] sortedKeys = new double[xvals.length];
+        double[] sortedValues = new double[yvals.length];
+
+        for (int i = 0; i < xvals.length; i++) {
+            sortedKeys[i] = xvals[indices[i]];
+            sortedValues[i] = yvals[indices[i]];
+        }
+        return new double[][]{sortedKeys, sortedValues};
+    }
+
     /**
      * Estimates CEST/R1rho peak positions and widths for initial guesses before
      * fitting.
@@ -504,8 +519,10 @@ public class CESTEquations {
      */
     public static List<CESTPeak> cestPeakGuess(double[][] xyvals, String fitMode) {
         // Estimates CEST peak positions for initial guesses for before fitting.
-        double[] xvals = xyvals[0];
-        double[] yvals = xyvals[xyvals.length - 1];
+        double[][] xysort = makeSortedArrays(xyvals[0], xyvals[xyvals.length-1]);
+        double[] xvals = xysort[0];
+        double[] yvals = xysort[1];
+
         double field = xyvals[xyvals.length-2][0];
         List<CESTPeak> peaks = new ArrayList<>();
 
