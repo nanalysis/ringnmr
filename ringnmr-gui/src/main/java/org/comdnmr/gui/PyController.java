@@ -21,7 +21,10 @@ import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
@@ -49,6 +52,7 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Callback;
 import javafx.util.Duration;
+import javafx.util.converter.IntegerStringConverter;
 import org.comdnmr.BasicFitter;
 import org.comdnmr.data.*;
 import org.comdnmr.eqnfit.*;
@@ -70,6 +74,7 @@ import org.nmrfx.chemistry.io.MoleculeIOException;
 import org.nmrfx.chemistry.relax.*;
 import org.nmrfx.chemistry.relax.RelaxTypes;
 import org.nmrfx.console.ConsoleController;
+import org.nmrfx.datasets.Nuclei;
 import org.nmrfx.graphicsio.GraphicsIOException;
 import org.nmrfx.graphicsio.SVGGraphicsContext;
 import org.nmrfx.peaks.InvalidPeakException;
@@ -85,6 +90,7 @@ import java.text.DecimalFormat;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.comdnmr.gui.MainApp.preferencesController;
 import static org.comdnmr.gui.MainApp.primaryStage;
@@ -264,9 +270,15 @@ public class PyController implements Initializable {
     File initialDir = null;
     SeriesComparator seriesComparator = new SeriesComparator();
     Map<Atom, CorrelationTime.TauR1R2Result> tauR1R2ResultMap = new HashMap<>();
-    Function<String, String> nmrfxFunction;
+    Function<String, Object> nmrfxFunction;
     List<MenuData> menuDataList = new ArrayList<>();
     ResonanceSource lastDeleted = null;
+    ChangeListener simModeListener = new ChangeListener() {
+        @Override
+        public void changed(ObservableValue observable, Object oldValue, Object newValue) {
+            simAction();
+        }
+    };
 
     public class ColumnFormatter<T> {
 
@@ -314,7 +326,7 @@ public class PyController implements Initializable {
         //MainApp.interpreter.exec("onAction(" + node + ")");
     }
 
-    public void setNMRFxFunction(Function<String, String> nmrfxFunction) {
+    public void setNMRFxFunction(Function<String, Object> nmrfxFunction) {
         this.nmrfxFunction = nmrfxFunction;
         nmrFxPeakButton.setDisable(false);
     }
@@ -482,14 +494,14 @@ public class PyController implements Initializable {
         updateEquationChoices(getFittingMode());
         equationChoice.valueProperty().addListener(e -> equationAction());
 
-        simChoice.getItems().add("CPMG");
-        simChoice.getItems().add("EXP");
-        simChoice.getItems().add("CEST");
-        simChoice.getItems().add("R1Rho");
-        simChoice.getItems().add("ModelFree");
-        simChoice.getItems().add("SSR1Rho");
-        simChoice.setValue("CPMG");
-        simChoice.valueProperty().addListener(s -> simAction());
+        simChoice.getItems().add("cpmg");
+        simChoice.getItems().add("exp");
+        simChoice.getItems().add("cest");
+        simChoice.getItems().add("r1rho");
+        simChoice.getItems().add("modelfree");
+        simChoice.getItems().add("ssr1rho");
+        simChoice.setValue("cpmg");
+        simChoice.valueProperty().addListener(simModeListener);
 
         splitPane.setDividerPositions(0.4, 0.7);
         relaxSetMenu.showingProperty().addListener(e -> makeRelaxSetMenu());
@@ -807,6 +819,10 @@ public class PyController implements Initializable {
             simControls = new SSR1RhoControls();
             update = true;
         }
+        simChoice.valueProperty().removeListener(simModeListener);
+        simChoice.setValue(getFittingMode());
+        simChoice.valueProperty().addListener(simModeListener);
+
         if (update) {
             VBox vBox = simControls.makeControls(mainController);
             simPane.centerProperty().set(vBox);
@@ -1205,6 +1221,18 @@ public class PyController implements Initializable {
         String peakString = getPeakNumFromTable();
         System.out.println("show peak " + peakString);
         nmrfxFunction.apply("nw.showPeak " + peakString);
+    }
+
+    @FXML
+    void getScanTable(ActionEvent e) {
+        Object object = nmrfxFunction.apply("nw.getScanTable");
+        Map<String, double[]> scanData = (Map<String, double[]>) object;
+        Optional<RelaxInfo> relaxInfoOpt = getRelaxInfo();
+        relaxInfoOpt.ifPresent(relaxInfo -> {
+                    ExperimentSet experimentSet = DataIO.loadFromScannerTable(scanData, relaxInfo.nuclei, relaxInfo.tau);
+                    ChartUtil.setupExperimentSet(experimentSet);
+                }
+        );
     }
 
     public void updateXYChartLabels() {
@@ -3375,6 +3403,42 @@ public class PyController implements Initializable {
 
     public void calculateSpectralDensities() {
         OrderParameterTool.calculateSpectralDensities();
+    }
+
+    private record RelaxInfo(Nuclei nuclei, double tau) {}
+
+    public static Optional<RelaxInfo> getRelaxInfo() {
+        Dialog<RelaxInfo> dialog = new Dialog<>();
+        dialog.setTitle("Relax Parameters");
+        dialog.setHeaderText("Nuclei/Tau:");
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        GridPane grid = new GridPane();
+        grid.setVgap(10);
+        grid.setHgap(10);
+        dialog.getDialogPane().setContent(grid);
+        int row = 0;
+        ChoiceBox<Nuclei> nucleiChoiceBox = new ChoiceBox<>();
+        List<Nuclei> nucleichoices = List.of(Nuclei.H1, Nuclei.N15, Nuclei.C13, Nuclei.findNuclei("19F"));
+        nucleiChoiceBox.getItems().addAll(nucleichoices);
+
+        grid.add(new Label("Nuceli: "), 0, row);
+        grid.add(nucleiChoiceBox, 1, row);
+        row++;
+        SimpleDoubleProperty tauProperty = new SimpleDoubleProperty(0.03);
+        var textField = GUIUtils.getDoubleTextField(tauProperty,3);
+        grid.add(new Label("Tau: "), 0, row);
+        grid.add(textField, 1, row);
+
+
+
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == ButtonType.OK) {
+                return new RelaxInfo(nucleiChoiceBox.getValue(), tauProperty.get());
+            }
+            return null;
+        });
+        Optional<RelaxInfo> result = dialog.showAndWait();
+        return result;
     }
 
 }

@@ -558,11 +558,6 @@ public class ChartUtil {
     }
 
     public static void loadParameters(String fileName) {
-        ResidueChart reschartNode = PyController.mainController.getActiveChart();
-        if (reschartNode == null) {
-            reschartNode = PyController.mainController.addChart();
-
-        }
         File file = new File(fileName);
         if (!file.exists()) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -571,9 +566,9 @@ public class ChartUtil {
             alert.showAndWait();
             return;
         }
-        ExperimentSet resProp = null;
+        ExperimentSet experimentSet = null;
         try {
-            resProp = DataIO.loadYAMLFile(fileName);
+            experimentSet = DataIO.loadYAMLFile(fileName);
         } catch (IOException ex) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Parameter file error");
@@ -581,19 +576,27 @@ public class ChartUtil {
             alert.showAndWait();
             return;
         }
-        valueSets.put(resProp.name(), resProp);
+        setupExperimentSet(experimentSet);
+    }
+    public static void setupExperimentSet(ExperimentSet experimentSet) {
+        valueSets.put(experimentSet.name(), experimentSet);
         String parName = "Kex";
-        String expMode = resProp.getExpMode();
+        String expMode = experimentSet.getExpMode();
         if (expMode.equals("r1") || expMode.equals("r2") || expMode.equals("rq") || expMode.equals("rap")) {
             parName = "R";
         } else if (expMode.equals("noe")) {
             parName = "NOE";
         }
-        ObservableList<DataSeries> data = ChartUtil.getParMapData(resProp.name(), "best", "0:0:0", parName);
-        PyController.mainController.setCurrentExperimentSet(resProp);
+        ObservableList<DataSeries> data = ChartUtil.getParMapData(experimentSet.name(), "best", "0:0:0", parName);
+        PyController.mainController.setCurrentExperimentSet(experimentSet);
         PyController.mainController.makeAxisMenu();
-        PyController.mainController.setYAxisType(resProp.getExpMode(), resProp.name(), "best", "0:0:0", parName, true);
-        reschartNode.setResProps(resProp);
+        PyController.mainController.setYAxisType(experimentSet.getExpMode(), experimentSet.name(), "best", "0:0:0", parName, true);
+        ResidueChart reschartNode = PyController.mainController.getActiveChart();
+        if (reschartNode == null) {
+            reschartNode = PyController.mainController.addChart();
+
+        }
+        reschartNode.setResProps(experimentSet);
         PyController.mainController.setControls();
     }
 

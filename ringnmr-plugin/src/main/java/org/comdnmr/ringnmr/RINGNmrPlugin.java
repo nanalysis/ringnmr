@@ -14,7 +14,7 @@ import java.util.function.Function;
 
 public class RINGNmrPlugin implements NMRFxPlugin {
     public static PyController ringNMRController;
-    Function<String, String> nmrfxFunction;
+    Function<String, Object> nmrfxFunction;
 
     @Override
     public Set<EntryPoint> getSupportedEntryPoints() {
