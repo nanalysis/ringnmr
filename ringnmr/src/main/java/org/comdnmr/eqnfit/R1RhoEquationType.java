@@ -57,7 +57,7 @@ public interface R1RhoEquationType extends EquationType {
                 double[][] r2 = CESTEquations.cestR2Guess(peaks, xy[yIndex], "r1rho");
                 guesses[map1[0]] = CESTEquations.cestKexGuess(peaks, "r1rho"); //112.0; //kex
                 guesses[map1[1]] = CESTEquations.cestPbGuess(peaks, xy[yIndex], "r1rho"); //0.1; //pb
-                guesses[map1[2]] = peaks.get(peaks.size() - 1).position; //-250 * 2.0 * Math.PI; //deltaA
+                guesses[map1[2]] = 0.0; //-250 * 2.0 * Math.PI; //deltaA
                 guesses[map1[3]] = peaks.get(0).position; //400 * 2.0 * Math.PI; //deltaB
                 guesses[map1[4]] = r1[0]; //2.4; //R1A
                 guesses[map1[5]] = r1[1]; //2.4; //R1B
@@ -96,9 +96,9 @@ public interface R1RhoEquationType extends EquationType {
 
             boundaries[0][map1[0]] = 1.0; //kex LB
             // boundaries[1][map1[0]] = guesses[map1[0]] * 5; //kex UB
-            boundaries[1][map1[0]] = 500.0; //kex UB
-            boundaries[0][map1[1]] = 0.01; //pb LB
-            boundaries[1][map1[1]] = 0.25; //pb UB //guesses[1] * 4;
+            boundaries[1][map1[0]] = 16000.0; //kex UB
+            boundaries[0][map1[1]] = 0.001; //pb LB
+            boundaries[1][map1[1]] = 0.4; //pb UB //guesses[1] * 4;
             boundaries[0][map1[2]] = guesses[map1[2]] - dAbound; //deltaA LB
             boundaries[1][map1[2]] = guesses[map1[2]] + dAbound; //deltaA UB
             boundaries[0][map1[3]] = guesses[map1[3]] - dBbound; //deltaB LB
