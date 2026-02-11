@@ -154,6 +154,8 @@
                                             <Button text="Gen" onAction="#showSimData"/>
                                             <Button text="Guess" onAction="#guesses"/>
                                             <Button text="Fit" onAction="#fitEquation"/>
+                                            <Button text="Set Fit Guess" onAction="#setGuess"/>
+                                            <Button text="Clear Fit Guess" onAction="#clearGuess"/>
                                         </HBox>
                                     </VBox>
                                 </top>

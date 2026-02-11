@@ -845,6 +845,7 @@ public class CESTEquations {
     public static double[] r1Boundaries(double r1, double tex, double delta) {
         double baseline = Math.exp(-r1 * tex);
         double r1Low = -Math.log(baseline + 0.1) / tex;
+        r1Low = Math.max(0.5, r1Low);
         double r1Updiff = baseline - delta;
         if (r1Updiff < 0.01) {
             r1Updiff = 0.01;

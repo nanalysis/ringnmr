@@ -440,6 +440,15 @@ public class R1RhoControls extends EquationControls {
 
     }
 
+    public void getGuesses() {
+        double[][] pars = getPars("TROTT_PALMER");
+        R1RhoFitter.setGuesses(pars[0]);
+    }
+
+    public void clearGuesses() {
+        R1RhoFitter.setGuesses(null);
+    }
+
     double[][] getPars(String equationName, Map<String, ParValueInterface> parValues) {
         double[][] pars;
         switch (equationName) {
@@ -591,6 +600,7 @@ public class R1RhoControls extends EquationControls {
             String parName = parValue.getName();
             ParControls control = PARS.valueOf(parName.toUpperCase());
             if (control != null) {
+                control.adjustLimits(parValue.getValue());
                 control.setValue(parValue.getValue());
                 if (control.getName().equals("deltaA0") || control.getName().equals("deltaB0")) {
                     if (controller.getCurrentExperimentSet() != null) {

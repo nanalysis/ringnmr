@@ -40,6 +40,13 @@ public abstract class EquationControls {
 
     abstract List<String> getParNames();
 
+    void getGuesses() {
+
+    };
+    void clearGuesses() {
+
+    };
+
     abstract public double[] getExtras();
 
     public VBox init() {

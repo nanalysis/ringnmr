@@ -2322,6 +2322,19 @@ public class PyController implements Initializable {
     }
 
     @FXML
+    public void setGuess() {
+        if (simControls != null) {
+            simControls.getGuesses();
+        }
+    }
+    @FXML
+    public void clearGuess() {
+        if (simControls != null) {
+            simControls.getGuesses();
+        }
+    }
+
+    @FXML
     public void fitEquation() {
         fitResult = null;
         try {

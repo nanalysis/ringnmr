@@ -95,7 +95,7 @@ public interface CESTEquationType extends EquationType {
                 double tex = xValues[2][0];
                 double[] r1 = CESTEquations.cestR1Guess(xy[yIndex], tex, "cest");
                 double[][] r2 = CESTEquations.cestR2Guess(peaks, xy[yIndex], "cest");
-                guesses[map1[0]] = CESTEquations.cestKexGuess(peaks, "cest"); //112.0; //kex
+                guesses[map1[0]] = CoMDPreferences.getCPMGMaxFreq() / 2.0;
                 guesses[map1[1]] = CESTEquations.cestPbGuess(peaks, xy[yIndex], "cest"); //0.1; //pb
                 guesses[map1[2]] = peaks.get(0).position; //-250 * 2.0 * Math.PI; //deltaB
                 guesses[map1[3]] = peaks.get(peaks.size() - 1).position; //400 * 2.0 * Math.PI; //deltaA
