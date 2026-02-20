@@ -327,7 +327,7 @@ public class FitR1R2NOEModel extends FitModel {
             MFModelIso model = MFModelIso.buildModel(modelName,
                     localFitTau, tau, localTauFraction, fitExchange);
             resData.setTestModel(model);
-            SimonsScore score = simonsTryModel(molDataRes, model, localTauFraction, localFitTau, random);
+            SimonsScore score = simonsTryModel(molDataRes, model, localTauFraction, localFitTau, random, null);
             OrderParSet orderParSet = orderParSetMap.get("order_parameter_list_"+ modelName);
             double[][] repData = null;
             if (nReplicates > 2) {
@@ -554,40 +554,57 @@ public class FitR1R2NOEModel extends FitModel {
         double[] weights = null;
 
         int[] totalCounts = new int[nJ];
-        for (int iRep = 0; iRep < nReplicates; iRep++) {
+
+        Map<String, double[]> initialGuesses = new HashMap<>();
+        for (int iRep = -1; iRep < nReplicates; iRep++) {
+            long timeStart = System.currentTimeMillis();
             if (cancelled.get()) {
                 return result;
             }
-            if (bootstrapMode == BootstrapMode.BAYESIAN) {
-                weights = dirichlet.sample();
-                scaleWeights(weights);
-                for (var molData : molDataRes.values()) {
-                    molData.weight(weights);
-                    molData.clearBootStrapSet();
+
+            if (iRep != -1) {
+                if (bootstrapMode == BootstrapMode.BAYESIAN) {
+                    weights = dirichlet.sample();
+                    scaleWeights(weights);
+                    for (var molData : molDataRes.values()) {
+                        molData.weight(weights);
+                        molData.clearBootStrapSet();
+                    }
+                } else {
+                    int bootStrapSet = iRepList.get(iRep);
+                    for (var molData : molDataRes.values()) {
+                        molData.setBootstrapAggregator(bootstrapAggregator);
+                        molData.setBootstrapSet(bootStrapSet);
+                        molData.weight(weights);
+                    }
+                    BootstrapAggregator.incrCounts(totalCounts, bootstrapAggregator.getY(bootStrapSet));
                 }
-            } else {
-                int bootStrapSet = iRepList.get(iRep);
-                for (var molData : molDataRes.values()) {
-                    molData.setBootstrapAggregator(bootstrapAggregator);
-                    molData.setBootstrapSet(bootStrapSet);
-                    molData.weight(weights);
-                }
-                BootstrapAggregator.incrCounts(totalCounts, bootstrapAggregator.getY(bootStrapSet));
             }
+
             List<SimonsScore> scores = new ArrayList<>();
             List<MFModelIso> models = new ArrayList<>();
             for (var modelName : modelNames) {
                 MFModelIso model = MFModelIso.buildModel(modelName,
                         localFitTau, tau, localTauFraction, fitExchange);
                 resData.setTestModel(model);
-                SimonsScore score = simonsTryModel(molDataRes, model, localTauFraction, localFitTau, random);
-                score.setWeights(weights);
-                scores.add(score);
-                models.add(model);
+                SimonsScore score;
+                if (iRep == -1) {
+                    score = simonsTryModel(molDataRes, model, localTauFraction, localFitTau, random, null);
+                    initialGuesses.put(model.getName(), score.pars);
+                }
+                else {
+                    score = simonsTryModel(molDataRes, model, localTauFraction, localFitTau, random, initialGuesses.get(model.getName()));
+                    score.setWeights(weights);
+                    scores.add(score);
+                    models.add(model);
+                }
             }
+
             int iBest = simonsBestScore(scores);
+            long timeEnd = System.currentTimeMillis();
             if (iBest != -1) {
                 SimonsScore bestScore = scores.get(iBest);
+                bestScore.setRuntime(timeEnd - timeStart);
                 MFModelIso bestModel = models.get(iBest);
                 double[] repPars = bestScore.getPars();
                 bestModels[iRep] = bestModel;
@@ -728,7 +745,7 @@ public class FitR1R2NOEModel extends FitModel {
         }
     }
 
-    SimonsScore simonsTryModel(Map<String, MolDataValues> molDataRes, MFModelIso model, double localTauFraction, boolean localFitTau, Random random) {
+    SimonsScore simonsTryModel(Map<String, MolDataValues> molDataRes, MFModelIso model, double localTauFraction, boolean localFitTau, Random random, double[] initialGuess) {
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setRelaxData(molDataRes);
         relaxFit.setLambdaS(lambdaS);
@@ -737,7 +754,7 @@ public class FitR1R2NOEModel extends FitModel {
         relaxFit.setUseLambda(useLambda);
         relaxFit.setFitJ(fitJ);
         model.setTauFraction(localTauFraction);
-        double[] start = model.getStart();
+        double[] start = (initialGuess == null) ? model.getStart() : initialGuess;
         double[] lower = model.getLower();
         double[] upper = model.getUpper();
         double[] keepStart = start.clone();

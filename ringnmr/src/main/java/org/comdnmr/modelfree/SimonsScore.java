@@ -5,6 +5,7 @@ import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.CMAESOptimizer;
 public class SimonsScore extends Score {
 
     public CMAESOptimizer optimizer;
+    private long runtime;
 
     public SimonsScore(
         double rss,
@@ -22,4 +23,8 @@ public class SimonsScore extends Score {
     }
 
     public CMAESOptimizer getOptimizer() { return optimizer; }
+
+    public void setRuntime(long runtime) { this.runtime = runtime; }
+
+    public long getRuntime() { return runtime; }
 }
