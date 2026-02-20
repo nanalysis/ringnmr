@@ -33,9 +33,8 @@ public class MFModelIso2sf extends MFModelIso2f {
     double complexityS = 0.0;
     double complexityTauF = 0.0;
     double complexityTauS = 0.0;
-    final double tauSFactor = 0.2;
 
-    private static double tauPrime = 30.0e-12;
+    private static final double TAU_PRIME = 30.0e-12;
 
     public MFModelIso2sf(boolean fitTau, double targetTau, double tauFraction,
             boolean includeEx) {
@@ -76,8 +75,8 @@ public class MFModelIso2sf extends MFModelIso2f {
         }
 
         complexityS = Math.abs(1.0 - sf2) + Math.abs(1.0 - ss2);
-        complexityTauF = Math.log10((tauFx + tauPrime) / tauPrime);
-        complexityTauS = Math.log10((tauSx + tauPrime) / tauPrime);
+        complexityTauF = Math.log10((tauFx + TAU_PRIME) / TAU_PRIME);
+        complexityTauS = Math.log10((tauSx + TAU_PRIME) / TAU_PRIME);
 
         return J;
     }
@@ -166,26 +165,25 @@ public class MFModelIso2sf extends MFModelIso2f {
     @Override
     public double[] getStart() {
         if (includeEx) {
-            return getParValues(targetTau, 0.9, 0.1, 0.9, 0.01, 2.0);
+            return getParValues(targetTau, 0.5, SLOW_LIMIT / 2.0, 0.5, targetTau / 4.0, 2.0);
         } else {
-            // tauF = 50ps, tauS = 450ps
-            return getParValues(targetTau, 0.9, SLOW_LIMIT / 3.0, 0.9, SLOW_LIMIT * 3.0);
+            return getParValues(targetTau, 0.5, SLOW_LIMIT / 2.0, 0.5, targetTau / 4.0);
         }
     }
 
     @Override
     public double[] getLower() {
         if (includeEx) {
-            return getParValues(tauLower(), 0.0, 0.0, 0.0, 0.0, 0.0);
+            return getParValues(tauLower(), 0.0, 0.001, 0.0, SLOW_LIMIT, 0.0);
         } else {
-            return getParValues(tauLower(), 0.0, 0.0, 0.0, 0.0);
+            return getParValues(tauLower(), 0.0, 0.001, 0.0, SLOW_LIMIT);
         }
     }
 
     @Override
     public double[] getUpper() {
         if (includeEx) {
-            return getParValues(tauUpper(), 1.0, targetTau / 2.0, 1.0, targetTau / 2.0, 100.0);
+            return getParValues(tauUpper(), 1.0, SLOW_LIMIT, 1.0, targetTau / 2.0, 100.0);
         } else {
             return getParValues(tauUpper(), 1.0, SLOW_LIMIT, 1.0, targetTau / 2.0);
         }

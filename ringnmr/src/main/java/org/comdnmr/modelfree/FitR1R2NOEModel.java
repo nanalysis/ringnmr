@@ -756,6 +756,15 @@ public class FitR1R2NOEModel extends FitModel {
         model.setTauFraction(localTauFraction);
         double[] start = (initialGuess == null) ? model.getStart() : initialGuess;
         double[] lower = model.getLower();
+        // If using regularization, set the lower bounds to 0 for all parameters
+        // This should only apply when the Model is 2sf.
+        // I have included an assertion check here for sanity
+        if (useLambda) {
+            if (!(model instanceof MFModelIso2sf)) {
+                throw new AssertionError("`useLambda` is set to `true` and the model type is not `MFModelIso2sf`. This should not be possible.");
+            }
+            lower = new double[lower.length];
+        }
         double[] upper = model.getUpper();
         double[] keepStart = start.clone();
         int nTries = 3;
