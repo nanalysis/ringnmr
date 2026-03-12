@@ -386,7 +386,7 @@ public class FitR1R2NOEModel extends FitModel {
         DirichletSampler dirichlet = null;
         if (bootstrapMode == BootstrapMode.BAYESIAN) {
             // New sampler with same seed each time for reproducibility
-            dirichlet = DirichletSampler.symmetric(getRandomSource(true), nJ, 4.0);
+            dirichlet = DirichletSampler.symmetric(getRandomSource(true), nJ, 1.0);
         } else {
             nReplicates = Math.min(nReplicates, bootstrapAggregator.getN());
             iRepList = IntStream.range(0, bootstrapAggregator.getN()).boxed().collect(Collectors.toList());
@@ -573,10 +573,14 @@ public class FitR1R2NOEModel extends FitModel {
                 } else {
                     int bootStrapSet = iRepList.get(iRep);
                     for (var molData : molDataRes.values()) {
-                        molData.setBootstrapAggregator(bootstrapAggregator);
-                        molData.setBootstrapSet(bootStrapSet);
-                        molData.weight(weights);
-                    }
+                            molData.setBootstrapAggregator(bootstrapAggregator);
+                            molData.setBootstrapSet(bootStrapSet);
+                            // Prior to my changes, `weights` was always `null` at this point
+                            molData.weight(null);
+                        }
+                    weights = Arrays.stream(bootstrapAggregator.getY(bootStrapSet))
+                        .mapToDouble(val -> (double) val)
+                        .toArray();
                     BootstrapAggregator.incrCounts(totalCounts, bootstrapAggregator.getY(bootStrapSet));
                 }
             }
@@ -638,12 +642,21 @@ public class FitR1R2NOEModel extends FitModel {
             OrderPar orderPar = new OrderPar(orderParSet, resSource, rss, bestScores[0].nValues, parNames.length, bestModel.getName());
             double[][] cov = new double[nJ][parNames.length];
             double[] bestPars = new double[parNames.length];
+            double[] smoothErrors = new double[parNames.length];
+            double[] unsmoothErrors = new double[parNames.length];
             for (int iPar = 0; iPar < parNames.length; iPar++) {
                 String parName = parNames[iPar];
                 Double parError = null;
                 DescriptiveStatistics sumStat = new DescriptiveStatistics(replicateData[iPar]);
                 double parValue = useMedian ? sumStat.getPercentile(50.0) : sumStat.getMean();
                 bestPars[iPar] = parValue;
+
+                for (int i = 0; i < nReplicates; i++) {
+                    unsmoothErrors[iPar] += Math.pow((replicateData[iPar][i] - parValue), 2.0);
+                }
+                unsmoothErrors[iPar] /= nReplicates - 1;
+                unsmoothErrors[iPar] = Math.pow(unsmoothErrors[iPar], 0.5);
+
                 if (bootstrapMode == BootstrapMode.BAYESIAN) {
                     parError = sumStat.getStandardDeviation();
                 } else {
@@ -659,7 +672,8 @@ public class FitR1R2NOEModel extends FitModel {
                     for (int j = 0; j < nJ; j++) {
                         sum += cov[j][iPar] * cov[j][iPar];
                     }
-                    parError = Math.sqrt(sum / nJ);
+                    parError = Math.sqrt(sum);
+                    smoothErrors[iPar] = parError;
                 }
                 orderPar = orderPar.set(parName, parValue, parError);
             }
