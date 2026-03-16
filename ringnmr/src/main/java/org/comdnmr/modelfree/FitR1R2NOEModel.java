@@ -421,7 +421,7 @@ public class FitR1R2NOEModel extends FitModel {
                     for (int j = 0; j < nJ; j++) {
                         sum += cov[j][iPar] * cov[j][iPar];
                     }
-                    parError = Math.sqrt(sum / nJ);
+                    parError = Math.sqrt(sum);
                 }
                 orderPar = orderPar.set(parName, parValue, parError);
             }
