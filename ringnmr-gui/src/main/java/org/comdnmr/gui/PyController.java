@@ -84,6 +84,7 @@ import org.nmrfx.utils.GUIUtils;
 import javax.imageio.ImageIO;
 import javax.script.ScriptException;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
 import java.text.DecimalFormat;
@@ -3454,4 +3455,37 @@ public class PyController implements Initializable {
         return result;
     }
 
+    public void saveIndependentSpectralDensities() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Spectral Densities File");
+        File file = fileChooser.showSaveDialog(MainApp.primaryStage);
+        double fieldScale = 2.0 * Math.PI * 1e6;
+        String sepChar = ",";
+        if (file != null) {
+            try {
+                try (FileWriter fileWriter = new FileWriter(file)) {
+                    String header = "Residue" + sepChar + "Atom" + sepChar + "k" + sepChar + "Field" + sepChar + "i" + sepChar + "SDField" + sepChar + "SD" + sepChar + "Err";
+                    fileWriter.write(header + "\n");
+                    Map<Atom, List<double[][]>> spectralDensityMap = OrderParameterTool.calculateIndependentSpectralDensities();
+                    int k = 0;
+                    for (Map.Entry<Atom, List<double[][]>> entry : spectralDensityMap.entrySet()) {
+                        for (double[][] jValues : entry.getValue()) {
+                            for (int i = 0; i < jValues.length; i++) {
+                                int iField = (int) Math.round(jValues[0][1] / fieldScale);
+                                String outStr = String.format("%d" + sepChar + "%s" + sepChar + "%d" + sepChar +
+                                                "%d" + sepChar + "%d" + sepChar + "%.5f" + sepChar + "%.5f" + sepChar +  "%.5f\n",
+                                        entry.getKey().getResidueNumber(), entry.getKey().getName(),
+                                        k, iField, i, jValues[0][i] / fieldScale, jValues[1][i] * 1.0e9, jValues[2][i] * 1.0e9);
+                                fileWriter.write(outStr);
+                            }
+                            k++;
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                ExceptionDialog exceptionDialog = new ExceptionDialog(e);
+                exceptionDialog.showAndWait();
+            }
+        }
+    }
 }

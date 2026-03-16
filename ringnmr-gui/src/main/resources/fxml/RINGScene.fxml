@@ -249,6 +249,9 @@
                                                       onAction="#interpolateRates"/>
                                             <MenuItem text="Calculate Spectral Densities"
                                                       onAction="#calculateSpectralDensities"/>
+                                            <MenuItem text="Save Independent Spectral Densities"
+                                                      onAction="#saveIndependentSpectralDensities"/>
+
                                         </items>
                                     </MenuButton>
                                     <MenuButton fx:id="relaxSetMenu" text="Fields"/>
