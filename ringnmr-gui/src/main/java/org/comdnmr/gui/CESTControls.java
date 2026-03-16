@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
@@ -29,12 +29,10 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import org.comdnmr.eqnfit.CESTEquation;
-import org.comdnmr.eqnfit.CESTFitter;
-import org.comdnmr.data.Experiment;
-import org.comdnmr.eqnfit.ParValueInterface;
+import org.comdnmr.eqnfit.*;
 import org.comdnmr.data.ExperimentResult;
 import org.comdnmr.data.ExperimentSet;
+
 import static org.comdnmr.gui.CESTControls.PARS.KEX;
 import static org.comdnmr.gui.CESTControls.PARS.PB;
 import static org.comdnmr.gui.CESTControls.PARS.DELTAA0;
@@ -45,7 +43,7 @@ import static org.comdnmr.gui.CESTControls.PARS.R2A;
 import static org.comdnmr.gui.CESTControls.PARS.R2B;
 import static org.comdnmr.gui.CESTControls.PARS.B1FIELD;
 import static org.comdnmr.gui.CESTControls.PARS.TEX;
-import org.comdnmr.eqnfit.CESTFitFunction;
+
 import org.comdnmr.util.CoMDPreferences;
 import javafx.scene.input.KeyCode;
 import org.nmrfx.chemistry.relax.ResonanceSource;
@@ -598,7 +596,7 @@ public class CESTControls extends EquationControls {
                     if (controller.getCurrentExperimentSet() != null) {
                         if (controller.getCurrentExperimentSet().getExperimentData() != null) {
                             List<ExperimentResult> resVals = controller.getCurrentExperimentSet().getExperimentResults();
-                            Collections.sort(resVals, (a,b) -> Integer.compare(a.getAtom().getIndex(), b.getAtom().getIndex()));
+                            Collections.sort(resVals, (a, b) -> Integer.compare(a.getAtom().getIndex(), b.getAtom().getIndex()));
                             ResonanceSource resSource = resVals.get(0).getResonanceSource();
                             double[] xVals = controller.getCurrentExperimentSet().getExperimentData().stream().findFirst().get().getResidueData(resSource).getXValues()[0];
                             if (xVals != null) {
@@ -676,39 +674,22 @@ public class CESTControls extends EquationControls {
     }
 
     void updateEquations() {
-        ExperimentResult resInfo = controller.chartInfo.getResult();
+        ExperimentResult experimentResult = controller.chartInfo.getResult();
         ExperimentSet experimentSet = controller.getCurrentExperimentSet();
         List<GUIPlotEquation> equations = new ArrayList<>();
         double[] pars;
         double[] extras1;
         String equationName = equationSelector.getValue();
-        Optional<Experiment> optionalData = Optional.empty();
-        if (resInfo != null) {
+        if (experimentResult != null) {
             if (experimentSet != null) {
-                optionalData = experimentSet.getExperimentData().stream().findFirst();
-                if (optionalData.isPresent() && optionalData.get().getExtras().size() > 0) {
-                    for (Experiment expData : experimentSet.getExperimentData()) {
-                        pars = getPars(equationName)[0];
-                        List<Double> dataExtras = expData.getExtras();
-                        double[] errs = new double[pars.length];
-                        double[] extras = new double[3];
-                        extras[0] = expData.getNucleusField();
-                        extras[1] = dataExtras.get(0);
-                        extras[2] = dataExtras.get(1);
-                        GUIPlotEquation plotEquation = new GUIPlotEquation("cest", equationName, pars, errs, extras);
-
-                        equations.add(plotEquation);
-                    }
-                } else {
-                    pars = getPars(equationName)[0];
-                    double[] errs = new double[pars.length];
-                    double[] extras = new double[1];
-                    extras[0] = CoMDPreferences.getRefField() * getNucleus().getFreqRatio(); // fixme
-                    GUIPlotEquation plotEquation = new GUIPlotEquation("cest", equationName, pars, errs, extras);
-                    equations.add(plotEquation);
+                var curveSets = experimentResult.getCurveSets(equationName);
+                for (CurveFit curveFit : curveSets) {
+                    PlotEquation plotEquation = curveFit.getEquation().clone();
+                    plotEquation.setPars(getPars(equationName)[0]);
+                    GUIPlotEquation guiPlotEquation = new GUIPlotEquation("cest", plotEquation);
+                    equations.add(guiPlotEquation);
                 }
             }
-
         } else {
             pars = getPars(equationName)[0];
             extras1 = getPars(equationName)[1];

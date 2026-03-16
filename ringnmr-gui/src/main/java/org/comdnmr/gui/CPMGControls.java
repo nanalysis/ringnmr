@@ -539,7 +539,6 @@ public class CPMGControls extends EquationControls {
                             tau = cpmgExperiment.getTau();
                         }
                     }
-                    int iField = Integer.parseInt(state.substring(0, 1));
                     List<ParValueInterface> parValues = resInfo.getParValues(equationName, state);
                     if (state.equals(currentState) || parValues.isEmpty()) {
                         pars = getPars(equationName);

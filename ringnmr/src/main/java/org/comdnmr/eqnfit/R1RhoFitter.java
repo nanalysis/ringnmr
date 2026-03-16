@@ -35,6 +35,7 @@ import org.nmrfx.chemistry.Atom;
  */
 public class R1RhoFitter implements EquationFitter {
 
+    static double[] guesses = null;
     FitFunction calcR1Rho;
     CoMDOptions options;
     List<Double>[] xValues;
@@ -73,6 +74,18 @@ public class R1RhoFitter implements EquationFitter {
     public R1RhoFitter(CoMDOptions options) {
         calcR1Rho = new R1RhoFitFunction(options);
         this.options = options;
+    }
+
+    public static void setGuesses(double[] pars) {
+        guesses = pars == null ? null : pars.clone();
+    }
+
+    public static void clearGuesses() {
+        guesses = null;
+    }
+
+    public static Optional<double[]> getGuesses() {
+        return Optional.ofNullable(guesses);
     }
 
     public static int getMapIndex(int[] state, int[] stateCount, int... mask) {

@@ -23,6 +23,7 @@
                         <MenuItem text="Project File..." onAction="#loadParameterFile"/>
                         <MenuItem text="Setup Parameters..." onAction="#inputParameters"/>
                         <MenuItem text="Load from peak lists..." onAction="#loadFromPeakLists"/>
+                        <MenuItem text="Load from Scanner..." onAction="#getScanTable"/>
                         <MenuItem text="Relaxation Table..." onAction="#loadRelaxValues"/>
                         <MenuItem text="Secondary Structure..." onAction="#loadSecondaryStructure"/>
                         <MenuItem text="XY Chart  Data..." onAction="#loadSimData"/>
@@ -153,6 +154,8 @@
                                             <Button text="Gen" onAction="#showSimData"/>
                                             <Button text="Guess" onAction="#guesses"/>
                                             <Button text="Fit" onAction="#fitEquation"/>
+                                            <Button text="Set Fit Guess" onAction="#setGuess"/>
+                                            <Button text="Clear Fit Guess" onAction="#clearGuess"/>
                                         </HBox>
                                     </VBox>
                                 </top>

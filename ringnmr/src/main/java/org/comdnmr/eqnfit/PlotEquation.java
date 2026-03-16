@@ -66,6 +66,10 @@ public class PlotEquation {
         return extras;
     }
 
+    public void setPars(double[] pars) {
+        this.pars = pars.clone();
+    }
+
     public double[] getPars() {
         return pars;
     }
