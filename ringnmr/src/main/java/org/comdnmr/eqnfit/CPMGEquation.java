@@ -20,47 +20,25 @@ package org.comdnmr.eqnfit;
 
 import static java.lang.Math.abs;
 
-import java.io.InputStream;
 import java.io.IOException;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
-import org.apache.commons.math3.analysis.polynomials.PolynomialFunction;
 import org.apache.commons.math3.complex.Complex;
-import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.util.FastMath;
 
 import static org.comdnmr.modelfree.RelaxEquations.GAMMA_MAP;
 import org.comdnmr.util.CoMDPreferences;
 import org.comdnmr.util.DataUtil;
-import org.comdnmr.util.Utilities;
-import org.comdnmr.util.traindata.DataGenerator;
 
-import org.tensorflow.GraphOperation;
 import org.tensorflow.SavedModelBundle;
-import org.tensorflow.Tensor;
 import org.tensorflow.ndarray.FloatNdArray;
 import org.tensorflow.ndarray.NdArrays;
 import org.tensorflow.ndarray.Shape;
 import org.tensorflow.types.TFloat32;
 
-import static org.comdnmr.modelfree.RelaxEquations.GAMMA_MAP;
-
-import org.comdnmr.util.CoMDPreferences;
-import org.comdnmr.util.DataUtil;
-import org.comdnmr.util.Utilities;
-import static org.comdnmr.util.UnzipUtil.unzip;
 import static org.comdnmr.util.traindata.DataGenerator.getInterpolatedProfile;
 
 /**
@@ -111,19 +89,6 @@ public enum CPMGEquation implements EquationType {
         }
 
         @Override
-        public int[][] makeMap(int n) {
-            int[][] map = new int[n][1];
-            for (int i = 0; i < n; i++) {
-                map[i][0] = i;
-            }
-            return map;
-        }
-
-        @Override
-        public int[][] makeMap(int n, int m) {
-            return makeMap(n);
-        }
-
         public int[][] makeMap(int[] stateCount, int[][] states, int[] r2Mask) {
             int n = states.length;
             int[][] map = new int[n][1];
@@ -238,22 +203,6 @@ public enum CPMGEquation implements EquationType {
         @Override
         public double getKex(double[] pars, int id) {
             return getKex(pars);
-        }
-
-        @Override
-        public int[][] makeMap(int n) {
-            int[][] map = new int[n][3];
-            for (int i = 0; i < n; i++) {
-                map[i][0] = 0;
-                map[i][1] = 2 * i + 1;
-                map[i][2] = 2 * i + 2;
-            }
-            return map;
-        }
-
-        @Override
-        public int[][] makeMap(int n, int m) {
-            return makeMap(n);
         }
 
         public int[][] makeMap(int[] stateCount, int[][] states, int[] r2Mask) {
@@ -554,34 +503,6 @@ public enum CPMGEquation implements EquationType {
 
         // TODO
         @Override
-        public int[][] makeMap(int n) {
-            int[][] map = new int[n][5];
-            for (int i = 0; i < n; i++) {
-                map[i][0] = 0;
-                map[i][1] = 1;
-                map[i][2] = 3 * i + 2;
-                map[i][3] = 3 * i + 3;
-                map[i][4] = 3 * i + 4;
-            }
-            return map;
-        }
-
-        // TODO
-        @Override
-        public int[][] makeMap(int n, int m) {
-            int[][] map = new int[n][5];
-            for (int i = 0; i < n; i++) {
-                map[i][0] = 0;
-                map[i][1] = 1;
-                map[i][2] = 3 * i + 2;
-                map[i][3] = 3 * i + 3;
-                map[i][4] = 3 * i + 4;
-            }
-            return map;
-        }
-
-        // TODO
-        @Override
         public int[][] makeMap(int[] stateCount, int[][] states, int[] r2Mask) {
             int n = states.length;
             int[][] map = new int[n][5];
@@ -730,29 +651,6 @@ public enum CPMGEquation implements EquationType {
         }
 
         @Override
-        public int[][] makeMap(int n) {
-            int[][] map = new int[n][4];
-            for (int i = 0; i < n; i++) {
-                map[i][0] = 0;
-                map[i][1] = 1;
-                map[i][2] = 2 * i + 2;
-                map[i][3] = 2 * i + 3;
-            }
-            return map;
-        }
-
-        @Override
-        public int[][] makeMap(int n, int m) {
-            int[][] map = new int[n][4];
-            for (int i = 0; i < n; i++) {
-                map[i][0] = 0;
-                map[i][1] = 1;
-                map[i][2] = 2 * i + 2;
-                map[i][3] = 2 * i + 3;
-            }
-            return map;
-        }
-
         public int[][] makeMap(int[] stateCount, int[][] states, int[] r2Mask) {
             int n = states.length;
             int[][] map = new int[n][4];

@@ -8,6 +8,8 @@ import org.nmrfx.chemistry.MoleculeFactory;
 import org.nmrfx.chemistry.relax.*;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class OrderParameterTool {
@@ -29,6 +31,18 @@ public class OrderParameterTool {
             atom.addSpectralDensity(key, spectralDensity);
         });
     }
+    public static Map<Atom, List<double[][]>> calculateIndependentSpectralDensities() {
+        var data = FitDeuteriumModel.getData(false);
+        Map<Atom, List<double[][]>> result = new HashMap<>();
+        data.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(e -> {
+            MolDataValues resData = e.getValue();
+            Atom atom = resData.getAtom();
+            List<double[][]> jValueList = resData.calcIndependentJ();
+            result.put(atom, jValueList);
+        });
+        return result;
+    }
+
     public static void interpolateRates(double field2) {
         MoleculeBase moleculeBase = MoleculeFactory.getActive();
         var relaxMap = moleculeBase.relaxationSetMap();

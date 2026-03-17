@@ -29,9 +29,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.comdnmr.data.DoubleArrayExperiment;
-import org.comdnmr.eqnfit.R1RhoEquation;
+import org.comdnmr.eqnfit.*;
 import org.comdnmr.data.Experiment;
-import org.comdnmr.eqnfit.ParValueInterface;
 import org.comdnmr.data.ExperimentResult;
 import org.comdnmr.data.ExperimentSet;
 import static org.comdnmr.gui.R1RhoControls.PARS.KEX;
@@ -44,7 +43,7 @@ import static org.comdnmr.gui.R1RhoControls.PARS.R2A;
 import static org.comdnmr.gui.R1RhoControls.PARS.R2B;
 import static org.comdnmr.gui.R1RhoControls.PARS.B1FIELD;
 import static org.comdnmr.gui.R1RhoControls.PARS.TEX;
-import org.comdnmr.eqnfit.R1RhoFitFunction;
+
 import org.comdnmr.util.CoMDPreferences;
 
 /**
@@ -441,6 +440,15 @@ public class R1RhoControls extends EquationControls {
 
     }
 
+    public void getGuesses() {
+        double[][] pars = getPars("TROTT_PALMER");
+        R1RhoFitter.setGuesses(pars[0]);
+    }
+
+    public void clearGuesses() {
+        R1RhoFitter.setGuesses(null);
+    }
+
     double[][] getPars(String equationName, Map<String, ParValueInterface> parValues) {
         double[][] pars;
         switch (equationName) {
@@ -592,6 +600,7 @@ public class R1RhoControls extends EquationControls {
             String parName = parValue.getName();
             ParControls control = PARS.valueOf(parName.toUpperCase());
             if (control != null) {
+                control.adjustLimits(parValue.getValue());
                 control.setValue(parValue.getValue());
                 if (control.getName().equals("deltaA0") || control.getName().equals("deltaB0")) {
                     if (controller.getCurrentExperimentSet() != null) {
@@ -630,7 +639,7 @@ public class R1RhoControls extends EquationControls {
     }
 
     public List<String> getParNames() {
-        String equationName = equationSelector.getValue().toString();
+        String equationName = equationSelector.getValue();
         List<String> parNames1 = new ArrayList<>();
         switch (equationName) {
             case "TROTT_PALMER":
@@ -674,48 +683,23 @@ public class R1RhoControls extends EquationControls {
     }
 
     void updateEquations() {
-//        System.out.println("R1Rho Controls updateEqns called.");
-        ExperimentResult resInfo = controller.chartInfo.getResult();
+        ExperimentResult experimentResult = controller.chartInfo.getResult();
         ExperimentSet experimentSet = controller.getCurrentExperimentSet();
         List<GUIPlotEquation> equations = new ArrayList<>();
         double[] pars;
         double[] extras1;
         String equationName = equationSelector.getValue();
-        Optional<Experiment> optionalData = Optional.empty();
-        if (resInfo != null) {
-            if (experimentSet != null) {
-                optionalData = experimentSet.getExperimentData().stream().findFirst();
-                if (optionalData.isPresent() && optionalData.get().getExtras().size() > 0) {
-                    for (Experiment expData : experimentSet.getExperimentData()) {
-                        pars = getPars(equationName)[0];
-                        List<Double> dataExtras = expData.getExtras();
-                        double[] errs = new double[pars.length];
-                        double[] extras = new double[3];
-                        extras[0] = expData.getNucleusField();
-                        extras[1] = dataExtras.get(0);
-                        extras[2] = dataExtras.get(1);
-//                        System.out.println("resInfo Res Num = " + resInfo.getSource());
-//                        System.out.println("extras size = " + expData.getExtras().size());
-                        //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[1] = " + extras[1]);
-//                        System.out.println("extras[1] = " + extras[1]);
-//                        System.out.println("extras[2] = " + extras[2]);
-                        GUIPlotEquation plotEquation = new GUIPlotEquation("r1rho", equationName, pars, errs, extras);
-                        //equationCopy.setExtra(extras);
 
-                        equations.add(plotEquation);
-                    }
-                } else {
-                    pars = getPars(equationName)[0];
-                    double[] errs = new double[pars.length];
-                    double[] extras = new double[1];
-                    extras[0] = CoMDPreferences.getRefField() * getNucleus().getFreqRatio(); // fixme
-                    GUIPlotEquation plotEquation = new GUIPlotEquation("r1rho", equationName, pars, errs, extras);
-                    //equationCopy.setExtra(extras);
-                    //System.out.println("expData extras size = " + expData.getExtras().size()+ " extra[0] = " + extras[0]);
-                    equations.add(plotEquation);
+        if (experimentResult != null) {
+            if (experimentSet != null) {
+                var curveSets = experimentResult.getCurveSets(equationName);
+                for (CurveFit curveFit : curveSets) {
+                    PlotEquation plotEquation = curveFit.getEquation().clone();
+                    plotEquation.setPars(getPars(equationName)[0]);
+                    GUIPlotEquation guiPlotEquation = new GUIPlotEquation("r1rho", plotEquation);
+                    equations.add(guiPlotEquation);
                 }
             }
-
         } else {
             pars = getPars(equationName)[0];
             extras1 = getPars(equationName)[1];
@@ -724,7 +708,6 @@ public class R1RhoControls extends EquationControls {
             extras[0] = extras1[0]; //17.0 * 2 * Math.PI;
             extras[1] = extras1[1]; //0.3;
             extras[2] = CoMDPreferences.getRefField() * getNucleus().getFreqRatio(); // fixme
-            //System.out.println("updateEquations got called without experimentSet; extras length = "+extras.length);
             GUIPlotEquation plotEquation = new GUIPlotEquation("r1rho", equationName, pars, errs, extras);
             equations.add(plotEquation);
         }

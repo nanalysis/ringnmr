@@ -83,4 +83,7 @@ public class CESTPeak {
         return widths;
     }
 
+    public String toString() {
+        return pkInd + " " + position + " " + depth + " " + width25 + " " + width50 + " " + width75;
+    }
 }

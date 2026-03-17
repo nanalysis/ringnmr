@@ -22,6 +22,7 @@
  */
 package org.comdnmr.eqnfit;
 
+import org.comdnmr.BasicFitter;
 import org.comdnmr.data.ExperimentSet;
 
 import java.util.*;
@@ -33,7 +34,7 @@ import org.nmrfx.chemistry.relax.ResonanceSource;
 /**
  * @author Bruce Johnson
  */
-public interface EquationFitter {
+public interface EquationFitter extends BasicFitter {
 
     List<String> getEquationNameList();
 
@@ -43,23 +44,12 @@ public interface EquationFitter {
 
     Optional<FitResult> doFit(String eqn, double[] sliderGuesses, CoMDOptions options);
 
-    void setupFit(String eqn);
-
-    List<ParValueInterface> guessPars(String eqn);
-
-    double rms(double[] pars);
-
-    void setData(ExperimentSet experimentSet, ResonanceSource[] dynSources);
-
-    void setData(List<Double>[] allXValues, List<Double> yValues, List<Double> errValues);
 
     int[] getStateCount();
 
     int[][] getStates();
 
     double[] getSimX(int nPts, double xLB, double xUB);
-
-    double[] getSimXDefaults();
 
     default double[][] getFields(List<Double>[] xValues, List<Integer> idNums) {
         Map<Integer, double[]> fieldMap = new HashMap<>();

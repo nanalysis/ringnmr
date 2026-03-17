@@ -95,7 +95,7 @@ public interface CESTEquationType extends EquationType {
                 double tex = xValues[2][0];
                 double[] r1 = CESTEquations.cestR1Guess(xy[yIndex], tex, "cest");
                 double[][] r2 = CESTEquations.cestR2Guess(peaks, xy[yIndex], "cest");
-                guesses[map1[0]] = CESTEquations.cestKexGuess(peaks, "cest"); //112.0; //kex
+                guesses[map1[0]] = CoMDPreferences.getCPMGMaxFreq() / 2.0;
                 guesses[map1[1]] = CESTEquations.cestPbGuess(peaks, xy[yIndex], "cest"); //0.1; //pb
                 guesses[map1[2]] = peaks.get(0).position; //-250 * 2.0 * Math.PI; //deltaB
                 guesses[map1[3]] = peaks.get(peaks.size() - 1).position; //400 * 2.0 * Math.PI; //deltaA
@@ -171,29 +171,6 @@ public interface CESTEquationType extends EquationType {
     @Override
     default double getKex(double[] pars, int id) {
         return pars[0];
-    }
-
-    @Override
-    default int[][] makeMap(int n) {
-        int nP = 8;
-        int[][] map = new int[n][nP];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < nP; j++) {
-                map[i][j] = nP * i + j;
-            }
-        }
-        return map;
-    }
-
-    @Override
-    default int[][] makeMap(int n, int m) {
-        int[][] map = new int[n][m];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < m; j++) {
-                map[i][0] = m * i + j;
-            }
-        }
-        return map;
     }
 
     @Override

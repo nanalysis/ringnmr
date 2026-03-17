@@ -37,7 +37,7 @@ public class RelaxEquationsTest {
                 double target = R1rhoCSATargets[i];
                 Assert.assertEquals(
                     target,
-                    relax.R1rhoCSA(
+                    relax.r1RhoCSA(
                        R1rhoOmegaR, R1rhoOmegaE, R1rhoTau, R1rhoS2
                     ),
                     1.0e-6
@@ -56,7 +56,7 @@ public class RelaxEquationsTest {
                 double target = R1rhoHNTargets[i];
                 Assert.assertEquals(
                     target,
-                    relax.R1rhoIS(
+                    relax.r1RhoIS(
                         R1rhoOmegaR, R1rhoOmegaE, R1rhoTau, R1rhoS2
                     ),
                     1.0e-6
@@ -76,7 +76,7 @@ public class RelaxEquationsTest {
                 double target = R1rhoHHTargets[i];
                 Assert.assertEquals(
                         target,
-                        relax.R1rhoAA(
+                        relax.r1RhoAA(
                                 R1rhoOmegaR, R1rhoOmegaE, R1rhoTau, R1rhoS2
                         ),
                         1.0e-6

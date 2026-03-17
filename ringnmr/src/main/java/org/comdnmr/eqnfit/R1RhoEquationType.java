@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -22,7 +22,10 @@
  */
 package org.comdnmr.eqnfit;
 
+import org.comdnmr.util.CoMDPreferences;
+
 import java.util.List;
+import java.util.Optional;
 
 /**
  *
@@ -45,24 +48,33 @@ public interface R1RhoEquationType extends EquationType {
     @Override
     public default double[] guess(double[][] xValues, double[] yValues, int[][] map, int[] idNums, int nID) {
         int nPars = R1RhoFitFunction.getNPars(map);
+        Optional<double[]> simGuessesOpt = R1RhoFitter.getGuesses();
         double[] guesses = new double[nPars];
         for (int id = 0; id < map.length; id++) {
             int[] map1 = map[id];
             double[][] xy = CESTEquations.getXYValues(xValues, yValues, idNums, id);
             int yIndex = xy.length - 1;
             List<CESTPeak> peaks = CESTEquations.cestPeakGuess(xy, "r1rho");
-            if (peaks.size() > 0) {
+            if (!peaks.isEmpty()) {
                 double tex = xValues[2][0];
                 double[] r1 = CESTEquations.cestR1Guess(xy[yIndex], tex, "r1rho");
                 double[][] r2 = CESTEquations.cestR2Guess(peaks, xy[yIndex], "r1rho");
-                guesses[map1[0]] = CESTEquations.cestKexGuess(peaks, "r1rho"); //112.0; //kex
-                guesses[map1[1]] = CESTEquations.cestPbGuess(peaks, xy[yIndex], "r1rho"); //0.1; //pb
-                guesses[map1[2]] = peaks.get(peaks.size() - 1).position; //-250 * 2.0 * Math.PI; //deltaA
+                if (simGuessesOpt.isPresent()) {
+                    double[] simGuesses = simGuessesOpt.get();
+                    guesses[map1[0]] = simGuesses[0];
+                    guesses[map1[1]] = simGuesses[1];
+                } else {
+                    guesses[map1[0]] = CoMDPreferences.getCPMGMaxFreq() / 2.0;
+                   // guesses[map1[0]] = CESTEquations.cestKexGuess(peaks, "r1rho"); //112.0; //kex
+                    guesses[map1[1]] = CESTEquations.cestPbGuess(peaks, xy[yIndex], "r1rho"); //0.1; //pb
+                }
+                guesses[map1[2]] = 0.0; //-250 * 2.0 * Math.PI; //deltaA
                 guesses[map1[3]] = peaks.get(0).position; //400 * 2.0 * Math.PI; //deltaB
                 guesses[map1[4]] = r1[0]; //2.4; //R1A
                 guesses[map1[5]] = r1[1]; //2.4; //R1B
                 guesses[map1[6]] = r2[0][0]; //20.0; //R2A
                 guesses[map1[7]] = r2[1][0]; //100.0; //R2B
+
             } else {
                 return null;
             }
@@ -80,7 +92,7 @@ public interface R1RhoEquationType extends EquationType {
             List<CESTPeak> peaks = CESTEquations.cestPeakGuess(xy, "r1rho");
             double dAbound = 0;
             double dBbound = 0;
-            double field = xValues[xValues.length -1][0];
+            double field = xValues[xValues.length - 1][0];
             if (peaks.size() > 1) {
                 dAbound = (peaks.get(0).getWidths()[1] / field) / 2.0;
                 dBbound = (peaks.get(1).getWidths()[1] / field) / 2.0;
@@ -94,13 +106,21 @@ public interface R1RhoEquationType extends EquationType {
             double r1B = guesses[map1[5]];
             double[] r1BouB = CESTEquations.r1Boundaries(r1B, tex, 0.1);
 
-            boundaries[0][map1[0]] = 1.0; //kex LB
-            // boundaries[1][map1[0]] = guesses[map1[0]] * 5; //kex UB
-            boundaries[1][map1[0]] = 500.0; //kex UB
-            boundaries[0][map1[1]] = 0.01; //pb LB
-            boundaries[1][map1[1]] = 0.25; //pb UB //guesses[1] * 4;
-            boundaries[0][map1[2]] = guesses[map1[2]] - dAbound; //deltaA LB
-            boundaries[1][map1[2]] = guesses[map1[2]] + dAbound; //deltaA UB
+            Optional<double[]> simGuessesOpt = R1RhoFitter.getGuesses();
+            if (simGuessesOpt.isPresent()) {
+                double[] simGuesses = simGuessesOpt.get();
+                boundaries[0][map1[0]] = simGuesses[0] * 0.75; //kex LB
+                boundaries[1][map1[0]] = simGuesses[0] * 1.25; //kex UB
+                boundaries[0][map1[1]] = simGuesses[1] * 0.5; //pb LB
+                boundaries[1][map1[1]] = simGuesses[1] * 2.0; //pb UB //guesses[1] * 4;
+            } else {
+                boundaries[0][map1[0]] = 1.0;
+                boundaries[1][map1[0]] = CoMDPreferences.getCPMGMaxFreq();
+                boundaries[0][map1[1]] = 0.001; //pb LB
+                boundaries[1][map1[1]] = 0.4; //pb UB //guesses[1] * 4;
+            }
+            boundaries[0][map1[2]] = guesses[map1[2]] - 1.0; //deltaA LB
+            boundaries[1][map1[2]] = guesses[map1[2]] + 1.0; //deltaA UB
             boundaries[0][map1[3]] = guesses[map1[3]] - dBbound; //deltaB LB
             boundaries[1][map1[3]] = guesses[map1[3]] + dBbound; //deltaB UB
             boundaries[0][map1[4]] = r1BouA[0]; //R1A LB
@@ -111,6 +131,7 @@ public interface R1RhoEquationType extends EquationType {
             boundaries[1][map1[6]] = 250.0; //R2A UB
             boundaries[0][map1[7]] = 1.0; //R2B LB
             boundaries[1][map1[7]] = 250.0; //R2B UB
+
         }
         return boundaries;
     }
@@ -128,30 +149,6 @@ public interface R1RhoEquationType extends EquationType {
     @Override
     public default double getKex(double[] pars, int id) {
         return pars[0];
-    }
-
-    @Override
-    public default int[][] makeMap(int n) {
-        int nP = 8;
-        int[][] map = new int[n][nP];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < nP; j++) {
-                map[i][j] = nP * i + j;
-            }
-        }
-        return map;
-    }
-
-    @Override
-    public default int[][] makeMap(int n, int m) {
-        int nP = m;
-        int[][] map = new int[n][nP];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < nP; j++) {
-                map[i][0] = nP * i + j;
-            }
-        }
-        return map;
     }
 
     @Override

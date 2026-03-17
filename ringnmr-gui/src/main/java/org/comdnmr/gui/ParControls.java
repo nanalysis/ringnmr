@@ -63,6 +63,14 @@ public interface ParControls {
             }
             updateLimits(curMin, newMax);
             slider.setValue(value);
+        } else if (value < curMin) {
+            double delta = curMax - curMin;
+            double newMin = curMin - delta;
+            while (newMin > value) {
+                newMin -= delta;
+            }
+            updateLimits(newMin, curMax);
+            slider.setValue(value);
         } else if (value < curMax / 5.0) {
             double newMax = curMax / 5.0;
             updateLimits(curMin, newMax);

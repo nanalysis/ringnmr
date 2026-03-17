@@ -22,12 +22,8 @@
  */
 package org.comdnmr.data;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import org.comdnmr.eqnfit.FitResult;
 import org.comdnmr.eqnfit.CurveFit;
 import org.comdnmr.eqnfit.ParValueInterface;
@@ -166,7 +162,7 @@ public class ExperimentResult {
     }
 
     public Collection<CurveFit> getCurveSets(String equationName) {
-        return curveFits.get(equationName).values();
+        return curveFits.isEmpty() ? Collections.emptyList() : curveFits.get(equationName).values();
     }
 
     public void addCurveFit(CurveFit curveFit, boolean best) {

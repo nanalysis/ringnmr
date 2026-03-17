@@ -30,6 +30,7 @@ import java.util.List;
  * @author simonhulse
  */
 public class MFModelIso2sf extends MFModelIso2f {
+    protected static double tauPrime = 30.0e-3;
     double tauS;
     double complexityS = 0.0;
     double complexityTauF = 0.0;
@@ -58,11 +59,11 @@ public class MFModelIso2sf extends MFModelIso2f {
 
     @Override
     public double[] calc(double[] omegas) {
-        double tauMx = tauM * 1.0e-9;
-        double tauFx = tauF * 1.0e-9;
-        double tauSx = tauS * 1.0e-9;
         double[] J = new double[omegas.length];
         int j = 0;
+        double tauMx = 1.0e-9 * tauM;
+        double tauFx = 1.0e-9 * tauF;
+        double tauSx = 1.0e-9 * tauS;
         double ss2 = this.ss2;
         double sf2 = this.sf2 / sN;
         double s2 = ss2 * sf2;
