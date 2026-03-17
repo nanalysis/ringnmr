@@ -9,7 +9,7 @@ import org.apache.commons.math3.geometry.euclidean.threed.RotationOrder;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.optim.PointValuePair;
 import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.CMAESOptimizer;
-import org.comdnmr.data.CMAESFitResult;
+
 import org.comdnmr.data.Fitter;
 import static org.comdnmr.modelfree.RelaxFit.DiffusionType.ANISOTROPIC;
 import static org.comdnmr.modelfree.RelaxFit.DiffusionType.OBLATE;
@@ -726,16 +726,6 @@ public class RelaxFit {
         Fitter fitter = Fitter.getArrayFitter(this::value);
         try {
             return Optional.of(fitter.fit(start, lower, upper, 10.0));
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return Optional.empty();
-        }
-    }
-
-    public Optional<CMAESFitResult> simonsFitResidueToModel(double[] start, double[] lower, double[] upper) {
-        Fitter fitter = Fitter.getArrayFitter(this::value);
-        try {
-            return Optional.of(fitter.simonsFit(start, lower, upper, 10.0));
         } catch (Exception ex) {
             ex.printStackTrace();
             return Optional.empty();
