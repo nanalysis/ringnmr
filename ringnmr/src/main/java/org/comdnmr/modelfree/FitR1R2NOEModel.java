@@ -5,6 +5,7 @@
  */
 package org.comdnmr.modelfree;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.apache.commons.math3.optim.PointValuePair;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
@@ -21,6 +22,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * Class for fitting the model-free formalism to spectral density data
+ * generated using reduced spectral density mapping.
+ *
  * @author brucejohnson
  * @author simonhulse
  */
@@ -317,6 +321,16 @@ public class FitR1R2NOEModel extends FitModel {
         return result;
     }
 
+    /**
+     * Perform model-free fitting using <a href="https://mr.copernicus.org/articles/2/251/2021/">bootstrap aggregation</a>.
+     *
+     * @param orderParSetMap a map containing order parameter sets indexed by string keys.
+     * @param resData instance of {@link MolDataValues} containing experimental data for fitting.
+     * @param key a string key representing the identifier for spectral density data.
+     * @param modelNames a list of model names to be tested during the fitting. Allowed elements are `1`, `1f`, `1s`, `2s`, `2sf`.
+     * @param random an instance of {@link Random} for generating random numbers during sampling.
+     * @return an {@link Optional<ModelFitResult>} containing the result of the model fitting, or empty if cancelled or no valid result is found.
+     */
     public Optional<ModelFitResult> testModelsWithBootstrapAggregation(
         Map<String, OrderParSet> orderParSetMap,
         MolDataValues resData,
@@ -343,10 +357,8 @@ public class FitR1R2NOEModel extends FitModel {
                 throw new AssertionError("Unreachable");
         }
 
-        int nSpecdens = sampler.getNJ();
-        double[][] parameters = new double[getNPars()][nReplicates];
         Score[] scores = new Score[nReplicates];
-
+        MFModelIso[] models = new MFModelIso[nReplicates];
         // Using the same index variables as Crawley and Palmer
         // i: boostrap repliacte
         // j: spectral density datapoint
@@ -361,28 +373,25 @@ public class FitR1R2NOEModel extends FitModel {
                 molData.weight(weights);
             }
 
-            double[] replicateParameters = new double[getNPars()];
-            Optional<Score> score = Optional.empty();
+            // Fit each model and retain the one which has the lowest AICc
+            Optional<Pair<MFModelIso, Score>> modelScore = Optional.empty();
             for (var modelName : modelNames) {
-                MFModelIso model = MFModelIso.buildModel(
+                MFModelIso testModel = MFModelIso.buildModel(
                         modelName, localFitTau, tau, localTauFraction, fitExchange);
-                resData.setTestModel(model);
-                Score testScore = tryModel(molDataRes, model, localTauFraction, localFitTau, random);
-                if (score.isEmpty() || testScore.aicc().get() < score.get().aicc().get()) {
-                    replicateParameters = model.getStandardPars(testScore.getPars());
-                    score = Optional.of(testScore);
+                resData.setTestModel(testModel);
+                Score testScore = tryModel(molDataRes, testModel, localTauFraction, localFitTau, random);
+                if (modelScore.isEmpty() || testScore.aicc().get() < modelScore.get().getValue().aicc().get()) {
+                    modelScore = Optional.of(Pair.of(testModel, testScore));
                 }
             }
-            if (score.isEmpty()) return Optional.empty();
-            scores[i] = score.get();
+
+            if (modelScore.isEmpty()) return Optional.empty();
+            models[i] = modelScore.get().getKey();
+            scores[i] = modelScore.get().getValue();
             scores[i].setWeights(weights);
-            for (int k = 0; k < getNPars(); k++) {
-                parameters[k][i] = replicateParameters[k];
-            }
         }
 
-        MFModelIso model2sf = MFModelIso.buildModel(
-            "2sf", localFitTau, tau, localTauFraction, fitExchange);
+        MFModelIso model2sf = MFModelIso.buildModel("2sf", localFitTau, tau, localTauFraction, fitExchange);
 
         ResonanceSource resSource = new ResonanceSource(resData.atom);
         double rssSum = 0.0;
@@ -398,23 +407,64 @@ public class FitR1R2NOEModel extends FitModel {
             scores[0].nValues,
             getNPars(),
             model2sf.getName());
+        orderPar = orderPar.set("model", (double) model2sf.getNumber(), null);
 
+        computeBaggingStats(orderPar, models, scores);
+
+        Atom atom = resData.atom;
+        atom.addOrderPar(orderParSet, orderPar);
+        double[][] jValues = resData.getJValues();
+        SpectralDensity spectralDensity = new SpectralDensity(key, jValues);
+        atom.addSpectralDensity(key, spectralDensity);
+        resData.setTestModel(model2sf);
+
+        ModelFitResult result = new ModelFitResult(orderPar, makeBaggingParameters(models, scores), null, scores);
+        return Optional.of(result);
+    }
+
+    private double[][] makeBaggingParameters(MFModelIso[] models, Score[] scores) {
+        int nReplicates = scores.length;
+        double[][] parameters = new double[getNPars()][nReplicates];
+        for (int i = 0; i < nReplicates; i++) {
+            double[] replicateParameters = models[i].getStandardPars(scores[i].getPars());
+            for (int k = 0; k < getNPars(); k++) {
+                parameters[k][i] = replicateParameters[k];
+            }
+        }
+        return parameters;
+    }
+
+    private double[] makeBaggingWeightMeans(Score[] scores) {
+        int nReplicates = scores.length;
+        int nSpecdens = scores[0].getWeights().length;
         double[] weightMeans = new double[nSpecdens];
         for (int i = 0; i < nReplicates; i++) {
             double[] replicateWeights = scores[i].getWeights();
             for (int j = 0; j < nSpecdens; j++) {
-                weightMeans[j] += replicateWeights[j] / nReplicates;
+                weightMeans[j] += replicateWeights[j];
             }
         }
+        for (int j = 0; j < nSpecdens; j++) {
+            weightMeans[j] /= nReplicates;
+        }
+        return weightMeans;
+    }
 
+    private void computeBaggingStats(OrderPar orderPar, MFModelIso[] models, Score[] scores) {
+        double[] weightMeans = makeBaggingWeightMeans(scores);
+        double[][] parameters = makeBaggingParameters(models, scores);
+
+        int nSpecdens = scores[0].getWeights().length;
+        int nReplicates = scores.length;
         for (int k = 0; k < getNPars(); k++) {
             String name = PARAMETER_NAMES[k];
 
             // Get parameter means
             double mean = 0.0;
             for (int i = 0; i < nReplicates; i++) {
-                mean += parameters[k][i] / nReplicates;
+                mean += parameters[k][i];
             }
+            mean /= nReplicates;
 
             // Get smoothed parameter errors
             // Eqs 17-19 in Crawley and Palmer's paper
@@ -427,25 +477,14 @@ public class FitR1R2NOEModel extends FitModel {
                     double weight = scores[i].getWeights()[j];
                     double weightMean = weightMeans[j];
                     double parameter = parameters[k][i];
-                    covjk += (weight - weightMean) * (parameter - mean) / nReplicates;
+                    covjk += (weight - weightMean) * (parameter - mean);
                 }
+                covjk /= nReplicates;
                 variance += Math.pow(covjk, 2.0);
             }
             double error = Math.sqrt(variance);
-
             orderPar = orderPar.set(name, mean, error);
         }
-        orderPar = orderPar.set("model", (double) model2sf.getNumber(), null);
-
-        Atom atom = resData.atom;
-        atom.addOrderPar(orderParSet, orderPar);
-        double[][] jValues = resData.getJValues();
-        SpectralDensity spectralDensity = new SpectralDensity(key, jValues);
-        atom.addSpectralDensity(key, spectralDensity);
-        resData.setTestModel(model2sf);
-
-        ModelFitResult result = new ModelFitResult(orderPar, parameters, null, scores);
-        return Optional.of(result);
     }
 
     public double scoreBootstrap(Map<String, MolDataValues> molDataRes, MFModelIso model, double[] pars,
