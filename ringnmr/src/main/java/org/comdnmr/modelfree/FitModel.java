@@ -106,21 +106,8 @@ public abstract class FitModel {
         var score = relaxFit.score(pars, true);
         return score.rss;
     }
-    int bestScore(List<Score> scores) {
-        double lowestAIC = Double.MAX_VALUE;
-        int iBest = -1;
-        int i = 0;
-        for (var score : scores) {
-            if (score.aic() < lowestAIC) {
-                lowestAIC = score.aic();
-                iBest = i;
-            }
-            i++;
-        }
-        return iBest;
-    }
 
-    int simonsBestScore(List<SimonsScore> scores) {
+    int bestScore(List<Score> scores) {
         double lowestAIC = Double.MAX_VALUE;
         int iBest = -1;
         int i = 0;

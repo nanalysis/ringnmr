@@ -8,8 +8,6 @@ package org.comdnmr.modelfree;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.apache.commons.math3.optim.PointValuePair;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.apache.commons.rng.sampling.distribution.DirichletSampler;
-import org.comdnmr.data.CMAESFitResult;
 import org.comdnmr.modelfree.models.MFModelIso;
 import org.comdnmr.modelfree.models.MFModelIso2sf;
 import org.nmrfx.chemistry.*;
@@ -21,14 +19,17 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * @author brucejohnson
+ * @author simonhulse
  */
 public class FitR1R2NOEModel extends FitModel {
     Map<String, MolDataValues> molData = null;
+
+    private static final String[] PARAMETER_NAMES = {"Tau_e", "Sf2", "Tau_f", "Ss2", "Tau_s"};
+
+    public int getNPars() { return PARAMETER_NAMES.length; }
 
     public void setData(Map<String, MolDataValues> molData) {
         this.molData = molData;
@@ -150,31 +151,6 @@ public class FitR1R2NOEModel extends FitModel {
         }
     }
 
-    public  Map<String, SimonsModelFitResult> simonsTestIsoModel() {
-        if ((molData == null) || (molData.isEmpty())) {
-            molData = getData(false);
-        }
-        if (searchKey != null) {
-            if (molData.containsKey(searchKey)) {
-                var keepVal = molData.get(searchKey);
-                molData.clear();
-                molData.put(searchKey, keepVal);
-            }
-        }
-
-        if (!molData.isEmpty()) {
-            if (tau == null) {
-                tau = estimateTau(molData).get("tau");
-            }
-
-            Map<String, SimonsModelFitResult> results = simonsTestModels(molData, modelNames);
-            return results;
-        } else {
-            throw new IllegalStateException("No relaxation data to analyze.  Need T1,T2 and NOE");
-        }
-    }
-
-
     public Map<String, Double> estimateTau() {
         Map<String, MolDataValues> molData = getData(false);
         return estimateTau(molData);
@@ -208,20 +184,19 @@ public class FitR1R2NOEModel extends FitModel {
 
     public  Map<String, ModelFitResult> testModels(Map<String, MolDataValues> molData, List<String> modelNames) {
         Random random = new Random();
-        if (tau == null) {
-            tau = estimateTau(molData).get("tau");
-        }
+        if (tau == null) tau = estimateTau(molData).get("tau");
         AtomicInteger counts = new AtomicInteger();
         int n = molData.entrySet().size();
         Map<String, ModelFitResult> results = new ConcurrentHashMap<>();
         MoleculeBase moleculeBase = MoleculeFactory.getActive();
         Map<String, OrderParSet> orderParSetMap = moleculeBase.orderParSetMap();
+
         for (var modelName : modelNames) {
             OrderParSet orderParSet = orderParSetMap.computeIfAbsent("order_parameter_list_" + modelName, k -> new OrderParSet(k));
         }
         OrderParSet orderParSet = orderParSetMap.computeIfAbsent("order_parameter_list_1", k -> new OrderParSet(k));
-
         molData.entrySet().stream().sorted(Comparator.comparing(Map.Entry::getKey)).parallel().forEach(e -> {
+
             updateProgress((double) counts.get() / n);
             if (cancelled.get()) {
                 return;
@@ -229,43 +204,19 @@ public class FitR1R2NOEModel extends FitModel {
             MolDataValues resData = e.getValue();
             String key = e.getKey();
             if (!resData.getData().isEmpty()) {
-                if (bootstrapMode != BootstrapMode.PARAMETRIC) {
-                    Optional<ModelFitResult> result = testModelsWithBootstrapAggregation(orderParSetMap, resData, key, modelNames, random);
-                    result.ifPresent(o -> results.put(key, o));
-                } else {
-                    Optional<ModelFitResult> result = testModels(orderParSetMap, resData, key, modelNames, random);
-                    result.ifPresent(o -> results.put(key, o));
+                Optional<ModelFitResult> result;
+                switch (bootstrapMode) {
+                    case PARAMETRIC:
+                        result = testModels(
+                            orderParSetMap, resData, key, modelNames, random);
+                        break;
+                    case AGGREGATE:
+                    case BAYESIAN:
+                        result = testModelsWithBootstrapAggregation(
+                            orderParSetMap, resData, key, modelNames, random);
+                        break;
+                    default: throw new AssertionError("Unreachable");
                 }
-            }
-            int iCount = counts.incrementAndGet();
-        });
-        return results;
-    }
-
-    public  Map<String, SimonsModelFitResult> simonsTestModels(Map<String, MolDataValues> molData, List<String> modelNames) {
-        Random random = new Random();
-        if (tau == null) {
-            tau = estimateTau(molData).get("tau");
-        }
-        AtomicInteger counts = new AtomicInteger();
-        int n = molData.entrySet().size();
-        Map<String, SimonsModelFitResult> results = new ConcurrentHashMap<>();
-        MoleculeBase moleculeBase = MoleculeFactory.getActive();
-        Map<String, OrderParSet> orderParSetMap = moleculeBase.orderParSetMap();
-        for (var modelName : modelNames) {
-            OrderParSet orderParSet = orderParSetMap.computeIfAbsent("order_parameter_list_" + modelName, k -> new OrderParSet(k));
-        }
-        OrderParSet orderParSet = orderParSetMap.computeIfAbsent("order_parameter_list_1", k -> new OrderParSet(k));
-
-        molData.entrySet().stream().sorted(Comparator.comparing(Map.Entry::getKey)).parallel().forEach(e -> {
-            updateProgress((double) counts.get() / n);
-            if (cancelled.get()) {
-                return;
-            }
-            MolDataValues resData = e.getValue();
-            String key = e.getKey();
-            if (!resData.getData().isEmpty()) {
-                Optional<SimonsModelFitResult> result = simonsTestModelsWithBootstrapAggregation(orderParSetMap, resData, key, modelNames, random);
                 result.ifPresent(o -> results.put(key, o));
             }
             int iCount = counts.incrementAndGet();
@@ -307,27 +258,28 @@ public class FitR1R2NOEModel extends FitModel {
 
     }
 
-    public Optional<ModelFitResult> testModels(Map<String, OrderParSet> orderParSetMap, MolDataValues resData, String key, List<String> modelNames, Random random) {
+    public Optional<ModelFitResult> testModels(
+        Map<String, OrderParSet> orderParSetMap,
+        MolDataValues resData,
+        String key,
+        List<String> modelNames,
+        Random random
+    ) {
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
         molDataRes.put(key, resData);
+
+        boolean localFitTau = fitTau(molDataRes);
+        double localTauFraction = (localFitTau) ? tauFraction : 0.0;
 
         MFModelIso bestModel = null;
         Score bestScore = null;
         double lowestAIC = Double.MAX_VALUE;
-        boolean localFitTau;
-        double localTauFraction;
-        if (fitTau(molDataRes)) {
-            localFitTau = true;
-            localTauFraction = tauFraction;
-        } else {
-            localTauFraction = 0.0;
-            localFitTau = false;
-        }
+
         for (var modelName : modelNames) {
-            MFModelIso model = MFModelIso.buildModel(modelName,
-                    localFitTau, tau, localTauFraction, fitExchange);
+            MFModelIso model = MFModelIso.buildModel(
+                modelName, localFitTau, tau, localTauFraction, fitExchange);
             resData.setTestModel(model);
-            SimonsScore score = simonsTryModel(molDataRes, model, localTauFraction, localFitTau, random, null);
+            Score score = tryModel(molDataRes, model, localTauFraction, localFitTau, random);
             OrderParSet orderParSet = orderParSetMap.get("order_parameter_list_"+ modelName);
             double[][] repData = null;
             if (nReplicates > 2) {
@@ -363,349 +315,136 @@ public class FitR1R2NOEModel extends FitModel {
         return result;
     }
 
-    public Optional<ModelFitResult> testModelsWithBootstrapAggregation(Map<String, OrderParSet> orderParSetMap, MolDataValues resData, String key, List<String> modelNames, Random random) {
-        Optional<ModelFitResult> result = Optional.empty();
+    public Optional<ModelFitResult> testModelsWithBootstrapAggregation(
+        Map<String, OrderParSet> orderParSetMap,
+        MolDataValues resData,
+        String key,
+        List<String> modelNames,
+        Random random
+    ) {
         Map<String, MolDataValues> molDataRes = new TreeMap<>();
         molDataRes.put(key, resData);
 
-        boolean localFitTau;
-        double localTauFraction;
-        if (fitTau(molDataRes)) {
-            localFitTau = true;
-            localTauFraction = tauFraction;
-        } else {
-            localTauFraction = 0.0;
-            localFitTau = false;
-        }
-        int maxPars = 5;
+        boolean localFitTau = fitTau(molDataRes);
+        double localTauFraction = (localFitTau) ? tauFraction : 0.0;
         int nExp = resData.dataValues.size();
-        int nJ = nExp * 3;
-        BootstrapAggregator bootstrapAggregator = new BootstrapAggregator(nExp);
 
-        List<Integer> iRepList = null;
-        DirichletSampler dirichlet = null;
-        if (bootstrapMode == BootstrapMode.BAYESIAN) {
-            // New sampler with same seed each time for reproducibility
-            dirichlet = DirichletSampler.symmetric(getRandomSource(true), nJ, 1.0);
-        } else {
-            nReplicates = Math.min(nReplicates, bootstrapAggregator.getN());
-            iRepList = IntStream.range(0, bootstrapAggregator.getN()).boxed().collect(Collectors.toList());
-            Collections.shuffle(iRepList);
+        BootstrapWeightSampler sampler;
+        switch (bootstrapMode) {
+            case AGGREGATE:
+                sampler = new NonparametricSampler(nExp);
+                break;
+            case BAYESIAN:
+                sampler = new BayesianSampler(nExp, getRandomSource(true));
+                break;
+            default:
+                throw new AssertionError("Unreachable");
         }
-        double[][] replicateData = new double[maxPars][nReplicates];
-        MFModelIso[] bestModels = new MFModelIso[nReplicates];
-        Score[] bestScores = new Score[nReplicates];
-        double[] weights = null;
 
-        int[] totalCounts = new int[nJ];
-        for (int iRep = 0; iRep < nReplicates; iRep++) {
+        int nSpecdens = sampler.getNJ();
+        double[][] parameters = new double[getNPars()][nReplicates];
+        Score[] scores = new Score[nReplicates];
+
+        // Using the same index variables as Crawley and Palmer
+        // i: boostrap repliacte
+        // j: spectral density datapoint
+        // k: parameter index
+        for (int i = 0; i < nReplicates; i++) {
             if (cancelled.get()) {
-                return result;
+                return Optional.empty();
             }
-            if (bootstrapMode == BootstrapMode.BAYESIAN) {
-                weights = dirichlet.sample();
-                scaleWeights(weights);
-                for (var molData : molDataRes.values()) {
-                    molData.weight(weights);
-                    molData.clearBootStrapSet();
-                }
-            } else {
-                int bootStrapSet = iRepList.get(iRep);
-                for (var molData : molDataRes.values()) {
-                    molData.setBootstrapAggregator(bootstrapAggregator);
-                    molData.setBootstrapSet(bootStrapSet);
-                    molData.weight(weights);
-                }
-                BootstrapAggregator.incrCounts(totalCounts, bootstrapAggregator.getY(bootStrapSet));
+
+            double[] weights = sampler.sample();
+            for (var molData : molDataRes.values()) {
+                molData.weight(weights);
             }
-            List<Score> scores = new ArrayList<>();
-            List<MFModelIso> models = new ArrayList<>();
+
+            double[] replicateParameters = new double[getNPars()];
+            Optional<Score> score = Optional.empty();
             for (var modelName : modelNames) {
-                MFModelIso model = MFModelIso.buildModel(modelName,
-                        localFitTau, tau, localTauFraction, fitExchange);
+                MFModelIso model = MFModelIso.buildModel(
+                        modelName, localFitTau, tau, localTauFraction, fitExchange);
                 resData.setTestModel(model);
-                Score score = tryModel(molDataRes, model, localTauFraction, localFitTau, random);
-                score.setWeights(weights);
-                scores.add(score);
-                models.add(model);
-            }
-            int iBest = bestScore(scores);
-            if (iBest != -1) {
-                Score bestScore = scores.get(iBest);
-                MFModelIso bestModel = models.get(iBest);
-                double[] repPars = bestScore.getPars();
-                bestModels[iRep] = bestModel;
-                bestScores[iRep] = bestScore;
-                double[] pars = bestModel.getStandardPars(repPars);
-
-                for (int iPar = 0; iPar < pars.length; iPar++) {
-                    replicateData[iPar][iRep] = pars[iPar];
+                Score testScore = tryModel(molDataRes, model, localTauFraction, localFitTau, random);
+                if (score.isEmpty() || testScore.aicc() < score.get().aicc()) {
+                    replicateParameters = model.getStandardPars(testScore.getPars());
+                    score = Optional.of(testScore);
                 }
             }
+            if (score.isEmpty()) return Optional.empty();
+            scores[i] = score.get();
+            scores[i].setWeights(weights);
+            for (int k = 0; k < getNPars(); k++) {
+                parameters[k][i] = replicateParameters[k];
+            }
         }
-        for (int i=0;i< totalCounts.length;i++) {
-            totalCounts[i] /= nReplicates;
-        }
-        for (var molData : molDataRes.values()) {
-            molData.clearBootStrapSet();;
-        }
-        MFModelIso bestModel = MFModelIso.buildModel("2sf",
-                localFitTau, tau, localTauFraction, fitExchange);
 
-        if (bestModels[0] != null) {
-            String[] parNames = {"Tau_e", "Sf2", "Tau_f", "Ss2", "Tau_s"};
+        MFModelIso model2sf = MFModelIso.buildModel(
+            "2sf", localFitTau, tau, localTauFraction, fitExchange);
 
-            ResonanceSource resSource = new ResonanceSource(resData.atom);
-            double rssSum = 0.0;
+        ResonanceSource resSource = new ResonanceSource(resData.atom);
+        double rssSum = 0.0;
+        for (int i = 0; i < nReplicates; i++) {
+            rssSum += scores[i].rss;
+        }
+        double rss = rssSum /= nReplicates;
+        OrderParSet orderParSet = orderParSetMap.get("order_parameter_list_1");
+        OrderPar orderPar = new OrderPar(
+            orderParSet,
+            resSource,
+            rss,
+            scores[0].nValues,
+            getNPars(),
+            model2sf.getName());
+
+        double[] weightMeans = new double[nSpecdens];
+        for (int i = 0; i < nReplicates; i++) {
+            double[] replicateWeights = scores[i].getWeights();
+            for (int j = 0; j < nSpecdens; j++) {
+                weightMeans[j] += replicateWeights[j] / nReplicates;
+            }
+        }
+
+        for (int k = 0; k < getNPars(); k++) {
+            String name = PARAMETER_NAMES[k];
+
+            // Get parameter means
+            double mean = 0.0;
             for (int i = 0; i < nReplicates; i++) {
-                rssSum += bestScores[i].rss;
-            }
-            double rss = rssSum /= nReplicates;
-            OrderParSet orderParSet = orderParSetMap.get("order_parameter_list_1");
-            OrderPar orderPar = new OrderPar(orderParSet, resSource, rss, bestScores[0].nValues, parNames.length, bestModel.getName());
-            double[][] cov = new double[nJ][parNames.length];
-            double[] bestPars = new double[parNames.length];
-            for (int iPar = 0; iPar < parNames.length; iPar++) {
-                String parName = parNames[iPar];
-                Double parError = null;
-                DescriptiveStatistics sumStat = new DescriptiveStatistics(replicateData[iPar]);
-                double parValue = useMedian ? sumStat.getPercentile(50.0) : sumStat.getMean();
-                bestPars[iPar] = parValue;
-                if (bootstrapMode == BootstrapMode.BAYESIAN) {
-                    parError = sumStat.getStandardDeviation();
-                } else {
-                    for (int j = 0; j < nJ; j++) {
-                        for (int i = 0; i < nReplicates; i++) {
-                            int[] y = bootstrapAggregator.getY(iRepList.get(i));
-                            cov[j][iPar] += (y[j] - totalCounts[j]) * (replicateData[iPar][i] - parValue);
-                        }
-                        cov[j][iPar] /= nReplicates;
-                    }
-
-                    double sum = 0.0;
-                    for (int j = 0; j < nJ; j++) {
-                        sum += cov[j][iPar] * cov[j][iPar];
-                    }
-                    parError = Math.sqrt(sum / nJ);
-                }
-                orderPar = orderPar.set(parName, parValue, parError);
-            }
-            orderPar = orderPar.set("model", (double) bestModel.getNumber(), null);
-            Atom atom = resData.atom;
-            atom.addOrderPar(orderParSet, orderPar);
-            double[][] jValues = resData.getJValues();
-            SpectralDensity spectralDensity = new SpectralDensity(key, jValues);
-            atom.addSpectralDensity(key, spectralDensity);
-            resData.setTestModel(bestModel);
-            Double validationScore = null;
-            if (calcValidation) {
-                if (bootstrapMode == BootstrapMode.BAYESIAN) {
-                    validationScore = scoreBayesian(molDataRes, bestModel, bestPars, dirichlet,
-                            nReplicates, nReplicates, localFitTau, localTauFraction);
-                } else {
-                    if ((nReplicates + nReplicates) <= iRepList.size()) {
-                        validationScore = scoreBootstrap(molDataRes, bestModel, bestPars, bootstrapAggregator, iRepList,
-                                nReplicates, nReplicates, localFitTau, localTauFraction);
-                    }
-                }
-            }
-            ModelFitResult modelFitResult = new ModelFitResult(
-                orderPar,
-                replicateData,
-                validationScore,
-                bestScores);
-            result = Optional.of(modelFitResult);
-        }
-        return result;
-    }
-
-    public Optional<SimonsModelFitResult> simonsTestModelsWithBootstrapAggregation(Map<String, OrderParSet> orderParSetMap, MolDataValues resData, String key, List<String> modelNames, Random random) {
-        Optional<SimonsModelFitResult> result = Optional.empty();
-        Map<String, MolDataValues> molDataRes = new TreeMap<>();
-        molDataRes.put(key, resData);
-
-        boolean localFitTau;
-        double localTauFraction;
-        if (fitTau(molDataRes)) {
-            localFitTau = true;
-            localTauFraction = tauFraction;
-        } else {
-            localTauFraction = 0.0;
-            localFitTau = false;
-        }
-        int maxPars = 5;
-        int nExp = resData.dataValues.size();
-        int nJ = nExp * 3;
-        BootstrapAggregator bootstrapAggregator = new BootstrapAggregator(nExp);
-
-        List<Integer> iRepList = null;
-        DirichletSampler dirichlet = null;
-        if (bootstrapMode == BootstrapMode.BAYESIAN) {
-            // New sampler with same seed each time for reproducibility
-            dirichlet = DirichletSampler.symmetric(getRandomSource(true), nJ, 4.0);
-        } else {
-            nReplicates = Math.min(nReplicates, bootstrapAggregator.getN());
-            iRepList = IntStream.range(0, bootstrapAggregator.getN()).boxed().collect(Collectors.toList());
-            Collections.shuffle(iRepList);
-        }
-        double[][] replicateData = new double[maxPars][nReplicates];
-        MFModelIso[] bestModels = new MFModelIso[nReplicates];
-        SimonsScore[] bestScores = new SimonsScore[nReplicates];
-        double[] weights = null;
-
-        int[] totalCounts = new int[nJ];
-
-        Map<String, double[]> initialGuesses = new HashMap<>();
-        for (int iRep = -1; iRep < nReplicates; iRep++) {
-            long timeStart = System.currentTimeMillis();
-            if (cancelled.get()) {
-                return result;
+                mean += parameters[k][i] / nReplicates;
             }
 
-            if (iRep != -1) {
-                if (bootstrapMode == BootstrapMode.BAYESIAN) {
-                    weights = dirichlet.sample();
-                    scaleWeights(weights);
-                    for (var molData : molDataRes.values()) {
-                        molData.weight(weights);
-                        molData.clearBootStrapSet();
-                    }
-                } else {
-                    int bootStrapSet = iRepList.get(iRep);
-                    for (var molData : molDataRes.values()) {
-                            molData.setBootstrapAggregator(bootstrapAggregator);
-                            molData.setBootstrapSet(bootStrapSet);
-                            // Prior to my changes, `weights` was always `null` at this point
-                            molData.weight(null);
-                        }
-                    weights = Arrays.stream(bootstrapAggregator.getY(bootStrapSet))
-                        .mapToDouble(val -> (double) val)
-                        .toArray();
-                    BootstrapAggregator.incrCounts(totalCounts, bootstrapAggregator.getY(bootStrapSet));
-                }
-            }
-
-            List<SimonsScore> scores = new ArrayList<>();
-            List<MFModelIso> models = new ArrayList<>();
-            for (var modelName : modelNames) {
-                MFModelIso model = MFModelIso.buildModel(modelName,
-                        localFitTau, tau, localTauFraction, fitExchange);
-                resData.setTestModel(model);
-                SimonsScore score;
-                if (iRep == -1) {
-                    score = simonsTryModel(molDataRes, model, localTauFraction, localFitTau, random, null);
-                    initialGuesses.put(model.getName(), score.pars);
-                }
-                else {
-                    score = simonsTryModel(molDataRes, model, localTauFraction, localFitTau, random, initialGuesses.get(model.getName()));
-                    score.setWeights(weights);
-                    scores.add(score);
-                    models.add(model);
-                }
-            }
-
-            int iBest = simonsBestScore(scores);
-            long timeEnd = System.currentTimeMillis();
-            if (iBest != -1) {
-                SimonsScore bestScore = scores.get(iBest);
-                bestScore.setRuntime(timeEnd - timeStart);
-                MFModelIso bestModel = models.get(iBest);
-                double[] repPars = bestScore.getPars();
-                bestModels[iRep] = bestModel;
-                bestScores[iRep] = bestScore;
-                double[] pars = bestModel.getStandardPars(repPars);
-
-                for (int iPar = 0; iPar < pars.length; iPar++) {
-                    replicateData[iPar][iRep] = pars[iPar];
-                }
-            }
-        }
-        for (int i=0;i< totalCounts.length;i++) {
-            totalCounts[i] /= nReplicates;
-        }
-        for (var molData : molDataRes.values()) {
-            molData.clearBootStrapSet();;
-        }
-        MFModelIso bestModel = MFModelIso.buildModel("2sf",
-                localFitTau, tau, localTauFraction, fitExchange);
-
-        if (bestModels[0] != null) {
-            String[] parNames = {"Tau_e", "Sf2", "Tau_f", "Ss2", "Tau_s"};
-
-            ResonanceSource resSource = new ResonanceSource(resData.atom);
-            double rssSum = 0.0;
-            for (int i = 0; i < nReplicates; i++) {
-                rssSum += bestScores[i].rss;
-            }
-            double rss = rssSum /= nReplicates;
-            OrderParSet orderParSet = orderParSetMap.get("order_parameter_list_1");
-            OrderPar orderPar = new OrderPar(orderParSet, resSource, rss, bestScores[0].nValues, parNames.length, bestModel.getName());
-            double[][] cov = new double[nJ][parNames.length];
-            double[] bestPars = new double[parNames.length];
-            double[] smoothErrors = new double[parNames.length];
-            double[] unsmoothErrors = new double[parNames.length];
-            for (int iPar = 0; iPar < parNames.length; iPar++) {
-                String parName = parNames[iPar];
-                Double parError = null;
-                DescriptiveStatistics sumStat = new DescriptiveStatistics(replicateData[iPar]);
-                double parValue = useMedian ? sumStat.getPercentile(50.0) : sumStat.getMean();
-                bestPars[iPar] = parValue;
-
+            // Get smoothed parameter errors
+            // Eqs 17-19 in Crawley and Palmer's paper
+            // N.B. there is an erroneous 1/N in eq 19 which has not be
+            // included
+            double variance = 0.0;
+            for (int j = 0; j < nSpecdens; j++) {
+                double covjk = 0.0;
                 for (int i = 0; i < nReplicates; i++) {
-                    unsmoothErrors[iPar] += Math.pow((replicateData[iPar][i] - parValue), 2.0);
+                    double weight = scores[i].getWeights()[j];
+                    double weightMean = weightMeans[j];
+                    double parameter = parameters[k][i];
+                    covjk += (weight - weightMean) * (parameter - mean) / nReplicates;
                 }
-                unsmoothErrors[iPar] /= nReplicates - 1;
-                unsmoothErrors[iPar] = Math.pow(unsmoothErrors[iPar], 0.5);
-
-                if (bootstrapMode == BootstrapMode.BAYESIAN) {
-                    parError = sumStat.getStandardDeviation();
-                } else {
-                    for (int j = 0; j < nJ; j++) {
-                        for (int i = 0; i < nReplicates; i++) {
-                            int[] y = bootstrapAggregator.getY(iRepList.get(i));
-                            cov[j][iPar] += (y[j] - totalCounts[j]) * (replicateData[iPar][i] - parValue);
-                        }
-                        cov[j][iPar] /= nReplicates;
-                    }
-
-                    double sum = 0.0;
-                    for (int j = 0; j < nJ; j++) {
-                        sum += cov[j][iPar] * cov[j][iPar];
-                    }
-                    parError = Math.sqrt(sum);
-                    smoothErrors[iPar] = parError;
-                }
-                orderPar = orderPar.set(parName, parValue, parError);
+                variance += Math.pow(covjk, 2.0);
             }
-            orderPar = orderPar.set("model", (double) bestModel.getNumber(), null);
-            Atom atom = resData.atom;
-            atom.addOrderPar(orderParSet, orderPar);
-            double[][] jValues = resData.getJValues();
-            SpectralDensity spectralDensity = new SpectralDensity(key, jValues);
-            atom.addSpectralDensity(key, spectralDensity);
-            resData.setTestModel(bestModel);
-            Double validationScore = null;
-            if (calcValidation) {
-                if (bootstrapMode == BootstrapMode.BAYESIAN) {
-                    validationScore = scoreBayesian(molDataRes, bestModel, bestPars, dirichlet,
-                            nReplicates, nReplicates, localFitTau, localTauFraction);
-                } else {
-                    if ((nReplicates + nReplicates) <= iRepList.size()) {
-                        validationScore = scoreBootstrap(molDataRes, bestModel, bestPars, bootstrapAggregator, iRepList,
-                                nReplicates, nReplicates, localFitTau, localTauFraction);
-                    }
-                }
-            }
-            SimonsModelFitResult modelFitResult = new SimonsModelFitResult(
-                orderPar,
-                replicateData,
-                validationScore,
-                bestScores);
-            result = Optional.of(modelFitResult);
+            double error = Math.sqrt(variance);
+
+            orderPar = orderPar.set(name, mean, error);
         }
-        return result;
-    }
+        orderPar = orderPar.set("model", (double) model2sf.getNumber(), null);
 
+        Atom atom = resData.atom;
+        atom.addOrderPar(orderParSet, orderPar);
+        double[][] jValues = resData.getJValues();
+        SpectralDensity spectralDensity = new SpectralDensity(key, jValues);
+        atom.addSpectralDensity(key, spectralDensity);
+        resData.setTestModel(model2sf);
+
+        ModelFitResult result = new ModelFitResult(orderPar, parameters, null, scores);
+        return Optional.of(result);
+    }
 
     public double scoreBootstrap(Map<String, MolDataValues> molDataRes, MFModelIso model, double[] pars,
                                  BootstrapAggregator bootstrapAggregator, List<Integer> iRepList, int iStart, int nReplicates,
@@ -727,7 +466,13 @@ public class FitR1R2NOEModel extends FitModel {
         return rssSum / nReplicates;
     }
 
-    Score tryModel(Map<String, MolDataValues> molDataRes, MFModelIso model, double localTauFraction, boolean localFitTau, Random random) {
+    Score tryModel(
+        Map<String, MolDataValues> molDataRes,
+        MFModelIso model,
+        double localTauFraction,
+        boolean localFitTau,
+        Random random
+    ) {
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setRelaxData(molDataRes);
         relaxFit.setLambdaS(lambdaS);
@@ -735,77 +480,26 @@ public class FitR1R2NOEModel extends FitModel {
         relaxFit.setLambdaTauS(lambdaTauS);
         relaxFit.setUseLambda(useLambda);
         relaxFit.setFitJ(fitJ);
+
         model.setTauFraction(localTauFraction);
+
         double[] start = model.getStart();
         double[] lower = model.getLower();
-        double[] upper = model.getUpper();
-        double[] keepStart = start.clone();
-        int nTries = 3;
-        PointValuePair best = null;
-        for (int i = 0; i < nTries; i++) {
-            Optional<PointValuePair> fitResultOpt = relaxFit.fitResidueToModel(start, lower, upper);
-            if (fitResultOpt.isPresent() && ((i == 0) || (fitResultOpt.get().getValue() < best.getValue()))) {
-                best = fitResultOpt.get();
-            }
-            for (int j = 0; j < start.length; j++) {
-                start[j] = keepStart[j] + random.nextGaussian() * 0.1 * (upper[j] - lower[j]);
-            }
-        }
-        if (best != null) {
-            var score = relaxFit.score(best.getPoint(), true);
-            return score;
-        } else {
-            return null;
-        }
-    }
-
-    SimonsScore simonsTryModel(Map<String, MolDataValues> molDataRes, MFModelIso model, double localTauFraction, boolean localFitTau, Random random, double[] initialGuess) {
-        RelaxFit relaxFit = new RelaxFit();
-        relaxFit.setRelaxData(molDataRes);
-        relaxFit.setLambdaS(lambdaS);
-        relaxFit.setLambdaTauF(lambdaTauF);
-        relaxFit.setLambdaTauS(lambdaTauS);
-        relaxFit.setUseLambda(useLambda);
-        relaxFit.setFitJ(fitJ);
-        model.setTauFraction(localTauFraction);
-        double[] start = (initialGuess == null) ? model.getStart() : initialGuess;
-        double[] lower = model.getLower();
-        // If using regularization, set the lower bounds to 0 for all parameters
-        // This should only apply when the Model is 2sf.
-        // I have included an assertion check here for sanity
         if (useLambda) {
             if (!(model instanceof MFModelIso2sf)) {
-                throw new AssertionError("`useLambda` is set to `true` and the model type is not `MFModelIso2sf`. This should not be possible.");
+                throw new AssertionError(
+                    "`useLambda` is set to `true` and the model type is not `MFModelIso2sf`. " +
+                    "This should not be possible.");
             }
+            // If regularization is used, all parameters should have lower bounds of 0.0
             lower = new double[lower.length];
         }
         double[] upper = model.getUpper();
-        double[] keepStart = start.clone();
-        int nTries = 3;
-        CMAESFitResult best = null;
-        for (int i = 0; i < nTries; i++) {
-            Optional<CMAESFitResult> fit = relaxFit.simonsFitResidueToModel(start, lower, upper);
-            if (
-                fit.isPresent() &&
-                (
-                    (i == 0) ||
-                    (best == null) ||
-                    (fit.get().result().getValue() < best.result().getValue())
-                )
-            ) { best = fit.get(); }
 
-            for (int j = 0; j < start.length; j++) {
-                start[j] = keepStart[j] + random.nextGaussian() * 0.1 * (upper[j] - lower[j]);
-            }
-        }
-        if (best != null) {
-            SimonsScore score = relaxFit.simonsScore(best);
-            return score;
-        } else {
-            return null;
-        }
+        Optional<PointValuePair> result = relaxFit.fitResidueToModel(start, lower, upper);
+        if (result.isPresent()) return relaxFit.score(result.get().getPoint(), true);
+        else return null;
     }
-
 
     public void setTauFraction(double value) {
         this.tauFraction = value;

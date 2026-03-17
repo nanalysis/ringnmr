@@ -27,6 +27,7 @@ import java.util.List;
 /**
  *
  * @author brucejohnson
+ * @author simonhulse
  */
 public class MFModelIso2sf extends MFModelIso2f {
     double tauS;
