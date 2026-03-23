@@ -30,7 +30,7 @@
         <dependency>
             <groupId>org.nmrfx</groupId>
             <artifactId>nmrfx-core</artifactId>
-            <version>11.4.34</version>
+            <version>11.4.36-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -109,6 +109,17 @@
     </dependencies>
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.12.0</version> <!-- Check for the latest version -->
+                <configuration>
+                    <outputDirectory>${project.build.directory}/apidocs</outputDirectory>
+                    <source>17</source> <!-- Set the appropriate version for your project -->
+                    <author>true</author>
+                    <version>true</version>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>

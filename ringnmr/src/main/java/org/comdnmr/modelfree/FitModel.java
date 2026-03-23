@@ -28,7 +28,8 @@ public abstract class FitModel implements BasicFitter {
     boolean fitExchange = false;
     double tauFraction = 0.25;
     double lambdaS = 0.0;
-    double lambdaTau = 0.0;
+    double lambdaTauF = 0.0;
+    double lambdaTauS = 0.0;
     boolean useLambda = false;
     double t2Limit = 0.0;
     int nReplicates = 0;
@@ -72,8 +73,13 @@ public abstract class FitModel implements BasicFitter {
 
 
     public static UniformRandomProvider getRandomSource() {
-        if (rng == null) {
-            rng = RandomSource.XO_RO_SHI_RO_128_PP.create();
+        return getRandomSource(false);
+    }
+
+    public static UniformRandomProvider getRandomSource(boolean init) {
+        if (init || rng == null) {
+            final int[] seed = new int[] { 196, 9, 0, 226 };
+            rng = RandomSource.XO_RO_SHI_RO_128_PP.create(seed);
         }
         return rng;
     }
@@ -116,12 +122,14 @@ public abstract class FitModel implements BasicFitter {
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setRelaxData(molDataRes);
         relaxFit.setLambdaS(lambdaS);
-        relaxFit.setLambdaTau(lambdaTau);
+        relaxFit.setLambdaTauF(lambdaTauF);
+        relaxFit.setLambdaTauS(lambdaTauS);
         relaxFit.setUseLambda(useLambda);
         relaxFit.setFitJ(fitJ);
         var score = relaxFit.score(pars, true);
         return score.rss;
     }
+
     int bestScore(List<Score> scores) {
         double lowestAIC = Double.MAX_VALUE;
         int iBest = -1;
@@ -162,7 +170,8 @@ public abstract class FitModel implements BasicFitter {
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setRelaxData(molDataRes);
         relaxFit.setLambdaS(lambdaS);
-        relaxFit.setLambdaTau(lambdaTau);
+        relaxFit.setLambdaTauF(lambdaTauF);
+        relaxFit.setLambdaTauS(lambdaTauS);
         relaxFit.setUseLambda(useLambda);
         relaxFit.setFitJ(fitJ);
         Map<String, MolDataValues> molDataMap = relaxFit.genBootstrap(random, model, pars);
@@ -202,8 +211,12 @@ public abstract class FitModel implements BasicFitter {
         this.lambdaS = value;
     }
 
-    public void setLambdaTau(double value) {
-        this.lambdaTau = value;
+    public void setLambdaTauF(double value) {
+        this.lambdaTauF = value;
+    }
+
+    public void setLambdaTauS(double value) {
+        this.lambdaTauS = value;
     }
 
     public void setUseLambda(boolean value) {
@@ -211,7 +224,7 @@ public abstract class FitModel implements BasicFitter {
     }
 
     public boolean useLambda() {
-        return useLambda && (lambdaS > 1.0e-8 || lambdaTau > 1.0e-8);
+        return useLambda && (lambdaS > 1.0e-8 || lambdaTauF > 1.0e-8 || lambdaTauS > 1.0e-8);
     }
 
     public void setFitJ(boolean value) {

@@ -28,6 +28,7 @@ public class FitDeuteriumModel extends FitModel {
             for (Polymer polymer : mol.getPolymers()) {
                 for (Residue residue : polymer.getResidues()) {
                     for (Atom atom : residue.getAtoms()) {
+
                         MolDataValues molData = getMolDataValues(atom, requireCoords);
                         if ((molData != null) && !molData.dataValues.isEmpty()) {
                             molDataValues.put(molData.specifier, molData);
@@ -225,7 +226,11 @@ public class FitDeuteriumModel extends FitModel {
             OrderPar orderPar = makeOrderPar(orderParSet, resSource, bestScore, bestModel, bestModel.getParNames(), bestScore.getPars(), replicateData);
             atom.addOrderPar(orderParSet, orderPar);
             atom.addSpectralDensity(key, spectralDensity);
-            ModelFitResult modelFitResult = new ModelFitResult(orderPar, replicateData, null);
+            ModelFitResult modelFitResult = new ModelFitResult(
+                orderPar,
+                replicateData,
+                null,
+                new Score[]{bestScore});
             result = Optional.of(modelFitResult);
         }
         return result;
@@ -357,7 +362,7 @@ public class FitDeuteriumModel extends FitModel {
                 validationScore = scoreBayesian(molDataRes, bestModel, bestPars, dirichlet,
                         nReplicates, nReplicates, localFitTau, localTauFraction);
             }
-            ModelFitResult modelFitResult = new ModelFitResult(orderPar, replicateData, validationScore);
+            ModelFitResult modelFitResult = new ModelFitResult(orderPar, replicateData, validationScore, bestScores);
             result = Optional.of(modelFitResult);
         }
         return result;
@@ -367,7 +372,8 @@ public class FitDeuteriumModel extends FitModel {
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setRelaxData(molDataRes);
         relaxFit.setLambdaS(lambdaS);
-        relaxFit.setLambdaTau(lambdaTau);
+        relaxFit.setLambdaTauF(lambdaTauF);
+        relaxFit.setLambdaTauS(lambdaTauS);
         relaxFit.setUseLambda(useLambda);
         relaxFit.setFitJ(true);
         model.setTauFraction(localTauFraction);
@@ -426,7 +432,8 @@ public class FitDeuteriumModel extends FitModel {
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setRelaxData(molDataRes);
         relaxFit.setLambdaS(lambdaS);
-        relaxFit.setLambdaTau(lambdaTau);
+        relaxFit.setLambdaTauF(lambdaTauF);
+        relaxFit.setLambdaTauS(lambdaTauS);
         relaxFit.setUseLambda(useLambda);
         relaxFit.setFitJ(fitJ);
         Map<String, MolDataValues> molDataMap = relaxFit.genBootstrap(random, model, pars);

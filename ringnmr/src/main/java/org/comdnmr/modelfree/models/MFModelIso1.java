@@ -99,9 +99,9 @@ public class MFModelIso1 extends MFModelIso {
     @Override
     public double[] getStart() {
         if (includeEx) {
-            return getParValues(targetTau, 0.9, 2.0);
+            return getParValues(targetTau, 0.5, 2.0);
         } else {
-            return getParValues(targetTau, 0.9);
+            return getParValues(targetTau, 0.5);
         }
     }
 

@@ -267,19 +267,67 @@
                                                     <CheckBox text="Fit Js: " fx:id="fitJCheckBox"/>
                                                     <CheckBox text="Use RQ: " fx:id="useRQCheckBox" selected="true"/>
                                                 </HBox>
-                                                <GridPane>
+                                                <GridPane hgap="10">
                                                     <children>
-                                                        <Label text="S" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-                                                        <Slider fx:id="sLambdaSlider" prefWidth="150"
-                                                                GridPane.columnIndex="1" GridPane.rowIndex="0"/>
-                                                        <Label fx:id="sLambdaLabel" prefWidth="50"
-                                                               GridPane.columnIndex="2" GridPane.rowIndex="0"/>
-                                                        <Label text="Tau" GridPane.columnIndex="0"
-                                                               GridPane.rowIndex="1"/>
-                                                        <Slider fx:id="tauLambdaSlider" prefWidth="150"
-                                                                GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-                                                        <Label fx:id="tauLambdaLabel" prefWidth="50"
-                                                               GridPane.columnIndex="2" GridPane.rowIndex="1"/>
+                                                        <Label
+                                                            text="λ(S²)"
+                                                            GridPane.columnIndex="0"
+                                                            GridPane.rowIndex="0"
+                                                            GridPane.valignment="top"
+                                                        />
+                                                        <Slider
+                                                            fx:id="lambdaSsqSlider"
+                                                            prefWidth="150"
+                                                            GridPane.columnIndex="1"
+                                                            GridPane.rowIndex="0"
+                                                        />
+                                                        <Label
+                                                            fx:id="lambdaSsqLabel"
+                                                            prefWidth="50"
+                                                            GridPane.columnIndex="2"
+                                                            GridPane.rowIndex="0"
+                                                            GridPane.valignment="top"
+                                                        />
+
+                                                        <Label
+                                                            text="λ(τf)"
+                                                            GridPane.columnIndex="0"
+                                                            GridPane.rowIndex="1"
+                                                            GridPane.valignment="top"
+                                                        />
+                                                        <Slider
+                                                            fx:id="lambdaTauFSlider"
+                                                            prefWidth="150"
+                                                            GridPane.columnIndex="1"
+                                                            GridPane.rowIndex="1"
+                                                        />
+                                                        <Label
+                                                            fx:id="lambdaTauFLabel"
+                                                            prefWidth="50"
+                                                            GridPane.columnIndex="2"
+                                                            GridPane.rowIndex="1"
+                                                            GridPane.valignment="top"
+                                                        />
+
+                                                        <Label text
+                                                            ="λ(τs)"
+                                                            GridPane.columnIndex="0"
+                                                            GridPane.rowIndex="2"
+                                                            GridPane.valignment="top"
+                                                        />
+                                                        <Slider
+                                                            fx:id="lambdaTauSSlider"
+                                                            prefWidth="150"
+                                                            GridPane.columnIndex="1"
+                                                            GridPane.rowIndex="2"
+                                                        />
+                                                        <Label
+                                                            fx:id="lambdaTauSLabel"
+                                                            prefWidth="50"
+                                                            GridPane.columnIndex="2"
+                                                            GridPane.rowIndex="2"
+                                                            GridPane.valignment="top"
+                                                        />
                                                     </children>
                                                 </GridPane>
                                             </VBox>
