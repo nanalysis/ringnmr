@@ -186,6 +186,80 @@ public class FitR1R2NOEModel extends FitModel {
         }
     }
 
+    public Map<String, ModelFitResult> fit(Map<String, MolDataValues> data, FitSpec fitSpec) {
+        // Estimate tauM if it has not be supplied
+        if (fitSpec.tauMNeedsComputing()) fitSpec.setTauM(estimateTau(data).get("tau"));
+
+        data
+            .entrySet()
+            .stream()
+            .sorted(Comparator.comparing(Map.Entry::getKey))
+            .parallel()
+            .forEach(residue -> residueFit(residue, fitSpec));
+
+        return new TreeMap<>();
+    }
+
+    private MFModelIso residueFit(Map.Entry<String, MolDataValues> residue, FitSpec fitSpec) {
+        if (fitSpec instanceof ConventionalFitSpec) {
+            conventionalResidueFit(residue, (ConventionalFitSpec) fitSpec);
+        }
+        throw new RuntimeException("Unspported fit method specified.");
+    }
+
+    private MFModelIso conventionalResidueFit(
+        Map.Entry<String, MolDataValues> residue,
+        ConventionalFitSpec fitSpec
+    ) {
+        String residueKey = residue.getKey();
+        MolDataValues residueData = residue.getValue();
+        Map<String, MolDataValues> residueMap = new TreeMap<>();
+        residueMap.put(residueKey, residueData);
+        boolean localFitTau = fitTau(residueMap);
+        double localTauFraction = (localFitTau) ? fitSpec.tauFraction : 0.0;
+
+        // Determine the optimal model using the AICc
+        List<MFModelIso> models = fitSpec.getModels();
+        MFModelIso bestModel = null;
+        Score bestScore = null;
+        double aicc = Double.MAX_VALUE;
+
+        for (MFModelIso model : models) {
+            model.setTauFraction(localTauFraction);
+            residueData.setTestModel(model);
+            RelaxFit relaxFit = new RelaxFit();
+            relaxFit.setRelaxData(residueMap);
+            Score score = runFit(relaxFit, model);
+            // TODO: currently assuming that the number of datapoints is
+            // sufficiently large for AICc to be computed (i.e. just using
+            // Optional::get without error handling)
+            if (score.aicc().get() < aicc) {
+                bestModel = model;
+                bestScore = score;
+                aicc = score.aicc().get();
+            }
+        }
+
+        if (bestModel == null || bestScore == null) {
+            throw new AssertionError("`bestModel` and `bestScore` should not be null here!");
+        }
+
+        return bestModel;
+
+    }
+
+    private Score runFit(RelaxFit relaxFit, MFModelIso model) {
+        double[] start = model.getStart();
+        double[] lower = model.getLower();
+        double[] upper = model.getUpper();
+
+        Optional<PointValuePair> result = relaxFit.fitResidueToModel(start, lower, upper);
+        if (result.isEmpty()) {
+            throw new RuntimeException("Could not generate fit result.");
+        }
+        return relaxFit.score(result.get().getPoint(), true);
+    }
+
     public  Map<String, ModelFitResult> testModels(Map<String, MolDataValues> molData, List<String> modelNames) {
         Random random = new Random();
         if (tau == null) tau = estimateTau(molData).get("tau");
