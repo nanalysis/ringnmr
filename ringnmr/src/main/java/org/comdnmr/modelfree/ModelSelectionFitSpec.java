@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.comdnmr.modelfree.models.MFModelIso;
 
-abstract class ModelSelectionFitSpec extends FitSpec {
+public abstract class ModelSelectionFitSpec extends FitSpec {
 
     private final List<String> modelNames;
 

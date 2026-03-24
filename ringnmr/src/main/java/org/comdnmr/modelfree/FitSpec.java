@@ -2,6 +2,9 @@ package org.comdnmr.modelfree;
 
 import java.util.*;
 
+import org.apache.commons.math3.optim.PointValuePair;
+import org.comdnmr.modelfree.models.MFModelIso;
+
 
 // TODO: if tauM is not specified, it must be estimated using the data.
 // Including the Map<String, MolDataValues> into the build method will allow
@@ -9,7 +12,7 @@ import java.util.*;
 // (see getTauM below).
 // estimateTau() is currently defined in FitR1R2NOEModel.
 // Makes more sense to me to make this a method of this class
-abstract class FitSpec{
+public abstract class FitSpec{
 
     protected double tauM;
     protected boolean tauMNeedsComputing;
@@ -38,6 +41,20 @@ abstract class FitSpec{
         this.nReplicates = builder.nReplicates;
     }
 
+    public abstract ModelFitResult fit(String key, MolDataValues data);
+
+    protected static Score runFit(RelaxFit relaxFit, MFModelIso model) {
+        double[] start = model.getStart();
+        double[] lower = model.getLower();
+        double[] upper = model.getUpper();
+
+        Optional<PointValuePair> result = relaxFit.fitResidueToModel(start, lower, upper);
+        if (result.isEmpty()) {
+            throw new RuntimeException("Could not generate fit result.");
+        }
+        return relaxFit.score(result.get().getPoint(), true);
+    }
+
     public void setTauM(double tauM) {
         this.tauM = tauM;
         tauMNeedsComputing = false;
@@ -50,20 +67,12 @@ abstract class FitSpec{
         return tauM;
     }
 
-    public boolean localfitTauM(Map<String, MolDataValues> data) {
-        return (
+    public double getLocalTauFraction(MolDataValues data) {
+        boolean fitTau = (
             t2Limit < 1.0e-6 ||
-            data
-                .values()
-                .stream()
-                .anyMatch(
-                    value ->
-                    value
-                        .getData()
-                        .stream()
-                        .anyMatch(d -> d.R2 > t2Limit)
-                )
+            data.getData() .stream().anyMatch(value -> value.R2 > t2Limit)
         );
+        return fitTau ? tauFraction : 0.0;
     }
 
     public boolean tauMNeedsComputing() {
@@ -72,34 +81,16 @@ abstract class FitSpec{
 
     public enum BootstrapMode {
         PARAMETRIC,
-        AGGREGATE,
+        NONPARAMETRIC,
         BAYESIAN
     }
 
-    private Map<String, Double> estimateTau(Map<String, MolDataValues> molData) {
-        Map<Long, List<RelaxDataValue>> map = new HashMap<>();
-        for (var entry : molData.entrySet()) {
-            MolDataValues value = entry.getValue();
-            for (RelaxDataValue rlxValue : value.getData()) {
-                long sfMHz = Math.round(rlxValue.relaxObj.getSF() / 1.0e6);
-                List<RelaxDataValue> values = map.computeIfAbsent(sfMHz, k -> new ArrayList<>());
-                values.add(rlxValue);
-            }
-        }
-        int max = 0;
-        long maxMHz = 0;
-        for (long sfMHz : map.keySet()) {
-            int size = map.get(sfMHz).size();
-            if (size > max) {
-                maxMHz = sfMHz;
-                max = size;
-            }
-        }
-        if (max > 0) {
-            return CorrelationTime.estimateTau(maxMHz, "N", map.get(maxMHz));
-        } else {
-            return Collections.emptyMap();
-        }
+    public BootstrapSampler getBootstrapSampler(MolDataValues data) {
+        return switch (bootstrapMode) {
+            case PARAMETRIC -> new ParametricSampler(data);
+            case NONPARAMETRIC -> new NonparametricSampler(data);
+            case BAYESIAN -> new BayesianSampler(data);
+        };
     }
 
     public static abstract class Builder<T extends Builder<T>> {

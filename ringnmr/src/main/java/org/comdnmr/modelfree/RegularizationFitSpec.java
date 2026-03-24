@@ -1,25 +1,11 @@
 package org.comdnmr.modelfree;
 
-class RegularizationFitSpec extends FitSpec {
+public class RegularizationFitSpec extends FitSpec {
 
     private final double lambdaS;
     private final double lambdaTauF;
     private final double lambdaTauS;
 
-    protected RegularizationFitSpec(Builder builder) {
-        super(builder);
-        this.lambdaS = builder.lambdaS;
-        this.lambdaTauF = builder.lambdaTauF;
-        this.lambdaTauS = builder.lambdaTauS;
-    }
-
-    double getLambdaS() { return lambdaS; }
-
-    double getLambdaTauF() { return lambdaTauF; }
-
-    double getLambdaTauS() { return lambdaTauS; }
-
-    // Concrete Builder for ConcreteFitSpec
     public static class Builder extends FitSpec.Builder<Builder> {
         private double lambdaS = 0.0;
         private double lambdaTauF = 0.0;
@@ -53,5 +39,22 @@ class RegularizationFitSpec extends FitSpec {
             return new RegularizationFitSpec(this);
         }
     }
+
+    protected RegularizationFitSpec(Builder builder) {
+        super(builder);
+        this.lambdaS = builder.lambdaS;
+        this.lambdaTauF = builder.lambdaTauF;
+        this.lambdaTauS = builder.lambdaTauS;
+    }
+
+    public ModelFitResult fit(String key, MolDataValues data) {
+        throw new UnsupportedOperationException("Regularization fitting yet to be implemented");
+    }
+
+    double getLambdaS() { return lambdaS; }
+
+    double getLambdaTauF() { return lambdaTauF; }
+
+    double getLambdaTauS() { return lambdaTauS; }
 
 }

@@ -190,74 +190,15 @@ public class FitR1R2NOEModel extends FitModel {
         // Estimate tauM if it has not be supplied
         if (fitSpec.tauMNeedsComputing()) fitSpec.setTauM(estimateTau(data).get("tau"));
 
+        Map<String, ModelFitResult> results = new HashMap<>();
         data
             .entrySet()
             .stream()
             .sorted(Comparator.comparing(Map.Entry::getKey))
             .parallel()
-            .forEach(residue -> residueFit(residue, fitSpec));
+            .forEach(residue -> results.put(residue.getKey(), fitSpec.fit(residue.getKey(), residue.getValue())));
 
-        return new TreeMap<>();
-    }
-
-    private MFModelIso residueFit(Map.Entry<String, MolDataValues> residue, FitSpec fitSpec) {
-        if (fitSpec instanceof ConventionalFitSpec) {
-            conventionalResidueFit(residue, (ConventionalFitSpec) fitSpec);
-        }
-        throw new RuntimeException("Unspported fit method specified.");
-    }
-
-    private MFModelIso conventionalResidueFit(
-        Map.Entry<String, MolDataValues> residue,
-        ConventionalFitSpec fitSpec
-    ) {
-        String residueKey = residue.getKey();
-        MolDataValues residueData = residue.getValue();
-        Map<String, MolDataValues> residueMap = new TreeMap<>();
-        residueMap.put(residueKey, residueData);
-        boolean localFitTau = fitTau(residueMap);
-        double localTauFraction = (localFitTau) ? fitSpec.tauFraction : 0.0;
-
-        // Determine the optimal model using the AICc
-        List<MFModelIso> models = fitSpec.getModels();
-        MFModelIso bestModel = null;
-        Score bestScore = null;
-        double aicc = Double.MAX_VALUE;
-
-        for (MFModelIso model : models) {
-            model.setTauFraction(localTauFraction);
-            residueData.setTestModel(model);
-            RelaxFit relaxFit = new RelaxFit();
-            relaxFit.setRelaxData(residueMap);
-            Score score = runFit(relaxFit, model);
-            // TODO: currently assuming that the number of datapoints is
-            // sufficiently large for AICc to be computed (i.e. just using
-            // Optional::get without error handling)
-            if (score.aicc().get() < aicc) {
-                bestModel = model;
-                bestScore = score;
-                aicc = score.aicc().get();
-            }
-        }
-
-        if (bestModel == null || bestScore == null) {
-            throw new AssertionError("`bestModel` and `bestScore` should not be null here!");
-        }
-
-        return bestModel;
-
-    }
-
-    private Score runFit(RelaxFit relaxFit, MFModelIso model) {
-        double[] start = model.getStart();
-        double[] lower = model.getLower();
-        double[] upper = model.getUpper();
-
-        Optional<PointValuePair> result = relaxFit.fitResidueToModel(start, lower, upper);
-        if (result.isEmpty()) {
-            throw new RuntimeException("Could not generate fit result.");
-        }
-        return relaxFit.score(result.get().getPoint(), true);
+        return results;
     }
 
     public  Map<String, ModelFitResult> testModels(Map<String, MolDataValues> molData, List<String> modelNames) {
@@ -303,8 +244,14 @@ public class FitR1R2NOEModel extends FitModel {
         return results;
     }
 
-    private OrderPar makeOrderPar(OrderParSet orderParSet, MolDataValues resData, Map<String, MolDataValues> molDataRes, String key,
-                                  Score bestScore, MFModelIso bestModel, double[][] repData) {
+    private OrderPar makeOrderPar(
+        OrderParSet orderParSet,
+        MolDataValues resData,
+        String key,
+        Score bestScore,
+        MFModelIso bestModel,
+        double[][] repData
+    ) {
         ResonanceSource resSource = new ResonanceSource(resData.atom);
         Atom atom = resData.atom;
         var parNames = bestModel.getParNames();
@@ -364,7 +311,7 @@ public class FitR1R2NOEModel extends FitModel {
             if (nReplicates > 2) {
                 double[] pars = score.getPars();
                 repData = replicates(molDataRes, model, localTauFraction, localFitTau, pars, random);
-                OrderPar orderPar = makeOrderPar(orderParSet, resData, molDataRes, key, score, model, repData);
+                OrderPar orderPar = makeOrderPar(orderParSet, resData, key, score, model, repData);
             }
             if (useLambda || (modelNames.size() == 1) || (score.aicc().isPresent() && ((bestScore == null) || (score.aicc().get() < lowestAIC))))  {
                 lowestAIC = score.aicc().isPresent() ? score.aicc().get() : null;
@@ -383,7 +330,7 @@ public class FitR1R2NOEModel extends FitModel {
                 replicateData = replicates(molDataRes, bestModel, localTauFraction, localFitTau, pars, random);
             }
             OrderParSet orderParSet = orderParSetMap.get("order_parameter_list_best");
-            OrderPar orderPar = makeOrderPar(orderParSet, resData, molDataRes, key, bestScore, bestModel, replicateData);
+            OrderPar orderPar = makeOrderPar(orderParSet, resData, key, bestScore, bestModel, replicateData);
             ModelFitResult modelFitResult = new ModelFitResult(
                 orderPar,
                 replicateData,
@@ -417,15 +364,14 @@ public class FitR1R2NOEModel extends FitModel {
 
         boolean localFitTau = fitTau(molDataRes);
         double localTauFraction = (localFitTau) ? tauFraction : 0.0;
-        int nExp = resData.dataValues.size();
 
-        BootstrapWeightSampler sampler;
+        BootstrapSampler sampler;
         switch (bootstrapMode) {
             case AGGREGATE:
-                sampler = new NonparametricSampler(nExp);
+                sampler = new NonparametricSampler(resData);
                 break;
             case BAYESIAN:
-                sampler = new BayesianSampler(nExp, getRandomSource(true));
+                sampler = new BayesianSampler(resData);
                 break;
             default:
                 throw new AssertionError("Unreachable");
@@ -442,10 +388,8 @@ public class FitR1R2NOEModel extends FitModel {
                 return Optional.empty();
             }
 
-            double[] weights = sampler.sample();
-            for (var molData : molDataRes.values()) {
-                molData.weight(weights);
-            }
+            MolDataValues replicateData = sampler.sample();
+            molData = new HashMap<>() {{ put(key, replicateData); }};
 
             // Fit each model and retain the one which has the lowest AICc
             Optional<Pair<MFModelIso, Score>> modelScore = Optional.empty();
@@ -462,7 +406,6 @@ public class FitR1R2NOEModel extends FitModel {
             if (modelScore.isEmpty()) return Optional.empty();
             models[i] = modelScore.get().getKey();
             scores[i] = modelScore.get().getValue();
-            scores[i].setWeights(weights);
         }
 
         MFModelIso model2sf = MFModelIso.buildModel("2sf", localFitTau, tau, localTauFraction, fitExchange);

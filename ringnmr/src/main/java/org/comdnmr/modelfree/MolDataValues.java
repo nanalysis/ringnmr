@@ -60,6 +60,10 @@ public class MolDataValues {
         return sBuilder.toString();
     }
 
+    public int getNValues() {
+        return SpectralDensityCalculator.getNData(dataValues);
+    }
+
     public void weight(double[] weights) {
         this.weights = weights;
     }
