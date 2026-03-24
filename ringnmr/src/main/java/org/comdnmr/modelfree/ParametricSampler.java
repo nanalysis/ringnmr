@@ -73,17 +73,19 @@ public class ParametricSampler extends BootstrapSampler {
     }
 
     public MolDataValues sample() {
-        for (RelaxDataValue dataValue : data.getData()) {
-            dataValue.R1 = nextGaussian(dataValue.R1, dataValue.R1err);
-            dataValue.R2 = nextGaussian(dataValue.R2, dataValue.R2err);
+        List<RelaxDataValue> dataValues = data.getData();
+        for (int i = 0; i < getNFields(); i++) {
+            RelaxDataValue dataValue = dataValues.get(i);
+            dataValue.R1 = nextGaussian(originalDataMap.get("R1").get(i), dataValue.R1err);
+            dataValue.R2 = nextGaussian(originalDataMap.get("R2").get(i), dataValue.R2err);
 
             if (dataType.equals(R1R2NOEDataValue.class)) {
                 R1R2NOEDataValue value = (R1R2NOEDataValue) dataValue;
-                value.NOE = nextGaussian(value.NOE, value.NOEerr);
+                value.NOE = nextGaussian(originalDataMap.get("NOE").get(i), value.NOEerr);
             } else if (dataType.equals(DeuteriumDataValue.class)) {
                 DeuteriumDataValue value = (DeuteriumDataValue) dataValue;
-                value.rQ = nextGaussian(value.rQ, value.rQError);
-                value.rAP = nextGaussian(value.rAP, value.rAPError);
+                value.rQ = nextGaussian(originalDataMap.get("rQ").get(i), value.rQError);
+                value.rAP = nextGaussian(originalDataMap.get("rAP").get(i), value.rAPError);
             } else {
                 throw new AssertionError("Unexpected subclass of `RelaxDataValue` detected!");
             }
