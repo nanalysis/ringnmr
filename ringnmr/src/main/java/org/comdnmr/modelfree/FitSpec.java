@@ -24,6 +24,14 @@ public abstract class FitSpec{
     protected final double t2Limit;
     protected final int nReplicates;
 
+    private static final List<String> METHOD_NAMES = List.of("Conventional", "Bootstrap Aggregation", "Regularization");
+    private static final Map<String, Class<? extends FitSpec>> CLASSES = new LinkedHashMap<>();
+    static {
+        CLASSES.put("Conventional", ConventionalFitSpec.class);
+        CLASSES.put("Bootstrap Aggregation", BaggingFitSpec.class);
+        CLASSES.put("Regularization", RegularizationFitSpec.class);
+    }
+
     protected FitSpec(Builder<?> builder) {
         if (builder.tauM.isEmpty()) {
             this.tauM = 0.0;
@@ -42,6 +50,21 @@ public abstract class FitSpec{
     }
 
     public abstract ModelFitResult fit(String key, MolDataValues data);
+
+    public static List<String> getNames() { return new ArrayList<>(CLASSES.keySet()); }
+
+    public static Class<? extends FitSpec> getFitSpec(String methodName) {
+        if (CLASSES.containsKey(methodName)) {
+            return CLASSES.get(methodName);
+        } else {
+            throw new IllegalArgumentException(
+                String.format(
+                    "`methodName` should be on of: %s",
+                    String.join(", ", getNames())
+                )
+            );
+        }
+    }
 
     protected static Score runFit(RelaxFit relaxFit, MFModelIso model) {
         double[] start = model.getStart();

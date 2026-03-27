@@ -148,10 +148,18 @@ public class FitR1R2NOEModel extends FitModel {
                 tau = estimateTau(molData).get("tau");
             }
 
-            Map<String, ModelFitResult> results = testModels(molData, modelNames);
+            FitSpec fitSpec = new ConventionalFitSpec.Builder()
+                .bootstrapMode(FitSpec.BootstrapMode.PARAMETRIC)
+                .nReplicates(100)
+                .tauM(17.5)
+                .fitTauM(true)
+                .modelNames(List.of("1", "1f", "2s", "2sf"))
+                .build();
+
+            Map<String, ModelFitResult> results = fit(molData, fitSpec);
             return results;
         } else {
-            throw new IllegalStateException("No relaxation data to analyze.  Need T1,T2 and NOE");
+            throw new IllegalStateException("No relaxation data to analyze. Need T1, T2 and NOE datasets");
         }
     }
 
@@ -195,7 +203,7 @@ public class FitR1R2NOEModel extends FitModel {
             .entrySet()
             .stream()
             .sorted(Comparator.comparing(Map.Entry::getKey))
-            .parallel()
+            // .parallel()
             .forEach(residue -> results.put(residue.getKey(), fitSpec.fit(residue.getKey(), residue.getValue())));
 
         return results;

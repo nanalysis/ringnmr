@@ -78,3 +78,12 @@
 .comment {
 	-fx-fill: cadetblue;
 }
+
+.validated-text-field {
+    -fx-border-color: transparent; /* Default border color when not focused */
+    -fx-border-width: 2;
+}
+
+.validated-text-field.invalid {
+    -fx-border-color: red; /* Invalid state border color */
+}

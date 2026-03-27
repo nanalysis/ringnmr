@@ -35,6 +35,7 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Bounds;
 import javafx.print.PrinterJob;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
@@ -212,7 +213,42 @@ public class PyController implements Initializable {
     @FXML
     TextField r2MedianField;
     @FXML
+    ChoiceBox<String> fitMethodChoice;
+    @FXML
     TextField tauCalcField;
+
+    // >>> Model-free entities >>>
+    @FXML
+    Label lambdaLabel;
+    @FXML
+    GridPane lambdasGrid;
+    @FXML
+    TextField lambdaSsqTextField;
+    @FXML
+    TextField lambdaTauFTextField;
+    @FXML
+    TextField lambdaTauSTextField;
+    @FXML
+    CheckBox hardCodeTauMCheck;
+    @FXML
+    Label tauMLabel;
+    @FXML
+    TextField tauMTextField;
+    @FXML
+    CheckBox fitTauMCheck;
+    @FXML
+    Label tauMFractionLabel;
+    @FXML
+    TextField tauMFractionTextField;
+    @FXML
+    Label r2LimitLabel;
+    @FXML
+    TextField r2LimitTextField;
+    @FXML
+    ChoiceBox<FitSpec.BootstrapMode> bootstrapMethodChoice;
+    @FXML
+    ValidatedIntegerTextField bootstrapReplicateTextField;
+
     @FXML
     Slider lambdaSsqSlider;
     @FXML
@@ -249,9 +285,32 @@ public class PyController implements Initializable {
     Label bootstrapNLabel;
     @FXML
     GridPane modelBox;
+    @FXML
+    GridPane lambdaBox;
+    @FXML
+    GridPane modelSelectionGrid;
+    @FXML
+    VBox boxyBox;
+    @FXML
+    ChoiceBox<String> modelAtoms;
 
-    ChoiceBox<String> modelAtoms = new ChoiceBox<>();
+    @FXML
+    Label modelsLabel;
+    @FXML
+    GridPane modelCheckBoxGrid;
+    @FXML
+    CheckBox model1CheckBox;
+    @FXML
+    CheckBox model1fCheckBox;
+    @FXML
+    CheckBox model1sCheckBox;
+    @FXML
+    CheckBox model2sCheckBox;
+    @FXML
+    CheckBox model2sfCheckBox;
+
     List<CheckBox> modelCheckBoxes = new ArrayList<>();
+    // <<< Model-free entities <<<
 
     BootstrapSamplePlots bootstrapSamplePlots = null;
     InputDataInterface inputDataInterface = null;
@@ -490,6 +549,7 @@ public class PyController implements Initializable {
         } else {
             System.out.println("Error: no fitting mode selected.");
         }
+
         VBox vBox = simControls.makeControls(mainController);
         simPane.centerProperty().set(vBox);
         CoMDOptions options = new CoMDOptions(true);
@@ -545,99 +605,101 @@ public class PyController implements Initializable {
         barScaleSlider.valueProperty().addListener(e -> resizeBarPlotCanvas());
         barScaleScrollBar.valueProperty().addListener(e -> resizeBarPlotCanvas());
 
-        tauFractionSlider.setMin(0.0);
-        tauFractionSlider.setMax(0.9);
-        tauFractionSlider.setValue(0.1);
-        tauFractionLabel.setText("0.1");
-        tauFractionSlider.setBlockIncrement(0.1);
-        tauFractionSlider.setMinorTickCount(4);
-        tauFractionSlider.setMajorTickUnit(0.1);
-        tauFractionSlider.setShowTickMarks(true);
-        tauFractionSlider.setShowTickLabels(true);
-        tauFractionSlider.valueProperty().addListener(v
-                -> tauFractionLabel.setText(String.format("%.2f", tauFractionSlider.getValue())));
+        // >>> MODEL-FREE PANEL >>>
+        // Moeity type being considered in model-free fitting
+        modelAtoms.getItems().addAll("¹H-¹⁵N", "²H-¹³C");
+        modelAtoms.setValue("¹H-¹⁵N");
 
-        lambdaSsqSlider.setMin(0.0);
-        lambdaSsqSlider.setMax(2.0);
-        lambdaSsqSlider.setValue(0.0);
-        lambdaSsqLabel.setText("0.0");
-        lambdaSsqSlider.setBlockIncrement(0.05);
-        lambdaSsqSlider.setMajorTickUnit(0.5);
-        lambdaSsqSlider.setMinorTickCount(4);
-        lambdaSsqSlider.setShowTickMarks(true);
-        lambdaSsqSlider.setShowTickLabels(true);
-        lambdaSsqSlider.valueProperty().addListener(v
-                -> lambdaSsqLabel.setText(String.format("%.1f", lambdaSsqSlider.getValue())));
+        // Model-free: fitting method (conventional, bagging, regularization)
+        fitMethodChoice.getItems().addAll(FitSpec.getNames());
+        fitMethodChoice.valueProperty().addListener(e -> fitMethodChanged(fitMethodChoice.getValue()));
+        fitMethodChoice.setValue(fitMethodChoice.getItems().get(0));
 
-        lambdaTauFSlider.setMin(0.0);
-        lambdaTauFSlider.setMax(2.0);
-        lambdaTauFSlider.setValue(0.0);
-        lambdaTauFLabel.setText("0.0");
-        lambdaTauFSlider.setBlockIncrement(0.05);
-        lambdaTauFSlider.setMajorTickUnit(0.5);
-        lambdaTauFSlider.setMinorTickCount(4);
-        lambdaTauFSlider.setShowTickMarks(true);
-        lambdaTauFSlider.setShowTickLabels(true);
-        lambdaTauFSlider.valueProperty().addListener(v
-                -> lambdaTauFLabel.setText(String.format("%.1f", lambdaTauFSlider.getValue())));
+        // Model-free: whether or not tauM is hard-coded
+        hardCodeTauMCheck.setOnAction(event -> updateTauMCheck());
+        updateTauMCheck();
 
+        fitTauMCheck.setOnAction(event -> updateFitTauMCheck());
+        updateFitTauMCheck();
 
-        lambdaTauSSlider.setMin(0.0);
-        lambdaTauSSlider.setMax(2.0);
-        lambdaTauSSlider.setValue(0.0);
-        lambdaTauSLabel.setText("0.0");
-        lambdaTauSSlider.setBlockIncrement(0.05);
-        lambdaTauSSlider.setMajorTickUnit(0.5);
-        lambdaTauSSlider.setMinorTickCount(4);
-        lambdaTauSSlider.setShowTickMarks(true);
-        lambdaTauSSlider.setShowTickLabels(true);
-        lambdaTauSSlider.valueProperty().addListener(v
-                -> lambdaTauSLabel.setText(String.format("%.1f", lambdaTauSSlider.getValue())));
+        bootstrapMethodChoice.getItems().addAll(FitSpec.BootstrapMode.values());
+        bootstrapMethodChoice.setValue(bootstrapMethodChoice.getItems().get(0));
+
+        // // Models to choose if conventional or bagging are being used
+        // modelBox.add(new Label("Models"), 0, 0);
+        // // FIXME should be accessible from MFModelIso class
+        // String[] modelNames = {"1", "1f", "1s", "2s", "2sf"};
+        // for (int i = 0; i < modelNames.length; i++) {
+        //     String modelName = modelNames[i];
+        //     CheckBox checkBox = new CheckBox(modelName);
+        //     int column = i + 1;
+        //     modelBox.add(checkBox, column, 0);
+        //     modelCheckBoxes.add(checkBox);
+        // }
+
+        // tauFractionSlider.setMin(0.0);
+        // tauFractionSlider.setMax(0.9);
+        // tauFractionSlider.setValue(0.1);
+        // tauFractionLabel.setText("0.1");
+        // tauFractionSlider.setBlockIncrement(0.1);
+        // tauFractionSlider.setMinorTickCount(4);
+        // tauFractionSlider.setMajorTickUnit(0.1);
+        // tauFractionSlider.setShowTickMarks(true);
+        // tauFractionSlider.setShowTickLabels(true);
+        // tauFractionSlider.valueProperty().addListener(v
+        //         -> tauFractionLabel.setText(String.format("%.2f", tauFractionSlider.getValue())));
 
 
-        t2LimitSlider.setMin(0.0);
-        t2LimitSlider.setMax(100.0);
-        t2LimitSlider.setValue(0.0);
-        t2LimitLabel.setText("0.0");
-        t2LimitSlider.setBlockIncrement(1.0);
-        t2LimitSlider.setMajorTickUnit(25.0);
-        t2LimitSlider.setMinorTickCount(4);
-        t2LimitSlider.setShowTickMarks(true);
-        t2LimitSlider.setShowTickLabels(true);
-        t2LimitSlider.valueProperty().addListener(v
-                -> t2LimitLabel.setText(String.format("%.1f", t2LimitSlider.getValue())));
+        // Slider[] lambdaSliders = new Slider[]{lambdaSsqSlider, lambdaTauFSlider, lambdaTauSSlider};
+        // Label[] lambdaLabels = new Label[]{lambdaSsqLabel, lambdaTauFLabel, lambdaTauSLabel};
 
-        nReplicatesSlider.setMin(0.0);
-        nReplicatesSlider.setMax(1000);
-        nReplicatesSlider.setValue(0.0);
-        bootstrapNLabel.setText("0");
-        nReplicatesSlider.setBlockIncrement(25);
-        nReplicatesSlider.setMajorTickUnit(50);
-        nReplicatesSlider.setMinorTickCount(4);
-        nReplicatesSlider.setShowTickMarks(true);
-        nReplicatesSlider.setShowTickLabels(true);
-        nReplicatesSlider.valueProperty().addListener(v
-                -> bootstrapNLabel.setText(String.format("%d", (int) nReplicatesSlider.getValue())));
-        bootStrapChoice.getItems().addAll(FitModel.BootstrapMode.values());
-        bootStrapChoice.setValue(FitModel.BootstrapMode.PARAMETRIC);
-        bootStrapChoice.valueProperty().addListener(e -> bootStrapChanged(bootStrapChoice.getValue()));
-        lambdaCheckBox.selectedProperty().addListener(e -> lambdaChanged(lambdaCheckBox.isSelected()));
+        // for (int i = 0; i < lambdaSliders.length; i++) {
+        //     Slider slider = lambdaSliders[i];
+        //     Label label = lambdaLabels[i];
+        //     slider.setMin(0.0);
+        //     slider.setMax(1.0);
+        //     slider.setBlockIncrement(0.01);
+        //     slider.setMajorTickUnit(0.25);
+        //     slider.setMinorTickCount(5);
+        //     slider.setShowTickMarks(true);
+        //     slider.setShowTickLabels(false);
+        //     slider.valueProperty().addListener(
+        //         v -> {
+        //             label.setText(String.format("%.2f", slider.getValue()));
+        //         }
+        //     );
+        //     slider.setValue(0.0);
+        //     label.setText("0.00");
+        // }
 
-        modelBox.add(new Label("Models"), 0, 0);
-        String[] modelNames = {"1", "1f", "1s", "2f", "2s", "1sf", "2sf"};
-        int iModel = 0;
-        for (var modelName : modelNames) {
-            var checkBox = new CheckBox(modelName);
-            checkBox.setMinWidth(50.0);
-            int column = iModel % 4 + 1;
-            int row = iModel / 4;
-            modelBox.add(checkBox,column, row);
-            modelCheckBoxes.add(checkBox);
-            iModel++;
-        }
-        modelAtoms.getItems().addAll("H-N", "D-C");
-        modelAtoms.setValue("H-N");
-        modelBox.add(modelAtoms, 4,1, 2, 1);
+        // t2LimitSlider.setMin(0.0);
+        // t2LimitSlider.setMax(100.0);
+        // t2LimitSlider.setValue(0.0);
+        // t2LimitLabel.setText("0.0");
+        // t2LimitSlider.setBlockIncrement(1.0);
+        // t2LimitSlider.setMajorTickUnit(25.0);
+        // t2LimitSlider.setMinorTickCount(4);
+        // t2LimitSlider.setShowTickMarks(true);
+        // t2LimitSlider.setShowTickLabels(true);
+        // t2LimitSlider.valueProperty().addListener(v
+        //         -> t2LimitLabel.setText(String.format("%.1f", t2LimitSlider.getValue())));
+
+        // nReplicatesSlider.setMin(0.0);
+        // nReplicatesSlider.setMax(1000);
+        // nReplicatesSlider.setValue(0.0);
+        // bootstrapNLabel.setText("0");
+        // nReplicatesSlider.setBlockIncrement(25);
+        // nReplicatesSlider.setMajorTickUnit(50);
+        // nReplicatesSlider.setMinorTickCount(4);
+        // nReplicatesSlider.setShowTickMarks(true);
+        // nReplicatesSlider.setShowTickLabels(true);
+        // nReplicatesSlider.valueProperty().addListener(v
+        //         -> bootstrapNLabel.setText(String.format("%d", (int) nReplicatesSlider.getValue())));
+        // bootStrapChoice.getItems().addAll(FitModel.BootstrapMode.values());
+        // bootStrapChoice.setValue(FitModel.BootstrapMode.PARAMETRIC);
+        // bootStrapChoice.valueProperty().addListener(e -> bootStrapChanged(bootStrapChoice.getValue()));
+        // lambdaCheckBox.selectedProperty().addListener(e -> lambdaChanged(lambdaCheckBox.isSelected()));
+        // // <<< MODEL-FREE PANEL <<<
     }
 
     public Stage getStage() {
@@ -1442,10 +1504,12 @@ public class PyController implements Initializable {
     }
 
     public void fitModelFree() {
-       if (modelAtoms.getValue().equalsIgnoreCase("H-N")) {
+       if (modelAtoms.getValue().equals("¹H-¹⁵N")) {
            fitR1R2NOEModel();
-       } else {
+       } else if (modelAtoms.getValue().equals("²H-¹³C")) {
            fitDeuteriumModel();
+       } else {
+           throw new AssertionError("Unsupported moiety");
        }
     }
 
@@ -2847,6 +2911,69 @@ public class PyController implements Initializable {
         updateXYChartLabels();
         genDataSDevTextField.setText("");
         simControls.simSliderAction("");
+    }
+
+    Parent[] regularizationNodes() {
+        return new Parent[]{lambdaLabel, lambdasGrid};
+    }
+
+    Parent[] modelSelectionNodes() {
+        return new Parent[]{modelsLabel, modelCheckBoxGrid};
+    }
+
+    void fitMethodChanged(String methodName) {
+        Class<? extends FitSpec> fitSpecClass = FitSpec.getFitSpec(methodName);
+        if (
+            fitSpecClass == ConventionalFitSpec.class ||
+            fitSpecClass == BaggingFitSpec.class
+        ) {
+            for (Parent node : regularizationNodes()) {
+                if (modelSelectionGrid.getChildren().contains(node)) {
+                    modelSelectionGrid.getChildren().remove(node);
+                }
+            }
+            for (Parent node : modelSelectionNodes()) {
+                if (!modelSelectionGrid.getChildren().contains(node)) {
+                    modelSelectionGrid.getChildren().add(node);
+                }
+            }
+        } else if (fitSpecClass == RegularizationFitSpec.class) {
+            for (Parent node : modelSelectionNodes()) {
+                if (modelSelectionGrid.getChildren().contains(node)) {
+                    modelSelectionGrid.getChildren().remove(node);
+                }
+            }
+            for (Parent node : regularizationNodes()) {
+                if (!modelSelectionGrid.getChildren().contains(node)) {
+                    modelSelectionGrid.getChildren().add(node);
+                }
+            }
+        } else {
+            throw new AssertionError("Unreachable");
+        }
+    }
+
+    void updateTauMCheck() {
+        boolean disable = !hardCodeTauMCheck.isSelected();
+        setLabelColor(tauMLabel, disable);
+        if (disable) tauMTextField.setText("");
+        tauMTextField.setDisable(disable);
+    }
+
+    void updateFitTauMCheck() {
+        boolean disable = !fitTauMCheck.isSelected();
+        for (Label label : new Label[]{tauMFractionLabel, r2LimitLabel}) {
+            setLabelColor(label, disable);
+        }
+        for (TextField textField : new TextField[]{tauMFractionTextField, r2LimitTextField}) {
+            textField.setDisable(disable);
+            if (disable) textField.setText("");
+        }
+    }
+
+    void setLabelColor(Label label, boolean disable) {
+        String color = disable ? "#b0b0b0" : "#000000";
+        label.setStyle(String.format("-fx-text-fill: %s", color));
     }
 
     void bootStrapChanged(FitModel.BootstrapMode mode) {

@@ -1,5 +1,6 @@
 package org.comdnmr.modelfree;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -62,12 +63,15 @@ public class ConventionalFitSpec extends ModelSelectionFitSpec {
         Map<String, OrderParSet> orderParSetMap = moleculeBase.orderParSetMap();
         orderParSetMap.computeIfAbsent(BEST_KEY, ky -> new OrderParSet(ky));
 
+        System.out.printf("key: %s%n", key);
+        System.out.printf("bestModel: %s%n", bestModel);
         data.setTestModel(bestModel);
         for (int i = 0; i < nReplicates; i++) {
             MolDataValues replicateData = sampler.sample();
             relaxFit.setRelaxData(key, replicateData);
             Score score = runFit(relaxFit, bestModel);
             double[] parameters = score.getPars();
+            System.out.printf("parameters:%n%s%n", Arrays.toString(parameters));
             for (int k = 0; k < parameters.length; k++) {
                 replicates[i][k] = parameters[k];
             }
@@ -105,9 +109,13 @@ public class ConventionalFitSpec extends ModelSelectionFitSpec {
         List<String> parameterNames = model.getParNames();
         int nParameters = parameterNames.size();
         OrderPar orderPar = new OrderPar(orderParSet, resSource, score.rss, score.nValues, score.nPars, model.getName());
+        double[] parameterBootstraps = new double[nReplicates];
         for (int k = 0; k < nParameters; k++) {
             String parameterName = parameterNames.get(k);
-            DescriptiveStatistics statistics = new DescriptiveStatistics(replicates[k]);
+            for (int i = 0; i < nReplicates; i++) {
+                parameterBootstraps[i] = replicates[i][k];
+            }
+            DescriptiveStatistics statistics = new DescriptiveStatistics(parameterBootstraps);
             double parameterMean = statistics.getMean();
             double parameterError = statistics.getStandardDeviation();
             orderPar = orderPar.set(parameterName, parameterMean, parameterError);
