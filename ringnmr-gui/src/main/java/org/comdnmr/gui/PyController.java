@@ -223,27 +223,27 @@ public class PyController implements Initializable {
     @FXML
     GridPane lambdasGrid;
     @FXML
-    TextField lambdaSsqTextField;
+    ValidatedDecimalTextField lambdaSsqTextField;
     @FXML
-    TextField lambdaTauFTextField;
+    ValidatedDecimalTextField lambdaTauFTextField;
     @FXML
-    TextField lambdaTauSTextField;
+    ValidatedDecimalTextField lambdaTauSTextField;
     @FXML
     CheckBox hardCodeTauMCheck;
     @FXML
     Label tauMLabel;
     @FXML
-    TextField tauMTextField;
+    ValidatedDecimalTextField tauMTextField;
     @FXML
     CheckBox fitTauMCheck;
     @FXML
     Label tauMFractionLabel;
     @FXML
-    TextField tauMFractionTextField;
+    ValidatedDecimalTextField tauMFractionTextField;
     @FXML
     Label r2LimitLabel;
     @FXML
-    TextField r2LimitTextField;
+    ValidatedDecimalTextField r2LimitTextField;
     @FXML
     ChoiceBox<FitSpec.BootstrapMode> bootstrapMethodChoice;
     @FXML
@@ -624,6 +624,10 @@ public class PyController implements Initializable {
 
         bootstrapMethodChoice.getItems().addAll(FitSpec.BootstrapMode.values());
         bootstrapMethodChoice.setValue(bootstrapMethodChoice.getItems().get(0));
+
+        // Set text to 100 initially in FXML. Need to call validateInput to
+        // ensure box doesn't start as red.
+        bootstrapReplicateTextField.validateInput();
 
         // // Models to choose if conventional or bagging are being used
         // modelBox.add(new Label("Models"), 0, 0);
@@ -2956,8 +2960,9 @@ public class PyController implements Initializable {
     void updateTauMCheck() {
         boolean disable = !hardCodeTauMCheck.isSelected();
         setLabelColor(tauMLabel, disable);
-        if (disable) tauMTextField.setText("");
         tauMTextField.setDisable(disable);
+        if (disable) tauMTextField.setText("");
+        tauMTextField.validateInput();
     }
 
     void updateFitTauMCheck() {
@@ -2965,9 +2970,10 @@ public class PyController implements Initializable {
         for (Label label : new Label[]{tauMFractionLabel, r2LimitLabel}) {
             setLabelColor(label, disable);
         }
-        for (TextField textField : new TextField[]{tauMFractionTextField, r2LimitTextField}) {
+        for (ValidatedDecimalTextField textField : new ValidatedDecimalTextField[]{tauMFractionTextField, r2LimitTextField}) {
             textField.setDisable(disable);
             if (disable) textField.setText("");
+            textField.validateInput();
         }
     }
 

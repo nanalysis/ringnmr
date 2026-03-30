@@ -2,9 +2,10 @@ package org.comdnmr.gui;
 
 import java.util.Optional;
 
-import javafx.scene.control.TextField;
-import javafx.scene.input.KeyCode;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 
+import javafx.scene.control.TextField;
 
 
 @FunctionalInterface
@@ -14,6 +15,8 @@ interface InputValidator<T> {
 
 abstract class ValidatedTextField<T> extends TextField {
 
+    private static final String INVALID_BORDER_COLOR = "red";
+
     private ValidationStrategy<T> validator;
 
     public ValidatedTextField(ValidationStrategy<T> validator) {
@@ -22,25 +25,24 @@ abstract class ValidatedTextField<T> extends TextField {
 
     public ValidatedTextField(ValidationStrategy<T> validator, String value) {
         this.validator = validator;
-        getStyleClass().add("validated-text-field");
 
-        // Listen for key pressed events
-        setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.ENTER) {
-                validateInput();
+        textProperty().addListener(
+            new ChangeListener<String>() {
+                @Override
+                public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                    validateInput();
+                }
             }
-        });
+        );
         setText(value);
-        validateInput();
     }
 
-    private void validateInput() {
+    public void validateInput() {
         boolean valid = getValue().isPresent();
-        if (valid) {
-            getStyleClass().remove("invalid");
+        if (valid || isDisabled()) {
+            setStyle("");
         } else {
-            setText("");
-            getStyleClass().add("invalid");
+            setStyle(String.format("-fx-border-color: %s;", INVALID_BORDER_COLOR));
         }
     }
 

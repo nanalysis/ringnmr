@@ -11,6 +11,7 @@
 
 <?import org.controlsfx.control.StatusBar?>
 
+<?import org.comdnmr.gui.ValidatedDecimalTextField?>
 <?import org.comdnmr.gui.ValidatedIntegerTextField?>
 <?import org.comdnmr.gui.XYPlotDataPane?>
 
@@ -302,30 +303,35 @@
                                                                 <CheckBox
                                                                     fx:id="model1CheckBox"
                                                                     text="1"
+                                                                    selected="true"
                                                                     GridPane.columnIndex="0"
                                                                     GridPane.rowIndex="0"
                                                                     />
                                                                 <CheckBox
                                                                     fx:id="model1fCheckBox"
                                                                     text="1f"
+                                                                    selected="true"
                                                                     GridPane.columnIndex="1"
                                                                     GridPane.rowIndex="0"
                                                                     />
                                                                 <CheckBox
                                                                     fx:id="model1sCheckBox"
                                                                     text="1s"
+                                                                    selected="true"
                                                                     GridPane.columnIndex="2"
                                                                     GridPane.rowIndex="0"
                                                                     />
                                                                 <CheckBox
                                                                     fx:id="model2sCheckBox"
                                                                     text="2s"
+                                                                    selected="true"
                                                                     GridPane.columnIndex="3"
                                                                     GridPane.rowIndex="0"
                                                                     />
                                                                 <CheckBox
                                                                     fx:id="model2sfCheckBox"
                                                                     text="2sf"
+                                                                    selected="true"
                                                                     GridPane.columnIndex="4"
                                                                     GridPane.rowIndex="0"
                                                                     />
@@ -349,7 +355,7 @@
                                                                     GridPane.columnIndex="0"
                                                                     GridPane.rowIndex="0"
                                                                     />
-                                                                <TextField
+                                                                <ValidatedDecimalTextField
                                                                     fx:id="lambdaSsqTextField"
                                                                     GridPane.columnIndex="1"
                                                                     GridPane.rowIndex="0"
@@ -361,7 +367,7 @@
                                                                     GridPane.columnIndex="2"
                                                                     GridPane.rowIndex="0"
                                                                     />
-                                                                <TextField
+                                                                <ValidatedDecimalTextField
                                                                     fx:id="lambdaTauFTextField"
                                                                     GridPane.columnIndex="3"
                                                                     GridPane.rowIndex="0"
@@ -373,7 +379,7 @@
                                                                     GridPane.columnIndex="4"
                                                                     GridPane.rowIndex="0"
                                                                     />
-                                                                <TextField
+                                                                <ValidatedDecimalTextField
                                                                     fx:id="lambdaTauSTextField"
                                                                     GridPane.columnIndex="5"
                                                                     GridPane.rowIndex="0"
@@ -399,7 +405,7 @@
                                                             GridPane.columnIndex="0"
                                                             GridPane.rowIndex="4"
                                                             />
-                                                        <TextField
+                                                        <ValidatedDecimalTextField
                                                             fx:id="tauMTextField"
                                                             text=""
                                                             GridPane.columnIndex="1"
@@ -424,9 +430,9 @@
                                                             GridPane.columnIndex="0"
                                                             GridPane.rowIndex="6"
                                                             />
-                                                        <TextField
+                                                        <ValidatedDecimalTextField
                                                             fx:id="tauMFractionTextField"
-                                                            text=""
+                                                            text="0.1"
                                                             GridPane.columnIndex="1"
                                                             GridPane.rowIndex="6"
                                                             prefWidth="50"
@@ -438,7 +444,7 @@
                                                             GridPane.columnIndex="0"
                                                             GridPane.rowIndex="7"
                                                             />
-                                                        <TextField
+                                                        <ValidatedDecimalTextField
                                                             fx:id="r2LimitTextField"
                                                             text=""
                                                             GridPane.columnIndex="1"
@@ -463,12 +469,11 @@
                                                             />
                                                         <ValidatedIntegerTextField
                                                             fx:id="bootstrapReplicateTextField"
-                                                            text=""
                                                             GridPane.columnIndex="1"
                                                             GridPane.rowIndex="9"
                                                             prefWidth="50"
                                                             maxWidth="50"
-                                                            />
+                                                            text="100"/>
                                                     </children>
                                                 </GridPane>
                                             </content>
