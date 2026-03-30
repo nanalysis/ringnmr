@@ -1536,7 +1536,6 @@ public class PyController implements Initializable {
         Class<? extends FitSpec> fitSpecClass = FitSpec.getFitSpec(fitMethodChoice.getValue());
         FitSpec.Builder fitSpecBuilder;
         if (fitSpecClass == ConventionalFitSpec.class) {
-            System.out.printf("getActiveModelNames(): %s%n", getActiveModelNames());
             fitSpecBuilder = new ConventionalFitSpec.Builder().modelNames(getActiveModelNames());
         } else if (fitSpecClass == BaggingFitSpec.class) {
             fitSpecBuilder = new BaggingFitSpec.Builder().modelNames(getActiveModelNames());
