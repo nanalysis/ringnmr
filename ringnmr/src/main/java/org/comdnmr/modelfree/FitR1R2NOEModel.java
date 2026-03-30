@@ -144,23 +144,26 @@ public class FitR1R2NOEModel extends FitModel {
         }
 
         if (!molData.isEmpty()) {
-            if (tau == null) {
-                tau = estimateTau(molData).get("tau");
-            }
+            if (fitSpec.tauMNeedsComputing) fitSpec.setTauM(estimateTau(molData).get("tau"));
 
-            FitSpec fitSpec = new ConventionalFitSpec.Builder()
-                .bootstrapMode(FitSpec.BootstrapMode.PARAMETRIC)
-                .nReplicates(100)
-                .tauM(17.5)
-                .fitTauM(true)
-                .modelNames(List.of("1", "1f", "2s", "2sf"))
-                .build();
-
-            Map<String, ModelFitResult> results = fit(molData, fitSpec);
+            Map<String, ModelFitResult> results = new HashMap<>();
+            molData
+                .entrySet()
+                .stream()
+                .sorted(Comparator.comparing(Map.Entry::getKey))
+                // .parallel()
+                .forEach(
+                    residue ->
+                        results.put(
+                            residue.getKey(),
+                            fitSpec.fit(residue.getKey(), residue.getValue())
+                        )
+                );
             return results;
         } else {
             throw new IllegalStateException("No relaxation data to analyze. Need T1, T2 and NOE datasets");
         }
+
     }
 
     public Map<String, Double> estimateTau() {
@@ -194,20 +197,6 @@ public class FitR1R2NOEModel extends FitModel {
         }
     }
 
-    public Map<String, ModelFitResult> fit(Map<String, MolDataValues> data, FitSpec fitSpec) {
-        // Estimate tauM if it has not be supplied
-        if (fitSpec.tauMNeedsComputing()) fitSpec.setTauM(estimateTau(data).get("tau"));
-
-        Map<String, ModelFitResult> results = new HashMap<>();
-        data
-            .entrySet()
-            .stream()
-            .sorted(Comparator.comparing(Map.Entry::getKey))
-            // .parallel()
-            .forEach(residue -> results.put(residue.getKey(), fitSpec.fit(residue.getKey(), residue.getValue())));
-
-        return results;
-    }
 
     public  Map<String, ModelFitResult> testModels(Map<String, MolDataValues> molData, List<String> modelNames) {
         Random random = new Random();

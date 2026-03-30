@@ -24,7 +24,6 @@ public abstract class FitSpec{
     protected final double t2Limit;
     protected final int nReplicates;
 
-    private static final List<String> METHOD_NAMES = List.of("Conventional", "Bootstrap Aggregation", "Regularization");
     private static final Map<String, Class<? extends FitSpec>> CLASSES = new LinkedHashMap<>();
     static {
         CLASSES.put("Conventional", ConventionalFitSpec.class);
@@ -78,6 +77,10 @@ public abstract class FitSpec{
         return relaxFit.score(result.get().getPoint(), true);
     }
 
+    public boolean tauMNeedsComputing() {
+        return tauMNeedsComputing;
+    }
+
     public void setTauM(double tauM) {
         this.tauM = tauM;
         tauMNeedsComputing = false;
@@ -90,16 +93,8 @@ public abstract class FitSpec{
         return tauM;
     }
 
-    public double getLocalTauFraction(MolDataValues data) {
-        boolean fitTau = (
-            t2Limit < 1.0e-6 ||
-            data.getData() .stream().anyMatch(value -> value.R2 > t2Limit)
-        );
-        return fitTau ? tauFraction : 0.0;
-    }
-
-    public boolean tauMNeedsComputing() {
-        return tauMNeedsComputing;
+    public boolean fitTauM(MolDataValues data) {
+        return fitTauM && data.getData().stream().anyMatch(value -> value.R2 > t2Limit);
     }
 
     public enum BootstrapMode {
@@ -131,8 +126,8 @@ public abstract class FitSpec{
             return (T) this;
         }
 
-        public T tauM(double tauM) {
-            this.tauM = Optional.ofNullable(tauM);
+        public T tauM(Optional<Double> tauM) {
+            this.tauM = tauM;
             return self();
         }
 
@@ -151,8 +146,10 @@ public abstract class FitSpec{
             return self();
         }
 
+        // TODO: implement
         public T fitExchange(boolean fitExchange) {
-            this.fitExchange = fitExchange;
+            // this.fitExchange = fitExchange;
+            this.fitExchange = false;
             return self();
         }
 

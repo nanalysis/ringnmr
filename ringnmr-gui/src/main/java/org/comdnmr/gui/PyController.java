@@ -1320,7 +1320,7 @@ public class PyController implements Initializable {
 
     public void updateXYChartLabels() {
         if ((simControls instanceof CPMGControls)) {
-            xychart.setNames("CPMG", "\u03BD (cpmg)", "R2 (\u03BD)", "0");
+            xychart.setNames("CPMG", "ν (CPMG)", "R₂ (ν)", "0");
             xychart.setBounds(0.0, 1100.0, 0.0, 65.0, 100.0, 5.0);
             xLowerBoundTextField.setText("0.0");
             xUpperBoundTextField.setText("1100.0");
@@ -1329,7 +1329,7 @@ public class PyController implements Initializable {
             xTickTextField.setText("100.0");
             yTickTextField.setText("5.0");
         } else if ((simControls instanceof ModelFreeControls)) {
-            xychart.setNames("Spectral Density", "\u03C9 (1/ns)", "log10[J(\u03C9)/1ns]", "0");
+            xychart.setNames("Spectral Density", "ω (ns⁻¹)", "log₁₀[J(ω)/1ns]", "0");
             xychart.setBounds(0.0, 5.0, -3.0, 1.0, 1.0, 1);
             xLowerBoundTextField.setText("0.0");
             xUpperBoundTextField.setText("5.0");
@@ -1357,7 +1357,7 @@ public class PyController implements Initializable {
             xTickTextField.setText("0.25");
             yTickTextField.setText("0.25");
         } else if ((simControls instanceof CESTControls)) {
-            xychart.setNames("CEST", "Offset (PPM)", "I(t)/I(0)", "20");
+            xychart.setNames("CEST", "Offset (ppm)", "I(t)/I(0)", "20");
             xychart.setBounds(-20, 20, 0.0, 1.0, 2.0, 0.25);
             xLowerBoundTextField.setText("-20.0");
             xUpperBoundTextField.setText("20.0");
@@ -1377,7 +1377,7 @@ public class PyController implements Initializable {
             xTickTextField.setText("2.0");
             yTickTextField.setText("0.25");
         } else if ((simControls instanceof R1RhoControls)) {
-            xychart.setNames("R1Rho", "Offset (PPM)", "R1ρ (s⁻¹)", "20");
+            xychart.setNames("R1Rho", "Offset (ppm)", "R1ρ (s⁻¹)", "20");
             xychart.setBounds(-20, 20, 0.0, 50.0, 2.0, 5.0);
             xLowerBoundTextField.setText("-20.0");
             xUpperBoundTextField.setText("20.0");
@@ -1533,48 +1533,44 @@ public class PyController implements Initializable {
     }
 
     public void fitIsotropicModel(FitModel fitModel, String prefix) {
-        double lambdaS = lambdaSsqSlider.getValue();
-        double lambdaTauF = lambdaTauFSlider.getValue();
-        double lambdaTauS = lambdaTauSSlider.getValue();
+        Class<? extends FitSpec> fitSpecClass = FitSpec.getFitSpec(fitMethodChoice.getValue());
+        FitSpec.Builder fitSpecBuilder;
+        if (fitSpecClass == ConventionalFitSpec.class) {
+            System.out.printf("getActiveModelNames(): %s%n", getActiveModelNames());
+            fitSpecBuilder = new ConventionalFitSpec.Builder().modelNames(getActiveModelNames());
+        } else if (fitSpecClass == BaggingFitSpec.class) {
+            fitSpecBuilder = new BaggingFitSpec.Builder().modelNames(getActiveModelNames());
+        } else if (fitSpecClass == RegularizationFitSpec.class) {
+            fitSpecBuilder = new RegularizationFitSpec.Builder();
+        } else {
+            throw new AssertionError(
+                "ConventionalFitSpec, BaggingFitSpec, RegularizationFitSpec are the only subclasses of FitSpec."
+            );
+        }
+        FitSpec fitSpec = fitSpecBuilder
+            .tauM(
+                hardCodeTauMCheck.isSelected() ?
+                    tauMTextField.getValue() :
+                    Optional.empty()
+             )
+            .fitTauM(fitTauMCheck.isSelected())
+            .tauFraction(
+                fitTauMCheck.isSelected() ?
+                    tauMFractionTextField.getValue().get() :
+                    0.0
+            )
+            .t2Limit(
+                fitTauMCheck.isSelected() ?
+                    r2LimitTextField.getValue().get() :
+                    0.0
+            )
+            .bootstrapMode(bootstrapMethodChoice.getValue())
+            .nReplicates(bootstrapReplicateTextField.getValue().get())
+            .build();
+        fitModel.setFitSpec(fitSpec);
 
-        String tauText = tauField.getText();
-        Double tau = null;
-        if (!tauText.isBlank()) {
-            try {
-                tau = Double.parseDouble(tauText);
-            } catch (NumberFormatException nfE) {
-            }
-        } else if (prefix.equals("D")) {
-            tau = 10.0;
-        }
-        DataIO.clearOrderPars();
-        DataIO.clearSpectralDensities();
-        boolean fitJ = fitJCheckBox.isSelected();
-        fitModel.setLambdaS(lambdaS);
-        fitModel.setLambdaTauF(lambdaTauF);
-        fitModel.setLambdaTauS(lambdaTauS);
-        fitModel.setUseLambda(lambdaCheckBox.isSelected());
-        fitModel.setTau(tau);
-        double tauFraction = tauFractionSlider.getValue();
-        double t2Limit = t2LimitSlider.getValue();
-        boolean fitTau = tauFraction > 0.001;
-        fitModel.setFitTau(fitTau);
-        fitModel.setT2Limit(t2Limit);
-        fitModel.setNReplicates((int) nReplicatesSlider.getValue());
-        fitModel.setFitJ(fitJ);
-        fitModel.setBootstrapMode(bootStrapChoice.getValue());
-        fitModel.setTauFraction(tauFraction);
-        var modelNames = new ArrayList<String>();
-        for (var modelCheckBox : modelCheckBoxes) {
-            if (modelCheckBox.isSelected()) {
-                String modelName = prefix + modelCheckBox.getText();
-                modelNames.add(modelName);
-            }
-        }
         try {
-            fitModel.setup(null, modelNames);
             fitModel.updaters(this::updateFitProgress, this::updateStatus);
-            // fitModel.testIsoModel();
             fitModel.fitResidues();
         } catch (IllegalStateException iaE) {
             GUIUtils.warn("Model Fit Error", iaE.getMessage());
@@ -2915,6 +2911,20 @@ public class PyController implements Initializable {
         updateXYChartLabels();
         genDataSDevTextField.setText("");
         simControls.simSliderAction("");
+    }
+
+
+    List<String> getActiveModelNames() {
+        List<String> modelNames = new ArrayList<>();
+        for (Node child : modelCheckBoxGrid.getChildren()) {
+            CheckBox checkBox = (CheckBox) child;
+            System.out.printf("checkBox.isDisabled(): %s%n", checkBox.isDisabled());
+            System.out.printf("checkBox.isSelected(): %s%n", checkBox.isSelected());
+            if (!checkBox.isDisabled() && checkBox.isSelected()) {
+                modelNames.add(checkBox.getText());
+            }
+        }
+        return modelNames;
     }
 
     Parent[] regularizationNodes() {

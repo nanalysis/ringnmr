@@ -28,17 +28,17 @@ public class ConventionalFitSpec extends ModelSelectionFitSpec {
     ConventionalFitSpec(Builder builder) { super(builder); }
 
     public ModelFitResult fit(String key, MolDataValues data) {
-        double localTauFraction = getLocalTauFraction(data);
         RelaxFit relaxFit = new RelaxFit();
+        // FIXME: currently weighting doesn't apply to R1/R2/NOE fitting
+        relaxFit.setFitJ(true);
         relaxFit.setRelaxData(key, data);
 
         // Determine the optimal model using the AICc
-        List<MFModelIso> models = getModels();
+        List<MFModelIso> models = getModels(data);
         MFModelIso bestModel = null;
         Score bestScore = null;
         double aicc = Double.MAX_VALUE;
         for (MFModelIso model : models) {
-            model.setTauFraction(localTauFraction);
             data.setTestModel(model);
             Score score = runFit(relaxFit, model);
 
@@ -63,15 +63,12 @@ public class ConventionalFitSpec extends ModelSelectionFitSpec {
         Map<String, OrderParSet> orderParSetMap = moleculeBase.orderParSetMap();
         orderParSetMap.computeIfAbsent(BEST_KEY, ky -> new OrderParSet(ky));
 
-        System.out.printf("key: %s%n", key);
-        System.out.printf("bestModel: %s%n", bestModel);
         data.setTestModel(bestModel);
         for (int i = 0; i < nReplicates; i++) {
             MolDataValues replicateData = sampler.sample();
             relaxFit.setRelaxData(key, replicateData);
             Score score = runFit(relaxFit, bestModel);
             double[] parameters = score.getPars();
-            System.out.printf("parameters:%n%s%n", Arrays.toString(parameters));
             for (int k = 0; k < parameters.length; k++) {
                 replicates[i][k] = parameters[k];
             }

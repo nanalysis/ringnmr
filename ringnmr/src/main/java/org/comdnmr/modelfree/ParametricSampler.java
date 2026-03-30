@@ -1,6 +1,7 @@
 package org.comdnmr.modelfree;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,6 +91,8 @@ public class ParametricSampler extends BootstrapSampler {
                 throw new AssertionError("Unexpected subclass of `RelaxDataValue` detected!");
             }
         }
+        // Force J-values to be computed
+        data.jValues = null;
         return data;
     }
 
@@ -110,7 +113,8 @@ public class ParametricSampler extends BootstrapSampler {
                 throw new AssertionError("Unexpected subclass of `RelaxDataValue` detected!");
             }
         }
-
+        // Force J-values to be computed
+        data.jValues = null;
         return data;
     }
 }

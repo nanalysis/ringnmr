@@ -21,10 +21,17 @@ public abstract class ModelSelectionFitSpec extends FitSpec {
         return modelNames;
     }
 
-    public List<MFModelIso> getModels() {
+    public List<MFModelIso> getModels(MolDataValues data) {
         List<MFModelIso> models = new ArrayList<>();
+        boolean fitTauM = fitTauM(data);
         for (String name : getModelNames()) {
-            models.add(MFModelIso.buildModel(name, fitTauM, getTauM(), tauFraction, fitExchange));
+            MFModelIso model = MFModelIso.buildModel(
+                name,
+                fitTauM,
+                tauM,
+                tauFraction,
+                fitExchange);
+            models.add(model);
         }
         return models;
     }
