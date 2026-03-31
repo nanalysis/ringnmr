@@ -1540,12 +1540,15 @@ public class PyController implements Initializable {
         Class<? extends FitSpec> fitSpecClass = getFitSpecClass();
         FitSpec.Builder fitSpecBuilder;
         if (fitSpecClass == ConventionalFitSpec.class) {
-            fitSpecBuilder = new ConventionalFitSpec.Builder().modelNames(getActiveModelNames());
+            fitSpecBuilder = new ConventionalFitSpec.Builder()
+                .modelNames(getActiveModelNames());
         } else if (fitSpecClass == BaggingFitSpec.class) {
             fitSpecBuilder = new BaggingFitSpec.Builder();
         } else if (fitSpecClass == RegularizationFitSpec.class) {
-            // TODO: add lambdas
-            fitSpecBuilder = new RegularizationFitSpec.Builder();
+            fitSpecBuilder = new RegularizationFitSpec.Builder()
+                .lambdaS(lambdaSsqTextField.getValue().get())
+                .lambdaTauF(lambdaTauFTextField.getValue().get())
+                .lambdaTauS(lambdaTauSTextField.getValue().get());
         } else {
             throw new AssertionError(
                 "ConventionalFitSpec, BaggingFitSpec, RegularizationFitSpec are the only subclasses of FitSpec."

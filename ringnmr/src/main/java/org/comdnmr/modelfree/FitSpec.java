@@ -178,11 +178,7 @@ public abstract class FitSpec {
         // Compute weight means. Should be 1.0 for every datapoint for
         // Nonparametric, and ~1.0 for Bayesian
         double[] parameterMeans = computeMeans(parameters);
-        System.out.printf("parameters:%n%s%n", Arrays.deepToString(parameters));
-        System.out.printf("parameterMeans:%n%s%n", Arrays.toString(parameterMeans));
         double[] weightMeans = computeMeans(weights);
-        System.out.printf("weights:%n%s%n", Arrays.deepToString(weights));
-        System.out.printf("weightMeans:%n%s%n", Arrays.toString(weightMeans));
 
         double[] parameterErrors = new double[nParameters];
         for (int k = 0; k < nParameters; k++) {
@@ -202,7 +198,6 @@ public abstract class FitSpec {
             double parameterError = Math.sqrt(variance);
             parameterErrors[k] = parameterError;
         }
-        System.out.printf("parameterErrors:%n%s%n", Arrays.toString(parameterErrors));
         return Pair.of(parameterMeans, parameterErrors);
     }
 

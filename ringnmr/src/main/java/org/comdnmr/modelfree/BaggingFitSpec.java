@@ -63,12 +63,8 @@ public class BaggingFitSpec extends ModelSelectionFitSpec {
             bestScores[i] = bestScore;
             double[] replicateParameters = bestModel.getStandardPars(bestScore.getPars());
             double[] replicateWeights = replicateData.getWeights();
-            for (int k = 0; k < nParameters; k++) {
-                parameters[i][k] = replicateParameters[k];
-            }
-            for (int j = 0; j < nWeights; j++) {
-                weights[i][j] = replicateWeights[j];
-            }
+            for (int k = 0; k < nParameters; k++) parameters[i][k] = replicateParameters[k];
+            for (int j = 0; j < nWeights; j++) weights[i][j] = replicateWeights[j];
         }
 
         MoleculeBase moleculeBase = MoleculeFactory.getActive();

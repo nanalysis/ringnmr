@@ -34,7 +34,9 @@ public class ConventionalFitSpec extends ModelSelectionFitSpec {
     ConventionalFitSpec(Builder builder) { super(builder); }
 
     public ModelFitResult fit(String key, MolDataValues data) {
-        RelaxFit relaxFit = initRelaxFit(key, data);
+        RelaxFit relaxFit = new RelaxFit();
+        relaxFit.setFitJ(fitJ);
+        relaxFit.setRelaxData(key, data);
 
         // Determine the optimal model using the AICc
         List<MFModelIso> models = getModels(data);

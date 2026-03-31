@@ -1,6 +1,18 @@
 package org.comdnmr.modelfree;
 
+import java.util.Map;
+
+import org.comdnmr.modelfree.models.MFModelIso;
+import org.comdnmr.modelfree.models.MFModelIso2sf;
+
+import org.nmrfx.chemistry.MoleculeBase;
+import org.nmrfx.chemistry.MoleculeFactory;
+import org.nmrfx.chemistry.relax.OrderPar;
+import org.nmrfx.chemistry.relax.OrderParSet;
+
 public class RegularizationFitSpec extends FitSpec {
+
+    private static final String KEY = "REGULARIZATION";
 
     private final double lambdaS;
     private final double lambdaTauF;
@@ -47,8 +59,65 @@ public class RegularizationFitSpec extends FitSpec {
         this.lambdaTauS = builder.lambdaTauS;
     }
 
+    @Override
+    protected RelaxFit initRelaxFit(String key, MolDataValues data) {
+        RelaxFit relaxFit = super.initRelaxFit(key, data);
+        relaxFit.setUseLambda(true);
+        relaxFit.setLambdaS(getLambdaS());
+        relaxFit.setLambdaTauF(getLambdaTauF());
+        relaxFit.setLambdaTauS(getLambdaTauS());
+        return relaxFit;
+    }
+
+    private MFModelIso2sf getModel2sf(MolDataValues data) {
+        boolean fitTauM = fitTauM(data);
+        return (MFModelIso2sf) MFModelIso.buildModel("2sf", fitTauM, tauM, tauFraction, fitExchange);
+    }
+
     public ModelFitResult fit(String key, MolDataValues data) {
-        throw new UnsupportedOperationException("Regularization fitting yet to be implemented");
+        RelaxFit relaxFit = initRelaxFit(key, data);
+        MFModelIso2sf model = getModel2sf(data);
+        data.setTestModel(model);
+
+        int nParameters = model.getNPars();
+        int nWeights = data.getNValues();
+        double[][] parameters = new double[nReplicates][nParameters];
+        double[][] weights = new double[nReplicates][nWeights];
+        BootstrapSampler sampler = getBootstrapSampler(data);
+
+        Score[] scores = new Score[nReplicates];
+        for (int i = 0; i < nReplicates; i++) {
+            MolDataValues replicateData = sampler.sample();
+            relaxFit.setRelaxData(key, replicateData);
+            Score score = runFit(relaxFit, model);
+            scores[i] = score;
+            double[] replicateParameters = model.getStandardPars(score.getPars());
+            double[] replicateWeights = replicateData.getWeights();
+            for (int k = 0; k < nParameters; k++) parameters[i][k] = replicateParameters[k];
+            for (int j = 0; j < nWeights; j++) weights[i][j] = replicateWeights[j];
+        }
+
+        MoleculeBase moleculeBase = MoleculeFactory.getActive();
+        Map<String, OrderParSet> orderParSetMap = moleculeBase.orderParSetMap();
+        orderParSetMap.computeIfAbsent(KEY, ky -> new OrderParSet(ky));
+
+        // FIXME: not sure what Score should be for makeOrderParSet...
+        OrderPar orderPar = makeOrderParSet(
+            orderParSetMap.get(KEY),
+            sampler.getOriginalData(),
+            key,
+            scores[0],
+            model,
+            parameters,
+            weights
+        );
+        ModelFitResult result = new ModelFitResult(
+            orderPar,
+            parameters,
+            null,
+            scores
+        );
+        return result;
     }
 
     double getLambdaS() { return lambdaS; }
