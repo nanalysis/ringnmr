@@ -2,22 +2,26 @@ package org.comdnmr.modelfree;
 
 import java.util.*;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.optim.PointValuePair;
 import org.comdnmr.modelfree.models.MFModelIso;
+import org.nmrfx.chemistry.Atom;
+import org.nmrfx.chemistry.relax.OrderPar;
+import org.nmrfx.chemistry.relax.OrderParSet;
+import org.nmrfx.chemistry.relax.ResonanceSource;
+import org.nmrfx.chemistry.relax.SpectralDensity;
 
 
 // TODO: if tauM is not specified, it must be estimated using the data.
 // Including the Map<String, MolDataValues> into the build method will allow
 // this to be computed without the risk if an IllegalStateException
-// (see getTauM below).
-// estimateTau() is currently defined in FitR1R2NOEModel.
-// Makes more sense to me to make this a method of this class
-public abstract class FitSpec{
+// (see getTauM below). estimateTau() is currently defined in FitR1R2NOEModel. Makes more sense to me to make this a method of this class
+public abstract class FitSpec {
 
     protected double tauM;
     protected boolean tauMNeedsComputing;
     protected final boolean fitTauM;
-    protected final boolean fitJ;
+    protected final boolean fitJ; // TODO: Currently not supported
     protected final BootstrapMode bootstrapMode;
     protected final boolean fitExchange; // TODO: Currently not supported
     protected final double tauFraction;
@@ -111,15 +115,132 @@ public abstract class FitSpec{
         };
     }
 
+    private double[] computeMeans(double[][] array) {
+        int nSamples = array.length;
+        int nDataPoints = array[0].length;
+
+        double[] means = new double[nDataPoints];
+        for (int j = 0; j < nDataPoints; j++) {
+            double sum = 0.0;
+            for (int i = 0; i < nSamples; i++) {
+                sum += array[i][j];
+            }
+            double mean = sum / nSamples;
+            means[j] = mean;
+        }
+        return means;
+    }
+
+    private double[] computeStdevs(double[][] array, Optional<double[]> meansOpt) {
+        int nSamples = array.length;
+        int nDataPoints = array[0].length;
+
+        double[] means;
+        if (meansOpt.isEmpty()) means = computeMeans(array);
+        else means = meansOpt.get();
+        double[] stdevs = new double[nDataPoints];
+        for (int j = 0; j < nDataPoints; j++) {
+            double sum = 0.0;
+            double mean = means[j];
+            for (int i = 0; i < nSamples; i++) {
+                sum += Math.pow(mean - array[i][j], 2.0);
+            }
+            double stdev = sum / (nSamples - 1);
+            stdevs[j] = stdev;
+        }
+        return stdevs;
+    }
+
+    protected Pair<double[], double[]> computeStatisticsParametric(double[][] parameters) {
+        double[] parameterMeans = computeMeans(parameters);
+        double[] parameterErrors = computeStdevs(parameters, Optional.of(parameterMeans));
+        return Pair.of(parameterMeans, parameterErrors);
+    }
+
+    protected Pair<double[], double[]> computeStatisticsBootstrapping(double[][] parameters, double[][] weights) {
+        int nParameters = parameters[0].length;
+        int nDataPoints = weights[0].length;
+
+        // Compute weight means. Should be 1.0 for every datapoint for
+        // Nonparametric, and ~1.0 for Bayesian
+        double[] parameterMeans = computeMeans(parameters);
+        double[] weightMeans = computeMeans(weights);
+
+        double[] parameterErrors = new double[nParameters];
+        for (int k = 0; k < nParameters; k++) {
+            double parameterMean = parameterMeans[k];
+            double variance = 0.0;
+            for (int j = 0; j < nDataPoints; j++) {
+                double covjk = 0.0;
+                double weightMean = weightMeans[j];
+                for (int i = 0; i < nReplicates; i++) {
+                    double weight = weights[i][j];
+                    double parameter = parameters[i][k];
+                    covjk += (weight - weightMean) * (parameter - parameterMean);
+                }
+                covjk /= nReplicates;
+                variance += Math.pow(covjk, 2.0);
+            }
+            double parameterError = Math.sqrt(variance);
+            parameterErrors[k] = parameterError;
+        }
+        return Pair.of(parameterMeans, parameterErrors);
+    }
+
+    protected OrderPar makeOrderParSet(
+        OrderParSet orderParSet,
+        MolDataValues data,
+        String key,
+        Score score,
+        MFModelIso model,
+        double[][] parameters,
+        double[][] weights
+    ) {
+        Pair<double[], double[]> parameterStats = switch (bootstrapMode) {
+            case PARAMETRIC -> computeStatisticsParametric(parameters);
+            case NONPARAMETRIC, BAYESIAN -> computeStatisticsBootstrapping(parameters, weights);
+        };
+        double[] parameterMeans = parameterStats.getLeft();
+        double[] parameterErrors = parameterStats.getRight();
+        int nParameters = parameterMeans.length;
+
+        ResonanceSource resSource = new ResonanceSource(data.atom);
+        Atom atom = data.atom;
+        List<String> parameterNames = model.getParNames();
+        OrderPar orderPar = new OrderPar(orderParSet, resSource, score.rss, score.nValues, score.nPars, model.getName());
+
+        for (int k = 0; k < nParameters; k++) {
+            String parameterName = parameterNames.get(k);
+            double parameterMean = parameterMeans[k];
+            double parameterError = parameterErrors[k];
+            orderPar = orderPar.set(parameterName, parameterMean, parameterError);
+        }
+
+        // If tauM is fixed, set it to the fixed value with zero error
+        if (!model.fitTau())  orderPar = orderPar.set("Tau_e", model.getTau(), 0.0);
+
+        orderPar = orderPar.set("model", (double) model.getNumber(), null);
+        atom.addOrderPar(orderParSet, orderPar);
+
+        SpectralDensity spectralDensity = new SpectralDensity(key, data.getJValues());
+        atom.addSpectralDensity(key, spectralDensity);
+
+        return orderPar;
+    }
+
     public static abstract class Builder<T extends Builder<T>> {
         private Optional<Double> tauM = Optional.empty();
         private boolean fitTauM = false;
-        private boolean fitJ = false;
+        private boolean fitJ = true;
         private BootstrapMode bootstrapMode = BootstrapMode.PARAMETRIC;
         private boolean fitExchange = false; // Currently not supported
         private double tauFraction = 0.25;
         private double t2Limit = 0.0;
-        private int nReplicates = 0;
+        // 25 is smaller than 27, the maximum number of iterates possible for a
+        // 2-field dataset when using nonparametric bootstrapping.
+        // It therefore will not lead to an unexpected error if the user simply
+        // uses the default setup
+        private int nReplicates = 25;
 
         @SuppressWarnings("unchecked")
         private T self() {
@@ -136,8 +257,10 @@ public abstract class FitSpec{
             return self();
         }
 
+        // TODO: implement
         public T fitJ(boolean fitJ) {
-            this.fitJ = fitJ;
+            // this.fitJ = fitJ;
+            this.fitJ = true;
             return self();
         }
 

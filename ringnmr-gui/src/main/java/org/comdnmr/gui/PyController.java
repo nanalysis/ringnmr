@@ -41,6 +41,7 @@ import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.KeyEvent;
@@ -219,81 +220,10 @@ public class PyController implements Initializable {
 
     // >>> Model-free entities >>>
     @FXML
-    Label lambdaLabel;
-    @FXML
-    GridPane lambdasGrid;
-    @FXML
-    ValidatedDecimalTextField lambdaSsqTextField;
-    @FXML
-    ValidatedDecimalTextField lambdaTauFTextField;
-    @FXML
-    ValidatedDecimalTextField lambdaTauSTextField;
-    @FXML
-    CheckBox hardCodeTauMCheck;
-    @FXML
-    Label tauMLabel;
-    @FXML
-    ValidatedDecimalTextField tauMTextField;
-    @FXML
-    CheckBox fitTauMCheck;
-    @FXML
-    Label tauMFractionLabel;
-    @FXML
-    ValidatedDecimalTextField tauMFractionTextField;
-    @FXML
-    Label r2LimitLabel;
-    @FXML
-    ValidatedDecimalTextField r2LimitTextField;
-    @FXML
-    ChoiceBox<FitSpec.BootstrapMode> bootstrapMethodChoice;
-    @FXML
-    ValidatedIntegerTextField bootstrapReplicateTextField;
-
-    @FXML
-    Slider lambdaSsqSlider;
-    @FXML
-    Label lambdaSsqLabel;
-    @FXML
-    Slider lambdaTauFSlider;
-    @FXML
-    Label lambdaTauFLabel;
-    @FXML
-    Slider lambdaTauSSlider;
-    @FXML
-    Label lambdaTauSLabel;
-    @FXML
-    CheckBox fitJCheckBox;
-    @FXML
-    ChoiceBox<FitModel.BootstrapMode> bootStrapChoice;
-    @FXML
-    CheckBox lambdaCheckBox;
-    @FXML
-    CheckBox useRQCheckBox;
-    @FXML
-    Slider tauFractionSlider;
-    @FXML
-    Label tauFractionLabel;
-    @FXML
-    TextField tauField;
-    @FXML
-    Slider t2LimitSlider;
-    @FXML
-    Label t2LimitLabel;
-    @FXML
-    Slider nReplicatesSlider;
-    @FXML
-    Label bootstrapNLabel;
-    @FXML
-    GridPane modelBox;
-    @FXML
-    GridPane lambdaBox;
-    @FXML
-    GridPane modelSelectionGrid;
-    @FXML
-    VBox boxyBox;
-    @FXML
     ChoiceBox<String> modelAtoms;
 
+    @FXML
+    GridPane modelSelectionGrid;
     @FXML
     Label modelsLabel;
     @FXML
@@ -309,7 +239,39 @@ public class PyController implements Initializable {
     @FXML
     CheckBox model2sfCheckBox;
 
-    List<CheckBox> modelCheckBoxes = new ArrayList<>();
+    @FXML
+    GridPane lambdasGrid;
+    @FXML
+    Label lambdaLabel;
+    @FXML
+    ValidatedDecimalTextField lambdaSsqTextField;
+    @FXML
+    ValidatedDecimalTextField lambdaTauFTextField;
+    @FXML
+    ValidatedDecimalTextField lambdaTauSTextField;
+
+    @FXML
+    CheckBox hardCodeTauMCheck;
+    @FXML
+    Label tauMLabel;
+    @FXML
+    ValidatedDecimalTextField tauMTextField;
+
+    @FXML
+    CheckBox fitTauMCheck;
+    @FXML
+    Label tauMFractionLabel;
+    @FXML
+    ValidatedDecimalTextField tauMFractionTextField;
+    @FXML
+    Label r2LimitLabel;
+    @FXML
+    ValidatedDecimalTextField r2LimitTextField;
+
+    @FXML
+    ChoiceBox<FitSpec.BootstrapMode> bootstrapMethodChoice;
+    @FXML
+    ValidatedIntegerTextField bootstrapReplicateTextField;
     // <<< Model-free entities <<<
 
     BootstrapSamplePlots bootstrapSamplePlots = null;
@@ -1507,14 +1469,51 @@ public class PyController implements Initializable {
         xychart.setEquations(equations);
     }
 
+    private void showWarningDialog(Exception e) {
+        Alert alert = new Alert(AlertType.WARNING);
+        alert.setTitle("Warning");
+        alert.setHeaderText("An error has occurred");
+        alert.setContentText(e.getMessage()); // Show exception message
+        alert.showAndWait();
+    }
+
     public void fitModelFree() {
-       if (modelAtoms.getValue().equals("¹H-¹⁵N")) {
-           fitR1R2NOEModel();
-       } else if (modelAtoms.getValue().equals("²H-¹³C")) {
-           fitDeuteriumModel();
-       } else {
-           throw new AssertionError("Unsupported moiety");
-       }
+        try {
+            checkForInvalidTextFields();
+        } catch (Exception e) {
+            showWarningDialog(e);
+            return;
+        }
+        if (modelAtoms.getValue().equals("¹H-¹⁵N")) {
+            fitR1R2NOEModel();
+        } else if (modelAtoms.getValue().equals("²H-¹³C")) {
+            // FIXME: Implement Deuterium fitting
+            throw new RuntimeException("Deuterium fitting needs to be implemented!");
+            // fitDeuteriumModel();
+        } else {
+            throw new AssertionError("Unsupported moiety");
+        }
+    }
+
+    private List<ValidatedTextField<?>> getValidatedTextFields() {
+        List<ValidatedTextField<?>> textFields = new ArrayList<>();
+        textFields.add(tauMTextField);
+        textFields.add(tauMFractionTextField);
+        textFields.add(r2LimitTextField);
+        if (getFitSpecClass() == RegularizationFitSpec.class) {
+            textFields.add(lambdaSsqTextField);
+            textFields.add(lambdaTauFTextField);
+            textFields.add(lambdaTauSTextField);
+        }
+        return textFields;
+    }
+
+    private void checkForInvalidTextFields() {
+        for (ValidatedTextField<?> textField : getValidatedTextFields()) {
+            if (!textField.isDisabled() && textField.getValue().isEmpty()) {
+                throw new RuntimeException("At least one text field contains invalid input.");
+            }
+        }
     }
 
     public void fitR1R2NOEModel() {
@@ -1522,24 +1521,30 @@ public class PyController implements Initializable {
         fitIsotropicModel(modelFitter, "");
     }
 
-    public void fitDeuteriumModel() {
-        modelFitter = new FitDeuteriumModel();
-        fitJCheckBox.setSelected(true);
-        if (modelCheckBoxes.stream().filter(CheckBox::isSelected).findAny().isEmpty()) {
-            modelCheckBoxes.stream().filter(m -> m.getText().equals("1f")).findAny().ifPresent(m -> m.setSelected(true));
-        }
-        SpectralDensityCalculator.setUseRQ(useRQCheckBox.isSelected());
-        fitIsotropicModel(modelFitter, "D");
+    // TODO: Deuterium fitting
+    // public void fitDeuteriumModel() {
+    //     modelFitter = new FitDeuteriumModel();
+    //     fitJCheckBox.setSelected(true);
+    //     if (modelCheckBoxes.stream().filter(CheckBox::isSelected).findAny().isEmpty()) {
+    //         modelCheckBoxes.stream().filter(m -> m.getText().equals("1f")).findAny().ifPresent(m -> m.setSelected(true));
+    //     }
+    //     SpectralDensityCalculator.setUseRQ(useRQCheckBox.isSelected());
+    //     fitIsotropicModel(modelFitter, "D");
+    // }
+
+    private Class<? extends FitSpec> getFitSpecClass() {
+        return FitSpec.getFitSpec(fitMethodChoice.getValue());
     }
 
     public void fitIsotropicModel(FitModel fitModel, String prefix) {
-        Class<? extends FitSpec> fitSpecClass = FitSpec.getFitSpec(fitMethodChoice.getValue());
+        Class<? extends FitSpec> fitSpecClass = getFitSpecClass();
         FitSpec.Builder fitSpecBuilder;
         if (fitSpecClass == ConventionalFitSpec.class) {
             fitSpecBuilder = new ConventionalFitSpec.Builder().modelNames(getActiveModelNames());
         } else if (fitSpecClass == BaggingFitSpec.class) {
-            fitSpecBuilder = new BaggingFitSpec.Builder().modelNames(getActiveModelNames());
+            fitSpecBuilder = new BaggingFitSpec.Builder();
         } else if (fitSpecClass == RegularizationFitSpec.class) {
+            // TODO: add lambdas
             fitSpecBuilder = new RegularizationFitSpec.Builder();
         } else {
             throw new AssertionError(
@@ -1578,11 +1583,11 @@ public class PyController implements Initializable {
     }
 
     public void finishModelFreeFit() {
-        Double tauFit = modelFitter.getTau();
-        if (tauFit != null) {
-            tauCalcField.setText(String.format("%.2f", tauFit));
-            tauField.setText(tauCalcField.getText());
-        }
+        // Double tauFit = modelFitter.getTau();
+        // if (tauFit != null) {
+        //     tauCalcField.setText(String.format("%.2f", tauFit));
+        //     tauField.setText(tauCalcField.getText());
+        // }
 
         Map<String, OrderParSet> molResProps = DataIO.getOrderParSetFromMolecule();
         boolean hasBest = molResProps.keySet().stream().anyMatch(setName -> setName.endsWith("best"));
@@ -1596,7 +1601,7 @@ public class PyController implements Initializable {
 
         addMoleculeDataToAxisMenu();
         showModelFreeData();
-        nReplicatesSlider.setValue(modelFitter.getNReplicates());
+        // nReplicatesSlider.setValue(modelFitter.getNReplicates());
     }
 
     public void estimateCorrelationTime() {
@@ -1620,7 +1625,7 @@ public class PyController implements Initializable {
             r1MedianField.setText(String.format("%.3f", result.get("R1")));
             r2MedianField.setText(String.format("%.3f", result.get("R2")));
             tauCalcField.setText(String.format("%.2f", result.get("tau")));
-            tauField.setText(tauCalcField.getText());
+            // tauField.setText(tauCalcField.getText());
 
         }
     }
@@ -2937,8 +2942,7 @@ public class PyController implements Initializable {
     void fitMethodChanged(String methodName) {
         Class<? extends FitSpec> fitSpecClass = FitSpec.getFitSpec(methodName);
         if (
-            fitSpecClass == ConventionalFitSpec.class ||
-            fitSpecClass == BaggingFitSpec.class
+            fitSpecClass == ConventionalFitSpec.class
         ) {
             for (Parent node : regularizationNodes()) {
                 if (modelSelectionGrid.getChildren().contains(node)) {
@@ -2950,7 +2954,19 @@ public class PyController implements Initializable {
                     modelSelectionGrid.getChildren().add(node);
                 }
             }
-        } else if (fitSpecClass == RegularizationFitSpec.class) {
+        } else if (fitSpecClass == BaggingFitSpec.class) {
+            for (Parent node : regularizationNodes()) {
+                if (modelSelectionGrid.getChildren().contains(node)) {
+                    modelSelectionGrid.getChildren().remove(node);
+                }
+            }
+            for (Parent node : modelSelectionNodes()) {
+                if (modelSelectionGrid.getChildren().contains(node)) {
+                    modelSelectionGrid.getChildren().remove(node);
+                }
+            }
+        }
+        else if (fitSpecClass == RegularizationFitSpec.class) {
             for (Parent node : modelSelectionNodes()) {
                 if (modelSelectionGrid.getChildren().contains(node)) {
                     modelSelectionGrid.getChildren().remove(node);
@@ -2991,32 +3007,32 @@ public class PyController implements Initializable {
         label.setStyle(String.format("-fx-text-fill: %s", color));
     }
 
-    void bootStrapChanged(FitModel.BootstrapMode mode) {
-        if (mode != FitModel.BootstrapMode.PARAMETRIC) {
-            fitJCheckBox.setSelected(true);
-            int nReplicates = (int) nReplicatesSlider.getValue();
-            if (nReplicates < 10) {
-                nReplicates = 50;
-                nReplicatesSlider.setValue(nReplicates);
-            }
-            if (!lambdaCheckBox.isSelected()) {
-                modelCheckBoxes.forEach(checkBox -> checkBox.setSelected(true));
-            }
-        }
-    }
+    // void bootStrapChanged(FitModel.BootstrapMode mode) {
+    //     if (mode != FitModel.BootstrapMode.PARAMETRIC) {
+    //         fitJCheckBox.setSelected(true);
+    //         int nReplicates = (int) nReplicatesSlider.getValue();
+    //         if (nReplicates < 10) {
+    //             nReplicates = 50;
+    //             nReplicatesSlider.setValue(nReplicates);
+    //         }
+    //         if (!lambdaCheckBox.isSelected()) {
+    //             modelCheckBoxes.forEach(checkBox -> checkBox.setSelected(true));
+    //         }
+    //     }
+    // }
 
-    void lambdaChanged(boolean state) {
-        if (state) {
-            fitJCheckBox.setSelected(true);
-            if (lambdaSsqSlider.getValue() < 1.0e-5) {
-                lambdaSsqSlider.setValue(0.5);
-                lambdaTauFSlider.setValue(0.5);
-                lambdaTauSSlider.setValue(0.1);
-            }
-            modelCheckBoxes.forEach(checkBox -> checkBox.setSelected(false));
-            modelCheckBoxes.get(modelCheckBoxes.size() - 1).setSelected(true);
-        }
-    }
+    // void lambdaChanged(boolean state) {
+    //     if (state) {
+    //         fitJCheckBox.setSelected(true);
+    //         if (lambdaSsqSlider.getValue() < 1.0e-5) {
+    //             lambdaSsqSlider.setValue(0.5);
+    //             lambdaTauFSlider.setValue(0.5);
+    //             lambdaTauSSlider.setValue(0.1);
+    //         }
+    //         modelCheckBoxes.forEach(checkBox -> checkBox.setSelected(false));
+    //         modelCheckBoxes.get(modelCheckBoxes.size() - 1).setSelected(true);
+    //     }
+    // }
 
     @FXML
     void clearProject() {

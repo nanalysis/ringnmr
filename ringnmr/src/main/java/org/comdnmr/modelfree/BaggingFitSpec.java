@@ -8,35 +8,35 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.comdnmr.modelfree.models.MFModelIso;
 import org.comdnmr.modelfree.models.MFModelIso2sf;
 
-import org.nmrfx.chemistry.Atom;
 import org.nmrfx.chemistry.MoleculeBase;
 import org.nmrfx.chemistry.MoleculeFactory;
 import org.nmrfx.chemistry.relax.OrderPar;
 import org.nmrfx.chemistry.relax.OrderParSet;
-import org.nmrfx.chemistry.relax.ResonanceSource;
-import org.nmrfx.chemistry.relax.SpectralDensity;
 
 public class BaggingFitSpec extends ModelSelectionFitSpec {
 
     private static final String KEY = "BAGGING";
 
-    BaggingFitSpec(Builder builder) {
-        super(builder);
+    public static class Builder extends ModelSelectionFitSpec.Builder {
+
+        public BaggingFitSpec build() {
+            return new BaggingFitSpec(this);
+        }
     }
+
+    BaggingFitSpec(Builder builder) { super(builder); }
 
     public ModelFitResult fit(String key, MolDataValues data) {
         RelaxFit relaxFit = new RelaxFit();
-        // FIXME: currently weighting doesn't apply to R1/R2/NOE fitting
-        relaxFit.setFitJ(true);
 
         List<MFModelIso> models = getModels(data);
         MFModelIso2sf model2sf = (MFModelIso2sf) getModel("2sf", data);
-        double[][] replicates = new double[nReplicates][5];
-        BootstrapSampler sampler = getBootstrapSampler(data);
 
-        MoleculeBase moleculeBase = MoleculeFactory.getActive();
-        Map<String, OrderParSet> orderParSetMap = moleculeBase.orderParSetMap();
-        orderParSetMap.computeIfAbsent(KEY, ky -> new OrderParSet(ky));
+        int nParameters = 5;
+        int nWeights = data.getNValues();
+        double[][] parameters = new double[nReplicates][nParameters];
+        double[][] weights = new double[nReplicates][nWeights];
+        BootstrapSampler sampler = getBootstrapSampler(data);
 
         Score[] bestScores = new Score[nReplicates];
         for (int i = 0; i < nReplicates; i++) {
@@ -61,11 +61,18 @@ public class BaggingFitSpec extends ModelSelectionFitSpec {
             MFModelIso bestModel = bestModelScore.get().getLeft();
             Score bestScore = bestModelScore.get().getRight();
             bestScores[i] = bestScore;
-            double[] parameters = bestModel.getStandardPars(bestScore.getPars());
-            for (int k = 0; k < parameters.length; k++) {
-                replicates[i][k] = parameters[k];
+            double[] replicateParameters = bestModel.getStandardPars(bestScore.getPars());
+            for (int k = 0; k < nParameters; k++) {
+                parameters[i][k] = replicateParameters[k];
+            }
+            for (int j = 0; j < nWeights; j++) {
+                weights[i][j] = replicateData.weights[j];
             }
         }
+
+        MoleculeBase moleculeBase = MoleculeFactory.getActive();
+        Map<String, OrderParSet> orderParSetMap = moleculeBase.orderParSetMap();
+        orderParSetMap.computeIfAbsent(KEY, ky -> new OrderParSet(ky));
 
         // FIXME: not sure what Score should be for makeOrderParSet...
         OrderPar orderPar = makeOrderParSet(
@@ -74,23 +81,17 @@ public class BaggingFitSpec extends ModelSelectionFitSpec {
             key,
             bestScores[0],
             model2sf,
-            replicates
+            parameters,
+            weights
         );
 
         ModelFitResult result = new ModelFitResult(
             orderPar,
-            replicates,
+            parameters,
             null,
             bestScores
         );
 
         return result;
-    }
-
-    public static class Builder extends ModelSelectionFitSpec.Builder {
-
-        public BaggingFitSpec build() {
-            return new BaggingFitSpec(this);
-        }
     }
 }
