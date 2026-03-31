@@ -34,8 +34,7 @@ public class ConventionalFitSpec extends ModelSelectionFitSpec {
     ConventionalFitSpec(Builder builder) { super(builder); }
 
     public ModelFitResult fit(String key, MolDataValues data) {
-        RelaxFit relaxFit = new RelaxFit();
-        relaxFit.setRelaxData(key, data);
+        RelaxFit relaxFit = initRelaxFit(key, data);
 
         // Determine the optimal model using the AICc
         List<MFModelIso> models = getModels(data);
@@ -45,7 +44,7 @@ public class ConventionalFitSpec extends ModelSelectionFitSpec {
             Score score = runFit(relaxFit, model);
             if (
                 bestModelScore.isEmpty() ||
-                bestModelScore.get().getRight().aicc().get() < score.aicc().get()
+                score.aicc().get() < bestModelScore.get().getRight().aicc().get()
             ) {
                 bestModelScore = Optional.of(Pair.of(model, score));
             }
@@ -69,12 +68,7 @@ public class ConventionalFitSpec extends ModelSelectionFitSpec {
             relaxFit.setRelaxData(key, replicateData);
             Score score = runFit(relaxFit, bestModel);
             double[] replicateParameters = score.getPars();
-            double[] replicateWeights = data.weights;
-            // Parametric sampling: weights will be null. Set them to all ones
-            if (replicateWeights == null) {
-                replicateWeights = new double[nWeights];
-                for (int j = 0; j < nWeights; j++) replicateWeights[j] = 1.0;
-            }
+            double[] replicateWeights = replicateData.getWeights();
             for (int k = 0; k < nParameters; k++) parameters[i][k] = replicateParameters[k];
             for (int j = 0; j < nWeights; j++) weights[i][j] = replicateWeights[j];
         }

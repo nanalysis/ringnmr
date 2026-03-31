@@ -2922,8 +2922,6 @@ public class PyController implements Initializable {
         List<String> modelNames = new ArrayList<>();
         for (Node child : modelCheckBoxGrid.getChildren()) {
             CheckBox checkBox = (CheckBox) child;
-            System.out.printf("checkBox.isDisabled(): %s%n", checkBox.isDisabled());
-            System.out.printf("checkBox.isSelected(): %s%n", checkBox.isSelected());
             if (!checkBox.isDisabled() && checkBox.isSelected()) {
                 modelNames.add(checkBox.getText());
             }

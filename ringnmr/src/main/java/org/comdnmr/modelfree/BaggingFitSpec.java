@@ -27,7 +27,7 @@ public class BaggingFitSpec extends ModelSelectionFitSpec {
     BaggingFitSpec(Builder builder) { super(builder); }
 
     public ModelFitResult fit(String key, MolDataValues data) {
-        RelaxFit relaxFit = new RelaxFit();
+        RelaxFit relaxFit = initRelaxFit(key, data);
 
         List<MFModelIso> models = getModels(data);
         MFModelIso2sf model2sf = (MFModelIso2sf) getModel("2sf", data);
@@ -62,11 +62,12 @@ public class BaggingFitSpec extends ModelSelectionFitSpec {
             Score bestScore = bestModelScore.get().getRight();
             bestScores[i] = bestScore;
             double[] replicateParameters = bestModel.getStandardPars(bestScore.getPars());
+            double[] replicateWeights = replicateData.getWeights();
             for (int k = 0; k < nParameters; k++) {
                 parameters[i][k] = replicateParameters[k];
             }
             for (int j = 0; j < nWeights; j++) {
-                weights[i][j] = replicateData.weights[j];
+                weights[i][j] = replicateWeights[j];
             }
         }
 

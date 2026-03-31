@@ -115,6 +115,13 @@ public abstract class FitSpec {
         };
     }
 
+    protected RelaxFit initRelaxFit(String key, MolDataValues data) {
+        RelaxFit relaxFit = new RelaxFit();
+        relaxFit.setFitJ(fitJ);
+        relaxFit.setRelaxData(key, data);
+        return relaxFit;
+    }
+
     private double[] computeMeans(double[][] array) {
         int nSamples = array.length;
         int nDataPoints = array[0].length;
@@ -145,26 +152,37 @@ public abstract class FitSpec {
             for (int i = 0; i < nSamples; i++) {
                 sum += Math.pow(mean - array[i][j], 2.0);
             }
-            double stdev = sum / (nSamples - 1);
+            double stdev = Math.sqrt(sum / (nSamples - 1));
             stdevs[j] = stdev;
         }
         return stdevs;
     }
 
-    protected Pair<double[], double[]> computeStatisticsParametric(double[][] parameters) {
+    private Pair<double[], double[]> computeStatistics(double[][] parameters, double[][] weights) {
+        return switch (bootstrapMode) {
+            case PARAMETRIC -> computeStatisticsParametric(parameters);
+            case NONPARAMETRIC, BAYESIAN -> computeStatisticsBootstrapping(parameters, weights);
+        };
+    }
+
+    private Pair<double[], double[]> computeStatisticsParametric(double[][] parameters) {
         double[] parameterMeans = computeMeans(parameters);
         double[] parameterErrors = computeStdevs(parameters, Optional.of(parameterMeans));
         return Pair.of(parameterMeans, parameterErrors);
     }
 
-    protected Pair<double[], double[]> computeStatisticsBootstrapping(double[][] parameters, double[][] weights) {
+    private Pair<double[], double[]> computeStatisticsBootstrapping(double[][] parameters, double[][] weights) {
         int nParameters = parameters[0].length;
         int nDataPoints = weights[0].length;
 
         // Compute weight means. Should be 1.0 for every datapoint for
         // Nonparametric, and ~1.0 for Bayesian
         double[] parameterMeans = computeMeans(parameters);
+        System.out.printf("parameters:%n%s%n", Arrays.deepToString(parameters));
+        System.out.printf("parameterMeans:%n%s%n", Arrays.toString(parameterMeans));
         double[] weightMeans = computeMeans(weights);
+        System.out.printf("weights:%n%s%n", Arrays.deepToString(weights));
+        System.out.printf("weightMeans:%n%s%n", Arrays.toString(weightMeans));
 
         double[] parameterErrors = new double[nParameters];
         for (int k = 0; k < nParameters; k++) {
@@ -184,8 +202,10 @@ public abstract class FitSpec {
             double parameterError = Math.sqrt(variance);
             parameterErrors[k] = parameterError;
         }
+        System.out.printf("parameterErrors:%n%s%n", Arrays.toString(parameterErrors));
         return Pair.of(parameterMeans, parameterErrors);
     }
+
 
     protected OrderPar makeOrderParSet(
         OrderParSet orderParSet,
@@ -196,10 +216,7 @@ public abstract class FitSpec {
         double[][] parameters,
         double[][] weights
     ) {
-        Pair<double[], double[]> parameterStats = switch (bootstrapMode) {
-            case PARAMETRIC -> computeStatisticsParametric(parameters);
-            case NONPARAMETRIC, BAYESIAN -> computeStatisticsBootstrapping(parameters, weights);
-        };
+        Pair<double[], double[]> parameterStats = computeStatistics(parameters, weights);
         double[] parameterMeans = parameterStats.getLeft();
         double[] parameterErrors = parameterStats.getRight();
         int nParameters = parameterMeans.length;
