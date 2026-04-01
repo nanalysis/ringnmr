@@ -82,13 +82,6 @@ public class BaggingFitSpec extends ModelSelectionFitSpec {
             weights
         );
 
-        ModelFitResult result = new ModelFitResult(
-            orderPar,
-            parameters,
-            null,
-            bestScores
-        );
-
-        return result;
+        return new ModelFitResult(orderPar, parameters, null);
     }
 }

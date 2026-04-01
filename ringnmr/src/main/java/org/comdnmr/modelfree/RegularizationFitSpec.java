@@ -111,13 +111,8 @@ public class RegularizationFitSpec extends FitSpec {
             parameters,
             weights
         );
-        ModelFitResult result = new ModelFitResult(
-            orderPar,
-            parameters,
-            null,
-            scores
-        );
-        return result;
+
+        return new ModelFitResult(orderPar, parameters, null);
     }
 
     double getLambdaS() { return lambdaS; }
