@@ -150,8 +150,7 @@ public class FitR1R2NOEModel extends FitModel {
             molData
                 .entrySet()
                 .stream()
-                .sorted(Comparator.comparing(Map.Entry::getKey))
-                // .parallel()
+                .parallel()
                 .forEach(
                     residue ->
                         results.put(
@@ -161,7 +160,7 @@ public class FitR1R2NOEModel extends FitModel {
                 );
             return results;
         } else {
-            throw new IllegalStateException("No relaxation data to analyze. Need T1, T2 and NOE datasets");
+            throw new IllegalStateException("No relaxation data to analyze. Need R1, R2, and NOE");
         }
 
     }

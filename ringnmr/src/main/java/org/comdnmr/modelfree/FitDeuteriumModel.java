@@ -14,11 +14,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class FitDeuteriumModel extends FitModel {
-    Map<String, MolDataValues> molDataValuesMap = null;
+    Map<String, MolDataValues> molData = null;
     Random random = new Random();
 
-    public void setData(Map<String, MolDataValues> molDataValuesMap) {
-        this.molDataValuesMap = molDataValuesMap;
+    public void setData(Map<String, MolDataValues> molData) {
+        this.molData = molData;
     }
 
     public static Map<String, MolDataValues> getData(boolean requireCoords) {
@@ -130,19 +130,35 @@ public class FitDeuteriumModel extends FitModel {
     }
 
     public Map<String, ModelFitResult> testIsoModel() {
-        if ((molDataValuesMap == null) || (molDataValuesMap.isEmpty())) {
-            molDataValuesMap = getData(false);
+        if ((molData == null) || (molData.isEmpty())) {
+            molData = getData(false);
         }
-        if ((searchKey != null) && molDataValuesMap.containsKey(searchKey)) {
-            var keepVal = molDataValuesMap.get(searchKey);
-            molDataValuesMap.clear();
-            molDataValuesMap.put(searchKey, keepVal);
+        if ((searchKey != null) && molData.containsKey(searchKey)) {
+            var keepVal = molData.get(searchKey);
+            molData.clear();
+            molData.put(searchKey, keepVal);
         }
 
-        if (!molDataValuesMap.isEmpty()) {
-            return testModels(molDataValuesMap, modelNames);
+        if (!molData.isEmpty()) {
+            // FIXME: hard-coding value used previously.
+            // Is there a way to estimate this similarly with amide R1/R2/NOE?
+            if (fitSpec.tauMNeedsComputing) fitSpec.setTauM(10.0);
+
+            Map<String, ModelFitResult> results = new HashMap<>();
+            molData
+                .entrySet()
+                .stream()
+                // .parallel()
+                .forEach(
+                    residue ->
+                        results.put(
+                            residue.getKey(),
+                            fitSpec.fit(residue.getKey(), residue.getValue())
+                        )
+                );
+            return results;
         } else {
-            throw new IllegalStateException("No relaxation data to analyze.  Need R1, R2, RAP");
+            throw new IllegalStateException("No relaxation data to analyze. Need R1, R2, RAP, and optionally RQ");
         }
     }
 

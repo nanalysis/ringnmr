@@ -107,6 +107,11 @@ public abstract class FitSpec {
         BAYESIAN
     }
 
+    public enum MoietyType {
+        N15_H1,
+        C13_H2
+    }
+
     public BootstrapSampler getBootstrapSampler(MolDataValues data) {
         return switch (bootstrapMode) {
             case PARAMETRIC -> new ParametricSampler(data);
@@ -114,6 +119,7 @@ public abstract class FitSpec {
             case BAYESIAN -> new BayesianSampler(data);
         };
     }
+
 
     protected RelaxFit initRelaxFit(String key, MolDataValues data) {
         RelaxFit relaxFit = new RelaxFit();
@@ -200,7 +206,6 @@ public abstract class FitSpec {
         }
         return Pair.of(parameterMeans, parameterErrors);
     }
-
 
     protected OrderPar makeOrderParSet(
         OrderParSet orderParSet,
