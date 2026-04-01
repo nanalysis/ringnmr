@@ -331,8 +331,7 @@ public class FitR1R2NOEModel extends FitModel {
             ModelFitResult modelFitResult = new ModelFitResult(
                 orderPar,
                 replicateData,
-                null,
-                new Score[]{bestScore}
+                null
             );
             result = Optional.of(modelFitResult);
         }
@@ -432,7 +431,7 @@ public class FitR1R2NOEModel extends FitModel {
         atom.addSpectralDensity(key, spectralDensity);
         resData.setTestModel(model2sf);
 
-        ModelFitResult result = new ModelFitResult(orderPar, makeBaggingParameters(models, scores), null, scores);
+        ModelFitResult result = new ModelFitResult(orderPar, makeBaggingParameters(models, scores), null);
         return Optional.of(result);
     }
 
