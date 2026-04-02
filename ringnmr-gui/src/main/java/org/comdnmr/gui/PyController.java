@@ -236,6 +236,8 @@ public class PyController implements Initializable {
     @FXML
     CheckBox model1sCheckBox;
     @FXML
+    CheckBox model1fsCheckBox;
+    @FXML
     CheckBox model2sCheckBox;
     @FXML
     CheckBox model2sfCheckBox;
@@ -572,6 +574,14 @@ public class PyController implements Initializable {
         // Moeity type being considered in model-free fitting
         modelAtoms.getItems().addAll("¹H-¹⁵N", "²H-¹³C");
         modelAtoms.setValue("¹H-¹⁵N");
+        modelAtoms
+            .getSelectionModel()
+            .selectedItemProperty()
+            .addListener(
+                (ObservableValue<? extends String> obs, String oldValue, String newValue)
+                    -> updateModelAtoms(newValue)
+            );
+
 
         // Model-free: fitting method (conventional, bagging, regularization)
         fitMethodChoice.getItems().addAll(FitSpec.getNames());
@@ -1476,6 +1486,16 @@ public class PyController implements Initializable {
         alert.setHeaderText("An error has occurred");
         alert.setContentText(e.getMessage()); // Show exception message
         alert.showAndWait();
+    }
+
+    private void updateModelAtoms(String newValue) {
+        if (newValue.equals("¹H-¹⁵N")) {
+            model1sCheckBox.setText("1s");
+        } else if (newValue.equals("²H-¹³C")) {
+            model1sCheckBox.setText("1sf");
+        } else {
+            throw new AssertionError("Unsupported moiety");
+        }
     }
 
     public void fitModelFree() {

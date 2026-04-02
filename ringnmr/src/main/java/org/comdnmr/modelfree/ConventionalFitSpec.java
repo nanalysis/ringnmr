@@ -5,9 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
 
-import org.apache.commons.math3.geometry.partitioning.BSPTreeVisitor.Order;
 import org.comdnmr.modelfree.models.MFModelIso;
 
 import org.nmrfx.chemistry.MoleculeBase;
