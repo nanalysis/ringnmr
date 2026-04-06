@@ -74,7 +74,8 @@ public class RegularizationFitSpec extends FitSpec {
         return (MFModelIso2sf) MFModelIso.buildModel("2sf", fitTauM, tauM, tauFraction, fitExchange);
     }
 
-    public ModelFitResult fit(String key, MolDataValues data) {
+    @Override
+    public ModelFitResult fit(String key, MolDataValues data, Map<String, OrderParSet> orderParSetMap) {
         RelaxFit relaxFit = initRelaxFit(key, data);
         MFModelIso2sf model = getModel2sf(data);
         data.setTestModel(model);
@@ -97,10 +98,7 @@ public class RegularizationFitSpec extends FitSpec {
             for (int j = 0; j < nWeights; j++) weights[i][j] = replicateWeights[j];
         }
 
-        MoleculeBase moleculeBase = MoleculeFactory.getActive();
-        Map<String, OrderParSet> orderParSetMap = moleculeBase.orderParSetMap();
         orderParSetMap.computeIfAbsent(KEY, ky -> new OrderParSet(ky));
-
         // FIXME: not sure what Score should be for makeOrderParSet...
         OrderPar orderPar = makeOrderParSet(
             orderParSetMap.get(KEY),

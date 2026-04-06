@@ -26,7 +26,8 @@ public class BaggingFitSpec extends ModelSelectionFitSpec {
 
     BaggingFitSpec(Builder builder) { super(builder); }
 
-    public ModelFitResult fit(String key, MolDataValues data) {
+    @Override
+    public ModelFitResult fit(String key, MolDataValues data, Map<String, OrderParSet> orderParSetMap) {
         RelaxFit relaxFit = initRelaxFit(key, data);
 
         List<MFModelIso> models = getModels(data);
@@ -67,10 +68,7 @@ public class BaggingFitSpec extends ModelSelectionFitSpec {
             for (int j = 0; j < nWeights; j++) weights[i][j] = replicateWeights[j];
         }
 
-        MoleculeBase moleculeBase = MoleculeFactory.getActive();
-        Map<String, OrderParSet> orderParSetMap = moleculeBase.orderParSetMap();
         orderParSetMap.computeIfAbsent(KEY, ky -> new OrderParSet(ky));
-
         // FIXME: not sure what Score should be for makeOrderParSet...
         OrderPar orderPar = makeOrderParSet(
             orderParSetMap.get(KEY),

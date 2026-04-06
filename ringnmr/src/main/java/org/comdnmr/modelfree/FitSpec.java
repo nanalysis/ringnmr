@@ -52,7 +52,7 @@ public abstract class FitSpec {
         this.nReplicates = builder.nReplicates;
     }
 
-    public abstract ModelFitResult fit(String key, MolDataValues data);
+    public abstract ModelFitResult fit(String key, MolDataValues data, Map<String, OrderParSet> orderParSetMap);
 
     public static List<String> getNames() { return new ArrayList<>(CLASSES.keySet()); }
 

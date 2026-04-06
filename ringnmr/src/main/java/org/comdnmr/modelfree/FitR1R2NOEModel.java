@@ -19,7 +19,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
 
 /**
  * Class for fitting the model-free formalism to spectral density data
@@ -39,7 +42,7 @@ public class FitR1R2NOEModel extends FitModel {
         this.molData = molData;
     }
 
-    Map<String, MolDataValues> getData(boolean requireCoords) {
+    public Map<String, MolDataValues> getData(boolean requireCoords) {
         Map<String, MolDataValues> molDataValues = new HashMap<>();
         MoleculeBase mol = MoleculeFactory.getActive();
         if (mol != null) {
@@ -145,18 +148,33 @@ public class FitR1R2NOEModel extends FitModel {
 
         if (!molData.isEmpty()) {
             if (fitSpec.tauMNeedsComputing) fitSpec.setTauM(estimateTau(molData).get("tau"));
+            AtomicInteger counts = new AtomicInteger();
+            int n = molData.entrySet().size();
+            MoleculeBase moleculeBase = MoleculeFactory.getActive();
+            Map<String, OrderParSet> orderParSetMap = new ConcurrentHashMap<>();
+            orderParSetMap.putAll(moleculeBase.orderParSetMap());
 
-            Map<String, ModelFitResult> results = new HashMap<>();
-            molData
-                .entrySet()
-                .stream()
-                .parallel()
+            Map<String, ModelFitResult> results = new ConcurrentHashMap<>();
+
+            // molData.entrySet() may return a spliterator that doesn't split
+            // well (synchronized wrapper, custom Map, or other), so work
+            // stayed on one worker. Copying to ArrayList gives a highly
+            // splittable source.
+            new ArrayList<>(molData.entrySet())
+                .parallelStream()
                 .forEach(
-                    residue ->
-                        results.put(
-                            residue.getKey(),
-                            fitSpec.fit(residue.getKey(), residue.getValue())
-                        )
+                    residue -> {
+                        updateProgress((double) counts.get() / n);
+                        System.out.printf("counts.get(): %s%n", counts.get());
+                        if (cancelled.get()) return;
+                        String key = residue.getKey();
+                        System.out.printf("key: %s%n", key);
+                        MolDataValues data = residue.getValue();
+                        if (!data.getData().isEmpty()) results.put(key, fitSpec.fit(key, data, orderParSetMap));
+                        counts.incrementAndGet();
+                        System.out.println("DONE");
+                    }
+
                 );
             return results;
         } else {

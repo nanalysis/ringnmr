@@ -3,9 +3,10 @@ package org.comdnmr.modelfree;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.tuple.Pair;
-
+import org.apache.commons.lang3.tuple.Triple;
 import org.comdnmr.modelfree.models.MFModelIso;
 
 import org.nmrfx.chemistry.MoleculeBase;
@@ -33,14 +34,12 @@ public class ConventionalFitSpec extends ModelSelectionFitSpec {
 
     ConventionalFitSpec(Builder builder) { super(builder); }
 
-    public ModelFitResult fit(String key, MolDataValues data) {
+    @Override
+    public ModelFitResult fit(String key, MolDataValues data, Map<String, OrderParSet> orderParSetMap) {
         RelaxFit relaxFit = initRelaxFit(key, data);
         List<MFModelIso> models = getModels(data);
 
-        MoleculeBase moleculeBase = MoleculeFactory.getActive();
-        Map<String, OrderParSet> orderParSetMap = moleculeBase.orderParSetMap();
-
-        Optional<Pair<Score, ModelFitResult>> bestScoreResult = Optional.empty();
+        Optional<Triple<Score, ModelFitResult, MFModelIso>> best = Optional.empty();
         int nWeights = data.getNValues();
         for (MFModelIso model : models) {
             data.setTestModel(model);
@@ -78,29 +77,27 @@ public class ConventionalFitSpec extends ModelSelectionFitSpec {
                 weights
             );
 
-            if (
-                bestScoreResult.isEmpty() ||
-                score.aicc().get() < bestScoreResult.get().getLeft().aicc().get()
-            ) {
+            if (best.isEmpty() || score.aicc().get() < best.get().getLeft().aicc().get()) {
                 ModelFitResult result = new ModelFitResult(orderPar, parameters, null);
-                bestScoreResult = Optional.of(Pair.of(score, result));
+                best = Optional.of(Triple.of(score, result, model));
             }
         }
 
-        if (bestScoreResult.isEmpty()) {
-            throw new AssertionError("`bestScoreResult` should not be empty here!");
-        }
+        String bestModelName = best
+            .orElseThrow(() -> new AssertionError("`best` should not be empty here!"))
+            .getRight()
+            .getName();
+        // orderParSetMap.put(makeBestKey(bestModelName), orderParSetMap.get(makeKey(bestModelName)));
+        // System.out.printf("orderParSetMap: %s%n", orderParSetMap);
 
-        // String modelString = bestScoreResult.get().getRight().orderPar().getModel();
-        // String oldKey = makeKey(modelString);
-        // String newKey = String.format("%s-BEST", oldKey);
-        // OrderParSet bestOrderParSet = orderParSetMap.remove(oldKey);
-        // orderParSetMap.put(newKey, bestOrderParSet);
-
-        return bestScoreResult.get().getRight();
+        return best.get().getMiddle();
     }
 
     private String makeKey(String modelName) {
         return String.format("%s-%s", KEY, modelName.replace("model", ""));
+    }
+
+    private String makeBestKey(String modelName) {
+        return String.format("%s-%s-%s", KEY, "BEST", modelName);
     }
 }
