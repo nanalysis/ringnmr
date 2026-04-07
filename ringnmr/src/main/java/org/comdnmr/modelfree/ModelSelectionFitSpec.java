@@ -55,4 +55,11 @@ public abstract class ModelSelectionFitSpec extends FitSpec {
             .collect(Collectors.toList());
     }
 
+    @Override
+    public int hashCode() {
+        int h = 17;
+        h = 31 * h + super.hashCode();
+        h = 31 * h + (modelNames.hashCode());
+        return h;
+    }
 }

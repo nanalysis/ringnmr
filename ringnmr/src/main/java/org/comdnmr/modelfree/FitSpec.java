@@ -269,6 +269,25 @@ public abstract class FitSpec {
         return orderPar;
     }
 
+    @Override
+    public int hashCode() {
+        int h = 17;
+        long tauMBits = Double.doubleToLongBits(tauM);
+        h = 31 * h + (int)(tauMBits ^ (tauMBits >>> 32));
+        h = 31 * h + (tauMNeedsComputing ? 1 : 0);
+        h = 31 * h + (fitTauM ? 1 : 0);
+        h = 31 * h + (fitJ ? 1 : 0);
+        h = 31 * h + (bootstrapMode == null ? 0 : bootstrapMode.hashCode());
+        h = 31 * h + (fitExchange ? 1 : 0);
+        long tauMFractionBits = Double.doubleToLongBits(tauMFraction);
+        h = 31 * h + (int)(tauMFractionBits ^ (tauMFractionBits >>> 32));
+        long r2LimitBits = Double.doubleToLongBits(r2Limit);
+        h = 31 * h + (int)(r2LimitBits ^ (r2LimitBits >>> 32));
+        h = 31 * h + nReplicates;
+        h = 31 * h + this.getClass().hashCode();
+        return h;
+    }
+
     public static abstract class Builder<T extends Builder<T>> {
         private Optional<Double> tauM = Optional.empty();
         private boolean fitTauM = false;

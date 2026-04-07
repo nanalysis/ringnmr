@@ -125,4 +125,17 @@ public class RegularizationFitSpec extends FitSpec {
     double getLambdaTauF() { return lambdaTauF; }
 
     double getLambdaTauS() { return lambdaTauS; }
+
+    @Override
+    public int hashCode() {
+        int h = 17;
+        h = 31 * h + super.hashCode();
+        long lambdaSBits = Double.doubleToLongBits(lambdaS);
+        h = 31 * h + (int)(lambdaSBits ^ (lambdaSBits >>> 32));
+        long lambdaTauFBits = Double.doubleToLongBits(lambdaTauF);
+        h = 31 * h + (int)(lambdaTauFBits ^ (lambdaTauFBits >>> 32));
+        long lambdaTauSBits = Double.doubleToLongBits(lambdaTauS);
+        h = 31 * h + (int)(lambdaTauSBits ^ (lambdaTauSBits >>> 32));
+        return h;
+    }
 }
