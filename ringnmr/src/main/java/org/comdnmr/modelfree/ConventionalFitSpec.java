@@ -3,14 +3,10 @@ package org.comdnmr.modelfree;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.comdnmr.modelfree.models.MFModelIso;
 
-import org.nmrfx.chemistry.MoleculeBase;
-import org.nmrfx.chemistry.MoleculeFactory;
 import org.nmrfx.chemistry.relax.OrderPar;
 import org.nmrfx.chemistry.relax.OrderParSet;
 
@@ -83,14 +79,17 @@ public class ConventionalFitSpec extends ModelSelectionFitSpec {
             }
         }
 
-        String bestModelName = best
-            .orElseThrow(() -> new AssertionError("`best` should not be empty here!"))
-            .getRight()
-            .getName();
+        // FIXME: currently don't see the best OrderParSet in RING with this code...
+        // String bestModelName = best
+        //     .orElseThrow(() -> new AssertionError("`best` should not be empty here!"))
+        //     .getRight()
+        //     .getName();
         // orderParSetMap.put(makeBestKey(bestModelName), orderParSetMap.get(makeKey(bestModelName)));
         // System.out.printf("orderParSetMap: %s%n", orderParSetMap);
 
-        return best.get().getMiddle();
+        return best
+            .orElseThrow(() -> new AssertionError("`best` should not be empty here!"))
+            .getMiddle();
     }
 
     private String makeKey(String modelName) {

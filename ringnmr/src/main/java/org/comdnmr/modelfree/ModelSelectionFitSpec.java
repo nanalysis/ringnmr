@@ -24,13 +24,28 @@ public abstract class ModelSelectionFitSpec extends FitSpec {
         this.modelNames = builder.modelNames;
     }
 
+    @Override
+    public String toToml() {
+        StringBuilder builder = getBaseTomlBuilder();
+        builder.append(
+            String.format(
+                "model_names = [%s]",
+                modelNames
+                    .stream()
+                    .map(s -> String.format("\"%s\"", s))
+                    .collect(Collectors.joining(", "))
+            )
+        );
+        return builder.toString();
+    }
+
     public List<String> getModelNames() {
         return modelNames;
     }
 
     public MFModelIso getModel(String name, MolDataValues data) {
         boolean fitTauM = fitTauM(data);
-        return MFModelIso.buildModel(name, fitTauM, tauM, tauFraction, fitExchange);
+        return MFModelIso.buildModel(name, fitTauM, tauM, tauMFraction, fitExchange);
     }
 
     public List<MFModelIso> getModels(MolDataValues data) {

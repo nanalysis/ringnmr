@@ -19,10 +19,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
 
 /**
  * Class for fitting the model-free formalism to spectral density data
@@ -154,27 +151,31 @@ public class FitR1R2NOEModel extends FitModel {
             Map<String, OrderParSet> orderParSetMap = new ConcurrentHashMap<>();
             orderParSetMap.putAll(moleculeBase.orderParSetMap());
 
-            Map<String, ModelFitResult> results = new ConcurrentHashMap<>();
-
+            // I Was having issues getting fitting to run concurrently across residues.
+            // Using molData.entrySet().parallelStream(),
+            // all fits were being performed successively in the main thread.
+            //
+            // I found that creating the parallelStream from an
+            // ArrayList<Map.Entry<String, MolDataValues>> instead of the
+            // Map<String, MolDataValues> did leave to parallelism.
+            //
+            // Some info from Chat-GPT:
             // molData.entrySet() may return a spliterator that doesn't split
             // well (synchronized wrapper, custom Map, or other), so work
             // stayed on one worker. Copying to ArrayList gives a highly
             // splittable source.
+            Map<String, ModelFitResult> results = new ConcurrentHashMap<>();
             new ArrayList<>(molData.entrySet())
                 .parallelStream()
                 .forEach(
                     residue -> {
                         updateProgress((double) counts.get() / n);
-                        System.out.printf("counts.get(): %s%n", counts.get());
                         if (cancelled.get()) return;
                         String key = residue.getKey();
-                        System.out.printf("key: %s%n", key);
                         MolDataValues data = residue.getValue();
                         if (!data.getData().isEmpty()) results.put(key, fitSpec.fit(key, data, orderParSetMap));
                         counts.incrementAndGet();
-                        System.out.println("DONE");
                     }
-
                 );
             return results;
         } else {

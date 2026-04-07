@@ -5,8 +5,6 @@ import java.util.Map;
 import org.comdnmr.modelfree.models.MFModelIso;
 import org.comdnmr.modelfree.models.MFModelIso2sf;
 
-import org.nmrfx.chemistry.MoleculeBase;
-import org.nmrfx.chemistry.MoleculeFactory;
 import org.nmrfx.chemistry.relax.OrderPar;
 import org.nmrfx.chemistry.relax.OrderParSet;
 
@@ -60,6 +58,15 @@ public class RegularizationFitSpec extends FitSpec {
     }
 
     @Override
+    public String toToml() {
+        StringBuilder builder = getBaseTomlBuilder();
+        builder.append(String.format("lambdaS = %f%n", lambdaS));
+        builder.append(String.format("lambdaTauF = %f%n", lambdaTauF));
+        builder.append(String.format("lambdaTauS = %f", lambdaTauS));
+        return builder.toString();
+    }
+
+    @Override
     protected RelaxFit initRelaxFit(String key, MolDataValues data) {
         RelaxFit relaxFit = super.initRelaxFit(key, data);
         relaxFit.setUseLambda(true);
@@ -71,7 +78,7 @@ public class RegularizationFitSpec extends FitSpec {
 
     private MFModelIso2sf getModel2sf(MolDataValues data) {
         boolean fitTauM = fitTauM(data);
-        return (MFModelIso2sf) MFModelIso.buildModel("2sf", fitTauM, tauM, tauFraction, fitExchange);
+        return (MFModelIso2sf) MFModelIso.buildModel("2sf", fitTauM, tauM, tauMFraction, fitExchange);
     }
 
     @Override
@@ -118,5 +125,4 @@ public class RegularizationFitSpec extends FitSpec {
     double getLambdaTauF() { return lambdaTauF; }
 
     double getLambdaTauS() { return lambdaTauS; }
-
 }

@@ -1561,29 +1561,27 @@ public class PyController implements Initializable {
                 .lambdaTauS(lambdaTauSTextField.getValue().get());
         } else {
             throw new AssertionError(
-                "ConventionalFitSpec, BaggingFitSpec, RegularizationFitSpec are the only subclasses of FitSpec."
+                "ConventionalFitSpec, BaggingFitSpec, RegularizationFitSpec are the only concrete subclasses of FitSpec."
             );
         }
-        FitSpec fitSpec = fitSpecBuilder
+        fitSpecBuilder
             .tauM(
                 hardCodeTauMCheck.isSelected() ?
                     tauMTextField.getValue() :
                     Optional.empty()
-             )
-            .fitTauM(fitTauMCheck.isSelected())
-            .tauFraction(
-                fitTauMCheck.isSelected() ?
-                    tauMFractionTextField.getValue().get() :
-                    0.0
-            )
-            .t2Limit(
-                fitTauMCheck.isSelected() ?
-                    r2LimitTextField.getValue().get() :
-                    0.0
             )
             .bootstrapMode(bootstrapMethodChoice.getValue())
-            .nReplicates(bootstrapReplicateTextField.getValue().get())
-            .build();
+            .nReplicates(bootstrapReplicateTextField.getValue().get());
+
+        if (fitTauMCheck.isSelected()) {
+            fitSpecBuilder
+                .fitTauM(true)
+                .tauMFraction(tauMFractionTextField.getValue().get())
+                .r2Limit(r2LimitTextField.getValue().get());
+        } else {
+            fitSpecBuilder.fitTauM(false);
+        }
+        FitSpec fitSpec = fitSpecBuilder.build();
 
         fitModel.setFitSpec(fitSpec);
         try {

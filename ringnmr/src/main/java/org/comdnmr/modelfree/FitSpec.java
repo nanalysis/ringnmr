@@ -24,8 +24,8 @@ public abstract class FitSpec {
     protected final boolean fitJ; // TODO: Currently not supported
     protected final BootstrapMode bootstrapMode;
     protected final boolean fitExchange; // TODO: Currently not supported
-    protected final double tauFraction;
-    protected final double t2Limit;
+    protected final double tauMFraction;
+    protected final double r2Limit;
     protected final int nReplicates;
 
     private static final Map<String, Class<? extends FitSpec>> CLASSES = new LinkedHashMap<>();
@@ -47,8 +47,8 @@ public abstract class FitSpec {
         this.fitJ = builder.fitJ;
         this.bootstrapMode = builder.bootstrapMode;
         this.fitExchange = builder.fitExchange;
-        this.tauFraction = builder.tauFraction;
-        this.t2Limit = builder.t2Limit;
+        this.tauMFraction = builder.tauMFraction;
+        this.r2Limit = builder.r2Limit;
         this.nReplicates = builder.nReplicates;
     }
 
@@ -81,6 +81,30 @@ public abstract class FitSpec {
         return relaxFit.score(result.get().getPoint(), true);
     }
 
+    abstract public String toToml();
+
+    protected StringBuilder getBaseTomlBuilder() {
+        StringBuilder builder = new StringBuilder("[fit_specification]\n");
+        builder.append(
+            String.format(
+                "method = \"%s\"%n",
+                this
+                    .getClass()
+                    .getSimpleName()
+                    .toLowerCase()
+                    .replace("fitspec", "")
+            )
+        );
+        builder.append(String.format("tauM = %f%n", tauM));
+        builder.append(String.format("fitTauM = %b%n", fitTauM));
+        builder.append(String.format("tauMFraction = %f%n", tauMFraction));
+        builder.append(String.format("r2Limit = %f%n", r2Limit));
+        builder.append(String.format("fitJ = %b%n", fitJ));
+        builder.append(String.format("bootstrapMode = \"%s\"%n", bootstrapMode.toString().toLowerCase()));
+        builder.append(String.format("nReplicates = %d%n", nReplicates));
+        return builder;
+    }
+
     public boolean tauMNeedsComputing() {
         return tauMNeedsComputing;
     }
@@ -98,7 +122,7 @@ public abstract class FitSpec {
     }
 
     public boolean fitTauM(MolDataValues data) {
-        return fitTauM && data.getData().stream().anyMatch(value -> value.R2 > t2Limit);
+        return fitTauM && data.getData().stream().anyMatch(value -> value.R2 > r2Limit);
     }
 
     public enum BootstrapMode {
@@ -251,8 +275,8 @@ public abstract class FitSpec {
         private boolean fitJ = true;
         private BootstrapMode bootstrapMode = BootstrapMode.PARAMETRIC;
         private boolean fitExchange = false; // Currently not supported
-        private double tauFraction = 0.25;
-        private double t2Limit = 0.0;
+        private double tauMFraction = 0.25;
+        private double r2Limit = 0.0;
         // 25 is smaller than 27, the maximum number of iterates possible for a
         // 2-field dataset when using nonparametric bootstrapping.
         // It therefore will not lead to an unexpected error if the user simply
@@ -293,13 +317,13 @@ public abstract class FitSpec {
             return self();
         }
 
-        public T tauFraction(double tauFraction) {
-            this.tauFraction = tauFraction;
+        public T tauMFraction(double tauMFraction) {
+            this.tauMFraction = tauMFraction;
             return self();
         }
 
-        public T t2Limit(double t2Limit) {
-            this.t2Limit = t2Limit;
+        public T r2Limit(double r2Limit) {
+            this.r2Limit = r2Limit;
             return self();
         }
 
