@@ -60,9 +60,9 @@ public class RegularizationFitSpec extends FitSpec {
     @Override
     public String toToml() {
         StringBuilder builder = getBaseTomlBuilder();
-        builder.append(String.format("lambdaS = %f%n", lambdaS));
-        builder.append(String.format("lambdaTauF = %f%n", lambdaTauF));
-        builder.append(String.format("lambdaTauS = %f", lambdaTauS));
+        builder.append(String.format("lambdaS = %s%n", lambdaS));
+        builder.append(String.format("lambdaTauF = %s%n", lambdaTauF));
+        builder.append(String.format("lambdaTauS = %s", lambdaTauS));
         return builder.toString();
     }
 

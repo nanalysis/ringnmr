@@ -11,6 +11,11 @@ import org.nmrfx.chemistry.relax.OrderParSet;
 import org.nmrfx.chemistry.relax.ResonanceSource;
 import org.nmrfx.chemistry.relax.SpectralDensity;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Formatter;
+
 
 // TODO: if tauM is not specified, it must be estimated using the data.
 // Including the Map<String, MolDataValues> into the build method will allow
@@ -69,9 +74,14 @@ public abstract class FitSpec {
         }
     }
 
-    protected static Score runFit(RelaxFit relaxFit, MFModelIso model) {
+    protected Score runFit(RelaxFit relaxFit, MFModelIso model) {
         double[] start = model.getStart();
         double[] lower = model.getLower();
+        // FIXME: Hacky way to set lower bounds to 0 for regularization
+        // should be a more elegant way to do this
+        if (this.getClass() == RegularizationFitSpec.class) {
+            lower = new double[lower.length];
+        }
         double[] upper = model.getUpper();
 
         Optional<PointValuePair> result = relaxFit.fitResidueToModel(start, lower, upper);
@@ -95,10 +105,10 @@ public abstract class FitSpec {
                     .replace("fitspec", "")
             )
         );
-        builder.append(String.format("tauM = %f%n", tauM));
+        builder.append(String.format("tauM = %s%n", tauM));
         builder.append(String.format("fitTauM = %b%n", fitTauM));
-        builder.append(String.format("tauMFraction = %f%n", tauMFraction));
-        builder.append(String.format("r2Limit = %f%n", r2Limit));
+        builder.append(String.format("tauMFraction = %s%n", tauMFraction));
+        builder.append(String.format("r2Limit = %s%n", r2Limit));
         builder.append(String.format("fitJ = %b%n", fitJ));
         builder.append(String.format("bootstrapMode = \"%s\"%n", bootstrapMode.toString().toLowerCase()));
         builder.append(String.format("nReplicates = %d%n", nReplicates));
@@ -287,6 +297,73 @@ public abstract class FitSpec {
         h = 31 * h + this.getClass().hashCode();
         return h;
     }
+
+    protected String canonicalStateString() {
+        StringBuilder sb = new StringBuilder();
+        // include concrete class so different subclasses differ
+        sb.append(this.getClass().getName()).append('|');
+
+        // core FitSpec fields in a fixed order
+        sb.append("tauM=").append(Double.doubleToLongBits(tauM)).append('|');
+        sb.append("tauMNeedsComputing=").append(tauMNeedsComputing).append('|');
+        sb.append("fitTauM=").append(fitTauM).append('|');
+        sb.append("fitJ=").append(fitJ).append('|');
+        sb.append("bootstrapMode=").append(bootstrapMode == null ? "null" : bootstrapMode.name()).append('|');
+        sb.append("fitExchange=").append(fitExchange).append('|');
+        sb.append("tauMFraction=").append(Double.doubleToLongBits(tauMFraction)).append('|');
+        sb.append("r2Limit=").append(Double.doubleToLongBits(r2Limit)).append('|');
+        sb.append("nReplicates=").append(nReplicates).append('|');
+
+        // hook for subclasses to append their fields in a deterministic way
+        appendSubclassState(sb);
+
+        return sb.toString();
+    }
+
+    /**
+     * Subclasses should override to append their additional fields in a stable,
+     * deterministic order. Default does nothing.
+     */
+    protected void appendSubclassState(StringBuilder sb) {
+        // default: nothing
+    }
+
+    /**
+     * Compute SHA-256 hex fingerprint of the canonical state and return the first
+     * `hexLength` hex chars (must be even and between 2 and 64).
+     */
+    protected String stateFingerprintHex(int hexLength) {
+        if (hexLength <= 0 || hexLength > 64) throw new IllegalArgumentException("hexLength 1..64");
+        byte[] digest;
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] bytes = canonicalStateString().getBytes(StandardCharsets.UTF_8);
+            digest = md.digest(bytes);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+
+        // convert to hex
+        StringBuilder hex = new StringBuilder(64);
+        try (Formatter fmt = new Formatter(hex)) {
+            for (byte b : digest) {
+                fmt.format("%02x", b);
+            }
+        }
+        // return prefix of requested length
+        return hex.substring(0, Math.min(hexLength, hex.length()));
+    }
+
+    /**
+     * Produce a safe filename using a short fingerprint. Example: "<base>-<fp>.toml".
+     * `hexLength` recommended >= 16; choose shorter if you want shorter names.
+     */
+    public String filenameWithFingerprint(String baseName, int hexLength, String extension) {
+        String fp = stateFingerprintHex(hexLength);
+        String ext = (extension == null || extension.isEmpty()) ? "" : "." + extension;
+        return String.format("%s-%s%s", baseName, fp, ext);
+    }
+
 
     public static abstract class Builder<T extends Builder<T>> {
         private Optional<Double> tauM = Optional.empty();
