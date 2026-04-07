@@ -150,10 +150,8 @@ public class FitDeuteriumModel extends FitModel {
             Map<String, OrderParSet> orderParSetMap = moleculeBase.orderParSetMap();
 
             Map<String, ModelFitResult> results = new ConcurrentHashMap<>();
-            molData
-                .entrySet()
-                .stream()
-                .parallel()
+            new ArrayList<>(molData.entrySet())
+                .parallelStream()
                 .forEach(
                     residue -> {
                         updateProgress((double) counts.get() / n);
