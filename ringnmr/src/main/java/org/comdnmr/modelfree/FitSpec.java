@@ -80,21 +80,22 @@ public abstract class FitSpec {
         }
     }
 
+    abstract protected double[] getLower(MFModelIso model);
+
+    abstract protected double[] processParamsAfterFit(MFModelIso model, double[] params);
+
     protected Score runFit(RelaxFit relaxFit, MFModelIso model) {
         double[] start = model.getStart();
-        double[] lower = model.getLower();
-        // FIXME: Hacky way to set lower bounds to 0 for regularization.
-        // Should be a more elegant way to do this...
-        if (this.getClass() == RegularizationFitSpec.class) {
-            lower = new double[lower.length];
-        }
+        double[] lower = getLower(model);
         double[] upper = model.getUpper();
 
         Optional<PointValuePair> result = relaxFit.fitResidueToModel(start, lower, upper);
         if (result.isEmpty()) {
             throw new RuntimeException("Could not generate fit result.");
         }
-        return relaxFit.score(result.get().getPoint(), true);
+
+        double[] params = processParamsAfterFit(model, result.get().getPoint());
+        return relaxFit.score(params, true);
     }
 
     abstract public String toToml();
@@ -237,6 +238,8 @@ public abstract class FitSpec {
         OrderPar orderPar = new OrderPar(orderParSet, resSource, score.rss, score.nValues, score.nPars, model.getName());
 
         int nParameters = parameters.length;
+        // System.out.printf("parameters:%n%s%n", Arrays.toString(parameters));
+        // System.out.printf("errors:%n%s%n", Arrays.toString(errors));
         for (int k = 0; k < nParameters; k++) {
             String name = names.get(k);
             double parameter = parameters[k];
