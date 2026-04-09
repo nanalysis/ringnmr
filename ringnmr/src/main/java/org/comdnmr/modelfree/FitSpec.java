@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Formatter;
+import java.util.stream.Collectors;
 
 
 // TODO: if tauM is not specified, it must be estimated using the data.
@@ -24,6 +25,7 @@ import java.util.Formatter;
 // (see getTauM below). estimateTau() is currently defined in FitR1R2NOEModel. Makes more sense to me to make this a method of this class
 public abstract class FitSpec {
 
+    protected MoietyType moietyType;
     protected double tauM;
     protected boolean tauMNeedsComputing;
     protected final boolean fitTauM;
@@ -45,6 +47,7 @@ public abstract class FitSpec {
     }
 
     protected FitSpec(Builder<?> builder) {
+        moietyType = builder.moietyType;
         if (builder.tauM.isEmpty()) {
             this.tauM = 0.0;
             tauMNeedsComputing = true;
@@ -145,12 +148,25 @@ public abstract class FitSpec {
     public enum BootstrapMode {
         PARAMETRIC,
         NONPARAMETRIC,
-        BAYESIAN
+        BAYESIAN;
+
+        @Override
+        public String toString() {
+            String name = name();
+            return String.format("%c%s", name.charAt(0), name.substring(1).toLowerCase());
+        }
     }
 
     public enum MoietyType {
-        N15_H1,
-        C13_H2
+        AMIDE,
+        DEUTERATED_METHYL;
+
+        @Override
+        public String toString() {
+            return Arrays.stream(name().split("_"))
+                .map(s -> String.format("%c%s", s.charAt(0), s.substring(1).toLowerCase()))
+                .collect(Collectors.joining(" "));
+        }
     }
 
     public BootstrapSampler getBootstrapSampler(MolDataValues data) {
@@ -326,22 +342,48 @@ public abstract class FitSpec {
     }
 
     public static abstract class Builder<T extends Builder<T>> {
-        private Optional<Double> tauM = Optional.empty();
-        private boolean fitTauM = false;
-        private boolean fitJ = true;
-        private BootstrapMode bootstrapMode = BootstrapMode.PARAMETRIC;
-        private boolean fitExchange = false; // Currently not supported
-        private double tauMFraction = 0.25;
-        private double r2Limit = 0.0;
+        private static final MoietyType DEFAULT_MOIETY_TYPE = MoietyType.AMIDE;
+        private static final boolean DEFAULT_FIT_TAUM = true;
+        private static final double DEFAULT_TAUM_FRACTION = 0.25;
+        private static final double DEFAULT_R2_LIMIT = 0.0;
+
+        private static final BootstrapMode DEFAULT_BOOTSTRAP_MODE = BootstrapMode.PARAMETRIC;
         // 25 is smaller than 27, the maximum number of iterates possible for a
         // 2-field dataset when using nonparametric bootstrapping.
         // It therefore will not lead to an unexpected error if the user simply
         // uses the default setup
-        private int nReplicates = 25;
+        private static final int DEFAULT_N_REPLICATES = 25;
+
+        private MoietyType moietyType = DEFAULT_MOIETY_TYPE;
+        private Optional<Double> tauM = Optional.empty();
+        private boolean fitTauM = DEFAULT_FIT_TAUM;
+        private boolean fitJ = true;
+        private BootstrapMode bootstrapMode = BootstrapMode.PARAMETRIC;
+        private boolean fitExchange = false; // Currently not supported
+        private double tauMFraction = DEFAULT_TAUM_FRACTION;
+        private double r2Limit = DEFAULT_R2_LIMIT;
+        private int nReplicates = DEFAULT_N_REPLICATES;
+
+        public static MoietyType getDefaultMoietyType() { return DEFAULT_MOIETY_TYPE; }
+
+        public static boolean getDefaultFitTauM() { return DEFAULT_FIT_TAUM; }
+
+        public static double getDefaultTauMFraction() { return DEFAULT_TAUM_FRACTION; }
+
+        public static double getDefaultR2Limit() { return DEFAULT_R2_LIMIT; }
+
+        public static int getDefaultNReplicates() { return DEFAULT_N_REPLICATES; }
+
+        public static BootstrapMode getDefaultBootstrapMode() { return DEFAULT_BOOTSTRAP_MODE; }
 
         @SuppressWarnings("unchecked")
         private T self() {
             return (T) this;
+        }
+
+        public T moietyType(MoietyType moietyType) {
+            this.moietyType = moietyType;
+            return self();
         }
 
         public T tauM(Optional<Double> tauM) {

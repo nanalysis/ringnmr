@@ -1,10 +1,8 @@
 package org.comdnmr.modelfree;
 
 import java.util.Map;
-import java.util.Optional;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.math3.optim.PointValuePair;
 import org.comdnmr.modelfree.models.MFModelIso;
 import org.comdnmr.modelfree.models.MFModelIso2sf;
 
@@ -25,9 +23,19 @@ public class RegularizationFitSpec extends FitSpec {
     private final double lambdaTauS;
 
     public static class Builder extends FitSpec.Builder<Builder> {
-        private double lambdaS = 0.0;
-        private double lambdaTauF = 0.0;
-        private double lambdaTauS = 0.0;
+        private static final double DEFAULT_LAMBDA_S = 0.5;
+        private static final double DEFAULT_LAMBDA_TAUF = 0.1;
+        private static final double DEFAULT_LAMBDA_TAUS = 0.2;
+
+        private double lambdaS = DEFAULT_LAMBDA_S;
+        private double lambdaTauF = DEFAULT_LAMBDA_TAUF;
+        private double lambdaTauS = DEFAULT_LAMBDA_TAUS;
+
+        public static double getDefaultLambdaS() { return DEFAULT_LAMBDA_S; }
+
+        public static double getDefaultLambdaTauF() { return DEFAULT_LAMBDA_TAUF; }
+
+        public static double getDefaultLambdaTauS() { return DEFAULT_LAMBDA_TAUS; }
 
         private void validateLambda(String name, double value) {
             if (value < 0.0) {
