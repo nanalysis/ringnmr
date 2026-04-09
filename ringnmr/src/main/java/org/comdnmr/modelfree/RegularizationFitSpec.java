@@ -2,6 +2,7 @@ package org.comdnmr.modelfree;
 
 import java.util.Map;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.comdnmr.modelfree.models.MFModelIso;
 import org.comdnmr.modelfree.models.MFModelIso2sf;
 
@@ -57,6 +58,12 @@ public class RegularizationFitSpec extends FitSpec {
         this.lambdaTauS = builder.lambdaTauS;
     }
 
+    double getLambdaS() { return lambdaS; }
+
+    double getLambdaTauF() { return lambdaTauF; }
+
+    double getLambdaTauS() { return lambdaTauS; }
+
     @Override
     public String toToml() {
         StringBuilder builder = getBaseTomlBuilder();
@@ -89,8 +96,8 @@ public class RegularizationFitSpec extends FitSpec {
 
         int nParameters = model.getNPars();
         int nWeights = data.getNValues();
-        double[][] parameters = new double[nReplicates][nParameters];
-        double[][] weights = new double[nReplicates][nWeights];
+        double[][] parameters = new double[nParameters][nReplicates];
+        double[][] weights = new double[nWeights][nReplicates];
         BootstrapSampler sampler = getBootstrapSampler(data);
 
         Score[] scores = new Score[nReplicates];
@@ -101,41 +108,33 @@ public class RegularizationFitSpec extends FitSpec {
             scores[i] = score;
             double[] replicateParameters = model.getStandardPars(score.getPars());
             double[] replicateWeights = replicateData.getWeights();
-            for (int k = 0; k < nParameters; k++) parameters[i][k] = replicateParameters[k];
-            for (int j = 0; j < nWeights; j++) weights[i][j] = replicateWeights[j];
+            for (int k = 0; k < nParameters; k++) parameters[k][i] = replicateParameters[k];
+            for (int j = 0; j < nWeights; j++) weights[j][i] = replicateWeights[j];
         }
 
+        Pair<double[], double[]> parameterEstimates = computeStatistics(parameters, weights);
+        double[] fitParameters = parameterEstimates.getLeft();
+        double[] fitErrors = parameterEstimates.getRight();
+
         orderParSetMap.computeIfAbsent(KEY, ky -> new OrderParSet(ky));
-        // FIXME: not sure what Score should be for makeOrderParSet...
         OrderPar orderPar = makeOrderParSet(
             orderParSetMap.get(KEY),
             sampler.getOriginalData(),
             key,
+            // FIXME: not sure what Score should be for makeOrderParSet...
             scores[0],
             model,
-            parameters,
-            weights
+            fitParameters,
+            fitErrors
         );
 
         return new ModelFitResult(orderPar, parameters, null);
     }
 
-    double getLambdaS() { return lambdaS; }
-
-    double getLambdaTauF() { return lambdaTauF; }
-
-    double getLambdaTauS() { return lambdaTauS; }
-
-    @Override
-    public int hashCode() {
-        int h = 17;
-        h = 31 * h + super.hashCode();
-        long lambdaSBits = Double.doubleToLongBits(lambdaS);
-        h = 31 * h + (int)(lambdaSBits ^ (lambdaSBits >>> 32));
-        long lambdaTauFBits = Double.doubleToLongBits(lambdaTauF);
-        h = 31 * h + (int)(lambdaTauFBits ^ (lambdaTauFBits >>> 32));
-        long lambdaTauSBits = Double.doubleToLongBits(lambdaTauS);
-        h = 31 * h + (int)(lambdaTauSBits ^ (lambdaTauSBits >>> 32));
-        return h;
+    protected void appendSubclassState(StringBuilder sb) {
+        sb.append("lambdaS=").append(Double.doubleToLongBits(lambdaS)).append('|');
+        sb.append("lambdaTauF=").append(Double.doubleToLongBits(lambdaTauF)).append('|');
+        sb.append("lambdaTauS=").append(Double.doubleToLongBits(lambdaTauS)).append('|');
     }
+
 }

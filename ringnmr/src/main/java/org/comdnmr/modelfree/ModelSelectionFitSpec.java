@@ -55,6 +55,10 @@ public abstract class ModelSelectionFitSpec extends FitSpec {
             .collect(Collectors.toList());
     }
 
+    protected void appendSubclassState(StringBuilder sb) {
+        sb.append("modelNames=").append(modelNames.toString()).append('|');
+    }
+
     @Override
     public int hashCode() {
         int h = 17;

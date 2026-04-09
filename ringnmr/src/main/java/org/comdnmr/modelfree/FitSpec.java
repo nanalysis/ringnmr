@@ -4,6 +4,7 @@ import java.util.*;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.optim.PointValuePair;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.comdnmr.modelfree.models.MFModelIso;
 import org.nmrfx.chemistry.Atom;
 import org.nmrfx.chemistry.relax.OrderPar;
@@ -32,6 +33,9 @@ public abstract class FitSpec {
     protected final double tauMFraction;
     protected final double r2Limit;
     protected final int nReplicates;
+    // TODO: Should only be available to Bagging and Nonparametric
+    // (Conventional uses fit to original data for parameters)
+    protected final boolean useMedian;
 
     private static final Map<String, Class<? extends FitSpec>> CLASSES = new LinkedHashMap<>();
     static {
@@ -55,6 +59,8 @@ public abstract class FitSpec {
         this.tauMFraction = builder.tauMFraction;
         this.r2Limit = builder.r2Limit;
         this.nReplicates = builder.nReplicates;
+        // TODO: Expose to the builder
+        this.useMedian = false;
     }
 
     public abstract ModelFitResult fit(String key, MolDataValues data, Map<String, OrderParSet> orderParSetMap);
@@ -77,8 +83,8 @@ public abstract class FitSpec {
     protected Score runFit(RelaxFit relaxFit, MFModelIso model) {
         double[] start = model.getStart();
         double[] lower = model.getLower();
-        // FIXME: Hacky way to set lower bounds to 0 for regularization
-        // should be a more elegant way to do this
+        // FIXME: Hacky way to set lower bounds to 0 for regularization.
+        // Should be a more elegant way to do this...
         if (this.getClass() == RegularizationFitSpec.class) {
             lower = new double[lower.length];
         }
@@ -162,74 +168,49 @@ public abstract class FitSpec {
         return relaxFit;
     }
 
-    private double[] computeMeans(double[][] array) {
-        int nSamples = array.length;
-        int nDataPoints = array[0].length;
-
-        double[] means = new double[nDataPoints];
-        for (int j = 0; j < nDataPoints; j++) {
-            double sum = 0.0;
-            for (int i = 0; i < nSamples; i++) {
-                sum += array[i][j];
-            }
-            double mean = sum / nSamples;
-            means[j] = mean;
-        }
-        return means;
-    }
-
-    private double[] computeStdevs(double[][] array, Optional<double[]> meansOpt) {
-        int nSamples = array.length;
-        int nDataPoints = array[0].length;
-
-        double[] means;
-        if (meansOpt.isEmpty()) means = computeMeans(array);
-        else means = meansOpt.get();
-        double[] stdevs = new double[nDataPoints];
-        for (int j = 0; j < nDataPoints; j++) {
-            double sum = 0.0;
-            double mean = means[j];
-            for (int i = 0; i < nSamples; i++) {
-                sum += Math.pow(mean - array[i][j], 2.0);
-            }
-            double stdev = Math.sqrt(sum / (nSamples - 1));
-            stdevs[j] = stdev;
-        }
-        return stdevs;
-    }
-
-    private Pair<double[], double[]> computeStatistics(double[][] parameters, double[][] weights) {
+    // Compute parameter mean/median and errors based on the bootstrapping method
+    // If conventional method is used, mean/median is not computed,
+    protected Pair<double[], double[]> computeStatistics(double[][] parameters, double[][] weights) {
         return switch (bootstrapMode) {
             case PARAMETRIC -> computeStatisticsParametric(parameters);
-            case NONPARAMETRIC, BAYESIAN -> computeStatisticsBootstrapping(parameters, weights);
+            case NONPARAMETRIC, BAYESIAN -> computeStatisticsNonparametric(parameters, weights);
         };
     }
 
-    private Pair<double[], double[]> computeStatisticsParametric(double[][] parameters) {
-        double[] parameterMeans = computeMeans(parameters);
-        double[] parameterErrors = computeStdevs(parameters, Optional.of(parameterMeans));
-        return Pair.of(parameterMeans, parameterErrors);
+    private double getAverage(DescriptiveStatistics stats) {
+        return useMedian ? stats.getMean() : stats.getPercentile(50.0);
     }
 
-    private Pair<double[], double[]> computeStatisticsBootstrapping(double[][] parameters, double[][] weights) {
-        int nParameters = parameters[0].length;
-        int nDataPoints = weights[0].length;
-
-        // Compute weight means. Should be 1.0 for every datapoint for
-        // Nonparametric, and ~1.0 for Bayesian
-        double[] parameterMeans = computeMeans(parameters);
-        double[] weightMeans = computeMeans(weights);
-
+    private Pair<double[], double[]> computeStatisticsParametric(double[][] parameters) {
+        int nParameters = parameters.length;
+        double[] parameterEstimates = new double[nParameters];
         double[] parameterErrors = new double[nParameters];
         for (int k = 0; k < nParameters; k++) {
-            double parameterMean = parameterMeans[k];
+            DescriptiveStatistics stats = new DescriptiveStatistics(parameters[k]);
+            parameterEstimates[k] = getAverage(stats);
+            parameterErrors[k] = stats.getStandardDeviation();
+        }
+        return Pair.of(parameterEstimates, parameterErrors);
+    }
+
+    private Pair<double[], double[]> computeStatisticsNonparametric(double[][] parameters, double[][] weights) {
+        int nParameters = parameters.length;
+        int nReplicates = parameters[0].length;
+        int nDatapoints = weights.length;
+        double[] parameterEstimates = new double[nParameters];
+        double[] parameterErrors = new double[nParameters];
+        for (int k = 0; k < nParameters; k++) {
+            DescriptiveStatistics parameterStats = new DescriptiveStatistics(parameters[k]);
+            parameterEstimates[k] = getAverage(parameterStats);
+            double parameterMean = parameterStats.getMean();
             double variance = 0.0;
-            for (int j = 0; j < nDataPoints; j++) {
+            for (int j = 0; j < nDatapoints; j++) {
+                DescriptiveStatistics weightStats = new DescriptiveStatistics(weights[j]);
+                double weightMean = weightStats.getMean();
                 double covjk = 0.0;
-                double weightMean = weightMeans[j];
                 for (int i = 0; i < nReplicates; i++) {
-                    double weight = weights[i][j];
-                    double parameter = parameters[i][k];
+                    double weight = weights[j][i];
+                    double parameter = parameters[k][i];
                     covjk += (weight - weightMean) * (parameter - parameterMean);
                 }
                 covjk /= nReplicates;
@@ -238,7 +219,7 @@ public abstract class FitSpec {
             double parameterError = Math.sqrt(variance);
             parameterErrors[k] = parameterError;
         }
-        return Pair.of(parameterMeans, parameterErrors);
+        return Pair.of(parameterEstimates, parameterErrors);
     }
 
     protected OrderPar makeOrderParSet(
@@ -247,24 +228,20 @@ public abstract class FitSpec {
         String key,
         Score score,
         MFModelIso model,
-        double[][] parameters,
-        double[][] weights
+        double[] parameters,
+        double[] errors
     ) {
-        Pair<double[], double[]> parameterStats = computeStatistics(parameters, weights);
-        double[] parameterMeans = parameterStats.getLeft();
-        double[] parameterErrors = parameterStats.getRight();
-        int nParameters = parameterMeans.length;
-
         ResonanceSource resSource = new ResonanceSource(data.atom);
         Atom atom = data.atom;
-        List<String> parameterNames = model.getParNames();
+        List<String> names = model.getParNames();
         OrderPar orderPar = new OrderPar(orderParSet, resSource, score.rss, score.nValues, score.nPars, model.getName());
 
+        int nParameters = parameters.length;
         for (int k = 0; k < nParameters; k++) {
-            String parameterName = parameterNames.get(k);
-            double parameterMean = parameterMeans[k];
-            double parameterError = parameterErrors[k];
-            orderPar = orderPar.set(parameterName, parameterMean, parameterError);
+            String name = names.get(k);
+            double parameter = parameters[k];
+            double error = errors[k];
+            orderPar = orderPar.set(name, parameter, error);
         }
 
         // If tauM is fixed, set it to the fixed value with zero error
@@ -277,25 +254,6 @@ public abstract class FitSpec {
         atom.addSpectralDensity(key, spectralDensity);
 
         return orderPar;
-    }
-
-    @Override
-    public int hashCode() {
-        int h = 17;
-        long tauMBits = Double.doubleToLongBits(tauM);
-        h = 31 * h + (int)(tauMBits ^ (tauMBits >>> 32));
-        h = 31 * h + (tauMNeedsComputing ? 1 : 0);
-        h = 31 * h + (fitTauM ? 1 : 0);
-        h = 31 * h + (fitJ ? 1 : 0);
-        h = 31 * h + (bootstrapMode == null ? 0 : bootstrapMode.hashCode());
-        h = 31 * h + (fitExchange ? 1 : 0);
-        long tauMFractionBits = Double.doubleToLongBits(tauMFraction);
-        h = 31 * h + (int)(tauMFractionBits ^ (tauMFractionBits >>> 32));
-        long r2LimitBits = Double.doubleToLongBits(r2Limit);
-        h = 31 * h + (int)(r2LimitBits ^ (r2LimitBits >>> 32));
-        h = 31 * h + nReplicates;
-        h = 31 * h + this.getClass().hashCode();
-        return h;
     }
 
     protected String canonicalStateString() {
@@ -363,7 +321,6 @@ public abstract class FitSpec {
         String ext = (extension == null || extension.isEmpty()) ? "" : "." + extension;
         return String.format("%s-%s%s", baseName, fp, ext);
     }
-
 
     public static abstract class Builder<T extends Builder<T>> {
         private Optional<Double> tauM = Optional.empty();
