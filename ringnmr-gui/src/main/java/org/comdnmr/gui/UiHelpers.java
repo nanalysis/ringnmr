@@ -3,20 +3,49 @@ package org.comdnmr.gui;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.util.Duration;
 
 public class UiHelpers {
+
+    private static final int DEFAULT_BOX_GAP = 2;
+    private static final int DEFAULT_PANE_GAP = 10;
+    private static final Pos DEFAULT_ALIGNMENT = Pos.CENTER_LEFT;
+    private static final int DEFAULT_SPACER_WIDTH = 5;
+
     private static final String HELPER_MESSAGES_DIR = "helper_messages";
+
+    public static GridPane createDefaultGridPane() {
+        GridPane pane = new GridPane();
+        pane.setHgap(DEFAULT_PANE_GAP);
+        pane.setVgap(DEFAULT_PANE_GAP);
+        pane.setAlignment(DEFAULT_ALIGNMENT);
+        return pane;
+    }
+
+    public static Region createSpacer() {
+        return createSpacer(DEFAULT_SPACER_WIDTH);
+    }
+
+    public static Region createSpacer(int width) {
+        Region spacer = new Region();
+        spacer.setPrefWidth(width);
+        return spacer;
+    }
+
+    public static HBox createDefaultHBox(Node... nodes) {
+        HBox hBox = new HBox(DEFAULT_BOX_GAP, nodes);
+        hBox.setAlignment(DEFAULT_ALIGNMENT);
+        return hBox;
+    }
 
     /** Create a small helper icon that shows a message on hover/focus. */
     public static Label createHelperIcon(String fileName) {

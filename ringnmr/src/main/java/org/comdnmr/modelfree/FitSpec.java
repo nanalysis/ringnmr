@@ -35,7 +35,7 @@ public abstract class FitSpec {
     protected final double tauMFraction;
     protected final double r2Limit;
     protected final int nReplicates;
-    // TODO: Should only be available to Bagging and Nonparametric
+    // FIXME: Should only be available to Bagging and Nonparametric
     // (Conventional uses fit to original data for parameters)
     protected final boolean useMedian;
 
@@ -62,8 +62,7 @@ public abstract class FitSpec {
         this.tauMFraction = builder.tauMFraction;
         this.r2Limit = builder.r2Limit;
         this.nReplicates = builder.nReplicates;
-        // TODO: Expose to the builder
-        this.useMedian = false;
+        this.useMedian = builder.useMedian;
     }
 
     public abstract ModelFitResult fit(String key, MolDataValues data, Map<String, OrderParSet> orderParSetMap);
@@ -353,6 +352,7 @@ public abstract class FitSpec {
         // It therefore will not lead to an unexpected error if the user simply
         // uses the default setup
         private static final int DEFAULT_N_REPLICATES = 25;
+        private static final boolean DEFAULT_USE_MEDIAN = false;
 
         private MoietyType moietyType = DEFAULT_MOIETY_TYPE;
         private Optional<Double> tauM = Optional.empty();
@@ -363,6 +363,7 @@ public abstract class FitSpec {
         private double tauMFraction = DEFAULT_TAUM_FRACTION;
         private double r2Limit = DEFAULT_R2_LIMIT;
         private int nReplicates = DEFAULT_N_REPLICATES;
+        private boolean useMedian = DEFAULT_USE_MEDIAN;
 
         public static MoietyType getDefaultMoietyType() { return DEFAULT_MOIETY_TYPE; }
 
@@ -375,6 +376,8 @@ public abstract class FitSpec {
         public static int getDefaultNReplicates() { return DEFAULT_N_REPLICATES; }
 
         public static BootstrapMode getDefaultBootstrapMode() { return DEFAULT_BOOTSTRAP_MODE; }
+
+        public static boolean getDefaultUseMedian() { return DEFAULT_USE_MEDIAN; }
 
         @SuppressWarnings("unchecked")
         private T self() {
@@ -427,6 +430,11 @@ public abstract class FitSpec {
 
         public T nReplicates(int nReplicates) {
             this.nReplicates = nReplicates;
+            return self();
+        }
+
+        public T useMedian(boolean useMedian) {
+            this.useMedian = useMedian;
             return self();
         }
 

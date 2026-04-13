@@ -33,7 +33,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Bounds;
-import javafx.geometry.Pos;
 import javafx.print.PrinterJob;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -91,6 +90,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -220,6 +221,9 @@ public class PyController implements Initializable {
 
     // >>> Model-free entities >>>
     @FXML
+    Tab modelFreeTab;
+
+    // >> Fitting method grid >>
     GridPane fittingMethodGrid;
     ChoiceBox<MoietyType> moietyTypeChoiceBox;
     Label modelsLabel;
@@ -232,24 +236,19 @@ public class PyController implements Initializable {
     HBox model2sBox;
     HBox model2sfBox;
 
-    @FXML
-    GridPane lambdasGrid;
-    @FXML
-    Label lambdaLabel;
-    @FXML
-    ValidatedDecimalTextField lambdaSsqTextField;
-    @FXML
+    Label lambdasLabel;
+    GridPane lambdasGridPane;
+    ValidatedDecimalTextField lambdaS2TextField;
     ValidatedDecimalTextField lambdaTauFTextField;
-    @FXML
     ValidatedDecimalTextField lambdaTauSTextField;
+    HBox lambdasHBox;
 
-    @FXML
     Label useRQLabel;
-    @FXML
     CheckBox useRQCheckBox;
+    HBox useRQHBox;
+    // << Fitting method grid <<
 
-    // >>> Model-free: tauM treatment panel >>>
-    @FXML
+    // >> TauM treatment panel >>
     GridPane tauMTreatmentGridPane;
     CheckBox hardCodeTauMCheck;
     Label tauMLabel;
@@ -257,14 +256,21 @@ public class PyController implements Initializable {
     CheckBox fitTauMCheck;
     Label tauMFractionLabel;
     ValidatedDecimalTextField tauMFractionTextField;
+    HBox tauMFractionHBox;
     Label r2LimitLabel;
     ValidatedDecimalTextField r2LimitTextField;
-    // <<< Model-free: tauM treatment panel <<<
+    HBox r2LimitHBox;
+    // << TauM treatment panel <<
 
-    @FXML
+    // >> Bootstrapping panel >>
+    GridPane bootstrapGridPane;
     ChoiceBox<FitSpec.BootstrapMode> bootstrapMethodChoice;
-    @FXML
     ValidatedIntegerTextField bootstrapReplicateTextField;
+    HBox bootstrapMethodHBox;
+    Label useMedianLabel;
+    CheckBox useMedianCheckBox;
+    // << Bootstrapping panel <<
+
     // <<< Model-free entities <<<
 
     BootstrapSamplePlots bootstrapSamplePlots = null;
@@ -564,6 +570,25 @@ public class PyController implements Initializable {
     }
 
     private void initializeModelFree() {
+        TitledPane fitProtocolPane = makeModelFreeFitProtocolPane();
+        TitledPane tauMTreatmentPane = makeModelFreeTauMTreatmentPane();
+        TitledPane bootstrapingPane = makeModelFreeBootstrappingPane();
+
+        Accordion modelFreeAccordion = new Accordion(fitProtocolPane, tauMTreatmentPane, bootstrapingPane);
+        modelFreeAccordion.setExpandedPane(fitProtocolPane);
+
+        VBox box = (VBox) modelFreeTab.getContent();
+        box.getChildren().add(modelFreeAccordion);
+
+        updateTauMCheck();
+        moietyTypeChoiceBox.setValue(FitSpec.Builder.getDefaultMoietyType());
+        fitMethodChoice.setValue(fitMethodChoice.getItems().get(0));
+        bootstrapMethodChoice.setValue(FitSpec.Builder.getDefaultBootstrapMode());
+    }
+
+    private TitledPane makeModelFreeFitProtocolPane() {
+        fittingMethodGrid = UiHelpers.createDefaultGridPane();
+
         fittingMethodGrid.add(new Label("Moiety Type:"), 0, 0);
 
         moietyTypeChoiceBox = new ChoiceBox<>();
@@ -577,26 +602,36 @@ public class PyController implements Initializable {
             );
         fittingMethodGrid.add(moietyTypeChoiceBox, 1, 0);
 
-        fittingMethodGrid.add(new Label("Fit Protocol:"), 0, 1);
+        useRQLabel = new Label("Use RQ:");
+        useRQCheckBox = new CheckBox();
+        useRQHBox = UiHelpers.createElementWithHelper(useRQCheckBox, "use_rq.txt");
+
+        HBox moietyTypeHBox = UiHelpers.createDefaultHBox(moietyTypeChoiceBox, UiHelpers.createSpacer(), useRQLabel, useRQHBox);
+        fittingMethodGrid.add(moietyTypeHBox, 1, 0);
+
+        fittingMethodGrid.add(new Label("Fitting Protocol:"), 0, 1);
 
         fitMethodChoice = new ChoiceBox<>();
         fitMethodChoice.getItems().addAll(FitSpec.getNames());
         fitMethodChoice.valueProperty().addListener(e -> fitMethodChanged(fitMethodChoice.getValue()));
-        fittingMethodGrid.add(UiHelpers.createElementWithHelper(fitMethodChoice, "model_free_protocol.txt"), 1, 1);
+        HBox fitMethodHBox = UiHelpers.createElementWithHelper(fitMethodChoice, "model_free_protocol.txt");
+
+        useMedianLabel = new Label("Use Median:");
+        useMedianCheckBox = new CheckBox();
+        fitMethodHBox.getChildren().addAll(UiHelpers.createSpacer(), useMedianLabel, useMedianCheckBox);
+        fittingMethodGrid.add(fitMethodHBox, 1, 1);
 
         modelsLabel = new Label("Models:");
         fittingMethodGrid.add(modelsLabel, 0, 2);
 
-        model1Box = new HBox(2, new Label("1:"), new CheckBox());
-        model1fBox = new HBox(2, new Label("1f:"), new CheckBox());
-        model1sBox = new HBox(2, new Label("1s:"), new CheckBox());
-        model2sBox = new HBox(2, new Label("2s:"), new CheckBox());
-        model2sfBox = new HBox(2, new Label("2sf:"), new CheckBox());
-        model1sfBox = new HBox(2, new Label("1sf:"), new CheckBox());
+        model1Box = UiHelpers.createDefaultHBox(new Label("1:"), new CheckBox());
+        model1fBox = UiHelpers.createDefaultHBox(new Label("1f:"), new CheckBox());
+        model1sBox = UiHelpers.createDefaultHBox(new Label("1s:"), new CheckBox());
+        model2sBox = UiHelpers.createDefaultHBox(new Label("2s:"), new CheckBox());
+        model2sfBox = UiHelpers.createDefaultHBox(new Label("2sf:"), new CheckBox());
+        model1sfBox = UiHelpers.createDefaultHBox(new Label("1sf:"), new CheckBox());
 
-        modelGridPane = new GridPane();
-        modelGridPane.setHgap(5);
-        modelGridPane.setAlignment(Pos.CENTER_LEFT);
+        modelGridPane = UiHelpers.createDefaultGridPane();
         modelGridPane.add(model1Box, 0, 0);
         modelGridPane.add(model1fBox, 1, 0);
         modelGridPane.add(model1sBox, 2, 0);
@@ -607,9 +642,35 @@ public class PyController implements Initializable {
         modelBox = UiHelpers.createElementWithHelper(modelGridPane, "model_free_models.txt");
         fittingMethodGrid.add(modelBox, 1, 2);
 
-        fitMethodChoice.setValue(fitMethodChoice.getItems().get(0));
+        lambdasLabel = new Label("λ-values:");
+        fittingMethodGrid.add(lambdasLabel, 0, 2);
 
-        // Whether or not tauM is hard-coded
+        lambdaS2TextField = new ValidatedDecimalTextField(Double.toString(RegularizationFitSpec.Builder.getDefaultLambdaS()));
+        HBox lambdaS2Box = UiHelpers.createDefaultHBox(new Label("λ(S²):"), lambdaS2TextField);
+
+        lambdaTauFTextField = new ValidatedDecimalTextField(Double.toString(RegularizationFitSpec.Builder.getDefaultLambdaTauF()));
+        HBox lambdaTauFBox = UiHelpers.createDefaultHBox(new Label("λ(τf):"), lambdaTauFTextField);
+
+        lambdaTauSTextField = new ValidatedDecimalTextField(Double.toString(RegularizationFitSpec.Builder.getDefaultLambdaTauS()));
+        HBox lambdaTauSBox = UiHelpers.createDefaultHBox(new Label("λ(τs):"), lambdaTauSTextField);
+
+        lambdasGridPane = UiHelpers.createDefaultGridPane();
+        lambdasGridPane.add(lambdaS2Box, 0, 0);
+        lambdasGridPane.add(lambdaTauFBox, 1, 0);
+        lambdasGridPane.add(lambdaTauSBox, 2, 0);
+        lambdasHBox = UiHelpers.createElementWithHelper(lambdasGridPane, "regularization_lambdas.txt");
+
+        fittingMethodGrid.add(lambdasHBox, 1, 2);
+
+
+        TitledPane pane = new TitledPane("Fitting Protocol", fittingMethodGrid);
+        return pane;
+    }
+
+    private TitledPane makeModelFreeTauMTreatmentPane() {
+        tauMTreatmentGridPane = UiHelpers.createDefaultGridPane();
+        tauMTreatmentGridPane.setHgap(5);
+
         tauMTreatmentGridPane.add(new Label("Hard-code τm:"), 0, 0);
 
         hardCodeTauMCheck = new CheckBox();
@@ -618,11 +679,9 @@ public class PyController implements Initializable {
 
         tauMLabel = new Label("τm (ns):");
         tauMTreatmentGridPane.add(tauMLabel, 3, 0);
+
         tauMTextField = new ValidatedDecimalTextField();
-        tauMTextField.setMaxWidth(TEXT_FIELD_SHORT_WIDTH);
-        tauMTextField.setPrefWidth(TEXT_FIELD_SHORT_WIDTH);
         tauMTreatmentGridPane.add(tauMTextField, 4, 0);
-        updateTauMCheck();
 
         tauMTreatmentGridPane.add(new Label("Fit τm:"), 0, 1);
 
@@ -634,20 +693,15 @@ public class PyController implements Initializable {
         tauMFractionLabel = new Label("τm fraction:");
         tauMTreatmentGridPane.add(tauMFractionLabel, 3, 1);
 
-        tauMFractionTextField = new ValidatedDecimalTextField();
-        tauMFractionTextField.setMaxWidth(TEXT_FIELD_SHORT_WIDTH);
-        tauMFractionTextField.setPrefWidth(TEXT_FIELD_SHORT_WIDTH);
-        tauMFractionTextField.setText(Double.toString(FitSpec.Builder.getDefaultTauMFraction()));
-
-        tauMTreatmentGridPane.add(UiHelpers.createElementWithHelper(tauMFractionTextField, "taum_fraction.txt"), 4, 1);
+        tauMFractionTextField = new ValidatedDecimalTextField(Double.toString(FitSpec.Builder.getDefaultTauMFraction()));
+        tauMFractionHBox = UiHelpers.createElementWithHelper(tauMFractionTextField, "taum_fraction.txt");
+        tauMTreatmentGridPane.add(tauMFractionHBox, 4, 1);
 
         r2LimitLabel = new Label("R₂ limit (s⁻¹):");
         tauMTreatmentGridPane.add(r2LimitLabel, 6, 1);
-        r2LimitTextField = new ValidatedDecimalTextField();
-        r2LimitTextField.setMaxWidth(TEXT_FIELD_SHORT_WIDTH);
-        r2LimitTextField.setPrefWidth(TEXT_FIELD_SHORT_WIDTH);
-        r2LimitTextField.setText(Double.toString(FitSpec.Builder.getDefaultR2Limit()));
-        tauMTreatmentGridPane.add(UiHelpers.createElementWithHelper(r2LimitTextField, "r2_limit.txt"), 7, 1);
+        r2LimitTextField = new ValidatedDecimalTextField(Double.toString(FitSpec.Builder.getDefaultR2Limit()));
+        r2LimitHBox = UiHelpers.createElementWithHelper(r2LimitTextField, "r2_limit.txt");
+        tauMTreatmentGridPane.add(r2LimitHBox, 7, 1);
 
         for (int columnIndex : new int[]{2, 5}) {
             Region gap = new Region();
@@ -655,101 +709,28 @@ public class PyController implements Initializable {
             tauMTreatmentGridPane.add(gap, columnIndex, 0, 1, tauMTreatmentGridPane.getRowCount());
         }
 
-        // HBox fitTauMHBox = new HBox(5, fitTauMLabel, fitTauMCheck, tauMFractionLabel, tauMFractionHBox, r2LimitLabel, r2LimitHBox);
-        // fitTauMHBox.setAlignment(Pos.CENTER_LEFT);
-        // HBox.setMargin(tauMFractionLabel, new Insets(0, 0, 0, 20));
-        // HBox.setMargin(r2LimitLabel, new Insets(0, 0, 0, 20));
-
-        // tauMTreatmentBox.getChildren().addAll(hardCodeTauMHBox, fitTauMHBox);
-
-        // Model-free: bootstrapping options
-        bootstrapMethodChoice.getItems().addAll(FitSpec.BootstrapMode.values());
-        bootstrapMethodChoice.setValue(FitSpec.Builder.getDefaultBootstrapMode());
-        bootstrapReplicateTextField.setText(Integer.toString(FitSpec.Builder.getDefaultNReplicates()));
-
-        // Set defaults for regularization lambdas
-        lambdaSsqTextField.setText(Double.toString(RegularizationFitSpec.Builder.getDefaultLambdaS()));
-        lambdaTauFTextField.setText(Double.toString(RegularizationFitSpec.Builder.getDefaultLambdaTauF()));
-        lambdaTauSTextField.setText(Double.toString(RegularizationFitSpec.Builder.getDefaultLambdaTauS()));
-
-        moietyTypeChoiceBox.setValue(FitSpec.Builder.getDefaultMoietyType());
+        TitledPane pane = new TitledPane("τm Treatment", tauMTreatmentGridPane);
+        return pane;
     }
 
-        // // Models to choose if conventional or bagging are being used
-        // modelBox.add(new Label("Models"), 0, 0);
-        // // FIXME should be accessible from MFModelIso class
-        // String[] modelNames = {"1", "1f", "1s", "2s", "2sf"};
-        // for (int i = 0; i < modelNames.length; i++) {
-        //     String modelName = modelNames[i];
-        //     CheckBox checkBox = new CheckBox(modelName);
-        //     int column = i + 1;
-        //     modelBox.add(checkBox, column, 0);
-        //     modelCheckBoxes.add(checkBox);
-        // }
+    private TitledPane makeModelFreeBootstrappingPane() {
+        bootstrapGridPane = UiHelpers.createDefaultGridPane();
 
-        // tauFractionSlider.setMin(0.0);
-        // tauFractionSlider.setMax(0.9);
-        // tauFractionSlider.setValue(0.1);
-        // tauFractionLabel.setText("0.1");
-        // tauFractionSlider.setBlockIncrement(0.1);
-        // tauFractionSlider.setMinorTickCount(4);
-        // tauFractionSlider.setMajorTickUnit(0.1);
-        // tauFractionSlider.setShowTickMarks(true);
-        // tauFractionSlider.setShowTickLabels(true);
-        // tauFractionSlider.valueProperty().addListener(v
-        //         -> tauFractionLabel.setText(String.format("%.2f", tauFractionSlider.getValue())));
+        bootstrapGridPane.add(new Label("Method:"), 0, 0);
 
+        bootstrapMethodChoice = new ChoiceBox<>();
+        bootstrapMethodChoice.getItems().addAll(FitSpec.BootstrapMode.values());
+        bootstrapMethodHBox = UiHelpers.createElementWithHelper(bootstrapMethodChoice, "bootstrap_method.txt");
+        bootstrapGridPane.add(bootstrapMethodHBox, 1, 0);
 
-        // Slider[] lambdaSliders = new Slider[]{lambdaSsqSlider, lambdaTauFSlider, lambdaTauSSlider};
-        // Label[] lambdaLabels = new Label[]{lambdaSsqLabel, lambdaTauFLabel, lambdaTauSLabel};
+        bootstrapGridPane.add(new Label("# Replicates:"), 0, 1);
 
-        // for (int i = 0; i < lambdaSliders.length; i++) {
-        //     Slider slider = lambdaSliders[i];
-        //     Label label = lambdaLabels[i];
-        //     slider.setMin(0.0);
-        //     slider.setMax(1.0);
-        //     slider.setBlockIncrement(0.01);
-        //     slider.setMajorTickUnit(0.25);
-        //     slider.setMinorTickCount(5);
-        //     slider.setShowTickMarks(true);
-        //     slider.setShowTickLabels(false);
-        //     slider.valueProperty().addListener(
-        //         v -> {
-        //             label.setText(String.format("%.2f", slider.getValue()));
-        //         }
-        //     );
-        //     slider.setValue(0.0);
-        //     label.setText("0.00");
-        // }
+        bootstrapReplicateTextField = new ValidatedIntegerTextField(Integer.toString(FitSpec.Builder.getDefaultNReplicates()));
+        bootstrapGridPane.add(bootstrapReplicateTextField, 1, 1);
 
-        // t2LimitSlider.setMin(0.0);
-        // t2LimitSlider.setMax(100.0);
-        // t2LimitSlider.setValue(0.0);
-        // t2LimitLabel.setText("0.0");
-        // t2LimitSlider.setBlockIncrement(1.0);
-        // t2LimitSlider.setMajorTickUnit(25.0);
-        // t2LimitSlider.setMinorTickCount(4);
-        // t2LimitSlider.setShowTickMarks(true);
-        // t2LimitSlider.setShowTickLabels(true);
-        // t2LimitSlider.valueProperty().addListener(v
-        //         -> t2LimitLabel.setText(String.format("%.1f", t2LimitSlider.getValue())));
-
-        // nReplicatesSlider.setMin(0.0);
-        // nReplicatesSlider.setMax(1000);
-        // nReplicatesSlider.setValue(0.0);
-        // bootstrapNLabel.setText("0");
-        // nReplicatesSlider.setBlockIncrement(25);
-        // nReplicatesSlider.setMajorTickUnit(50);
-        // nReplicatesSlider.setMinorTickCount(4);
-        // nReplicatesSlider.setShowTickMarks(true);
-        // nReplicatesSlider.setShowTickLabels(true);
-        // nReplicatesSlider.valueProperty().addListener(v
-        //         -> bootstrapNLabel.setText(String.format("%d", (int) nReplicatesSlider.getValue())));
-        // bootStrapChoice.getItems().addAll(FitModel.BootstrapMode.values());
-        // bootStrapChoice.setValue(FitModel.BootstrapMode.PARAMETRIC);
-        // bootStrapChoice.valueProperty().addListener(e -> bootStrapChanged(bootStrapChoice.getValue()));
-        // lambdaCheckBox.selectedProperty().addListener(e -> lambdaChanged(lambdaCheckBox.isSelected()));
-        // // <<< MODEL-FREE PANEL <<<
+        TitledPane pane = new TitledPane("Bootstrapping", bootstrapGridPane);
+        return pane;
+    }
 
     public Stage getStage() {
         return stage;
@@ -1561,22 +1542,28 @@ public class PyController implements Initializable {
     }
 
     private void updateMoietyType(MoietyType newValue) {
-        // Remove/add 1sf model check box depending on whether amide/deute
+        BiConsumer<GridPane, Node> model1sfBoxAction;
+        Consumer<Node> useRQAction;
+        BiConsumer<ChoiceBox<FitSpec.BootstrapMode>, FitSpec.BootstrapMode> bootstrapAction;
+
         switch (newValue) {
             case AMIDE -> {
-                removeNode(modelGridPane.getChildren(), model1sfBox);
-                removeNode(fittingMethodGrid.getChildren(), useRQLabel);
-                removeNode(fittingMethodGrid.getChildren(), useRQCheckBox);
-                addOption(bootstrapMethodChoice, FitSpec.BootstrapMode.NONPARAMETRIC);
+                model1sfBoxAction = this::removeNode;
+                useRQAction = this::hideNode;
+                bootstrapAction = this::addOption;
             }
             case DEUTERATED_METHYL -> {
-                addNode(modelGridPane.getChildren(), model1sfBox);
-                addNode(fittingMethodGrid.getChildren(), useRQLabel);
-                addNode(fittingMethodGrid.getChildren(), useRQCheckBox);
-                removeOption(bootstrapMethodChoice, FitSpec.BootstrapMode.NONPARAMETRIC);
+                model1sfBoxAction = this::addNode;
+                useRQAction = this::showNode;
+                bootstrapAction = this::removeOption;
             }
             default -> throw new AssertionError("Unreachable");
         }
+
+        model1sfBoxAction.accept(modelGridPane, model1sfBox);
+        useRQAction.accept(useRQLabel);
+        useRQAction.accept(useRQHBox);
+        bootstrapAction.accept(bootstrapMethodChoice, FitSpec.BootstrapMode.NONPARAMETRIC);
     }
 
     public void fitModelFree() {
@@ -1586,6 +1573,7 @@ public class PyController implements Initializable {
             showWarningDialog(e);
             return;
         }
+
         FitModel fitModel;
         String modelPrefix;
         if (moietyTypeChoiceBox.getValue().equals(MoietyType.AMIDE)) {
@@ -1607,7 +1595,7 @@ public class PyController implements Initializable {
         textFields.add(tauMFractionTextField);
         textFields.add(r2LimitTextField);
         if (getFitSpecClass() == RegularizationFitSpec.class) {
-            textFields.add(lambdaSsqTextField);
+            textFields.add(lambdaS2TextField);
             textFields.add(lambdaTauFTextField);
             textFields.add(lambdaTauSTextField);
         }
@@ -1633,10 +1621,12 @@ public class PyController implements Initializable {
             fitSpecBuilder = new ConventionalFitSpec.Builder()
                 .modelNames(getActiveModelNames(modelPrefix));
         } else if (fitSpecClass == BaggingFitSpec.class) {
-            fitSpecBuilder = new BaggingFitSpec.Builder();
+            fitSpecBuilder = new BaggingFitSpec.Builder()
+                .useMedian(useMedianCheckBox.isSelected());
         } else if (fitSpecClass == RegularizationFitSpec.class) {
             fitSpecBuilder = new RegularizationFitSpec.Builder()
-                .lambdaS(lambdaSsqTextField.getValue().get())
+                .useMedian(useMedianCheckBox.isSelected())
+                .lambdaS(lambdaS2TextField.getValue().get())
                 .lambdaTauF(lambdaTauFTextField.getValue().get())
                 .lambdaTauS(lambdaTauSTextField.getValue().get());
         } else {
@@ -1644,6 +1634,7 @@ public class PyController implements Initializable {
                 "ConventionalFitSpec, BaggingFitSpec, RegularizationFitSpec are the only concrete subclasses of FitSpec."
             );
         }
+
         fitSpecBuilder
             .tauM(
                 hardCodeTauMCheck.isSelected() ?
@@ -3021,12 +3012,20 @@ public class PyController implements Initializable {
         return modelNames;
     }
 
-    private void removeNode(List<Node> nodes, Node node) {
-        if (nodes.contains(node)) nodes.remove(node);
+    private void removeNode(GridPane pane, Node node) {
+        if (pane.getChildren().contains(node)) pane.getChildren().remove(node);
     }
 
-    private void addNode(List<Node> nodes, Node node) {
-        if (!nodes.contains(node)) nodes.add(node);
+    private void addNode(GridPane pane, Node node) {
+        if (!pane.getChildren().contains(node)) pane.getChildren().add(node);
+    }
+
+    private void hideNode(Node node) {
+        if (node.isVisible()) node.setVisible(false);
+    }
+
+    private void showNode(Node node) {
+        if (!node.isVisible()) node.setVisible(true);
     }
 
     private <T> void removeOption(ChoiceBox<T> choiceBox, T option) {
@@ -3041,44 +3040,51 @@ public class PyController implements Initializable {
 
     void fitMethodChanged(String methodName) {
         Class<? extends FitSpec> fitSpecClass = FitSpec.getFitSpec(methodName);
-        List<Node> children = fittingMethodGrid.getChildren();
+        BiConsumer<GridPane, Node> modelAction;
+        BiConsumer<GridPane, Node> lambdaAction;
+        Consumer<Node> medianAction;
         if (fitSpecClass == ConventionalFitSpec.class) {
-            addNode(children, modelsLabel);
-            addNode(children, modelBox);
-            removeNode(children, lambdaLabel);
-            removeNode(children, lambdasGrid);
+            modelAction = this::addNode;
+            lambdaAction = this::removeNode;
+            medianAction = this::hideNode;
         } else if (fitSpecClass == BaggingFitSpec.class) {
-            removeNode(children, modelsLabel);
-            removeNode(children, modelBox);
-            removeNode(children, lambdaLabel);
-            removeNode(children, lambdasGrid);
+            modelAction = this::removeNode;
+            lambdaAction = this::removeNode;
+            medianAction = this::showNode;
         } else if (fitSpecClass == RegularizationFitSpec.class) {
-            removeNode(children, modelsLabel);
-            removeNode(children, modelBox);
-            addNode(children, lambdaLabel);
-            addNode(children, lambdasGrid);
+            modelAction = this::removeNode;
+            lambdaAction = this::addNode;
+            medianAction = this::showNode;
         } else {
             throw new AssertionError("Unreachable");
         }
+
+        modelAction.accept(fittingMethodGrid, modelsLabel);
+        modelAction.accept(fittingMethodGrid, modelBox);
+        lambdaAction.accept(fittingMethodGrid, lambdasLabel);
+        lambdaAction.accept(fittingMethodGrid, lambdasHBox);
+        medianAction.accept(useMedianLabel);
+        medianAction.accept(useMedianCheckBox);
     }
 
     void updateTauMCheck() {
-        boolean disable = !hardCodeTauMCheck.isSelected();
-        setLabelColor(tauMLabel, disable);
-        tauMTextField.setDisable(disable);
-        if (disable) tauMTextField.setText("");
-        tauMTextField.validateInput();
+        Consumer<Node> action =
+            hardCodeTauMCheck.isSelected() ?
+            this::showNode :
+            this::hideNode;
+
+        action.accept(tauMLabel);
+        action.accept(tauMTextField);
     }
 
     void updateFitTauMCheck() {
-        boolean disabled = !fitTauMCheck.isSelected();
-        for (Label label : new Label[]{tauMFractionLabel, r2LimitLabel}) {
-            setLabelColor(label, disabled);
-        }
-        for (ValidatedDecimalTextField textField : new ValidatedDecimalTextField[]{tauMFractionTextField, r2LimitTextField}) {
-            textField.setDisable(disabled);
-            textField.validateInput();
-        }
+        Consumer<Node> action =
+            fitTauMCheck.isSelected() ?
+            this::showNode :
+            this::hideNode;
+
+        Node[] nodes = new Node[]{tauMFractionLabel, tauMFractionHBox, r2LimitLabel, r2LimitHBox};
+        for (Node node : nodes) action.accept(node);
     }
 
     void setLabelColor(Label label, boolean disable) {
