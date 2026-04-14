@@ -121,6 +121,7 @@ public abstract class FitSpec {
         builder.append(String.format("fitJ = %b%n", fitJ));
         builder.append(String.format("bootstrapMode = \"%s\"%n", bootstrapMode.toString().toLowerCase()));
         builder.append(String.format("nReplicates = %d%n", nReplicates));
+        builder.append(String.format("useMedian = %b%n", useMedian));
         return builder;
     }
 
