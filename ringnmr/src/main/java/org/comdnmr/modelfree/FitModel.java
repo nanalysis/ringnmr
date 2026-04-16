@@ -14,8 +14,14 @@ import org.comdnmr.modelfree.models.MFModelIso;
 import org.comdnmr.util.ProcessingStatus;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+
+import org.nmrfx.chemistry.MoleculeBase;
+import org.nmrfx.chemistry.MoleculeFactory;
+import org.nmrfx.chemistry.relax.OrderParSet;
 
 public abstract class FitModel implements BasicFitter {
     public static UniformRandomProvider rng = null;
@@ -23,6 +29,8 @@ public abstract class FitModel implements BasicFitter {
     protected FitSpec fitSpec = new ConventionalFitSpec.Builder()
         .modelNames(List.of("1", "1f", "1s", "2s", "2sf"))
         .build();
+
+    protected Map<String, MolDataValues> molData = null;
 
     // >>>>>>>>>>>>>>>>>>>>>>>>
     // TODO: transition to not needing these attributes. It is all contained
@@ -71,6 +79,26 @@ public abstract class FitModel implements BasicFitter {
     }
 
     public void setFitSpec(FitSpec fitSpec) { this.fitSpec = fitSpec; }
+
+    public void setData(Map<String, MolDataValues> molData) { this.molData = molData; }
+
+    /**
+     * Loads relaxation data from the active molecule. Called when {@link #molData}
+     * is null or empty at the start of {@link #testIsoModel()}.
+     */
+    protected abstract Map<String, MolDataValues> loadData();
+
+    /**
+     * Sets the overall tumbling correlation time on {@link #fitSpec} when it has
+     * not yet been computed. Subclasses either estimate it from the data or
+     * supply a fixed fallback.
+     */
+    protected abstract void setTauMFromData(Map<String, MolDataValues> molData);
+
+    /**
+     * Returns the error message thrown when no relaxation data are available.
+     */
+    protected abstract String getNoDataMessage();
 
     @Override
     public List<ParValueInterface> guessPars(String eqn) {
@@ -160,7 +188,38 @@ public abstract class FitModel implements BasicFitter {
         this.statusFunction = statusFunction;
     }
 
-    public abstract Map<String, ModelFitResult> testIsoModel();
+    public Map<String, ModelFitResult> testIsoModel() {
+        if ((molData == null) || (molData.isEmpty())) {
+            molData = loadData();
+        }
+        if ((searchKey != null) && molData.containsKey(searchKey)) {
+            var keepVal = molData.get(searchKey);
+            molData.clear();
+            molData.put(searchKey, keepVal);
+        }
+        if (!molData.isEmpty()) {
+            if (fitSpec.tauMNeedsComputing()) setTauMFromData(molData);
+            AtomicInteger counts = new AtomicInteger();
+            int n = molData.size();
+            MoleculeBase moleculeBase = MoleculeFactory.getActive();
+            Map<String, OrderParSet> orderParSetMap = new ConcurrentHashMap<>();
+            orderParSetMap.putAll(moleculeBase.orderParSetMap());
+            Map<String, ModelFitResult> results = new ConcurrentHashMap<>();
+            new ArrayList<>(molData.entrySet())
+                .parallelStream()
+                .forEach(residue -> {
+                    updateProgress((double) counts.get() / n);
+                    if (cancelled.get()) return;
+                    String key = residue.getKey();
+                    MolDataValues data = residue.getValue();
+                    if (!data.getData().isEmpty()) results.put(key, fitSpec.fit(key, data, orderParSetMap));
+                    counts.incrementAndGet();
+                });
+            return results;
+        } else {
+            throw new IllegalStateException(getNoDataMessage());
+        }
+    }
 
     double[][] replicates(Map<String, MolDataValues> molDataRes,
                           MFModelIso bestModel, double localTauFraction,

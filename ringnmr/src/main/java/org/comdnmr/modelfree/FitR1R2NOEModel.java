@@ -29,14 +29,22 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author simonhulse
  */
 public class FitR1R2NOEModel extends FitModel {
-    Map<String, MolDataValues> molData = null;
 
     private static final String[] PARAMETER_NAMES = {"Tau_e", "Sf2", "Tau_f", "Ss2", "Tau_s"};
 
     public int getNPars() { return PARAMETER_NAMES.length; }
 
-    public void setData(Map<String, MolDataValues> molData) {
-        this.molData = molData;
+    @Override
+    protected Map<String, MolDataValues> loadData() { return getData(false); }
+
+    @Override
+    protected void setTauMFromData(Map<String, MolDataValues> molData) {
+        fitSpec.setTauM(estimateTau(molData).get("tau"));
+    }
+
+    @Override
+    protected String getNoDataMessage() {
+        return "No relaxation data to analyze. Need R1, R2, and NOE";
     }
 
     public Map<String, MolDataValues> getData(boolean requireCoords) {
@@ -129,59 +137,6 @@ public class FitR1R2NOEModel extends FitModel {
             }
         }
         return molDataValues;
-    }
-
-    public  Map<String, ModelFitResult> testIsoModel() {
-        if ((molData == null) || (molData.isEmpty())) {
-            molData = getData(false);
-        }
-
-        if (searchKey != null) {
-            if (molData.containsKey(searchKey)) {
-                var keepVal = molData.get(searchKey);
-                molData.clear();
-                molData.put(searchKey, keepVal);
-            }
-        }
-
-        if (!molData.isEmpty()) {
-            if (fitSpec.tauMNeedsComputing) fitSpec.setTauM(estimateTau(molData).get("tau"));
-            AtomicInteger counts = new AtomicInteger();
-            int n = molData.entrySet().size();
-            MoleculeBase moleculeBase = MoleculeFactory.getActive();
-            Map<String, OrderParSet> orderParSetMap = new ConcurrentHashMap<>();
-            orderParSetMap.putAll(moleculeBase.orderParSetMap());
-
-            // I Was having issues getting fitting to run concurrently across residues.
-            // Using molData.entrySet().parallelStream(),
-            // all fits were being performed successively in the main thread.
-            //
-            // I found that creating the parallelStream from an
-            // ArrayList<Map.Entry<String, MolDataValues>> instead of the
-            // Map<String, MolDataValues> did leave to parallelism.
-            //
-            // Some info from Chat-GPT:
-            // molData.entrySet() may return a spliterator that doesn't split
-            // well (synchronized wrapper, custom Map, or other), so work
-            // stayed on one worker. Copying to ArrayList gives a highly
-            // splittable source.
-            Map<String, ModelFitResult> results = new ConcurrentHashMap<>();
-            new ArrayList<>(molData.entrySet())
-                .parallelStream()
-                .forEach(
-                    residue -> {
-                        updateProgress((double) counts.get() / n);
-                        if (cancelled.get()) return;
-                        String key = residue.getKey();
-                        MolDataValues data = residue.getValue();
-                        if (!data.getData().isEmpty()) results.put(key, fitSpec.fit(key, data, orderParSetMap));
-                        counts.incrementAndGet();
-                    }
-                );
-            return results;
-        } else {
-            throw new IllegalStateException("No relaxation data to analyze. Need R1, R2, and NOE");
-        }
     }
 
     public Map<String, Double> estimateTau() {

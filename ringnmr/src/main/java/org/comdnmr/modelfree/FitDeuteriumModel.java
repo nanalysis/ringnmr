@@ -14,11 +14,21 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class FitDeuteriumModel extends FitModel {
-    Map<String, MolDataValues> molData = null;
     Random random = new Random();
 
-    public void setData(Map<String, MolDataValues> molData) {
-        this.molData = molData;
+    @Override
+    protected Map<String, MolDataValues> loadData() { return getData(false); }
+
+    @Override
+    protected void setTauMFromData(Map<String, MolDataValues> molData) {
+        // FIXME: hard-coding value used previously.
+        // Is there a way to estimate this similarly with amide R1/R2/NOE?
+        fitSpec.setTauM(10.0);
+    }
+
+    @Override
+    protected String getNoDataMessage() {
+        return "No relaxation data to analyze. Need R1, R2, RAP, and optionally RQ";
     }
 
     public static Map<String, MolDataValues> getData(boolean requireCoords) {
@@ -127,46 +137,6 @@ public class FitDeuteriumModel extends FitModel {
             }
         }
         return molData;
-    }
-
-    public Map<String, ModelFitResult> testIsoModel() {
-        if ((molData == null) || (molData.isEmpty())) {
-            molData = getData(false);
-        }
-        if ((searchKey != null) && molData.containsKey(searchKey)) {
-            var keepVal = molData.get(searchKey);
-            molData.clear();
-            molData.put(searchKey, keepVal);
-        }
-
-        if (!molData.isEmpty()) {
-            // FIXME: hard-coding value used previously.
-            // Is there a way to estimate this similarly with amide R1/R2/NOE?
-            if (fitSpec.tauMNeedsComputing) fitSpec.setTauM(10.0);
-
-            AtomicInteger counts = new AtomicInteger();
-            int n = molData.entrySet().size();
-            MoleculeBase moleculeBase = MoleculeFactory.getActive();
-            Map<String, OrderParSet> orderParSetMap = moleculeBase.orderParSetMap();
-
-            Map<String, ModelFitResult> results = new ConcurrentHashMap<>();
-            new ArrayList<>(molData.entrySet())
-                .parallelStream()
-                .forEach(
-                    residue -> {
-                        updateProgress((double) counts.get() / n);
-                        if (cancelled.get()) return;
-                        String key = residue.getKey();
-                        MolDataValues data = residue.getValue();
-                        if (!data.getData().isEmpty()) results.put(key, fitSpec.fit(key, data, orderParSetMap));
-                        counts.incrementAndGet();
-                    }
-
-                );
-            return results;
-        } else {
-            throw new IllegalStateException("No relaxation data to analyze. Need R1, R2, RAP, and optionally RQ");
-        }
     }
 
     public Map<String, ModelFitResult> testModels(Map<String, MolDataValues> molData, List<String> modelNames) {

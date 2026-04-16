@@ -100,8 +100,6 @@ import static org.comdnmr.gui.MainApp.primaryStage;
 
 public class PyController implements Initializable {
 
-    private static final int TEXT_FIELD_SHORT_WIDTH = 50;
-
     public static PyController mainController;
     ResidueChart activeChart;
     Stage stage;
@@ -1613,7 +1611,7 @@ public class PyController implements Initializable {
     }
 
     private Class<? extends FitSpec> getFitSpecClass() {
-        return FitSpec.getFitSpec(fitMethodChoice.getValue());
+        return FitSpec.getFitSpecClass(fitMethodChoice.getValue());
     }
 
     List<String> getActiveModelNames(String prefix) {
@@ -1742,14 +1740,11 @@ public class PyController implements Initializable {
             );
         }
 
-        fitSpecBuilder
-            .tauM(
-                hardCodeTauMCheck.isSelected() ?
-                    tauMTextField.getValue() :
-                    Optional.empty()
-            )
-            .bootstrapMode(bootstrapMethodChoice.getValue())
-            .nReplicates(bootstrapReplicateTextField.getValue().get());
+        if (hardCodeTauMCheck.isSelected()) {
+            fitSpecBuilder.tauM(tauMTextField.getValue().get());
+        } else {
+            fitSpecBuilder.tauMUnset();
+        }
 
         if (fitTauMCheck.isSelected()) {
             fitSpecBuilder
@@ -1759,7 +1754,11 @@ public class PyController implements Initializable {
         } else {
             fitSpecBuilder.fitTauM(false);
         }
-        FitSpec fitSpec = fitSpecBuilder.build();
+
+        FitSpec fitSpec = fitSpecBuilder
+            .bootstrapMode(bootstrapMethodChoice.getValue())
+            .nReplicates(bootstrapReplicateTextField.getValue().get())
+            .build();
 
         fitModel.setFitSpec(fitSpec);
         try {
