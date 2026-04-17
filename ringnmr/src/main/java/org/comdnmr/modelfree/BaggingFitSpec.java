@@ -28,14 +28,14 @@ import org.nmrfx.chemistry.relax.OrderParSet;
  * and the per-parameter distributions naturally reflect that uncertainty. After
  * selection, each replicate's raw parameters are converted to the extended
  * model-free ({@code 2sf}) representation via
- * {@link #processParamsAfterFit(MFModelIso, double[])} before being stored.</p>
+ * {@link MFModelIso#getStandardPars(double[])} before being stored.</p>
  *
  * <p>The set of candidate models is determined by the moiety type: AMIDE uses
  * models 1, 1f, 1s, 2s, 2sf; DEUTERATED_METHYL additionally includes 1sf.
  * Other common settings (tau_M, bootstrap mode, number of replicates, etc.)
  * are inherited from {@link FitSpec}.</p>
  *
- * <h3>Example usage:</h3>
+ * <h2>Example usage:</h2>
  * <pre>{@code
  * FitSpec spec = new BaggingFitSpec.Builder()
  *     .tauM(17.5)
@@ -49,7 +49,7 @@ import org.nmrfx.chemistry.relax.OrderParSet;
  * @see ConventionalFitSpec
  * @see RegularizationFitSpec
  */
-public class BaggingFitSpec extends BootstrappedFitSpec {
+public class BaggingFitSpec extends FitSpec {
 
     /** Key used when registering results in the {@link OrderParSet} map. */
     private static final String KEY = "BAGGING";
@@ -98,12 +98,12 @@ public class BaggingFitSpec extends BootstrappedFitSpec {
         return names;
     }
 
-    public MFModelIso getModel(String name, MolDataValues data) {
+    public MFModelIso getModel(String name, MolDataValues<? extends RelaxDataValue> data) {
         boolean fitTauM = fitTauM(data);
         return MFModelIso.buildModel(name, fitTauM, getTauM(), tauMFraction, fitExchange);
     }
 
-    public List<MFModelIso> getModels(MolDataValues data) {
+    public List<MFModelIso> getModels(MolDataValues<? extends RelaxDataValue> data) {
         return getModelNames().stream()
             .map(name -> getModel(name, data))
             .collect(Collectors.toList());
@@ -124,8 +124,9 @@ public class BaggingFitSpec extends BootstrappedFitSpec {
      *       <li>Draw a bootstrap sample from {@code data}.</li>
      *       <li>Fit every candidate model to the sample.</li>
      *       <li>Select the model with the lowest AICc.</li>
-     *       <li>Convert the winning parameters to the canonical {@code 2sf}
-     *           representation via {@link #processParamsAfterFit}.</li>
+     *       <li>Convert the optimal parameters to the {@code 2sf}
+     *           representation using
+     *           {@link MFModelIso#getStandardPars(double[])}.</li>
      *       <li>Record the parameters and bootstrap weights.</li>
      *     </ol>
      *   </li>
@@ -150,7 +151,7 @@ public class BaggingFitSpec extends BootstrappedFitSpec {
      * @throws IllegalStateException if tau_M has not been set
      */
     @Override
-    public ModelFitResult fit(String key, MolDataValues data, Map<String, OrderParSet> orderParSetMap) {
+    public ModelFitResult fit(String key, MolDataValues<?> data, Map<String, OrderParSet> orderParSetMap) {
         RelaxFit relaxFit = initRelaxFit(key, data);
 
         List<MFModelIso> models = getModels(data);
@@ -161,11 +162,11 @@ public class BaggingFitSpec extends BootstrappedFitSpec {
         int nWeights = data.getNValues();
         double[][] parameters = new double[nParameters][nReplicates];
         double[][] weights = new double[nWeights][nReplicates];
-        BootstrapSampler sampler = getBootstrapSampler(data);
+        BootstrapSampler<? extends RelaxDataValue> sampler = getBootstrapSampler(data);
 
         Score[] bestScores = new Score[nReplicates];
         for (int i = 0; i < nReplicates; i++) {
-            MolDataValues replicateData = sampler.sample();
+            MolDataValues<? extends RelaxDataValue> replicateData = sampler.sample();
             relaxFit.setRelaxData(key, replicateData);
 
             Optional<Pair<Score, MFModelIso>> bestScoreModel = Optional.empty();
@@ -185,7 +186,7 @@ public class BaggingFitSpec extends BootstrappedFitSpec {
             MFModelIso bestModel = bestScoreModel.get().getRight();
             // Convert the winning model's parameters to the canonical 2sf
             // representation so that all replicates are on a common scale.
-            double[] replicateParameters = processParamsAfterFit(bestModel, bestScores[i].getPars());
+            double[] replicateParameters = bestModel.getStandardPars(bestScores[i].getPars());
             double[] replicateWeights = replicateData.getWeights();
             for (int k = 0; k < nParameters; k++) parameters[k][i] = replicateParameters[k];
             for (int j = 0; j < nWeights; j++) weights[j][i] = replicateWeights[j];
@@ -211,5 +212,4 @@ public class BaggingFitSpec extends BootstrappedFitSpec {
 
         return new ModelFitResult(orderPar, parameters, null);
     }
-
 }

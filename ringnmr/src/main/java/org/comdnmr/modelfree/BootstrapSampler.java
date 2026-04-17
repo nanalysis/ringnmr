@@ -28,11 +28,11 @@ import org.apache.commons.rng.simple.RandomSource;
  * {@code seed = true} to the two-argument constructor fixes the seed to a
  * hard-coded value for reproducible results (e.g., in tests).
  */
-public abstract class BootstrapSampler implements ObjectSampler<MolDataValues> {
+public abstract class BootstrapSampler<T extends RelaxDataValue> implements ObjectSampler<MolDataValues<T>> {
 
     private static final int[] SEED = new int[] {196, 9, 0, 226};
 
-    protected final MolDataValues data;
+    protected final MolDataValues<T> data;
     protected final UniformRandomProvider rng;
 
     /**
@@ -40,7 +40,7 @@ public abstract class BootstrapSampler implements ObjectSampler<MolDataValues> {
      *
      * @param data the relaxation data to be resampled
      */
-    public BootstrapSampler(MolDataValues data) { this(data, false); }
+    public BootstrapSampler(MolDataValues<T> data) { this(data, false); }
 
     /**
      * Constructs a {@code BootstrapSampler}, optionally fixing the RNG seed.
@@ -49,7 +49,7 @@ public abstract class BootstrapSampler implements ObjectSampler<MolDataValues> {
      * @param seed if {@code true}, initialises the RNG with a fixed seed for
      *             reproducibility; if {@code false}, uses a random seed
      */
-    public BootstrapSampler(MolDataValues data, boolean seed) {
+    public BootstrapSampler(MolDataValues<T> data, boolean seed) {
         this.data = data;
         this.rng = (seed) ?
             RandomSource.XO_SHI_RO_128_PP.create(SEED) :
@@ -73,7 +73,7 @@ public abstract class BootstrapSampler implements ObjectSampler<MolDataValues> {
      * @return the number of relaxation data entries
      */
     public int getNFields() {
-        return data.dataValues.size();
+        return data.getData().size();
     }
 
     /**
@@ -86,7 +86,7 @@ public abstract class BootstrapSampler implements ObjectSampler<MolDataValues> {
      *
      * @return the wrapped {@code MolDataValues} in its resampled state
      */
-    public abstract MolDataValues sample();
+    public abstract MolDataValues<T> sample();
 
     /**
      * Restores the wrapped {@link MolDataValues} to its original, unperturbed state and
@@ -94,5 +94,5 @@ public abstract class BootstrapSampler implements ObjectSampler<MolDataValues> {
      *
      * @return the wrapped {@code MolDataValues} with the original data restored
      */
-    public abstract MolDataValues getOriginalData();
+    public abstract MolDataValues<T> getOriginalData();
 }

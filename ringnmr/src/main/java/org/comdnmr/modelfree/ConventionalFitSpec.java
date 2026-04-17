@@ -30,7 +30,7 @@ import org.nmrfx.chemistry.relax.OrderParSet;
  * {@link MoietyType#AMIDE}, the {@code "1sf"} model is automatically
  * excluded.</p>
  *
- * <h3>Example usage:</h3>
+ * <h2>Example usage:</h2>
  * <pre>{@code
  * FitSpec spec = new ConventionalFitSpec.Builder()
  *     .tauM(17.5)
@@ -176,19 +176,6 @@ public class ConventionalFitSpec extends FitSpec {
     }
 
     /**
-     * Returns the raw optimizer output unchanged. The conventional strategy
-     * does not apply any post-processing to fitted parameters.
-     *
-     * @param model  the model that was fit
-     * @param params raw parameter values from the optimizer
-     * @return {@code params} unmodified
-     */
-    @Override
-    protected double[] processParamsAfterFit(MFModelIso model, double[] params) {
-        return params;
-    }
-
-    /**
      * Serializes this specification to a TOML-formatted string, including
      * the base fields and the list of model names.
      *
@@ -228,7 +215,7 @@ public class ConventionalFitSpec extends FitSpec {
      * @return the configured model instance
      * @throws IllegalStateException if tau_M has not been set
      */
-    public MFModelIso getModel(String name, MolDataValues data) {
+    public MFModelIso getModel(String name, MolDataValues<? extends RelaxDataValue> data) {
         boolean fitTauM = fitTauM(data);
         return MFModelIso.buildModel(name, fitTauM, getTauM(), tauMFraction, fitExchange);
     }
@@ -240,7 +227,7 @@ public class ConventionalFitSpec extends FitSpec {
      * @return list of configured models, one per entry in {@link #getModelNames()}
      * @throws IllegalStateException if tau_M has not been set
      */
-    public List<MFModelIso> getModels(MolDataValues data) {
+    public List<MFModelIso> getModels(MolDataValues<? extends RelaxDataValue> data) {
         return getModelNames()
             .stream()
             .map(name -> getModel(name, data))
@@ -285,7 +272,7 @@ public class ConventionalFitSpec extends FitSpec {
      * @throws IllegalStateException if tau_M has not been set
      */
     @Override
-    public ModelFitResult fit(String key, MolDataValues data, Map<String, OrderParSet> orderParSetMap) {
+    public ModelFitResult fit(String key, MolDataValues<?> data, Map<String, OrderParSet> orderParSetMap) {
         RelaxFit relaxFit = initRelaxFit(key, data);
         List<MFModelIso> models = getModels(data);
 
@@ -298,9 +285,9 @@ public class ConventionalFitSpec extends FitSpec {
             // Perform bootstrapping to estimate parameter errors
             double[][] parameters = new double[nParameters][nReplicates];
             double[][] weights = new double[nWeights][nReplicates];
-            BootstrapSampler sampler = getBootstrapSampler(data);
+            BootstrapSampler<? extends RelaxDataValue> sampler = getBootstrapSampler(data);
             for (int i = 0; i < nReplicates; i++) {
-                MolDataValues replicateData = sampler.sample();
+                MolDataValues<? extends RelaxDataValue> replicateData = sampler.sample();
                 relaxFit.setRelaxData(key, replicateData);
                 Score replicateScore = runFit(relaxFit, model);
                 double[] replicateParameters = replicateScore.getPars();

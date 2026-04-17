@@ -1550,7 +1550,6 @@ public class PyController implements Initializable {
         xychart.setEquations(equations);
     }
 
-    // >>> Simon's model-free work >>>
     private void showWarningDialog(Exception e) {
         Alert alert = new Alert(AlertType.WARNING);
         alert.setTitle("Warning");
@@ -1677,9 +1676,13 @@ public class PyController implements Initializable {
 
     private List<ValidatedTextField<?>> getValidatedTextFields() {
         List<ValidatedTextField<?>> textFields = new ArrayList<>();
-        textFields.add(tauMTextField);
-        textFields.add(tauMFractionTextField);
-        textFields.add(r2LimitTextField);
+        if (hardCodeTauMCheck.isSelected()) {
+            textFields.add(tauMTextField);
+        }
+        if (fitTauMCheck.isSelected()) {
+            textFields.add(tauMFractionTextField);
+            textFields.add(r2LimitTextField);
+        }
         if (getFitSpecClass() == RegularizationFitSpec.class) {
             textFields.add(lambdaS2TextField);
             textFields.add(lambdaTauFTextField);
@@ -1706,16 +1709,19 @@ public class PyController implements Initializable {
 
         FitModel fitModel;
         String modelPrefix;
-        if (moietyTypeChoiceBox.getValue().equals(MoietyType.AMIDE)) {
-            fitModel = new FitR1R2NOEModel();
-            modelPrefix = "";
-        } else if (moietyTypeChoiceBox.getValue().equals(MoietyType.DEUTERATED_METHYL)) {
-            SpectralDensityCalculator.setUseRQ(useRQCheckBox.isSelected());
-            fitModel = new FitDeuteriumModel();
-            modelPrefix = "D";
-        } else {
-            throw new AssertionError("Unsupported moiety");
-        }
+        MoietyType moietyType = moietyTypeChoiceBox.getValue();
+        switch (moietyType) {
+            case AMIDE -> {
+                fitModel = new FitR1R2NOEModel();
+                modelPrefix = "";
+            }
+            case DEUTERATED_METHYL -> {
+                SpectralDensityCalculator.setUseRQ(useRQCheckBox.isSelected());
+                fitModel = new FitDeuteriumModel();
+                modelPrefix = "D";
+            }
+            default -> throw new AssertionError("Unsupported moiety");
+        };
         fitIsotropicModel(fitModel, modelPrefix);
     }
 
@@ -1756,6 +1762,7 @@ public class PyController implements Initializable {
         }
 
         FitSpec fitSpec = fitSpecBuilder
+            .moietyType(moietyTypeChoiceBox.getValue())
             .bootstrapMode(bootstrapMethodChoice.getValue())
             .nReplicates(bootstrapReplicateTextField.getValue().get())
             .build();

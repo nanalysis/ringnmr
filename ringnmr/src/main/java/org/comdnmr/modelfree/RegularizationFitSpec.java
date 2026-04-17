@@ -15,7 +15,7 @@ import org.nmrfx.chemistry.relax.OrderParSet;
  *
  * <p>Unlike {@link BaggingFitSpec}, which selects the best model per replicate
  * from a candidate set, this strategy always fits the {@code 2sf} model
- * (parameters: {@code [tauM?,] sf², τ_f, ss², τ_s}) with
+ * (parameters: {@code [τm?,] S²f, τf, S²s, τs}) with
  * regularization terms that penalize deviations of the order parameters and
  * correlation times from physically motivated null values. The regularization
  * discourages overfitting without the need for AICc-based model selection.</p>
@@ -30,11 +30,11 @@ import org.nmrfx.chemistry.relax.OrderParSet;
  * {@link BaggingFitSpec}: for each replicate, the data are resampled via the
  * configured {@link FitSpec.BootstrapMode}, the 2sf model is fit, and the
  * resulting parameters are post-processed via
- * {@link #processParamsAfterFit(MFModelIso, double[])} before being aggregated
+ * {@link #processParamsAfterFit(double[], boolean)} before being aggregated
  * across replicates by
  * {@link FitSpec#computeStatistics(double[][], double[][])}.</p>
  *
- * <h3>Example usage:</h3>
+ * <h2>Example usage:</h2>
  * <pre>{@code
  * FitSpec spec = new RegularizationFitSpec.Builder()
  *     .tauM(17.5)
@@ -52,10 +52,24 @@ import org.nmrfx.chemistry.relax.OrderParSet;
  * @see ConventionalFitSpec
  * @see FitSpec.BootstrapMode
  */
-public class RegularizationFitSpec extends BootstrappedFitSpec {
+public class RegularizationFitSpec extends FitSpec {
 
     /** Key used when registering results in the {@link OrderParSet} map. */
     private static final String KEY = "REGULARIZATION";
+
+    /**
+     * Order-parameter threshold above which the corresponding motion is
+     * considered absent (S² ≈ 1). When both S² values exceed this limit,
+     * the result is mapped to "model 0" (no local motions).
+     */
+    static final double S2_THOLD = 0.99;
+
+    /**
+     * Correlation-time threshold (ns) below which the corresponding motion is
+     * treated as instantaneous (τ → 0). Motions with τ less than this limit
+     * are assigned τ = 0.
+     */
+    static final double TAU_THOLD = 1.0e-3;  // 1 ps
 
     /**
      * Regularization strength for the order parameters (S²f, S²s).
@@ -83,7 +97,7 @@ public class RegularizationFitSpec extends BootstrappedFitSpec {
      * regularization strengths have sensible defaults and may be set
      * individually.</p>
      *
-     * <h3>Example:</h3>
+     * <h2>Example:</h2>
      * <pre>{@code
      * FitSpec spec = new RegularizationFitSpec.Builder()
      *     .tauM(17.5)
@@ -239,7 +253,7 @@ public class RegularizationFitSpec extends BootstrappedFitSpec {
      * strengths.</p>
      */
     @Override
-    protected RelaxFit initRelaxFit(String key, MolDataValues data) {
+    protected RelaxFit initRelaxFit(String key, MolDataValues<? extends RelaxDataValue> data) {
         RelaxFit relaxFit = super.initRelaxFit(key, data);
         relaxFit.setUseLambda(true);
         relaxFit.setLambdaS(getLambdaS());
@@ -250,10 +264,90 @@ public class RegularizationFitSpec extends BootstrappedFitSpec {
 
     // ── fit ───────────────────────────────────────────────────────────────────
 
-    private MFModelIso2sf getModel2sf(MolDataValues data) {
+    private MFModelIso2sf getModel2sf(MolDataValues<? extends RelaxDataValue> data) {
         boolean fitTauM = fitTauM(data);
         return (MFModelIso2sf) MFModelIso.buildModel("2sf", fitTauM, getTauM(), tauMFraction, fitExchange);
     }
+
+   /**
+    * Processes output of 2sf fit.
+    *
+    * <ul>
+    *   <li><em>No local motions</em> (both S² above {@code S2_THOLD}):
+    *       S²f = S²s = 1, τf = τs = 0.</li>
+    *   <li><em>One fast motion</em> (τ below {@code TAU_THOLD}):
+    *       S²f = S², τf = 0, S²s = 1, τs = 0.</li>
+    *   <li><em>One fast motion with non-zero τ_f</em>
+    *       (τ in (TAU_THOLD, SLOW_LIMIT]):
+    *       S²f = S², τf = τ, S²s = 1, τs = 0.</li>
+    *   <li><em>One slow motion</em> (τ above {@code SLOW_LIMIT}):
+    *       S²f = 1, τf = 0, S²s = S², τs = τ.</li>
+    *   <li><em>Two motions, one instantaneous</em>:
+    *       The instantaneous timescale is mapped to τf = 0.</li>
+    *   <li><em>Two independent motions</em>:
+    *       Sorted so that τf &lt; τs.</li>
+    * </ul>
+    *
+    * @param params parameter values from the optimizer
+    * @return the processed parameter array
+    */
+    protected double[] processParamsAfterFit(double[] params, boolean fitTau) {
+       int start = fitTau ? 1 : 0;
+       double s1   = params[start];
+       double tau1 = params[start + 1];
+       double s2   = params[start + 2];
+       double tau2 = params[start + 3];
+
+       double sf2, tauf, ss2, taus;
+
+       // No local motions — both order parameters are effectively 1
+       if (s1 > S2_THOLD && s2 > S2_THOLD) {
+           sf2 = ss2 = 1.0;
+           tauf = taus = 0.0;
+       }
+
+       // One local motion — the other degree of freedom is frozen out
+       else if (s1 > S2_THOLD || s2 > S2_THOLD) {
+           double s   = (s1 > S2_THOLD) ? s2 : s1;
+           double tau = (s1 > S2_THOLD) ? tau2 : tau1;
+           if (tau < TAU_THOLD) {
+               // Fast motion with effectively zero correlation time (Model 1)
+               sf2 = s;   tauf = 0.0; ss2 = 1.0; taus = 0.0;
+           } else if (tau < MFModelIso2sf.SLOW_LIMIT) {
+               // Resolvable fast motion (Model 1f)
+               sf2 = s;   tauf = tau; ss2 = 1.0; taus = 0.0;
+           } else {
+               // Slow motion (Model 1s)
+               sf2 = 1.0; tauf = 0.0; ss2 = s;   taus = tau;
+           }
+       }
+
+       // Two local motions
+       else {
+           if (tau1 < TAU_THOLD) {
+               // tau1 is instantaneous: assign it to the fast slot (Model 2s)
+               sf2 = s1; tauf = 0.0; ss2 = s2; taus = tau2;
+           } else if (tau2 < TAU_THOLD) {
+               // tau2 is instantaneous: assign it to the fast slot (Model 2s)
+               sf2 = s2; tauf = 0.0; ss2 = s1; taus = tau1;
+           } else {
+               // Both timescales are resolvable: sort so that tauf < taus (Model 2sf)
+               if (tau1 < tau2) {
+                   sf2 = s1; tauf = tau1; ss2 = s2; taus = tau2;
+               } else {
+                   sf2 = s2; tauf = tau2; ss2 = s1; taus = tau1;
+               }
+           }
+       }
+
+       params[start]     = sf2;
+       params[start + 1] = tauf;
+       params[start + 2] = ss2;
+       params[start + 3] = taus;
+
+       return params;
+    }
+
 
     /**
      * Performs a regularized model-free fit for a single residue.
@@ -264,8 +358,8 @@ public class RegularizationFitSpec extends BootstrappedFitSpec {
      *     <ol type="a">
      *       <li>Draw a bootstrap sample from {@code data}.</li>
      *       <li>Fit the {@code 2sf} model to the sample with regularization.</li>
-     *       <li>Post-process the parameters into the canonical 2sf layout via
-     *           {@link #processParamsAfterFit(MFModelIso, double[])}.</li>
+     *       <li>Post-process the parameters via
+     *           {@link #processParamsAfterFit(double[], boolean)}.</li>
      *       <li>Record the parameters and bootstrap weights.</li>
      *     </ol>
      *   </li>
@@ -289,7 +383,7 @@ public class RegularizationFitSpec extends BootstrappedFitSpec {
      * @throws IllegalStateException if tau_M has not been set
      */
     @Override
-    public ModelFitResult fit(String key, MolDataValues data, Map<String, OrderParSet> orderParSetMap) {
+    public ModelFitResult fit(String key, MolDataValues<?> data, Map<String, OrderParSet> orderParSetMap) {
         RelaxFit relaxFit = initRelaxFit(key, data);
         MFModelIso2sf model = getModel2sf(data);
         data.setTestModel(model);
@@ -298,14 +392,14 @@ public class RegularizationFitSpec extends BootstrappedFitSpec {
         int nWeights = data.getNValues();
         double[][] parameters = new double[nParameters][nReplicates];
         double[][] weights = new double[nWeights][nReplicates];
-        BootstrapSampler sampler = getBootstrapSampler(data);
+        BootstrapSampler<? extends RelaxDataValue> sampler = getBootstrapSampler(data);
 
         Score[] scores = new Score[nReplicates];
         for (int i = 0; i < nReplicates; i++) {
-            MolDataValues replicateData = sampler.sample();
+            MolDataValues<? extends RelaxDataValue> replicateData = sampler.sample();
             relaxFit.setRelaxData(key, replicateData);
             scores[i] = runFit(relaxFit, model);
-            double[] replicateParameters = processParamsAfterFit(model, scores[i].getPars());
+            double[] replicateParameters = processParamsAfterFit(scores[i].getPars(), model.fitTau());
             double[] replicateWeights = replicateData.getWeights();
             for (int k = 0; k < nParameters; k++) parameters[k][i] = replicateParameters[k];
             for (int j = 0; j < nWeights; j++) weights[j][i] = replicateWeights[j];

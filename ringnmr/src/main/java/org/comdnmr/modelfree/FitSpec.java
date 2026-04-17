@@ -139,7 +139,7 @@ public abstract class FitSpec {
      *                       entries will be added
      * @return the result of the fitting process
      */
-    public abstract ModelFitResult fit(String key, MolDataValues data, Map<String, OrderParSet> orderParSetMap);
+    public abstract ModelFitResult fit(String key, MolDataValues<?> data, Map<String, OrderParSet> orderParSetMap);
 
     /**
      * Returns the lower bounds for the model parameters. Subclasses may apply
@@ -150,17 +150,6 @@ public abstract class FitSpec {
      * @return array of lower-bound values, one per local parameter
      */
     protected double[] getLower(MFModelIso model) { return model.getLower(); }
-
-    /**
-     * Post-processes fitted parameter values. Subclasses may adjust the raw optimizer output.
-     * For example, the bagging and regularization method will convert the
-     * parameters to an appropriate representation for the extended (2sf) model
-     *
-     * @param model  the model that was fit
-     * @param params raw parameter values from the optimizer
-     * @return the (possibly adjusted) parameter values
-     */
-    protected abstract double[] processParamsAfterFit(MFModelIso model, double[] params);
 
     /**
      * Serializes this specification to a TOML-formatted string suitable for
@@ -303,7 +292,7 @@ public abstract class FitSpec {
      * @param data relaxation data for the residue under consideration
      * @return {@code true} if tau_M should be fit for this residue
      */
-    public boolean fitTauM(MolDataValues data) {
+    public boolean fitTauM(MolDataValues<?> data) {
         return fitTauM && data.getData().stream().anyMatch(value -> value.R2 > r2Limit);
     }
 
@@ -368,11 +357,11 @@ public abstract class FitSpec {
      * @param data the relaxation data to be resampled
      * @return a sampler matching {@link #bootstrapMode}
      */
-    public BootstrapSampler getBootstrapSampler(MolDataValues data) {
+    public <T extends RelaxDataValue> BootstrapSampler<T> getBootstrapSampler(MolDataValues<T> data) {
         return switch (bootstrapMode) {
-            case PARAMETRIC -> new ParametricSampler(data);
-            case NONPARAMETRIC -> new NonparametricSampler(data);
-            case BAYESIAN -> new BayesianSampler(data);
+            case PARAMETRIC    -> new ParametricSampler<>(data);
+            case NONPARAMETRIC -> new NonparametricSampler<>(data);
+            case BAYESIAN      -> new BayesianSampler<>(data);
         };
     }
 
@@ -384,7 +373,7 @@ public abstract class FitSpec {
      * @param data measured relaxation values
      * @return a ready-to-use {@link RelaxFit}
      */
-    protected RelaxFit initRelaxFit(String key, MolDataValues data) {
+    protected RelaxFit initRelaxFit(String key, MolDataValues<?> data) {
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setFitJ(fitJ);
         relaxFit.setRelaxData(key, data);
@@ -511,15 +500,15 @@ public abstract class FitSpec {
      */
     protected OrderPar makeOrderPar(
         OrderParSet orderParSet,
-        MolDataValues data,
+        MolDataValues<?> data,
         String key,
         Score score,
         MFModelIso model,
         double[] parameters,
         double[] errors
     ) {
-        ResonanceSource resSource = new ResonanceSource(data.atom);
-        Atom atom = data.atom;
+        ResonanceSource resSource = new ResonanceSource(data.getAtom());
+        Atom atom = data.getAtom();
         List<String> names = model.getParNames();
         OrderPar orderPar = new OrderPar(
             orderParSet, resSource, score.rss, score.nValues, score.nPars, model.getName()
@@ -649,7 +638,7 @@ public abstract class FitSpec {
      * defaults need to be set explicitly. Call {@link #build()} on a concrete
      * subclass builder to obtain the final {@code FitSpec} instance.</p>
      *
-     * <h3>Example usage (assuming a concrete subclass {@code ConventionalFitSpec}):</h3>
+     * <h2>Example usage (assuming a concrete subclass {@code ConventionalFitSpec}):</h2>
      * <pre>{@code
      * FitSpec spec = new ConventionalFitSpec.Builder()
      *     .moietyType(MoietyType.AMIDE)

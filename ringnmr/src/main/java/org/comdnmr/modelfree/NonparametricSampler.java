@@ -22,7 +22,7 @@ import java.util.stream.IntStream;
  * observation is selected across the three frequency draws; selected twice → weight 2.0,
  * not selected → weight 0.0.
  */
-public class NonparametricSampler extends WeightSampler {
+public class NonparametricSampler<T extends RelaxDataValue> extends WeightSampler<T> {
 
     // Iterator of randomly ordered ints which specifies the ordering of possible weight vectors.
     private final Iterator<Integer> iterator;
@@ -88,7 +88,7 @@ public class NonparametricSampler extends WeightSampler {
      *
      * @param data the relaxation data to be resampled
      */
-    public NonparametricSampler(MolDataValues data) {
+    public NonparametricSampler(MolDataValues<T> data) {
         super(data);
         iterator = generateIterator();
     }

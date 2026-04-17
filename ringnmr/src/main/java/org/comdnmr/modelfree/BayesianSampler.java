@@ -16,7 +16,7 @@ import org.apache.commons.rng.sampling.distribution.DirichletSampler;
  * <p>This sampler can be called an unlimited number of times, unlike
  * {@link NonparametricSampler} which exhausts after {@code nSel³} draws.
  */
-public class BayesianSampler extends WeightSampler {
+public class BayesianSampler<T extends RelaxDataValue> extends WeightSampler<T> {
 
     /** Dirichlet concentration parameter; α = 1 corresponds to the uniform prior. */
     private static final double ALPHA = 1.0;
@@ -28,7 +28,7 @@ public class BayesianSampler extends WeightSampler {
      *
      * @param data the relaxation data to be resampled
      */
-    public BayesianSampler(MolDataValues data) {
+    public BayesianSampler(MolDataValues<T> data) {
         super(data);
         dirichlet = DirichletSampler.symmetric(rng, getNValues(), ALPHA);
     }
