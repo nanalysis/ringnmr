@@ -1613,7 +1613,7 @@ public class PyController implements Initializable {
         return FitSpec.getFitSpecClass(fitMethodChoice.getValue());
     }
 
-    List<String> getActiveModelNames(String prefix) {
+    List<String> getActiveModelNames() {
         List<String> modelNames = new ArrayList<>();
         List<Node> activeBoxes = modelGridPane.getChildren();
         for (Map.Entry<String, HBox> modelBox : modelBoxes.entrySet()) {
@@ -1707,30 +1707,27 @@ public class PyController implements Initializable {
             return;
         }
 
-        FitModel fitModel;
-        String modelPrefix;
         MoietyType moietyType = moietyTypeChoiceBox.getValue();
         switch (moietyType) {
             case AMIDE -> {
-                fitModel = new FitR1R2NOEModel();
-                modelPrefix = "";
+                modelFitter = new FitR1R2NOEModel();
             }
             case DEUTERATED_METHYL -> {
+                // FIXME: Encapsulate in FitSpec. Will need some thinking... only applicable to deuterated methyl data
                 SpectralDensityCalculator.setUseRQ(useRQCheckBox.isSelected());
-                fitModel = new FitDeuteriumModel();
-                modelPrefix = "D";
+                modelFitter = new FitDeuteriumModel();
             }
             default -> throw new AssertionError("Unsupported moiety");
         };
-        fitIsotropicModel(fitModel, modelPrefix);
+        fitIsotropicModel(modelFitter);
     }
 
-    public void fitIsotropicModel(FitModel fitModel, String modelPrefix) {
+    public void fitIsotropicModel(FitModel fitModel) {
         Class<? extends FitSpec> fitSpecClass = getFitSpecClass();
         FitSpec.Builder fitSpecBuilder;
         if (fitSpecClass == ConventionalFitSpec.class) {
             fitSpecBuilder = new ConventionalFitSpec.Builder()
-                .modelNames(getActiveModelNames(modelPrefix));
+                .modelNames(getActiveModelNames());
         } else if (fitSpecClass == BaggingFitSpec.class) {
             fitSpecBuilder = new BaggingFitSpec.Builder()
                 .useMedian(useMedianCheckBox.isSelected());
@@ -1778,6 +1775,7 @@ public class PyController implements Initializable {
     }
 
     public void finishModelFreeFit() {
+
         // Double tauFit = modelFitter.getTau();
         // if (tauFit != null) {
         //     tauCalcField.setText(String.format("%.2f", tauFit));
@@ -1785,13 +1783,14 @@ public class PyController implements Initializable {
         // }
 
         Map<String, OrderParSet> molResProps = DataIO.getOrderParSetFromMolecule();
-        boolean hasBest = molResProps.keySet().stream().anyMatch(setName -> setName.endsWith("best"));
+        // boolean hasBest = molResProps.keySet().stream().anyMatch(setName -> setName.endsWith("best"));
         for (var entry : molResProps.entrySet()) {
             String setName = entry.getKey();
             OrderParSet orderParSet = entry.getValue();
-            if (hasBest) {
-                orderParSet.active(setName.endsWith("best"));
-            }
+            orderParSet.active(true);
+            // if (hasBest) {
+            //     orderParSet.active(setName.endsWith("best"));
+            // }
         }
 
         addMoleculeDataToAxisMenu();
@@ -2873,7 +2872,7 @@ public class PyController implements Initializable {
             statusBar.setText("");
         } else {
             statusBar.setText(s);
-            if (s.equals("Done")) {
+            if (s.startsWith("Done")) {
                 if (modelFitter != null) {
                     finishModelFreeFit();
                 } else {

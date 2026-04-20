@@ -53,6 +53,7 @@ public abstract class FitModel implements BasicFitter {
     List<String> modelNames = new ArrayList<>();
     String searchKey = null;
     AtomicBoolean cancelled = new AtomicBoolean(false);
+    int lastFitCount = 0;
     boolean useMedian = false;
     boolean calcValidation = false;
 
@@ -181,6 +182,7 @@ public abstract class FitModel implements BasicFitter {
                     if (!data.getData().isEmpty()) results.put(key, fitSpec.fit(key, data, orderParSetMap));
                     counts.incrementAndGet();
                 });
+            moleculeBase.orderParSetMap().putAll(orderParSetMap);
             return results;
         } else {
             throw new IllegalStateException(getNoDataMessage());
@@ -358,19 +360,13 @@ public abstract class FitModel implements BasicFitter {
     }
 
     void finishProcessing() {
-        updateStatus("Done");
-        try {
-        } catch (IllegalArgumentException iAE) {
-        }
+        updateStatus("Done: fit " + lastFitCount + " residues");
     }
 
     public void fitAll(Task task) {
-        testIsoModel();
-        int nFit = 0;
-        int nGroups = 1;
-        nFit++;
+        lastFitCount = testIsoModel().size();
         if (task != null) {
-            updateProgress((1.0 * nFit) / nGroups);
+            updateProgress(1.0);
         }
     }
 }
