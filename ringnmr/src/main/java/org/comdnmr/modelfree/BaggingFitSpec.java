@@ -98,13 +98,10 @@ public class BaggingFitSpec extends FitSpec {
         return names;
     }
 
-    public MFModelIso getModel(String name, MolDataValues<? extends RelaxDataValue> data) {
-        boolean fitTauM = fitTauM(data);
-        return MFModelIso.buildModel(name, fitTauM, getTauM(), tauMFraction, fitExchange);
-    }
-
+    // FIXME: repeated with ConventionalFitSpec
     public List<MFModelIso> getModels(MolDataValues<? extends RelaxDataValue> data) {
-        return getModelNames().stream()
+        return getModelNames()
+            .stream()
             .map(name -> getModel(name, data))
             .collect(Collectors.toList());
     }

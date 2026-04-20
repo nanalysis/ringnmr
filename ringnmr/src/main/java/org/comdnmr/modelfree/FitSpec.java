@@ -128,6 +128,23 @@ public abstract class FitSpec {
         this.useMedian = builder.useMedian;
     }
 
+    /**
+     * Builds a single {@link MFModelIso} by name, configured with the
+     * current tau_M, tau_M fraction bounds, and exchange-fitting flag.
+     *
+     * @param name the model name
+     * @param data relaxation data for the residue, used to determine whether
+     *             tau_M should be fit for this residue
+     * @return the configured model instance
+     * @throws IllegalStateException if tau_M has not been set
+     */
+    protected MFModelIso getModel(String name, MolDataValues<? extends RelaxDataValue> data) {
+        boolean fitTauM = fitTauM(data);
+        String fullName = moietyType.getModelName(name);
+        return MFModelIso.buildModel(fullName, fitTauM, getTauM(), tauMFraction, fitExchange);
+    }
+
+
     // ── Abstract methods ────────────────────────────────────────────────
 
     /**
@@ -331,13 +348,17 @@ public abstract class FitSpec {
      */
     public enum MoietyType {
         /** Backbone amide group (). */
-        AMIDE("¹⁵N¹H"),
+        AMIDE("¹⁵N¹H", ""),
         /** Deuterated methyl group (). */
-        DEUTERATED_METHYL("¹³C²H¹H₂");
+        DEUTERATED_METHYL("¹³C²H¹H₂", "D");
 
-        private final String string;
+        private final String label;
+        private final String modelPrefix;
 
-        MoietyType(String s) { string = s; }
+        MoietyType(String label, String modelPrefix) {
+            this.label = label;
+            this.modelPrefix = modelPrefix;
+        }
 
         /**
          * Returns a human-readable representation of the moiety.
@@ -345,7 +366,9 @@ public abstract class FitSpec {
          * @return the display name
          */
         @Override
-        public String toString() { return string; }
+        public String toString() { return label; }
+
+        public String getModelName(String baseName) { return modelPrefix + baseName; }
     }
 
     // ── Bootstrap ───────────────────────────────────────────────────────

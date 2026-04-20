@@ -262,13 +262,6 @@ public class RegularizationFitSpec extends FitSpec {
         return relaxFit;
     }
 
-    // ── fit ───────────────────────────────────────────────────────────────────
-
-    private MFModelIso2sf getModel2sf(MolDataValues<? extends RelaxDataValue> data) {
-        boolean fitTauM = fitTauM(data);
-        return (MFModelIso2sf) MFModelIso.buildModel("2sf", fitTauM, getTauM(), tauMFraction, fitExchange);
-    }
-
    /**
     * Processes output of 2sf fit.
     *
@@ -348,7 +341,6 @@ public class RegularizationFitSpec extends FitSpec {
        return params;
     }
 
-
     /**
      * Performs a regularized model-free fit for a single residue.
      *
@@ -385,7 +377,7 @@ public class RegularizationFitSpec extends FitSpec {
     @Override
     public ModelFitResult fit(String key, MolDataValues<?> data, Map<String, OrderParSet> orderParSetMap) {
         RelaxFit relaxFit = initRelaxFit(key, data);
-        MFModelIso2sf model = getModel2sf(data);
+        MFModelIso2sf model = (MFModelIso2sf) getModel("2sf", data);
         data.setTestModel(model);
 
         int nParameters = model.getNPars();

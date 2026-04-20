@@ -206,27 +206,13 @@ public class ConventionalFitSpec extends FitSpec {
     }
 
     /**
-     * Builds a single {@link MFModelIso} by name, configured with the
-     * current tau_M, tau_M fraction bounds, and exchange-fitting flag.
-     *
-     * @param name the model name
-     * @param data relaxation data for the residue, used to determine whether
-     *             tau_M should be fit for this residue
-     * @return the configured model instance
-     * @throws IllegalStateException if tau_M has not been set
-     */
-    public MFModelIso getModel(String name, MolDataValues<? extends RelaxDataValue> data) {
-        boolean fitTauM = fitTauM(data);
-        return MFModelIso.buildModel(name, fitTauM, getTauM(), tauMFraction, fitExchange);
-    }
-
-    /**
      * Builds all candidate {@link MFModelIso} instances for the given residue.
      *
      * @param data relaxation data for the residue
      * @return list of configured models, one per entry in {@link #getModelNames()}
      * @throws IllegalStateException if tau_M has not been set
      */
+    // FIXME: repeated with BaggingFitSpec
     public List<MFModelIso> getModels(MolDataValues<? extends RelaxDataValue> data) {
         return getModelNames()
             .stream()
