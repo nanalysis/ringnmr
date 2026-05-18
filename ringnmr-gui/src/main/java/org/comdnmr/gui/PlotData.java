@@ -185,6 +185,7 @@ public class PlotData extends XYCanvasChart {
     }
 
     void mousePressedForPan(MouseEvent e) {
+        if (e.getButton() != MouseButton.PRIMARY) return;
         dragAnchorX = xAxis.getValueForDisplay(e.getX()).doubleValue();
         dragAnchorY = yAxis.getValueForDisplay(e.getY()).doubleValue();
         if (e.isShiftDown()) {
