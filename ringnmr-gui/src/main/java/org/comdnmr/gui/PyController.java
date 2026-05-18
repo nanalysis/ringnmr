@@ -585,7 +585,11 @@ public class PyController implements Initializable {
 
         showBootstrapFitsCheckBox = new CheckBox("Show bootstrap fits");
         showBootstrapFitsCheckBox.setVisible(false);
-        showBootstrapFitsCheckBox.setOnAction(e -> showInfo(chartInfo, xychart));
+        showBootstrapFitsCheckBox.setOnAction(e -> {
+            double[] savedView = xychart.getCurrentView();
+            showInfo(chartInfo, xychart);
+            xychart.restoreView(savedView);
+        });
         StackPane.setAlignment(showBootstrapFitsCheckBox, Pos.TOP_RIGHT);
         StackPane.setMargin(showBootstrapFitsCheckBox, new Insets(10, 15, 0, 0));
         stackPane.getChildren().add(showBootstrapFitsCheckBox);

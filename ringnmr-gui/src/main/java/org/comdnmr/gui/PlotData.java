@@ -29,8 +29,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.Files;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +40,7 @@ import java.util.Optional;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Orientation;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 
@@ -63,6 +66,11 @@ public class PlotData extends XYCanvasChart {
 
     private double defaultXLower, defaultXUpper, defaultYLower, defaultYUpper;
     private double dragAnchorX, dragAnchorY;
+    private double zoomStartX, zoomStartY, zoomCurrentX, zoomCurrentY;
+    private boolean zoomDragActive;
+    private double[] panStartBounds;
+    private final Deque<double[]> zoomHistory = new ArrayDeque<>();
+    private static final int MAX_ZOOM_HISTORY = 20;
 
     protected static final Color[] colors = {
             Color.web("#1b9e77"),
@@ -100,6 +108,7 @@ public class PlotData extends XYCanvasChart {
         getCanvas().setOnScroll(this::mouseScrolled);
         getCanvas().setOnMousePressed(this::mousePressedForPan);
         getCanvas().setOnMouseDragged(this::mouseDraggedForPan);
+        getCanvas().setOnMouseReleased(this::mouseReleased);
     }
 
     @Override
@@ -119,11 +128,35 @@ public class PlotData extends XYCanvasChart {
         xAxis.setUpperBound(xUpper);
         yAxis.setLowerBound(yLower);
         yAxis.setUpperBound(yUpper);
+        zoomHistory.clear();
+        zoomHistory.push(new double[]{xLower, xUpper, yLower, yUpper});
         drawChart();
     }
 
+    private void pushZoomHistory() {
+        double[] current = {
+            xAxis.getLowerBound(), xAxis.getUpperBound(),
+            yAxis.getLowerBound(), yAxis.getUpperBound()
+        };
+        if (!zoomHistory.isEmpty() && Arrays.equals(zoomHistory.peek(), current)) return;
+        if (zoomHistory.size() >= MAX_ZOOM_HISTORY) zoomHistory.pollLast();
+        zoomHistory.push(current);
+    }
+
     void mouseClicked(MouseEvent e) {
+        if (e.getButton() == MouseButton.SECONDARY) {
+            if (!zoomHistory.isEmpty()) {
+                double[] prev = zoomHistory.pop();
+                xAxis.setLowerBound(prev[0]);
+                xAxis.setUpperBound(prev[1]);
+                yAxis.setLowerBound(prev[2]);
+                yAxis.setUpperBound(prev[3]);
+                drawChart();
+            }
+            return;
+        }
         if (e.getClickCount() == 2) {
+            zoomHistory.clear();
             xAxis.setLowerBound(defaultXLower);
             xAxis.setUpperBound(defaultXUpper);
             yAxis.setLowerBound(defaultYLower);
@@ -140,6 +173,7 @@ public class PlotData extends XYCanvasChart {
     }
 
     void mouseScrolled(ScrollEvent e) {
+        pushZoomHistory();
         double factor = Math.pow(0.999, e.getDeltaY());
         double dataX = xAxis.getValueForDisplay(e.getX()).doubleValue();
         double dataY = yAxis.getValueForDisplay(e.getY()).doubleValue();
@@ -153,9 +187,27 @@ public class PlotData extends XYCanvasChart {
     void mousePressedForPan(MouseEvent e) {
         dragAnchorX = xAxis.getValueForDisplay(e.getX()).doubleValue();
         dragAnchorY = yAxis.getValueForDisplay(e.getY()).doubleValue();
+        if (e.isShiftDown()) {
+            zoomStartX = e.getX();
+            zoomStartY = e.getY();
+            zoomCurrentX = e.getX();
+            zoomCurrentY = e.getY();
+            zoomDragActive = true;
+        } else {
+            panStartBounds = new double[]{
+                xAxis.getLowerBound(), xAxis.getUpperBound(),
+                yAxis.getLowerBound(), yAxis.getUpperBound()
+            };
+        }
     }
 
     void mouseDraggedForPan(MouseEvent e) {
+        if (zoomDragActive) {
+            zoomCurrentX = e.getX();
+            zoomCurrentY = e.getY();
+            drawChart();
+            return;
+        }
         double dataX = xAxis.getValueForDisplay(e.getX()).doubleValue();
         double dataY = yAxis.getValueForDisplay(e.getY()).doubleValue();
         double dx = dragAnchorX - dataX;
@@ -167,6 +219,35 @@ public class PlotData extends XYCanvasChart {
         dragAnchorX = xAxis.getValueForDisplay(e.getX()).doubleValue();
         dragAnchorY = yAxis.getValueForDisplay(e.getY()).doubleValue();
         drawChart();
+    }
+
+    void mouseReleased(MouseEvent e) {
+        if (zoomDragActive) {
+            zoomDragActive = false;
+            double x1 = Math.min(zoomStartX, zoomCurrentX);
+            double x2 = Math.max(zoomStartX, zoomCurrentX);
+            double y1 = Math.min(zoomStartY, zoomCurrentY);
+            double y2 = Math.max(zoomStartY, zoomCurrentY);
+            if (x2 - x1 > 5 && y2 - y1 > 5) {
+                pushZoomHistory();
+                xAxis.setLowerBound(xAxis.getValueForDisplay(x1).doubleValue());
+                xAxis.setUpperBound(xAxis.getValueForDisplay(x2).doubleValue());
+                // screen Y increases downward, so y2 (bottom of box) → smaller data value
+                yAxis.setLowerBound(yAxis.getValueForDisplay(y2).doubleValue());
+                yAxis.setUpperBound(yAxis.getValueForDisplay(y1).doubleValue());
+            }
+            drawChart();
+        } else if (panStartBounds != null) {
+            double[] current = {
+                xAxis.getLowerBound(), xAxis.getUpperBound(),
+                yAxis.getLowerBound(), yAxis.getUpperBound()
+            };
+            if (!Arrays.equals(panStartBounds, current)) {
+                if (zoomHistory.size() >= MAX_ZOOM_HISTORY) zoomHistory.pollLast();
+                zoomHistory.push(panStartBounds);
+            }
+            panStartBounds = null;
+        }
     }
 
     public int getNumPlots() {
@@ -192,6 +273,23 @@ public class PlotData extends XYCanvasChart {
     public void drawChart() {
         super.drawChart();
         paintLines();
+        if (zoomDragActive) paintZoomRect();
+    }
+
+    private void paintZoomRect() {
+        GraphicsContext gc = getCanvas().getGraphicsContext2D();
+        double x = Math.min(zoomStartX, zoomCurrentX);
+        double y = Math.min(zoomStartY, zoomCurrentY);
+        double w = Math.abs(zoomCurrentX - zoomStartX);
+        double h = Math.abs(zoomCurrentY - zoomStartY);
+        gc.save();
+        gc.setFill(Color.rgb(100, 149, 237, 0.15));
+        gc.fillRect(x, y, w, h);
+        gc.setStroke(Color.rgb(70, 130, 180, 0.9));
+        gc.setLineWidth(1.0);
+        gc.setLineDashes(5, 4);
+        gc.strokeRect(x, y, w, h);
+        gc.restore();
     }
 
     protected void exportVectorGraphics(SVGGraphicsContext svgGC) throws GraphicsIOException {
@@ -216,6 +314,21 @@ public class PlotData extends XYCanvasChart {
 
     public double[] getYBounds() {
         return new double[]{yAxis.getLowerBound(), yAxis.getUpperBound()};
+    }
+
+    public double[] getCurrentView() {
+        return new double[]{
+            xAxis.getLowerBound(), xAxis.getUpperBound(),
+            yAxis.getLowerBound(), yAxis.getUpperBound()
+        };
+    }
+
+    public void restoreView(double[] bounds) {
+        xAxis.setLowerBound(bounds[0]);
+        xAxis.setUpperBound(bounds[1]);
+        yAxis.setLowerBound(bounds[2]);
+        yAxis.setUpperBound(bounds[3]);
+        drawChart();
     }
 
     void paintLines() {
