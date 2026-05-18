@@ -527,6 +527,14 @@ public abstract class FitSpec {
         return Pair.of(parameterEstimates, parameterErrors);
     }
 
+    protected static boolean[] flagSpuriousReplicates(double[] crossResiduals) {
+        DescriptiveStatistics stats = new DescriptiveStatistics(crossResiduals);
+        double threshold = 5.0 * stats.getPercentile(50.0);
+        boolean[] flags = new boolean[crossResiduals.length];
+        for (int i = 0; i < crossResiduals.length; i++) flags[i] = crossResiduals[i] > threshold;
+        return flags;
+    }
+
     // ── Order parameter construction ────────────────────────────────────
 
     /**

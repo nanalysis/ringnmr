@@ -294,6 +294,7 @@ public class ConventionalFitSpec extends FitSpec {
             double[][] parameters = new double[nParameters][nReplicates];
             double[][] weights = new double[nWeights][nReplicates];
             double[] currentReplicateTimes = new double[nReplicates];
+            double[] crossResiduals = new double[nReplicates];
             BootstrapSampler<? extends RelaxDataValue> sampler = getBootstrapSampler(data);
             for (int i = 0; i < nReplicates; i++) {
                 long startNs = System.nanoTime();
@@ -305,6 +306,8 @@ public class ConventionalFitSpec extends FitSpec {
                 for (int k = 0; k < nParameters; k++) parameters[k][i] = replicateParameters[k];
                 for (int j = 0; j < nWeights; j++) weights[j][i] = replicateWeights[j];
                 currentReplicateTimes[i] = (System.nanoTime() - startNs) / 1_000_000.0;
+                relaxFit.setRelaxData(key, data);
+                crossResiduals[i] = relaxFit.maxNormalizedResidual(replicateParameters);
             }
 
             String modelName = model.getName();
@@ -337,7 +340,7 @@ public class ConventionalFitSpec extends FitSpec {
                     fitParameters,
                     fitErrors
                 );
-                result = Optional.of(new ModelFitResult(bestOrderPar, parameters, null, currentReplicateTimes));
+                result = Optional.of(new ModelFitResult(bestOrderPar, parameters, null, currentReplicateTimes, flagSpuriousReplicates(crossResiduals)));
             }
         }
 

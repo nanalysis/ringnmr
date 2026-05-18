@@ -3310,12 +3310,15 @@ public class PyController implements Initializable {
                                 int nRepPars = repData.length;
                                 int offset = pars.length - nRepPars;
                                 Color repColor = Color.GRAY.deriveColor(0, 1, 1, 0.25);
+                                Color spuriousColor = Color.RED.deriveColor(0, 1, 1, 0.4);
+                                boolean[] spurious = fitResult.spuriousFlags();
                                 double[] repErrs = new double[pars.length];
                                 for (int rep = 0; rep < nReplicates; rep++) {
                                     double[] repPars = pars.clone();
                                     for (int k = 0; k < nRepPars; k++) repPars[k + offset] = repData[k][rep];
                                     var repEquation = new GUIPlotEquation(modelName, "spectralDensity", repPars, repErrs, extras);
-                                    repEquation.setColor(repColor);
+                                    boolean isSpurious = spurious != null && spurious[rep];
+                                    repEquation.setColor(isSpurious ? spuriousColor : repColor);
                                     repEquation.setLineWidth(0.5);
                                     equations.add(repEquation);
                                 }

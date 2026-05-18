@@ -524,6 +524,51 @@ public class RelaxFit {
         return score;
     }
 
+    public double maxNormalizedResidual(double[] pars) {
+        double maxNormRes = 0.0;
+        for (MolDataValues molData : molDataValues.values()) {
+            MFModel testModel = molData.getTestModel();
+            double[] resPars;
+            if (useGlobalTau) {
+                int nResPars = testModel.getNPars();
+                resPars = new double[nResPars + 1];
+                resPars[0] = globalTau;
+                System.arraycopy(pars, 0, resPars, 1, nResPars);
+            } else {
+                resPars = pars;
+            }
+            if (fitJ) {
+                double[][] jValues = molData.getJValues();
+                double[] jCalc = testModel.calc(jValues[0], resPars);
+                for (int i = 0; i < jCalc.length; i++) {
+                    double delta, jErr;
+                    if (logJMode) {
+                        delta = Math.abs(Math.log10(jCalc[i]) - Math.log10(jValues[1][i]));
+                        double high = jValues[1][i] + jValues[2][i];
+                        double low  = jValues[1][i] - jValues[2][i];
+                        jErr = Math.abs(Math.log10(high) - Math.log10(low)) / 2.0;
+                    } else {
+                        delta = Math.abs(jCalc[i] - jValues[1][i]) * 1.0e9;
+                        jErr  = jValues[2][i] * 1.0e9;
+                    }
+                    if (jErr > 0.0) maxNormRes = Math.max(maxNormRes, delta / jErr);
+                }
+            } else {
+                for (Object value : molData.getData()) {
+                    R1R2NOEDataValue dValue = (R1R2NOEDataValue) value;
+                    RelaxEquations relaxObj = dValue.relaxObj;
+                    double[] J = testModel.calc(relaxObj.wValues, resPars);
+                    double rEx = testModel.includesEx() ? resPars[resPars.length - 1] : 0.0;
+                    double r1D = Math.abs((relaxObj.R1(J)   - dValue.R1)  / dValue.R1err);
+                    double r2D = Math.abs((relaxObj.R2(J, rEx) - dValue.R2) / dValue.R2err);
+                    double noeD = Math.abs((relaxObj.NOE(J)  - dValue.NOE) / dValue.NOEerr);
+                    maxNormRes = Math.max(maxNormRes, Math.max(r1D, Math.max(r2D, noeD)));
+                }
+            }
+        }
+        return maxNormRes;
+    }
+
     @SuppressWarnings("unchecked")
     public Map<String, MolDataValues> genBootstrap(Random random, MFModel model, double[] pars) {
         var newMolDataValues = new HashMap<String, MolDataValues>();

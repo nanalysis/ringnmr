@@ -5,7 +5,7 @@ import java.util.StringJoiner;
 
 import org.nmrfx.chemistry.relax.OrderPar;
 
-public record ModelFitResult(OrderPar orderPar, double[][] replicateData, Double validationValue, double[] replicateTimes) {
+public record ModelFitResult(OrderPar orderPar, double[][] replicateData, Double validationValue, double[] replicateTimes, boolean[] spuriousFlags) {
 
     public String toToml(boolean includeReplicates) {
         StringBuilder builder = new StringBuilder("[fit_result]\n");
