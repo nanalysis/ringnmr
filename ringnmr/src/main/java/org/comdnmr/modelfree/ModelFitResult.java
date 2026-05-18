@@ -41,6 +41,11 @@ public record ModelFitResult(OrderPar orderPar, double[][] replicateData, Double
                 builder.append(String.format("    %s,%n", Arrays.toString(replicateData[i])));
             }
             builder.append("]");
+            if (spuriousFlags != null) {
+                StringJoiner flagJoiner = new StringJoiner(", ", "[", "]");
+                for (boolean flag : spuriousFlags) flagJoiner.add(flag ? "true" : "false");
+                builder.append(String.format("%nspurious_flags = %s", flagJoiner));
+            }
         }
 
         if (replicateTimes != null) {
