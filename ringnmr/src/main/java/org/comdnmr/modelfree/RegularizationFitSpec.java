@@ -303,6 +303,8 @@ public class RegularizationFitSpec extends FitSpec {
     *       S²f = S², τf = τ, S²s = 1, τs = 0.</li>
     *   <li><em>One slow motion</em> (τ above {@code SLOW_LIMIT}):
     *       S²f = 1, τf = 0, S²s = S², τs = τ.</li>
+    *   <li><em>Two instantaneous motions</em> (both τ below {@code TAU_THOLD}):
+    *       S²f = S²1 × S²2, τf = τs = 0, S²s = 1.</li>
     *   <li><em>Two motions, one instantaneous</em>:
     *       The instantaneous timescale is mapped to τf = 0.</li>
     *   <li><em>Two independent motions</em>:
@@ -341,7 +343,10 @@ public class RegularizationFitSpec extends FitSpec {
                     sf2 = 1.0; tauf = 0.0; ss2 = s;   taus = tau;
                 }
             } else {
-                if (tau1 < TAU_THOLD) {
+                if (tau1 < TAU_THOLD && tau2 < TAU_THOLD) {
+                    // Both motions are instantaneous: collapse to effective order parameter (Model 1)
+                    sf2 = s1 * s2; tauf = 0.0; ss2 = 1.0; taus = 0.0;
+                } else if (tau1 < TAU_THOLD) {
                     // tau1 is instantaneous: assign it to the fast slot (Model 2s)
                     sf2 = s1; tauf = 0.0; ss2 = s2; taus = tau2;
                 } else if (tau2 < TAU_THOLD) {
