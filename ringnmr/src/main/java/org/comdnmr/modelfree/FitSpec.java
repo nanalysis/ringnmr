@@ -99,9 +99,9 @@ public abstract class FitSpec {
      */
     private static final Map<String, Class<? extends FitSpec>> CLASSES = new LinkedHashMap<>();
     static {
+        CLASSES.put("Regularization", RegularizationFitSpec.class);
         CLASSES.put("Conventional", ConventionalFitSpec.class);
         CLASSES.put("Bootstrap Aggregation", BaggingFitSpec.class);
-        CLASSES.put("Regularization", RegularizationFitSpec.class);
     }
 
     /**
@@ -704,7 +704,7 @@ public abstract class FitSpec {
         private static final double DEFAULT_R2_LIMIT = 0.0;
 
         /** Default bootstrap resampling strategy. */
-        private static final BootstrapMode DEFAULT_BOOTSTRAP_MODE = BootstrapMode.PARAMETRIC;
+        private static final BootstrapMode DEFAULT_BOOTSTRAP_MODE = BootstrapMode.BAYESIAN;
 
         /**
          * Default value for fitExchange. Currently always {@code false}
@@ -723,8 +723,8 @@ public abstract class FitSpec {
          */
         private static final int DEFAULT_N_REPLICATES = 25;
 
-        /** By default, use the mean (not median) as the central estimator. */
-        private static final boolean DEFAULT_USE_MEDIAN = false;
+        /** By default, use the median (not mean) as the central estimator. */
+        private static final boolean DEFAULT_USE_MEDIAN = true;
 
         // ── Mutable state ───────────────────────────────────────────────
 
