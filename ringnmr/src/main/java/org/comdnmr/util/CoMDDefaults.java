@@ -26,6 +26,7 @@ public class CoMDDefaults {
     static final Integer SAMPLE_SIZE = 50; // 
     static final String OPTIMIZER = "CMA-ES";
     static final String BOOTSTRAP_OPTIMIZER = "CMA-ES";
+    static final Integer N_TRIES = 20;
 
     /**
      * @return the refField
@@ -62,6 +63,9 @@ public class CoMDDefaults {
         return START_RADIUS;
     }
 
+    public static Integer getNTries() {
+        return N_TRIES;
+    }
     /**
      * @return the finalRadius
      */

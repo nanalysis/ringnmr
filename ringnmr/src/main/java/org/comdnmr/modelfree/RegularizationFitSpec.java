@@ -6,6 +6,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.comdnmr.modelfree.models.MFModelIso;
 import org.comdnmr.modelfree.models.MFModelIso2sf;
 
+import org.comdnmr.util.CoMDOptions;
 import org.nmrfx.chemistry.relax.OrderPar;
 import org.nmrfx.chemistry.relax.OrderParSet;
 
@@ -396,11 +397,16 @@ public class RegularizationFitSpec extends FitSpec {
 
         Score[] scores = new Score[nReplicates];
         double[] replicateTimes = new double[nReplicates];
+        double[] start = null;
+        CoMDOptions options = new CoMDOptions(true);
+
         for (int i = 0; i < nReplicates; i++) {
+            int nTry = i == 0 ? options.getNTries() : 1;
             long startNs = System.nanoTime();
             MolDataValues<? extends RelaxDataValue> replicateData = sampler.sample();
             relaxFit.setRelaxData(key, replicateData);
-            scores[i] = runFit(relaxFit, model);
+            scores[i] = runFit(relaxFit, model, start, nTry);
+            start = scores[i].pars.clone();
             double[] replicateParameters = processParamsAfterFit(scores[i].getPars(), model.fitTau());
             double[] replicateWeights = replicateData.getWeights();
             for (int k = 0; k < nParameters; k++) parameters[k][i] = replicateParameters[k];

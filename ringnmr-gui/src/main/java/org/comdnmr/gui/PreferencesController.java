@@ -133,6 +133,11 @@ public class PreferencesController implements Initializable {
         IntRangeOperationItem nSamplesItem = new IntRangeOperationItem(prefSheet, (obs, oldV, newV) -> {
             CoMDPreferences.setSampleSize((Integer) newV);
         }, CoMDPreferences.getSampleSize(), 10, 500, "Optimizer", "Bootstrap Samples", "Number of bootstrap samples");
+
+        IntRangeOperationItem nTriesItem = new IntRangeOperationItem(prefSheet, (obs, oldV, newV) -> {
+            CoMDPreferences.setNTries((Integer) newV);
+        }, CoMDPreferences.getNTries(), 1, 40, "Optimizer", "NTries", "Number of initial fitting attempts");
+
         ChoiceOperationItem optimizerChoiceItem = new ChoiceOperationItem(prefSheet, optimizerListener,
                 CoMDPreferences.getOptimizer(), optimizers, "Optimizer", "Refine Optimizer", "Optimizer for refinement");
         ChoiceOperationItem bootStrapOptimizerrChoiceItem = new ChoiceOperationItem(prefSheet, bootStrapOptimizerListener,
@@ -155,7 +160,7 @@ public class PreferencesController implements Initializable {
 
         ArrayList<String> expEqnChoices = new ArrayList<>();
         expEqnChoices.addAll(Arrays.asList("EXPAB", "EXPABC"));
-//        prefSheet.getItems().addAll(locationTypeItem, locationFileItem, nProcessesItem, maxFreqItem, rexRatioItem, nSamplesItem);
+//        prefSheet.getItems().addAll(locationTypeItem, locationFileItem, nProcessesItem, maxFreqItem, rexRatioItem, nSamplesItem, nTriesItem);
 
         DoubleRangeOperationItem startingRadiusItem = new DoubleRangeOperationItem(prefSheet, (obs, oldV, newV) -> {
             CoMDPreferences.setStartingRadius((Double) newV);
@@ -210,7 +215,7 @@ public class PreferencesController implements Initializable {
         }, RelaxEquations.getSigma("C") * -1.0e6, 10, 220, "ModelFree", "C CSA", "C Chemical Shift Anisotropy (* -1.0)");
 
         prefSheet.getItems().addAll(nProcessesItem, refFieldItem, maxFreqItem, rexRatioItem, deltaABdiffItem,
-                absValueItem, nonParametricItem, nSamplesItem, optimizerChoiceItem, bootStrapOptimizerrChoiceItem,
+                absValueItem, nonParametricItem, nSamplesItem, nTriesItem, optimizerChoiceItem, bootStrapOptimizerrChoiceItem,
                 startingRadiusItem, toleranceItem, finalRadiusItem, weightFitItem, neuralNetworkGuessItem, corrR1RhoItem, hnDistanceItem, hcDistanceItem, nSigmaItem, cSigmaItem);
         for (String eqn : cestEqnChoices) {
             boolean defaultState = CoMDPreferences.getCESTEquationState(eqn);

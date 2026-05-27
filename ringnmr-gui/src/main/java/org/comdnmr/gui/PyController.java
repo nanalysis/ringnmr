@@ -708,6 +708,7 @@ public class PyController implements Initializable {
 
         bootstrapMethodChoice = new ChoiceBox<>();
         bootstrapMethodChoice.getItems().addAll(FitSpec.BootstrapMode.values());
+        bootstrapMethodChoice.setValue(FitSpec.BootstrapMode.BAYESIAN);
         bootstrapMethodHBox = UiHelpers.createElementWithHelper(bootstrapMethodChoice, "bootstrap_method.txt");
         bootstrapGridPane.add(bootstrapMethodHBox, 1, 0);
 

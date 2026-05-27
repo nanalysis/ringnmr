@@ -72,7 +72,7 @@ public class FitR1R2NOEModelTest {
         double[] lower = model.getLower();
         double[] upper = model.getUpper();
         resData.setTestModel(model);
-        Optional<PointValuePair> fitResultOpt = relaxFit.fitResidueToModel(start, lower, upper);
+        Optional<PointValuePair> fitResultOpt = relaxFit.fitResidueToModel(start, lower, upper, 1);
         if (fitResultOpt.isPresent()) {
             PointValuePair fitResult = fitResultOpt.get();
             for (int i = 0; i < start.length; i++) {
