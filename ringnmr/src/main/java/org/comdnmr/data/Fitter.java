@@ -3,6 +3,7 @@ package org.comdnmr.data;
 import java.util.Arrays;
 import java.util.function.BiFunction;
 import java.util.stream.IntStream;
+
 import org.apache.commons.math3.analysis.MultivariateFunction;
 import org.apache.commons.math3.exception.DimensionMismatchException;
 import org.apache.commons.math3.exception.NotPositiveException;
@@ -64,7 +65,7 @@ public class Fitter {
         return valuesFunction.apply(par, values);
     }
 
-    public PointValuePair fit(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma) throws Exception {
+    public PointValuePair fit(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma, int nTry) throws Exception {
         this.start = start;
         this.lowerBounds = lowerBounds.clone();
         this.upperBounds = upperBounds.clone();
@@ -73,14 +74,31 @@ public class Fitter {
         if (xValues != null) {
             opt.setXYE(xValues, yValues, errValues);
         }
-        PointValuePair result;
-        if (CoMDPreferences.getOptimizer().equals("BOBYQA")) {
-            result = opt.refineBOBYQA(start, inputSigma);
-        } else {
-            result = opt.refineCMAES(start, inputSigma);
+        PointValuePair bestPair = null;
+        double[] bestStart = new double[start.length];
+        double[] tryStart = new double[start.length];
+        double range = 0.9;
+        for (int iTry = 0; iTry < nTry; iTry++) {
+            PointValuePair result;
+            if (iTry > 0) {
+                for (int j = 0; j < start.length; j++) {
+                    double delta = (upperBounds[j] - lowerBounds[j]) * range;
+                    tryStart[j] = lowerBounds[j] + delta * (1.0 - range) / 2.0 + random.nextDouble() * delta;
+                }
+            } else {
+                System.arraycopy(start, 0, tryStart, 0, start.length);
+            }
+            if (CoMDPreferences.getOptimizer().equals("BOBYQA")) {
+                result = opt.refineBOBYQA(tryStart, inputSigma);
+            } else {
+                result = opt.refineCMAES(tryStart, inputSigma);
+            }
+            if ((bestPair == null) || (result.getValue() < bestPair.getValue())) {
+                bestPair = result;
+                System.arraycopy(tryStart, 0, bestStart, 0, tryStart.length);
+            }
         }
-
-        return result;
+        return bestPair;
     }
 
     public void setXYE(double[][] xValues, double[] yValues, double[] errValues) {
@@ -206,7 +224,8 @@ public class Fitter {
                         new ObjectiveFunction(this), GoalType.MINIMIZE,
                         new SimpleBounds(normLower, normUpper),
                         new InitialGuess(normGuess));
-            } catch (DimensionMismatchException | NotPositiveException | NotStrictlyPositiveException | TooManyEvaluationsException e) {
+            } catch (DimensionMismatchException | NotPositiveException | NotStrictlyPositiveException |
+                     TooManyEvaluationsException e) {
                 throw new Exception("failure to fit data " + e.getMessage());
             }
             endTime = System.currentTimeMillis();

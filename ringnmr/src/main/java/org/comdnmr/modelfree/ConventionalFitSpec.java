@@ -264,9 +264,10 @@ public class ConventionalFitSpec extends FitSpec {
         List<MFModelIso> models = getModels(data);
 
         Map<String, Score> originalFits = new HashMap<>();
+        double[] start = null;
         for (MFModelIso model : models) {
             data.setTestModel(model);
-            Score score = runFit(relaxFit, model);
+            Score score = runFit(relaxFit, model, start, 25);
             originalFits.put(model.getName(), score);
         }
         Map.Entry<String, Score> bestOriginalFit = Collections.min(
@@ -299,7 +300,7 @@ public class ConventionalFitSpec extends FitSpec {
                 long startNs = System.nanoTime();
                 MolDataValues<? extends RelaxDataValue> replicateData = sampler.sample();
                 relaxFit.setRelaxData(key, replicateData);
-                Score replicateScore = runFit(relaxFit, model);
+                Score replicateScore = runFit(relaxFit, model, originalFits.get(model.getName()).pars, 1);
                 double[] replicateParameters = replicateScore.getPars();
                 double[] replicateWeights = replicateData.getWeights();
                 for (int k = 0; k < nParameters; k++) parameters[k][i] = replicateParameters[k];

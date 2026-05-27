@@ -207,7 +207,7 @@ public class DRefineTest {
                 double[] start = model.getStart();
                 double[] lower = model.getLower();
                 double[] upper = model.getUpper();
-                Optional<PointValuePair> fitOpt = relaxFit.fitResidueToModel(start, lower, upper);
+                Optional<PointValuePair> fitOpt = relaxFit.fitResidueToModel(start, lower, upper, 1);
                 fitOpt.ifPresent(fitResult -> {
                     double[] values = fitResult.getPoint();
                     double score = fitResult.getValue();
@@ -310,7 +310,7 @@ public class DRefineTest {
         lower[0] = tau / 4.0;
         upper[0] = tau * 4.0;
         relaxFit.setRelaxData(molDataRes);
-        PointValuePair fitResult = relaxFit.fitMultiResidueToModel(guesses, lower, upper);
+        PointValuePair fitResult = relaxFit.fitMultiResidueToModel(guesses, lower, upper, 1);
         double[] values = fitResult.getPoint();
         double score = fitResult.getValue();
         for (double val : values) {

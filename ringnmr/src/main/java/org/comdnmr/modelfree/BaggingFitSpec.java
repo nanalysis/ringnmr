@@ -1,10 +1,6 @@
 package org.comdnmr.modelfree;
 
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -163,17 +159,27 @@ public class BaggingFitSpec extends FitSpec {
 
         Score[] bestScores = new Score[nReplicates];
         double[] replicateTimes = new double[nReplicates];
+        double[] start = null;
+        Map<String, Score> originalFits = new HashMap<>();
+
         for (int i = 0; i < nReplicates; i++) {
             long startNs = System.nanoTime();
             MolDataValues<? extends RelaxDataValue> replicateData = sampler.sample();
             relaxFit.setRelaxData(key, replicateData);
+            int nTry = i == 0 ? 25 : 1;
 
             Optional<Pair<Score, MFModelIso>> bestScoreModel = Optional.empty();
             for (MFModelIso model : models) {
                 data.setTestModel(model);
-                Score score = runFit(relaxFit, model);
+                if (i > 0) {
+                    start = originalFits.get(model.getName()).pars;
+                }
+                Score score = runFit(relaxFit, model, start, nTry);
                 if (bestScoreModel.isEmpty() || score.aicc().get() < bestScoreModel.get().getLeft().aicc().get()) {
                     bestScoreModel = Optional.of(Pair.of(score, model));
+                }
+                if (i == 0) {
+                    originalFits.put(model.getName(), score);
                 }
             }
 

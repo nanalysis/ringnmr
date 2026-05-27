@@ -218,12 +218,14 @@ public abstract class FitSpec {
      * @return a {@link Score} summarizing the fit quality and best-fit parameters
      * @throws RuntimeException if the optimizer fails to converge
      */
-    protected Score runFit(RelaxFit relaxFit, MFModelIso model) {
-        double[] start = model.getStart();
+    protected Score runFit(RelaxFit relaxFit, MFModelIso model, double[] start, int nTry) {
+        if (start == null) {
+            start = model.getStart();
+        }
         double[] lower = getLower(model);
         double[] upper = model.getUpper();
 
-        Optional<PointValuePair> result = relaxFit.fitResidueToModel(start, lower, upper);
+        Optional<PointValuePair> result = relaxFit.fitResidueToModel(start, lower, upper, nTry);
         if (result.isEmpty()) {
             throw new RuntimeException("Could not generate fit result.");
         }

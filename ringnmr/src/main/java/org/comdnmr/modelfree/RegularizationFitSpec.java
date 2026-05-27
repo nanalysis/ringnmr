@@ -396,11 +396,14 @@ public class RegularizationFitSpec extends FitSpec {
 
         Score[] scores = new Score[nReplicates];
         double[] replicateTimes = new double[nReplicates];
+        double[] start = null;
         for (int i = 0; i < nReplicates; i++) {
+            int nTry = i == 0 ? 25 : 1;
             long startNs = System.nanoTime();
             MolDataValues<? extends RelaxDataValue> replicateData = sampler.sample();
             relaxFit.setRelaxData(key, replicateData);
-            scores[i] = runFit(relaxFit, model);
+            scores[i] = runFit(relaxFit, model, start, nTry);
+            start = scores[i].pars.clone();
             double[] replicateParameters = processParamsAfterFit(scores[i].getPars(), model.fitTau());
             double[] replicateWeights = replicateData.getWeights();
             for (int k = 0; k < nParameters; k++) parameters[k][i] = replicateParameters[k];
