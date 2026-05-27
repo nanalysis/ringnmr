@@ -79,6 +79,13 @@ public class CoMDOptions {
     }
 
     /**
+     * @return the startRadius
+     */
+    public Integer getNTries() {
+        return usePrefs ? CoMDPreferences.getNTries() : CoMDDefaults.getNTries();
+    }
+
+    /**
      * @return the nonParametricBootstrap
      */
     public Boolean getNonParametricBootstrap() {

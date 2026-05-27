@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import org.comdnmr.modelfree.models.MFModelIso;
 
+import org.comdnmr.util.CoMDOptions;
 import org.nmrfx.chemistry.relax.OrderPar;
 import org.nmrfx.chemistry.relax.OrderParSet;
 
@@ -265,9 +266,11 @@ public class ConventionalFitSpec extends FitSpec {
 
         Map<String, Score> originalFits = new HashMap<>();
         double[] start = null;
+        CoMDOptions options = new CoMDOptions(true);
+
         for (MFModelIso model : models) {
             data.setTestModel(model);
-            Score score = runFit(relaxFit, model, start, 25);
+            Score score = runFit(relaxFit, model, start, options.getNTries());
             originalFits.put(model.getName(), score);
         }
         Map.Entry<String, Score> bestOriginalFit = Collections.min(

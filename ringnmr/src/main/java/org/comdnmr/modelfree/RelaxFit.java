@@ -25,6 +25,7 @@ import org.comdnmr.modelfree.models.MFModelIso1;
 import org.comdnmr.modelfree.models.MFModelIso1f;
 import org.comdnmr.modelfree.models.MFModelIso2s;
 import org.comdnmr.modelfree.models.MFModelIso2sf;
+import org.comdnmr.util.CoMDOptions;
 
 /**
  *
@@ -728,20 +729,22 @@ public class RelaxFit {
 
     }
 
-    public Optional<PointValuePair> fitResidueToModel(double[] start, double[] lower, double[] upper) {
+    public Optional<PointValuePair> fitResidueToModel(double[] start, double[] lower, double[] upper, int nTry) {
         Fitter fitter = Fitter.getArrayFitter(this::value);
+        CoMDOptions options = new CoMDOptions(true);
+
         try {
-            return Optional.of(fitter.fit(start, lower, upper, 10.0));
+            return Optional.of(fitter.fit(start, lower, upper, options.getStartRadius(), nTry));
         } catch (Exception ex) {
             ex.printStackTrace();
             return Optional.empty();
         }
     }
 
-    public PointValuePair fitMultiResidueToModel(double[] start, double[] lower, double[] upper) {
+    public PointValuePair fitMultiResidueToModel(double[] start, double[] lower, double[] upper, int nTry) {
         Fitter fitter = Fitter.getArrayFitter(this::valueMultiResidue);
         try {
-            return fitter.fit(start, lower, upper, 10.0);
+            return fitter.fit(start, lower, upper, 10.0, nTry);
         } catch (Exception ex) {
             ex.printStackTrace();
             return null;
@@ -763,7 +766,7 @@ public class RelaxFit {
             upper[i] = guesses[i] + Math.PI / 4.0;
         }
         try {
-            PointValuePair result = fitter.fit(guesses, lower, upper, 10.0);
+            PointValuePair result = fitter.fit(guesses, lower, upper, 10.0, 1);
             bestPars = result.getPoint();
             bestChiSq = result.getValue();
             return result;

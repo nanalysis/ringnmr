@@ -47,6 +47,7 @@ public class CoMDPreferences {
     static private Boolean neuralNetworkGuess = null;
     static private Boolean calR1rhoCorr = null;
     static private Integer sampleSize = null;
+    static private Integer nTries = null;
     static private String optimizer = null;
     static private String bootStrapOptimizer = null;
     private static Map<String, Boolean> cestEqnMap = null;
@@ -108,12 +109,30 @@ public class CoMDPreferences {
         return sampleSize;
     }
 
+
     public static void setSampleSize(Integer value) {
         sampleSize = value;
         if (value != null) {
             getPrefs().put("SAMPLE_SIZE", value.toString());
         } else {
             getPrefs().remove("SAMPLE_SIZE");
+        }
+    }
+
+    public static Integer getNTries() {
+        if (nTries == null) {
+            String value = getPrefs().get("N_TRIES", String.valueOf(CoMDDefaults.getNTries()));
+            nTries = Integer.parseInt(value);
+        }
+        return nTries;
+    }
+
+    public static void setNTries(Integer value) {
+        nTries = value;
+        if (value != null) {
+            getPrefs().put("N_TRIES", value.toString());
+        } else {
+            getPrefs().remove("N_TRIES");
         }
     }
 

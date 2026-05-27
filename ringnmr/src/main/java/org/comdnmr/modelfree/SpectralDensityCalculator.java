@@ -55,7 +55,7 @@ public class SpectralDensityCalculator {
         double[] upper = {j0 * 1.5, jN * 1.5, jH * 1.5};
 
         try {
-            PointValuePair pointValuePair = fitter.fit(start, lower, upper, 10.0);
+            PointValuePair pointValuePair = fitter.fit(start, lower, upper, 10.0, 1);
             double[] j = pointValuePair.getPoint();
 
             double jHr = j[2];
