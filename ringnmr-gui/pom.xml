@@ -5,12 +5,12 @@
     <parent>
         <groupId>org.comdnmr</groupId>
         <artifactId>ringnmr-parent</artifactId>
-        <version>1.38</version>
+        <version>1.39</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>ringnmr-gui</artifactId>
-    <version>1.38</version>
+    <version>1.39</version>
     <name>ringnmr-gui</name>
     <packaging>jar</packaging>
     <properties>
@@ -22,22 +22,18 @@
         <dependency>
             <groupId>org.comdnmr</groupId>
             <artifactId>ringnmr</artifactId>
-            <version>1.38</version>
+            <version>1.39</version>
         </dependency>
         <dependency>
             <groupId>org.nmrfx</groupId>
             <artifactId>nmrfx-utils</artifactId>
-            <version>11.4.38</version>
+            <version>11.4.39</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.nmrfx</groupId>
             <artifactId>nmrfx-plugin-api</artifactId>
-<<<<<<< HEAD
-            <version>11.4.38</version>
-=======
-            <version>11.4.38-SNAPSHOT</version>
->>>>>>> mffit
+            <version>11.4.39</version>
         </dependency>
         <dependency>
             <groupId>org.fxmisc.richtext</groupId>
