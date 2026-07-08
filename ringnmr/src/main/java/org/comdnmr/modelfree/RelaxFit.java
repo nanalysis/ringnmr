@@ -33,7 +33,8 @@ import org.comdnmr.util.CoMDOptions;
  */
 public class RelaxFit {
 
-    double lambdaS = 0.0;
+    double lambdaS2F = 0.0;
+    double lambdaS2S = 0.0;
     double lambdaTauF = 0.0;
     double lambdaTauS = 0.0;
     boolean useLambda = false;
@@ -98,12 +99,20 @@ public class RelaxFit {
         return logJMode;
     }
 
-    public double getLambdaS() {
-        return useLambda ? lambdaS : 0.0;
+    public double getLambdaS2F() {
+        return useLambda ? lambdaS2F : 0.0;
     }
 
-    public void setLambdaS(double value) {
-        this.lambdaS = value;
+    public void setLambdaS2F(double value) {
+        this.lambdaS2F = value;
+    }
+
+    public double getLambdaS2S() {
+        return useLambda ? lambdaS2S : 0.0;
+    }
+
+    public void setLambdaS2S(double value) {
+        this.lambdaS2S = value;
     }
 
     public double getLambdaTauF() {
@@ -127,7 +136,7 @@ public class RelaxFit {
     }
 
     public boolean useLambda() {
-        return useLambda && (lambdaS > 1.0e-8 || lambdaTauF > 1.0e-8 || lambdaTauS > 1.0e-8);
+        return useLambda && (lambdaS2F > 1.0e-8 || lambdaS2S > 1.0e-8 || lambdaTauF > 1.0e-8 || lambdaTauS > 1.0e-8);
     }
 
     public static double[] getDValues(double isoD) {
@@ -420,14 +429,16 @@ public class RelaxFit {
        if (report) {
            System.out.printf("%11.5g %11.5g\n",Math.sqrt(sumSq/jCalc.length), Math.sqrt(sumSqNW/jCalc.length));
        }
-        double complexityS = testModel.getComplexityS();
+        double complexityS2F = testModel.getComplexityS2F();
+        double complexityS2S = testModel.getComplexityS2S();
         double complexityTauF = testModel.getComplexityTauF();
         double complexityTauS = testModel.getComplexityTauS();
-        return new double[]{sumSq, complexityS, complexityTauF, complexityTauS, jCalc.length};
+        return new double[]{sumSq, complexityS2F, complexityS2S, complexityTauF, complexityTauS, jCalc.length};
     }
 
     double[] calcDeltaSqR(MolDataValues<?> molData, double[] resPars, MFModel testModel) {
-        double sumComplexityS = 0.0;
+        double sumComplexityS2F = 0.0;
+        double sumComplexityS2S = 0.0;
         double sumComplexityTauF = 0.0;
         double sumComplexityTauS = 0.0;
         double sumSq = 0.0;
@@ -436,7 +447,8 @@ public class RelaxFit {
             R1R2NOEDataValue dValue  = (R1R2NOEDataValue) value;
             RelaxEquations relaxObj = dValue.relaxObj;
             double[] J = testModel.calc(relaxObj.wValues, resPars);
-            sumComplexityS += testModel.getComplexityS();
+            sumComplexityS2F += testModel.getComplexityS2F();
+            sumComplexityS2S += testModel.getComplexityS2S();
             sumComplexityTauF += testModel.getComplexityTauF();
             sumComplexityTauS += testModel.getComplexityTauS();
             double r1 = relaxObj.R1(J);
@@ -448,7 +460,7 @@ public class RelaxFit {
             sumSq += delta2;
             nPar += 3;
         }
-        return new double[]{sumSq, sumComplexityS, sumComplexityTauF, sumComplexityTauS, nPar};
+        return new double[]{sumSq, sumComplexityS2F, sumComplexityS2S, sumComplexityTauF, sumComplexityTauS, nPar};
     }
 
     double[] calcDeltaSq(MolDataValues molData, double[] resPars, MFModel testModel, boolean report) {
@@ -468,7 +480,8 @@ public class RelaxFit {
         int n = 0;
         int nComplex = 0;
         boolean parsOK = true;
-        double sumComplexityS = 0.0;
+        double sumComplexityS2F = 0.0;
+        double sumComplexityS2S = 0.0;
         double sumComplexityTauF = 0.0;
         double sumComplexityTauS = 0.0;
         for (MolDataValues molData : molDataValues.values()) {
@@ -484,30 +497,77 @@ public class RelaxFit {
             }
             double[] resResult = calcDeltaSq(molData, resPars, testModel, report);
             sumSq += resResult[0];
-            sumComplexityS += resResult[1];
-            sumComplexityTauF += resResult[2];
-            sumComplexityTauS += resResult[3];
+            sumComplexityS2F += resResult[1];
+            sumComplexityS2S += resResult[2];
+            sumComplexityTauF += resResult[3];
+            sumComplexityTauS += resResult[4];
             if (fitJ) {
                 nComplex++;
             } else {
                 nComplex += molData.getData().size();
             }
-            n += (int) Math.round(resResult[4]);
+            n += (int) Math.round(resResult[5]);
 
             if (!testModel.checkParConstraints()) {
                 parsOK = false;
             }
         }
-        double avgComplexityS = sumComplexityS / nComplex;
+        double avgComplexityS2F = sumComplexityS2F / nComplex;
+        double avgComplexityS2S = sumComplexityS2S / nComplex;
         double avgComplexityTauF = sumComplexityTauF / nComplex;
         double avgComplexityTauS = sumComplexityTauS / nComplex;
         Score score;
         if (keepPars) {
-            score = new Score(sumSq, n, pars.length, parsOK, avgComplexityS, avgComplexityTauF, avgComplexityTauS, pars.clone());
+            score = new Score(sumSq, n, pars.length, parsOK, avgComplexityS2F, avgComplexityS2S, avgComplexityTauF, avgComplexityTauS, pars.clone());
         } else {
-            score = new Score(sumSq, n, pars.length, parsOK, avgComplexityS, avgComplexityTauF, avgComplexityTauS);
+            score = new Score(sumSq, n, pars.length, parsOK, avgComplexityS2F, avgComplexityS2S, avgComplexityTauF, avgComplexityTauS);
         }
         return score;
+    }
+
+    public double maxNormalizedResidual(double[] pars) {
+        double maxNormRes = 0.0;
+        for (MolDataValues molData : molDataValues.values()) {
+            MFModel testModel = molData.getTestModel();
+            double[] resPars;
+            if (useGlobalTau) {
+                int nResPars = testModel.getNPars();
+                resPars = new double[nResPars + 1];
+                resPars[0] = globalTau;
+                System.arraycopy(pars, 0, resPars, 1, nResPars);
+            } else {
+                resPars = pars;
+            }
+            if (fitJ) {
+                double[][] jValues = molData.getJValues();
+                double[] jCalc = testModel.calc(jValues[0], resPars);
+                for (int i = 0; i < jCalc.length; i++) {
+                    double delta, jErr;
+                    if (logJMode) {
+                        delta = Math.abs(Math.log10(jCalc[i]) - Math.log10(jValues[1][i]));
+                        double high = jValues[1][i] + jValues[2][i];
+                        double low  = jValues[1][i] - jValues[2][i];
+                        jErr = Math.abs(Math.log10(high) - Math.log10(low)) / 2.0;
+                    } else {
+                        delta = Math.abs(jCalc[i] - jValues[1][i]) * 1.0e9;
+                        jErr  = jValues[2][i] * 1.0e9;
+                    }
+                    if (jErr > 0.0) maxNormRes = Math.max(maxNormRes, delta / jErr);
+                }
+            } else {
+                for (Object value : molData.getData()) {
+                    R1R2NOEDataValue dValue = (R1R2NOEDataValue) value;
+                    RelaxEquations relaxObj = dValue.relaxObj;
+                    double[] J = testModel.calc(relaxObj.wValues, resPars);
+                    double rEx = testModel.includesEx() ? resPars[resPars.length - 1] : 0.0;
+                    double r1D = Math.abs((relaxObj.R1(J)   - dValue.R1)  / dValue.R1err);
+                    double r2D = Math.abs((relaxObj.R2(J, rEx) - dValue.R2) / dValue.R2err);
+                    double noeD = Math.abs((relaxObj.NOE(J)  - dValue.NOE) / dValue.NOEerr);
+                    maxNormRes = Math.max(maxNormRes, Math.max(r1D, Math.max(r2D, noeD)));
+                }
+            }
+        }
+        return maxNormRes;
     }
 
     @SuppressWarnings("unchecked")
@@ -565,7 +625,7 @@ public class RelaxFit {
 
     public double value(double[] pars, double[][] values) {
         var score = score(pars, false);
-        return score.value(getLambdaS(), getLambdaTauF(), getLambdaTauS());
+        return score.value(getLambdaS2F(), getLambdaS2S(), getLambdaTauF(), getLambdaTauS());
     }
 
     public double valueMultiResidue(double[] pars, double[][] values) {

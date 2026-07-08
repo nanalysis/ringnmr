@@ -33,6 +33,8 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Bounds;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.print.PrinterJob;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -231,7 +233,8 @@ public class PyController implements Initializable {
 
     Label lambdasLabel;
     GridPane lambdasGridPane;
-    ValidatedDecimalTextField lambdaS2TextField;
+    ValidatedDecimalTextField lambdaS2FTextField;
+    ValidatedDecimalTextField lambdaS2STextField;
     ValidatedDecimalTextField lambdaTauFTextField;
     ValidatedDecimalTextField lambdaTauSTextField;
     HBox lambdasHBox;
@@ -239,6 +242,10 @@ public class PyController implements Initializable {
     Label useRQLabel;
     CheckBox useRQCheckBox;
     HBox useRQHBox;
+
+    Label j0TreatmentLabel;
+    ChoiceBox<R1R2NOEMolDataValues.J0Mode> j0TreatmentChoiceBox;
+    HBox j0TreatmentHBox;
     // << Fitting method grid <<
 
     // >> TauM treatment panel >>
@@ -262,7 +269,10 @@ public class PyController implements Initializable {
     HBox bootstrapMethodHBox;
     Label useMedianLabel;
     CheckBox useMedianCheckBox;
+    CheckBox showBootstrapFitsCheckBox;
     // << Bootstrapping panel <<
+
+    Map<String, ModelFitResult> lastFitResults = null;
 
     // <<< Model-free entities <<<
 
@@ -573,6 +583,17 @@ public class PyController implements Initializable {
         modelFreeAccordion.setExpandedPane(fitProtocolPane);
         ((VBox) modelFreeTab.getContent()).getChildren().add(modelFreeAccordion);
 
+        showBootstrapFitsCheckBox = new CheckBox("Show bootstrap fits");
+        showBootstrapFitsCheckBox.setVisible(false);
+        showBootstrapFitsCheckBox.setOnAction(e -> {
+            double[] savedView = xychart.getCurrentView();
+            showInfo(chartInfo, xychart);
+            xychart.restoreView(savedView);
+        });
+        StackPane.setAlignment(showBootstrapFitsCheckBox, Pos.TOP_RIGHT);
+        StackPane.setMargin(showBootstrapFitsCheckBox, new Insets(10, 15, 0, 0));
+        stackPane.getChildren().add(showBootstrapFitsCheckBox);
+
         setModelFreeState();
     }
 
@@ -611,8 +632,17 @@ public class PyController implements Initializable {
         fitMethodHBox.getChildren().addAll(UiHelpers.createSpacer(), useMedianLabel, useMedianCheckBox);
         fittingMethodGrid.add(fitMethodHBox, 1, 1);
 
+        j0TreatmentLabel = new Label("J(0) treatment:");
+        fittingMethodGrid.add(j0TreatmentLabel, 0, 2);
+
+        j0TreatmentChoiceBox = new ChoiceBox<>();
+        j0TreatmentChoiceBox.getItems().addAll(R1R2NOEMolDataValues.J0Mode.values());
+        j0TreatmentChoiceBox.setValue(R1R2NOEMolDataValues.J0Mode.INDEPENDENT);
+        j0TreatmentHBox = UiHelpers.createElementWithHelper(j0TreatmentChoiceBox, "j0_treatment.txt");
+        fittingMethodGrid.add(j0TreatmentHBox, 1, 2);
+
         modelsLabel = new Label("Models:");
-        fittingMethodGrid.add(modelsLabel, 0, 2);
+        fittingMethodGrid.add(modelsLabel, 0, 3);
 
         modelBoxes = new LinkedHashMap<>();
         String[] modelNames = MFModelIso.getAllModelNames();
@@ -623,24 +653,27 @@ public class PyController implements Initializable {
             modelGridPane.add(box, i, 0);
         }
         modelContainer = UiHelpers.createElementWithHelper(modelGridPane, "model_free_models.txt");
-        fittingMethodGrid.add(modelContainer, 1, 2);
+        fittingMethodGrid.add(modelContainer, 1, 3);
 
         lambdasLabel = new Label("λ-values:");
-        fittingMethodGrid.add(lambdasLabel, 0, 2);
-        lambdaS2TextField = new ValidatedDecimalTextField();
-        HBox lambdaS2Box = UiHelpers.createDefaultHBox(new Label("λ(S²):"), lambdaS2TextField);
+        fittingMethodGrid.add(lambdasLabel, 0, 3);
+        lambdaS2FTextField = new ValidatedDecimalTextField();
+        HBox lambdaS2FBox = UiHelpers.createDefaultHBox(new Label("λ(S²f):"), lambdaS2FTextField);
+        lambdaS2STextField = new ValidatedDecimalTextField();
+        HBox lambdaS2SBox = UiHelpers.createDefaultHBox(new Label("λ(S²s):"), lambdaS2STextField);
         lambdaTauFTextField = new ValidatedDecimalTextField();
         HBox lambdaTauFBox = UiHelpers.createDefaultHBox(new Label("λ(τf):"), lambdaTauFTextField);
         lambdaTauSTextField = new ValidatedDecimalTextField();
         HBox lambdaTauSBox = UiHelpers.createDefaultHBox(new Label("λ(τs):"), lambdaTauSTextField);
 
         lambdasGridPane = UiHelpers.createDefaultGridPane();
-        lambdasGridPane.add(lambdaS2Box, 0, 0);
-        lambdasGridPane.add(lambdaTauFBox, 1, 0);
-        lambdasGridPane.add(lambdaTauSBox, 2, 0);
+        lambdasGridPane.add(lambdaS2FBox, 0, 0);
+        lambdasGridPane.add(lambdaS2SBox, 1, 0);
+        lambdasGridPane.add(lambdaTauFBox, 2, 0);
+        lambdasGridPane.add(lambdaTauSBox, 3, 0);
         lambdasHBox = UiHelpers.createElementWithHelper(lambdasGridPane, "regularization_lambdas.txt");
 
-        fittingMethodGrid.add(lambdasHBox, 1, 2);
+        fittingMethodGrid.add(lambdasHBox, 1, 3);
 
         TitledPane pane = new TitledPane("Fitting Protocol", fittingMethodGrid);
         return pane;
@@ -733,7 +766,8 @@ public class PyController implements Initializable {
         }
 
         // lambdas
-        lambdaS2TextField.setText(Double.toString(RegularizationFitSpec.Builder.getDefaultLambdaS()));
+        lambdaS2FTextField.setText(Double.toString(RegularizationFitSpec.Builder.getDefaultLambdaS2F()));
+        lambdaS2STextField.setText(Double.toString(RegularizationFitSpec.Builder.getDefaultLambdaS2S()));
         lambdaTauFTextField.setText(Double.toString(RegularizationFitSpec.Builder.getDefaultLambdaTauF()));
         lambdaTauSTextField.setText(Double.toString(RegularizationFitSpec.Builder.getDefaultLambdaTauS()));
 
@@ -1365,6 +1399,7 @@ public class PyController implements Initializable {
     }
 
     public void updateXYChartLabels() {
+        showBootstrapFitsCheckBox.setVisible(false);
         if ((simControls instanceof CPMGControls)) {
             xychart.setNames("CPMG", "ν (CPMG)", "R₂ (ν)", "0");
             xychart.setBounds(0.0, 1100.0, 0.0, 65.0, 100.0, 5.0);
@@ -1580,15 +1615,18 @@ public class PyController implements Initializable {
     private void updateMoietyType(MoietyType newValue) {
         BiConsumer<GridPane, Node> model1sfBoxAction;
         Consumer<Node> useRQAction;
+        BiConsumer<GridPane, Node> j0TreatmentAction;
 
         switch (newValue) {
             case AMIDE -> {
                 model1sfBoxAction = this::removeNode;
                 useRQAction = this::hideNode;
+                j0TreatmentAction = this::addNode;
             }
             case DEUTERATED_METHYL -> {
                 model1sfBoxAction = this::addNode;
                 useRQAction = this::showNode;
+                j0TreatmentAction = this::removeNode;
             }
             default -> throw new AssertionError("Unreachable");
         }
@@ -1596,6 +1634,8 @@ public class PyController implements Initializable {
         model1sfBoxAction.accept(modelGridPane, modelBoxes.get("1sf"));
         useRQAction.accept(useRQLabel);
         useRQAction.accept(useRQHBox);
+        j0TreatmentAction.accept(fittingMethodGrid, j0TreatmentLabel);
+        j0TreatmentAction.accept(fittingMethodGrid, j0TreatmentHBox);
     }
 
     private Class<? extends FitSpec> getFitSpecClass() {
@@ -1673,7 +1713,8 @@ public class PyController implements Initializable {
             textFields.add(r2LimitTextField);
         }
         if (getFitSpecClass() == RegularizationFitSpec.class) {
-            textFields.add(lambdaS2TextField);
+            textFields.add(lambdaS2FTextField);
+            textFields.add(lambdaS2STextField);
             textFields.add(lambdaTauFTextField);
             textFields.add(lambdaTauSTextField);
         }
@@ -1723,7 +1764,8 @@ public class PyController implements Initializable {
         } else if (fitSpecClass == RegularizationFitSpec.class) {
             fitSpecBuilder = new RegularizationFitSpec.Builder()
                 .useMedian(useMedianCheckBox.isSelected())
-                .lambdaS(lambdaS2TextField.getValue().get())
+                .lambdaS2F(lambdaS2FTextField.getValue().get())
+                .lambdaS2S(lambdaS2STextField.getValue().get())
                 .lambdaTauF(lambdaTauFTextField.getValue().get())
                 .lambdaTauS(lambdaTauSTextField.getValue().get());
         } else {
@@ -1747,6 +1789,10 @@ public class PyController implements Initializable {
             fitSpecBuilder.fitTauM(false);
         }
 
+        if (moietyTypeChoiceBox.getValue() == MoietyType.AMIDE) {
+            fitSpecBuilder.j0Mode(j0TreatmentChoiceBox.getValue());
+        }
+
         FitSpec fitSpec = fitSpecBuilder
             .moietyType(moietyTypeChoiceBox.getValue())
             .bootstrapMode(bootstrapMethodChoice.getValue())
@@ -1766,6 +1812,7 @@ public class PyController implements Initializable {
     }
 
     public void finishModelFreeFit() {
+        lastFitResults = modelFitter.getLastFitResults();
         Map<String, OrderParSet> molResProps = DataIO.getOrderParSetFromMolecule();
         for (var entry : molResProps.entrySet()) {
             String setName = entry.getKey();
@@ -2364,6 +2411,7 @@ public class PyController implements Initializable {
     }
 
     public void showModelFreeData(List<String> chartNames) {
+        showBootstrapFitsCheckBox.setVisible(true);
         var chartMap = setupCharts(chartNames);
         var usedSet = new TreeSet<String>();
         var molResProps = DataIO.getOrderParSetFromMolecule();
@@ -3253,8 +3301,34 @@ public class PyController implements Initializable {
                         Integer nValues = orderPar.getN();
                         updateFitQuality(aic, aicc, rms, rChiSq, nValues);
                         double[] extras = new double[1];
+                        Color mainColor = PlotData.colors[iSeries % 8];
+
+                        if (showBootstrapFitsCheckBox.isSelected() && lastFitResults != null) {
+                            ModelFitResult fitResult = lastFitResults.get(atom.getFullName());
+                            if (fitResult != null) {
+                                double[][] repData = fitResult.replicateData();
+                                int nReplicates = repData[0].length;
+                                int nRepPars = repData.length;
+                                int offset = pars.length - nRepPars;
+                                Color repColor = Color.GRAY.deriveColor(0, 1, 1, 0.25);
+                                Color spuriousColor = Color.RED.deriveColor(0, 1, 1, 0.4);
+                                boolean[] spurious = fitResult.spuriousFlags();
+                                double[] repErrs = new double[pars.length];
+                                for (int rep = 0; rep < nReplicates; rep++) {
+                                    double[] repPars = pars.clone();
+                                    for (int k = 0; k < nRepPars; k++) repPars[k + offset] = repData[k][rep];
+                                    var repEquation = new GUIPlotEquation(modelName, "spectralDensity", repPars, repErrs, extras);
+                                    boolean isSpurious = spurious != null && spurious[rep];
+                                    repEquation.setColor(isSpurious ? spuriousColor : repColor);
+                                    repEquation.setLineWidth(0.5);
+                                    equations.add(repEquation);
+                                }
+                            }
+                        }
+
                         var guiPlotEquation = new GUIPlotEquation(modelName, "spectralDensity", pars, errs, extras);
-                        guiPlotEquation.setColor(PlotData.colors[iSeries % 8]);
+                        guiPlotEquation.setColor(mainColor);
+                        guiPlotEquation.setLineWidth(2.0);
                         equations.add(guiPlotEquation);
                         iSeries++;
 

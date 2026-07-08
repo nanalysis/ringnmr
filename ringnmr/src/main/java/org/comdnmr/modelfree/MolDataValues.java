@@ -26,8 +26,6 @@ public abstract class MolDataValues<T extends RelaxDataValue> {
     final List<T> dataValues = new ArrayList<>();
     private MFModel model;
     private double[][] jValues = null;
-    private Integer bootstrapSet = null;
-    private BootstrapAggregator bootstrapAggregator = null;
     private double[] weights = null;
 
     public MolDataValues(String specifier, double[] vector, DynamicsSource dynSourceFactory) {
@@ -112,20 +110,6 @@ public abstract class MolDataValues<T extends RelaxDataValue> {
         return vector;
     }
 
-    public void setBootstrapAggregator(BootstrapAggregator bootstrapAggregator) {
-        this.bootstrapAggregator = bootstrapAggregator;
-    }
-
-    public void setBootstrapSet(int iSet) {
-        bootstrapSet = iSet;
-        jValues = null;
-    }
-
-    public void clearBootStrapSet() {
-        bootstrapSet = null;
-        jValues = null;
-    }
-
     public void clearJ() {
         jValues = null;
     }
@@ -142,17 +126,21 @@ public abstract class MolDataValues<T extends RelaxDataValue> {
 
     public abstract MolDataValues<T> createEmpty();
 
+    /**
+     * Returns a deep copy of this instance with the same atom, vector, and data
+     * values, but independent mutable state (weights, J-value cache, model).
+     *
+     * @return a new {@code MolDataValues<T>} containing copies of all data values
+     */
+    public abstract MolDataValues<T> copy();
+
     public void setJValues(double[][] jValuesSet) {
         jValues = Arrays.stream(jValuesSet).map(double[]::clone).toArray(double[][]::new);
     }
 
     public double[][] getJValues() {
         if (jValues == null) {
-            if (bootstrapSet != null) {
-                jValues = bootstrapAggregator.getBootStrapJ(calcJ(), bootstrapSet);
-            } else {
-                jValues = calcJ();
-            }
+            jValues = calcJ();
         }
         if (weights != null) {
             System.arraycopy(weights, 0, jValues[jValues.length - 1], 0, weights.length);
