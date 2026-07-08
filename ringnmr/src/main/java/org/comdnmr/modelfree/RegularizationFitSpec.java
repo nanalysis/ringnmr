@@ -121,10 +121,10 @@ public class RegularizationFitSpec extends FitSpec {
      */
     public static class Builder extends FitSpec.Builder<Builder> {
 
-        private static final double DEFAULT_LAMBDA_S2F  = 0.5;
-        private static final double DEFAULT_LAMBDA_S2S  = 0.5;
-        private static final double DEFAULT_LAMBDA_TAUF = 0.1;
-        private static final double DEFAULT_LAMBDA_TAUS = 0.2;
+        private static final double DEFAULT_LAMBDA_S2F  = 0.8;
+        private static final double DEFAULT_LAMBDA_S2S  = 0.8;
+        private static final double DEFAULT_LAMBDA_TAUF = 0.8;
+        private static final double DEFAULT_LAMBDA_TAUS = 0.8;
 
         private double lambdaS2F  = DEFAULT_LAMBDA_S2F;
         private double lambdaS2S  = DEFAULT_LAMBDA_S2S;
