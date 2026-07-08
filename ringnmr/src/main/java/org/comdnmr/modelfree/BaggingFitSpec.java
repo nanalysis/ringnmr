@@ -178,7 +178,7 @@ public class BaggingFitSpec extends FitSpec {
                     start = originalFits.get(model.getName()).pars;
                 }
                 replicateData.setTestModel(model);
-                Score score = runFit(relaxFit, model);
+                Score score = runFit(relaxFit, model, start, nTry);
                 if (bestScoreModel.isEmpty() || score.aicc().get() < bestScoreModel.get().getLeft().aicc().get()) {
                     bestScoreModel = Optional.of(Pair.of(score, model));
                 }
