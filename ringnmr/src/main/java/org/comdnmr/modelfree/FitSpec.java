@@ -92,6 +92,16 @@ public abstract class FitSpec {
      */
     protected final boolean useMedian;
 
+    // Added for use in the regularization paper; not used within RING.
+    /** If {@code true}, bootstrap samplers are initialised with a fixed seed for reproducibility. */
+    protected final boolean fixedSeed;
+
+    /**
+     * J(0) computation strategy for amide ({@link MoietyType#AMIDE}) data.
+     * Ignored for {@link MoietyType#DEUTERATED_METHYL}.
+     */
+    protected final R1R2NOEMolDataValues.J0Mode j0Mode;
+
     /**
      * Registry mapping human-readable method names to their corresponding
      * {@code FitSpec} subclass. Insertion order is preserved via
@@ -126,6 +136,8 @@ public abstract class FitSpec {
         this.r2Limit = builder.r2Limit;
         this.nReplicates = builder.nReplicates;
         this.useMedian = builder.useMedian;
+        this.fixedSeed = builder.fixedSeed;
+        this.j0Mode = builder.j0Mode;
     }
 
     /**
@@ -260,6 +272,8 @@ public abstract class FitSpec {
         builder.append(String.format("bootstrapMode = \"%s\"%n", bootstrapMode.toString().toLowerCase()));
         builder.append(String.format("nReplicates = %d%n", nReplicates));
         builder.append(String.format("useMedian = %b%n", useMedian));
+        builder.append(String.format("fixedSeed = %b%n", fixedSeed));
+        builder.append(String.format("j0Mode = \"%s\"%n", j0Mode.name().toLowerCase()));
         return builder;
     }
 
@@ -385,12 +399,17 @@ public abstract class FitSpec {
     @SuppressWarnings("unchecked")
     public <T extends RelaxDataValue> BootstrapSampler<T> getBootstrapSampler(MolDataValues<T> data) {
         return switch (bootstrapMode) {
-            case PARAMETRIC    -> new ParametricSampler<>(data);
-            case NONPARAMETRIC -> switch (moietyType) {
-                case DEUTERATED_METHYL -> (BootstrapSampler<T>) new DeuteriumNonparametricSampler((MolDataValues<DeuteriumDataValue>) data);
-                case AMIDE             -> new AmideNonparametricSampler<>(data);
+            case PARAMETRIC    -> fixedSeed
+                ? ParametricSampler.withFixedSeed(data)
+                : new ParametricSampler<>(data);
+            case NONPARAMETRIC -> (BootstrapSampler<T>) switch (moietyType) {
+                case DEUTERATED_METHYL -> fixedSeed ? DeuteriumNonparametricSampler.withFixedSeed((MolDataValues<DeuteriumDataValue>) data) : new DeuteriumNonparametricSampler((MolDataValues<DeuteriumDataValue>) data);
+                case AMIDE             -> fixedSeed ? AmideNonparametricSampler.withFixedSeed((MolDataValues<R1R2NOEDataValue>) data)         : new AmideNonparametricSampler((MolDataValues<R1R2NOEDataValue>) data);
             };
-            case BAYESIAN      -> new BayesianSampler<>(data);
+            case BAYESIAN      -> (BootstrapSampler<T>) switch (moietyType) {
+                case DEUTERATED_METHYL -> fixedSeed ? DeuteriumBayesianSampler.withFixedSeed((MolDataValues<DeuteriumDataValue>) data) : new DeuteriumBayesianSampler((MolDataValues<DeuteriumDataValue>) data);
+                case AMIDE             -> fixedSeed ? AmideBayesianSampler.withFixedSeed((MolDataValues<R1R2NOEDataValue>) data)         : new AmideBayesianSampler((MolDataValues<R1R2NOEDataValue>) data);
+            };
         };
     }
 
@@ -405,6 +424,9 @@ public abstract class FitSpec {
     protected RelaxFit initRelaxFit(String key, MolDataValues<?> data) {
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setFitJ(fitJ);
+        if (moietyType == MoietyType.AMIDE) {
+            ((R1R2NOEMolDataValues) data).setJ0Mode(j0Mode);
+        }
         relaxFit.setRelaxData(key, data);
         return relaxFit;
     }
@@ -507,6 +529,14 @@ public abstract class FitSpec {
         return Pair.of(parameterEstimates, parameterErrors);
     }
 
+    protected static boolean[] flagSpuriousReplicates(double[] crossResiduals) {
+        DescriptiveStatistics stats = new DescriptiveStatistics(crossResiduals);
+        double threshold = 5.0 * stats.getPercentile(50.0);
+        boolean[] flags = new boolean[crossResiduals.length];
+        for (int i = 0; i < crossResiduals.length; i++) flags[i] = crossResiduals[i] > threshold;
+        return flags;
+    }
+
     // ── Order parameter construction ────────────────────────────────────
 
     /**
@@ -591,6 +621,8 @@ public abstract class FitSpec {
         sb.append("tauMFraction=").append(Double.doubleToLongBits(tauMFraction)).append('|');
         sb.append("r2Limit=").append(Double.doubleToLongBits(r2Limit)).append('|');
         sb.append("nReplicates=").append(nReplicates).append('|');
+        sb.append("fixedSeed=").append(fixedSeed).append('|');
+        sb.append("j0Mode=").append(j0Mode == null ? "null" : j0Mode.name()).append('|');
 
         // Hook for subclasses
         appendSubclassState(sb);
@@ -738,6 +770,10 @@ public abstract class FitSpec {
         protected double r2Limit = DEFAULT_R2_LIMIT;
         protected int nReplicates = DEFAULT_N_REPLICATES;
         protected boolean useMedian = DEFAULT_USE_MEDIAN;
+        // Added for use in the regularization paper; not used within RING.
+        protected boolean fixedSeed = false;
+
+        protected R1R2NOEMolDataValues.J0Mode j0Mode = R1R2NOEMolDataValues.J0Mode.INDEPENDENT;
 
         // ── Default-value accessors ─────────────────────────────────────
 
@@ -936,6 +972,24 @@ public abstract class FitSpec {
             return self();
         }
 
+        // Added for use in the regularization paper; not used within RING.
+        public T fixedSeed(boolean fixedSeed) {
+            this.fixedSeed = fixedSeed;
+            return self();
+        }
+
+        /**
+         * Sets the J(0) computation strategy for amide data.
+         * Ignored when {@link #moietyType} is {@link MoietyType#DEUTERATED_METHYL}.
+         *
+         * @param j0Mode the J(0) mode; must not be {@code null}
+         * @return this builder
+         */
+        public T j0Mode(R1R2NOEMolDataValues.J0Mode j0Mode) {
+            this.j0Mode = Objects.requireNonNull(j0Mode, "j0Mode must not be null");
+            return self();
+        }
+
         /**
          * Validates cross-field constraints. Called by {@link #build()} before
          * constructing the {@code FitSpec} instance.
@@ -962,6 +1016,11 @@ public abstract class FitSpec {
             }
             if (r2Limit < 0) {
                 throw new IllegalStateException("r2Limit must be non-negative, got: " + r2Limit);
+            }
+            if (j0Mode != R1R2NOEMolDataValues.J0Mode.INDEPENDENT && moietyType == MoietyType.DEUTERATED_METHYL) {
+                throw new IllegalStateException(
+                    "j0Mode " + j0Mode + " is only applicable to AMIDE data"
+                );
             }
         }
 

@@ -17,13 +17,18 @@ import org.apache.commons.rng.simple.RandomSource;
  * <p>Two sub-hierarchies exist:
  * <ul>
  *   <li>{@link WeightSampler} (and its concrete subclasses
- *       {@link AmideNonparametricSampler}, {@link DeuteriumNonparametricSampler} and
- *       {@link BayesianSampler}) — resamples by assigning per-observation weights
- *       without modifying the measured values.</li>
+ *       {@link AmideNonparametricSampler}, {@link AmideBayesianSampler},
+ *       {@link DeuteriumNonparametricSampler} and {@link DeuteriumBayesianSampler}) —
+ *       resamples by assigning per-observation weights without modifying the measured
+ *       values.</li>
  *   <li>{@link ParametricSampler} — resamples by drawing new measured values from
  *       Gaussian distributions centred on the originals, using the reported
  *       experimental errors as standard deviations.</li>
  * </ul>
+ *
+ * <p>Each call to {@link #sample()} returns a <em>new</em> {@link MolDataValues}
+ * instance; the wrapped {@code data} object is never mutated. {@link #getOriginalData()}
+ * returns the original unwrapped instance.
  *
  * <p>The RNG is an XoShiRo128++ generator from Apache Commons RNG. Passing
  * {@code seed = true} to the two-argument constructor fixes the seed to a
@@ -78,22 +83,18 @@ public abstract class BootstrapSampler<T extends RelaxDataValue> implements Obje
     }
 
     /**
-     * Draws the next bootstrap replicate by mutating the wrapped {@link MolDataValues}
-     * in-place and returning it.
+     * Draws the next bootstrap replicate and returns it as a new {@link MolDataValues}
+     * instance. The wrapped {@code data} object is never modified.
      *
-     * <p><strong>Important:</strong> the returned reference is the same object on every
-     * call. Callers that need to retain the state of a replicate must copy the result
-     * before drawing the next sample.
-     *
-     * @return the wrapped {@code MolDataValues} in its resampled state
+     * @return a new {@code MolDataValues} representing the current bootstrap replicate
      */
     public abstract MolDataValues<T> sample();
 
     /**
-     * Restores the wrapped {@link MolDataValues} to its original, unperturbed state and
-     * returns it.
+     * Returns the original, unperturbed {@link MolDataValues} passed at construction.
      *
-     * @return the wrapped {@code MolDataValues} with the original data restored
+     * @return the original data
      */
     public abstract MolDataValues<T> getOriginalData();
+
 }

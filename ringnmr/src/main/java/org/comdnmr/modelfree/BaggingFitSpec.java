@@ -158,12 +158,14 @@ public class BaggingFitSpec extends FitSpec {
         double[][] weights = new double[nWeights][nReplicates];
         BootstrapSampler<? extends RelaxDataValue> sampler = getBootstrapSampler(data);
 
+        data.setTestModel(model2sf);
         Score[] bestScores = new Score[nReplicates];
         double[] replicateTimes = new double[nReplicates];
         double[] start = null;
         Map<String, Score> originalFits = new HashMap<>();
         CoMDOptions options = new CoMDOptions(true);
 
+        double[] crossResiduals = new double[nReplicates];
         for (int i = 0; i < nReplicates; i++) {
             long startNs = System.nanoTime();
             MolDataValues<? extends RelaxDataValue> replicateData = sampler.sample();
@@ -172,10 +174,10 @@ public class BaggingFitSpec extends FitSpec {
 
             Optional<Pair<Score, MFModelIso>> bestScoreModel = Optional.empty();
             for (MFModelIso model : models) {
-                data.setTestModel(model);
                 if (i > 0) {
                     start = originalFits.get(model.getName()).pars;
                 }
+                replicateData.setTestModel(model);
                 Score score = runFit(relaxFit, model, start, nTry);
                 if (bestScoreModel.isEmpty() || score.aicc().get() < bestScoreModel.get().getLeft().aicc().get()) {
                     bestScoreModel = Optional.of(Pair.of(score, model));
@@ -198,6 +200,8 @@ public class BaggingFitSpec extends FitSpec {
             for (int k = 0; k < nParameters; k++) parameters[k][i] = replicateParameters[k];
             for (int j = 0; j < nWeights; j++) weights[j][i] = replicateWeights[j];
             replicateTimes[i] = (System.nanoTime() - startNs) / 1_000_000.0;
+            relaxFit.setRelaxData(key, data);
+            crossResiduals[i] = relaxFit.maxNormalizedResidual(replicateParameters);
         }
 
         Pair<double[], double[]> parameterEstimates = computeStatistics(parameters, weights);
@@ -218,6 +222,6 @@ public class BaggingFitSpec extends FitSpec {
             fitErrors
         );
 
-        return new ModelFitResult(orderPar, parameters, null, replicateTimes);
+        return new ModelFitResult(orderPar, parameters, null, replicateTimes, flagSpuriousReplicates(crossResiduals));
     }
 }
