@@ -49,7 +49,7 @@
         <dependency>
             <groupId>org.nmrfx</groupId>
             <artifactId>nmrfx-plugin-api</artifactId>
-            <version>11.4.40</version>
+            <version>12.0.5</version>
         </dependency>
         <dependency>
             <groupId>org.comdnmr</groupId>
