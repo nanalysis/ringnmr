@@ -27,24 +27,20 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.print.PrinterJob;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.SnapshotParameters;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.image.WritableImage;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
@@ -68,14 +64,16 @@ import org.comdnmr.util.CoMDPreferences;
 import org.comdnmr.util.ProcessingStatus;
 import org.controlsfx.control.StatusBar;
 import org.controlsfx.dialog.ExceptionDialog;
-import org.nmrfx.chart.*;
+import org.nmrfx.chart.Axis;
+import org.nmrfx.chart.DataSeries;
+import org.nmrfx.chart.XYEValue;
+import org.nmrfx.chart.XYValue;
 import org.nmrfx.chemistry.Atom;
 import org.nmrfx.chemistry.InvalidMoleculeException;
 import org.nmrfx.chemistry.MoleculeBase;
 import org.nmrfx.chemistry.MoleculeFactory;
 import org.nmrfx.chemistry.io.MoleculeIOException;
 import org.nmrfx.chemistry.relax.*;
-import org.nmrfx.chemistry.relax.RelaxTypes;
 import org.nmrfx.console.ConsoleController;
 import org.nmrfx.datasets.Nuclei;
 import org.nmrfx.graphicsio.GraphicsIOException;
@@ -84,7 +82,6 @@ import org.nmrfx.peaks.InvalidPeakException;
 import org.nmrfx.star.ParseException;
 import org.nmrfx.utils.GUIUtils;
 
-import javax.imageio.ImageIO;
 import javax.script.ScriptException;
 import java.io.File;
 import java.io.FileWriter;
@@ -3009,15 +3006,7 @@ public class PyController implements Initializable {
     }
 
     public void snapit(Node node, File file) throws IOException {
-        double scale = 4.0;
-        final Bounds bounds = node.getLayoutBounds();
-        final WritableImage image = new WritableImage(
-                (int) Math.round(bounds.getWidth() * scale),
-                (int) Math.round(bounds.getHeight() * scale));
-        final SnapshotParameters spa = new SnapshotParameters();
-        spa.setTransform(javafx.scene.transform.Transform.scale(scale, scale));
-        node.snapshot(spa, image);
-        ImageIO.write(SwingFXUtils.fromFXImage(image, null), "png", file);
+        GUIUtils.snapNode(node, file, 4.0);
     }
 
     public FitResult getFitResult() {
