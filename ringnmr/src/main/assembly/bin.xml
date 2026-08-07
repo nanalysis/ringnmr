@@ -49,6 +49,15 @@
             <fileMode>0744</fileMode>
         </file>
         <file>
+            <source>src/main/scripts/ringcmd.bat</source>
+            <filtered>true</filtered>
+        </file>
+        <file>
+            <source>src/main/scripts/ringcmd</source>
+            <filtered>true</filtered>
+            <fileMode>0744</fileMode>
+        </file>
+        <file>
             <source>target/Manifest.jar</source>
             <filtered>false</filtered>
             <outputDirectory>lib</outputDirectory>
