@@ -324,7 +324,7 @@ public class MFModelIso2sf extends MFModelIso2s {
         if (includeEx) {
             return getParValues(targetTau, 0.5, SLOW_LIMIT / 2.0, 0.5, targetTau / 4.0, 2.0);
         } else {
-            return getParValues(targetTau, 0.5, SLOW_LIMIT / 2.0, 0.5, targetTau / 4.0);
+            return getParValues(targetTau, 0.8, SLOW_LIMIT / 2.0, 0.5, targetTau / 4.0);
         }
     }
 
