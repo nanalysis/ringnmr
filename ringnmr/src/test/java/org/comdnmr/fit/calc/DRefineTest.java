@@ -10,15 +10,22 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.math3.optim.PointValuePair;
+import org.comdnmr.data.DataIO;
 import org.comdnmr.data.DynamicsSource;
+import org.comdnmr.datasets.Dataset;
+import org.comdnmr.datasets.ParameterSet;
 import org.comdnmr.modelfree.*;
 import org.comdnmr.modelfree.RelaxFit.DiffusionType;
 import org.comdnmr.modelfree.models.*;
 import org.comdnmr.util.CoMDPreferences;
 import org.junit.Test;
 import org.junit.Assert;
+import org.nmrfx.chemistry.relax.OrderParSet;
+
+import static org.comdnmr.modelfree.models.MFModelIso2sf.TAU_PRIME;
 
 /**
  *
@@ -26,7 +33,7 @@ import org.junit.Assert;
  */
 public class DRefineTest {
 
-//    private final double[] guesses = {0.75 * Di, Di, 1.25 * Di, Math.PI / 2, Math.PI / 2, Math.PI / 2};
+    //    private final double[] guesses = {0.75 * Di, Di, 1.25 * Di, Math.PI / 2, Math.PI / 2, Math.PI / 2};
 //    private final double[] guesses = {4.4170 * 1e7, 4.5832 * 1e7, 6.0129 * 1e7, Math.toRadians(98.06),
 //            Math.toRadians(68.64), Math.toRadians(77.42)};
     private final double[] fields = {400.0e6, 500e6, 600e6, 700e6, 800.0e6};
@@ -132,14 +139,14 @@ public class DRefineTest {
         double[] omegas = new double[hFreqs.length * 2 + 1];
 
         for (int i = 0; i < hFreqs.length; i++) {
-            omegas[i * 2 + 1] = 1.0e6* hFreqs[i] * RelaxEquations.GAMMA_D / RelaxEquations.GAMMA_H * 2.0 * Math.PI;
+            omegas[i * 2 + 1] = 1.0e6 * hFreqs[i] * RelaxEquations.GAMMA_D / RelaxEquations.GAMMA_H * 2.0 * Math.PI;
             omegas[i * 2 + 2] = omegas[i * 2 + 1] * 2;
         }
         Arrays.sort(omegas);
         double[] pars = {7.0, 1.0};
         var jValues = model.calc(omegas, pars);
         for (int i = 0; i < omegas.length; i++) {
-            System.out.printf("%9.4f %9.4f\n", omegas[i]*1.0e-9, Math.log10(jValues[i]*1.0e9));
+            System.out.printf("%9.4f %9.4f\n", omegas[i] * 1.0e-9, Math.log10(jValues[i] * 1.0e9));
         }
     }
 
@@ -151,14 +158,14 @@ public class DRefineTest {
         double[] omegas = new double[hFreqs.length * 2 + 1];
 
         for (int i = 0; i < hFreqs.length; i++) {
-            omegas[i * 2 + 1] = 1.0e6* hFreqs[i] * RelaxEquations.GAMMA_D / RelaxEquations.GAMMA_H * 2.0 * Math.PI;
+            omegas[i * 2 + 1] = 1.0e6 * hFreqs[i] * RelaxEquations.GAMMA_D / RelaxEquations.GAMMA_H * 2.0 * Math.PI;
             omegas[i * 2 + 2] = omegas[i * 2 + 1] * 2;
         }
         Arrays.sort(omegas);
         double[] pars = {12.411, 0.471, 44.9e-3};
         var jValues = model.calc(omegas, pars);
         for (int i = 0; i < omegas.length; i++) {
-            System.out.printf("%9.4f %9.4f\n", omegas[i]*1.0e-9, Math.log10(jValues[i]*1.0e9));
+            System.out.printf("%9.4f %9.4f\n", omegas[i] * 1.0e-9, Math.log10(jValues[i] * 1.0e9));
         }
     }
 
@@ -200,24 +207,156 @@ public class DRefineTest {
             }
             molDataRes.clear();
             MolDataValues resData = molData.get(key);
-            if (!resData.getData().isEmpty()) {
-                resData.setTestModel(model);
-                molDataRes.put(key, molData.get(key));
-                relaxFit.setRelaxData(molDataRes);
-                double[] start = model.getStart();
-                double[] lower = model.getLower();
-                double[] upper = model.getUpper();
-                Optional<PointValuePair> fitOpt = relaxFit.fitResidueToModel(start, lower, upper, 1);
-                fitOpt.ifPresent(fitResult -> {
-                    double[] values = fitResult.getPoint();
-                    double score = fitResult.getValue();
-                    for (double val : values) {
-                        System.out.print(val + " ");
-                    }
-                    System.out.println(score + " " + key);
-                });
+            doModelFit(model, relaxFit, resData, key, null);
+        }
+    }
+
+    double[] doModelFit(MFModelIso model, RelaxFit relaxFit, MolDataValues resData, String key, double[] start) {
+        Map<String, MolDataValues> molDataRes = new TreeMap<>();
+        double[] values = null;
+        if (!resData.getData().isEmpty()) {
+            resData.setTestModel(model);
+            molDataRes.put(key, resData);
+            relaxFit.setRelaxData(molDataRes);
+            if (start == null) {
+                start = model.getStart();
+            }
+            double[] lower = model.getLower();
+            double[] upper = model.getUpper();
+            Optional<PointValuePair> fitOpt = relaxFit.fitResidueToModel(start, lower, upper, 1);
+            if (fitOpt.isPresent()) {
+                values = fitOpt.get().getPoint();
+//                for (double val : values) {
+//                    System.out.print(val + " ");
+//                }
+//                System.out.println( " " + key);
+               // values = model.getStandardPars(values);
+
+                double score = fitOpt.get().getValue();
             }
         }
+        return values;
+    }
+
+    @Test
+    public void testModel2sf() throws IOException {
+        File file = new File("src/test/data/sim_relax_data.csv");
+        DataIO.loadRelaxationTextFile(file);
+        FitR1R2NOEModel fitModel = new FitR1R2NOEModel();
+        var data = fitModel.getData(false);
+        File truthFile = new File("src/test/data/sim_relax_truth.csv");
+        List<ParameterSet> parameterSets = ParameterSet.fromFile(truthFile, "2sf");
+        Map<Integer, ParameterSet> parameterSetMap = new HashMap<>();
+        for (ParameterSet parameterSet: parameterSets) {
+            parameterSetMap.put(parameterSet.residueNumber(), parameterSet);
+        }
+
+        RelaxFit relaxFit = new RelaxFit();
+        double tau = 10.0;
+        MFModelIso2sf model = new MFModelIso2sf(true, tau, 0.1, false);
+
+        for (var d : data.entrySet()) {
+            String key = d.getKey();
+            if (!key.equals("1:12.N")) {
+                continue;
+            }
+            System.out.println(key);
+            Integer residueNum = Integer.valueOf(key.split(":")[1].split("\\.")[0]);
+            ParameterSet parameterSet = parameterSetMap.get(residueNum);
+            System.out.println(parameterSet);
+            MolDataValues molDataValues = d.getValue();
+            IO.println(data.get(key));
+            double[] crlb = relaxFit.calcCRLB(molDataValues,model);
+            System.out.print("crlb with start:");
+            for (int i=0;i<crlb.length;i++) {
+                System.out.print(" " + crlb[i]);
+            }
+            System.out.println();
+            relaxFit.setUseLambda(true);
+            double lambdaScale = 2.0;
+            relaxFit.setLambdaS2F(2.0 * lambdaScale);
+            relaxFit.setLambdaTauF(2.0 * Math.log(10.0) * TAU_PRIME * lambdaScale);
+            relaxFit.setLambdaS2S(2.0 * lambdaScale);
+            relaxFit.setLambdaTauS(2.0 * Math.log(10.0) * TAU_PRIME * lambdaScale );
+            System.out.println("lambdaS2F  " + relaxFit.getLambdaS2F() + " lambdaS2S " + relaxFit.getLambdaS2S());
+            System.out.println("lambdaTauF  " + relaxFit.getLambdaTauF() + " lambdaTauS " + relaxFit.getLambdaTauS());
+            model.updateCRLB(crlb);
+            double tauM = parameterSet.tauM();
+            double tauS = parameterSet.modelParams().get("Tau_s");
+            double tauF = parameterSet.modelParams().get("Tau_f");
+            double ss2 = parameterSet.modelParams().get("Ss2");
+            double sf2 = parameterSet.modelParams().get("Sf2");
+            double[] parValues = {tauM, sf2, tauF, ss2, tauS};
+            var parNames = model.getParNames();
+            double[] values = doModelFit(model, relaxFit, molDataValues, key, null);
+            System.out.println("Pass 1 Fit");
+            System.out.println("Par Fit Known");
+            for (int i=0;i < values.length;i++) {
+                System.out.printf("%s %.4f %.4f\n", parNames.get(i), values[i], parValues[i]);
+            }
+            crlb = relaxFit.calcCRLB(molDataValues,model, values);
+            if (crlb != null) {
+                model.updateCRLB(crlb);
+            }
+            if (crlb != null) {
+                System.out.print("crlb after pass 1 fit:");
+                for (int i = 0; i < crlb.length; i++) {
+                    System.out.print(" " + crlb[i]);
+                }
+                System.out.println();
+            } else {
+                System.out.println("crlb null");
+            }
+            values = doModelFit(model, relaxFit, molDataValues, key, values);
+            System.out.println("Pass 2 Fit");
+            System.out.println("Par Fit Known");
+            for (int i=0;i < values.length;i++) {
+                System.out.printf("%s %.4f %.4f\n", parNames.get(i), values[i], parValues[i]);
+            }
+        }
+    }
+
+    @Test
+    public void testModel2sfReg() throws IOException {
+        File file = new File("src/test/data/sim_relax_data.csv");
+        DataIO.loadRelaxationTextFile(file);
+        FitR1R2NOEModel fitModel = new FitR1R2NOEModel();
+        var data = fitModel.getData(false);
+        File truthFile = new File("src/test/data/sim_relax_truth.csv");
+        List<ParameterSet> parameterSets = ParameterSet.fromFile(truthFile, "2sf");
+        Map<Integer, ParameterSet> parameterSetMap = new HashMap<>();
+        for (ParameterSet parameterSet: parameterSets) {
+            parameterSetMap.put(parameterSet.residueNumber(), parameterSet);
+        }
+
+        RelaxFit relaxFit = new RelaxFit();
+        double tau = 10.0;
+        MFModelIso2sf model = new MFModelIso2sf(true, tau, 0.1, false);
+
+        FitSpec.Builder<?> builder;
+        builder = new RegularizationFitSpec.Builder()
+                .useMedian(true)
+                .lambdaScale(1.0)
+                .fitTauM(true)
+                .tauM(10.1)
+                .nReplicates(10);
+
+        FitSpec fitSpec = builder.build();
+        Map<String, OrderParSet> orderParSetMap = new ConcurrentHashMap<>();
+
+        for (var d : data.entrySet()) {
+            String key = d.getKey();
+            if (!key.equals("1:11.N")) {
+                continue;
+            }
+
+            MolDataValues molDataValues = d.getValue();
+            var x = fitSpec.fit(key,molDataValues,orderParSetMap);
+            Integer residueNum = Integer.valueOf(key.split(":")[1].split("\\.")[0]);
+            ParameterSet parameterSet = parameterSetMap.get(residueNum);
+            System.out.println("x : " + x);
+        }
+
     }
 
     @Test
@@ -331,7 +470,7 @@ public class DRefineTest {
         relaxFit.setRelaxData(molData);
         relaxFit.setDiffusionType(DiffusionType.ANISOTROPIC);
         double[] pars = {4.4170 * 1e7, 4.5832 * 1e7, 6.0129 * 1e7, Math.toRadians(98.06),
-            Math.toRadians(68.64), Math.toRadians(77.42)};
+                Math.toRadians(68.64), Math.toRadians(77.42)};
 
         double value = relaxFit.valueDMat(pars, null);
         System.out.println("value " + value);

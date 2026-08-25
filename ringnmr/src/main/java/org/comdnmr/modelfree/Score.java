@@ -53,9 +53,9 @@ public class Score {
     }
 
     public double value(double lambdaS2F, double lambdaS2S, double lambdaTauF, double lambdaTauS) {
-        double score = rms();
+        double score = rss;
         if (!parsOK) {
-            score += nValues * 10.0;
+            score += nValues * 10000.0;
         }
         score += complexityS2F * lambdaS2F + complexityS2S * lambdaS2S + complexityTauF * lambdaTauF + complexityTauS * lambdaTauS;
         return score;

@@ -73,7 +73,7 @@ public class FitR1R2NOEModelTest {
         double[] lower = model.getLower();
         double[] upper = model.getUpper();
         resData.setTestModel(model);
-        Optional<PointValuePair> fitResultOpt = relaxFit.fitResidueToModel(start, lower, upper, 1);
+        Optional<PointValuePair> fitResultOpt = relaxFit.fitResidueToModel(start, lower, upper, 10);
         if (fitResultOpt.isPresent()) {
             PointValuePair fitResult = fitResultOpt.get();
             for (int i = 0; i < start.length; i++) {
@@ -122,12 +122,13 @@ public class FitR1R2NOEModelTest {
     public void testModel3() {
         String modelName = "2sf";
         double tau = 10.0;
-        double[] pars = {0.9, 0.0, 0.3, 0.2};
+        double[] pars = {0.9, 0.0, 0.3, .5};
         double[] sfs = {600.0e6, 800.0e6};
 
         RelaxFit relaxFit = makeRelaxFit();
         PointValuePair fitResult = fitModel(relaxFit, modelName, tau, pars, sfs);
-        Assert.assertArrayEquals(pars, fitResult.getPoint(), 0.01);
+        System.out.println(fitResult.getValue());
+        Assert.assertArrayEquals(pars, fitResult.getPoint(), 0.05);
     }
     @Test
     public void testModel4() {

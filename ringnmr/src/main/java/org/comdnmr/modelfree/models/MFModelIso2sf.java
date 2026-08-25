@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
- /*
+/*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
@@ -31,16 +31,114 @@ import java.util.List;
  */
 public class MFModelIso2sf extends MFModelIso2s {
 
-    private static final double TAU_PRIME = 30.0e-12;
+    public static final double TAU_PRIME = 30.0e-3;
+//            return getParValues(tauLower(), 0.0, 0.001, 0.0, TAU_PRIME);
+    public enum ORDERPARS {
+        TAUM(4) {
+            @Override
+            public void setParam(MFModelIso2sf model, double value) {
+                model.tauM = value;
+            }
+
+            @Override
+            public double getParam(MFModelIso2sf model) {
+                return model.tauM;
+            }
+            @Override
+            public double getLowerBound() {
+                return 0.0;
+            }
+        },
+        SF2(0) {
+            @Override
+            public void setParam(MFModelIso2sf model, double value) {
+                model.sf2 = value;
+            }
+
+            @Override
+            public double getParam(MFModelIso2sf model) {
+                return model.sf2;
+            }
+            @Override
+            public double getLowerBound() {
+                return 0.0;
+            }
+
+        },
+        TAUF(1) {
+            @Override
+            public void setParam(MFModelIso2sf model, double value) {
+                model.tauF = value;
+            }
+
+            @Override
+            public double getParam(MFModelIso2sf model) {
+                return model.tauF;
+            }
+            @Override
+            public double getLowerBound() {
+                return 0.001;
+            }
+
+        },
+        SS2(2) {
+            @Override
+            public void setParam(MFModelIso2sf model, double value) {
+                model.ss2 = value;
+            }
+
+            @Override
+            public double getParam(MFModelIso2sf model) {
+                return model.ss2;
+            }
+            @Override
+            public double getLowerBound() {
+                return 0.0;
+            }
+
+        },
+        TAUS(3) {
+            @Override
+            public void setParam(MFModelIso2sf model, double value) {
+                model.tauS = value;
+            }
+
+            @Override
+            public double getParam(MFModelIso2sf model) {
+                return model.tauS;
+            }
+            @Override
+            public double getLowerBound() {
+                return 0.15;
+            }
+        };
+
+        final int index;
+
+        ORDERPARS(int index) {
+            this.index = index;
+        }
+
+        public int index(boolean hasTau) {
+            return index;
+        }
+
+        public abstract void setParam(MFModelIso2sf model, double value);
+
+        public abstract double getParam(MFModelIso2sf model);
+
+        public abstract double getLowerBound();
+    }
 
     double tauF;
     double complexityS2F = 0.0;
     double complexityS2S = 0.0;
     double complexityTauF = 0.0;
     double complexityTauS = 0.0;
+    double[] crlb = null;
 
     public MFModelIso2sf(boolean fitTau, double targetTau, double tauFraction,
-            boolean includeEx) {
+                         boolean includeEx) {
         super(fitTau, targetTau, tauFraction, includeEx);
         nPars = includeEx ? 5 : 4;
     }
@@ -56,6 +154,26 @@ public class MFModelIso2sf extends MFModelIso2s {
     @Override
     public List<String> getParNames() {
         return getAllParNames("Sf2", "Tau_f", "Ss2", "Tau_s");
+    }
+
+    public double getTauF() {
+        return tauF;
+    }
+
+    public double getTauS() {
+        return tauS;
+    }
+
+    public double getSs2() {
+        return ss2;
+    }
+
+    public double getSf2() {
+        return sf2;
+    }
+
+    public double getSN() {
+        return sN;
     }
 
     @Override
@@ -81,34 +199,65 @@ public class MFModelIso2sf extends MFModelIso2s {
         double tauM2TimesTauF2 = tauM2 * tauF2;
         double tauM2TimesTauS2 = tauM2 * tauS2;
         double tauM2TimesTauF2TimesTauS2 = tauM2 * tauF2 * tauS2;
-
+        if ((sf2 / sN) * (1.0 - ss2) < 1.0e-4) {
+            tauS = 0.0;
+            ss2  = 1.0;
+        }
         double[] js = new double[omegas.length];
         int index = 0;
         for (double omega : omegas) {
             double omega2 = omega * omega;
             double term1 = ((sf2 / sN) * ss2) / (1.0 + omega2 * tauM2);
             double term2 = (sf2 / sN) * (1.0 - ss2) * (
-                (tauS * tauMPlusTauS) / (omega2 * tauM2TimesTauS2 + tauMPlusTauS2)
+                    (tauS * tauMPlusTauS) / (omega2 * tauM2TimesTauS2 + tauMPlusTauS2)
             );
             double term3 = (1.0 - (sf2 / sN)) * ss2 * (
-                (tauF * tauMPlusTauF) / (omega2 * tauM2TimesTauF2 + tauMPlusTauF2)
+                    (tauF * tauMPlusTauF) / (omega2 * tauM2TimesTauF2 + tauMPlusTauF2)
             );
             // guard against division by zero error when tauf and taus are zero
             double term4 = 0.0;
             if (!(tauF < 1.0e-15 && tauS < 1.0e-15)) {
                 term4 = (1.0 - (sf2 / sN)) * (1.0 - ss2) * (
-                    (tauFTimesTauS * tauPrime) / (omega2 * tauM2TimesTauF2TimesTauS2 + tauPrime2)
+                        (tauFTimesTauS * tauPrime) / (omega2 * tauM2TimesTauF2TimesTauS2 + tauPrime2)
                 );
             }
             js[index++] = tauMTimesPt4 * (term1 + term2 + term3 + term4);
         }
-
-        complexityS2F = Math.abs(1.0 - sf2);
-        complexityS2S = Math.abs(1.0 - ss2);
-        complexityTauF = Math.log10((tauF + TAU_PRIME) / TAU_PRIME);
-        complexityTauS = Math.log10((tauS + TAU_PRIME) / TAU_PRIME);
-
+        updateComplexities();
         return js;
+    }
+
+    public void updateCRLB(double[] crlb) {
+        if (crlb == null) {                 // cramerRao rejected it (cond too high,
+            return;                         // or Cholesky failed) - keep previous
+        }
+        double s2 = (sf2 / sN) * ss2;       // note sN: matters for methyl
+        if (s2 < 0.05 || tauS > 0.4 * tauM) {
+            return;                         // degenerate corner; previous weights safer
+        }
+        if (this.crlb == null) {
+            this.crlb = crlb.clone();
+            return;
+        }
+        // Infinity means "this parameter is not in the model at this point" -
+        // legitimate, and not a reason to discard the whole array. Take the finite
+        // entries; carry the previous value forward for the rest.
+        for (int i = 0; i < crlb.length; i++) {
+            double c = crlb[i];
+            if (c > 0.0 && !Double.isInfinite(c) && !Double.isNaN(c)) {
+                this.crlb[i] = c;
+            }
+        }
+    }
+
+    public void updateComplexities() {
+        if (crlb == null) {
+            return;
+        }
+        complexityS2F = Math.abs(1.0 - sf2) / crlb[ORDERPARS.SF2.index(fitTau)];
+        complexityS2S = Math.abs(1.0 - ss2) / crlb[ORDERPARS.SS2.index(fitTau)];
+        complexityTauF = Math.log10((tauF + TAU_PRIME) / TAU_PRIME) / crlb[ORDERPARS.TAUF.index(fitTau)];
+        complexityTauS = Math.log10((tauS + TAU_PRIME) / TAU_PRIME) / crlb[ORDERPARS.TAUS.index(fitTau)];
     }
 
     @Override
@@ -167,7 +316,7 @@ public class MFModelIso2sf extends MFModelIso2s {
 
     @Override
     public boolean checkParConstraints() {
-        return tauF < tauM && tauS < tauM;
+        return (tauF * 5.0) < tauS && tauS < (0.5 * tauM);
     }
 
     @Override
@@ -182,18 +331,20 @@ public class MFModelIso2sf extends MFModelIso2s {
     @Override
     public double[] getLower() {
         if (includeEx) {
-            return getParValues(tauLower(), 0.0, 0.001, 0.0, SLOW_LIMIT, 0.0);
+            return getParValues(tauLower(), 0.0,ORDERPARS.TAUF.getLowerBound(),
+                    0.0, ORDERPARS.TAUS.getLowerBound(), 0.0);
         } else {
-            return getParValues(tauLower(), 0.0, 0.001, 0.0, SLOW_LIMIT);
+            return getParValues(tauLower(), 0.0, ORDERPARS.TAUF.getLowerBound(),
+                    0.0, ORDERPARS.TAUS.getLowerBound());
         }
     }
 
     @Override
     public double[] getUpper() {
         if (includeEx) {
-            return getParValues(tauUpper(), 1.0, SLOW_LIMIT, 1.0, targetTau / 2.0, 100.0);
+            return getParValues(tauUpper(), 1.0, 1.5 * SLOW_LIMIT, 1.0, targetTau / 2.0, 100.0);
         } else {
-            return getParValues(tauUpper(), 1.0, SLOW_LIMIT, 1.0, targetTau / 2.0);
+            return getParValues(tauUpper(), 1.0, 1.5 * SLOW_LIMIT, 1.0, targetTau / 2.0);
         }
     }
 
@@ -210,5 +361,4 @@ public class MFModelIso2sf extends MFModelIso2s {
             return "model2sf";
         }
     }
-
 }

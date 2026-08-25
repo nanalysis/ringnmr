@@ -8,8 +8,7 @@ import org.apache.commons.math3.geometry.euclidean.threed.RotationConvention;
 import org.apache.commons.math3.geometry.euclidean.threed.RotationOrder;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.optim.PointValuePair;
-import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.CMAESOptimizer;
-
+import org.checkerframework.checker.units.qual.C;
 import org.comdnmr.data.Fitter;
 import static org.comdnmr.modelfree.RelaxFit.DiffusionType.ANISOTROPIC;
 import static org.comdnmr.modelfree.RelaxFit.DiffusionType.OBLATE;
@@ -391,6 +390,17 @@ public class RelaxFit {
 
     public double[][] getRotationMatrix(Rotation rot) {
         return new Array2DRowRealMatrix(rot.getMatrix()).transpose().getData();
+    }
+    public double[] calcCRLB(MolDataValues molData, MFModelIso2sf testModel) {
+        double[] start = testModel.getStart();
+        return calcCRLB(molData, testModel, start);
+    }
+
+    public double[] calcCRLB(MolDataValues molData, MFModelIso2sf testModel, double[] start) {
+        double[][] jValues = molData.getJValues();
+        CRLBCalc crlbCalc = new CRLBCalc();
+        testModel.pars(start);
+        return crlbCalc.cramerRao(testModel, jValues[0], jValues[1], jValues[2], true);
     }
 
     double[] calcDeltaSqJ(MolDataValues molData, double[] resPars, MFModel testModel, boolean report) {

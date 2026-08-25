@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.comdnmr.modelfree.models.MFModelIso2sf.TAU_PRIME;
+
 /**
  * @author brucejohnson
  */
@@ -110,6 +112,14 @@ public abstract class MFModelIso extends MFModel {
             pars = new double[4];
             start = 0;
         }
+        if ((sf2 / sN) * (1.0 - ss2) < 1.0e-4) {
+            ss2 = 1.0;
+            taus = 0.0;
+        }
+        if ((1.0 - sf2 / sN) < 1.0e-4 || tauf < TAU_PRIME) {
+            tauf = 0.0;
+        }
+
         pars[start] = sf2;
         pars[start + 1] = tauf;
         pars[start + 2] = ss2;

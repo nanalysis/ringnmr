@@ -19,7 +19,7 @@ import org.comdnmr.modelfree.RelaxDataValue;
 import org.comdnmr.modelfree.StructureValues;
 
 
-abstract class Dataset implements Iterable<Map.Entry<String, MolDataValues<? extends RelaxDataValue>>> {
+public abstract class Dataset implements Iterable<Map.Entry<String, MolDataValues<? extends RelaxDataValue>>> {
 
     private static final Pattern KEY_PATTERN = Pattern.compile("\\d+:(\\d+)\\.[A-Za-z0-9]+");
     protected final StructureValues data;
