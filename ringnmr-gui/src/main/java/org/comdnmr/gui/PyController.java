@@ -230,10 +230,7 @@ public class PyController implements Initializable {
 
     Label lambdasLabel;
     GridPane lambdasGridPane;
-    ValidatedDecimalTextField lambdaS2FTextField;
-    ValidatedDecimalTextField lambdaS2STextField;
-    ValidatedDecimalTextField lambdaTauFTextField;
-    ValidatedDecimalTextField lambdaTauSTextField;
+    ValidatedDecimalTextField lambdaScaleTextField;
     HBox lambdasHBox;
 
     Label useRQLabel;
@@ -654,20 +651,11 @@ public class PyController implements Initializable {
 
         lambdasLabel = new Label("λ-values:");
         fittingMethodGrid.add(lambdasLabel, 0, 3);
-        lambdaS2FTextField = new ValidatedDecimalTextField();
-        HBox lambdaS2FBox = UiHelpers.createDefaultHBox(new Label("λ(S²f):"), lambdaS2FTextField);
-        lambdaS2STextField = new ValidatedDecimalTextField();
-        HBox lambdaS2SBox = UiHelpers.createDefaultHBox(new Label("λ(S²s):"), lambdaS2STextField);
-        lambdaTauFTextField = new ValidatedDecimalTextField();
-        HBox lambdaTauFBox = UiHelpers.createDefaultHBox(new Label("λ(τf):"), lambdaTauFTextField);
-        lambdaTauSTextField = new ValidatedDecimalTextField();
-        HBox lambdaTauSBox = UiHelpers.createDefaultHBox(new Label("λ(τs):"), lambdaTauSTextField);
+        lambdaScaleTextField = new ValidatedDecimalTextField();
+        HBox lambdaS2FBox = UiHelpers.createDefaultHBox(new Label("λ(Sscale):"), lambdaScaleTextField);
 
         lambdasGridPane = UiHelpers.createDefaultGridPane();
         lambdasGridPane.add(lambdaS2FBox, 0, 0);
-        lambdasGridPane.add(lambdaS2SBox, 1, 0);
-        lambdasGridPane.add(lambdaTauFBox, 2, 0);
-        lambdasGridPane.add(lambdaTauSBox, 3, 0);
         lambdasHBox = UiHelpers.createElementWithHelper(lambdasGridPane, "regularization_lambdas.txt");
 
         fittingMethodGrid.add(lambdasHBox, 1, 3);
@@ -763,10 +751,7 @@ public class PyController implements Initializable {
         }
 
         // lambdas
-        lambdaS2FTextField.setText(Double.toString(RegularizationFitSpec.Builder.getDefaultLambdaS2F()));
-        lambdaS2STextField.setText(Double.toString(RegularizationFitSpec.Builder.getDefaultLambdaS2S()));
-        lambdaTauFTextField.setText(Double.toString(RegularizationFitSpec.Builder.getDefaultLambdaTauF()));
-        lambdaTauSTextField.setText(Double.toString(RegularizationFitSpec.Builder.getDefaultLambdaTauS()));
+        lambdaScaleTextField.setText(Double.toString(RegularizationFitSpec.Builder.getDefaultLambdaScale()));
 
         // hard-code tauM
         // Bit of a hack to ensure tauMTextField is not visible initially
@@ -1710,10 +1695,7 @@ public class PyController implements Initializable {
             textFields.add(r2LimitTextField);
         }
         if (getFitSpecClass() == RegularizationFitSpec.class) {
-            textFields.add(lambdaS2FTextField);
-            textFields.add(lambdaS2STextField);
-            textFields.add(lambdaTauFTextField);
-            textFields.add(lambdaTauSTextField);
+            textFields.add(lambdaScaleTextField);
         }
         return textFields;
     }
@@ -1761,10 +1743,7 @@ public class PyController implements Initializable {
         } else if (fitSpecClass == RegularizationFitSpec.class) {
             fitSpecBuilder = new RegularizationFitSpec.Builder()
                 .useMedian(useMedianCheckBox.isSelected())
-                .lambdaS2F(lambdaS2FTextField.getValue().get())
-                .lambdaS2S(lambdaS2STextField.getValue().get())
-                .lambdaTauF(lambdaTauFTextField.getValue().get())
-                .lambdaTauS(lambdaTauSTextField.getValue().get());
+                .lambdaScale(lambdaScaleTextField.getValue().get());
         } else {
             throw new AssertionError(
                 "ConventionalFitSpec, BaggingFitSpec, RegularizationFitSpec are the only concrete subclasses of FitSpec."

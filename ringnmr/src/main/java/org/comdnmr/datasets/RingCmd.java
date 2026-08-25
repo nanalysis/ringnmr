@@ -19,6 +19,7 @@ import java.util.*;
 public class RingCmd {
 
     private static final Set<String> ALLOWED_MODELS = new HashSet<>();
+
     static {
         for (String model : MFModelIso.getAllModelNames()) {
             if (!model.equals("1sf")) ALLOWED_MODELS.add(model);
@@ -30,15 +31,30 @@ public class RingCmd {
 
         if (args.length > 0 && args[0].equals("simulate")) {
             runSimulate(Arrays.copyOfRange(args, 1, args.length));
-            return;
+        } else if (args.length > 0 && args[0].equals("fit")) {
+            runFit(Arrays.copyOfRange(args, 1, args.length));
         }
+    }
+
+    public static void printUsage() {
+        HelpFormatter hf = new HelpFormatter();
+        String syntax = "ringcmd fit|simulate <data-file> <output-dir> [options]";
+        hf.printHelp(syntax, buildCliOptions());
+    }
+
+    private static void runFit(String[] args) throws IOException {
 
         try {
             CommandLineParser parser = new DefaultParser();
             Options options = buildCliOptions();
             CommandLine cmd = parser.parse(options, args);
+            System.out.println("cmd " + cmd + " args " + cmd.getArgs());
 
             String[] positional = cmd.getArgs();
+            for (var pos : positional) {
+                System.out.println("par " + pos);
+            }
+
             if (positional.length != 2) {
                 throw new ParseException("Expected exactly two positional arguments: <data-file> <output-dir>");
             }
@@ -64,15 +80,6 @@ public class RingCmd {
         }
     }
 
-    public static void printUsage() {
-        HelpFormatter hf = new HelpFormatter();
-        String syntax = "mvn exec:java -Dclass=org.comdnmr.App <data-file> <output-dir> [options]";
-        hf.printHelp(syntax, buildCliOptions());
-        System.err.println();
-        System.err.println("To generate a simulated dataset, use:");
-        System.err.println("  mvn exec:java -Dclass=org.comdnmr.App -Dexec.args=\"simulate <params-file> <output-file> [options]\"");
-    }
-
     private static void runSimulate(String[] args) {
         try {
             CommandLineParser parser = new DefaultParser();
@@ -80,6 +87,9 @@ public class RingCmd {
             CommandLine cmd = parser.parse(options, args);
 
             String[] positional = cmd.getArgs();
+            for (var pos : positional) {
+                System.out.println("pars " + pos);
+            }
             if (positional.length != 2) {
                 throw new ParseException("Expected exactly two positional arguments: <params-file> <output-file>");
             }
@@ -96,8 +106,8 @@ public class RingCmd {
             String modelName = cmd.getOptionValue("model");
             if (!ALLOWED_MODELS.contains(modelName)) {
                 throw new ParseException(String.format(
-                    "Invalid --model specified: %s.%nMust be one of: %s",
-                    modelName, String.join(", ", ALLOWED_MODELS)
+                        "Invalid --model specified: %s.%nMust be one of: %s",
+                        modelName, String.join(", ", ALLOWED_MODELS)
                 ));
             }
 
@@ -135,7 +145,7 @@ public class RingCmd {
 
     public static void printSimulateUsage() {
         HelpFormatter hf = new HelpFormatter();
-        String syntax = "mvn exec:java -Dclass=org.comdnmr.App -Dexec.args=\"simulate <params-file> <output-file> [options]\"";
+        String syntax = "ringcmd simulate <params-file> <output-file> [options]\"";
         hf.printHelp(syntax, buildSimulateCliOptions());
     }
 
@@ -143,43 +153,43 @@ public class RingCmd {
         Options opts = new Options();
 
         opts.addOption(
-            Option
-                .builder()
-                .longOpt("model")
-                .hasArg()
-                .argName("model")
-                .desc("The model-free model used to generate 'true' relaxation values from the parameter set file. Must be one of: 1, 1f, 1s, 2s, 2sf")
-                .build()
+                Option
+                        .builder()
+                        .longOpt("model")
+                        .hasArg()
+                        .argName("model")
+                        .desc("The model-free model used to generate 'true' relaxation values from the parameter set file. Must be one of: 1, 1f, 1s, 2s, 2sf")
+                        .build()
         );
 
         opts.addOption(
-            Option
-                .builder()
-                .longOpt("fields")
-                .hasArg()
-                .argName("fields")
-                .desc("Comma-separated list of 1H spectrometer frequencies, in MHz (e.g. 500,700,900)")
-                .build()
+                Option
+                        .builder()
+                        .longOpt("fields")
+                        .hasArg()
+                        .argName("fields")
+                        .desc("Comma-separated list of 1H spectrometer frequencies, in MHz (e.g. 500,700,900)")
+                        .build()
         );
 
         opts.addOption(
-            Option
-                .builder()
-                .longOpt("noise")
-                .hasArg()
-                .argName("noise")
-                .desc("Relative noise level applied to simulated signal intensities, as a fraction of the reference intensity (default: 0.02)")
-                .build()
+                Option
+                        .builder()
+                        .longOpt("noise")
+                        .hasArg()
+                        .argName("noise")
+                        .desc("Relative noise level applied to simulated signal intensities, as a fraction of the reference intensity (default: 0.02)")
+                        .build()
         );
 
         opts.addOption(
-            Option
-                .builder()
-                .longOpt("seed")
-                .hasArg()
-                .argName("seed")
-                .desc("Seed for the random number generator used to corrupt simulated measurements with noise (default: 1)")
-                .build()
+                Option
+                        .builder()
+                        .longOpt("seed")
+                        .hasArg()
+                        .argName("seed")
+                        .desc("Seed for the random number generator used to corrupt simulated measurements with noise (default: 1)")
+                        .build()
         );
 
         opts.addOption(
@@ -214,139 +224,110 @@ public class RingCmd {
         Options opts = new Options();
 
         opts.addOption(
-            Option
-                .builder()
-                .longOpt("method")
-                .hasArg()
-                .argName("method")
-                .desc("Must be one of: conventional, bagging, regularization (default: conventional)")
-                .build()
+                Option
+                        .builder()
+                        .longOpt("method")
+                        .hasArg()
+                        .argName("method")
+                        .desc("Must be one of: conventional, bagging, regularization (default: conventional)")
+                        .build()
         );
 
         opts.addOption(
-            Option
-                .builder()
-                .longOpt("tauM")
-                .hasArg()
-                .argName("tauM")
-                .desc("The initial guess of the global correlation time. Must be a positive double (default: estimated based on the R1 and R2 values in the dataset)")
-                .build()
+                Option
+                        .builder()
+                        .longOpt("tauM")
+                        .hasArg()
+                        .argName("tauM")
+                        .desc("The initial guess of the global correlation time. Must be a positive double (default: estimated based on the R1 and R2 values in the dataset)")
+                        .build()
         );
 
         opts.addOption(
-            Option
-                .builder()
-                .longOpt("fitTauM")
-                .desc("Treat tauM as a parameter to be optimized.")
-                .build()
+                Option
+                        .builder()
+                        .longOpt("fitTauM")
+                        .desc("Treat tauM as a parameter to be optimized.")
+                        .build()
         );
 
         opts.addOption(
-            Option
-                .builder()
-                .longOpt("tauMFraction")
-                .hasArg()
-                .argName("tauMFraction")
-                .desc("If --fitTauM is provided, specifies the bounding of tauM in the optimization. Must be between 0.0 and 1.0 (default: 0.25)")
-                .build()
+                Option
+                        .builder()
+                        .longOpt("tauMFraction")
+                        .hasArg()
+                        .argName("tauMFraction")
+                        .desc("If --fitTauM is provided, specifies the bounding of tauM in the optimization. Must be between 0.0 and 1.0 (default: 0.25)")
+                        .build()
         );
 
         opts.addOption(
-            Option
-                .builder()
-                .longOpt("r2Limit")
-                .hasArg()
-                .argName("r2Limit")
-                .desc("If --fitTauM is provided, if a residue has R2 values which are below this threshold, tauM will not be fit for this residue. Must be a positive number (default 0.0)")
-                .build()
+                Option
+                        .builder()
+                        .longOpt("r2Limit")
+                        .hasArg()
+                        .argName("r2Limit")
+                        .desc("If --fitTauM is provided, if a residue has R2 values which are below this threshold, tauM will not be fit for this residue. Must be a positive number (default 0.0)")
+                        .build()
         );
 
         opts.addOption(
-            Option
-                .builder()
-                .longOpt("bootstrapMode")
-                .hasArg()
-                .argName("bootstrapMode")
-                .desc("Must be one of: parametric, nonparametric, bayesian (default: parametric)")
-                .build()
+                Option
+                        .builder()
+                        .longOpt("bootstrapMode")
+                        .hasArg()
+                        .argName("bootstrapMode")
+                        .desc("Must be one of: parametric, nonparametric, bayesian (default: parametric)")
+                        .build()
         );
 
         opts.addOption(
-            Option
-                .builder()
-                .longOpt("nReplicates")
-                .hasArg()
-                .argName("nReplicates")
-                .desc("Number of bootstrap replicates to run. Larger values will lead to slower performnace but more robust statistics. If --bootstrapMode is nonparametric, the following are the largest permitted values: 2 fields: 27, 3 fields: 343, 4 fields: 6859 (default: 25).")
-                .build()
+                Option
+                        .builder()
+                        .longOpt("nReplicates")
+                        .hasArg()
+                        .argName("nReplicates")
+                        .desc("Number of bootstrap replicates to run. Larger values will lead to slower performnace but more robust statistics. If --bootstrapMode is nonparametric, the following are the largest permitted values: 2 fields: 27, 3 fields: 343, 4 fields: 6859 (default: 25).")
+                        .build()
         );
 
         opts.addOption(
-            Option
-                .builder()
-                .longOpt("models")
-                .hasArg()
-                .argName("models")
-                .desc("Only valid when --method is conventional or bagging. Specifies the models to fit to the data (default: 1,1f,1s,2s,2sf).")
-                .build()
+                Option
+                        .builder()
+                        .longOpt("models")
+                        .hasArg()
+                        .argName("models")
+                        .desc("Only valid when --method is conventional or bagging. Specifies the models to fit to the data (default: 1,1f,1s,2s,2sf).")
+                        .build()
         );
 
         opts.addOption(
-            Option
-                .builder()
-                .longOpt("lambdaS2F")
-                .hasArg()
-                .argName("lambdaS2F")
-                .desc("Only valid with --method regularization. Specifies the magnitude of the fast order parameter (Sf²) regularization (default: 0.0)")
-                .build()
+                Option
+                        .builder()
+                        .longOpt("lambdaScale")
+                        .hasArg()
+                        .argName("lambdaScale")
+                        .desc("Only valid with --method regularization. Specifies the scale of the lambda regularization (default: 1.0)")
+                        .build()
+        );
+
+
+        opts.addOption(
+                Option
+                        .builder()
+                        .longOpt("useMedian")
+                        .desc("If --method is bagging or reglarization, --useMedian will result in the reported parameters being the median of the bootstrap results. If not provided, the mean will be used.")
+                        .build()
         );
 
         opts.addOption(
-            Option
-                .builder()
-                .longOpt("lambdaS2S")
-                .hasArg()
-                .argName("lambdaS2S")
-                .desc("Only valid with --method regularization. Specifies the magnitude of the slow order parameter (Ss²) regularization (default: 0.0)")
-                .build()
-        );
-
-        opts.addOption(
-            Option
-                .builder()
-                .longOpt("lambdaTauF")
-                .hasArg()
-                .argName("lambdaTauF")
-                .desc("Only valid with --method regularization. Specifies the magnitude of the fast local correlation time regularization (default: 0.0)")
-                .build()
-        );
-
-        opts.addOption(
-            Option
-                .builder()
-                .longOpt("lambdaTauS")
-                .hasArg()
-                .argName("lambdaTauS")
-                .desc("Only valid with --method regularization. Specifies the magnitude of the slow local correlation time regularization (default: 0.0)")
-                .build()
-        );
-
-        opts.addOption(
-            Option
-                .builder()
-                .longOpt("useMedian")
-                .desc("If --method is bagging or reglarization, --useMedian will result in the reported parameters being the median of the bootstrap results. If not provided, the mean will be used.")
-                .build()
-        );
-
-        opts.addOption(
-            Option
-                .builder()
-                .longOpt("j0Mode")
-                .hasArg()
-                .argName("j0Mode")
-                .desc("Only applicable to amide data. Controls how J(0) is treated: independent (one J(0) per field) or averaged_jackknife (a single J(0) averaged across fields with jackknife uncertainty). Must be one of: independent, averaged_jackknife (default: averaged_jackknife)")
-                .build()
+                Option
+                        .builder()
+                        .longOpt("j0Mode")
+                        .hasArg()
+                        .argName("j0Mode")
+                        .desc("Only applicable to amide data. Controls how J(0) is treated: independent (one J(0) per field) or averaged_jackknife (a single J(0) averaged across fields with jackknife uncertainty). Must be one of: independent, averaged_jackknife (default: averaged_jackknife)")
+                        .build()
         );
 
         return opts;
@@ -359,33 +340,27 @@ public class RingCmd {
             switch (methodString) {
                 case "conventional" -> {
                     builder = new ConventionalFitSpec.Builder()
-                        .modelNames(getModels(cmd));
+                            .modelNames(getModels(cmd));
                 }
                 case "bagging" -> {
                     builder = new BaggingFitSpec.Builder()
-                        .useMedian(cmd.hasOption("useMedian"));
+                            .useMedian(cmd.hasOption("useMedian"));
                 }
                 case "regularization" -> {
-                    double lambdaS2F = (cmd.hasOption("lambdaS2F")) ? parsePositiveDouble(cmd, "lambdaS2F", true) : 0.0;
-                    double lambdaS2S = (cmd.hasOption("lambdaS2S")) ? parsePositiveDouble(cmd, "lambdaS2S", true) : 0.0;
-                    double lambdaTauF = (cmd.hasOption("lambdaTauF")) ? parsePositiveDouble(cmd, "lambdaTauF", true) : 0.0;
-                    double lambdaTauS = (cmd.hasOption("lambdaTauS")) ? parsePositiveDouble(cmd, "lambdaTauS", true) : 0.0;
+                    double lambdaScale = (cmd.hasOption("lambdaScale")) ? parsePositiveDouble(cmd, "lambdaScale", true) : 0.0;
                     builder = new RegularizationFitSpec.Builder()
-                        .useMedian(cmd.hasOption("useMedian"))
-                        .lambdaS2F(lambdaS2F)
-                        .lambdaS2S(lambdaS2S)
-                        .lambdaTauF(lambdaTauF)
-                        .lambdaTauS(lambdaTauS);
+                            .useMedian(cmd.hasOption("useMedian"))
+                            .lambdaScale(lambdaScale);
                 }
                 default -> throw new ParseException(
-                    String.format(
-                        "Invalid --method specified: %s.%nMust be one of conventional, bagging, regularization",
-                        methodString
-                    )
+                        String.format(
+                                "Invalid --method specified: %s.%nMust be one of conventional, bagging, regularization",
+                                methodString
+                        )
                 );
             }
         } else {
-           builder = new ConventionalFitSpec.Builder().modelNames(getModels(cmd));
+            builder = new ConventionalFitSpec.Builder().modelNames(getModels(cmd));
         }
 
         if (dataset.getClass() == AmideDataset.class) {
@@ -395,10 +370,10 @@ public class RingCmd {
                 case "independent" -> R1R2NOEMolDataValues.J0Mode.INDEPENDENT;
                 case "averaged_jackknife" -> R1R2NOEMolDataValues.J0Mode.AVERAGED_JACKKNIFE;
                 default -> throw new ParseException(
-                    String.format(
-                        "Invalid --j0Mode specified: %s.%nMust be one of independent, averaged_jackknife",
-                        j0ModeString
-                    )
+                        String.format(
+                                "Invalid --j0Mode specified: %s.%nMust be one of independent, averaged_jackknife",
+                                j0ModeString
+                        )
                 );
             };
             builder.j0Mode(j0Mode);
@@ -436,10 +411,10 @@ public class RingCmd {
                 case "nonparametric" -> FitSpec.BootstrapMode.NONPARAMETRIC;
                 case "bayesian" -> FitSpec.BootstrapMode.BAYESIAN;
                 default -> throw new ParseException(
-                    String.format(
-                        "Invalid --bootstrapMode specified: %s.%nMust be one of parametric, nonparametric, bayesian",
-                        bootstrapModeString
-                    )
+                        String.format(
+                                "Invalid --bootstrapMode specified: %s.%nMust be one of parametric, nonparametric, bayesian",
+                                bootstrapModeString
+                        )
                 );
             };
             builder.bootstrapMode(bootstrapMode);

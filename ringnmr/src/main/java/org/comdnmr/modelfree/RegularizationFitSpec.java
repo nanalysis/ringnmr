@@ -10,6 +10,8 @@ import org.comdnmr.util.CoMDOptions;
 import org.nmrfx.chemistry.relax.OrderPar;
 import org.nmrfx.chemistry.relax.OrderParSet;
 
+import static org.comdnmr.modelfree.models.MFModelIso2sf.TAU_PRIME;
+
 /**
  * Regularized model-free fitting strategy using the extended
  * ({@code 2sf}) model exclusively.
@@ -21,8 +23,7 @@ import org.nmrfx.chemistry.relax.OrderParSet;
  * correlation times from physically motivated null values. The regularization
  * discourages overfitting without the need for AICc-based model selection.</p>
  *
- * <p>The four regularization strengths — {@link #lambdaS2F}, {@link #lambdaS2S},
- * {@link #lambdaTauF}, and {@link #lambdaTauS} — are passed through to
+ * <p>The four strength scale — {@link #lambdaScale}— is passed through to
  * {@link RelaxFit} via {@link RelaxFit#setLambdaS2F(double)},
  * {@link RelaxFit#setLambdaS2S(double)}, {@link RelaxFit#setLambdaTauF(double)},
  * and {@link RelaxFit#setLambdaTauS(double)} respectively. All lower bounds for
@@ -78,25 +79,7 @@ public class RegularizationFitSpec extends FitSpec {
      * Regularization strength for the fast order parameter S²f.
      * Higher values push S²f estimates towards 1 (rigid limit).
      */
-    private final double lambdaS2F;
-
-    /**
-     * Regularization strength for the slow order parameter S²s.
-     * Higher values push S²s estimates towards 1 (rigid limit).
-     */
-    private final double lambdaS2S;
-
-    /**
-     * Regularization strength for the fast correlation time τ_f.
-     * Higher values push τf estimates towards 0.
-     */
-    private final double lambdaTauF;
-
-    /**
-     * Regularization strength for the slow correlation time τs.
-     * Higher values suppress spurious slow-motion contributions.
-     */
-    private final double lambdaTauS;
+    private final double lambdaScale;
 
     /**
      * Builder for {@link RegularizationFitSpec}.
@@ -121,27 +104,12 @@ public class RegularizationFitSpec extends FitSpec {
      */
     public static class Builder extends FitSpec.Builder<Builder> {
 
-        private static final double DEFAULT_LAMBDA_S2F  = 0.8;
-        private static final double DEFAULT_LAMBDA_S2S  = 0.8;
-        private static final double DEFAULT_LAMBDA_TAUF = 0.8;
-        private static final double DEFAULT_LAMBDA_TAUS = 0.8;
+        private static final double DEFAULT_LAMBDA_SCALE  = 1.0;
 
-        private double lambdaS2F  = DEFAULT_LAMBDA_S2F;
-        private double lambdaS2S  = DEFAULT_LAMBDA_S2S;
-        private double lambdaTauF = DEFAULT_LAMBDA_TAUF;
-        private double lambdaTauS = DEFAULT_LAMBDA_TAUS;
+        private double lambdaScale  = DEFAULT_LAMBDA_SCALE;
 
         /** Returns the default regularization strength for S²f (0.5). */
-        public static double getDefaultLambdaS2F()   { return DEFAULT_LAMBDA_S2F; }
-
-        /** Returns the default regularization strength for S²s (0.5). */
-        public static double getDefaultLambdaS2S()   { return DEFAULT_LAMBDA_S2S; }
-
-        /** Returns the default regularization strength for τ_f (0.1). */
-        public static double getDefaultLambdaTauF() { return DEFAULT_LAMBDA_TAUF; }
-
-        /** Returns the default regularization strength for τ_s (0.2). */
-        public static double getDefaultLambdaTauS() { return DEFAULT_LAMBDA_TAUS; }
+        public static double getDefaultLambdaScale()   { return DEFAULT_LAMBDA_SCALE; }
 
         private void validateLambda(String name, double value) {
             if (value < 0.0) {
@@ -154,52 +122,13 @@ public class RegularizationFitSpec extends FitSpec {
         /**
          * Sets the regularization strength for the fast order parameter S²f.
          *
-         * @param lambdaS2F regularization weight; must be &ge; 0
+         * @param lambdaScale regularization weight; must be &ge; 0
          * @return this builder
          * @throws IllegalArgumentException if {@code lambdaS2F} is negative
          */
-        public Builder lambdaS2F(double lambdaS2F) {
-            validateLambda("lambdaS2F", lambdaS2F);
-            this.lambdaS2F = lambdaS2F;
-            return this;
-        }
-
-        /**
-         * Sets the regularization strength for the slow order parameter S²s.
-         *
-         * @param lambdaS2S regularization weight; must be &ge; 0
-         * @return this builder
-         * @throws IllegalArgumentException if {@code lambdaS2S} is negative
-         */
-        public Builder lambdaS2S(double lambdaS2S) {
-            validateLambda("lambdaS2S", lambdaS2S);
-            this.lambdaS2S = lambdaS2S;
-            return this;
-        }
-
-        /**
-         * Sets the regularization strength for the fast correlation time τ_f.
-         *
-         * @param lambdaTauF regularization weight; must be &ge; 0
-         * @return this builder
-         * @throws IllegalArgumentException if {@code lambdaTauF} is negative
-         */
-        public Builder lambdaTauF(double lambdaTauF) {
-            validateLambda("lambdaTauF", lambdaTauF);
-            this.lambdaTauF = lambdaTauF;
-            return this;
-        }
-
-        /**
-         * Sets the regularization strength for the slow correlation time τ_s.
-         *
-         * @param lambdaTauS regularization weight; must be &ge; 0
-         * @return this builder
-         * @throws IllegalArgumentException if {@code lambdaTauS} is negative
-         */
-        public Builder lambdaTauS(double lambdaTauS) {
-            validateLambda("lambdaTauS", lambdaTauS);
-            this.lambdaTauS = lambdaTauS;
+        public Builder lambdaScale(double lambdaScale) {
+            validateLambda("lambdaS2F", lambdaScale);
+            this.lambdaScale = lambdaScale;
             return this;
         }
 
@@ -224,23 +153,12 @@ public class RegularizationFitSpec extends FitSpec {
      */
     protected RegularizationFitSpec(Builder builder) {
         super(builder);
-        this.lambdaS2F  = builder.lambdaS2F;
-        this.lambdaS2S  = builder.lambdaS2S;
-        this.lambdaTauF = builder.lambdaTauF;
-        this.lambdaTauS = builder.lambdaTauS;
+        this.lambdaScale  = builder.lambdaScale;
     }
 
     /** Returns the S²f regularization strength. */
-    double getLambdaS2F()  { return lambdaS2F; }
+    double getLambdaScale()  { return lambdaScale; }
 
-    /** Returns the S²s regularization strength. */
-    double getLambdaS2S()  { return lambdaS2S; }
-
-    /** Returns the fast-correlation-time regularization strength. */
-    double getLambdaTauF() { return lambdaTauF; }
-
-    /** Returns the slow-correlation-time regularization strength. */
-    double getLambdaTauS() { return lambdaTauS; }
 
     @Override
     protected double[] getLower(MFModelIso model) {
@@ -255,19 +173,13 @@ public class RegularizationFitSpec extends FitSpec {
      */
     @Override
     protected void appendSubclassState(StringBuilder sb) {
-        sb.append("lambdaS2F=").append(Double.doubleToLongBits(lambdaS2F)).append('|');
-        sb.append("lambdaS2S=").append(Double.doubleToLongBits(lambdaS2S)).append('|');
-        sb.append("lambdaTauF=").append(Double.doubleToLongBits(lambdaTauF)).append('|');
-        sb.append("lambdaTauS=").append(Double.doubleToLongBits(lambdaTauS)).append('|');
+        sb.append("lambdaScale=").append(Double.doubleToLongBits(lambdaScale)).append('|');
     }
 
     @Override
     public String toToml() {
         StringBuilder builder = getBaseTomlBuilder();
-        builder.append(String.format("lambdaS2F = %s%n", lambdaS2F));
-        builder.append(String.format("lambdaS2S = %s%n", lambdaS2S));
-        builder.append(String.format("lambdaTauF = %s%n", lambdaTauF));
-        builder.append(String.format("lambdaTauS = %s", lambdaTauS));
+        builder.append(String.format("lambdaScale = %s%n", lambdaScale));
         return builder.toString();
     }
 
@@ -284,10 +196,12 @@ public class RegularizationFitSpec extends FitSpec {
     protected RelaxFit initRelaxFit(String key, MolDataValues<? extends RelaxDataValue> data) {
         RelaxFit relaxFit = super.initRelaxFit(key, data);
         relaxFit.setUseLambda(true);
-        relaxFit.setLambdaS2F(getLambdaS2F());
-        relaxFit.setLambdaS2S(getLambdaS2S());
-        relaxFit.setLambdaTauF(getLambdaTauF());
-        relaxFit.setLambdaTauS(getLambdaTauS());
+
+        relaxFit.setUseLambda(true);
+        relaxFit.setLambdaS2F(2.0 * getLambdaScale());
+        relaxFit.setLambdaTauF(2.0 * Math.log(10.0) * TAU_PRIME * getLambdaScale());
+        relaxFit.setLambdaS2S(2.0 * getLambdaScale());
+        relaxFit.setLambdaTauS(2.0 * Math.log(10.0) * TAU_PRIME * getLambdaScale());
         return relaxFit;
     }
 
@@ -420,6 +334,8 @@ public class RegularizationFitSpec extends FitSpec {
     public ModelFitResult fit(String key, MolDataValues<?> data, Map<String, OrderParSet> orderParSetMap) {
         RelaxFit relaxFit = initRelaxFit(key, data);
         MFModelIso2sf model = (MFModelIso2sf) getModel("2sf", data);
+       // relaxFit.calcCRLB(data, model);
+
         data.setTestModel(model);
 
         int nParameters = model.getNPars();
@@ -438,7 +354,20 @@ public class RegularizationFitSpec extends FitSpec {
             long startNs = System.nanoTime();
             MolDataValues<? extends RelaxDataValue> replicateData = sampler.sample();
             relaxFit.setRelaxData(key, replicateData);
-            scores[i] = runFit(relaxFit, model, start, nTry);
+
+            double[] crlb = relaxFit.calcCRLB(replicateData, model);
+            model.updateCRLB(crlb);
+
+            Score score = runFit(relaxFit, model, start, nTry);
+
+            crlb = relaxFit.calcCRLB(replicateData,model, score.pars);
+            if (crlb != null) {
+                model.updateCRLB(crlb);
+            }
+
+            scores[i] = runFit(relaxFit, model, score.pars, nTry);
+
+
             start = scores[i].pars.clone();
             double[] replicateParameters = processParamsAfterFit(scores[i].getPars(), model.fitTau());
             double[] replicateWeights = replicateData.getWeights();
