@@ -54,6 +54,11 @@ public class R1R2NOEMolDataValues extends MolDataValues<R1R2NOEDataValue> {
         clearJValues();
     }
 
+    public double[][][] calcCov() {
+        if (dataValues.isEmpty()) return new double[0][0][];
+        return SpectralDensityCalculator.calcJCovariance(dataValues);
+    }
+
     @Override
     public double[][] calcJ() {
         if (dataValues.isEmpty()) return new double[0][0];

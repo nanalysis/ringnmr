@@ -100,9 +100,57 @@ public abstract class MFModelIso extends MFModel {
     }
 
     public abstract double[] getStart();
+    /** Enforce a canonical labelling: a lone internal mode lives in the fast
+     *  channel, and when both are active tauF < tauS. The likelihood is invariant
+     *  under this swap, so it changes only the labels. */
+    static void canonicalise(MFModelIso2sf model) {
+        double sf2 = model.getSf2();
+        double tauF = model.getTauF();
+        double ss2 = model.getSs2();
+        double tauS = model.getTauS();
+        double tauM = model.getTau();
 
-    protected double[] createStandardPars(double sf2, double tauf, double ss2, double taus) {
+        boolean fastOff = (tauF <= 0.0) || (1.0 - sf2 / model.getSN() <= 1e-6);
+        boolean slowOn  = (tauS >  0.0) && (1.0 - ss2 > 1e-6);
+
+        boolean swap = (fastOff && slowOn)                   // lone mode -> fast
+                || (!fastOff && slowOn && tauF > tauS);      // both on -> order them
         double[] pars;
+        int start;
+        if (model.fitTau) {
+            pars = new double[5];
+            pars[0] = tauM;
+            start = 1;
+        } else {
+            pars = new double[4];
+            start = 0;
+        }
+        if (swap) {
+            pars[start] = ss2;
+            pars[start + 1] = tauS;
+            pars[start + 2] = sf2;
+            pars[start + 3] = tauF;
+        } else {
+            pars[start] = sf2;
+            pars[start + 1] = tauF;
+            pars[start + 2] = ss2;
+            pars[start + 3] = tauS;
+        }
+    }
+
+    protected double[] createStandardPars(double sf2, double tauF, double ss2, double tauS) {
+        double[] pars;
+
+        double sN = 1.0;
+        if (this instanceof MFModelIso2sf mfModelIso2sf) {
+            sN = mfModelIso2sf.getSN();
+        }
+
+        boolean fastOff = (tauF <= 0.0) || (1.0 - sf2 / sN <= 1e-6);
+        boolean slowOn  = (tauS >  0.0) && (1.0 - ss2 > 1e-6);
+
+        boolean swap = (fastOff && slowOn)                   // lone mode -> fast
+                || (!fastOff && slowOn && tauF > tauS);      // both on -> order them
         int start;
         if (fitTau) {
             pars = new double[5];
@@ -112,18 +160,17 @@ public abstract class MFModelIso extends MFModel {
             pars = new double[4];
             start = 0;
         }
-        if ((sf2 / sN) * (1.0 - ss2) < 1.0e-4) {
-            ss2 = 1.0;
-            taus = 0.0;
+        if (swap) {
+            pars[start] = ss2;
+            pars[start + 1] = tauS;
+            pars[start + 2] = sf2;
+            pars[start + 3] = tauF;
+        } else {
+            pars[start] = sf2;
+            pars[start + 1] = tauF;
+            pars[start + 2] = ss2;
+            pars[start + 3] = tauS;
         }
-        if ((1.0 - sf2 / sN) < 1.0e-4 || tauf < TAU_PRIME) {
-            tauf = 0.0;
-        }
-
-        pars[start] = sf2;
-        pars[start + 1] = tauf;
-        pars[start + 2] = ss2;
-        pars[start + 3] = taus;
 
         return pars;
     }

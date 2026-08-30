@@ -241,7 +241,10 @@ public abstract class FitSpec {
         if (result.isEmpty()) {
             throw new RuntimeException("Could not generate fit result.");
         }
-        return relaxFit.score(result.get().getPoint(), true);
+        double[] values = model.getStandardPars(result.get().getPoint());
+
+        return relaxFit.score(values, true);
+
     }
 
     // ── TOML serialization ──────────────────────────────────────────────

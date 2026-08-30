@@ -355,17 +355,24 @@ public class RegularizationFitSpec extends FitSpec {
             MolDataValues<? extends RelaxDataValue> replicateData = sampler.sample();
             relaxFit.setRelaxData(key, replicateData);
 
-            double[] crlb = relaxFit.calcCRLB(replicateData, model);
+
+            double[] crlb = relaxFit.calcCRLB(replicateData,model);
+            relaxFit.setUseLambda(true);
+            double lambdaScale = 0.125;
+            relaxFit.setLambdas(lambdaScale);
             model.updateCRLB(crlb);
 
             Score score = runFit(relaxFit, model, start, nTry);
-
             crlb = relaxFit.calcCRLB(replicateData,model, score.pars);
-            if (crlb != null) {
-                model.updateCRLB(crlb);
-            }
+            model.updateCRLB(crlb);
+            model.updateTauWeights();
+
+            score = runFit(relaxFit, model, score.pars, nTry);
+            crlb = relaxFit.calcCRLB(replicateData,model, score.pars);
+            model.updateTauWeights();
 
             scores[i] = runFit(relaxFit, model, score.pars, nTry);
+            crlb = relaxFit.calcCRLB(replicateData,model, scores[i].pars);
 
 
             start = scores[i].pars.clone();

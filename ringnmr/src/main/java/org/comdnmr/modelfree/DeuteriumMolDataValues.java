@@ -13,6 +13,12 @@ public class DeuteriumMolDataValues extends MolDataValues<DeuteriumDataValue> {
     public DeuteriumMolDataValues(Atom atom, double[] vector) { super(atom, vector); }
     public DeuteriumMolDataValues(Atom atom)                  { super(atom); }
 
+
+    @Override
+    public double[][][] calcCov() {
+        return new double[0][0][0];
+    }
+
     @Override
     public double[][] calcJ() {
         return dataValues.isEmpty() ? new double[0][0]

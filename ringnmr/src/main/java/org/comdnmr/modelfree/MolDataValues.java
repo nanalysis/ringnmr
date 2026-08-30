@@ -27,6 +27,7 @@ public abstract class MolDataValues<T extends RelaxDataValue> {
     private MFModel model;
     private double[][] jValues = null;
     private double[] weights = null;
+    private double[][][] cov = null;
 
     public MolDataValues(String specifier, double[] vector, DynamicsSource dynSourceFactory) {
         this.specifier = specifier;
@@ -120,6 +121,8 @@ public abstract class MolDataValues<T extends RelaxDataValue> {
 
     public abstract double[][] calcJ();
 
+    public abstract double[][][] calcCov();
+
     public abstract List<double[][]> calcIndependentJ();
 
     public abstract int getNSpectralDensities();
@@ -146,5 +149,12 @@ public abstract class MolDataValues<T extends RelaxDataValue> {
             System.arraycopy(weights, 0, jValues[jValues.length - 1], 0, weights.length);
         }
         return jValues;
+    }
+
+    public double[][][] getCovariance() {
+        if (cov == null) {
+            cov = calcCov();
+        }
+        return cov;
     }
 }

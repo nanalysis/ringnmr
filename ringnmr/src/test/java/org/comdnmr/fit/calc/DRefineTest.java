@@ -226,18 +226,43 @@ public class DRefineTest {
             Optional<PointValuePair> fitOpt = relaxFit.fitResidueToModel(start, lower, upper, 1);
             if (fitOpt.isPresent()) {
                 values = fitOpt.get().getPoint();
-//                for (double val : values) {
-//                    System.out.print(val + " ");
-//                }
-//                System.out.println( " " + key);
-               // values = model.getStandardPars(values);
-
-                double score = fitOpt.get().getValue();
+                values = model.getStandardPars(values);
             }
+            relaxFit.reportValue(values);
         }
         return values;
     }
 
+    double[] getCurrentTruePars(ParameterSet parameterSet) {
+        double tauM = parameterSet.tauM();
+        double tauS = parameterSet.modelParams().get("Tau_s");
+        double tauF = parameterSet.modelParams().get("Tau_f");
+        double ss2 = parameterSet.modelParams().get("Ss2");
+        double sf2 = parameterSet.modelParams().get("Sf2");
+        double[] parValues = {tauM, sf2, tauF, ss2, tauS};
+        return parValues;
+    }
+
+    private void dumpCRLB(double[] crlb, String message) {
+        if (crlb != null) {
+            System.out.print(message + ": ");
+            for (int i = 0; i < crlb.length; i++) {
+                System.out.print(" " + crlb[i]);
+            }
+            System.out.println();
+        } else {
+            System.out.println("crlb null");
+        }
+
+    }
+
+    public void dumpFit(double[] values, double[] parValues, List<String> parNames) {
+        System.out.println("Par Fit Known");
+        for (int i=0;i < values.length;i++) {
+            System.out.printf("%s %.4f %.4f\n", parNames.get(i), values[i], parValues[i]);
+        }
+
+    }
     @Test
     public void testModel2sf() throws IOException {
         File file = new File("src/test/data/sim_relax_data.csv");
@@ -257,62 +282,46 @@ public class DRefineTest {
 
         for (var d : data.entrySet()) {
             String key = d.getKey();
-            if (!key.equals("1:12.N")) {
+            if (!key.equals("1:37.N")) {
                 continue;
             }
             System.out.println(key);
             Integer residueNum = Integer.valueOf(key.split(":")[1].split("\\.")[0]);
             ParameterSet parameterSet = parameterSetMap.get(residueNum);
-            System.out.println(parameterSet);
+            double[] parValues = getCurrentTruePars(parameterSet);
+            var parNames = model.getParNames();
+
             MolDataValues molDataValues = d.getValue();
             IO.println(data.get(key));
+
             double[] crlb = relaxFit.calcCRLB(molDataValues,model);
-            System.out.print("crlb with start:");
-            for (int i=0;i<crlb.length;i++) {
-                System.out.print(" " + crlb[i]);
-            }
-            System.out.println();
+            dumpCRLB(crlb, "crlb with start");
             relaxFit.setUseLambda(true);
-            double lambdaScale = 2.0;
-            relaxFit.setLambdaS2F(2.0 * lambdaScale);
-            relaxFit.setLambdaTauF(2.0 * Math.log(10.0) * TAU_PRIME * lambdaScale);
-            relaxFit.setLambdaS2S(2.0 * lambdaScale);
-            relaxFit.setLambdaTauS(2.0 * Math.log(10.0) * TAU_PRIME * lambdaScale );
-            System.out.println("lambdaS2F  " + relaxFit.getLambdaS2F() + " lambdaS2S " + relaxFit.getLambdaS2S());
-            System.out.println("lambdaTauF  " + relaxFit.getLambdaTauF() + " lambdaTauS " + relaxFit.getLambdaTauS());
+            double lambdaScale = 0.125;
+            relaxFit.setLambdas(lambdaScale);
             model.updateCRLB(crlb);
-            double tauM = parameterSet.tauM();
-            double tauS = parameterSet.modelParams().get("Tau_s");
-            double tauF = parameterSet.modelParams().get("Tau_f");
-            double ss2 = parameterSet.modelParams().get("Ss2");
-            double sf2 = parameterSet.modelParams().get("Sf2");
-            double[] parValues = {tauM, sf2, tauF, ss2, tauS};
-            var parNames = model.getParNames();
+
             double[] values = doModelFit(model, relaxFit, molDataValues, key, null);
             System.out.println("Pass 1 Fit");
-            System.out.println("Par Fit Known");
-            for (int i=0;i < values.length;i++) {
-                System.out.printf("%s %.4f %.4f\n", parNames.get(i), values[i], parValues[i]);
-            }
+            dumpFit(values, parValues, parNames);
             crlb = relaxFit.calcCRLB(molDataValues,model, values);
-            if (crlb != null) {
-                model.updateCRLB(crlb);
-            }
-            if (crlb != null) {
-                System.out.print("crlb after pass 1 fit:");
-                for (int i = 0; i < crlb.length; i++) {
-                    System.out.print(" " + crlb[i]);
-                }
-                System.out.println();
-            } else {
-                System.out.println("crlb null");
-            }
+            model.updateCRLB(crlb);
+            dumpCRLB(crlb, "crlb after pass 1 fit");
+            model.updateTauWeights();
+
             values = doModelFit(model, relaxFit, molDataValues, key, values);
             System.out.println("Pass 2 Fit");
-            System.out.println("Par Fit Known");
-            for (int i=0;i < values.length;i++) {
-                System.out.printf("%s %.4f %.4f\n", parNames.get(i), values[i], parValues[i]);
-            }
+            dumpFit(values, parValues, parNames);
+            crlb = relaxFit.calcCRLB(molDataValues,model, values);
+            dumpCRLB(crlb, "crlb after pass 2 fit");
+            model.updateTauWeights();
+
+            values = doModelFit(model, relaxFit, molDataValues, key, values);
+            System.out.println("Pass 3 Fit");
+            dumpFit(values, parValues, parNames);
+            crlb = relaxFit.calcCRLB(molDataValues,model, values);
+            dumpCRLB(crlb, "crlb after pass 3 fit");
+
         }
     }
 

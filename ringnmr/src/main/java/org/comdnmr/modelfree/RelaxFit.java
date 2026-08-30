@@ -13,6 +13,8 @@ import org.comdnmr.data.Fitter;
 import static org.comdnmr.modelfree.RelaxFit.DiffusionType.ANISOTROPIC;
 import static org.comdnmr.modelfree.RelaxFit.DiffusionType.OBLATE;
 import static org.comdnmr.modelfree.RelaxFit.DiffusionType.PROLATE;
+import static org.comdnmr.modelfree.models.MFModelIso2sf.TAU_PRIME;
+
 import org.comdnmr.modelfree.models.MFModel;
 import org.comdnmr.modelfree.models.MFModelAniso;
 import org.comdnmr.modelfree.models.MFModelAniso1;
@@ -96,6 +98,15 @@ public class RelaxFit {
 
     public boolean getLogJMode() {
         return logJMode;
+    }
+
+    public void setLambdas(double lambdaScale) {
+        setLambdaS2F(2.0 * lambdaScale);
+        setLambdaTauF(2.0 * Math.log(10.0) * TAU_PRIME * lambdaScale);
+        setLambdaS2S(2.0 * lambdaScale);
+        setLambdaTauS(2.0 * Math.log(10.0) * TAU_PRIME * lambdaScale );
+        System.out.println("lambdaS2F  " + getLambdaS2F() + " lambdaS2S " + getLambdaS2S());
+        System.out.println("lambdaTauF  " + getLambdaTauF() + " lambdaTauS " + getLambdaTauS());
     }
 
     public double getLambdaS2F() {
@@ -398,9 +409,10 @@ public class RelaxFit {
 
     public double[] calcCRLB(MolDataValues molData, MFModelIso2sf testModel, double[] start) {
         double[][] jValues = molData.getJValues();
+        double[][][] cov = molData.getCovariance();
         CRLBCalc crlbCalc = new CRLBCalc();
         testModel.pars(start);
-        return crlbCalc.cramerRao(testModel, jValues[0], jValues[1], jValues[2], true);
+        return crlbCalc.cramerRao(testModel, jValues[0], cov, true);
     }
 
     double[] calcDeltaSqJ(MolDataValues molData, double[] resPars, MFModel testModel, boolean report) {
@@ -636,6 +648,11 @@ public class RelaxFit {
     public double value(double[] pars, double[][] values) {
         var score = score(pars, false);
         return score.value(getLambdaS2F(), getLambdaS2S(), getLambdaTauF(), getLambdaTauS());
+    }
+
+    public void reportValue(double[] pars) {
+        var score = score(pars, false);
+        score.reportScore(getLambdaS2F(), getLambdaS2S(), getLambdaTauF(), getLambdaTauS());
     }
 
     public double valueMultiResidue(double[] pars, double[][] values) {

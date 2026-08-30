@@ -20,6 +20,47 @@ public class SpectralDensityCalculator {
         useRQ = state;
     }
 
+    /**
+     * J values' full covariance, one 3x3 per field.
+     * Row/column order matches calcJR1R2NOE: {J(0), J(0.87 wH), J(wN)}.
+     */
+    public static double[][][] calcJCovariance(List<R1R2NOEDataValue> dataValues) {
+        int nFields = dataValues.size();
+        double[][][] cov = new double[nFields][3][3];
+        for (int iField = 0; iField < nFields; iField++) {
+            R1R2NOEDataValue v = dataValues.get(iField);
+            double r1 = v.R1;
+            double noe = v.NOE;
+            double d2 = v.relaxObj.getD2();
+            double c2 = v.relaxObj.getC2();
+            double gam = RelaxEquations.GAMMA_N / RelaxEquations.GAMMA_H;
+
+            double j0Mul = 6.0 / (3.0 * d2 + 4.0 * c2);
+            double jNMul = 4.0 / (3.0 * d2 + 4.0 * c2);
+            double dSigDR1  = (noe - 1.0) * gam;
+            double dSigDNOE = r1 * gam;
+
+            // a[i][k] = dJ_i / d(rate_k),  rates = {R1, R2, NOE}
+            double[][] a = {
+                    {j0Mul * (-0.5 - 0.454 * dSigDR1), j0Mul, j0Mul * (-0.454 * dSigDNOE)},
+                    {4.0 * dSigDR1 / (5.0 * d2),       0.0,   4.0 * dSigDNOE / (5.0 * d2)},
+                    {jNMul * (1.0 - 1.249 * dSigDR1),  0.0,   jNMul * (-1.249 * dSigDNOE)},
+            };
+            double[] var = {v.R1err * v.R1err, v.R2err * v.R2err, v.NOEerr * v.NOEerr};
+
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < 3; j++) {
+                    double s = 0.0;
+                    for (int k = 0; k < 3; k++) {
+                        s += a[i][k] * var[k] * a[j][k];
+                    }
+                    cov[iField][i][j] = s;
+                }
+            }
+        }
+        return cov;
+    }
+
     public double value(double[] pars, double[][] values) {
         RelaxEquations relaxEquation = relaxDataValue.relaxObj;
         double ratio = RelaxEquations.GAMMA_N / RelaxEquations.GAMMA_H;

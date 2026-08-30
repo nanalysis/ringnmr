@@ -30,8 +30,11 @@ import java.util.List;
  * @author simonhulse
  */
 public class MFModelIso2sf extends MFModelIso2s {
-
+    private static final double CRLB_CAP_TAU = 10.0;   // ~tau_m in ns: no information
+    private static final double CRLB_CAP_S2  = 1.0;    // full range of 1 - S2
+    private static final double CRLB_FLOOR   = 1.0e-9; // numerical guard only
     public static final double TAU_PRIME = 30.0e-3;
+
 //            return getParValues(tauLower(), 0.0, 0.001, 0.0, TAU_PRIME);
     public enum ORDERPARS {
         TAUM(4) {
@@ -77,7 +80,7 @@ public class MFModelIso2sf extends MFModelIso2s {
             }
             @Override
             public double getLowerBound() {
-                return 0.001;
+                return 0.0;
             }
 
         },
@@ -109,7 +112,7 @@ public class MFModelIso2sf extends MFModelIso2s {
             }
             @Override
             public double getLowerBound() {
-                return 0.15;
+                return 0.0;
             }
         };
 
@@ -119,10 +122,9 @@ public class MFModelIso2sf extends MFModelIso2s {
             this.index = index;
         }
 
-        public int index(boolean hasTau) {
+        public int index() {
             return index;
         }
-
         public abstract void setParam(MFModelIso2sf model, double value);
 
         public abstract double getParam(MFModelIso2sf model);
@@ -136,6 +138,10 @@ public class MFModelIso2sf extends MFModelIso2s {
     double complexityTauF = 0.0;
     double complexityTauS = 0.0;
     double[] crlb = null;
+    // ---- linearisation weights: frozen per pass, never touched during a fit ----
+    private double wTauF = 1.0 / (Math.log(10.0) * TAU_PRIME);   // = c'(0)
+    private double wTauS = 1.0 / (Math.log(10.0) * TAU_PRIME);
+
 
     public MFModelIso2sf(boolean fitTau, double targetTau, double tauFraction,
                          boolean includeEx) {
@@ -249,15 +255,37 @@ public class MFModelIso2sf extends MFModelIso2s {
             }
         }
     }
+    /**
+     * Refresh the linearisation weights from the current parameter values.
+     * Call ONCE between passes, after canonicalise() and before the next fit.
+     * Never call it from inside the objective function.
+     */
+    public void updateTauWeights() {
+        wTauF = 1.0 / (Math.log(10.0) * (tauF + TAU_PRIME));
+        wTauS = 1.0 / (Math.log(10.0) * (tauS + TAU_PRIME));
+    }
 
+    /** 1/CRLB, guarded. Zero means "this parameter contributes no penalty". */
+// caps are in each parameter's own units, so they can't be one constant
+
+    private static double invCrlb(double c, double cap) {
+        if (Double.isNaN(c)) {
+            return 1.0 / cap;                 // fail toward the simple model
+        }
+        return 1.0 / Math.min(Math.max(c, CRLB_FLOOR), cap);
+    }
     public void updateComplexities() {
         if (crlb == null) {
             return;
         }
-        complexityS2F = Math.abs(1.0 - sf2) / crlb[ORDERPARS.SF2.index(fitTau)];
-        complexityS2S = Math.abs(1.0 - ss2) / crlb[ORDERPARS.SS2.index(fitTau)];
-        complexityTauF = Math.log10((tauF + TAU_PRIME) / TAU_PRIME) / crlb[ORDERPARS.TAUF.index(fitTau)];
-        complexityTauS = Math.log10((tauS + TAU_PRIME) / TAU_PRIME) / crlb[ORDERPARS.TAUS.index(fitTau)];
+        complexityS2F  = Math.abs(1.0 - sf2) * invCrlb(crlb[ORDERPARS.SF2.index()],  CRLB_CAP_S2);
+        complexityS2S  = Math.abs(1.0 - ss2) * invCrlb(crlb[ORDERPARS.SS2.index()],  CRLB_CAP_S2);
+        complexityTauF = wTauF * tauF * invCrlb(crlb[ORDERPARS.TAUF.index()], CRLB_CAP_TAU);
+        complexityTauS = wTauS * tauS * invCrlb(crlb[ORDERPARS.TAUS.index()], CRLB_CAP_TAU);
+    }
+
+    public double trueComplexityTauF() {
+        return Math.log10((tauF + TAU_PRIME) / TAU_PRIME) * invCrlb(crlb[ORDERPARS.TAUF.index()], CRLB_CAP_TAU);
     }
 
     @Override
@@ -283,7 +311,9 @@ public class MFModelIso2sf extends MFModelIso2s {
     @Override
     public double[] getStandardPars(double[] pars) {
         pars(pars);
-        return createStandardPars(sf2, tauF, ss2, tauS);
+        double[] newPars =  createStandardPars(sf2, tauF, ss2, tauS);
+        pars(newPars);
+        return newPars;
     }
 
     @Override
