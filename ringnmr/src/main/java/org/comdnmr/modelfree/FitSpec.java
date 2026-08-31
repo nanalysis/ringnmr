@@ -241,7 +241,7 @@ public abstract class FitSpec {
         if (result.isEmpty()) {
             throw new RuntimeException("Could not generate fit result.");
         }
-        double[] values = model.getStandardPars(result.get().getPoint());
+        double[] values = model.canonicalizePars(result.get().getPoint());
 
         return relaxFit.score(values, true);
 

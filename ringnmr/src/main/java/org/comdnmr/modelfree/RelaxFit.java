@@ -105,8 +105,6 @@ public class RelaxFit {
         setLambdaTauF(2.0 * Math.log(10.0) * TAU_PRIME * lambdaScale);
         setLambdaS2S(2.0 * lambdaScale);
         setLambdaTauS(2.0 * Math.log(10.0) * TAU_PRIME * lambdaScale );
-        System.out.println("lambdaS2F  " + getLambdaS2F() + " lambdaS2S " + getLambdaS2S());
-        System.out.println("lambdaTauF  " + getLambdaTauF() + " lambdaTauS " + getLambdaTauS());
     }
 
     public double getLambdaS2F() {

@@ -138,6 +138,10 @@ public abstract class MFModelIso extends MFModel {
         }
     }
 
+    public double[] canonicalizePars(double[] pars) {
+        return pars;
+    }
+
     protected double[] createStandardPars(double sf2, double tauF, double ss2, double tauS) {
         double[] pars;
 

@@ -309,7 +309,13 @@ public class MFModelIso2sf extends MFModelIso2s {
     }
 
     @Override
+    public double[] canonicalizePars(double[] pars) {
+        return getStandardPars(pars);
+    }
+
+    @Override
     public double[] getStandardPars(double[] pars) {
+
         pars(pars);
         double[] newPars =  createStandardPars(sf2, tauF, ss2, tauS);
         pars(newPars);
