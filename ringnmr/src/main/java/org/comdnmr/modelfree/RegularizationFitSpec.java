@@ -196,12 +196,7 @@ public class RegularizationFitSpec extends FitSpec {
     protected RelaxFit initRelaxFit(String key, MolDataValues<? extends RelaxDataValue> data) {
         RelaxFit relaxFit = super.initRelaxFit(key, data);
         relaxFit.setUseLambda(true);
-
-        relaxFit.setUseLambda(true);
-        relaxFit.setLambdaS2F(2.0 * getLambdaScale());
-        relaxFit.setLambdaTauF(2.0 * Math.log(10.0) * TAU_PRIME * getLambdaScale());
-        relaxFit.setLambdaS2S(2.0 * getLambdaScale());
-        relaxFit.setLambdaTauS(2.0 * Math.log(10.0) * TAU_PRIME * getLambdaScale());
+        relaxFit.setLambdas(getLambdaScale());
         return relaxFit;
     }
 
@@ -334,7 +329,6 @@ public class RegularizationFitSpec extends FitSpec {
     public ModelFitResult fit(String key, MolDataValues<?> data, Map<String, OrderParSet> orderParSetMap) {
         RelaxFit relaxFit = initRelaxFit(key, data);
         MFModelIso2sf model = (MFModelIso2sf) getModel("2sf", data);
-       // relaxFit.calcCRLB(data, model);
 
         data.setTestModel(model);
 
@@ -355,11 +349,7 @@ public class RegularizationFitSpec extends FitSpec {
             MolDataValues<? extends RelaxDataValue> replicateData = sampler.sample();
             relaxFit.setRelaxData(key, replicateData);
 
-
             double[] crlb = relaxFit.calcCRLB(replicateData,model);
-            relaxFit.setUseLambda(true);
-            double lambdaScale = 0.125;
-            relaxFit.setLambdas(lambdaScale);
             model.updateCRLB(crlb);
 
             Score score = runFit(relaxFit, model, start, nTry);
