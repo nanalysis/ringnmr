@@ -294,7 +294,7 @@ public class DRefineTest {
             double[] crlb = relaxFit.calcCRLB(molDataValues,model);
             dumpCRLB(crlb, "crlb with start");
             relaxFit.setUseLambda(true);
-            double lambdaScale = 0.0625;
+            double lambdaScale = 0.125;
             relaxFit.setLambdas(lambdaScale);
             model.updateCRLB(crlb);
 
@@ -330,6 +330,7 @@ public class DRefineTest {
                 dumpCRLB(crlb, "crlb after pass 3 fit");
             }
 
+            Assert.assertArrayEquals(parValues, values, 0.1);
         }
     }
 
