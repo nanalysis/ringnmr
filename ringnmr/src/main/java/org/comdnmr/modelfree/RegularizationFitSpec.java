@@ -10,8 +10,6 @@ import org.comdnmr.util.CoMDOptions;
 import org.nmrfx.chemistry.relax.OrderPar;
 import org.nmrfx.chemistry.relax.OrderParSet;
 
-import static org.comdnmr.modelfree.models.MFModelIso2sf.TAU_PRIME;
-
 /**
  * Regularized model-free fitting strategy using the extended
  * ({@code 2sf}) model exclusively.
@@ -344,6 +342,7 @@ public class RegularizationFitSpec extends FitSpec {
         CoMDOptions options = new CoMDOptions(true);
         double[] crossResiduals = new double[nReplicates];
         for (int i = 0; i < nReplicates; i++) {
+            model.applyThreshold(null);
             int nTry = i == 0 ? options.getNTries() : 1;
             long startNs = System.nanoTime();
             MolDataValues<? extends RelaxDataValue> replicateData = sampler.sample();
@@ -363,13 +362,22 @@ public class RegularizationFitSpec extends FitSpec {
 
             scores[i] = runFit(relaxFit, model, score.pars, nTry);
             crlb = relaxFit.calcCRLB(replicateData,model, scores[i].pars);
-
+            MFModelIso2sf.ThresholdedPars tPars = model.calcThreshold(crlb, lambdaScale);
+            if (tPars.anyChanged()) {
+                model.applyThreshold(tPars);
+                scores[i] = runFit(relaxFit, model, score.pars, nTry);
+                crlb = relaxFit.calcCRLB(replicateData,model, scores[i].pars);
+            }
 
             start = scores[i].pars.clone();
             double[] replicateParameters = processParamsAfterFit(scores[i].getPars(), model.fitTau());
             double[] replicateWeights = replicateData.getWeights();
-            for (int k = 0; k < nParameters; k++) parameters[k][i] = replicateParameters[k];
-            for (int j = 0; j < nWeights; j++) weights[j][i] = replicateWeights[j];
+            for (int k = 0; k < nParameters; k++) {
+                parameters[k][i] = replicateParameters[k];
+            }
+            for (int j = 0; j < nWeights; j++) {
+                weights[j][i] = replicateWeights[j];
+            }
             replicateTimes[i] = (System.nanoTime() - startNs) / 1_000_000.0;
             relaxFit.setRelaxData(key, data);
             crossResiduals[i] = relaxFit.maxNormalizedResidual(replicateParameters);

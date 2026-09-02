@@ -15,7 +15,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.math3.optim.PointValuePair;
 import org.comdnmr.data.DataIO;
 import org.comdnmr.data.DynamicsSource;
-import org.comdnmr.datasets.Dataset;
 import org.comdnmr.datasets.ParameterSet;
 import org.comdnmr.modelfree.*;
 import org.comdnmr.modelfree.RelaxFit.DiffusionType;
@@ -24,8 +23,6 @@ import org.comdnmr.util.CoMDPreferences;
 import org.junit.Test;
 import org.junit.Assert;
 import org.nmrfx.chemistry.relax.OrderParSet;
-
-import static org.comdnmr.modelfree.models.MFModelIso2sf.TAU_PRIME;
 
 /**
  *
@@ -297,7 +294,7 @@ public class DRefineTest {
             double[] crlb = relaxFit.calcCRLB(molDataValues,model);
             dumpCRLB(crlb, "crlb with start");
             relaxFit.setUseLambda(true);
-            double lambdaScale = 0.125;
+            double lambdaScale = 0.0625;
             relaxFit.setLambdas(lambdaScale);
             model.updateCRLB(crlb);
 
@@ -321,6 +318,17 @@ public class DRefineTest {
             dumpFit(values, parValues, parNames);
             crlb = relaxFit.calcCRLB(molDataValues,model, values);
             dumpCRLB(crlb, "crlb after pass 3 fit");
+
+            MFModelIso2sf.ThresholdedPars tPars = model.calcThreshold(crlb, lambdaScale);
+            System.out.println(tPars);
+            if (tPars.anyChanged()) {
+                model.applyThreshold(tPars);
+                relaxFit.setLambdas(0.0);
+                values = doModelFit(model, relaxFit, molDataValues, key, values);
+                dumpFit(values, parValues, parNames);
+                crlb = relaxFit.calcCRLB(molDataValues,model, values);
+                dumpCRLB(crlb, "crlb after pass 3 fit");
+            }
 
         }
     }

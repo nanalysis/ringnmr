@@ -112,6 +112,14 @@ public abstract class MFModelIso extends MFModel {
 
         boolean fastOff = (tauF <= 0.0) || (1.0 - sf2 / model.getSN() <= 1e-6);
         boolean slowOn  = (tauS >  0.0) && (1.0 - ss2 > 1e-6);
+        if (!slowOn) {
+            tauS = 0.0;
+            ss2 = 1.0;
+        }
+        if (fastOff) {
+            tauF = 0.0;
+            sf2 = 1.0;
+        }
 
         boolean swap = (fastOff && slowOn)                   // lone mode -> fast
                 || (!fastOff && slowOn && tauF > tauS);      // both on -> order them

@@ -31,11 +31,11 @@ import java.util.List;
  */
 public class MFModelIso2sf extends MFModelIso2s {
     private static final double CRLB_CAP_TAU = 10.0;   // ~tau_m in ns: no information
-    private static final double CRLB_CAP_S2  = 1.0;    // full range of 1 - S2
-    private static final double CRLB_FLOOR   = 1.0e-9; // numerical guard only
+    private static final double CRLB_CAP_S2 = 1.0;    // full range of 1 - S2
+    private static final double CRLB_FLOOR = 1.0e-9; // numerical guard only
     public static final double TAU_PRIME = 30.0e-3;
 
-//            return getParValues(tauLower(), 0.0, 0.001, 0.0, TAU_PRIME);
+    //            return getParValues(tauLower(), 0.0, 0.001, 0.0, TAU_PRIME);
     public enum ORDERPARS {
         TAUM(4) {
             @Override
@@ -47,6 +47,7 @@ public class MFModelIso2sf extends MFModelIso2s {
             public double getParam(MFModelIso2sf model) {
                 return model.tauM;
             }
+
             @Override
             public double getLowerBound() {
                 return 0.0;
@@ -62,6 +63,7 @@ public class MFModelIso2sf extends MFModelIso2s {
             public double getParam(MFModelIso2sf model) {
                 return model.sf2;
             }
+
             @Override
             public double getLowerBound() {
                 return 0.0;
@@ -78,6 +80,7 @@ public class MFModelIso2sf extends MFModelIso2s {
             public double getParam(MFModelIso2sf model) {
                 return model.tauF;
             }
+
             @Override
             public double getLowerBound() {
                 return 0.0;
@@ -94,6 +97,7 @@ public class MFModelIso2sf extends MFModelIso2s {
             public double getParam(MFModelIso2sf model) {
                 return model.ss2;
             }
+
             @Override
             public double getLowerBound() {
                 return 0.0;
@@ -110,6 +114,7 @@ public class MFModelIso2sf extends MFModelIso2s {
             public double getParam(MFModelIso2sf model) {
                 return model.tauS;
             }
+
             @Override
             public double getLowerBound() {
                 return 0.0;
@@ -125,6 +130,7 @@ public class MFModelIso2sf extends MFModelIso2s {
         public int index() {
             return index;
         }
+
         public abstract void setParam(MFModelIso2sf model, double value);
 
         public abstract double getParam(MFModelIso2sf model);
@@ -141,6 +147,7 @@ public class MFModelIso2sf extends MFModelIso2s {
     // ---- linearisation weights: frozen per pass, never touched during a fit ----
     private double wTauF = 1.0 / (Math.log(10.0) * TAU_PRIME);   // = c'(0)
     private double wTauS = 1.0 / (Math.log(10.0) * TAU_PRIME);
+    private ThresholdedPars thresholdedPars = null;
 
 
     public MFModelIso2sf(boolean fitTau, double targetTau, double tauFraction,
@@ -207,7 +214,7 @@ public class MFModelIso2sf extends MFModelIso2s {
         double tauM2TimesTauF2TimesTauS2 = tauM2 * tauF2 * tauS2;
         if ((sf2 / sN) * (1.0 - ss2) < 1.0e-4) {
             tauS = 0.0;
-            ss2  = 1.0;
+            ss2 = 1.0;
         }
         double[] js = new double[omegas.length];
         int index = 0;
@@ -255,6 +262,7 @@ public class MFModelIso2sf extends MFModelIso2s {
             }
         }
     }
+
     /**
      * Refresh the linearisation weights from the current parameter values.
      * Call ONCE between passes, after canonicalise() and before the next fit.
@@ -265,21 +273,23 @@ public class MFModelIso2sf extends MFModelIso2s {
         wTauS = 1.0 / (Math.log(10.0) * (tauS + TAU_PRIME));
     }
 
-    /** 1/CRLB, guarded. Zero means "this parameter contributes no penalty". */
+    /**
+     * 1/CRLB, guarded. Zero means "this parameter contributes no penalty".
+     */
 // caps are in each parameter's own units, so they can't be one constant
-
     private static double invCrlb(double c, double cap) {
         if (Double.isNaN(c)) {
             return 1.0 / cap;                 // fail toward the simple model
         }
         return 1.0 / Math.min(Math.max(c, CRLB_FLOOR), cap);
     }
+
     public void updateComplexities() {
         if (crlb == null) {
             return;
         }
-        complexityS2F  = Math.abs(1.0 - sf2) * invCrlb(crlb[ORDERPARS.SF2.index()],  CRLB_CAP_S2);
-        complexityS2S  = Math.abs(1.0 - ss2) * invCrlb(crlb[ORDERPARS.SS2.index()],  CRLB_CAP_S2);
+        complexityS2F = Math.abs(1.0 - sf2) * invCrlb(crlb[ORDERPARS.SF2.index()], CRLB_CAP_S2);
+        complexityS2S = Math.abs(1.0 - ss2) * invCrlb(crlb[ORDERPARS.SS2.index()], CRLB_CAP_S2);
         complexityTauF = wTauF * tauF * invCrlb(crlb[ORDERPARS.TAUF.index()], CRLB_CAP_TAU);
         complexityTauS = wTauS * tauS * invCrlb(crlb[ORDERPARS.TAUS.index()], CRLB_CAP_TAU);
     }
@@ -313,11 +323,29 @@ public class MFModelIso2sf extends MFModelIso2s {
         return getStandardPars(pars);
     }
 
+    static void canonicalise(MFModelIso2sf model) {
+        final double EPS = 1e-6;
+        double ampF = 1.0 - model.getSf2() / model.getSN();   // amplitude, not tau
+        double ampS = 1.0 - model.getSs2();
+        boolean fastHas = ampF > EPS;
+        boolean slowHas = ampS > EPS;
+
+        boolean swap;
+        if (!fastHas && slowHas) {
+            swap = true;                                       // lone mode -> fast channel
+        } else if (fastHas && slowHas) {
+            swap = model.getTauF() > model.getTauS();           // order; tau = 0 is fastest
+        } else {
+            swap = false;
+        }
+        if (swap) { /* exchange (sf2,tauF) <-> (ss2,tauS), minding the sN scaling */ }
+    }
+
     @Override
     public double[] getStandardPars(double[] pars) {
 
         pars(pars);
-        double[] newPars =  createStandardPars(sf2, tauF, ss2, tauS);
+        double[] newPars = createStandardPars(sf2, tauF, ss2, tauS);
         pars(newPars);
         return newPars;
     }
@@ -366,22 +394,33 @@ public class MFModelIso2sf extends MFModelIso2s {
 
     @Override
     public double[] getLower() {
+        final double[] lower;
         if (includeEx) {
-            return getParValues(tauLower(), 0.0,ORDERPARS.TAUF.getLowerBound(),
+            lower = getParValues(tauLower(), 0.0, ORDERPARS.TAUF.getLowerBound(),
                     0.0, ORDERPARS.TAUS.getLowerBound(), 0.0);
         } else {
-            return getParValues(tauLower(), 0.0, ORDERPARS.TAUF.getLowerBound(),
+            lower = getParValues(tauLower(), 0.0, ORDERPARS.TAUF.getLowerBound(),
                     0.0, ORDERPARS.TAUS.getLowerBound());
         }
+        if (thresholdedPars != null) {
+            thresholdedPars.threshold(lower, true, fitTau);
+        }
+        return lower;
     }
 
     @Override
     public double[] getUpper() {
+        final double[] upper;
         if (includeEx) {
-            return getParValues(tauUpper(), 1.0, 1.5 * SLOW_LIMIT, 1.0, targetTau / 2.0, 100.0);
+            upper = getParValues(tauUpper(), 1.0, 1.5 * SLOW_LIMIT, 1.0, targetTau / 2.0, 100.0);
         } else {
-            return getParValues(tauUpper(), 1.0, 1.5 * SLOW_LIMIT, 1.0, targetTau / 2.0);
+            upper = getParValues(tauUpper(), 1.0, 1.5 * SLOW_LIMIT, 1.0, targetTau / 2.0);
         }
+        if (thresholdedPars != null) {
+            thresholdedPars.threshold(upper, false, fitTau);
+        }
+
+        return upper;
     }
 
     @Override
@@ -396,5 +435,63 @@ public class MFModelIso2sf extends MFModelIso2s {
         } else {
             return "model2sf";
         }
+    }
+
+    public void applyThreshold(ThresholdedPars thresholdedPars) {
+        this.thresholdedPars = thresholdedPars;
+    }
+
+    public record ThresholdedPars(boolean slow, boolean fast) {
+        public boolean anyChanged() {
+            return slow || fast;
+        }
+
+        /*
+                this.sf2 = pars[parStart];
+        this.tauF = pars[parStart + 1];
+        this.ss2 = pars[parStart + 2];
+        this.tauS = pars[parStart + 3];
+    }
+
+         */
+        public void threshold(double[] bound, boolean lower, boolean fitTaau) {
+            int start = fitTaau ? 1 : 0;
+            double tauLimit = lower ? 0.0 : 1.0e-6;
+            double ssLimit = lower ? 1.0 - 1.0e-6 : 1.0;
+            if (fast) {
+                bound[start + 1] = tauLimit;
+            }
+            if (slow) {
+                bound[start + 2] = ssLimit;
+                bound[start + 3] = tauLimit;
+            }
+        }
+    }
+
+    /**
+     * Apply the soft-threshold rule where the optimizer's gradients vanish.
+     * Returns true if anything moved, so the caller knows to refit.
+     */
+    public ThresholdedPars calcThreshold(double[] crlbNow, double stringency) {
+        boolean changedSlow = false;
+        boolean changedFast = false;
+        if (tauS > 0.0) {
+            double c = crlbNow[ORDERPARS.TAUS.index()];
+            double snr = (c > 0.0 && !Double.isInfinite(c)) ? tauS / c : 0.0;
+            if (snr < stringency) {
+                tauS = 0.0;          // the slow mode stands or falls
+                ss2 = 1.0;           // as one unit
+                changedSlow = true;
+            }
+        }
+        if (tauF > 0.0) {
+            double c = crlbNow[ORDERPARS.TAUF.index()];
+            double snr = (c > 0.0 && !Double.isInfinite(c)) ? tauF / c : 0.0;
+            if (snr < stringency) {
+                tauF = 0.0;          // Sf2 stays free — it is always present
+                changedFast = true;
+            }
+        }
+        return new ThresholdedPars(changedSlow, changedFast);
     }
 }
