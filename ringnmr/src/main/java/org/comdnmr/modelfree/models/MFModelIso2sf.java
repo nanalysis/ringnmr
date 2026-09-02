@@ -319,14 +319,11 @@ public class MFModelIso2sf extends MFModelIso2s {
     }
 
     @Override
-    public double[] canonicalizePars(double[] pars) {
-        return getStandardPars(pars);
-    }
-
-    static void canonicalise(MFModelIso2sf model) {
+    public double[] canonicalizePars(double[] currentPars) {
+        pars(currentPars);
         final double EPS = 1e-6;
-        double ampF = 1.0 - model.getSf2() / model.getSN();   // amplitude, not tau
-        double ampS = 1.0 - model.getSs2();
+        double ampF = 1.0 - sf2 / getSN();   // amplitude, not tau
+        double ampS = 1.0 - ss2;
         boolean fastHas = ampF > EPS;
         boolean slowHas = ampS > EPS;
 
@@ -334,11 +331,32 @@ public class MFModelIso2sf extends MFModelIso2s {
         if (!fastHas && slowHas) {
             swap = true;                                       // lone mode -> fast channel
         } else if (fastHas && slowHas) {
-            swap = model.getTauF() > model.getTauS();           // order; tau = 0 is fastest
+            swap = tauF > tauS;           // order; tau = 0 is fastest
         } else {
             swap = false;
         }
-        if (swap) { /* exchange (sf2,tauF) <-> (ss2,tauS), minding the sN scaling */ }
+        final double[] pars;
+        final int start;
+        if (fitTau) {
+            pars = new double[5];
+            pars[0] = tauM;
+            start = 1;
+        } else {
+            pars = new double[4];
+            start = 0;
+        }
+        if (swap) {
+            pars[start] = ss2;
+            pars[start + 1] = tauS;
+            pars[start + 2] = sf2;
+            pars[start + 3] = tauF;
+        } else {
+            pars[start] = sf2;
+            pars[start + 1] = tauF;
+            pars[start + 2] = ss2;
+            pars[start + 3] = tauS;
+        }
+        return pars;
     }
 
     @Override
