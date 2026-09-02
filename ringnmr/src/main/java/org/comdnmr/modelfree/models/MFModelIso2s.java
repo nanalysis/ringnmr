@@ -110,9 +110,20 @@ public class MFModelIso2s extends MFModelIso1s {
         return calc(omegas);
     }
 
-    @Override
-    public boolean checkParConstraints() {
-        return tauS < tauM;
+    /** Smooth constraint penalties: tau ceilings and the fast/slow ordering.
+     *  Each violation is expressed as a fraction of the tau range, so the three
+     *  terms are commensurate and one constant scales all of them. */
+    public double constraintPenalty() {
+        double range = 0.5 * tauM;
+        if (!(range > 0.0)) {
+            return 0.0;
+        }
+        double p = 0.0;
+
+        p += sq(Math.max(0.0, tauS - range) / range);
+
+        double CONSTRAINT_WEIGHT = 5000.0;
+        return CONSTRAINT_WEIGHT * p;
     }
 
     @Override

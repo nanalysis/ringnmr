@@ -79,7 +79,7 @@ public record ParameterSet(int residueNumber, String residueName, double tauM, M
         }
 
         double[] jValues = model.calc(relaxObj.getOmegas(), pars);
-        if (!model.checkParConstraints()) {
+        if (model.constraintPenalty() > 1.0e-3) {
             throw new IllegalArgumentException(String.format(
                 "Residue %d: parameters are not physically valid for model '%s' " +
                 "(internal correlation times must be smaller than TauM)",

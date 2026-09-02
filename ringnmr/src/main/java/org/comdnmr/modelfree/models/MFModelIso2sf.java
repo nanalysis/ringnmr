@@ -396,9 +396,29 @@ public class MFModelIso2sf extends MFModelIso2s {
         return calc(omegas);
     }
 
-    @Override
-    public boolean checkParConstraints() {
-        return (tauF * 5.0) < tauS && tauS < (0.5 * tauM);
+
+    /** Smooth constraint penalties: tau ceilings and the fast/slow ordering.
+     *  Each violation is expressed as a fraction of the tau range, so the three
+     *  terms are commensurate and one constant scales all of them. */
+    public double constraintPenalty() {
+        double range = 0.5 * tauM;
+        if (!(range > 0.0)) {
+            return 0.0;
+        }
+        double p = 0.0;
+
+        // ceilings: an internal motion must stay well inside the tumbling time
+        p += sq(Math.max(0.0, tauF - range) / range);
+        p += sq(Math.max(0.0, tauS - range) / range);
+
+        // ordering: only meaningful when both modes actually carry amplitude
+        double ampF = 1.0 - sf2 / getSN();
+        double ampS = 1.0 - ss2;
+        if (ampF > 1.0e-6 && ampS > 1.0e-6) {
+            p += sq(Math.max(0.0, tauF - tauS) / range);
+        }
+        double CONSTRAINT_WEIGHT = 5000.0;
+        return CONSTRAINT_WEIGHT * p;
     }
 
     @Override

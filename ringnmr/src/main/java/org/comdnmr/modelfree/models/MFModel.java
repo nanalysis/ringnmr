@@ -54,8 +54,8 @@ public abstract class MFModel {
 
     public abstract double[] getUpper();
 
-    public boolean checkParConstraints() {
-        return true;
+    public double constraintPenalty() {
+        return 0.0;
     }
 
     public double calcWeight() {

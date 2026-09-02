@@ -146,6 +146,8 @@ public abstract class MFModelIso extends MFModel {
         }
     }
 
+    static double sq(double x) { return x * x; }
+
     public double[] canonicalizePars(double[] pars) {
         return pars;
     }

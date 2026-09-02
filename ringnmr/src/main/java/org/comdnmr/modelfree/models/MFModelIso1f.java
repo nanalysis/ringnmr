@@ -107,10 +107,13 @@ public class MFModelIso1f extends MFModelIso1 {
     }
 
     @Override
-    public boolean checkParConstraints() {
-        return tauF < tauM;
+    public double constraintPenalty() {
+        double range = 0.5 * tauM;
+        if (!(range > 0.0)) {
+            return 0.0;
+        }
+        return sq(Math.max(0.0, tauF - range) / range);
     }
-
     @Override
     public double[] getStart() {
         if (includeEx) {

@@ -107,8 +107,12 @@ public class MFModelIso1s extends MFModelIso {
     }
 
     @Override
-    public boolean checkParConstraints() {
-        return tauS < tauM;
+    public double constraintPenalty() {
+        double range = 0.5 * tauM;
+        if (!(range > 0.0)) {
+            return 0.0;
+        }
+        return sq(Math.max(0.0, tauS - range) / range);
     }
 
     @Override

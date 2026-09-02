@@ -504,6 +504,7 @@ public class RelaxFit {
         double sumComplexityS2S = 0.0;
         double sumComplexityTauF = 0.0;
         double sumComplexityTauS = 0.0;
+        double penalty = 0.0;
         for (MolDataValues molData : molDataValues.values()) {
             MFModel testModel = molData.getTestModel();
             double[] resPars;
@@ -528,9 +529,7 @@ public class RelaxFit {
             }
             n += (int) Math.round(resResult[5]);
 
-            if (!testModel.checkParConstraints()) {
-                parsOK = false;
-            }
+            penalty += testModel.constraintPenalty();
         }
         double avgComplexityS2F = sumComplexityS2F / nComplex;
         double avgComplexityS2S = sumComplexityS2S / nComplex;
@@ -538,9 +537,9 @@ public class RelaxFit {
         double avgComplexityTauS = sumComplexityTauS / nComplex;
         Score score;
         if (keepPars) {
-            score = new Score(sumSq, n, pars.length, parsOK, avgComplexityS2F, avgComplexityS2S, avgComplexityTauF, avgComplexityTauS, pars.clone());
+            score = new Score(sumSq, n, pars.length, penalty, avgComplexityS2F, avgComplexityS2S, avgComplexityTauF, avgComplexityTauS, pars.clone());
         } else {
-            score = new Score(sumSq, n, pars.length, parsOK, avgComplexityS2F, avgComplexityS2S, avgComplexityTauF, avgComplexityTauS);
+            score = new Score(sumSq, n, pars.length, penalty, avgComplexityS2F, avgComplexityS2S, avgComplexityTauF, avgComplexityTauS);
         }
         return score;
     }
@@ -658,6 +657,7 @@ public class RelaxFit {
         int n = 0;
         boolean parsOK = true;
         int parStart = 1;
+        double penalty = 0.0;
         for (MolDataValues molData : molDataValues.values()) {
             MFModel testModel = molData.getTestModel();
             int nResPars = testModel.getNPars();
@@ -677,15 +677,10 @@ public class RelaxFit {
                 sumSq += delta2;
                 n += 3;
             }
-            if (!testModel.checkParConstraints()) {
-                parsOK = false;
-            }
+            penalty += testModel.constraintPenalty();
         }
-        double rms = n == 0 ? 0.0 : Math.sqrt(sumSq / n);
-        if (!parsOK) {
-            rms += n * 10.0;
-        }
-        return rms;
+
+        return sumSq + penalty;
     }
 
     public double valueDMat(double[] pars, double[][] values) {
