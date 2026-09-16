@@ -369,15 +369,23 @@ public class RegularizationFitSpec extends FitSpec {
                 crlb = relaxFit.calcCRLB(replicateData,model, scores[i].pars);
             }
             int kS = MFModelIso2sf.ORDERPARS.TAUS.index();
+            /*
+                        pars[start] = ss2;
+            pars[start + 1] = tauS;
+            pars[start + 2] = sf2;
+            pars[start + 3] = tauF;
+
+             */
             double cS = crlb[kS];
-            double tS = scores[i].pars[MFModelIso2sf.ORDERPARS.TAUS.index()];
-            double tF = scores[i].pars[MFModelIso2sf.ORDERPARS.TAUF.index()];
-            double tM = scores[i].pars[MFModelIso2sf.ORDERPARS.TAUM.index()];
-            double ss2 = scores[i].pars[MFModelIso2sf.ORDERPARS.SS2.index()];
+            double tM = scores[i].pars[0];
+            double sf2 = scores[i].pars[1];
+            double tF = scores[i].pars[2];
+            double ss2 = scores[i].pars[3];
+            double tS = scores[i].pars[4];
             double snrS = (cS > 0.0 && !Double.isInfinite(cS)) ? tS / cS : 0.0;
 
-            System.out.printf("CRLBDIAG %s %d %.6f %.6e %.4f %.6f %.6f %.6f %s%n",
-                    key, i, tS, cS, snrS, ss2, tF, tM,
+            System.out.printf("CRLBDIAG %s %d %.6f %.6e %.4f %.6f %.6f %.6f %.6f %s%n",
+                    key, i, tS, cS, snrS, ss2, tF, sf2, tM,
                     (snrS < lambdaScale ? "WOULD_SNAP" : "keep"));
 
             start = scores[i].pars.clone();

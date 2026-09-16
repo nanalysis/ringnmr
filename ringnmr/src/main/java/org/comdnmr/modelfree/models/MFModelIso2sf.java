@@ -397,9 +397,11 @@ public class MFModelIso2sf extends MFModelIso2s {
     }
 
 
-    /** Smooth constraint penalties: tau ceilings and the fast/slow ordering.
-     *  Each violation is expressed as a fraction of the tau range, so the three
-     *  terms are commensurate and one constant scales all of them. */
+    /**
+     * Smooth constraint penalties: tau ceilings and the fast/slow ordering.
+     * Each violation is expressed as a fraction of the tau range, so the three
+     * terms are commensurate and one constant scales all of them.
+     */
     public double constraintPenalty() {
         double range = 0.5 * tauM;
         if (!(range > 0.0)) {
@@ -450,9 +452,9 @@ public class MFModelIso2sf extends MFModelIso2s {
     public double[] getUpper() {
         final double[] upper;
         if (includeEx) {
-            upper = getParValues(tauUpper(), 1.0, 1.5 * SLOW_LIMIT, 1.0, targetTau / 2.0, 100.0);
+            upper = getParValues(tauUpper(), 1.0, targetTau / 2.0, 1.0, targetTau / 2.0, 100.0);
         } else {
-            upper = getParValues(tauUpper(), 1.0, 1.5 * SLOW_LIMIT, 1.0, targetTau / 2.0);
+            upper = getParValues(tauUpper(), 1.0, targetTau / 2.0, 1.0, targetTau / 2.0);
         }
         if (thresholdedPars != null) {
             thresholdedPars.threshold(upper, false, fitTau);
