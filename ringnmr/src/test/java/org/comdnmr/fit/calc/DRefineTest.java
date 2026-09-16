@@ -223,6 +223,7 @@ public class DRefineTest {
             Optional<PointValuePair> fitOpt = relaxFit.fitResidueToModel(start, lower, upper, 1);
             if (fitOpt.isPresent()) {
                 values = fitOpt.get().getPoint();
+                Score score =  relaxFit.score(values, true);
                 values = model.getStandardPars(values);
             }
             relaxFit.reportValue(values);

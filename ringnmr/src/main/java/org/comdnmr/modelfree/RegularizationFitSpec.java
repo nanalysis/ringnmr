@@ -368,6 +368,17 @@ public class RegularizationFitSpec extends FitSpec {
                 scores[i] = runFit(relaxFit, model, score.pars, nTry);
                 crlb = relaxFit.calcCRLB(replicateData,model, scores[i].pars);
             }
+            int kS = MFModelIso2sf.ORDERPARS.TAUS.index();
+            double cS = crlb[kS];
+            double tS = scores[i].pars[MFModelIso2sf.ORDERPARS.TAUS.index()];
+            double tF = scores[i].pars[MFModelIso2sf.ORDERPARS.TAUF.index()];
+            double tM = scores[i].pars[MFModelIso2sf.ORDERPARS.TAUM.index()];
+            double ss2 = scores[i].pars[MFModelIso2sf.ORDERPARS.SS2.index()];
+            double snrS = (cS > 0.0 && !Double.isInfinite(cS)) ? tS / cS : 0.0;
+
+            System.out.printf("CRLBDIAG %s %d %.6f %.6e %.4f %.6f %.6f %.6f %s%n",
+                    key, i, tS, cS, snrS, ss2, tF, tM,
+                    (snrS < lambdaScale ? "WOULD_SNAP" : "keep"));
 
             start = scores[i].pars.clone();
             double[] replicateParameters = processParamsAfterFit(scores[i].getPars(), model.fitTau());

@@ -62,7 +62,8 @@ public class Score {
     }
 
     public void reportScore(double lambdaS2F, double lambdaS2S, double lambdaTauF, double lambdaTauS) {
-        String outStr = String.format("RSS %.5f ComplexityS2F %.5f lambdaS2F %.5f  ComplexityS2S %.5f lambdaS2S %.5f ComplexityTauF %.5f lambdaTauF %.5f ComplexityTauS %.5f lambdaTauS %.5f", rss
+        String outStr = String.format("RSS %.5f Penalty %.5f ComplexityS2F %.5f lambdaS2F %.5f  ComplexityS2S %.5f lambdaS2S %.5f ComplexityTauF %.5f lambdaTauF %.5f ComplexityTauS %.5f lambdaTauS %.5f",
+                rss, penalty
                 , complexityS2F, lambdaS2F
                 , complexityS2S, lambdaS2S
                 , complexityTauF, lambdaTauF
