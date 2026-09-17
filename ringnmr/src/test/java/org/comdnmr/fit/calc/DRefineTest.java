@@ -223,7 +223,7 @@ public class DRefineTest {
             Optional<PointValuePair> fitOpt = relaxFit.fitResidueToModel(start, lower, upper, 1);
             if (fitOpt.isPresent()) {
                 values = fitOpt.get().getPoint();
-                Score score =  relaxFit.score(values, true);
+                Score score = relaxFit.score(values, true);
                 values = model.getStandardPars(values);
             }
             relaxFit.reportValue(values);
@@ -256,11 +256,12 @@ public class DRefineTest {
 
     public void dumpFit(double[] values, double[] parValues, List<String> parNames) {
         System.out.println("Par Fit Known");
-        for (int i=0;i < values.length;i++) {
+        for (int i = 0; i < values.length; i++) {
             System.out.printf("%s %.4f %.4f\n", parNames.get(i), values[i], parValues[i]);
         }
 
     }
+
     @Test
     public void testModel2sf() throws IOException {
         File file = new File("src/test/data/sim_relax_data.csv");
@@ -270,7 +271,7 @@ public class DRefineTest {
         File truthFile = new File("src/test/data/sim_relax_truth.csv");
         List<ParameterSet> parameterSets = ParameterSet.fromFile(truthFile, "2sf");
         Map<Integer, ParameterSet> parameterSetMap = new HashMap<>();
-        for (ParameterSet parameterSet: parameterSets) {
+        for (ParameterSet parameterSet : parameterSets) {
             parameterSetMap.put(parameterSet.residueNumber(), parameterSet);
         }
 
@@ -292,7 +293,7 @@ public class DRefineTest {
             MolDataValues molDataValues = d.getValue();
             IO.println(data.get(key));
 
-            double[] crlb = relaxFit.calcCRLB(molDataValues,model);
+            double[] crlb = relaxFit.calcCRLB(molDataValues, model);
             dumpCRLB(crlb, "crlb with start");
             relaxFit.setUseLambda(true);
             double lambdaScale = 0.125;
@@ -302,7 +303,7 @@ public class DRefineTest {
             double[] values = doModelFit(model, relaxFit, molDataValues, key, null);
             System.out.println("Pass 1 Fit");
             dumpFit(values, parValues, parNames);
-            crlb = relaxFit.calcCRLB(molDataValues,model, values);
+            crlb = relaxFit.calcCRLB(molDataValues, model, values);
             model.updateCRLB(crlb);
             dumpCRLB(crlb, "crlb after pass 1 fit");
             model.updateTauWeights();
@@ -310,14 +311,14 @@ public class DRefineTest {
             values = doModelFit(model, relaxFit, molDataValues, key, values);
             System.out.println("Pass 2 Fit");
             dumpFit(values, parValues, parNames);
-            crlb = relaxFit.calcCRLB(molDataValues,model, values);
+            crlb = relaxFit.calcCRLB(molDataValues, model, values);
             dumpCRLB(crlb, "crlb after pass 2 fit");
             model.updateTauWeights();
 
             values = doModelFit(model, relaxFit, molDataValues, key, values);
             System.out.println("Pass 3 Fit");
             dumpFit(values, parValues, parNames);
-            crlb = relaxFit.calcCRLB(molDataValues,model, values);
+            crlb = relaxFit.calcCRLB(molDataValues, model, values);
             dumpCRLB(crlb, "crlb after pass 3 fit");
 
             MFModelIso2sf.ThresholdedPars tPars = model.calcThreshold(crlb, lambdaScale);
@@ -327,7 +328,7 @@ public class DRefineTest {
                 relaxFit.setLambdas(0.0);
                 values = doModelFit(model, relaxFit, molDataValues, key, values);
                 dumpFit(values, parValues, parNames);
-                crlb = relaxFit.calcCRLB(molDataValues,model, values);
+                crlb = relaxFit.calcCRLB(molDataValues, model, values);
                 dumpCRLB(crlb, "crlb after pass 3 fit");
             }
 
@@ -344,11 +345,10 @@ public class DRefineTest {
         File truthFile = new File("src/test/data/sim_relax_truth.csv");
         List<ParameterSet> parameterSets = ParameterSet.fromFile(truthFile, "2sf");
         Map<Integer, ParameterSet> parameterSetMap = new HashMap<>();
-        for (ParameterSet parameterSet: parameterSets) {
+        for (ParameterSet parameterSet : parameterSets) {
             parameterSetMap.put(parameterSet.residueNumber(), parameterSet);
         }
 
-        RelaxFit relaxFit = new RelaxFit();
         double tau = 10.0;
         MFModelIso2sf model = new MFModelIso2sf(true, tau, 0.1, false);
 
@@ -366,14 +366,61 @@ public class DRefineTest {
         for (var d : data.entrySet()) {
             String key = d.getKey();
             if (!key.equals("1:11.N")) {
-                continue;
+              //  continue;
             }
-
-            MolDataValues molDataValues = d.getValue();
-            var x = fitSpec.fit(key,molDataValues,orderParSetMap);
             Integer residueNum = Integer.valueOf(key.split(":")[1].split("\\.")[0]);
             ParameterSet parameterSet = parameterSetMap.get(residueNum);
-            System.out.println("x : " + x);
+            double[] parValues = getCurrentTruePars(parameterSet);
+            var parNames = model.getParNames();
+
+            MolDataValues molDataValues = d.getValue();
+            double lambdaScale = 1.0e-6;
+            RelaxFit relaxFit = fitSpec.initRelaxFit(key, molDataValues);
+
+
+            model.applyThreshold(null);
+            int nTry =  5 ;
+
+
+            relaxFit.setRelaxData(key, molDataValues);
+            molDataValues.setTestModel(model);
+
+            double[] crlb = relaxFit.calcCRLB(molDataValues, model);
+            model.updateCRLB(crlb);
+
+            Score score = fitSpec.runFit(relaxFit, model, null, nTry);
+            crlb = relaxFit.calcCRLB(molDataValues, model, score.getPars());
+            model.updateCRLB(crlb);
+            model.updateTauWeights();
+
+            score = fitSpec.runFit(relaxFit, model, score.getPars(), nTry);
+            crlb = relaxFit.calcCRLB(molDataValues, model, score.getPars());
+            model.updateTauWeights();
+
+            score = fitSpec.runFit(relaxFit, model, score.getPars(), nTry);
+            crlb = relaxFit.calcCRLB(molDataValues, model, score.getPars());
+            MFModelIso2sf.ThresholdedPars tPars = model.calcThreshold(crlb, lambdaScale);
+            if (tPars.anyChanged()) {
+                double[] pars = model.getPars();
+                model.applyThreshold(tPars);
+                score = fitSpec.runFit(relaxFit, model, pars, nTry);
+                crlb = relaxFit.calcCRLB(molDataValues, model, score.getPars());
+            }
+            int kS = MFModelIso2sf.ORDERPARS.TAUS.index();
+            double cS = crlb[kS];
+            double tM = score.getPars()[0];
+            double sf2 = score.getPars()[1];
+            double tF = score.getPars()[2];
+            double ss2 = score.getPars()[3];
+            double tS = score.getPars()[4];
+            double snrS = (cS > 0.0 && !Double.isInfinite(cS)) ? tS / cS : 0.0;
+
+            System.out.printf("CRLBDIAG key %s try %d tauS %.6f cS %.6e snrS %.4f ss2 %.6f tauF %.6f sf2 %.6f tauM %.6f keep %s%n",
+                    key, 0, tS, cS, snrS, ss2, tF, sf2, tM,
+                    (snrS < lambdaScale ? "WOULD_SNAP" : "keep"));
+
+            dumpFit(score.getPars(), parValues, parNames);
+
         }
 
     }

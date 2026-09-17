@@ -109,7 +109,7 @@ public class FitR1R2NOEModelTest {
     @Test
     public void testModel2() {
         String modelName = "2sf";
-        double tau = 100.0;
+        double tau = 20.0;
         double[] pars = {0.3, 0.0, 0.3, 0.2};
         double[] sfs = {600.0e6, 800.0e6};
 

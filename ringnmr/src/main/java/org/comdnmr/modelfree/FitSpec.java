@@ -230,12 +230,13 @@ public abstract class FitSpec {
      * @return a {@link Score} summarizing the fit quality and best-fit parameters
      * @throws RuntimeException if the optimizer fails to converge
      */
-    protected Score runFit(RelaxFit relaxFit, MFModelIso model, double[] start, int nTry) {
+    public Score runFit(RelaxFit relaxFit, MFModelIso model, double[] start, int nTry) {
         if (start == null) {
             start = model.getStart();
         }
-        double[] lower = getLower(model);
+        double[] lower = model.getLower();
         double[] upper = model.getUpper();
+        fixStart(start, lower, upper);
 
         Optional<PointValuePair> result = relaxFit.fitResidueToModel(start, lower, upper, nTry);
         if (result.isEmpty()) {
@@ -245,6 +246,14 @@ public abstract class FitSpec {
 
         return relaxFit.score(values, true);
 
+    }
+
+    protected void fixStart(double[] start, double[] lower, double[] upper) {
+        for (int i=0;i<lower.length;i++) {
+            if ((start[i] < lower[i] ) || (start[i] > upper[i])) {
+                start[i] = (lower[i] + upper[i]) / 2.0;
+            }
+        }
     }
 
     // ── TOML serialization ──────────────────────────────────────────────
@@ -424,7 +433,7 @@ public abstract class FitSpec {
      * @param data measured relaxation values
      * @return a ready-to-use {@link RelaxFit}
      */
-    protected RelaxFit initRelaxFit(String key, MolDataValues<?> data) {
+    public RelaxFit initRelaxFit(String key, MolDataValues<?> data) {
         RelaxFit relaxFit = new RelaxFit();
         relaxFit.setFitJ(fitJ);
         if (moietyType == MoietyType.AMIDE) {

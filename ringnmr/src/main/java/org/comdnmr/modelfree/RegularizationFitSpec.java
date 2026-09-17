@@ -191,7 +191,7 @@ public class RegularizationFitSpec extends FitSpec {
      * strengths.</p>
      */
     @Override
-    protected RelaxFit initRelaxFit(String key, MolDataValues<? extends RelaxDataValue> data) {
+    public RelaxFit initRelaxFit(String key, MolDataValues<? extends RelaxDataValue> data) {
         RelaxFit relaxFit = super.initRelaxFit(key, data);
         relaxFit.setUseLambda(true);
         relaxFit.setLambdas(getLambdaScale());
@@ -365,7 +365,8 @@ public class RegularizationFitSpec extends FitSpec {
             MFModelIso2sf.ThresholdedPars tPars = model.calcThreshold(crlb, lambdaScale);
             if (tPars.anyChanged()) {
                 model.applyThreshold(tPars);
-                scores[i] = runFit(relaxFit, model, score.pars, nTry);
+                double[] pars = model.getPars();
+                scores[i] = runFit(relaxFit, model, pars, nTry);
                 crlb = relaxFit.calcCRLB(replicateData,model, scores[i].pars);
             }
             int kS = MFModelIso2sf.ORDERPARS.TAUS.index();
@@ -376,17 +377,17 @@ public class RegularizationFitSpec extends FitSpec {
             pars[start + 3] = tauF;
 
              */
-            double cS = crlb[kS];
-            double tM = scores[i].pars[0];
-            double sf2 = scores[i].pars[1];
-            double tF = scores[i].pars[2];
-            double ss2 = scores[i].pars[3];
-            double tS = scores[i].pars[4];
-            double snrS = (cS > 0.0 && !Double.isInfinite(cS)) ? tS / cS : 0.0;
+//            double cS = crlb[kS];
+//            double tM = scores[i].pars[0];
+//            double sf2 = scores[i].pars[1];
+//            double tF = scores[i].pars[2];
+//            double ss2 = scores[i].pars[3];
+//            double tS = scores[i].pars[4];
+//            double snrS = (cS > 0.0 && !Double.isInfinite(cS)) ? tS / cS : 0.0;
 
-            System.out.printf("CRLBDIAG %s %d %.6f %.6e %.4f %.6f %.6f %.6f %.6f %s%n",
-                    key, i, tS, cS, snrS, ss2, tF, sf2, tM,
-                    (snrS < lambdaScale ? "WOULD_SNAP" : "keep"));
+//            System.out.printf("CRLBDIAG %s %d %.6f %.6e %.4f %.6f %.6f %.6f %.6f %s%n",
+//                    key, i, tS, cS, snrS, ss2, tF, sf2, tM,
+//                    (snrS < lambdaScale ? "WOULD_SNAP" : "keep"));
 
             start = scores[i].pars.clone();
             double[] replicateParameters = processParamsAfterFit(scores[i].getPars(), model.fitTau());

@@ -34,6 +34,9 @@ public class MFModelIso2sf extends MFModelIso2s {
     private static final double CRLB_CAP_S2 = 1.0;    // full range of 1 - S2
     private static final double CRLB_FLOOR = 1.0e-9; // numerical guard only
     public static final double TAU_PRIME = 30.0e-3;
+    private static final double ORDER_WEIGHT = 5000.0;  // stiff: labelling
+    private static final double CEILING_WEIGHT = 250.0;  // soft: physical prior
+    private static final double CEILING_ONSET = 0.5;  // fraction of tau_m
 
     //            return getParValues(tauLower(), 0.0, 0.001, 0.0, TAU_PRIME);
     public enum ORDERPARS {
@@ -359,6 +362,26 @@ public class MFModelIso2sf extends MFModelIso2s {
         return pars;
     }
 
+    public double[] getPars() {
+        double[] pars;
+        int start;
+        if (fitTau) {
+            pars = new double[5];
+            pars[0] = tauM;
+            start = 1;
+        } else {
+            pars = new double[4];
+            start = 0;
+        }
+        pars[start] = sf2;
+        pars[start + 1] = tauF;
+        pars[start + 2] = ss2;
+        pars[start + 3] = tauS;
+
+        return pars;
+
+    }
+
     @Override
     public double[] getStandardPars(double[] pars) {
 
@@ -403,24 +426,23 @@ public class MFModelIso2sf extends MFModelIso2s {
      * terms are commensurate and one constant scales all of them.
      */
     public double constraintPenalty() {
-        double range = 0.5 * tauM;
-        if (!(range > 0.0)) {
-            return 0.0;
-        }
         double p = 0.0;
-
-        // ceilings: an internal motion must stay well inside the tumbling time
-        p += sq(Math.max(0.0, tauF - range) / range);
-        p += sq(Math.max(0.0, tauS - range) / range);
+        double onset = CEILING_ONSET * tauM;
+        for (double tau : new double[]{tauF, tauS}) {
+            double over = tau - onset;
+            if (over > 0.0) {
+                p += CEILING_WEIGHT * sq(over / tauM);
+            }
+        }
 
         // ordering: only meaningful when both modes actually carry amplitude
+        double ORDER_WEIGHT = 5000.0;
         double ampF = 1.0 - sf2 / getSN();
         double ampS = 1.0 - ss2;
         if (ampF > 1.0e-6 && ampS > 1.0e-6) {
-            p += sq(Math.max(0.0, tauF - tauS) / range);
+            p += sq(Math.max(0.0, tauF - tauS) / tauM) * ORDER_WEIGHT;
         }
-        double CONSTRAINT_WEIGHT = 5000.0;
-        return CONSTRAINT_WEIGHT * p;
+        return p;
     }
 
     @Override
