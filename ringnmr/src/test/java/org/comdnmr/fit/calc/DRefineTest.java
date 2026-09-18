@@ -365,8 +365,8 @@ public class DRefineTest {
 
         for (var d : data.entrySet()) {
             String key = d.getKey();
-            if (!key.equals("1:11.N")) {
-              //  continue;
+            if (!key.equals("1:37.N")) {
+                continue;
             }
             Integer residueNum = Integer.valueOf(key.split(":")[1].split("\\.")[0]);
             ParameterSet parameterSet = parameterSetMap.get(residueNum);
@@ -415,9 +415,9 @@ public class DRefineTest {
             double tS = score.getPars()[4];
             double snrS = (cS > 0.0 && !Double.isInfinite(cS)) ? tS / cS : 0.0;
 
-            System.out.printf("CRLBDIAG key %s try %d tauS %.6f cS %.6e snrS %.4f ss2 %.6f tauF %.6f sf2 %.6f tauM %.6f keep %s%n",
+            System.out.printf("CRLBDIAG key %s try %d tauS %.6f cS %.6e snrS %.4f ss2 %.6f tauF %.6f sf2 %.6f tauM %.6f keep %s rms %.3f%n",
                     key, 0, tS, cS, snrS, ss2, tF, sf2, tM,
-                    (snrS < lambdaScale ? "WOULD_SNAP" : "keep"));
+                    (snrS < lambdaScale ? "WOULD_SNAP" : "keep"), score.rms());
 
             dumpFit(score.getPars(), parValues, parNames);
 
