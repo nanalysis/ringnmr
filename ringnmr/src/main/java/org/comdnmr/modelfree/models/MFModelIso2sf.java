@@ -36,7 +36,7 @@ public class MFModelIso2sf extends MFModelIso2s {
     public static final double TAU_PRIME = 30.0e-3;
     private static final double ORDER_WEIGHT = 5000.0;  // stiff: labelling
     private static final double CEILING_WEIGHT = 250.0;  // soft: physical prior
-    private static final double CEILING_ONSET = 0.5;  // fraction of tau_m
+    private static final double CEILING_ONSET = 0.4;  // fraction of tau_m
 
     //            return getParValues(tauLower(), 0.0, 0.001, 0.0, TAU_PRIME);
     public enum ORDERPARS {
