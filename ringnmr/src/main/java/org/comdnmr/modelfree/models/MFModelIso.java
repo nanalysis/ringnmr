@@ -159,12 +159,12 @@ public abstract class MFModelIso extends MFModel {
         if (this instanceof MFModelIso2sf mfModelIso2sf) {
             sN = mfModelIso2sf.getSN();
         }
+        boolean fastOff = (1.0 - sf2 / sN <= 1e-6);
+        boolean slowOn  = (tauS > 0.0) && (1.0 - ss2 > 1e-6);
 
-        boolean fastOff = (tauF <= 0.0) || (1.0 - sf2 / sN <= 1e-6);
-        boolean slowOn  = (tauS >  0.0) && (1.0 - ss2 > 1e-6);
+        boolean swap = (fastOff && slowOn && tauS < SLOW_LIMIT)   // lone mode -> fast, only if it IS fast
+                || (!fastOff && slowOn && tauF > tauS);           // both on -> order them        int start;
 
-        boolean swap = (fastOff && slowOn)                   // lone mode -> fast
-                || (!fastOff && slowOn && tauF > tauS);      // both on -> order them
         int start;
         if (fitTau) {
             pars = new double[5];
