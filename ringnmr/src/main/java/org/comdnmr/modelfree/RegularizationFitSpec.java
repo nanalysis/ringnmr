@@ -330,7 +330,9 @@ public class RegularizationFitSpec extends FitSpec {
         return params;
     }
 
-    Score fitOnce(MFModelIso2sf model, RelaxFit relaxFit, MolDataValues<? extends RelaxDataValue> replicateData, String key, double[] start, int nTry) {
+    public record FitOnceResult(Score score, double[] crlb) {}
+
+    public FitOnceResult doFit(MFModelIso2sf model, RelaxFit relaxFit, MolDataValues<? extends RelaxDataValue> replicateData, String key, double[] start, int nTry) {
         CoMDOptions options = new CoMDOptions(true);
         model.applyThreshold(null);
         relaxFit.setRelaxData(key, replicateData);
@@ -368,7 +370,7 @@ public class RegularizationFitSpec extends FitSpec {
             score = runFit(relaxFit, model, pars, nTry);
             crlb = relaxFit.calcCRLB(replicateData, model, score.pars);
         }
-        return score;
+        return new FitOnceResult(score, crlb);
     }
 
     /**
@@ -411,9 +413,9 @@ public class RegularizationFitSpec extends FitSpec {
 
         data.setTestModel(model);
         CoMDOptions options = new CoMDOptions(true);
+        int nTry = options.getNTries();
 
-        Score fullScore = fitOnce(model, relaxFit, data, key, null, options.getNTries());
-
+        FitOnceResult initialFitResult = doFit(model, relaxFit, data, key, null, nTry);
 
         int nParameters = model.getNPars();
         int nWeights = data.getNSpectralDensities();
@@ -427,10 +429,9 @@ public class RegularizationFitSpec extends FitSpec {
         double[] crossResiduals = new double[nReplicates];
         for (int i = 0; i < nReplicates; i++) {
             long startNs = System.nanoTime();
-            int nTry = i == 0 ? options.getNTries() : 1;
             MolDataValues<? extends RelaxDataValue> replicateData = sampler.sample();
-            scores[i] = fitOnce(model, relaxFit, data, key, start, nTry);
-
+            FitOnceResult fitOnceResult = doFit(model, relaxFit, replicateData, key, start, nTry);
+            scores[i] = fitOnceResult.score;
 
             start = scores[i].pars.clone();
             double[] replicateParameters = processParamsAfterFit(scores[i].getPars(), model.fitTau());
@@ -447,7 +448,7 @@ public class RegularizationFitSpec extends FitSpec {
         }
 
         Pair<double[], double[]> parameterEstimates = computeStatistics(parameters, weights);
-        double[] fitParameters = fullScore.pars;
+        double[] fitParameters = initialFitResult.score.pars;
         double[] fitErrors = parameterEstimates.getRight();
 
         orderParSetMap.computeIfAbsent(KEY, ky -> new OrderParSet(ky));

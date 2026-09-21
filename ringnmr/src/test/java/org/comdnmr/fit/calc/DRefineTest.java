@@ -405,64 +405,36 @@ public class DRefineTest {
 
 
 
-                double[][] jv = molDataValues.getJValues();   // [0]=omegas, [1]=J, [2]=errors
-                double sv = 0, se = 0;
-                for (double v : jv[1]) sv += v;
-                for (double v : jv[2]) se += v;
-                System.out.printf("   J sum %.9e  err sum %.9e%n", sv, se);
                 model.applyThreshold(null);
-                int nTry = 1;
+                int nTry = 5;
 
 
                 relaxFit.setRelaxData(key, molDataValues);
                 molDataValues.setTestModel(model);
 
+                RegularizationFitSpec.FitOnceResult fitOnceResult = ((RegularizationFitSpec) fitSpec).doFit(model, relaxFit, molDataValues, key, null, nTry);
 
-                relaxFit.setLambdas(0.0);
-                double[] crlb0 = relaxFit.calcCRLB(molDataValues, model);
-                model.updateCRLB(crlb0);
-                Score unpen = fitSpec.runFit(relaxFit, model, null, nTry);
-                double[] up = unpen.getPars();
 
-                relaxFit.setLambdas(lambdaScale);          // the builder's lambdaScale
-                model.pars(up);
-                model.updateTauWeights();          // w = c'(tau_unpenalized)  ← the whole point
-                double[] crlb = relaxFit.calcCRLB(molDataValues, model, up);
-                model.updateCRLB(crlb);
-                Score score = fitSpec.runFit(relaxFit, model, up, nTry);
+                if (false) {
+                    Score score = fitOnceResult.score();
+                    double[] crlb = fitOnceResult.crlb();
 
-                crlb = relaxFit.calcCRLB(molDataValues, model, score.getPars());
-                model.updateCRLB(crlb);
-                model.updateTauWeights();
+                    int kS = MFModelIso2sf.ORDERPARS.TAUS.index();
+                    double cS = crlb[kS];
+                    double tM = score.getPars()[0];
+                    double sf2 = score.getPars()[1];
+                    double tF = score.getPars()[2];
+                    double ss2 = score.getPars()[3];
+                    double tS = score.getPars()[4];
+                    double snrS = (cS > 0.0 && !Double.isInfinite(cS)) ? tS / cS : 0.0;
 
-                score = fitSpec.runFit(relaxFit, model, score.getPars(), nTry);
-                crlb = relaxFit.calcCRLB(molDataValues, model, score.getPars());
-                model.updateTauWeights();
-
-                score = fitSpec.runFit(relaxFit, model, score.getPars(), nTry);
-                crlb = relaxFit.calcCRLB(molDataValues, model, score.getPars());
-                MFModelIso2sf.ThresholdedPars tPars = model.calcThreshold(crlb, lambdaScale);
-                if (tPars.anyChanged()) {
-                    double[] pars = model.getPars();
-                    model.applyThreshold(tPars);
-                    score = fitSpec.runFit(relaxFit, model, pars, nTry);
-                    crlb = relaxFit.calcCRLB(molDataValues, model, score.getPars());
+                    System.out.printf("CRLBDIAG key %s try %d tauS %.6f cS %.6e snrS %.4f ss2 %.6f tauF %.6f sf2 %.6f tauM %.6f keep %s rms %.3f%n",
+                            key, 0, tS, cS, snrS, ss2, tF, sf2, tM,
+                            (snrS < lambdaScale ? "WOULD_SNAP" : "keep"), score.rms());
                 }
-                int kS = MFModelIso2sf.ORDERPARS.TAUS.index();
-                double cS = crlb[kS];
-                double tM = score.getPars()[0];
-                double sf2 = score.getPars()[1];
-                double tF = score.getPars()[2];
-                double ss2 = score.getPars()[3];
-                double tS = score.getPars()[4];
-                double snrS = (cS > 0.0 && !Double.isInfinite(cS)) ? tS / cS : 0.0;
 
-                System.out.printf("CRLBDIAG key %s try %d tauS %.6f cS %.6e snrS %.4f ss2 %.6f tauF %.6f sf2 %.6f tauM %.6f keep %s rms %.3f%n",
-                        key, 0, tS, cS, snrS, ss2, tF, sf2, tM,
-                        (snrS < lambdaScale ? "WOULD_SNAP" : "keep"), score.rms());
-
-                dumpFit(score.getPars(), parValues, parNames);
-                results.add(score);
+                dumpFit(fitOnceResult.score().getPars(), parValues, parNames);
+                results.add(fitOnceResult.score());
 
             }
         }
