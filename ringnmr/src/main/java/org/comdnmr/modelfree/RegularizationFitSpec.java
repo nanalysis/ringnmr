@@ -349,25 +349,24 @@ public class RegularizationFitSpec extends FitSpec {
         model.updateTauWeights();          // w = c'(tau_unpenalized)  ← the whole point
         double[] crlb = relaxFit.calcCRLB(replicateData, model, up);
         model.updateCRLB(crlb);
-        Score score = runFit(relaxFit, model, up, nTry);
+        Score score = runFit(relaxFit, model, up, 1);
 
-
-
+        
         crlb = relaxFit.calcCRLB(replicateData, model, score.pars);
         model.updateCRLB(crlb);
         model.updateTauWeights();
 
-        score = runFit(relaxFit, model, score.pars, nTry);
+        score = runFit(relaxFit, model, score.pars, 1);
         crlb = relaxFit.calcCRLB(replicateData, model, score.pars);
         model.updateTauWeights();
 
-        score = runFit(relaxFit, model, score.pars, nTry);
+        score = runFit(relaxFit, model, score.pars, 1);
         crlb = relaxFit.calcCRLB(replicateData, model, score.pars);
         MFModelIso2sf.ThresholdedPars tPars = model.calcThreshold(crlb, lambdaScale);
         if (tPars.anyChanged()) {
             model.applyThreshold(tPars);
             double[] pars = model.getPars();
-            score = runFit(relaxFit, model, pars, nTry);
+            score = runFit(relaxFit, model, pars, 1);
             crlb = relaxFit.calcCRLB(replicateData, model, score.pars);
         }
         return new FitOnceResult(score, crlb);

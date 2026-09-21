@@ -19,6 +19,7 @@ import org.comdnmr.datasets.ParameterSet;
 import org.comdnmr.modelfree.*;
 import org.comdnmr.modelfree.RelaxFit.DiffusionType;
 import org.comdnmr.modelfree.models.*;
+import org.comdnmr.util.CoMDOptions;
 import org.comdnmr.util.CoMDPreferences;
 import org.junit.Test;
 import org.junit.Assert;
@@ -369,6 +370,10 @@ public class DRefineTest {
 
         FitSpec fitSpec = builder.build();
         Map<String, OrderParSet> orderParSetMap = new ConcurrentHashMap<>();
+        CoMDOptions options = new CoMDOptions(true);
+        int nTry = 5;
+        System.out.println("NTRY " + nTry);
+
 
         List<Score> results = new ArrayList<>();
         List<String> parNames = null;
@@ -406,7 +411,6 @@ public class DRefineTest {
 
 
                 model.applyThreshold(null);
-                int nTry = 5;
 
 
                 relaxFit.setRelaxData(key, molDataValues);
@@ -415,7 +419,7 @@ public class DRefineTest {
                 RegularizationFitSpec.FitOnceResult fitOnceResult = ((RegularizationFitSpec) fitSpec).doFit(model, relaxFit, molDataValues, key, null, nTry);
 
 
-                if (false) {
+                if (true) {
                     Score score = fitOnceResult.score();
                     double[] crlb = fitOnceResult.crlb();
 
