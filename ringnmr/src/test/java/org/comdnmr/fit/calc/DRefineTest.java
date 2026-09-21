@@ -22,6 +22,8 @@ import org.comdnmr.modelfree.models.*;
 import org.comdnmr.util.CoMDPreferences;
 import org.junit.Test;
 import org.junit.Assert;
+import org.nmrfx.chemistry.Atom;
+import org.nmrfx.chemistry.MoleculeFactory;
 import org.nmrfx.chemistry.relax.OrderParSet;
 
 /**
@@ -336,13 +338,17 @@ public class DRefineTest {
         }
     }
 
-    @Test
-    public void testModel2sfReg() throws IOException {
-        File file = new File("src/test/data/sim_relax_data.csv");
+    public R1R2NOEStructureValues getData(String fileName) throws IOException {
+        File file = new File(fileName);
         DataIO.loadRelaxationTextFile(file);
         FitR1R2NOEModel fitModel = new FitR1R2NOEModel();
         var data = fitModel.getData(false);
-        File truthFile = new File("src/test/data/sim_relax_truth.csv");
+        return data;
+    }
+
+    @Test
+    public void testModel2sfReg() throws IOException {
+        File truthFile = new File("src/test/data/trial_truth.csv");
         List<ParameterSet> parameterSets = ParameterSet.fromFile(truthFile, "2sf");
         Map<Integer, ParameterSet> parameterSetMap = new HashMap<>();
         for (ParameterSet parameterSet : parameterSets) {
@@ -350,79 +356,131 @@ public class DRefineTest {
         }
 
         double tau = 10.0;
-        MFModelIso2sf model = new MFModelIso2sf(true, tau, 0.1, false);
+        double lambdaScale = 0.25;
 
         FitSpec.Builder<?> builder;
         builder = new RegularizationFitSpec.Builder()
                 .useMedian(true)
-                .lambdaScale(1.0)
+                .lambdaScale(lambdaScale)
                 .fitTauM(true)
                 .tauM(10.1)
-                .nReplicates(10);
+                .tauMFraction(0.5)
+                .nReplicates(1);
 
         FitSpec fitSpec = builder.build();
         Map<String, OrderParSet> orderParSetMap = new ConcurrentHashMap<>();
 
-        for (var d : data.entrySet()) {
-            String key = d.getKey();
-            if (!key.equals("1:37.N")) {
-                continue;
+        List<Score> results = new ArrayList<>();
+        List<String> parNames = null;
+        double[] parValues = null;
+        int iter = -1;
+        for (int s = 0; s < 10; s++) {
+            iter++;
+            var mol = MoleculeFactory.getActive();
+            if (mol != null) {
+                mol.relaxationSetMap().clear();
+                for (Atom atom : mol.getAtomArray()) {
+                    atom.getRelaxationData().clear();     // exact accessor name may differ
+                }
             }
-            Integer residueNum = Integer.valueOf(key.split(":")[1].split("\\.")[0]);
-            ParameterSet parameterSet = parameterSetMap.get(residueNum);
-            double[] parValues = getCurrentTruePars(parameterSet);
-            var parNames = model.getParNames();
+            MFModelIso2sf model = new MFModelIso2sf(true, tau, 0.25, false);
+            parNames = model.getParNames();
+            var data = getData("src/test/data/trial_relax_n0.5_s" + s + ".csv");
+            for (var d : data.entrySet()) {
+                String key = d.getKey();
+                if (!key.equals("1:41.N")) {
+                    continue;
+                }
+                Integer residueNum = Integer.valueOf(key.split(":")[1].split("\\.")[0]);
+                ParameterSet parameterSet = parameterSetMap.get(residueNum);
+                parValues = getCurrentTruePars(parameterSet);
 
-            MolDataValues molDataValues = d.getValue();
-            double lambdaScale = 1.0e-6;
-            RelaxFit relaxFit = fitSpec.initRelaxFit(key, molDataValues);
+                MolDataValues molDataValues = d.getValue();
+                RelaxFit relaxFit = fitSpec.initRelaxFit(key, molDataValues);
+                System.out.printf("iter %d  nData %d  nJ %d%n",
+                        s, molDataValues.getData().size(), molDataValues.getNSpectralDensities());
+                System.out.printf("iter %d seed %d  wTauF %.6f  wTauS %.6f  sf2 %.4f ss2 %.4f tauF %.4f tauS %.4f%n",
+                        iter, s, model.getWTauF(), model.getWTauS(),
+                        model.getSf2(), model.getSs2(), model.getTauF(), model.getTauS());
 
 
-            model.applyThreshold(null);
-            int nTry =  5 ;
+
+                double[][] jv = molDataValues.getJValues();   // [0]=omegas, [1]=J, [2]=errors
+                double sv = 0, se = 0;
+                for (double v : jv[1]) sv += v;
+                for (double v : jv[2]) se += v;
+                System.out.printf("   J sum %.9e  err sum %.9e%n", sv, se);
+                model.applyThreshold(null);
+                int nTry = 1;
 
 
-            relaxFit.setRelaxData(key, molDataValues);
-            molDataValues.setTestModel(model);
+                relaxFit.setRelaxData(key, molDataValues);
+                molDataValues.setTestModel(model);
 
-            double[] crlb = relaxFit.calcCRLB(molDataValues, model);
-            model.updateCRLB(crlb);
 
-            Score score = fitSpec.runFit(relaxFit, model, null, nTry);
-            crlb = relaxFit.calcCRLB(molDataValues, model, score.getPars());
-            model.updateCRLB(crlb);
-            model.updateTauWeights();
+                relaxFit.setLambdas(0.0);
+                double[] crlb0 = relaxFit.calcCRLB(molDataValues, model);
+                model.updateCRLB(crlb0);
+                Score unpen = fitSpec.runFit(relaxFit, model, null, nTry);
+                double[] up = unpen.getPars();
 
-            score = fitSpec.runFit(relaxFit, model, score.getPars(), nTry);
-            crlb = relaxFit.calcCRLB(molDataValues, model, score.getPars());
-            model.updateTauWeights();
+                relaxFit.setLambdas(lambdaScale);          // the builder's lambdaScale
+                model.pars(up);
+                model.updateTauWeights();          // w = c'(tau_unpenalized)  ← the whole point
+                double[] crlb = relaxFit.calcCRLB(molDataValues, model, up);
+                model.updateCRLB(crlb);
+                Score score = fitSpec.runFit(relaxFit, model, up, nTry);
 
-            score = fitSpec.runFit(relaxFit, model, score.getPars(), nTry);
-            crlb = relaxFit.calcCRLB(molDataValues, model, score.getPars());
-            MFModelIso2sf.ThresholdedPars tPars = model.calcThreshold(crlb, lambdaScale);
-            if (tPars.anyChanged()) {
-                double[] pars = model.getPars();
-                model.applyThreshold(tPars);
-                score = fitSpec.runFit(relaxFit, model, pars, nTry);
                 crlb = relaxFit.calcCRLB(molDataValues, model, score.getPars());
+                model.updateCRLB(crlb);
+                model.updateTauWeights();
+
+                score = fitSpec.runFit(relaxFit, model, score.getPars(), nTry);
+                crlb = relaxFit.calcCRLB(molDataValues, model, score.getPars());
+                model.updateTauWeights();
+
+                score = fitSpec.runFit(relaxFit, model, score.getPars(), nTry);
+                crlb = relaxFit.calcCRLB(molDataValues, model, score.getPars());
+                MFModelIso2sf.ThresholdedPars tPars = model.calcThreshold(crlb, lambdaScale);
+                if (tPars.anyChanged()) {
+                    double[] pars = model.getPars();
+                    model.applyThreshold(tPars);
+                    score = fitSpec.runFit(relaxFit, model, pars, nTry);
+                    crlb = relaxFit.calcCRLB(molDataValues, model, score.getPars());
+                }
+                int kS = MFModelIso2sf.ORDERPARS.TAUS.index();
+                double cS = crlb[kS];
+                double tM = score.getPars()[0];
+                double sf2 = score.getPars()[1];
+                double tF = score.getPars()[2];
+                double ss2 = score.getPars()[3];
+                double tS = score.getPars()[4];
+                double snrS = (cS > 0.0 && !Double.isInfinite(cS)) ? tS / cS : 0.0;
+
+                System.out.printf("CRLBDIAG key %s try %d tauS %.6f cS %.6e snrS %.4f ss2 %.6f tauF %.6f sf2 %.6f tauM %.6f keep %s rms %.3f%n",
+                        key, 0, tS, cS, snrS, ss2, tF, sf2, tM,
+                        (snrS < lambdaScale ? "WOULD_SNAP" : "keep"), score.rms());
+
+                dumpFit(score.getPars(), parValues, parNames);
+                results.add(score);
+
             }
-            int kS = MFModelIso2sf.ORDERPARS.TAUS.index();
-            double cS = crlb[kS];
-            double tM = score.getPars()[0];
-            double sf2 = score.getPars()[1];
-            double tF = score.getPars()[2];
-            double ss2 = score.getPars()[3];
-            double tS = score.getPars()[4];
-            double snrS = (cS > 0.0 && !Double.isInfinite(cS)) ? tS / cS : 0.0;
-
-            System.out.printf("CRLBDIAG key %s try %d tauS %.6f cS %.6e snrS %.4f ss2 %.6f tauF %.6f sf2 %.6f tauM %.6f keep %s rms %.3f%n",
-                    key, 0, tS, cS, snrS, ss2, tF, sf2, tM,
-                    (snrS < lambdaScale ? "WOULD_SNAP" : "keep"), score.rms());
-
-            dumpFit(score.getPars(), parValues, parNames);
-
         }
+        for (var name : parNames) {
+            System.out.printf("%s ", name);
+        }
+        System.out.println("rms");
+        for (var v : parValues) {
+            System.out.printf("%.4f ", v);
+        }
+        System.out.println("0.0");
 
+        for (var row : results) {
+            for (double v : row.getPars()) {
+                System.out.printf("%.4f ", v);
+            }
+            System.out.printf("%.4f\n", row.rms());
+        }
     }
 
     @Test

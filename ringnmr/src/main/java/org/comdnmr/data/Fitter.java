@@ -66,6 +66,7 @@ public class Fitter {
     }
 
     public PointValuePair fit(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma, int nTry) throws Exception {
+        random.setSeed(1);
         this.start = start;
         this.lowerBounds = lowerBounds.clone();
         this.upperBounds = upperBounds.clone();

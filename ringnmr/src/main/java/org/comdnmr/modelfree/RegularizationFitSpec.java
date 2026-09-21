@@ -56,7 +56,9 @@ import org.nmrfx.chemistry.relax.OrderParSet;
  */
 public class RegularizationFitSpec extends FitSpec {
 
-    /** Key used when registering results in the {@link OrderParSet} map. */
+    /**
+     * Key used when registering results in the {@link OrderParSet} map.
+     */
     private static final String KEY = "REGULARIZATION";
 
     /**
@@ -102,17 +104,21 @@ public class RegularizationFitSpec extends FitSpec {
      */
     public static class Builder extends FitSpec.Builder<Builder> {
 
-        private static final double DEFAULT_LAMBDA_SCALE  = 1.0;
+        private static final double DEFAULT_LAMBDA_SCALE = 1.0;
 
-        private double lambdaScale  = DEFAULT_LAMBDA_SCALE;
+        private double lambdaScale = DEFAULT_LAMBDA_SCALE;
 
-        /** Returns the default regularization strength for S²f (0.5). */
-        public static double getDefaultLambdaScale()   { return DEFAULT_LAMBDA_SCALE; }
+        /**
+         * Returns the default regularization strength for S²f (0.5).
+         */
+        public static double getDefaultLambdaScale() {
+            return DEFAULT_LAMBDA_SCALE;
+        }
 
         private void validateLambda(String name, double value) {
             if (value < 0.0) {
                 throw new IllegalArgumentException(
-                    String.format("%s must be >= 0.0, got: %s", name, value)
+                        String.format("%s must be >= 0.0, got: %s", name, value)
                 );
             }
         }
@@ -151,11 +157,15 @@ public class RegularizationFitSpec extends FitSpec {
      */
     protected RegularizationFitSpec(Builder builder) {
         super(builder);
-        this.lambdaScale  = builder.lambdaScale;
+        this.lambdaScale = builder.lambdaScale;
     }
 
-    /** Returns the S²f regularization strength. */
-    double getLambdaScale()  { return lambdaScale; }
+    /**
+     * Returns the S²f regularization strength.
+     */
+    double getLambdaScale() {
+        return lambdaScale;
+    }
 
 
     @Override
@@ -198,35 +208,35 @@ public class RegularizationFitSpec extends FitSpec {
         return relaxFit;
     }
 
-   /**
-    * Processes output of 2sf fit.
-    *
-    * <ul>
-    *   <li><em>No local motions</em> (both S² above {@code S2_THOLD}):
-    *       S²f = S²s = 1, τf = τs = 0.</li>
-    *   <li><em>One fast motion</em> (τ below {@code TAU_THOLD}):
-    *       S²f = S², τf = 0, S²s = 1, τs = 0.</li>
-    *   <li><em>One fast motion with non-zero τ_f</em>
-    *       (τ in (TAU_THOLD, SLOW_LIMIT]):
-    *       S²f = S², τf = τ, S²s = 1, τs = 0.</li>
-    *   <li><em>One slow motion</em> (τ above {@code SLOW_LIMIT}):
-    *       S²f = 1, τf = 0, S²s = S², τs = τ.</li>
-    *   <li><em>Two instantaneous motions</em> (both τ below {@code TAU_THOLD}):
-    *       S²f = S²1 × S²2, τf = τs = 0, S²s = 1.</li>
-    *   <li><em>Two motions, one instantaneous</em>:
-    *       The instantaneous timescale is mapped to τf = 0.</li>
-    *   <li><em>Two independent motions</em>:
-    *       Sorted so that τf &lt; τs.</li>
-    * </ul>
-    *
-    * @param params parameter values from the optimizer
-    * @return the processed parameter array
-    */
+    /**
+     * Processes output of 2sf fit.
+     *
+     * <ul>
+     *   <li><em>No local motions</em> (both S² above {@code S2_THOLD}):
+     *       S²f = S²s = 1, τf = τs = 0.</li>
+     *   <li><em>One fast motion</em> (τ below {@code TAU_THOLD}):
+     *       S²f = S², τf = 0, S²s = 1, τs = 0.</li>
+     *   <li><em>One fast motion with non-zero τ_f</em>
+     *       (τ in (TAU_THOLD, SLOW_LIMIT]):
+     *       S²f = S², τf = τ, S²s = 1, τs = 0.</li>
+     *   <li><em>One slow motion</em> (τ above {@code SLOW_LIMIT}):
+     *       S²f = 1, τf = 0, S²s = S², τs = τ.</li>
+     *   <li><em>Two instantaneous motions</em> (both τ below {@code TAU_THOLD}):
+     *       S²f = S²1 × S²2, τf = τs = 0, S²s = 1.</li>
+     *   <li><em>Two motions, one instantaneous</em>:
+     *       The instantaneous timescale is mapped to τf = 0.</li>
+     *   <li><em>Two independent motions</em>:
+     *       Sorted so that τf &lt; τs.</li>
+     * </ul>
+     *
+     * @param params parameter values from the optimizer
+     * @return the processed parameter array
+     */
     protected double[] processParamsAfterFit(double[] params, boolean fitTau) {
         int start = fitTau ? 1 : 0;
-        double s1   = params[start];      // sf2
+        double s1 = params[start];      // sf2
         double tau1 = params[start + 1];  // tau_f
-        double s2   = params[start + 2];  // ss2
+        double s2 = params[start + 2];  // ss2
         double tau2 = params[start + 3];  // tau_s
 
         double sf2, tauf, ss2, taus;
@@ -241,31 +251,55 @@ public class RegularizationFitSpec extends FitSpec {
                 tauf = taus = 0.0;
             } else if (s1 > S2_THOLD || s2 > S2_THOLD) {
                 // One local motion
-                double s   = (s1 > S2_THOLD) ? s2 : s1;
+                double s = (s1 > S2_THOLD) ? s2 : s1;
                 double tau = (s1 > S2_THOLD) ? tau2 : tau1;
                 if (tau < TAU_THOLD) {
-                    sf2 = s;   tauf = 0.0; ss2 = 1.0; taus = 0.0;
+                    sf2 = s;
+                    tauf = 0.0;
+                    ss2 = 1.0;
+                    taus = 0.0;
                 } else if (tau < MFModelIso2sf.SLOW_LIMIT) {
-                    sf2 = s;   tauf = tau; ss2 = 1.0; taus = 0.0;
+                    sf2 = s;
+                    tauf = tau;
+                    ss2 = 1.0;
+                    taus = 0.0;
                 } else {
-                    sf2 = 1.0; tauf = 0.0; ss2 = s;   taus = tau;
+                    sf2 = 1.0;
+                    tauf = 0.0;
+                    ss2 = s;
+                    taus = tau;
                 }
             } else {
                 if (tau1 < TAU_THOLD && tau2 < TAU_THOLD) {
                     // Both motions are instantaneous: collapse to effective order parameter (Model 1)
-                    sf2 = s1 * s2; tauf = 0.0; ss2 = 1.0; taus = 0.0;
+                    sf2 = s1 * s2;
+                    tauf = 0.0;
+                    ss2 = 1.0;
+                    taus = 0.0;
                 } else if (tau1 < TAU_THOLD) {
                     // tau1 is instantaneous: assign it to the fast slot (Model 2s)
-                    sf2 = s1; tauf = 0.0; ss2 = s2; taus = tau2;
+                    sf2 = s1;
+                    tauf = 0.0;
+                    ss2 = s2;
+                    taus = tau2;
                 } else if (tau2 < TAU_THOLD) {
                     // tau2 is instantaneous: assign it to the fast slot (Model 2s)
-                    sf2 = s2; tauf = 0.0; ss2 = s1; taus = tau1;
+                    sf2 = s2;
+                    tauf = 0.0;
+                    ss2 = s1;
+                    taus = tau1;
                 } else {
                     // Both timescales are resolvable: sort so that tauf < taus (Model 2sf)
                     if (tau1 < tau2) {
-                        sf2 = s1; tauf = tau1; ss2 = s2; taus = tau2;
+                        sf2 = s1;
+                        tauf = tau1;
+                        ss2 = s2;
+                        taus = tau2;
                     } else {
-                        sf2 = s2; tauf = tau2; ss2 = s1; taus = tau1;
+                        sf2 = s2;
+                        tauf = tau2;
+                        ss2 = s1;
+                        taus = tau1;
                     }
                 }
             }
@@ -276,18 +310,65 @@ public class RegularizationFitSpec extends FitSpec {
             // Only suppress slow motion if ss2≈1, or if tau_s < tau_f (unphysical
             // ordering that cannot be resolved by sorting).
             if (s2 > S2_THOLD || (tau2 > TAU_THOLD && tau2 < tau1)) {
-                sf2 = s1; tauf = tau1; ss2 = 1.0; taus = 0.0;
+                sf2 = s1;
+                tauf = tau1;
+                ss2 = 1.0;
+                taus = 0.0;
             } else {
-                sf2 = s1; tauf = tau1; ss2 = s2; taus = tau2;
+                sf2 = s1;
+                tauf = tau1;
+                ss2 = s2;
+                taus = tau2;
             }
         }
 
-        params[start]     = sf2;
+        params[start] = sf2;
         params[start + 1] = tauf;
         params[start + 2] = ss2;
         params[start + 3] = taus;
 
         return params;
+    }
+
+    Score fitOnce(MFModelIso2sf model, RelaxFit relaxFit, MolDataValues<? extends RelaxDataValue> replicateData, String key, double[] start, int nTry) {
+        CoMDOptions options = new CoMDOptions(true);
+        model.applyThreshold(null);
+        relaxFit.setRelaxData(key, replicateData);
+
+
+        relaxFit.setLambdas(0.0);
+        double[] crlb0 = relaxFit.calcCRLB(replicateData, model);
+        model.updateCRLB(crlb0);
+        Score unpen = runFit(relaxFit, model, null, nTry);
+        double[] up = unpen.getPars();
+
+        relaxFit.setLambdas(lambdaScale);          // the builder's lambdaScale
+        model.pars(up);
+        model.updateTauWeights();          // w = c'(tau_unpenalized)  ← the whole point
+        double[] crlb = relaxFit.calcCRLB(replicateData, model, up);
+        model.updateCRLB(crlb);
+        Score score = runFit(relaxFit, model, up, nTry);
+
+
+
+        crlb = relaxFit.calcCRLB(replicateData, model, score.pars);
+        model.updateCRLB(crlb);
+        model.updateTauWeights();
+
+        score = runFit(relaxFit, model, score.pars, nTry);
+        crlb = relaxFit.calcCRLB(replicateData, model, score.pars);
+        model.updateTauWeights();
+
+        score = runFit(relaxFit, model, score.pars, nTry);
+        crlb = relaxFit.calcCRLB(replicateData, model, score.pars);
+        MFModelIso2sf.ThresholdedPars tPars = model.calcThreshold(crlb, lambdaScale);
+        if (tPars.anyChanged()) {
+            model.applyThreshold(tPars);
+            double[] pars = model.getPars();
+            score = runFit(relaxFit, model, pars, nTry);
+            crlb = relaxFit.calcCRLB(replicateData, model, score.pars);
+        }
+        return score;
     }
 
     /**
@@ -329,6 +410,10 @@ public class RegularizationFitSpec extends FitSpec {
         MFModelIso2sf model = (MFModelIso2sf) getModel("2sf", data);
 
         data.setTestModel(model);
+        CoMDOptions options = new CoMDOptions(true);
+
+        Score fullScore = fitOnce(model, relaxFit, data, key, null, options.getNTries());
+
 
         int nParameters = model.getNPars();
         int nWeights = data.getNSpectralDensities();
@@ -339,55 +424,13 @@ public class RegularizationFitSpec extends FitSpec {
         Score[] scores = new Score[nReplicates];
         double[] replicateTimes = new double[nReplicates];
         double[] start = null;
-        CoMDOptions options = new CoMDOptions(true);
         double[] crossResiduals = new double[nReplicates];
         for (int i = 0; i < nReplicates; i++) {
-            model.applyThreshold(null);
-            int nTry = i == 0 ? options.getNTries() : 1;
             long startNs = System.nanoTime();
+            int nTry = i == 0 ? options.getNTries() : 1;
             MolDataValues<? extends RelaxDataValue> replicateData = sampler.sample();
-            relaxFit.setRelaxData(key, replicateData);
+            scores[i] = fitOnce(model, relaxFit, data, key, start, nTry);
 
-            double[] crlb = relaxFit.calcCRLB(replicateData,model);
-            model.updateCRLB(crlb);
-
-            Score score = runFit(relaxFit, model, start, nTry);
-            crlb = relaxFit.calcCRLB(replicateData,model, score.pars);
-            model.updateCRLB(crlb);
-            model.updateTauWeights();
-
-            score = runFit(relaxFit, model, score.pars, nTry);
-            crlb = relaxFit.calcCRLB(replicateData,model, score.pars);
-            model.updateTauWeights();
-
-            scores[i] = runFit(relaxFit, model, score.pars, nTry);
-            crlb = relaxFit.calcCRLB(replicateData,model, scores[i].pars);
-            MFModelIso2sf.ThresholdedPars tPars = model.calcThreshold(crlb, lambdaScale);
-            if (tPars.anyChanged()) {
-                model.applyThreshold(tPars);
-                double[] pars = model.getPars();
-                scores[i] = runFit(relaxFit, model, pars, nTry);
-                crlb = relaxFit.calcCRLB(replicateData,model, scores[i].pars);
-            }
-            int kS = MFModelIso2sf.ORDERPARS.TAUS.index();
-            /*
-                        pars[start] = ss2;
-            pars[start + 1] = tauS;
-            pars[start + 2] = sf2;
-            pars[start + 3] = tauF;
-
-             */
-//            double cS = crlb[kS];
-//            double tM = scores[i].pars[0];
-//            double sf2 = scores[i].pars[1];
-//            double tF = scores[i].pars[2];
-//            double ss2 = scores[i].pars[3];
-//            double tS = scores[i].pars[4];
-//            double snrS = (cS > 0.0 && !Double.isInfinite(cS)) ? tS / cS : 0.0;
-
-//            System.out.printf("CRLBDIAG %s %d %.6f %.6e %.4f %.6f %.6f %.6f %.6f %s%n",
-//                    key, i, tS, cS, snrS, ss2, tF, sf2, tM,
-//                    (snrS < lambdaScale ? "WOULD_SNAP" : "keep"));
 
             start = scores[i].pars.clone();
             double[] replicateParameters = processParamsAfterFit(scores[i].getPars(), model.fitTau());
@@ -404,7 +447,7 @@ public class RegularizationFitSpec extends FitSpec {
         }
 
         Pair<double[], double[]> parameterEstimates = computeStatistics(parameters, weights);
-        double[] fitParameters = parameterEstimates.getLeft();
+        double[] fitParameters = fullScore.pars;
         double[] fitErrors = parameterEstimates.getRight();
 
         orderParSetMap.computeIfAbsent(KEY, ky -> new OrderParSet(ky));
@@ -412,13 +455,13 @@ public class RegularizationFitSpec extends FitSpec {
         // For bootstrap fitting, there is no single score over the original
         // data; this should be revisited.
         OrderPar orderPar = makeOrderPar(
-            orderParSetMap.get(KEY),
-            sampler.getOriginalData(),
-            key,
-            scores[0],
-            model,
-            fitParameters,
-            fitErrors
+                orderParSetMap.get(KEY),
+                sampler.getOriginalData(),
+                key,
+                scores[0],
+                model,
+                fitParameters,
+                fitErrors
         );
 
         return new ModelFitResult(orderPar, parameters, null, replicateTimes, flagSpuriousReplicates(crossResiduals));

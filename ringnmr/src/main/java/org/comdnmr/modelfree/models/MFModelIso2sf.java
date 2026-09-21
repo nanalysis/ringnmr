@@ -152,7 +152,12 @@ public class MFModelIso2sf extends MFModelIso2s {
     private double wTauS = 1.0 / (Math.log(10.0) * TAU_PRIME);
     private ThresholdedPars thresholdedPars = null;
 
-
+    public double getWTauF() {
+        return wTauF;
+    }
+    public double getWTauS() {
+        return wTauS;
+    }
     public MFModelIso2sf(boolean fitTau, double targetTau, double tauFraction,
                          boolean includeEx) {
         super(fitTau, targetTau, tauFraction, includeEx);
