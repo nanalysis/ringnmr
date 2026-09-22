@@ -101,7 +101,7 @@ public class RelaxFit {
     }
 
     public void setLambdas(double lambdaScale) {
-        setLambdaS2F(2.0 * lambdaScale);
+        setLambdaS2F(0.0);
         setLambdaTauF(2.0 * Math.log(10.0) * TAU_PRIME * lambdaScale);
         setLambdaS2S(2.0 * lambdaScale);
         setLambdaTauS(2.0 * Math.log(10.0) * TAU_PRIME * lambdaScale );
