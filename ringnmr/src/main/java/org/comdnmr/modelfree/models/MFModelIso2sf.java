@@ -329,42 +329,8 @@ public class MFModelIso2sf extends MFModelIso2s {
     @Override
     public double[] canonicalizePars(double[] currentPars) {
         pars(currentPars);
-        final double EPS = 1e-6;
-        double ampF = 1.0 - sf2 / getSN();   // amplitude, not tau
-        double ampS = 1.0 - ss2;
-        boolean fastHas = ampF > EPS;
-        boolean slowHas = ampS > EPS;
+        return createStandardPars(sf2, tauF, ss2, tauS);
 
-        boolean swap;
-        if (!fastHas && slowHas) {
-            swap = true;                                       // lone mode -> fast channel
-        } else if (fastHas && slowHas) {
-            swap = tauF > tauS;           // order; tau = 0 is fastest
-        } else {
-            swap = false;
-        }
-        final double[] pars;
-        final int start;
-        if (fitTau) {
-            pars = new double[5];
-            pars[0] = tauM;
-            start = 1;
-        } else {
-            pars = new double[4];
-            start = 0;
-        }
-        if (swap) {
-            pars[start] = ss2;
-            pars[start + 1] = tauS;
-            pars[start + 2] = sf2;
-            pars[start + 3] = tauF;
-        } else {
-            pars[start] = sf2;
-            pars[start + 1] = tauF;
-            pars[start + 2] = ss2;
-            pars[start + 3] = tauS;
-        }
-        return pars;
     }
 
     public double[] getPars() {
@@ -479,9 +445,9 @@ public class MFModelIso2sf extends MFModelIso2s {
     public double[] getUpper() {
         final double[] upper;
         if (includeEx) {
-            upper = getParValues(tauUpper(), 1.0, targetTau / 2.0, 1.0, targetTau / 2.0, 100.0);
+            upper = getParValues(tauUpper(), 1.0, targetTau * 0.2, 1.0, targetTau / 2.0, 100.0);
         } else {
-            upper = getParValues(tauUpper(), 1.0, targetTau / 2.0, 1.0, targetTau / 2.0);
+            upper = getParValues(tauUpper(), 1.0, targetTau * 0.2, 1.0, targetTau / 2.0);
         }
         if (thresholdedPars != null) {
             thresholdedPars.threshold(upper, false, fitTau);

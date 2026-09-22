@@ -324,7 +324,7 @@ public class DRefineTest {
             crlb = relaxFit.calcCRLB(molDataValues, model, values);
             dumpCRLB(crlb, "crlb after pass 3 fit");
 
-            MFModelIso2sf.ThresholdedPars tPars = model.calcThreshold(crlb, lambdaScale);
+            MFModelIso2sf.ThresholdedPars tPars = model.calcThreshold(crlb, 1.0);
             System.out.println(tPars);
             if (tPars.anyChanged()) {
                 model.applyThreshold(tPars);
@@ -372,7 +372,8 @@ public class DRefineTest {
         Map<String, OrderParSet> orderParSetMap = new ConcurrentHashMap<>();
         CoMDOptions options = new CoMDOptions(true);
         int nTry = 5;
-        System.out.println("NTRY " + nTry);
+
+        System.out.println("NTRY " + nTry + " " + options.getStartRadius());
 
 
         List<Score> results = new ArrayList<>();
@@ -393,7 +394,7 @@ public class DRefineTest {
             var data = getData("src/test/data/trial_relax_n0.5_s" + s + ".csv");
             for (var d : data.entrySet()) {
                 String key = d.getKey();
-                if (!key.equals("1:41.N")) {
+                if (!key.equals("1:44.N")) {
                     continue;
                 }
                 Integer residueNum = Integer.valueOf(key.split(":")[1].split("\\.")[0]);

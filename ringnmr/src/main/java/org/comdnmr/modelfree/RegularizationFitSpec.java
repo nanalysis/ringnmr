@@ -232,7 +232,7 @@ public class RegularizationFitSpec extends FitSpec {
      * @param params parameter values from the optimizer
      * @return the processed parameter array
      */
-    protected double[] processParamsAfterFit(double[] params, boolean fitTau) {
+    protected double[] processParamsAfterFit(double[] params, boolean fitTau, double slowLimit) {
         int start = fitTau ? 1 : 0;
         double s1 = params[start];      // sf2
         double tau1 = params[start + 1];  // tau_f
@@ -258,7 +258,7 @@ public class RegularizationFitSpec extends FitSpec {
                     tauf = 0.0;
                     ss2 = 1.0;
                     taus = 0.0;
-                } else if (tau < MFModelIso2sf.SLOW_LIMIT) {
+                } else if (tau < slowLimit) {
                     sf2 = s;
                     tauf = tau;
                     ss2 = 1.0;
@@ -351,7 +351,7 @@ public class RegularizationFitSpec extends FitSpec {
         model.updateCRLB(crlb);
         Score score = runFit(relaxFit, model, up, 1);
 
-        
+
         crlb = relaxFit.calcCRLB(replicateData, model, score.pars);
         model.updateCRLB(crlb);
         model.updateTauWeights();
@@ -362,7 +362,7 @@ public class RegularizationFitSpec extends FitSpec {
 
         score = runFit(relaxFit, model, score.pars, 1);
         crlb = relaxFit.calcCRLB(replicateData, model, score.pars);
-        MFModelIso2sf.ThresholdedPars tPars = model.calcThreshold(crlb, lambdaScale);
+        MFModelIso2sf.ThresholdedPars tPars = model.calcThreshold(crlb, 1.0);
         if (tPars.anyChanged()) {
             model.applyThreshold(tPars);
             double[] pars = model.getPars();
@@ -433,7 +433,7 @@ public class RegularizationFitSpec extends FitSpec {
             scores[i] = fitOnceResult.score;
 
             start = scores[i].pars.clone();
-            double[] replicateParameters = processParamsAfterFit(scores[i].getPars(), model.fitTau());
+            double[] replicateParameters = processParamsAfterFit(scores[i].getPars(), model.fitTau(),model.slowLimit());
             double[] replicateWeights = replicateData.getWeights();
             for (int k = 0; k < nParameters; k++) {
                 parameters[k][i] = replicateParameters[k];

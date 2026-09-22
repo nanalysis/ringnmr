@@ -34,6 +34,7 @@ import static org.comdnmr.modelfree.models.MFModelIso2sf.TAU_PRIME;
 public abstract class MFModelIso extends MFModel {
 
     private static final String[] MODEL_NAMES = {"1", "1f", "1s", "2s", "2sf", "1sf"};
+    protected static final double AMP_EPS = 1.0e-4;     // the cutoff calc() already uses
 
     double sN = 1.0;
     double tauM;
@@ -50,6 +51,11 @@ public abstract class MFModelIso extends MFModel {
             tauM = targetTau;
         }
     }
+
+    public double slowLimit() {
+        return 0.02 * tauM;
+    }
+
 
     public MFModelIso(double targetTau) {
         this(false, targetTau, 0.0, false);
@@ -148,6 +154,25 @@ public abstract class MFModelIso extends MFModel {
 
     static double sq(double x) { return x * x; }
 
+    // MFModelIso — one normalization used by both canonicalizePars and createStandardPars
+
+    /** Order the two channels and clear any channel whose Lorentzian is dead. */
+    protected double[] normalizeChannels(double sf2, double tauF,
+                                                double ss2, double tauS, double sN) {
+        boolean fastHas = (tauF > 0.0) && ((1.0 - sf2 / sN) * ss2   > AMP_EPS);
+        boolean slowHas = (tauS > 0.0) && ((sf2 / sN) * (1.0 - ss2) > AMP_EPS);
+
+
+        boolean swap;
+        if      ( fastHas &&  slowHas) swap = tauF > tauS;
+        else if (!fastHas &&  slowHas) swap = tauS < slowLimit();
+        else if ( fastHas && !slowHas) swap = tauF > slowLimit();
+        else                           swap = false;
+
+        return swap ? new double[]{ss2, tauS, sf2, tauF}
+                : new double[]{sf2, tauF, ss2, tauS};
+    }
+
     public double[] canonicalizePars(double[] pars) {
         return pars;
     }
@@ -159,11 +184,7 @@ public abstract class MFModelIso extends MFModel {
         if (this instanceof MFModelIso2sf mfModelIso2sf) {
             sN = mfModelIso2sf.getSN();
         }
-        boolean fastOff = (1.0 - sf2 / sN <= 1e-6);
-        boolean slowOn  = (tauS > 0.0) && (1.0 - ss2 > 1e-6);
-
-        boolean swap = (fastOff && slowOn && tauS < SLOW_LIMIT)   // lone mode -> fast, only if it IS fast
-                || (!fastOff && slowOn && tauF > tauS);           // both on -> order them        int start;
+        double[] stPars =  normalizeChannels(sf2, tauF, ss2, tauS, sN);
 
         int start;
         if (fitTau) {
@@ -174,17 +195,7 @@ public abstract class MFModelIso extends MFModel {
             pars = new double[4];
             start = 0;
         }
-        if (swap) {
-            pars[start] = ss2;
-            pars[start + 1] = tauS;
-            pars[start + 2] = sf2;
-            pars[start + 3] = tauF;
-        } else {
-            pars[start] = sf2;
-            pars[start + 1] = tauF;
-            pars[start + 2] = ss2;
-            pars[start + 3] = tauS;
-        }
+        System.arraycopy(stPars, 0, pars, start, stPars.length);
 
         return pars;
     }
