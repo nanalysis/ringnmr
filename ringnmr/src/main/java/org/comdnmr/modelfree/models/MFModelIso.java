@@ -53,7 +53,10 @@ public abstract class MFModelIso extends MFModel {
     }
 
     public double slowLimit() {
-        return 0.02 * tauM;
+        // Must equal the tau_f/tau_s box split used by MFModelIso2sf and by
+        // MFModelIso1f/1s; otherwise normalizeChannels can route a mode into a
+        // channel whose bounds cannot hold it.
+        return SLOW_LIMIT;
     }
 
 

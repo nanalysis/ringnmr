@@ -118,9 +118,16 @@ public class MFModelIso2sf extends MFModelIso2s {
                 return model.tauS;
             }
 
+            /** Floor at SLOW_LIMIT so the slow box is [SLOW_LIMIT, targetTau/2],
+             *  the same box MFModelIso1s uses.  Together with the tau_f ceiling
+             *  in getUpper() this makes the two channels disjoint, which breaks
+             *  the (sf2,tauF) <-> (ss2,tauS) exchange symmetry by construction
+             *  rather than leaving it to canonicalise()/normalizeChannels().
+             *  A thresholded slow mode is still pinned to zero: ThresholdedPars
+             *  .threshold() rewrites this bound to 0 after getLower() builds it. */
             @Override
             public double getLowerBound() {
-                return 0.0;
+                return MFModel.SLOW_LIMIT;
             }
         };
 
@@ -446,9 +453,9 @@ public class MFModelIso2sf extends MFModelIso2s {
     public double[] getUpper() {
         final double[] upper;
         if (includeEx) {
-            upper = getParValues(tauUpper(), 1.0, targetTau * 0.2, 1.0, targetTau / 2.0, 100.0);
+            upper = getParValues(tauUpper(), 1.0, SLOW_LIMIT, 1.0, targetTau / 2.0, 100.0);
         } else {
-            upper = getParValues(tauUpper(), 1.0, targetTau * 0.2, 1.0, targetTau / 2.0);
+            upper = getParValues(tauUpper(), 1.0, SLOW_LIMIT, 1.0, targetTau / 2.0);
         }
         if (thresholdedPars != null) {
             thresholdedPars.threshold(upper, false, fitTau);
