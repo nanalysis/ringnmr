@@ -27,7 +27,7 @@ import org.comdnmr.util.CoMDPreferences;
 
 public class Fitter {
 
-    static RandomGenerator random = new SynchronizedRandomGenerator(new Well19937c());
+    RandomGenerator random = new Well19937c();
 
     boolean reportFitness = false;
     int reportAt = 10;

@@ -286,10 +286,11 @@ public class MFModelIso2sf extends MFModelIso2s {
      */
 // caps are in each parameter's own units, so they can't be one constant
     private static double invCrlb(double c, double cap) {
-        if (Double.isNaN(c)) {
-            return 1.0 / cap;                 // fail toward the simple model
-        }
-        return 1.0 / Math.min(Math.max(c, CRLB_FLOOR), cap);
+        return 1.0;
+//        if (Double.isNaN(c)) {
+//            return 1.0 / cap;                 // fail toward the simple model
+//        }
+//        return 1.0 / Math.min(Math.max(c, CRLB_FLOOR), cap);
     }
 
     public void updateComplexities() {
