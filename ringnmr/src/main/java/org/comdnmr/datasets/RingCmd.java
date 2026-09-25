@@ -311,6 +311,16 @@ public class RingCmd {
                         .build()
         );
 
+        opts.addOption(
+                Option
+                        .builder()
+                        .longOpt("stringency")
+                        .hasArg()
+                        .argName("stringency")
+                        .desc("Only valid with --method regularization. Specifies the stringency (default: 1.0)")
+                        .build()
+        );
+
 
         opts.addOption(
                 Option
@@ -348,9 +358,11 @@ public class RingCmd {
                 }
                 case "regularization" -> {
                     double lambdaScale = (cmd.hasOption("lambdaScale")) ? parsePositiveDouble(cmd, "lambdaScale", true) : 0.0;
+                    double stringency = (cmd.hasOption("stringency")) ? parsePositiveDouble(cmd, "stringency", true) : 1.0;
                     builder = new RegularizationFitSpec.Builder()
                             .useMedian(cmd.hasOption("useMedian"))
-                            .lambdaScale(lambdaScale);
+                            .lambdaScale(lambdaScale)
+                            .stringency(stringency);
                 }
                 default -> throw new ParseException(
                         String.format(

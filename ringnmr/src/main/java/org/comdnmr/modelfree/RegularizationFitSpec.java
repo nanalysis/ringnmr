@@ -82,6 +82,19 @@ public class RegularizationFitSpec extends FitSpec {
     private final double lambdaScale;
 
     /**
+     * SNR threshold, in units of the CRLB, below which a component is dropped
+     * by {@link MFModelIso2sf#calcThreshold(double[], double)}.  A component
+     * survives only if {@code tau / crlb >= stringency}, so this is literally
+     * "how many sigma above zero must a component be".
+     *
+     * <p>Because a component whose true value is zero has an estimate bounded
+     * below at zero, {@code tau_hat/sigma} is approximately half-normal and the
+     * false-positive rate is about {@code 2*(1 - Phi(stringency))}: roughly 32%
+     * at 1.0, 13% at 1.5, 4.6% at 2.0 and 1.2% at 2.5.</p>
+     */
+    private final double stringency;
+
+    /**
      * Builder for {@link RegularizationFitSpec}.
      *
      * <p>All base configuration (tau_M, bootstrap mode, number of replicates,
@@ -105,8 +118,10 @@ public class RegularizationFitSpec extends FitSpec {
     public static class Builder extends FitSpec.Builder<Builder> {
 
         private static final double DEFAULT_LAMBDA_SCALE = 1.0;
+        private static final double DEFAULT_STRINGENCY = 1.0;
 
         private double lambdaScale = DEFAULT_LAMBDA_SCALE;
+        private double stringency = DEFAULT_STRINGENCY;
 
         /**
          * Returns the default regularization strength for S²f (0.5).
@@ -137,6 +152,29 @@ public class RegularizationFitSpec extends FitSpec {
         }
 
         /**
+         * Returns the default component-retention threshold (1.0 sigma).
+         */
+        public static double getDefaultStringency() {
+            return DEFAULT_STRINGENCY;
+        }
+
+        /**
+         * Sets the SNR threshold for retaining a component, in units of the
+         * CRLB.  1.0 keeps anything one sigma above zero; 2.0 cuts the
+         * false-positive rate roughly sevenfold at the cost of about half the
+         * detections of genuinely marginal (2 sigma) components.
+         *
+         * @param stringency retention threshold; must be &ge; 0
+         * @return this builder
+         * @throws IllegalArgumentException if {@code stringency} is negative
+         */
+        public Builder stringency(double stringency) {
+            validateLambda("stringency", stringency);
+            this.stringency = stringency;
+            return this;
+        }
+
+        /**
          * Validates the configuration and constructs a new
          * {@link RegularizationFitSpec}.
          *
@@ -158,6 +196,7 @@ public class RegularizationFitSpec extends FitSpec {
     protected RegularizationFitSpec(Builder builder) {
         super(builder);
         this.lambdaScale = builder.lambdaScale;
+        this.stringency = builder.stringency;
     }
 
     /**
@@ -165,6 +204,13 @@ public class RegularizationFitSpec extends FitSpec {
      */
     double getLambdaScale() {
         return lambdaScale;
+    }
+
+    /**
+     * Returns the component-retention SNR threshold.
+     */
+    double getStringency() {
+        return stringency;
     }
 
 
@@ -182,12 +228,14 @@ public class RegularizationFitSpec extends FitSpec {
     @Override
     protected void appendSubclassState(StringBuilder sb) {
         sb.append("lambdaScale=").append(Double.doubleToLongBits(lambdaScale)).append('|');
+        sb.append("stringency=").append(Double.doubleToLongBits(stringency)).append('|');
     }
 
     @Override
     public String toToml() {
         StringBuilder builder = getBaseTomlBuilder();
         builder.append(String.format("lambdaScale = %s%n", lambdaScale));
+        builder.append(String.format("stringency = %s%n", stringency));
         return builder.toString();
     }
 
@@ -362,7 +410,7 @@ public class RegularizationFitSpec extends FitSpec {
 
         score = runFit(relaxFit, model, score.pars, 1);
         crlb = relaxFit.calcCRLB(replicateData, model, score.pars);
-        MFModelIso2sf.ThresholdedPars tPars = model.calcThreshold(crlb, 1.0);
+        MFModelIso2sf.ThresholdedPars tPars = model.calcThreshold(crlb, stringency);
         if (tPars.anyChanged()) {
             model.applyThreshold(tPars);
             double[] pars = model.getPars();
