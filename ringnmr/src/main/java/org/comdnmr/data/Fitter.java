@@ -18,6 +18,8 @@ import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
 import org.apache.commons.math3.optim.nonlinear.scalar.ObjectiveFunction;
 import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.BOBYQAOptimizer;
 import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.CMAESOptimizer;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.DoubleAccumulator;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.random.SynchronizedRandomGenerator;
 import org.apache.commons.math3.random.Well19937c;
@@ -65,6 +67,30 @@ public class Fitter {
         return valuesFunction.apply(par, values);
     }
 
+    // ---- incumbent-guard diagnostics ------------------------------------
+    // Atomic because FitModel fits residues on a parallelStream.
+    private static final AtomicLong GUARD_CALLS = new AtomicLong();
+    private static final AtomicLong GUARD_FIRES = new AtomicLong();
+    private static final DoubleAccumulator GUARD_WORST_RATIO =
+            new DoubleAccumulator(Math::max, 1.0);
+    /** Set true to print a line every time the guard rejects a fit. */
+    public static volatile boolean GUARD_VERBOSE = false;
+
+    public static void guardReset() {
+        GUARD_CALLS.set(0);
+        GUARD_FIRES.set(0);
+        GUARD_WORST_RATIO.reset();
+    }
+
+    /** Human-readable summary of how often a fit came back worse than its start. */
+    public static String guardReport() {
+        long c = GUARD_CALLS.get();
+        long f = GUARD_FIRES.get();
+        return String.format(
+                "GUARD warm-started fits %d, rejected %d (%.1f%%), worst returned/start ratio %.2f",
+                c, f, c > 0 ? 100.0 * f / c : 0.0, GUARD_WORST_RATIO.get());
+    }
+
     public PointValuePair fit(double[] start, double[] lowerBounds, double[] upperBounds, double inputSigma, int nTry) throws Exception {
         random.setSeed(1);
         this.start = start;
@@ -97,6 +123,29 @@ public class Fitter {
             if ((bestPair == null) || (result.getValue() < bestPair.getValue())) {
                 bestPair = result;
                 System.arraycopy(tryStart, 0, bestStart, 0, tryStart.length);
+            }
+        }
+        // Incumbent guard.  CMA-ES evaluates its sampled population, never the
+        // initial guess itself, so with a large start radius it can return a
+        // point worse than where it began -- fatal for the warm-started
+        // refinement passes, which then lock in the worse answer.  Warm starts
+        // were observed going from rss 3.4 to 22.8 this way.  Never return
+        // worse than the caller's starting point.
+        if ((bestPair != null) && (start != null)) {
+            GUARD_CALLS.incrementAndGet();
+            double startValue = opt.value(opt.normalize(start));
+            if (Double.isFinite(startValue) && (startValue < bestPair.getValue())) {
+                GUARD_FIRES.incrementAndGet();
+                if (startValue > 0.0) {
+                    GUARD_WORST_RATIO.accumulate(bestPair.getValue() / startValue);
+                }
+                if (GUARD_VERBOSE) {
+                    System.out.printf(
+                            "GUARDFIRE nTry %d sigma %.1f returned %.6f start %.6f (%.2fx worse)%n",
+                            nTry, inputSigma, bestPair.getValue(), startValue,
+                            startValue > 0.0 ? bestPair.getValue() / startValue : Double.NaN);
+                }
+                bestPair = new PointValuePair(start.clone(), startValue);
             }
         }
         return bestPair;

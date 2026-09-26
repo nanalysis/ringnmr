@@ -309,14 +309,14 @@ public class DRefineTest {
             crlb = relaxFit.calcCRLB(molDataValues, model, values);
             model.updateCRLB(crlb);
             dumpCRLB(crlb, "crlb after pass 1 fit");
-            model.updateTauWeights();
+            model.updateTermWeights();
 
             values = doModelFit(model, relaxFit, molDataValues, key, values);
             System.out.println("Pass 2 Fit");
             dumpFit(values, parValues, parNames);
             crlb = relaxFit.calcCRLB(molDataValues, model, values);
             dumpCRLB(crlb, "crlb after pass 2 fit");
-            model.updateTauWeights();
+            model.updateTermWeights();
 
             values = doModelFit(model, relaxFit, molDataValues, key, values);
             System.out.println("Pass 3 Fit");
@@ -357,7 +357,8 @@ public class DRefineTest {
         }
 
         double tau = 10.0;
-        double lambdaScale = 0.25;
+        double lambdaScale = 1.0;
+        double stringency = 1.0;
 
         FitSpec.Builder<?> builder;
         builder = new RegularizationFitSpec.Builder()
@@ -366,6 +367,8 @@ public class DRefineTest {
                 .fitTauM(true)
                 .tauM(10.1)
                 .tauMFraction(0.5)
+                .stringency(stringency)
+                .complexityMode(MFModelIso2sf.ComplexityMode.PARAMETER)
                 .nReplicates(1);
 
         FitSpec fitSpec = builder.build();
@@ -405,8 +408,8 @@ public class DRefineTest {
                 RelaxFit relaxFit = fitSpec.initRelaxFit(key, molDataValues);
                 System.out.printf("iter %d  nData %d  nJ %d%n",
                         s, molDataValues.getData().size(), molDataValues.getNSpectralDensities());
-                System.out.printf("iter %d seed %d  wTauF %.6f  wTauS %.6f  sf2 %.4f ss2 %.4f tauF %.4f tauS %.4f%n",
-                        iter, s, model.getWTauF(), model.getWTauS(),
+                System.out.printf("iter %d seed %d  wTerm2 %.6f  wTerm3 %.6f  sf2 %.4f ss2 %.4f tauF %.4f tauS %.4f%n",
+                        iter, s, model.getWTerm2(), model.getWTerm3(),
                         model.getSf2(), model.getSs2(), model.getTauF(), model.getTauS());
 
 
