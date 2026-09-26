@@ -102,6 +102,8 @@ public abstract class FitSpec {
      */
     protected final R1R2NOEMolDataValues.J0Mode j0Mode;
 
+    protected final FitSpec.ComplexityMode complexityMode;
+
     /**
      * Registry mapping human-readable method names to their corresponding
      * {@code FitSpec} subclass. Insertion order is preserved via
@@ -138,6 +140,7 @@ public abstract class FitSpec {
         this.useMedian = builder.useMedian;
         this.fixedSeed = builder.fixedSeed;
         this.j0Mode = builder.j0Mode;
+        this.complexityMode = builder.complexityMode;
     }
 
     /**
@@ -286,6 +289,7 @@ public abstract class FitSpec {
         builder.append(String.format("useMedian = %b%n", useMedian));
         builder.append(String.format("fixedSeed = %b%n", fixedSeed));
         builder.append(String.format("j0Mode = \"%s\"%n", j0Mode.name().toLowerCase()));
+        builder.append(String.format("complexityMode = \"%s\"%n", complexityMode.name().toLowerCase()));
         return builder;
     }
 
@@ -359,6 +363,21 @@ public abstract class FitSpec {
 
         /**
          * Returns a title-cased representation (e.g. "Parametric").
+         *
+         * @return the display name
+         */
+        @Override
+        public String toString() {
+            String name = name();
+            return String.format("%c%s", name.charAt(0), name.substring(1).toLowerCase());
+        }
+    }
+    public enum ComplexityMode {
+        TERMS,
+        PARAMETER;
+
+        /**
+         * Returns a title-cased representation (e.g. "TERMS").
          *
          * @return the display name
          */
@@ -786,6 +805,7 @@ public abstract class FitSpec {
         protected boolean fixedSeed = false;
 
         protected R1R2NOEMolDataValues.J0Mode j0Mode = R1R2NOEMolDataValues.J0Mode.INDEPENDENT;
+        protected FitSpec.ComplexityMode complexityMode = ComplexityMode.PARAMETER;
 
         // ── Default-value accessors ─────────────────────────────────────
 

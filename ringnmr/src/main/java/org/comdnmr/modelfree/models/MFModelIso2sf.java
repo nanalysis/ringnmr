@@ -22,6 +22,8 @@
  */
 package org.comdnmr.modelfree.models;
 
+import org.comdnmr.modelfree.FitSpec;
+
 import java.util.List;
 
 /**
@@ -34,6 +36,10 @@ public class MFModelIso2sf extends MFModelIso2s {
     private static final double CRLB_CAP_S2 = 1.0;    // full range of 1 - S2
     private static final double CRLB_FLOOR = 1.0e-9; // numerical guard only
     public static final double TAU_PRIME = 30.0e-3;
+    /** Knee of the log-sum penalty on term weights.  Weights are shares of J in
+     *  [0,1]; measured spurious components sit at median 0.14 and genuine ones
+     *  at 0.59, so 0.05-0.10 places the knee between them. */
+    private static final double W_PRIME = 0.08;
     private static final double ORDER_WEIGHT = 5000.0;  // stiff: labelling
     private static final double CEILING_WEIGHT = 250.0;  // soft: physical prior
     private static final double CEILING_ONSET = 0.4;  // fraction of tau_m
@@ -154,16 +160,55 @@ public class MFModelIso2sf extends MFModelIso2s {
     double complexityTauF = 0.0;
     double complexityTauS = 0.0;
     double[] crlb = null;
+    /**
+     * What the regularization penalty acts on.
+     *
+     * <p>{@code PARAMETER} is the original scheme: |1 - S2f|, |1 - S2s| and a
+     * log-sum on each tau.  {@code TERM} penalises each internal term's share
+     * of J instead, which is dimensionless and independent of how large the
+     * parameter happens to be.  Both are kept selectable so the two can be
+     * compared under an identical binary -- otherwise any difference conflates
+     * the formulation with the optimizer fixes.</p>
+     */
+
+    private FitSpec.ComplexityMode complexityMode = FitSpec.ComplexityMode.TERMS;
+
+    public void setComplexityMode(FitSpec.ComplexityMode mode) {
+        this.complexityMode = mode;
+    }
+
+    public FitSpec.ComplexityMode getComplexityMode() {
+        return complexityMode;
+    }
+
     // ---- linearisation weights: frozen per pass, never touched during a fit ----
-    private double wTauF = 1.0 / (Math.log(10.0) * TAU_PRIME);   // = c'(0)
+    // TERM mode
+    private double wTerm2 = 1.0 / (Math.log(10.0) * W_PRIME);   // = c'(0)
+    private double wTerm3 = 1.0 / (Math.log(10.0) * W_PRIME);
+    private double wTerm4 = 1.0 / (Math.log(10.0) * W_PRIME);
+    // raw term weights from the most recent calc(), read by updateTermWeights()
+    private double w2Last = 0.0, w3Last = 0.0, w4Last = 0.0;
+    // PARAMETER mode
+    private double wTauF = 1.0 / (Math.log(10.0) * TAU_PRIME);
     private double wTauS = 1.0 / (Math.log(10.0) * TAU_PRIME);
     private ThresholdedPars thresholdedPars = null;
 
     public double getWTauF() {
         return wTauF;
     }
+
     public double getWTauS() {
         return wTauS;
+    }
+
+    public double getWTerm2() {
+        return wTerm2;
+    }
+    public double getWTerm3() {
+        return wTerm3;
+    }
+    public double getWTerm4() {
+        return wTerm4;
     }
     public MFModelIso2sf(boolean fitTau, double targetTau, double tauFraction,
                          boolean includeEx) {
@@ -233,6 +278,7 @@ public class MFModelIso2sf extends MFModelIso2s {
         }
         double[] js = new double[omegas.length];
         int index = 0;
+        double w2 = 0.0, w3 = 0.0, w4 = 0.0;
         for (double omega : omegas) {
             double omega2 = omega * omega;
             double term1 = ((sf2 / sN) * ss2) / (1.0 + omega2 * tauM2);
@@ -249,9 +295,31 @@ public class MFModelIso2sf extends MFModelIso2s {
                         (tauFTimesTauS * tauPrime) / (omega2 * tauM2TimesTauF2TimesTauS2 + tauPrime2)
                 );
             }
+            double tot = term1 + term2 + term3 + term4;   // NEW
+            if (tot > 0.0) {                              // NEW
+                w2 = Math.max(w2, term2 / tot);           // NEW
+                w3 = Math.max(w3, term3 / tot);           // NEW
+                w4 = Math.max(w4, term4 / tot);           // NEW
+            }
             js[index++] = tauMTimesPt4 * (term1 + term2 + term3 + term4);
         }
-        updateComplexities();
+        w2Last = w2;
+        w3Last = w3;
+        w4Last = w4;
+        if (complexityMode == FitSpec.ComplexityMode.TERMS) {
+            complexityS2S = wTerm2 * w2;    // slow term
+            complexityS2F = wTerm3 * w3;    // fast term
+            complexityTauF = wTerm4 * w4;   // cross term
+            complexityTauS = 0.0;           // term1 is the plateau; never shrink it
+        } else {
+            // Original parameter-space scheme.  Uses this.sf2/this.ss2 etc, the
+            // model fields, NOT the locals above -- those were converted to
+            // seconds and may have been zeroed by the small-amplitude guard.
+            complexityS2F = Math.abs(1.0 - this.sf2);
+            complexityS2S = Math.abs(1.0 - this.ss2);
+            complexityTauF = wTauF * this.tauF;
+            complexityTauS = wTauS * this.tauS;
+        }
         return js;
     }
 
@@ -279,13 +347,24 @@ public class MFModelIso2sf extends MFModelIso2s {
     }
 
     /**
-     * Refresh the linearisation weights from the current parameter values.
+     * Refresh the linearisation weights from the term weights of the last fit.
+     * MM surrogate for log10(1 + w/W_PRIME): c'(w) = 1/(ln10 * (w + W_PRIME)).
      * Call ONCE between passes, after canonicalise() and before the next fit.
-     * Never call it from inside the objective function.
+     * Never call it from inside the objective function -- it must read the
+     * PREVIOUS iterate, or the penalty stops being log-sum and the MM
+     * convergence argument is lost.
      */
-    public void updateTauWeights() {
-        wTauF = 1.0 / (Math.log(10.0) * (tauF + TAU_PRIME));
-        wTauS = 1.0 / (Math.log(10.0) * (tauS + TAU_PRIME));
+    public void updateTermWeights() {
+        if (complexityMode == FitSpec.ComplexityMode.TERMS) {
+            wTerm2 = 1.0 / (Math.log(10.0) * (w2Last + W_PRIME));
+            wTerm3 = 1.0 / (Math.log(10.0) * (w3Last + W_PRIME));
+            wTerm4 = 1.0 / (Math.log(10.0) * (w4Last + W_PRIME));
+        } else {
+            // PARAMETER mode reads tauF/tauS, which pars() does set -- so it
+            // needs no preceding calc(), unlike the TERM branch.
+            wTauF = 1.0 / (Math.log(10.0) * (tauF + TAU_PRIME));
+            wTauS = 1.0 / (Math.log(10.0) * (tauS + TAU_PRIME));
+        }
     }
 
     /**
@@ -300,18 +379,10 @@ public class MFModelIso2sf extends MFModelIso2s {
 //        return 1.0 / Math.min(Math.max(c, CRLB_FLOOR), cap);
     }
 
-    public void updateComplexities() {
-        if (crlb == null) {
-            return;
-        }
-        complexityS2F = Math.abs(1.0 - sf2) * invCrlb(crlb[ORDERPARS.SF2.index()], CRLB_CAP_S2);
-        complexityS2S = Math.abs(1.0 - ss2) * invCrlb(crlb[ORDERPARS.SS2.index()], CRLB_CAP_S2);
-        complexityTauF = wTauF * tauF * invCrlb(crlb[ORDERPARS.TAUF.index()], CRLB_CAP_TAU);
-        complexityTauS = wTauS * tauS * invCrlb(crlb[ORDERPARS.TAUS.index()], CRLB_CAP_TAU);
-    }
-
-    public double trueComplexityTauF() {
-        return Math.log10((tauF + TAU_PRIME) / TAU_PRIME) * invCrlb(crlb[ORDERPARS.TAUF.index()], CRLB_CAP_TAU);
+    /** The un-linearised log-sum penalty the MM surrogate approximates, for the
+     *  fast term.  Reporting only; the objective uses the surrogate. */
+    public double trueComplexityTermFast() {
+        return Math.log10((w3Last + W_PRIME) / W_PRIME);
     }
 
     @Override
@@ -519,8 +590,9 @@ public class MFModelIso2sf extends MFModelIso2s {
         if (tauS > 0.0) {
             double c = crlbNow[ORDERPARS.TAUS.index()];
             double snr = (c > 0.0 && !Double.isInfinite(c)) ? tauS / c : 0.0;
-            if (snr < stringency) {
-                tauS = 0.0;          // the slow mode stands or falls
+            double cA = crlbNow[ORDERPARS.SS2.index()];
+            double snrAmp = (cA > 0.0 && !Double.isInfinite(cA)) ? (1.0 - ss2) / cA : 0.0;
+            if (snr < stringency && snrAmp < stringency) {                tauS = 0.0;          // the slow mode stands or falls
                 ss2 = 1.0;           // as one unit
                 changedSlow = true;
             }

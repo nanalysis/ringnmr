@@ -94,6 +94,9 @@ public class RegularizationFitSpec extends FitSpec {
      */
     private final double stringency;
 
+    /** Whether the penalty acts on model parameters or on spectral-density terms. */
+    private final FitSpec.ComplexityMode complexityMode;
+
     /**
      * Builder for {@link RegularizationFitSpec}.
      *
@@ -122,6 +125,8 @@ public class RegularizationFitSpec extends FitSpec {
 
         private double lambdaScale = DEFAULT_LAMBDA_SCALE;
         private double stringency = DEFAULT_STRINGENCY;
+        private FitSpec.ComplexityMode complexityMode =
+                ComplexityMode.PARAMETER;
 
         /**
          * Returns the default regularization strength for S²f (0.5).
@@ -175,6 +180,21 @@ public class RegularizationFitSpec extends FitSpec {
         }
 
         /**
+         * Selects what the penalty acts on: PARAMETER reproduces the original
+         * scheme, TERM penalises each spectral-density term's share of J.
+         *
+         * @param mode the complexity formulation; must not be null
+         * @return this builder
+         */
+        public Builder complexityMode(FitSpec.ComplexityMode mode) {
+            if (mode == null) {
+                throw new IllegalArgumentException("complexityMode must not be null");
+            }
+            this.complexityMode = mode;
+            return this;
+        }
+
+        /**
          * Validates the configuration and constructs a new
          * {@link RegularizationFitSpec}.
          *
@@ -197,6 +217,7 @@ public class RegularizationFitSpec extends FitSpec {
         super(builder);
         this.lambdaScale = builder.lambdaScale;
         this.stringency = builder.stringency;
+        this.complexityMode = builder.complexityMode;
     }
 
     /**
@@ -211,6 +232,11 @@ public class RegularizationFitSpec extends FitSpec {
      */
     double getStringency() {
         return stringency;
+    }
+
+    /** Returns the complexity formulation in use. */
+    FitSpec.ComplexityMode getComplexityMode() {
+        return complexityMode;
     }
 
 
@@ -229,6 +255,7 @@ public class RegularizationFitSpec extends FitSpec {
     protected void appendSubclassState(StringBuilder sb) {
         sb.append("lambdaScale=").append(Double.doubleToLongBits(lambdaScale)).append('|');
         sb.append("stringency=").append(Double.doubleToLongBits(stringency)).append('|');
+        sb.append("complexityMode=").append(complexityMode.name()).append('|');
     }
 
     @Override
@@ -236,6 +263,7 @@ public class RegularizationFitSpec extends FitSpec {
         StringBuilder builder = getBaseTomlBuilder();
         builder.append(String.format("lambdaScale = %s%n", lambdaScale));
         builder.append(String.format("stringency = %s%n", stringency));
+        builder.append(String.format("complexityMode = %s%n", complexityMode));
         return builder.toString();
     }
 
@@ -380,9 +408,74 @@ public class RegularizationFitSpec extends FitSpec {
 
     public record FitOnceResult(Score score, double[] crlb) {}
 
+    // ---- threshold-guard diagnostics -------------------------------------
+    private static final java.util.concurrent.atomic.AtomicLong CUTS_PROPOSED =
+            new java.util.concurrent.atomic.AtomicLong();
+    private static final java.util.concurrent.atomic.AtomicLong CUTS_REJECTED =
+            new java.util.concurrent.atomic.AtomicLong();
+    /** Set true to print a line every time a proposed component cut is refused. */
+    public static volatile boolean CUT_VERBOSE = false;
+
+    public static void cutReset() {
+        CUTS_PROPOSED.set(0);
+        CUTS_REJECTED.set(0);
+    }
+
+    /** How often calcThreshold proposed removing a component, and how often the
+     *  objective refused -- i.e. the data supported the component after all. */
+    public static String cutReport() {
+        long p = CUTS_PROPOSED.get();
+        long r = CUTS_REJECTED.get();
+        return String.format("CUTS proposed %d, rejected %d (%.1f%%), accepted %d",
+                p, r, p > 0 ? 100.0 * r / p : 0.0, p - r);
+    }
+
+    /** Penalised objective under the lambdas currently set on {@code relaxFit}. */
+    private static double objective(RelaxFit relaxFit, Score s) {
+        return s.value(relaxFit.getLambdaS2F(), relaxFit.getLambdaS2S(),
+                relaxFit.getLambdaTauF(), relaxFit.getLambdaTauS());
+    }
+
+    /**
+     * One reweighted (majorize-minimize) pass, with a descent guard.
+     *
+     * <p>MM guarantees the surrogate objective cannot increase from one pass to
+     * the next.  If the optimizer returns a worse point it has failed, and the
+     * correct response is to keep the previous iterate rather than accept the
+     * ascent.  Without this guard a single CMA-ES run warm-started from a good
+     * point was observed to wander out of the basin and return a solution 6-9x
+     * worse in the penalised objective -- paying 9-19 units of RSS to save at
+     * most 0.44 of penalty -- which silently destroyed genuine slow motions.</p>
+     *
+     * <p>The baseline is re-scored under the NEW linearisation weights: the
+     * previous pass's Score carries complexities computed with the old weights,
+     * so comparing against it directly would not be like for like.</p>
+     */
+    private Score mmPass(RelaxFit relaxFit, MFModelIso2sf model, double[] pars) {
+        // pars() sets sf2/tauF/ss2/tauS but NOT the term weights -- those are
+        // written only by calc() -- so evaluate once before reweighting, or
+        // updateTermWeights() reads a stale w*Last (zero on a fresh model,
+        // giving c'(0), the most aggressive linearisation the log-sum allows).
+        relaxFit.score(pars, false);
+        model.updateTermWeights();
+        Score base = relaxFit.score(pars, true);
+        Score cand = runFit(relaxFit, model, pars, 1);
+        Score chosen = objective(relaxFit, cand) <= objective(relaxFit, base)
+                ? cand : base;
+        // runFit leaves the model at the last point CMA-ES evaluated, which is
+        // not the returned optimum and, on a rejected pass, is the bad point we
+        // just refused.  Downstream code reads the MODEL, not the Score --
+        // calcThreshold() tests model.tauS/model.ss2 directly -- so put the
+        // model back on the iterate we actually chose before returning.
+        relaxFit.score(chosen.getPars(), false);
+        return chosen;
+    }
+
     public FitOnceResult doFit(MFModelIso2sf model, RelaxFit relaxFit, MolDataValues<? extends RelaxDataValue> replicateData, String key, double[] start, int nTry) {
         CoMDOptions options = new CoMDOptions(true);
         model.applyThreshold(null);
+        model.setComplexityMode(complexityMode);
+        relaxFit.setComplexityMode(complexityMode);
         relaxFit.setRelaxData(key, replicateData);
 
 
@@ -394,27 +487,56 @@ public class RegularizationFitSpec extends FitSpec {
 
         relaxFit.setLambdas(lambdaScale);          // the builder's lambdaScale
         model.pars(up);
-        model.updateTauWeights();          // w = c'(tau_unpenalized)  ← the whole point
         double[] crlb = relaxFit.calcCRLB(replicateData, model, up);
         model.updateCRLB(crlb);
-        Score score = runFit(relaxFit, model, up, 1);
-
+        Score score = mmPass(relaxFit, model, up);
+        // TEMPORARY DIAGNOSTIC -- remove once the collapsed-slow-mode question
+        // is settled.
+//        System.out.printf("UNPENDIAG key %s rss %.6f wTerm2 %.6f wTerm3 %.6f up %s%n",
+//                key, unpen.rss, model.getWTerm2(), model.getWTerm3(),
+//                java.util.Arrays.toString(up));
 
         crlb = relaxFit.calcCRLB(replicateData, model, score.pars);
         model.updateCRLB(crlb);
-        model.updateTauWeights();
+        score = mmPass(relaxFit, model, score.pars);
 
-        score = runFit(relaxFit, model, score.pars, 1);
         crlb = relaxFit.calcCRLB(replicateData, model, score.pars);
-        model.updateTauWeights();
+        score = mmPass(relaxFit, model, score.pars);
 
-        score = runFit(relaxFit, model, score.pars, 1);
         crlb = relaxFit.calcCRLB(replicateData, model, score.pars);
+        // calcCRLB perturbs the model to build the Jacobian and leaves it at the
+        // last finite-difference point; calcThreshold reads model.tauS/model.ss2
+        // directly, so put the model back on the iterate being tested first.
+        relaxFit.score(score.pars, false);
         MFModelIso2sf.ThresholdedPars tPars = model.calcThreshold(crlb, stringency);
         if (tPars.anyChanged()) {
+            // Pruning is only worth doing if it improves the penalised
+            // objective.  A component that is genuinely absent costs almost no
+            // RSS to remove and saves its penalty, so the cut is accepted; a
+            // real one costs far more RSS than the penalty it saves, so it is
+            // kept.  Without this check a marginal-but-real slow mode was being
+            // removed at a cost of 19 units of RSS to save at most 0.44 of
+            // penalty, tripling the residual.
+            double[] keptPars = score.getPars();
+            double[] cutPars = model.getPars();   // calcThreshold already zeroed the channel
+            double keptObj = objective(relaxFit, relaxFit.score(keptPars, true));
+            CUTS_PROPOSED.incrementAndGet();
             model.applyThreshold(tPars);
-            double[] pars = model.getPars();
-            score = runFit(relaxFit, model, pars, 1);
+            Score cand = runFit(relaxFit, model, cutPars, 1);
+            double cutObj = objective(relaxFit, cand);
+            if (cutObj <= keptObj) {
+                score = cand;
+            } else {
+                CUTS_REJECTED.incrementAndGet();
+                if (CUT_VERBOSE) {
+                    System.out.printf(
+                            "CUTREJECT key %s slow %b fast %b  cut obj %.6f vs kept %.6f (%.2fx worse)%n",
+                            key, tPars.slow(), tPars.fast(), cutObj, keptObj,
+                            keptObj > 0.0 ? cutObj / keptObj : Double.NaN);
+                }
+                model.applyThreshold(null);
+                relaxFit.score(keptPars, false);
+            }
             crlb = relaxFit.calcCRLB(replicateData, model, score.pars);
         }
         return new FitOnceResult(score, crlb);

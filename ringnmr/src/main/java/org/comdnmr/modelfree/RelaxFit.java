@@ -100,11 +100,31 @@ public class RelaxFit {
         return logJMode;
     }
 
+    private FitSpec.ComplexityMode complexityMode = FitSpec.ComplexityMode.TERMS;
+
+    public void setComplexityMode(FitSpec.ComplexityMode mode) {
+        this.complexityMode = mode;
+    }
+
+    /**
+     * Distribute one lambda scale across the four complexity slots.  The two
+     * modes need different scalings: TERM complexities are dimensionless shares
+     * of J and share a single scale, while PARAMETER complexities mix an order
+     * parameter against a tau in ns and need the TAU_PRIME factors to be
+     * commensurate.
+     */
     public void setLambdas(double lambdaScale) {
-        setLambdaS2F(0.0);
-        setLambdaTauF(2.0 * Math.log(10.0) * TAU_PRIME * lambdaScale);
-        setLambdaS2S(2.0 * lambdaScale);
-        setLambdaTauS(2.0 * Math.log(10.0) * TAU_PRIME * lambdaScale );
+        if (complexityMode == FitSpec.ComplexityMode.TERMS) {
+            setLambdaS2F(lambdaScale);    // fast term
+            setLambdaS2S(lambdaScale);    // slow term
+            setLambdaTauF(0.0);           // cross term (try 0.0 first)
+            setLambdaTauS(0.0);           // plateau: never penalised
+        } else {
+            setLambdaS2F(0.0);
+            setLambdaTauF(2.0 * Math.log(10.0) * TAU_PRIME * lambdaScale);
+            setLambdaS2S(2.0 * lambdaScale);
+            setLambdaTauS(2.0 * Math.log(10.0) * TAU_PRIME * lambdaScale);
+        }
     }
 
     public double getLambdaS2F() {

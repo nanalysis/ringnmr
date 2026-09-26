@@ -14,7 +14,7 @@ public class CoMDDefaults {
     static final Double REF_FIELD = 500.0;
     static final Double CPMG_MAX_FREQ = 3000.0;
     static final Double REX_RATIO = 3.0;
-    static final Double START_RADIUS = 20.0;
+    static final Double START_RADIUS = 10.0;
     static final Double FINAL_RADIUS = -5.0;
     static final Double TOLERANCE = -5.0;
     static final Double DELTA_AB_DIFF = 0.1;

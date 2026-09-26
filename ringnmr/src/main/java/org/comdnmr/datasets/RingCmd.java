@@ -1,5 +1,6 @@
 package org.comdnmr.datasets;
 
+import org.comdnmr.data.Fitter;
 import org.comdnmr.modelfree.BaggingFitSpec;
 import org.comdnmr.modelfree.ConventionalFitSpec;
 import org.comdnmr.modelfree.FitSpec;
@@ -69,9 +70,15 @@ public class RingCmd {
             }
 
             Dataset dataset = Dataset.fromFile(dataFile);
+            Fitter.guardReset();
+            RegularizationFitSpec.cutReset();
             List<FitSpec> fitSpec = List.of(getFitSpec(cmd, dataset));
             dataset.saveToToml(outDir);
+            System.out.println(Fitter.guardReport());
+            System.out.println(RegularizationFitSpec.cutReport());
             dataset.fit(fitSpec, outDir);
+            System.out.println(Fitter.guardReport());
+            System.out.println(RegularizationFitSpec.cutReport());
         } catch (ParseException e) {
             System.err.println("Error: " + e.getMessage());
             printUsage();
@@ -359,9 +366,11 @@ public class RingCmd {
                 case "regularization" -> {
                     double lambdaScale = (cmd.hasOption("lambdaScale")) ? parsePositiveDouble(cmd, "lambdaScale", true) : 0.0;
                     double stringency = (cmd.hasOption("stringency")) ? parsePositiveDouble(cmd, "stringency", true) : 1.0;
+                    String complexityMode = (cmd.hasOption("complexityMode"))  ? cmd.getOptionValue("complexityMode") : "TERMS";
                     builder = new RegularizationFitSpec.Builder()
                             .useMedian(cmd.hasOption("useMedian"))
                             .lambdaScale(lambdaScale)
+                            .complexityMode(FitSpec.ComplexityMode.valueOf(complexityMode.toUpperCase()))
                             .stringency(stringency);
                 }
                 default -> throw new ParseException(
