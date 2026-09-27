@@ -263,7 +263,7 @@ public class RegularizationFitSpec extends FitSpec {
         StringBuilder builder = getBaseTomlBuilder();
         builder.append(String.format("lambdaScale = %s%n", lambdaScale));
         builder.append(String.format("stringency = %s%n", stringency));
-        builder.append(String.format("complexityMode = %s%n", complexityMode));
+        builder.append(String.format("complexityMode = \"%s\"%n", complexityMode.name().toLowerCase()));
         return builder.toString();
     }
 

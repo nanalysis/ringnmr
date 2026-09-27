@@ -289,7 +289,6 @@ public abstract class FitSpec {
         builder.append(String.format("useMedian = %b%n", useMedian));
         builder.append(String.format("fixedSeed = %b%n", fixedSeed));
         builder.append(String.format("j0Mode = \"%s\"%n", j0Mode.name().toLowerCase()));
-        builder.append(String.format("complexityMode = \"%s\"%n", complexityMode.name().toLowerCase()));
         return builder;
     }
 
