@@ -74,8 +74,6 @@ public class RingCmd {
             RegularizationFitSpec.cutReset();
             List<FitSpec> fitSpec = List.of(getFitSpec(cmd, dataset));
             dataset.saveToToml(outDir);
-            System.out.println(Fitter.guardReport());
-            System.out.println(RegularizationFitSpec.cutReport());
             dataset.fit(fitSpec, outDir);
             System.out.println(Fitter.guardReport());
             System.out.println(RegularizationFitSpec.cutReport());

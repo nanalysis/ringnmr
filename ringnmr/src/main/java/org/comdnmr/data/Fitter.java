@@ -105,6 +105,7 @@ public class Fitter {
         double[] bestStart = new double[start.length];
         double[] tryStart = new double[start.length];
         double range = 0.9;
+        double sigma = nTry > 1 ? inputSigma : 5.0;
         for (int iTry = 0; iTry < nTry; iTry++) {
             PointValuePair result;
             if (iTry > 0) {
@@ -116,9 +117,9 @@ public class Fitter {
                 System.arraycopy(start, 0, tryStart, 0, start.length);
             }
             if (CoMDPreferences.getOptimizer().equals("BOBYQA")) {
-                result = opt.refineBOBYQA(tryStart, inputSigma);
+                result = opt.refineBOBYQA(tryStart, sigma);
             } else {
-                result = opt.refineCMAES(tryStart, inputSigma);
+                result = opt.refineCMAES(tryStart, sigma);
             }
             if ((bestPair == null) || (result.getValue() < bestPair.getValue())) {
                 bestPair = result;
@@ -261,7 +262,7 @@ public class Fitter {
             fixGuesses(normGuess);
 
             //new Checker(100 * Precision.EPSILON, 100 * Precision.SAFE_MIN, nSteps));
-            CMAESOptimizer cmaesOptimizer = new CMAESOptimizer(nSteps, stopFitness, true, diagOnly, 0,
+            CMAESOptimizer cmaesOptimizer = new CMAESOptimizer(nSteps, stopFitness, true, diagOnly, 10,
                     random, true,
                     new Checker(tol, tol, nSteps));
             PointValuePair result = null;

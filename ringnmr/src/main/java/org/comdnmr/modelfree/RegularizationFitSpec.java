@@ -416,6 +416,38 @@ public class RegularizationFitSpec extends FitSpec {
     /** Set true to print a line every time a proposed component cut is refused. */
     public static volatile boolean CUT_VERBOSE = false;
 
+    // per-MM-pass rejection counts: is the iteration converging, or failing?
+    private static final java.util.concurrent.atomic.AtomicLong[] PASS_CALLS = {
+        new java.util.concurrent.atomic.AtomicLong(),
+        new java.util.concurrent.atomic.AtomicLong(),
+        new java.util.concurrent.atomic.AtomicLong()};
+    private static final java.util.concurrent.atomic.AtomicLong[] PASS_REJECTS = {
+        new java.util.concurrent.atomic.AtomicLong(),
+        new java.util.concurrent.atomic.AtomicLong(),
+        new java.util.concurrent.atomic.AtomicLong()};
+
+    /** Rejection rate of each reweighting pass.  A rate that climbs with pass
+     *  index means the MM iteration has converged and the later passes have
+     *  nothing left to do -- drop them.  A flat high rate across all passes
+     *  means the optimizer is genuinely failing. */
+    public static String passReport() {
+        StringBuilder sb = new StringBuilder("PASS");
+        for (int i = 0; i < PASS_CALLS.length; i++) {
+            long c = PASS_CALLS[i].get();
+            long r = PASS_REJECTS[i].get();
+            sb.append(String.format("  pass%d %d/%d (%.1f%%)", i + 1, r, c,
+                    c > 0 ? 100.0 * r / c : 0.0));
+        }
+        return sb.toString();
+    }
+
+    public static void passReset() {
+        for (int i = 0; i < PASS_CALLS.length; i++) {
+            PASS_CALLS[i].set(0);
+            PASS_REJECTS[i].set(0);
+        }
+    }
+
     public static void cutReset() {
         CUTS_PROPOSED.set(0);
         CUTS_REJECTED.set(0);
@@ -428,6 +460,55 @@ public class RegularizationFitSpec extends FitSpec {
         long r = CUTS_REJECTED.get();
         return String.format("CUTS proposed %d, rejected %d (%.1f%%), accepted %d",
                 p, r, p > 0 ? 100.0 * r / p : 0.0, p - r);
+    }
+
+    /**
+     * How the cut test charges for the free parameters a cut removes.
+     *
+     * <p>The cut compares models of DIFFERENT dimension.  RSS can only rise
+     * when parameters are frozen, so without a complexity term a cut is never
+     * worth taking at lambda = 0 and only becomes so as the penalty grows --
+     * which made simple-stratum tau_s 127x worse than AICc at lambda = 0 and
+     * recovered only at lambda = 64.  This is the comparison AIC and BIC exist
+     * to make.</p>
+     *
+     * <p>At n = 9 spectral densities AICc's small-sample term is enormous
+     * (credit 19.2 for freeing two parameters, against ~19 for a genuinely
+     * real slow mode), so it reproduces the conventional method's
+     * conservatism.  AIC and BIC both give ~4, which kills spurious components
+     * (dRSS ~2-4) while keeping real ones.  AIC is the default.</p>
+     */
+    public enum CutCriterion { NONE, AIC, BIC, AICC }
+
+    /** Static so it can be switched for experiments.  If this ever becomes a
+     *  swept parameter it must move to the Builder and into
+     *  appendSubclassState(), or two runs will share a state key. */
+    public static volatile CutCriterion CUT_CRITERION = CutCriterion.AIC;
+
+    private static double aicc(int n, int k) {
+        double denom = n - k - 1.0;
+        return denom > 0.0 ? 2.0 * k + 2.0 * k * (k + 1.0) / denom
+                : Double.POSITIVE_INFINITY;
+    }
+
+    /** Credit, in objective units, for freeing {@code dK} of {@code k}
+     *  parameters in a model fitted to {@code n} points. */
+    private static double complexityCredit(int n, int k, int dK) {
+        if (dK <= 0) {
+            return 0.0;
+        }
+        switch (CUT_CRITERION) {
+            case AIC:
+                return 2.0 * dK;
+            case BIC:
+                return Math.log(Math.max(n, 2)) * dK;
+            case AICC:
+                double full = aicc(n, k);
+                double cut = aicc(n, k - dK);
+                return Double.isFinite(full) && Double.isFinite(cut) ? full - cut : 2.0 * dK;
+            default:
+                return 0.0;
+        }
     }
 
     /** Penalised objective under the lambdas currently set on {@code relaxFit}. */
@@ -452,6 +533,10 @@ public class RegularizationFitSpec extends FitSpec {
      * so comparing against it directly would not be like for like.</p>
      */
     private Score mmPass(RelaxFit relaxFit, MFModelIso2sf model, double[] pars) {
+        return mmPass(relaxFit, model, pars, -1);
+    }
+
+    private Score mmPass(RelaxFit relaxFit, MFModelIso2sf model, double[] pars, int passIndex) {
         // pars() sets sf2/tauF/ss2/tauS but NOT the term weights -- those are
         // written only by calc() -- so evaluate once before reweighting, or
         // updateTermWeights() reads a stale w*Last (zero on a fresh model,
@@ -460,8 +545,14 @@ public class RegularizationFitSpec extends FitSpec {
         model.updateTermWeights();
         Score base = relaxFit.score(pars, true);
         Score cand = runFit(relaxFit, model, pars, 1);
-        Score chosen = objective(relaxFit, cand) <= objective(relaxFit, base)
-                ? cand : base;
+        boolean accept = objective(relaxFit, cand) <= objective(relaxFit, base);
+        if ((passIndex >= 0) && (passIndex < PASS_CALLS.length)) {
+            PASS_CALLS[passIndex].incrementAndGet();
+            if (!accept) {
+                PASS_REJECTS[passIndex].incrementAndGet();
+            }
+        }
+        Score chosen = accept ? cand : base;
         // runFit leaves the model at the last point CMA-ES evaluated, which is
         // not the returned optimum and, on a rejected pass, is the bad point we
         // just refused.  Downstream code reads the MODEL, not the Score --
@@ -489,7 +580,7 @@ public class RegularizationFitSpec extends FitSpec {
         model.pars(up);
         double[] crlb = relaxFit.calcCRLB(replicateData, model, up);
         model.updateCRLB(crlb);
-        Score score = mmPass(relaxFit, model, up);
+        Score score = mmPass(relaxFit, model, up, 0);
         // TEMPORARY DIAGNOSTIC -- remove once the collapsed-slow-mode question
         // is settled.
 //        System.out.printf("UNPENDIAG key %s rss %.6f wTerm2 %.6f wTerm3 %.6f up %s%n",
@@ -498,10 +589,10 @@ public class RegularizationFitSpec extends FitSpec {
 
         crlb = relaxFit.calcCRLB(replicateData, model, score.pars);
         model.updateCRLB(crlb);
-        score = mmPass(relaxFit, model, score.pars);
+        score = mmPass(relaxFit, model, score.pars, 1);
 
         crlb = relaxFit.calcCRLB(replicateData, model, score.pars);
-        score = mmPass(relaxFit, model, score.pars);
+        score = mmPass(relaxFit, model, score.pars, 2);
 
         crlb = relaxFit.calcCRLB(replicateData, model, score.pars);
         // calcCRLB perturbs the model to build the Jacobian and leaves it at the
@@ -520,19 +611,24 @@ public class RegularizationFitSpec extends FitSpec {
             double[] keptPars = score.getPars();
             double[] cutPars = model.getPars();   // calcThreshold already zeroed the channel
             double keptObj = objective(relaxFit, relaxFit.score(keptPars, true));
+            // A slow cut freezes ss2 and tauS; a fast cut freezes tauF alone
+            // (S2f stays free -- it is always present).
+            int dK = (tPars.slow() ? 2 : 0) + (tPars.fast() ? 1 : 0);
+            double credit = complexityCredit(replicateData.getNSpectralDensities(),
+                    keptPars.length, dK);
             CUTS_PROPOSED.incrementAndGet();
             model.applyThreshold(tPars);
             Score cand = runFit(relaxFit, model, cutPars, 1);
             double cutObj = objective(relaxFit, cand);
-            if (cutObj <= keptObj) {
+            if (cutObj - credit <= keptObj) {
                 score = cand;
             } else {
                 CUTS_REJECTED.incrementAndGet();
                 if (CUT_VERBOSE) {
                     System.out.printf(
-                            "CUTREJECT key %s slow %b fast %b  cut obj %.6f vs kept %.6f (%.2fx worse)%n",
-                            key, tPars.slow(), tPars.fast(), cutObj, keptObj,
-                            keptObj > 0.0 ? cutObj / keptObj : Double.NaN);
+                            "CUTREJECT key %s slow %b fast %b  cut obj %.6f - credit %.3f "
+                                    + "vs kept %.6f%n",
+                            key, tPars.slow(), tPars.fast(), cutObj, credit, keptObj);
                 }
                 model.applyThreshold(null);
                 relaxFit.score(keptPars, false);
