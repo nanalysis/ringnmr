@@ -311,6 +311,15 @@ public class RingCmd {
         opts.addOption(
                 Option
                         .builder()
+                        .longOpt("complexityMode")
+                        .hasArg()
+                        .argName("complexityMode")
+                        .desc("Only valid with --method regularization. Specifies the complexityMode (default: TERMS)")
+                        .build()
+        );
+        opts.addOption(
+                Option
+                        .builder()
                         .longOpt("lambdaScale")
                         .hasArg()
                         .argName("lambdaScale")
