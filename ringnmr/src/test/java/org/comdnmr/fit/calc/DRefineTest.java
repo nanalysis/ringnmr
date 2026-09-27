@@ -358,8 +358,8 @@ public class DRefineTest {
 
         double tau = 10.0;
         double lambdaScale = 1.0;
-        double stringency = 2.0;
-        CoMDPreferences.setOptimizer("CMAES");
+        double stringency = 1.0;
+
         FitSpec.Builder<?> builder;
         builder = new RegularizationFitSpec.Builder()
                 .useMedian(true)
