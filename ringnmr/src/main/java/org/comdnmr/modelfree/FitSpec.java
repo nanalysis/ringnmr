@@ -373,7 +373,8 @@ public abstract class FitSpec {
     }
     public enum ComplexityMode {
         TERMS,
-        PARAMETER;
+        PARAMETER,
+        HYBRID;
 
         /**
          * Returns a title-cased representation (e.g. "TERMS").

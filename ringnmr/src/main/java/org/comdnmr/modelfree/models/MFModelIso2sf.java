@@ -40,6 +40,8 @@ public class MFModelIso2sf extends MFModelIso2s {
      *  [0,1]; measured spurious components sit at median 0.14 and genuine ones
      *  at 0.59, so 0.05-0.10 places the knee between them. */
     private static final double W_PRIME = 0.08;
+
+    public static volatile double PIN_FRACTION = 0.05;
     private static final double ORDER_WEIGHT = 5000.0;  // stiff: labelling
     private static final double CEILING_WEIGHT = 250.0;  // soft: physical prior
     private static final double CEILING_ONSET = 0.4;  // fraction of tau_m
@@ -306,11 +308,14 @@ public class MFModelIso2sf extends MFModelIso2s {
         w2Last = w2;
         w3Last = w3;
         w4Last = w4;
-        if (complexityMode == FitSpec.ComplexityMode.TERMS) {
+        if (complexityMode != FitSpec.ComplexityMode.PARAMETER) {
             complexityS2S = wTerm2 * w2;    // slow term
             complexityS2F = wTerm3 * w3;    // fast term
             complexityTauF = wTerm4 * w4;   // cross term
-            complexityTauS = 0.0;           // term1 is the plateau; never shrink it
+            complexityTauS =
+                    (complexityMode == FitSpec.ComplexityMode.HYBRID && tauM > 0.0)
+                            ? (this.tauF + this.tauS) / tauM
+                            : 0.0;
         } else {
             // Original parameter-space scheme.  Uses this.sf2/this.ss2 etc, the
             // model fields, NOT the locals above -- those were converted to
@@ -355,7 +360,7 @@ public class MFModelIso2sf extends MFModelIso2s {
      * convergence argument is lost.
      */
     public void updateTermWeights() {
-        if (complexityMode == FitSpec.ComplexityMode.TERMS) {
+        if (complexityMode != FitSpec.ComplexityMode.PARAMETER) {
             wTerm2 = 1.0 / (Math.log(10.0) * (w2Last + W_PRIME));
             wTerm3 = 1.0 / (Math.log(10.0) * (w3Last + W_PRIME));
             wTerm4 = 1.0 / (Math.log(10.0) * (w4Last + W_PRIME));

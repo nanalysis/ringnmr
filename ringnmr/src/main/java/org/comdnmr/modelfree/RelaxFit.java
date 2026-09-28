@@ -114,11 +114,16 @@ public class RelaxFit {
      * commensurate.
      */
     public void setLambdas(double lambdaScale) {
-        if (complexityMode == FitSpec.ComplexityMode.TERMS) {
+        if (complexityMode == FitSpec.ComplexityMode.TERMS
+                || complexityMode == FitSpec.ComplexityMode.HYBRID) {
             setLambdaS2F(lambdaScale);    // fast term
             setLambdaS2S(lambdaScale);    // slow term
             setLambdaTauF(0.0);           // cross term (try 0.0 first)
-            setLambdaTauS(0.0);           // plateau: never penalised
+            // HYBRID only: pin on tau_f + tau_s.  Scaled by lambdaScale so that
+            // lambda = 0 still reproduces the other modes exactly -- that
+            // identity is the cross-mode correctness check.
+            setLambdaTauS(complexityMode == FitSpec.ComplexityMode.HYBRID
+                    ? MFModelIso2sf.PIN_FRACTION * lambdaScale : 0.0);
         } else {
             setLambdaS2F(0.0);
             setLambdaTauF(2.0 * Math.log(10.0) * TAU_PRIME * lambdaScale);
