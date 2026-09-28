@@ -313,8 +313,8 @@ public class MFModelIso2sf extends MFModelIso2s {
             complexityS2F = wTerm3 * w3;    // fast term
             complexityTauF = wTerm4 * w4;   // cross term
             complexityTauS =
-                    (complexityMode == FitSpec.ComplexityMode.HYBRID && tauM > 0.0)
-                            ? (this.tauF + this.tauS) / tauM
+                    (complexityMode == FitSpec.ComplexityMode.HYBRID && this.tauM > 0.0)
+                            ? (this.tauF + this.tauS) / this.tauM
                             : 0.0;
         } else {
             // Original parameter-space scheme.  Uses this.sf2/this.ss2 etc, the
