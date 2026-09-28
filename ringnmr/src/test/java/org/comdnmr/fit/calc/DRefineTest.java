@@ -383,6 +383,7 @@ public class DRefineTest {
         List<String> parNames = null;
         double[] parValues = null;
         int iter = -1;
+        List<String> rowInfo = new ArrayList<>();
         for (int s = 0; s < 10; s++) {
             iter++;
             var mol = MoleculeFactory.getActive();
@@ -398,7 +399,7 @@ public class DRefineTest {
             for (var d : data.entrySet()) {
                 String key = d.getKey();
                 if (!key.equals("1:44.N")) {
-                    continue;
+                    //continue;
                 }
                 Integer residueNum = Integer.valueOf(key.split(":")[1].split("\\.")[0]);
                 ParameterSet parameterSet = parameterSetMap.get(residueNum);
@@ -443,6 +444,7 @@ public class DRefineTest {
 
                 dumpFit(fitOnceResult.score().getPars(), parValues, parNames);
                 results.add(fitOnceResult.score());
+                rowInfo.add(key + " " + s);
 
             }
         }
@@ -455,11 +457,12 @@ public class DRefineTest {
         }
         System.out.println("0.0");
 
-        for (var row : results) {
-            for (double v : row.getPars()) {
+        for (int i=0;i<rowInfo.size();i++) {
+            Score score = results.get(i);
+            for (double v : score.getPars()) {
                 System.out.printf("%.4f ", v);
             }
-            System.out.printf("%.4f\n", row.rms());
+            System.out.printf("%.4f %s\n", score.rms(),rowInfo.get(i));
         }
     }
 
